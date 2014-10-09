@@ -7,8 +7,9 @@ namespace Blit {
 static void
 init_render_table (const StringVector &args)
 {
-  CPUInfo cpu = cpu_info();
-  if (cpu.x86_mmx)
+  const bool have_mmx = strstr (cpu_info().c_str(), " MMX ");
+  assert (have_mmx);
+  if (have_mmx)
     {
       Blit::render_optimize_mmx();
       RAPICORN_STARTUP_DEBUG ("Using MMX functions for blitting");

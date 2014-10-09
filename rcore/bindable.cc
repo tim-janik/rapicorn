@@ -6,8 +6,9 @@
 namespace Rapicorn {
 
 // == BindableIface ==
-static std::unordered_map<const BindableIface*, BindableIface::BindableNotifySignal> bindable_signal_map;
-static Spinlock                                                                      bindable_signal_mutex;
+typedef std::shared_ptr<BindableIface::BindableNotifySignal> BindableNotifySignalP;
+static std::unordered_map<const BindableIface*, BindableNotifySignalP> bindable_signal_map;
+static Spinlock                                                        bindable_signal_mutex;
 
 BindableIface::~BindableIface ()
 {
@@ -32,16 +33,22 @@ BindableIface::BindableNotifySignal::Connector
 BindableIface::sig_bindable_notify () const
 {
   ScopedLock<Spinlock> sig_map_locker (bindable_signal_mutex);
-  return bindable_signal_map[this]();
+  BindableNotifySignalP &sp = bindable_signal_map[this];
+  if (!sp)
+    sp = std::make_shared<BindableNotifySignalP::element_type> ();
+  return (*sp) ();
 }
 
 void
 BindableIface::bindable_notify (const std::string &name) const
 {
   ScopedLock<Spinlock> sig_map_locker (bindable_signal_mutex);
-  BindableNotifySignal &sig = bindable_signal_map[this];
-  sig_map_locker.unlock();
-  sig.emit (name);
+  BindableNotifySignalP sp = bindable_signal_map[this];
+  if (sp)
+    {
+      sig_map_locker.unlock();
+      sp->emit (name);
+    }
 }
 
 // == BinadableAccessor ==
@@ -61,7 +68,11 @@ BinadableAccessor::~BinadableAccessor ()
     ScopedLock<Spinlock> sig_map_locker (bindable_signal_mutex);
     auto it = bindable_signal_map.find (&bindable_); // using bindable_ pointer but not the object
     if (it != bindable_signal_map.end())
-      it->second() -= notify_id_;
+      {
+        BindableNotifySignalP sp = it->second;
+        if (sp)
+          (*sp) () -= notify_id_;
+      }
   }
   if (adaptor_)
     delete adaptor_;

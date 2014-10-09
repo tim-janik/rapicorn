@@ -22,11 +22,22 @@
 #if defined (__i386__) || defined (__x86_64__)
 #  include <x86intrin.h>        // __rdtsc
 #endif
-#include <glib.h>
 
 namespace Rapicorn {
 
 // == CPUInfo ==
+/// Acquire information about the runtime architecture and CPU type.
+struct CPUInfo {
+  // architecture name
+  const char *machine;
+  // CPU Vendor ID
+  char cpu_vendor[13];
+  // CPU features on X86
+  uint x86_fpu : 1, x86_ssesys : 1, x86_tsc   : 1, x86_htt      : 1;
+  uint x86_mmx : 1, x86_mmxext : 1, x86_3dnow : 1, x86_3dnowext : 1;
+  uint x86_sse : 1, x86_sse2   : 1, x86_sse3  : 1, x86_ssse3    : 1;
+  uint x86_cx16 : 1, x86_sse4_1 : 1, x86_sse4_2 : 1;
+};
 
 /* figure architecture name from compiler */
 static const char*
@@ -139,8 +150,7 @@ cpu_info_sigill_handler (int dummy)
 }
 
 static bool
-get_x86_cpu_features (CPUInfo *ci,
-                      char     vendor[13])
+get_x86_cpu_features (CPUInfo *ci)
 {
   memset (ci, 0, sizeof (*ci));
   /* check if the CPUID instruction is supported */
@@ -151,6 +161,7 @@ get_x86_cpu_features (CPUInfo *ci,
   unsigned int eax, ebx, ecx, edx;
   x86_cpuid (0, eax, ebx, ecx, edx);
   unsigned int v_ebx = ebx, v_ecx = ecx, v_edx = edx;
+  char *vendor = ci->cpu_vendor;
   *((unsigned int*) &vendor[0]) = ebx;
   *((unsigned int*) &vendor[4]) = edx;
   *((unsigned int*) &vendor[8]) = ecx;
@@ -234,98 +245,71 @@ get_x86_cpu_features (CPUInfo *ci,
   return true;
 }
 
-static CPUInfo cached_cpu_info; /* = 0; */
-
-CPUInfo
-cpu_info (void)
+static CPUInfo
+get_cpu_info (void)
 {
+  static CPUInfo cached_cpu_info = [] () {
+    CPUInfo ci = { 0, };
+    if (!get_x86_cpu_features (&ci))
+      strcat (ci.cpu_vendor, "unknown");
+    ci.machine = get_arch_name();
+    return ci;
+  } ();
   return cached_cpu_info;
 }
 
-static void
-init_cpuinfo (const StringVector &args)
-{
-  static char vendor_buffer[13];
-  CPUInfo lci;
-  memset (&lci, 0, sizeof (lci));
-  if (get_x86_cpu_features (&lci, vendor_buffer))
-    {
-      lci.machine = get_arch_name();
-      lci.cpu_vendor = vendor_buffer;
-    }
-  else
-    {
-      memset (&lci, 0, sizeof (lci));
-      lci.machine = get_arch_name();
-      lci.cpu_vendor = "unknown";
-    }
-  cached_cpu_info = lci;
-}
-static InitHook _init_cpuinfo ("core/02 Init CPU Info", init_cpuinfo);
-
+/** Retrieve string identifying the runtime CPU type.
+ * The returned string starts with a word describing the CPU architecture and ends with a word describing the CPU vendor.
+ * Inbetween are words identifying various processor flags.
+ * @return Example CPUID: "AMD64 FPU MMX MMXEXT AuthenticAMD"
+ */
 String
-cpu_info_string (const CPUInfo &cpu_info)
+cpu_info()
 {
-  GString *gstring = g_string_new ("");
-  g_string_append_printf (gstring,
-                          "CPU Architecture: %s\n"
-                          "CPU Vendor:       %s\n",
-                          cpu_info.machine, cpu_info.cpu_vendor);
-  /* processor flags */
-  GString *pflags = g_string_new ("");
+  const CPUInfo cpu_info = get_cpu_info();
+  String info;
+  // cores
+  info += string_format ("%d", sysconf (_SC_NPROCESSORS_ONLN));
+  // architecture
+  info += String (" ") + cpu_info.machine;
+  // vendor
+  info += String (" ") + cpu_info.cpu_vendor;
+  // processor flags
   if (cpu_info.x86_fpu)
-    g_string_append_printf (pflags, " FPU");
+    info += " FPU";
   if (cpu_info.x86_tsc)
-    g_string_append_printf (pflags, " TSC");
+    info += " TSC";
   if (cpu_info.x86_htt)
-    g_string_append_printf (pflags, " HTT");
-  /* MMX flags */
-  GString *mflags = g_string_new ("");
-  if (cpu_info.x86_mmx)
-    g_string_append_printf (mflags, " MMX");
-  if (cpu_info.x86_mmxext)
-    g_string_append_printf (mflags, " MMXEXT");
-  /* SSE flags */
-  GString *sflags = g_string_new ("");
-  if (cpu_info.x86_ssesys)
-    g_string_append_printf (sflags, " SSESYS");
-  if (cpu_info.x86_sse)
-    g_string_append_printf (sflags, " SSE");
-  if (cpu_info.x86_sse2)
-    g_string_append_printf (sflags, " SSE2");
-  if (cpu_info.x86_sse3)
-    g_string_append_printf (sflags, " SSE3");
-  if (cpu_info.x86_ssse3)
-    g_string_append_printf (sflags, " SSSE3");
-  if (cpu_info.x86_sse4_1)
-    g_string_append_printf (sflags, " SSE4.1");
-  if (cpu_info.x86_sse4_2)
-    g_string_append_printf (sflags, " SSE4.2");
+    info += " HTT";
   if (cpu_info.x86_cx16)
-    g_string_append_printf (sflags, " CMPXCHG16B");
-  /* 3DNOW flags */
-  GString *nflags = g_string_new ("");
+    info += " CMPXCHG16B";
+  // MMX flags
+  if (cpu_info.x86_mmx)
+    info += " MMX";
+  if (cpu_info.x86_mmxext)
+    info += " MMXEXT";
+  // SSE flags
+  if (cpu_info.x86_ssesys)
+    info += " SSESYS";
+  if (cpu_info.x86_sse)
+    info += " SSE";
+  if (cpu_info.x86_sse2)
+    info += " SSE2";
+  if (cpu_info.x86_sse3)
+    info += " SSE3";
+  if (cpu_info.x86_ssse3)
+    info += " SSSE3";
+  if (cpu_info.x86_sse4_1)
+    info += " SSE4.1";
+  if (cpu_info.x86_sse4_2)
+    info += " SSE4.2";
+  // 3DNOW flags
   if (cpu_info.x86_3dnow)
-    g_string_append_printf (nflags, " 3DNOW");
+    info += " 3DNOW";
   if (cpu_info.x86_3dnowext)
-    g_string_append_printf (nflags, " 3DNOWEXT");
-  /* flag output */
-  if (pflags->len)
-    g_string_append_printf (gstring, "CPU Features:    %s\n", pflags->str);
-  if (mflags->len)
-    g_string_append_printf (gstring, "CPU Integer SIMD:%s\n", mflags->str);
-  if (sflags->len)
-    g_string_append_printf (gstring, "CPU Float SIMD:  %s\n", sflags->str);
-  if (nflags->len)
-    g_string_append_printf (gstring, "CPU Media SIMD:  %s\n", nflags->str);
-  g_string_free (nflags, TRUE);
-  g_string_free (sflags, TRUE);
-  g_string_free (mflags, TRUE);
-  g_string_free (pflags, TRUE);
-  /* done */
-  String retval = gstring->str;
-  g_string_free (gstring, TRUE);
-  return retval;
+    info += " 3DNOWEXT";
+  info += " ";
+  return info;
 }
 
 // == TaskStatus ==

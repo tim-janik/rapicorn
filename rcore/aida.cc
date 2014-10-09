@@ -5,6 +5,7 @@
 #include "regex.hh"
 #include "objects.hh"           // BaseObject*
 #include "../configure.h"       // HAVE_SYS_EVENTFD_H
+#include "main.hh"              // random_nonce
 
 #include <string.h>
 #include <stdio.h>
@@ -1101,7 +1102,7 @@ private:
     OrbObjectW  orbow;
     InstanceP   instancep;
   };
-  size_t                                start_id_, id_mask_;
+  uint64                                start_id_, id_mask_;
   std::vector<Entry>                    entries_;
   std::unordered_map<Instance*, uint64> map_;
   std::vector<uint>                     free_list_;
@@ -1167,10 +1168,11 @@ template<class Instance> uint
 ObjectMap<Instance>::next_index ()
 {
   uint idx;
-  const size_t FREE_LENGTH = 5;
+  const size_t FREE_LENGTH = 31;
   if (free_list_.size() > FREE_LENGTH)
     {
-      const size_t prandom = hash_fnv64a (free_list_.data(), free_list_.size());
+      static uint64_t randomize = random_nonce ();
+      const size_t prandom = randomize ^ hash_fnv64a (free_list_.data(), free_list_.size());
       const size_t end = free_list_.size(), j = prandom % (end - 1);
       assert (j < end - 1); // use end-1 to avoid popping the last pushed slot
       idx = free_list_[j];

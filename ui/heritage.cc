@@ -113,25 +113,19 @@ class Heritage::Internals {
   WidgetImpl &widget_;
   ColorFunc ncf, scf;
 public:
-  Heritage *selected;
-  Internals (WidgetImpl &widget,
-             ColorFunc normal_cf,
-             ColorFunc selected_cf) :
+  HeritageP selected;
+  Internals (WidgetImpl &widget, ColorFunc normal_cf, ColorFunc selected_cf) :
     widget_ (widget), ncf (normal_cf), scf (selected_cf), selected (NULL)
   {}
   bool
-  match (WidgetImpl &widget,
-         ColorFunc normal_cf,
-         ColorFunc selected_cf)
+  match (WidgetImpl &widget, ColorFunc normal_cf, ColorFunc selected_cf)
   {
     return widget == widget_ && normal_cf == ncf && selected_cf == scf;
   }
   Color
-  get_color (const Heritage *heritage,
-             StateType       state,
-             ColorType       ct) const
+  get_color (const Heritage *heritage, StateType state, ColorType ct) const
   {
-    if (heritage == selected)
+    if (selected.get() == heritage)
       return scf (state, ct);
     else
       return ncf (state, ct);
@@ -142,7 +136,7 @@ Heritage::~Heritage ()
 {
   if (internals_)
     {
-      if (internals_->selected == this)
+      if (internals_->selected.get() == this)
         internals_->selected = NULL;
       else
         {
@@ -154,10 +148,8 @@ Heritage::~Heritage ()
     }
 }
 
-Heritage*
-Heritage::create_heritage (WindowImpl     &window,
-                           WidgetImpl       &widget,
-                           ColorSchemeType color_scheme)
+HeritageP
+Heritage::create_heritage (WindowImpl &window, WidgetImpl &widget, ColorSchemeType color_scheme)
 {
   WindowImpl *iwindow = widget.get_window();
   assert (iwindow == &window);
@@ -169,26 +161,24 @@ Heritage::create_heritage (WindowImpl     &window,
     case COLOR_NORMAL: case COLOR_INHERIT: ;
     }
   Internals *internals = new Internals (widget, cnorm, csel);
-  Heritage *self = new Heritage (window, internals);
-  return self;
+  return FriendAllocator<Heritage>::make_shared (window, internals);
 }
 
-Heritage*
-Heritage::adapt_heritage (WidgetImpl       &widget,
-                          ColorSchemeType color_scheme)
+HeritageP
+Heritage::adapt_heritage (WidgetImpl &widget, ColorSchemeType color_scheme)
 {
   if (internals_)
     {
       ColorFunc cnorm = colorset_normal, csel = colorset_selected;
       switch (color_scheme)
         {
-        case COLOR_INHERIT:     return this;
+        case COLOR_INHERIT:     return shared_from_this();
         case COLOR_BASE:        cnorm = colorset_base; break;
         case COLOR_SELECTED:    cnorm = colorset_selected; break;
         case COLOR_NORMAL:      ;
         }
       if (internals_->match (widget, cnorm, csel))
-        return this;
+        return shared_from_this();
     }
   WindowImpl *window = widget.get_window();
   if (!window)
@@ -208,8 +198,7 @@ Heritage::selected ()
     {
       if (!internals_->selected)
         {
-          internals_->selected = new Heritage (window_, internals_);
-          ref_sink (internals_->selected);
+          internals_->selected = FriendAllocator<Heritage>::make_shared (window_, internals_);
         }
       return *internals_->selected;
     }

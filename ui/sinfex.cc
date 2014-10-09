@@ -392,6 +392,10 @@ using namespace Rapicorn;
 #define YYSELF  (*(SinfexParser*) flex_yyget_extra (yyscanner))
 extern void* flex_yyget_extra (void *yyscanner); // flex forward declaration, needed by bison
 
+// *** Adjust GCC diagnostics for ygen/lgen code that we cannot fix
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+
 /* bison generated parser */
 #include "sinfex.ygen"
 #undef  yylval
@@ -403,6 +407,9 @@ extern void* flex_yyget_extra (void *yyscanner); // flex forward declaration, ne
 #undef  yylval
 #undef  yylloc
 #undef  YYSELF
+
+// *** Restore GCC diagnostics after ygen/lgen code
+#pragma GCC diagnostic pop
 
 /* glue scanning layers of flex and bison together */
 static int

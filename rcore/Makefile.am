@@ -39,7 +39,6 @@ rapicorn_generated_headers = $(strip	\
 	rapicornconfig.h		\
 )
 rapicorn_private_files = $(strip	\
-	aidabuiltins.cc			\
 )
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
@@ -60,17 +59,11 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
 	$(AM_LDFLAGS)                                           \
 ) # set libtool version and export symbols for resolving
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
+EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 
 # == Special Optimization Targets ==
 OPTIMIZE_SOURCE_FILES = loop.cc randomhash.cc
 AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
-
-# keep this .o rule in sync with the corresponding .la rule from Makefile.in
-librapicorncore@RAPICORN_RELEASE@.o: $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
-	$(CXXLINK) -rpath $(libdir) $(librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS) $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) # $(librapicorncore@RAPICORN_RELEASE@_la_LIBADD) $(LIBS)
-all-am: librapicorncore@RAPICORN_RELEASE@.o
-CLEANFILES += librapicorncore@RAPICORN_RELEASE@.lo librapicorncore@RAPICORN_RELEASE@.o
 
 # === API content ===
 api-content:
@@ -104,10 +97,12 @@ CLEANFILES += xtmp-empty.dat xtmp-empty.out
 
 # === configbits.cc ===
 BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
-	git log -n1 --pretty=format:Git-%h --abbrev=11 ; \
+	git log -n1 --pretty=format:Git-%h --abbrev=12 ; \
 	C=`git diff HEAD --raw | wc -l ` ; test "$$C" -lt 1 || echo "+$$C" ) \
 	|| sed -n "1,1{s/.*\# */ChangeLog-/g;p}" <$(top_srcdir)/ChangeLog )
 BUILDID_DEPS=$(shell B=`git rev-parse --git-dir 2>/dev/null` && for r in "`git symbolic-ref -q HEAD || echo HEAD`" packed-refs HEAD ; do echo "$B/$r" ; done)
+buildid:
+	@echo $(BUILDID)
 configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Makefile
 	$(AM_V_GEN)
 	$(Q) cd . \
@@ -120,7 +115,7 @@ configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Ma
 	$(Q) rm -f xgen-$(@F)
 CLEANFILES += xgen-configbits.cc configbits.cc
 $(srcdir)/main.cc: configbits.cc
-.PHONY: PHONY_REBUILDS
+.PHONY: PHONY_REBUILDS buildid
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile

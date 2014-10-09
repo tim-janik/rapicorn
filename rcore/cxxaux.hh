@@ -130,12 +130,6 @@
 #error  Failed to detect a recent GCC version (>= 4)
 #endif  // !__GNUC__
 
-// == C++11 Keywords ==
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 7
-#define override        /* unimplemented */
-#define final           /* unimplemented */
-#endif // GCC < 4.7
-
 // == Ensure 'uint' in global namespace ==
 #if 	RAPICORN_SIZEOF_SYS_TYPESH_UINT == 0
 typedef unsigned int		uint;           // for systems that don't define uint in sys/types.h

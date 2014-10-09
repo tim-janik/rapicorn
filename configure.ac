@@ -146,6 +146,8 @@ elif test "x$enable_debug" = "xno"; then
 else
   : # minimum debugging
 fi
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fmessage-length=0)
+MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fdiagnostics-color=auto)
 MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wall)
 MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wdeprecated)
 MC_CC_TRY_OPTION(AM_CFLAGS,     -Wmissing-prototypes)
@@ -182,7 +184,7 @@ MC_CC_TRY_OPTION(SIMD_FLAGS, -msse)
 # Note, -funroll-loops can harm SSE loop performance
 #MC_CC_TRY_OPTION(SIMD_FLAGS, -funroll-loops)
 #AC_SUBST(SIMD_FLAGS)
-# Expect the target architecture to support MMX/SSE if the cmpiler does it.
+# Expect the target architecture to support MMX/SSE if the compiler does it.
 MC_EVAR_ADD(AM_CFLAGS,   "$SIMD_FLAGS")
 MC_EVAR_ADD(AM_CXXFLAGS, "$SIMD_FLAGS")
 # Newer vectorization instruction sets, should be optionally supported
@@ -208,14 +210,22 @@ MC_CC_TRY_OPTION(OPTIMIZE_FAST, -finline-functions)
 MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
 AC_SUBST(OPTIMIZE_FAST)
 
-# check for development build rules (autogen.sh based builds)
+# --enable-devel-mode: check for development build rules, i.e. autogen.sh
+# based builds with rapicorn.git repository; these enable additional build
+# rules for files that are pre-packaged in tarballs.
 if test x"$enable_devel_mode" = xyes ; then
   TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
   TEST_BUILDDIR=$(cd . ; /bin/pwd)
   test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
-    AC_MSG_ERROR([source dir must be the same as build dir for development build rules])
+    AC_MSG_ERROR([development build rules require srcdir == builddir])
+  }
+  git cat-file commit 9ebb1801f1d0f90b 2>&1 | fgrep -q 8892df8dece73be5 || { # 12.08.0
+    AC_MSG_ERROR([development build rules require a rapicorn.git repository])
   }
   DEVELMODE="" ; NOTDEVELMODE="#"
+  # devel mode build tools
+  MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
+  MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
 else
   DEVELMODE="#"; NOTDEVELMODE=""
 fi
@@ -233,13 +243,17 @@ AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL],
 	    [AC_MSG_ERROR("failed to detect [$1]")])
     AC_SUBST([RAPICORN_SYSVAL_$1])])
 
-dnl # RAPICORN_GCC_REQUIREMENTS() - check for required minimum GCC version
-AC_DEFUN([RAPICORN_GCC_REQUIREMENTS],
+dnl # RAPICORN_CXX_REQUIREMENTS() - check for required minimum __GNUC__ version
+AC_DEFUN([RAPICORN_CXX_REQUIREMENTS],
 [
+    AC_MSG_CHECKING([for CXX compiler version])
+    cxx_version=`$CXX --version 2>/dev/null | head -n1`
+    AC_MSG_RESULT([$cxx_version])
+
     # check for minimum GCC version
-    DEPVERSION_GNUC='4.2.4'
+    DEPVERSION_GNUC='4.7.3'
     DEPVERSION_FORMULA=[`echo " $DEPVERSION_GNUC" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
-    AC_MSG_CHECKING([for minimum GCC version ($DEPVERSION_GNUC)])
+    AC_MSG_CHECKING([for __GNUC__ >= $DEPVERSION_GNUC])
     AC_TRY_COMPILE([
 	    #if defined __GNUC__
 	    #  if (__GNUC__ << 20) + (__GNUC_MINOR__ << 10) + __GNUC_PATCHLEVEL__ < $DEPVERSION_FORMULA
@@ -378,7 +392,7 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     dnl # == g++<=4.7 missing --enable-libstdcxx-time ==
     AC_CHECK_FUNCS([nanosleep sched_yield])
     if test "x$ac_cv_func_nanosleep$ac_cv_func_sched_yield" = xyesyes; then
-      AC_MSG_CHECKING([whether g++<=4.7 sleep_for/yield workaround is needed])
+      AC_MSG_CHECKING([whether g++ <= 4.7 sleep_for/yield workaround is needed])
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
 	      	#if __GNUC__ == 4 && __GNUC_MINOR__ <= 7 && !defined (_GLIBCXX_USE_SCHED_YIELD) && !defined (_GLIBCXX_USE_NANOSLEEP)
 	        #  define _GLIBCXX_USE_SCHED_YIELD 1
@@ -494,9 +508,6 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
     AC_SUBST(RAPICORN_GUI_CFLAGS)
     AC_SUBST(RAPICORN_GUI_LIBS)
     AM_CONDITIONAL(WITH_PANGO, true)
-    # --- Rapicorn build tools ---
-    MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
-    MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
 ])
 
 dnl # RAPICORN_ROPE_REQUIREMENTS() - rapicorn python binding checks
@@ -571,7 +582,7 @@ AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 
 # check requirement sets
 RAPICORN_I18N_REQUIREMENTS
-RAPICORN_GCC_REQUIREMENTS
+RAPICORN_CXX_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_ROPE_REQUIREMENTS
 RAPICORN_AIDA_REQUIREMENTS

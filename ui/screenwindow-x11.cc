@@ -523,7 +523,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       if (offer && xev.target && (xev.time == CurrentTime || time_cmp (xev.time, offer->time) >= 0))
         {
           ContentRequest cr;
-          cr.request_id = (uint64 (rand()) << 32) | rand(); // FIXME: need rand_int64
+          cr.request_id = random_nonce();
           cr.xsr = xev;
           content_requests_.push_back (cr);
           if (xev.target == x11context.atom ("TIMESTAMP") || xev.target == x11context.atom ("TARGETS"))

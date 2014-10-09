@@ -234,6 +234,7 @@ class FirstInterfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~FirstInterfaceHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -492,6 +493,7 @@ class UIWidgetAreaHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~UIWidgetAreaHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -535,6 +537,7 @@ class ParentHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~ParentHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -554,6 +557,7 @@ class ChildHandle : public virtual ParentHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~ChildHandle () override;
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
   static ChildHandle            down_cast (RemoteHandle smh) { return smh == NULL ? ChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
@@ -572,6 +576,7 @@ class DescendantHandle : public virtual ChildHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~DescendantHandle () override;
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
   static DescendantHandle       down_cast (RemoteHandle smh) { return smh == NULL ? DescendantHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
@@ -590,6 +595,7 @@ class GrandChildHandle : public virtual DescendantHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~GrandChildHandle () override;
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
   static GrandChildHandle       down_cast (RemoteHandle smh) { return smh == NULL ? GrandChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
@@ -639,6 +645,7 @@ class QuickIfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~QuickIfaceHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -659,6 +666,7 @@ class MethodTestInterfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~MethodTestInterfaceHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -749,6 +757,7 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~SignalTestInterfaceHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -794,6 +803,7 @@ class ChildInheritingSignalsHandle : public virtual SignalTestInterfaceHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~ChildInheritingSignalsHandle () override;
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
   static ChildInheritingSignalsHandle down_cast (RemoteHandle smh) { return smh == NULL ? ChildInheritingSignalsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
@@ -813,6 +823,7 @@ class AnotherChildHandle : public virtual SignalTestInterfaceHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~AnotherChildHandle () override;
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
   static AnotherChildHandle     down_cast (RemoteHandle smh) { return smh == NULL ? AnotherChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
@@ -831,6 +842,7 @@ class PropertyTesterHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~PropertyTesterHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -891,6 +903,7 @@ class ButtonAreaHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~ButtonAreaHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -922,6 +935,7 @@ class PureMethodsHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~PureMethodsHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -964,6 +978,7 @@ class NameTestsHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~NameTestsHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -989,6 +1004,7 @@ class CompressorHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~CompressorHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -1029,6 +1045,7 @@ class SoundModuleHandle : public virtual Rapicorn::Aida::RemoteHandle
   static const Rapicorn::Aida::TypeHash& __aida_typeid__();
 protected:
 public:
+  virtual /*Des*/                       ~SoundModuleHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
   const Rapicorn::Aida::TypeHashList     __aida_typelist__();
   template<class RemoteHandle>
@@ -1079,6 +1096,8 @@ template<> const EnumValue* enum_value_list<RapicornAidaTest::MathExpressions> (
 namespace MandatoryNamespace {
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
+FirstInterfaceHandle::~FirstInterfaceHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const FirstInterfaceHandle &handle)
 {
@@ -1633,6 +1652,8 @@ UIWidgetAreaHandle::__aida_connect__sample_signal (size_t signal_handler_id, con
 }
 UIWidgetAreaHandle::UIWidgetAreaHandle ()
 {}
+UIWidgetAreaHandle::~UIWidgetAreaHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const UIWidgetAreaHandle &handle)
 {
@@ -1891,6 +1912,8 @@ UIWidgetAreaHandle::on_click2in (const std::string &arg_command) /// See UIWidge
 }
 ParentHandle::ParentHandle ()
 {}
+ParentHandle::~ParentHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ParentHandle &handle)
 {
@@ -1948,6 +1971,8 @@ ParentHandle::__aida_typelist__()
 }
 ChildHandle::ChildHandle ()
 {}
+ChildHandle::~ChildHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ChildHandle &handle)
 {
@@ -2000,6 +2025,8 @@ ChildHandle::__aida_typelist__()
 }
 DescendantHandle::DescendantHandle ()
 {}
+DescendantHandle::~DescendantHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const DescendantHandle &handle)
 {
@@ -2052,6 +2079,8 @@ DescendantHandle::__aida_typelist__()
 }
 GrandChildHandle::GrandChildHandle ()
 {}
+GrandChildHandle::~GrandChildHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const GrandChildHandle &handle)
 {
@@ -2151,6 +2180,8 @@ QuickSequence::append_back()
 }
 QuickIfaceHandle::QuickIfaceHandle ()
 {}
+QuickIfaceHandle::~QuickIfaceHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const QuickIfaceHandle &handle)
 {
@@ -2218,6 +2249,8 @@ QuickIfaceHandle::simple_function (int arg_i) /// See QuickIface::simple_functio
 }
 MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
+MethodTestInterfaceHandle::~MethodTestInterfaceHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const MethodTestInterfaceHandle &handle)
 {
@@ -2912,6 +2945,8 @@ SignalTestInterfaceHandle::__aida_connect__self_args (size_t signal_handler_id, 
 }
 SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 {}
+SignalTestInterfaceHandle::~SignalTestInterfaceHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SignalTestInterfaceHandle &handle)
 {
@@ -2986,6 +3021,8 @@ ChildInheritingSignalsHandle::__aida_connect__child_signal (size_t signal_handle
 }
 ChildInheritingSignalsHandle::ChildInheritingSignalsHandle ()
 {}
+ChildInheritingSignalsHandle::~ChildInheritingSignalsHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ChildInheritingSignalsHandle &handle)
 {
@@ -3038,6 +3075,8 @@ ChildInheritingSignalsHandle::__aida_typelist__()
 }
 AnotherChildHandle::AnotherChildHandle ()
 {}
+AnotherChildHandle::~AnotherChildHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const AnotherChildHandle &handle)
 {
@@ -3090,6 +3129,8 @@ AnotherChildHandle::__aida_typelist__()
 }
 PropertyTesterHandle::PropertyTesterHandle ()
 {}
+PropertyTesterHandle::~PropertyTesterHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const PropertyTesterHandle &handle)
 {
@@ -3451,6 +3492,8 @@ ButtonAreaHandle::__aida_connect__activate (size_t signal_handler_id, const std:
 }
 ButtonAreaHandle::ButtonAreaHandle ()
 {}
+ButtonAreaHandle::~ButtonAreaHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const ButtonAreaHandle &handle)
 {
@@ -3604,6 +3647,8 @@ ButtonAreaHandle::click_type (ClickType value) /// See ButtonArea::click_type
 }
 PureMethodsHandle::PureMethodsHandle ()
 {}
+PureMethodsHandle::~PureMethodsHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const PureMethodsHandle &handle)
 {
@@ -3679,6 +3724,8 @@ PureMethodsHandle::pure_method (double arg_f) /// See PureMethods::pure_method()
 namespace Other {
 NameTestsHandle::NameTestsHandle ()
 {}
+NameTestsHandle::~NameTestsHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const NameTestsHandle &handle)
 {
@@ -3753,6 +3800,8 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::QuickRecord &a
 namespace BseTest {
 CompressorHandle::CompressorHandle ()
 {}
+CompressorHandle::~CompressorHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const CompressorHandle &handle)
 {
@@ -3889,6 +3938,8 @@ operator>>= (Rapicorn::Aida::FieldReader &src, RecordForGroups &self)
 }
 SoundModuleHandle::SoundModuleHandle ()
 {}
+SoundModuleHandle::~SoundModuleHandle ()
+{} // define empty dtor to emit vtable
 void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const SoundModuleHandle &handle)
 {

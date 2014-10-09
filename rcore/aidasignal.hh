@@ -251,8 +251,8 @@ protected:
   typedef HandlerLink<FutureFunction>             SignalLink;
 private:
   SignalLink   *callback_ring_; // linked ring of callback nodes
-  /*copy-ctor*/ AsyncSignal (const AsyncSignal&) = delete;
-  AsyncSignal&  operator=   (const AsyncSignal&) = delete;
+  explicit      AsyncSignal (const AsyncSignal&) = delete;  // non-copyable
+  AsyncSignal&  operator=   (const AsyncSignal&) = delete;  // non-assignable
   void
   ensure_ring ()
   {
@@ -333,11 +333,7 @@ public:
     bool
     future_ready ()
     {
-#if __GNUC__ == 4 && __GNUC_MINOR__ == 6
-      return future_.wait_for (std::chrono::nanoseconds (0)) != false; // g++-4.6.2: work around experimental code
-#else
       return future_.wait_for (std::chrono::nanoseconds (0)) == std::future_status::ready;
-#endif
     }
     inline void
     emit_stepwise()
@@ -395,12 +391,13 @@ public:
  * Note that the Signal template types is non-copyable.
  */
 template <typename SignalSignature, class Collector = Lib::CollectorDefault<typename std::function<SignalSignature>::result_type> >
-class Signal /*final*/ :
-    protected Lib::ProtoSignal<SignalSignature, Collector>
+class Signal : protected Lib::ProtoSignal<SignalSignature, Collector>
 {
   typedef Lib::ProtoSignal<SignalSignature, Collector> ProtoSignal;
   typedef typename ProtoSignal::CbFunction             CbFunction;
 public:
+  explicit Signal    (const Signal&) = delete;  // non-copyable
+  Signal&  operator= (const Signal&) = delete;  // non-assignable
   using ProtoSignal::emit;
   class Connector {
     friend     class Signal;
@@ -519,7 +516,7 @@ public:
  * emission before done() returns true is also supported.
  */
 template <typename SignalSignature>
-class AsyncSignal /*final*/ : protected Lib::AsyncSignal<SignalSignature>
+class AsyncSignal : protected Lib::AsyncSignal<SignalSignature>
 {
   typedef Lib::AsyncSignal<SignalSignature>   BaseSignal;
   typedef typename BaseSignal::CbFunction     CbFunction;

@@ -3,7 +3,8 @@
 
 %locations
 %pure-parser
-%name-prefix="bison_yy"
+%define api.prefix {bison_yy}
+%lex-param {void *yyscanner}
 %parse-param {void *yyscanner}
 
 /* === PRE-UNION DECLARATIONS === */

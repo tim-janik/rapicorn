@@ -9,7 +9,6 @@
 #include <libintl.h>
 #include <iconv.h>
 #include <errno.h>
-#include <glib.h>
 
 namespace Rapicorn {
 
@@ -133,57 +132,6 @@ string_totitle (const String &str)
 }
 
 #define STACK_BUFFER_SIZE       3072
-
-/// Formatted printing ala printf() into a String, using the POSIX/C locale.
-RAPICORN_PRINTF (1, 2) String
-string_cprintf (const char *format, ...) // FIXME: unused
-{
-  ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
-  va_list args;
-  int l;
-  {
-    char buffer[STACK_BUFFER_SIZE];
-    va_start (args, format);
-    l = vsnprintf (buffer, sizeof (buffer), format, args);
-    va_end (args);
-    if (l < 0)
-      return format; // error?
-    if (size_t (l) < sizeof (buffer))
-      return String (buffer, l);
-  }
-  String string;
-  string.resize (l + 1);
-  va_start (args, format);
-  const int j = vsnprintf (&string[0], string.size(), format, args);
-  va_end (args);
-  string.resize (std::min (l, std::max (j, 0)));
-  return string;
-}
-
-/// Formatted printing like string_cprintf using the current locale.
-RAPICORN_PRINTF (1, 2) String
-string_locale_cprintf (const char *format, ...) // FIXME: unused
-{
-  va_list args;
-  int l;
-  {
-    char buffer[STACK_BUFFER_SIZE];
-    va_start (args, format);
-    l = vsnprintf (buffer, sizeof (buffer), format, args);
-    va_end (args);
-    if (l < 0)
-      return format; // error?
-    if (size_t (l) < sizeof (buffer))
-      return String (buffer, l);
-  }
-  String string;
-  string.resize (l + 1);
-  va_start (args, format);
-  const int j = vsnprintf (&string[0], string.size(), format, args);
-  va_end (args);
-  string.resize (std::min (l, std::max (j, 0)));
-  return string;
-}
 
 static inline String
 current_locale_vprintf (const char *format, va_list vargs)

@@ -33,7 +33,7 @@ Dependencies
 ============
 
 In order to build Rapicorn from release tarballs, a recent version of
-libpng, Cairo, Pango and Gtk+ as well as Python 2.5 are currently needed.
+libpng, Cairo, Pango and Python 2.7 are currently needed.
 The sources for the required packages can be found here:
 
   http://gtk.org/download.html
@@ -43,17 +43,13 @@ The sources for the required packages can be found here:
 
 As Debian package list:
 
-  libpng12-dev libcairo2-dev libpango1.0-dev libgtk2.0-dev python2.5-dev
-
-Rapicorn tends to hit GNU C++ compiler bugs fairly frequently, so if you
-have problems compiling the code, or get segfaults in STL source files,
-upgrading the compiler may improve the situation.
+  libpng12-dev libcairo2-dev libpango1.0-dev python2.7-dev
 
 Compiling with a different compiler version than the default on your
 system and running all checks Rapicorn offers (they should all succeed)
 can be done with commands like:
 
-  export CC=gcc-4.6 CXX=g++-4.6 "CPP=gcc-4.6 -E" "CPPCXX=g++-4.6 -E"
+  export CC=gcc-4.9 CXX=g++-4.9 "CPP=gcc-4.9 -E" "CPPCXX=g++-4.9 -E"
   ./configure
   make all install
   make report # execute fast tests, performance tests and slow tests

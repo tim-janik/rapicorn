@@ -15,10 +15,6 @@
 
 namespace Rapicorn {
 
-struct ClassDoctor {
-  static void update_widget_heritage (WidgetImpl &widget) { widget.heritage (widget.heritage()); }
-};
-
 EventHandler::EventHandler() :
   sig_event (Aida::slot (*this, &EventHandler::handle_event))
 {}
@@ -578,10 +574,7 @@ WidgetImpl::~WidgetImpl()
   if (parent())
     parent()->remove (this);
   if (heritage_)
-    {
-      heritage_->unref();
-      heritage_ = NULL;
-    }
+    heritage_ = NULL;
   uint timer_id = get_data (&visual_update_key);
   if (timer_id)
     {
@@ -873,19 +866,15 @@ WidgetImpl::propagate_heritage ()
 }
 
 void
-WidgetImpl::heritage (Heritage *heritage)
+WidgetImpl::heritage (HeritageP heritage)
 {
-  Heritage *old_heritage = heritage_;
+  HeritageP old_heritage = heritage_;
   heritage_ = NULL;
   if (heritage)
-    {
-      heritage_ = heritage->adapt_heritage (*this, color_scheme());
-      ref_sink (heritage_);
-    }
-  if (old_heritage)
-    old_heritage->unref();
+    heritage_ = heritage->adapt_heritage (*this, color_scheme());
   if (heritage_ != old_heritage)
     {
+      old_heritage = NULL;
       invalidate();
       propagate_heritage ();
     }
@@ -1792,7 +1781,7 @@ WidgetImpl::color_scheme (ColorSchemeType cst)
         delete_data (&widget_color_scheme_key);
       else
         set_data (&widget_color_scheme_key, cst);
-      ClassDoctor::update_widget_heritage (*this);
+      heritage (heritage()); // forces recalculation/adaption
     }
 }
 

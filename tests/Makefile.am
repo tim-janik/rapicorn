@@ -51,8 +51,10 @@ XML_FILES  += noise16.xml
 EXTRA_DIST += noise16.png
 noise16-png-test: $(srcdir)/noise16.xml $(srcdir)/noise16.png
 	$(Q) rm -f xtmp-noise16.png
+	$(Q) test $(srcdir) = $(builddir) || cp $(srcdir)/noise16.png $(builddir)
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/noise16.xml
 	$(Q) $(IMGCHECK) $(srcdir)/noise16.png xtmp-noise16.png ; eval "$$TSTDIAGNOSE"
+	$(Q) test $(srcdir) = $(builddir) || rm -f $(builddir)/noise16.png
 	$(Q) rm -f xtmp-noise16.png
 check: noise16-png-test
 

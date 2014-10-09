@@ -46,28 +46,11 @@ MAKE_API_CHECKSUM=$(strip							\
 	  $(MAKE) -C $(top_srcdir)/ui/   $(AM_MAKEFLAGS) api-content    ) | 	\
 	md5sum | sed 's/ .*//'							\
 )
-api-check: # ensure headers don't change if RELEASE=outdated && REVISION=0
-	cd $(srcdir) \
-	&& RAPICORN_CURRENT_CHECKSUM=$$($(MAKE_API_CHECKSUM))			\
-	&& RAPICORN_MONTHLY_VERSION="$$(expr $$(date +%Y%m) - 200000)"		\
-	&& test "$$RAPICORN_CURRENT_CHECKSUM"  = "`cat api-check.md5`"		\
-	|| if [ "$$RAPICORN_MONTHLY_VERSION" =					\
-                "$$(expr @RAPICORN_RELEASE_YEAR@ '*' 100 + @RAPICORN_RELEASE_MONTH@)" \
-		-o "@RAPICORN_REVISION_VERSION@" -gt 0 ]; then			\
-	     echo "$$RAPICORN_CURRENT_CHECKSUM" > api-check.md5 ;		\
-	   else \
-	     MSG1="Rapicorn version needs updating (checksum: $$RAPICORN_CURRENT_CHECKSUM): " ; \
-	     MSG2="@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_MONTH@.@RAPICORN_REVISION_VERSION@ => " ; \
-	     MSG3="$$[RAPICORN_MONTHLY_VERSION/100].$$[RAPICORN_MONTHLY_VERSION%100].0" ; \
-	     MSG="$$MSG1$$MSG2$$MSG3" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ; \
-	     exit 1 ; \
-	   fi
 api-checksum:
 	$(MAKE_API_CHECKSUM)
-.PHONY: api-check api-checksum
-#check-am: api-check # check API version upon make check
+.PHONY: api-checksum
 distcheck-hook: # check API version upon make distcheck
-	$(MAKE) $(AM_MAKEFLAGS) -C $(top_srcdir)/ api-check
+	$(MAKE) $(AM_MAKEFLAGS) -C $(top_srcdir)/
 installcheck-local:
 	$(Q) cd . \
 	&& echo '#include <rapicorn-core.hh>'				 > tmpx.cc \
