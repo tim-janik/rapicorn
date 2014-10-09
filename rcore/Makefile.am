@@ -39,7 +39,6 @@ rapicorn_generated_headers = $(strip	\
 	rapicornconfig.h		\
 )
 rapicorn_private_files = $(strip	\
-	aidabuiltins.cc			\
 )
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
