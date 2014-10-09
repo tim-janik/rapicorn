@@ -82,6 +82,7 @@ check-am: check-dynamic_cast # run source code checks before all others
 # disable bogus cleanup checks
 distcleancheck_listfiles = true # find . -type f -print
 # distuninstallcheck_listfiles = true # find . -type f -print
+MAINTAINERCLEANFILES += intltool-extract.in  intltool-merge.in  intltool-update.in
 
 # == ChangeLog & Release Rules ==
 ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
