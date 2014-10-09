@@ -1,21 +1,19 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = imports tutorial
+SUBDIRS = examples imports tutorial
 
-QPRINT = @printf '  %-7s%s\n'
+QPRINT = @printf '  %-9s%s\n'
 
 # Describe source tree version (release tag relative, e.g. yy.mm.z-nnn-gHEXHEX)
 DSC_VERSION = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
 # Release version, shows last tag reachable
 REL_VERSION = $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
-# Project version as configured
-PRJ_VERSION = $(shell sed -ne "/^[ \t]*VERSION[ \t]*=/ { s/^[^=]*=[ \t]*//; p; q }" < $(top_srcdir)/Makefile)
-# Detailed documentation version
-DOC_VERSION = $(or $(DSC_VERSION), $(PRJ_VERSION))
+# Detailed documentation version, falls back to package version for tarballs
+DOC_VERSION = $(or $(DSC_VERSION), $(VERSION))
 
 # == Extra Tarball Files ==
-EXTRA_DIST += ChangeLog-2009
+EXTRA_DIST += ChangeLog-2009 references.bib doxygen_footer.html
 
 # == Doxygen Install Rules ==
 htmldocsbase  = ${docdir}
@@ -36,67 +34,110 @@ html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending o
 	$(AM_V_GEN)
 	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
 	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory html-docs
-	$(Q) rm -f $@ && echo "$(DOC_VERSION)" > $@
-clean-html-docs:
-	rm -rf html/
-clean-local: @INGIT@ clean-html-docs doxygen-clean
-EXTRA_DIST += html
-html-docs: doxygen-check
-	$(Q) rm -rf html/
-	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=NO DOC_TARGET=html
-	$(Q) echo "$(DOC_VERSION)" > html/doc-version
-.PHONY: html-docs
+	$(Q) test -e $@ # created by 'html-docs'
 
 # == Doxygen Build Rules ==
 HTMLMAN_FILES     	= imports/rapidrun.1.html
-DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox
+DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox docs/apps.dox docs/contribute.dox docs/configuration.dox
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
-DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh
-DOXYGEN_CHANGELOG       = ChangeLog.tmp
-DOXYGEN_CHANGELOG_TITLE	= "Rapicorn Development ChangeLog"
+DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh ui/sinfeximpl.hh ui/regionimpl.c \
+			  aidacc/CxxStub.py
+DOXYGEN_CHANGELOG       = $(builddir)/devel-changes
+DOXYGEN_CHANGELOG_TITLE	= "Development Changes"
 DOXYGEN_NEWS            = $(top_srcdir)/NEWS
+DOXYGEN_LAYOUT_DIFF     = $(srcdir)/layout.diff
 DOXYGEN_PROJECT_LINK    = http://rapicorn.org
-DOXYGEN_TAGFILES        = imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/
-build-docs: doxygen-check
+DOXYGEN_TAGFILES        = $(strip \
+	imports/tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/	\
+	imports/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/		\
+)
+DOXYGEN_STYLESHEET	= extrastyles.css
+SED_DELETE_ATFILE_LINE1	= '1s,/\*\*\s*@file.*\*/\s*,,'
+html-docs: doxygen-check
+	$(AM_V_GEN)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
-	$(QPRINT) "GEN" "Git ChangeLog"
-	$(Q) $(GIT_CHANGELOG) > $(DOXYGEN_CHANGELOG)
+	$(QPRINT) "GEN" "Documentation Sources"
+	$(Q) $(top_srcdir)/mkrelease.sh ChangeLog --first-parent -R a1e8017768fd935908a415e90c8137ccb8eaeda8..HEAD -o $(DOXYGEN_CHANGELOG)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
 	$(Q) rm -f $(DOXYGEN_CHANGELOG)
+	$(QPRINT) "MERGE" "ui/interfaces.dox"
+	$(Q) cd doxygen-srctree/ui && \
+	  sed $(SED_DELETE_ATFILE_LINE1) < interfaces.dox >> interfaces.idl && \
+	  rm interfaces.dox
 	$(QPRINT) "GEN" "docs/docextract.dox"
 	$(Q) cd doxygen-srctree && \
 	  find . -type f -name \*[hcHC] -print | \
 	  $(PYTHON) $(abs_srcdir)/docextract.py > docs/docextract.dox
+	$(QPRINT) "HIDE" "internal enum definitions"
+	$(Q) cd doxygen-srctree && \
+	  find . -type f -name \*[cC] -exec sed 's/^\([^"]*\)\benum\b/\1Enum/' -i {} \;
+	$(Q) bunzip2 -fk imports/tagfile-susv4.xml.bz2 imports/cppreference-doxygen-web.tag.xml.bz2
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
+	$(Q) rm -f imports/tagfile-susv4.xml imports/cppreference-doxygen-web.tag.xml
+	$(QPRINT) "GEN" "CSS for Rapicorn..."
+	$(Q) sed -r 's/\bfont\b[^:;]*:[^;]*;//' -i doxygen-html/navtree.css
+	$(Q) sed -r 's/\bfont(-size)?:[^;]*;//' -i doxygen-html/doxygen.css
 	$(QPRINT) "GEN" "HTML manual pages..."
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
 	$(QPRINT) "MOVE" "HTML Documentation..."
-	$(Q) ! test -e $(DOC_TARGET) || { echo "$@: target directory exists already: $(DOC_TARGET)"; exit 1; }
-	$(Q) mv doxygen-html $(DOC_TARGET)
+	$(Q) rm -rf html/
+	$(Q) mv doxygen-html html/
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
-.PHONY: build-docs
-CLEANFILES += $(DOXYGEN_CHANGELOG)
-GIT_CHANGELOG = ( git log --first-parent --date=short --pretty='%ad  %an 	\# %h%n%n%s%n%n%b' --abbrev=11 \
-		  bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD \
-		| sed 's/^/	/; s/^	//; /^[ 	]*<unknown>$$/d' )
+	$(Q) rm -f html/doc-version && echo "$(DOC_VERSION)" > html/doc-version
+EXTRA_DIST += html
+.PHONY: html-docs
+clean-html:
+	rm -rf html/
+clean-local: doxygen-clean @INGIT@ clean-html
 
-# == Upload build rules ==
-upload-docs: doxygen-check $(git_index_file)
+# == Coverage Build Rules ==
+DIST_TARBALL = $(PACKAGE)-$(VERSION).tar.bz2
+coverage-tree/buildid: @INGIT@ $(git_index_file)	# conditionally rebuild, depending on HEAD changes
 	$(AM_V_GEN)
-	$(Q) test -e $@ && test "`cat upload-docs/doc-version`" = "$(DOC_VERSION)" || (true \
-	&& rm -rf upload-docs/ \
-	&& $(MAKE) $(AM_MAKEFLAGS) --no-print-directory build-docs DOXYGEN_GRAPHICS=YES DOC_TARGET=upload-docs )
-	$(Q) echo "$(DOC_VERSION)" > upload-docs/doc-version
-clean-upload-docs:
-	rm -rf upload-docs/
-clean-local: clean-upload-docs
+	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
+	|| { $(MAKE) $(AM_MAKEFLAGS) --no-print-directory coverage-tree && \
+	     rm -f $@ && echo "$(DOC_VERSION)" > $@ ; }
+coverage-tree:
+	$(AM_V_GEN)
+	$(QPRINT) "CLEAN" "coverage-tree/"
+	$(Q) rm -rf coverage-tree/
+	$(QPRINT) "FIND" "dist tarball: $(DIST_TARBALL)"
+	$(Q) test -e "$(top_builddir)/$(DIST_TARBALL)" || { echo "ERROR: missing $(top_builddir)/$(DIST_TARBALL)"; false ; }
+	$(Q) test ! -e "$(git_index_file)" -o "$(top_builddir)/$(DIST_TARBALL)" -nt "$(git_index_file)" || \
+	  { echo "ERROR: needs rebuild: $(top_builddir)/$(DIST_TARBALL)"; false ; }
+	$(QPRINT) "BUILD" "coverage-tree/ from tarball"
+	$(Q) $(srcdir)/mkcoverage.sh --tree-only "$(top_builddir)/$(DIST_TARBALL)"
+.PHONY: coverage-tree # 'make coverage-tree' forces rebuilds, needed by coverage-tree/buildid
+coverage: coverage-tree/buildid
+	$(AM_V_GEN)
+	$(QPRINT) "CLEAN" "coverage/"
+	$(Q) rm -rf coverage/
+	$(QPRINT) "BUILD" "coverage/ from coverage-tree/"
+	$(Q) $(srcdir)/mkcoverage.sh "$(top_builddir)/$(DIST_TARBALL)"
+	$(QPRINT) "POLISH" "clean up coverage report titles"
+	$(Q) find coverage/ -name '*.html' -exec sed -i \
+	    -e 's/<title>[^<]*<\/title>/<title>Rapicorn Code Coverage Report<\/title>/i' \
+	    -e 's/lcov[ -]*\(code \)\?coverage.report/<a href="http:\/\/rapicorn.org">Rapicorn<\/a> Code Coverage Report/i' '{}' \;
+	$(QPRINT) "GEN" "coverage/tarball-version"
+	$(Q) rm -f coverage/tarball-version && echo "$(DIST_TARBALL) ($(DOC_VERSION))" > coverage/tarball-version
+	$(QPRINT) "DONE" "Use: www-browser `pwd`/coverage/index.html"
+clean-coverage:
+	rm -rf coverage/ coverage-tree/
+clean-local: clean-coverage
+
+# == Upload Rule ==
+CHECK_RSYNC = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
 # Upload release versions as $DOC_VERSION, otherwise upload as latest/
-upload: upload-docs
+upload-docs: html/doc-version
 	$(AM_V_GEN)
 	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
 	$(Q) test "${REL_VERSION}" != "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "upload-docs"   "testbit:/srv/dev/html/rapicorn/${DOC_VERSION}" ; }
+	  rsync -zaHP --del "html/"   "testbit:pub/docs/rapicorn/${DOC_VERSION}/" ; }
 	$(Q) test "${REL_VERSION}"  = "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "upload-docs/"  "testbit:/srv/dev/html/rapicorn/latest/" ; }
-.PHONY: upload upload-docs
-CHECK_RSYNC   = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
+	  rsync -zaHP --del "html/"  "testbit:pub/docs/rapicorn/latest/" ; }
+upload-coverage: coverage
+	$(AM_V_GEN)
+	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
+	$(Q) { set -x ; rsync -zaHP --del "coverage/"  "testbit:pub/docs/rapicorn/coverage/" ; }
+upload: upload-coverage upload-docs
+.PHONY: upload upload-docs upload-coverage

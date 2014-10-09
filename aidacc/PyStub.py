@@ -1,4 +1,4 @@
-# Licensed GNU GPLv3 or later: http://www.gnu.org/licenses/gpl.html
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 """AidaPyStub - Aida Python Code Generator
 
 More details at http://www.rapicorn.org/
@@ -255,8 +255,8 @@ class Generator:
     if not l:
       l = [ '_BaseClass_' ]
     s += 'class %s (%s):\n' % (class_info.name, ', '.join (l))
-    s += '  def __init__ (self, _aida_id):\n'
-    s += '    super (%s, self).__init__ (_aida_id)\n' % self.namespaced_type_name (class_info, '.')
+    s += '  def __init__ (self):\n'
+    s += '    super (%s, self).__init__()\n' % self.namespaced_type_name (class_info, '.')
     for m in class_info.methods:
       s += reindent ('  ', self.generate_method_caller_pyimpl (m)) + '\n'
     for sg in class_info.signals:
@@ -318,9 +318,9 @@ class Generator:
     elif type.storage == Decls.SEQUENCE:
       s += '  %s.add_seq (0);\n' % fb
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (NULL);\n' % fb
+      s += '  __AIDA_local__client_connection->add_handle (%s, RemoteHandle::__aida_null_handle__());\n' % fb
     elif type.storage == Decls.ANY:
-      s += '  %s.add_any (Rapicorn::Aida::Any());\n' % fb
+      s += '  %s.add_any (Rapicorn::Aida::Any(), *__AIDA_local__client_connection);\n' % fb
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -341,11 +341,11 @@ class Generator:
     elif type.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  if (!aida_py%s_proto_add (%s, %s)) goto error;\n' % (type.name, var, fb)
     elif type.storage == Decls.INTERFACE:
-      s += '  %s.add_object (PyAttr_As_uint64 (%s, "__aida_pyobject__")); %s;\n' % (fb, var, excheck)
+      s += '  __AIDA_local__client_connection->add_handle (%s, py_remote_handle_extract (%s)); %s;\n' % (fb, var, excheck)
     elif type.storage == Decls.ANY:
       s += '  { Rapicorn::Aida::Any tmpany;\n'
       s += '    __AIDA_pyconvert__pyany_to_any (tmpany, %s); %s;\n' % (var, excheck)
-      s += '    %s.add_any (tmpany); }\n' % fb
+      s += '    %s.add_any (tmpany, *__AIDA_local__client_connection); }\n' % fb
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type.storage)
     return s
@@ -367,9 +367,9 @@ class Generator:
     elif type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += '  %s = aida_py%s_proto_pop (%s); ERRORif (!%s);\n' % (var, type_info.name, fbr, var)
     elif type_info.storage == Decls.INTERFACE:
-      s += '  %s = __AIDA_pyfactory__create_from_orbid (%s.pop_object()); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = __AIDA_pyfactory__create_handle (__AIDA_local__client_connection_pop_handle (%s)); ERRORifpy();\n' % (var, fbr)
     elif type_info.storage == Decls.ANY:
-      s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any()); ERRORifpy();\n' % (var, fbr)
+      s += '  %s = __AIDA_pyconvert__pyany_from_any (%s.pop_any (*__AIDA_local__client_connection)); ERRORifpy();\n' % (var, fbr)
     else: # FUNC VOID
       raise RuntimeError ("marshalling not implemented: " + type_info.storage)
     return s
@@ -482,8 +482,8 @@ class Generator:
     s += '  if (PyErr_Occurred()) goto error;\n'
     s += '  result = PyObject_Call (callable, tuple, NULL);\n' # we MUST return EMIT_RESULT to be PyException safe
     if async:
-      s += '  rb = Rapicorn::Aida::ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, ' # invalidates fbr
-      s += 'Rapicorn::Aida::ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digestnums
+      s += '  rb = Rapicorn::Aida::FieldBuffer::renew_into_result (fbr, Rapicorn::Aida::MSGID_EMIT_RESULT, ' # invalidates fbr
+      s += 'Rapicorn::Aida::ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), %s, 2);\n' % digestnums
       s += '  *rb <<= emit_result_id;\n'
       s += '  if (PyErr_Occurred()) {\n'
       s += '  ' + self.generate_add_0_cxximpl ('(*rb)', stype.rtype)
@@ -500,9 +500,10 @@ class Generator:
     s += '__AIDA_pyconnect__%s__ (PyObject *pyself, PyObject *pyargs)\n' % digeststring
     s += '{\n'
     s += '  while (0) { error: return NULL; }\n'
+    s += '  RemoteHandle remote = RemoteHandle::__aida_null_handle__();\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + 2) ERRORpy ("wrong number of arguments");\n'
     s += '  PyObject *item = PyTuple_GET_ITEM (pyargs, 0);  // self\n'
-    s += '  Rapicorn::Aida::uint64 oid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
+    s += '  remote = py_remote_handle_ensure (item); ERRORifpy();\n'
     s += '  PyObject *callable = PyTuple_GET_ITEM (pyargs, 1);  // Closure\n'
     s += '  %s result = 0;\n' % u64
     s += '  if (callable == Py_None) {\n'
@@ -512,7 +513,7 @@ class Generator:
     s += '  } else {\n'
     s += '    if (!PyCallable_Check (callable)) ERRORpy ("arg2 must be callable");\n'
     s += '    Py_INCREF (callable);\n'
-    s += '    result = __AIDA_local__client_connection->signal_connect (%s, oid, %s, callable);\n' % (digestnums, emitfunc)
+    s += '    result = __AIDA_local__client_connection->signal_connect (%s, remote, %s, callable);\n' % (digestnums, emitfunc)
     s += '  }\n'
     s += '  PyObject *pyres = PyLong_FromLongLong (result); ERRORifpy ();\n'
     s += '  return pyres;\n'
@@ -525,20 +526,18 @@ class Generator:
     s += 'static PyObject*\n'
     s += '__AIDA_pycall__%s__ (PyObject *pyself, PyObject *pyargs)\n' % digeststring
     s += '{\n'
-    s += '  uint64 object_orbid;\n'
     s += '  PyObject *item%s;\n' % (', *pyfoR = NULL' if hasret else '')
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + %u), &fb = *fm, *fr = NULL;\n' % len (mtype.args) # header + self + args
+    s += '  RemoteHandle remote = RemoteHandle::__aida_null_handle__();\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + %u) ERRORpy ("Aida: wrong number of arguments");\n' % len (mtype.args) # self + args
     arg_counter = 0
     s += '  item = PyTuple_GET_ITEM (pyargs, %d);  // self\n' % arg_counter
-    s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
+    s += '  remote = py_remote_handle_ensure (item); ERRORifpy();\n'
     if hasret:
-      s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid),'
-      s += ' __AIDA_local__client_connection->connection_id(), %s);\n' % digestnums
+      s += '  add_header2_call (fb, remote, %s);\n' % digestnums
     else:
-      s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL,'
-      s += ' Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), %s);\n' % digestnums
-    s += '  fb.add_object (object_orbid);\n'
+      s += '  add_header1_call (fb, remote, %s);\n' % digestnums
+    s += '  __AIDA_local__client_connection->add_handle (fb, remote);\n'
     arg_counter += 1
     for ma in mtype.args:
       s += '  item = PyTuple_GET_ITEM (pyargs, %d); // %s\n' % (arg_counter, ma[0])
@@ -572,15 +571,14 @@ class Generator:
     s += 'static PyObject*\n'
     s += '__AIDA_pygetter__%s__ (PyObject *pyself, PyObject *pyargs) // %s.%s\n' % (digeststring, class_info.name, fident)
     s += '{\n'
-    s += '  uint64 object_orbid;\n'
     s += '  PyObject *item, *pyfoR = NULL;\n'
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1), &fb = *fm, *fr = NULL;\n' # header + self
+    s += '  RemoteHandle remote = RemoteHandle::__aida_null_handle__();\n'
     s += '  if (PyTuple_Size (pyargs) != 1) ERRORpy ("Aida: wrong number of arguments");\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);\n' # self
-    s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
-    s += '  fb.add_header2 (Rapicorn::Aida::MSGID_TWOWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), '
-    s += '__AIDA_local__client_connection->connection_id(), %s);\n' % digestnums
-    s += '  fb.add_object (object_orbid);\n'
+    s += '  remote = py_remote_handle_ensure (item); ERRORifpy();\n'
+    s += '  add_header2_call (fb, remote, %s);\n' % digestnums
+    s += '  __AIDA_local__client_connection->add_handle (fb, remote);\n'
     # call out
     s += '  fm = NULL; fr = __AIDA_local__client_connection->call_remote (&fb);\n' # deletes fb
     s += '  ERRORifnotret (fr);\n'
@@ -605,15 +603,14 @@ class Generator:
     s += 'static PyObject*\n'
     s += '__AIDA_pysetter__%s__ (PyObject *pyself, PyObject *pyargs) // %s.%s\n' % (digeststring, class_info.name, fident)
     s += '{\n'
-    s += '  uint64 object_orbid;\n'
     s += '  PyObject *item;\n'
     s += '  FieldBuffer *fm = FieldBuffer::_new (3 + 1 + 1), &fb = *fm, *fr = NULL;\n' # header + self + arg
+    s += '  RemoteHandle remote = RemoteHandle::__aida_null_handle__();\n'
     s += '  if (PyTuple_Size (pyargs) != 1 + 1) ERRORpy ("Aida: wrong number of arguments");\n' # self + arg
     s += '  item = PyTuple_GET_ITEM (pyargs, 0);\n' # self
-    s += '  object_orbid = PyAttr_As_uint64 (item, "__aida_pyobject__"); ERRORifpy();\n'
-    s += '  fb.add_header1 (Rapicorn::Aida::MSGID_ONEWAY_CALL, Rapicorn::Aida::ObjectBroker::connection_id_from_orbid (object_orbid), '
-    s += '%s);\n' % digestnums
-    s += '  fb.add_object (object_orbid);\n'
+    s += '  remote = py_remote_handle_ensure (item); ERRORifpy();\n'
+    s += '  add_header1_call (fb, remote, %s);\n' % digestnums
+    s += '  __AIDA_local__client_connection->add_handle (fb, remote);\n'
     s += '  item = PyTuple_GET_ITEM (pyargs, 1);\n' # arg
     s += self.generate_add_field_cxximpl ('fb', ftype, 'item')
     # call out

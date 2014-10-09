@@ -1,20 +1,6 @@
-/* Rapicorn
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rcore/testutils.hh>
+#include <rcore/randomhash.hh>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -35,15 +21,34 @@ value_func (int)
 }
 
 static void
+rapicorn_debug_fatal_syslog_0()
+{
+  // prevent assertion tests from uselessly spewing into syslog
+  const char *v = getenv ("RAPICORN_DEBUG");
+  String s = v ? v : "";
+  s += ":fatal-syslog=0";
+  setenv ("RAPICORN_DEBUG", s.c_str(), 1);
+}
+
+static void
 test_logging (const char *logarg)
 {
   errno = EINVAL;       // used by P* checks
   if (String ("--test-assert") == logarg)
-    RAPICORN_ASSERT (0 == "test-assert");
+    {
+      rapicorn_debug_fatal_syslog_0();
+      RAPICORN_ASSERT (0 == "test-assert");
+    }
   if (String ("--test-unreached") == logarg)
-    RAPICORN_ASSERT_UNREACHED();
+    {
+      rapicorn_debug_fatal_syslog_0();
+      RAPICORN_ASSERT_UNREACHED();
+    }
   if (String ("--test-fatal") == logarg)
-    fatal ("execution has reached a fatal condition (\"test-fatal\")");
+    {
+      rapicorn_debug_fatal_syslog_0();
+      fatal ("execution has reached a fatal condition (\"test-fatal\")");
+    }
   if (String ("--test-TASSERT") == logarg)
     TASSERT (0 == "test-TASSERT");
   if (String ("--test-assertion-hook") == logarg)
@@ -67,10 +72,41 @@ test_logging (const char *logarg)
     }
 }
 
+struct EntropyTests : Entropy {
+  void
+  test (char *arg)
+  {
+    if      (strcmp (arg, "--entropy") == 0)
+      {
+        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n",
+                  Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(),
+                  Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed());
+        exit (0);
+      }
+    else if (strcmp (arg, "--system-entropy") == 0)
+      {
+        KeccakPRNG pool;
+        Entropy::system_entropy (pool);
+        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
+        exit (0);
+      }
+    else if (strcmp (arg, "--runtime-entropy") == 0)
+      {
+        KeccakPRNG pool;
+        Entropy::runtime_entropy (pool);
+        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
+        exit (0);
+      }
+  }
+};
+
 int
 main (int   argc,
       char *argv[])
 {
+  if (argc >= 2)        // Entropy tests that need to be carried out before core_init
+    EntropyTests().test (argv[1]);
+
   init_core_test (__PRETTY_FILE__, &argc, argv);
 
   if (argc >= 2 || Test::logging())

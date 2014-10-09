@@ -1,15 +1,16 @@
-# Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 import sys, re
 
 rapicorn_debug_items, rapicorn_debug_items_set = '', set()
 rapicorn_debug_keys, rapicorn_debug_keys_set = '', set()
 rapicorn_flippers, rapicorn_flippers_set = '', set()
 rapicorn_todo_lists = {}
+rapicorn_bug_lists = {}
 
 def process_start ():
   pass
 
-def process_comment (txt):
+def process_comment (txt, lines):
   if not txt.startswith (('///', '/**', '/*!')):
     return      # filter non-doxygen comments
   # @TODO @TODOS
@@ -23,12 +24,33 @@ def process_comment (txt):
                    r'\1', text, 0, re.X | re.M)         # strip comment prefix from all lines
     pattern = r'\s* ( [*+-] | [0-9]+ \. )'              # pattern for list bullet
     if not re.match (pattern, text, re.X):              # not a list
-      text = ' - ' + text                               # insert list bullet
+      l = lines + txt[0:match.start (1)].count ('\n')
+      text = ' - %d: @b TODO: ' % l + text              # insert list bullet
+    else:
+      text = '%d: @b TODOS:\n' % lines + text
     blurb = rapicorn_todo_lists.get (filename, '')
     blurb += text.rstrip() + '\n'
     rapicorn_todo_lists[filename] = blurb
+  # @BUG @BUGS
+  global rapicorn_bug_lists
+  pattern = r'[@\\] BUG[Ss]? \s* ( : )'
+  match = re.search (pattern, txt, re.MULTILINE | re.VERBOSE)
+  if match:
+    text = txt[match.end (1):].strip()                  # take bug text, whitespace-stripped
+    text = text[:-2] if text.endswith ('*/') else text  # strip comment-closing
+    text = re.sub (r'( ^ | \n) \s* \*+',                # match comment prefix at line start
+                   r'\1', text, 0, re.X | re.M)         # strip comment prefix from all lines
+    pattern = r'\s* ( [*+-] | [0-9]+ \. )'              # pattern for list bullet
+    if not re.match (pattern, text, re.X):              # not a list
+      l = lines + txt[0:match.start (1)].count ('\n')
+      text = ' - %d: @b BUG: ' % l + text               # insert list bullet
+    else:
+      text = '%d: @b BUGS:\n' % lines + text
+    blurb = rapicorn_bug_lists.get (filename, '')
+    blurb += text.rstrip() + '\n'
+    rapicorn_bug_lists[filename] = blurb
 
-def process_code (txt):
+def process_code (txt, lines):
   cstring = r' " ( (?: [^\\"] | \\ .) * ) " '
   # RAPICORN_DEBUG_OPTION (option, blurb)
   global rapicorn_debug_items, rapicorn_debug_items_set
@@ -74,9 +96,20 @@ def process_end ():
       ident = sanitize_ident (filename)
       filename = filename[2:] if filename.startswith ('./') else filename
       print '/** @file %s' % filename
-      print '@xrefitem todo "Todos" "Source Code Todo List"'
+      print '@xrefitem todo "Issues" "Open Issues"' # sync with doxygen.cfg
       print blurb.rstrip()
       print '*/'
+  print '/**\n@page todo Open Issues\n*/' # needed to refer to 'todo' page with @subpage
+  if rapicorn_bug_lists:
+    # ('/** @page bug_lists Bug Lists', ' * @section %s %s' % (sanitize_ident (filename), filename), '*/')
+    for filename, blurb in rapicorn_bug_lists.items():
+      ident = sanitize_ident (filename)
+      filename = filename[2:] if filename.startswith ('./') else filename
+      print '/** @file %s' % filename
+      print '@xrefitem todo "Issues" "Open Issues"'
+      print blurb.rstrip()
+      print '*/'
+  print '/**\n@page unstable Unstable API\n*/' # needed to refer to 'unstable' page with @subpage
 
 def process_specific (filename, text):
   def is_comment (t):
@@ -90,7 +123,7 @@ def process_specific (filename, text):
   parts = re.split (cxx_splitter, text, 0, re.MULTILINE | re.VERBOSE)
   # parts = filter (len, parts) # strip empty parts
   # concatenate code vs. comment bits
-  i = 0
+  i, l = 0, 1
   while i < len (parts):
     s = parts[i]
     isc = is_comment (s)
@@ -99,9 +132,10 @@ def process_specific (filename, text):
       s += parts[i]
       i += 1
     if isc:
-      process_comment (s)
+      process_comment (s, l)
     else:
-      process_code (s)
+      process_code (s, l)
+    l += s.count ('\n')
 
 process_start()
 # print '/// @file'

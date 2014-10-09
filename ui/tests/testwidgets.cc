@@ -1,19 +1,4 @@
-/* Tests
- * Copyright (C) 2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "servertests.hh"
 #include <ui/uithread.hh>
 #include <ui/testwidgets.hh>
@@ -43,20 +28,18 @@ test_factory ()
 
   /* find and load GUI definitions relative to argv[0] */
   String factory_xml = "factory.xml";
-  app.auto_load ("RapicornTest",                        // namespace domain,
-                 Path::vpath_find (factory_xml),        // GUI file name
-                 program_file());
+  app.auto_load (Path::vpath_find (factory_xml),        // GUI file name
+                 program_file());                       // binary to determine file search path
   TOK();
   WidgetImpl *widget;
-  TestContainer *twidget;
-  WindowIface &testwin = *app.create_window ("RapicornTest:test-TestWidgetL2");
+  WindowIface &testwin = *app.create_window ("test-TestWidgetL2");
   testwin.show();
   run_main_loop_recursive (false);
   TOK();
   WindowImpl *window = &testwin.impl();
   widget = window->interface<WidgetImpl*> ("TestWidgetL2");
   TASSERT (widget != NULL);
-  twidget = dynamic_cast<TestContainer*> (widget);
+  TestContainerImpl *twidget = dynamic_cast<TestContainerImpl*> (widget);
   TASSERT (twidget != NULL);
   if (0)
     {
@@ -84,7 +67,7 @@ REGISTER_UITHREAD_TEST ("Factory/Test Widget Factory", test_factory);
 static void
 test_cxx_server_gui ()
 {
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   WindowIface &window = *app.create_window ("Window");
   TOK();
   WidgetImpl &twidget = Factory::create_ui_widget ("TestWidget");
@@ -95,14 +78,14 @@ test_cxx_server_gui ()
   window.impl().sig_displayed() += [&window]() { window.close(); };
   TOK();
   /* verify and assert at least one TestWidget rendering */
-  uint old_seen_test = TestContainer::seen_test_widgets();
+  uint old_seen_test = TestContainerImpl::seen_test_widgets();
   TOK();
   /* show onscreen and handle events like expose */
   window.show();
   run_main_loop_recursive();
   TOK();
   /* assert TestWidget rendering */
-  uint seen_test = TestContainer::seen_test_widgets();
+  uint seen_test = TestContainerImpl::seen_test_widgets();
   TASSERT (seen_test > old_seen_test); // may fail due to missing exposes (locked screens) needs PNG etc. backends
 }
 REGISTER_UITHREAD_TEST ("TestWidget/Test C++ Server Side GUI", test_cxx_server_gui);
@@ -122,11 +105,11 @@ assertions_passed ()
 static void
 test_test_widget ()
 {
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  WindowIface &window_iface = *app.create_window ("RapicornTest:alignment-test");
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
+  WindowIface &window_iface = *app.create_window ("alignment-test");
   TOK();
   WindowImpl &window = window_iface.impl();
-  TestContainer *twidget = window.interface<TestContainer*>();
+  TestContainerImpl *twidget = window.interface<TestContainerImpl*>();
   TASSERT (twidget != NULL);
   twidget->sig_assertion_ok() += assertion_ok;
   twidget->sig_assertions_passed() += assertions_passed;
@@ -136,10 +119,10 @@ test_test_widget ()
   /* close window (and exit main loop) after first expose */
   window.impl().sig_displayed() += [&window]() { window.close(); };
   /* verify and assert at least one TestWidget rendering */
-  uint old_seen_test = TestContainer::seen_test_widgets();
+  uint old_seen_test = TestContainerImpl::seen_test_widgets();
   window.show();
   run_main_loop_recursive();
-  uint seen_test = TestContainer::seen_test_widgets();
+  uint seen_test = TestContainerImpl::seen_test_widgets();
   TASSERT (seen_test > old_seen_test);
   /* test widget rendering also executed various assertions */
 }
@@ -152,7 +135,7 @@ ensure_ui_file()
     {
       // first, load required ui files
       ApplicationImpl &app = ApplicationImpl::the();
-      app.auto_load ("RapicornTest", Path::vpath_find ("testwidgets.xml"), program_file());
+      app.auto_load (Path::vpath_find ("testwidgets.xml"), program_file());
     }
 }
 
@@ -160,8 +143,8 @@ static void
 test_idl_test_widget ()
 {
   ensure_ui_file();
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
-  WindowIface &window_iface = *app.create_window ("RapicornTest:test-widget-window");
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
+  WindowIface &window_iface = *app.create_window ("test-widget-window");
   TOK();
   WindowImpl &window = window_iface.impl();
   IdlTestWidgetIface *twidgetp = window.interface<IdlTestWidgetIface*>();
@@ -198,13 +181,13 @@ static void
 test_complex_dialog ()
 {
   ensure_ui_file();
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   WindowIface *windowp = app.query_window ("/#"); // invalid path
   TASSERT (windowp == NULL);
 
   windowp = app.query_window ("#complex-dialog"); // not yet existing window
   TASSERT (windowp == NULL);
-  WindowIface &window = *app.create_window ("RapicornTest:complex-dialog");
+  WindowIface &window = *app.create_window ("complex-dialog");
   TOK();
   if (ServerTests::server_test_run_dialogs)
     {
@@ -233,13 +216,13 @@ test_complex_dialog ()
   widget = window.query_selector_unique (":root .Frame");
   TASSERT (widget == NULL); // not unique
   widget = window.query_selector_unique (":root .Frame! .Arrow#special-arrow");
-  TASSERT (widget != NULL && dynamic_cast<Frame*> (widget) != NULL);
+  TASSERT (widget != NULL && dynamic_cast<FrameIface*> (widget) != NULL);
   widget = window.query_selector_unique (":root .Button .Label");
   TASSERT (widget == NULL); // not unique
   widget = window.query_selector_unique (":root .Button .Label[markup-text*='Ok']");
-  TASSERT (widget != NULL && dynamic_cast<Text::Editor::Client*> (widget) != NULL);
+  TASSERT (widget != NULL && dynamic_cast<LabelImpl*> (widget) != NULL);
   widget = window.query_selector_unique (":root .Button! Label[markup-text*='Ok']");
-  TASSERT (widget != NULL && dynamic_cast<ButtonAreaImpl*> (widget) != NULL && dynamic_cast<Text::Editor::Client*> (widget) == NULL);
+  TASSERT (widget != NULL && dynamic_cast<ButtonAreaImpl*> (widget) != NULL && dynamic_cast<LabelImpl*> (widget) == NULL);
   widget = window.query_selector_unique ("/#"); // invalid path
   TASSERT (widget == NULL);
 }

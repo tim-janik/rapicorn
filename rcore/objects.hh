@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_CORE_OBJECTS_HH__
 #define __RAPICORN_CORE_OBJECTS_HH__
 
@@ -14,8 +14,8 @@ protected:
   virtual      ~VirtualTypeid      ();
 public:
   String        typeid_name        ();
-  static String cxx_demangle       (const char *mangled_identifier);
 };
+String          cxx_demangle       (const char *mangled_identifier);
 
 // == ClassDoctor (used for private class copies) ==
 #ifdef  __RAPICORN_BUILD__
@@ -122,12 +122,20 @@ template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
 template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 
 // == BaseObject ==
+/// Legacy type, will be merged/dissolved into ObjectImpl and ImplicitBase.
 class BaseObject : public virtual ReferenceCountable, public virtual Aida::ImplicitBase {
+  static void shared_ptr_deleter (BaseObject*);
 protected:
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
   virtual void                 dispose   ();
 public:
+  template<class Class, typename std::enable_if<std::is_base_of<BaseObject, Class>::value>::type* = nullptr>
+  static std::shared_ptr<Class> shared_ptr (Class *object) ///< Wrap BaseObject or derived type into a std::shared_ptr<>().
+  {
+    return object ? std::shared_ptr<Class> (ref (object), shared_ptr_deleter) : std::shared_ptr<Class>();
+  }
+  // keep clear, add new API to ObjectImpl or ObjectIface
 };
 typedef Aida::PropertyList PropertyList; // import PropertyList from Aida namespace
 typedef Aida::Property     Property;     // import Property from Aida namespace

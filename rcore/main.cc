@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "main.hh"
 #include "inout.hh"
 #include "strings.hh"
@@ -278,6 +278,98 @@ program_cwd ()
   return program_cwd0;
 }
 
+static Mutex       prng_mutex;
+static KeccakPRNG *keccak_prng = NULL;
+
+static inline KeccakPRNG&
+initialize_random_generator_LOCKED()
+{
+  if (RAPICORN_UNLIKELY (!keccak_prng))
+    {
+      assert (prng_mutex.try_lock() == false);
+      static uint64 space[(sizeof (KeccakPRNG) + 7) / 8];
+      Entropy e;
+      keccak_prng = new (space) KeccakPRNG (e); // uses e as generator & initializes Entropy
+    }
+  return *keccak_prng;
+}
+
+/// Provide a unique 64 bit identifier that is not 0, see also random_int64().
+uint64_t
+random_nonce ()
+{
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  uint64_t nonce = rgen();
+  while (RAPICORN_UNLIKELY (nonce == 0))
+    nonce = rgen();
+  return nonce;
+}
+
+/** Generate uniformly distributed 64 bit pseudo-random number.
+ * This function generates a pseudo-random number using class KeccakPRNG,
+ * seeded from class Entropy.
+ */
+uint64_t
+random_int64 ()
+{
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  return rgen();
+}
+
+/** Generate uniformly distributed pseudo-random integer within a range.
+ * This function generates a pseudo-random number using class KeccakPRNG,
+ * seeded from class Entropy.
+ * The generated number will be in the range: @a begin <= number < @a end.
+ */
+int64_t
+random_irange (int64_t begin, int64_t end)
+{
+  return_unless (begin < end, begin);
+  const uint64_t range    = end - begin;
+  const uint64_t quotient = 0xffffffffffffffffULL / range;
+  const uint64_t bound    = quotient * range;
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  uint64_t r = rgen ();
+  while (RAPICORN_UNLIKELY (r >= bound))        // repeats with <50% probability
+    r = rgen ();
+  return begin + r / quotient;
+}
+
+/** Generate uniformly distributed pseudo-random floating point number.
+ * This function generates a pseudo-random number using class KeccakPRNG,
+ * seeded from class Entropy.
+ * The generated number will be in the range: 0.0 <= number < 1.0.
+ */
+double
+random_float ()
+{
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  double r01;
+  do
+    r01 = rgen() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
+  while (RAPICORN_UNLIKELY (r01 >= 1.0));       // retry if arithmetic exceeds boundary
+  return r01;
+}
+
+/** Generate uniformly distributed pseudo-random floating point number within a range.
+ * This function generates a pseudo-random number using class KeccakPRNG,
+ * seeded from class Entropy.
+ * The generated number will be in the range: @a begin <= number < @a end.
+ */
+double
+random_frange (double begin, double end)
+{
+  return_unless (begin < end, begin + 0 * end); // catch and propagate NaNs
+  ScopedLock<Mutex> locker (prng_mutex);
+  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  const double r01 = rgen() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
+  return end * r01 + (1.0 - r01) * begin;
+}
+
 ScopedLocale::ScopedLocale (locale_t scope_locale) :
   locale_ (NULL)
 {
@@ -398,10 +490,6 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
     return;
   program_app_ident = app_ident;
 
-  // mandatory threading initialization
-  if (!g_threads_got_initialized)
-    g_thread_init (NULL);
-
   // setup program and application name
   if (program_argv0.empty() && argcp && *argcp && argv && argv[0] && argv[0][0] != 0)
     program_argv0 = argv[0];
@@ -450,7 +538,7 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
       debug_config_add ("fatal-warnings");
       const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
       g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
-      CPUInfo ci = cpu_info(); // initialize cpu info
+      String ci = cpu_info(); // initialize cpu info
       (void) ci; // silence compiler
       TTITLE ("%s", Path::basename (argv[0]).c_str());
     }

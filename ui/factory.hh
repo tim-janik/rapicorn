@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_FACTORY_HH__
 #define __RAPICORN_FACTORY_HH__
 
@@ -12,10 +12,6 @@ namespace Factory {
 typedef std::vector<String>      ArgumentList;  /* elements: key=utf8string */
 
 // == UI Factory ==
-String      parse_ui_file       (const String           &uinamespace,
-                                 const String           &file_name,
-                                 const String           &i18n_domain = "",
-                                 vector<String>         *definitions = NULL);
 String      parse_ui_data       (const String           &uinamespace,
                                  const String           &data_name,
                                  size_t                  data_length,
@@ -49,14 +45,13 @@ struct WidgetTypeFactory : protected Deletable {
   const String  qualified_type;
   RAPICORN_CLASS_NON_COPYABLE (WidgetTypeFactory);
 protected:
-  static void   register_widget_factory   (const WidgetTypeFactory  &itfactory);
-  static void   sanity_check_identifier (const char             *namespaced_ident);
+  static void   register_widget_factory (const WidgetTypeFactory    &itfactory);
+  static void   sanity_check_identifier (const char                 *namespaced_ident);
 public:
-  explicit      WidgetTypeFactory         (const char             *namespaced_ident,
-                                         bool _isevh, bool _iscontainer, bool);
-  virtual WidgetImpl* create_widget         (FactoryContext         *fc) const = 0;
-  inline String type_name               () const { return qualified_type; }
-  const bool iseventhandler, iscontainer;
+  explicit              WidgetTypeFactory (const char               *namespaced_ident);
+  virtual WidgetImpl*   create_widget     (FactoryContext           *fc) const = 0;
+  virtual void          type_name_list    (std::vector<const char*> &names) const = 0;
+  inline String         type_name         () const                          { return qualified_type; }
 };
 
 } // Factory
@@ -67,18 +62,26 @@ public:
 template<class Type>
 class WidgetFactory : Factory::WidgetTypeFactory {
   virtual WidgetImpl*
-  create_widget (FactoryContext *fc) const
+  create_widget (FactoryContext *fc) const override
   {
     WidgetImpl *widget = new Type();
     widget->factory_context (fc);
     return widget;
   }
+  virtual void
+  type_name_list (std::vector<const char*> &names) const override
+  {
+#define __RAPICORN_SERVERAPI_HH__INTERFACE_NAME(CLASS)  \
+    if (std::is_base_of<CLASS ## Iface, Type>::value)   \
+      names.push_back ( #CLASS );
+    __RAPICORN_SERVERAPI_HH__INTERFACE_LIST ; // enlist all known IDL classes matching Type
+#undef __RAPICORN_SERVERAPI_HH__INTERFACE_NAME
+    if (std::is_base_of<EventHandler, Type>::value)
+      names.push_back ("Rapicorn::EventHandler");
+  }
 public:
   explicit WidgetFactory (const char *namespaced_ident) :
-    WidgetTypeFactory (namespaced_ident,
-                     TraitConvertible<EventHandler,Type>::TRUTH,
-                     TraitConvertible<ContainerImpl,Type>::TRUTH,
-                     TraitConvertible<int,Type>::TRUTH)
+    WidgetTypeFactory (namespaced_ident)
   {
     sanity_check_identifier (namespaced_ident);
     register_widget_factory (*this);

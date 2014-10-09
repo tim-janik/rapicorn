@@ -1,13 +1,14 @@
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 # [HelloRapicorn-EXAMPLE]
 # Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
-import Rapicorn1307 as Rapicorn
+import Rapicorn1410 as Rapicorn
 
 # Setup the application object, unsing a unique application name.
 app = Rapicorn.app_init ("Hello Rapicorn")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """
-  <tmpl:define id="hello-window" inherit="Window">
+  <Window id="hello-window">
     <Alignment padding="15">
       <VBox spacing="30">
         <Label markup-text="Hello World!"/>
@@ -16,15 +17,15 @@ hello_window = """
         </Button>
       </VBox>
     </Alignment>
-  </tmpl:define>
+  </Window>
 """
 
 # Register the 'hello-window' definition for later use, for this we need
 # a unique domain string, it's easiest to reuse the application name.
-app.load_string ("HelloRapicorn", hello_window)
+app.load_string (hello_window)
 
 # The above is all that is needed to allow us to create the window object.
-window = app.create_window ("HelloRapicorn:hello-window")
+window = app.create_window ("hello-window")
 
 # This function is called to handle the command we use for button clicks.
 def command_handler (command_name, args):

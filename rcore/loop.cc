@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "loop.hh"
 #include "strings.hh"
 #include <sys/poll.h>
@@ -1034,7 +1034,7 @@ EventLoop::PollFDSource::~PollFDSource ()
 } // Rapicorn
 
 // == Loop Description ==
-/*! @page EventLoops    Event Loops and Event Sources
+/*! @page eventloops    Event Loops and Event Sources
   Rapicorn <a href="http://en.wikipedia.org/wiki/Event_loop">event loops</a>
   are a programming facility to execute callback handlers (dispatch event sources) according to expiring Timers,
   IO events or arbitrary other conditions.

@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "inout.hh"
 #include "utilities.hh"
 #include "strings.hh"
@@ -436,11 +436,11 @@ debug_config_get (const String &key, const String &default_value)
   if (pair != dbg_map.end())
     return pair->second;
   auto envstring = [] (const char *name) {
-    const char *c = getenv (name);
+    const char *c = name ? getenv (name) : NULL;
     return c ? c : "";
   };
   const String options[3] = {
-    envstring (dbg_envvar.c_str()),
+    envstring (dbg_envvar.c_str()), // FIXME: errors in static ctors *might* access dbg_envvar *before* its initialized
     envstring ("RAPICORN_DEBUG"),
     string_format ("fatal-syslog=1:devel=%d", RAPICORN_DEVEL_VERSION), // debug config defaults
   };
@@ -493,11 +493,13 @@ rapicorn_debug (const char *key, const char *file, const int line, const String 
  */
 bool rapicorn_debug_check   (const char *key);
 
+#ifndef DOXYGEN
 bool
 FlipperOption::flipper_check (const char *key)
 {
   return envkey_flipper_check ("RAPICORN_FLIPPER", key);
 }
+#endif // !DOXYGEN
 
 /** @def RAPICORN_DEBUG_OPTION(key, blurb)
  * Create a Rapicorn::DebugOption object that can be used to query, cache and document debugging options.

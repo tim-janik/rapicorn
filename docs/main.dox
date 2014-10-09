@@ -1,19 +1,61 @@
-// Licensed GNU LGPL v3 or later, see: www.gnu.org
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+//						-*- mode:visual-line -*-
+
 /*! @mainpage
+@tableofcontents
 
-@section documents Documents
-- <a href="rapicorn-NEWS.html"><b>Release News</b></a> - List of updates per release version
-- <a href="rapicorn-ChangeLog.html"><b>ChangeLog</b></a> - Rapicorn Development ChangeLog
-- <a href="classes.html"><b>Class Index</b></a> - Browse documentation by class names.
-- <a href="rapicorn-tutorial.html"><b>Tutorial</b></a> - Hello World tutorial.
-- <a href="pages.html"><b>Related Pages</b></a> - Pages about important components.
+- @subpage intro
+- @subpage configuration
+- @subpage apps
+- @subpage contribute
+- <a class="el" href="citelist.html">Bibliographic References</a>
+- <a class="el" href="classes.html">Index of Classes</a>
+- <a class="el" href="namespacemembers_func.html">Index of Functions</a>
+- <a class="el" href="files.html">Index of Files</a>
 
-@section manpages Manual Pages
-- <a href="rapidrun.1.html"><b>rapidrun.1</b></a>
+@copyright
+%Rapicorn is <a href="http://www.gnu.org/philosophy/free-sw.html">Free Software</a>.
+The %Rapicorn Source Code Form, its manual and documentation contents are made available subject to the terms of the
+<a rel="license" href="https://www.mozilla.org/MPL/2.0/">Mozilla Public License version 2.0</a> (MPLv2).
+Contributions are welcome from everyone and are protected by its simple Copyleft license
+without the need for copyright assignments, see @ref contribute.
+Example source code is usually dedicated to the Public Domain via
+<a rel="license" href="http://creativecommons.org/publicdomain/zero/1.0/">CC0 Public Domain</a>
+assignments.
 
-@section weblinks Online Resources
-- <a href="http://rapicorn.org/">Rapicorn Website</a>
-- <a href="https://github.com/tim-janik/rapicorn/issues">Rapicorn Bug Tracker</a>
-- <a href="http://dev.testbit.eu/rapicorn/latest/">Latest Online Documentation</a>
+*/ // @mainpage
 
-*/
+/*! @page intro Introduction
+@tableofcontents
+
+%Rapicorn is a Free Software toolkit for declarative UI design.
+It provides controls, layouts, resources, data bindings, declarative markup and a multithreaded IPC layer.
+Contributions are welcome from everyone and are protected by its simple Copyleft license
+without the need for copyright assignments, see @ref contribute.
+Users can create complex reusable components and arrange UI elements in a handful of
+XML lines. Data bindings to user defined model objects are automatically setup with simple
+attribute specifications.
+%Rapicorn is implemented in C++11, but it's API is defined in an IDL to support API uses from arbitrary languages.
+Among other things %Rapicorn has:
+- Controls such as Button, List, TextEditor;
+- Layouts such as Table, HBox, VBox, Window;
+- Language bindings to use the %Rapicorn API from C++ and Python;
+- Thread separation of application and UI logic, so layouting and rendering is done in the background.
+
+
+@section introlinks Links and Resources
+
+- <a class="el" href="http://testbit.eu/pub/docs/rapicorn/latest/">Latest Online Documentation</a> <br/> The latest documentation hosted on the %Rapicorn project website.
+
+- <a class="el" href="http://groups.google.com/d/forum/rapicorn">Mailing List and Web Forum</a> <br/> Discussion forum for uses and development of %Rapicorn, send email to <a href="mailto:rapicorn@googlegroups.com"><tt>rapicorn@googlegroups.com</tt></a>.
+
+- <a class="el" href="http://testbit.eu/wiki/Category:Rapicorn">Wiki Pages</a> <br/> The %Rapicorn wiki pages used for manual page documentation, the task list and hosting the website.
+
+- <a class="el" href="https://github.com/tim-janik/rapicorn/issues">Issues - Bug Tracker</a> <br/> Issue tracker of the %Rapicorn repository hosted at GitHub.
+
+
+@subsection manpages Manual Pages
+- <a href="rapidrun.1.html"><b>rapidrun.1</b></a> <br/>
+  Utility to run and test %Rapicorn dialogs.
+
+*/ // @page intro

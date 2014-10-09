@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "blitfuncs.hh"
 
 namespace Rapicorn {
@@ -7,8 +7,9 @@ namespace Blit {
 static void
 init_render_table (const StringVector &args)
 {
-  CPUInfo cpu = cpu_info();
-  if (cpu.x86_mmx)
+  const bool have_mmx = strstr (cpu_info().c_str(), " MMX ");
+  assert (have_mmx);
+  if (have_mmx)
     {
       Blit::render_optimize_mmx();
       RAPICORN_STARTUP_DEBUG ("Using MMX functions for blitting");

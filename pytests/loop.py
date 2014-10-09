@@ -1,13 +1,11 @@
-# Copyright (C) 2010 Tim Janik
-#
-# This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 """
 PyRapicorn Loop Test
 """
 
 import sys
-from Rapicorn1307 import Rapicorn # Rapicorn modules are versioned
-import Aida1307.loop as Loop # FIXME: provide by default?
+from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
+import Aida1410.loop as Loop # FIXME: provide by default?
 
 # initialize application
 app = Rapicorn.app_init ("PyRapicorn-Loop-Test")  # unique application name

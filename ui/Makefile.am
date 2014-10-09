@@ -3,17 +3,18 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS    = . tests
 
-INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
 # === Source Files ===
 rapicorn_public_headers = $(strip	\
-	adjustment.hh	application.hh	arrangement.hh	buttons.hh	\
+	adjustment.hh	application.hh	arrangement.hh	\
+	binding.hh	buttons.hh	\
 	cmdlib.hh			commands.hh			container.hh	\
 	evaluator.hh	events.hh	factory.hh	heritage.hh	\
-	image.hh	widget.hh		keysymbols.hh	\
-	layoutcontainers.hh	listarea.hh	models.hh	\
+	image.hh	widget.hh	imageframe.hh	keysymbols.hh	\
+	layoutcontainers.hh	listarea.hh	models.hh	object.hh	\
 	paintcontainers.hh	painter.hh	paintwidgets.hh	primitives.hh	\
 	region.hh	\
 	scrollwidgets.hh	selector.hh	selob.hh	\
@@ -26,11 +27,12 @@ rapicorn_public_headers = $(strip	\
 )
 rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	adjustment.cc	application.cc	arrangement.cc	\
-	blit-mmx.cc	blitfuncs.cc	buttons.cc	\
+	blit-mmx.cc	blitfuncs.cc	\
+	binding.cc	buttons.cc	\
 	cmdlib.cc			commands.cc			container.cc	\
 	evaluator.cc	events.cc	factory.cc	heritage.cc	\
-	image.cc	widget.cc		\
-	layoutcontainers.cc	listarea.cc	models.cc	\
+	image.cc	widget.cc	imageframe.cc	\
+	layoutcontainers.cc	listarea.cc	models.cc	object.cc	\
 	paintcontainers.cc	painter.cc	paintwidgets.cc	primitives.cc	\
 	region.cc	regionimpl.c	\
 	scrollwidgets.cc	selector.cc	selob.cc	\
@@ -41,10 +43,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	screenwindow-x11.cc	screenwindow.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
-	arrangementimpl.hh		\
-	scrollwidgetsimpl.hh		\
 	sinfeximpl.hh			\
-	tableimpl.hh			\
 )
 rapicorn_generated_headers = $(strip	\
 	clientapi.hh			\
@@ -61,12 +60,12 @@ rapicorn_private_files = $(strip 	\
 )
 EXTRA_DIST += widget.dox
 
-# === CPU flags ===
-CPU_FLAGS = $(or	\
-	$(patsubst %, @MMX_FLAGS@, $(findstring -mmx.cc, $(<F))), \
-	@FPU_FLAGS@	\
-)
-AM_CXXFLAGS += $(CPU_FLAGS)
+# == Special Optimization Targets ==
+OPTIMIZE_SOURCE_FILES = serverglue.cc clientglue.cc
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+
+# === CPU SIMD Flags ===
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@ @SSEAVX_FLAGS@, $(findstring -mmx.cc, $(<F)))
 
 # === Libraries ===
 # librapicorn
@@ -74,26 +73,36 @@ lib_LTLIBRARIES = librapicorn@RAPICORN_RELEASE@.la	# hardcoded -release $(RAPICO
 librapicorn@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/ui
 librapicorn@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o ldscript.map
+librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la ldscript.map \
+						$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.la
 librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
+	$(AM_LDFLAGS)						\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
-	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.o \
+	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la \
+	$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.la \
 	$(LIBXML_LIBS) \
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES)
+EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 # -- Build OBJECTS alphabetically --
 librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
 # === Rapicorn IDL ===
-ROPE        = $(srcdir)/../rope
-AIDACC      = $(top_builddir)/aidacc/aidacc-intern
-CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
-EXTRA_DIST += interfaces.idl serverinsert.hh hardcoded.idl
+ROPE           = $(srcdir)/../rope
+AIDACC         = $(top_builddir)/aidacc/aidacc-intern
+CXXSTUB_PY     = $(top_srcdir)/aidacc/CxxStub.py
+EXTRACTDOCS_PY = $(top_srcdir)/aidacc/ExtractDocs.py
+EXTRA_DIST    += interfaces.idl interfaces.dox serverinsert.hh
+# generate interfaces.dox to complete docs
+$(rapicorn_cc_sources): interfaces.dox
+interfaces.dox: $(EXTRACTDOCS_PY) $(srcdir)/interfaces.idl
+	${AIDACC} -x ExtractDocs $(srcdir)/interfaces.idl -o xgen-$(@F)
+	mv xgen-$(@F) $@
+MAINTAINERCLEANFILES += interfaces.dox
 # build serverapi.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
 serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
@@ -121,7 +130,6 @@ clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
 	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh
-AM_CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops -finline-functions, $(findstring $(<F), serverglue.cc clientglue.cc))
 # generate skeletons for non-virtual methods, skipping existing symbols
 skeletons.cc: $(CXXSTUB_PY) $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \

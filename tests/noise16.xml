@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
+<rapicorn-definitions>
+
+  <!-- test dialog -->
+  <Window id="test-dialog">
+    <TestBox snapshot_file="xtmp-noise16.png">
+      <!-- Only display the image, without any shading, border, etc to allow pixel comparisons -->
+      <Image hspread="1" vspread="1" source="noise16.png" />
+    </TestBox>
+  </Window>
+
+</rapicorn-definitions>

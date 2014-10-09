@@ -1,7 +1,6 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "listarea.hh"
 #include "sizegroup.hh"
-#include "paintcontainers.hh"
 #include "factory.hh"
 #include "application.hh"
 
@@ -11,122 +10,117 @@
 namespace Rapicorn {
 
 // == WidgetListRowImpl ==
-class WidgetListRowImpl : public virtual SingleContainerImpl,
-                          public virtual EventHandler,
-                          public virtual FocusFrame::Client {
-  FocusFrame     *focus_frame_;
-  int             index_;
-  WidgetListImpl* widget_list () const  { return dynamic_cast<WidgetListImpl*> (parent()); }
-protected:
-  virtual const PropertyList&
-  __aida_properties__ ()
-  {
-    static Property *properties[] = {
-      MakeProperty (WidgetListRowImpl, selected,  _("Selected"), _("Indicates wether this row is selected"), "rw"),
-      MakeProperty (WidgetListRowImpl, row_index, _("Row Index"), _("Row number inside WidgetList"), "ro"),
-    };
-    static const PropertyList property_list (properties, SingleContainerImpl::__aida_properties__());
-    return property_list;
-  }
-  virtual void
-  dump_private_data (TestStream &tstream)
-  {
-    WidgetListImpl *list = widget_list();
-    int kind = 0;
-    if (list && index_ >= 0)
-      {
-        ListRow *lr = list->row_map_[index_];
-        if (lr && lr->lrow == this)
-          kind = 1;
-        else
-          {
-            lr = list->off_map_[index_];
-            if (lr && lr->lrow == this)
-              kind = 2;
-            else
-              kind = 3;
-          }
-      }
-    const char *knames[] = { "nil", "mapped", "cached", "dangling" };
-    tstream.dump ("row_kind", String (knames[kind]));
-  }
-  virtual bool
-  handle_event (const Event &event)
-  {
-    WidgetListImpl *list = widget_list();
-    return list && list->row_event (event, this, index_);
-  }
-  virtual bool
-  can_focus () const
-  {
-    return focus_frame_ != NULL;
-  }
-  virtual bool
-  register_focus_frame (FocusFrame &frame)
-  {
-    if (!focus_frame_)
-      focus_frame_ = &frame;
-    return focus_frame_ == &frame;
-  }
-  virtual void
-  unregister_focus_frame (FocusFrame &frame)
-  {
-    if (focus_frame_ == &frame)
-      focus_frame_ = NULL;
-  }
-public:
-  WidgetListRowImpl() :
-    focus_frame_ (NULL), index_ (INT_MIN)
-  {
-    color_scheme (COLOR_BASE);
-  }
-  int           row_index() const       { return index_; }
-  void
-  row_index (int i)
-  {
-    index_ = i >= 0 ? i : INT_MIN;
-    WidgetListImpl *list = widget_list();
-    if (list && index_ >= 0)
-      color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
-    visible (index_ >= 0);
-  }
-  virtual bool
-  selected () const
-  {
-    WidgetListImpl *list = widget_list();
-    return list && index_ >= 0 ? list->selected (index_) : false;
-  }
-  virtual void
-  selected (bool s)
-  {
-    WidgetListImpl *list = widget_list();
-    if (list && index_ >= 0)
-      {
-        if (list->selected (index_) != s)
-          list->toggle_selected (index_);
-        color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
-      }
-  }
-  virtual void
-  reset (ResetMode mode = RESET_ALL)
-  {}
-};
+WidgetListImpl*
+WidgetListRowImpl::widget_list () const
+{
+  return dynamic_cast<WidgetListImpl*> (parent());
+}
 
-static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn::Factory::WidgetListRow");
+void
+WidgetListRowImpl::dump_private_data (TestStream &tstream)
+{
+  WidgetListImpl *list = widget_list();
+  int kind = 0;
+  if (list && index_ >= 0)
+    {
+      ListRow *lr = list->row_map_[index_];
+      if (lr && lr->lrow == this)
+        kind = 1;
+      else
+        {
+          lr = list->off_map_[index_];
+          if (lr && lr->lrow == this)
+            kind = 2;
+          else
+            kind = 3;
+        }
+    }
+  const char *knames[] = { "nil", "mapped", "cached", "dangling" };
+  tstream.dump ("row_kind", String (knames[kind]));
+}
+
+bool
+WidgetListRowImpl::handle_event (const Event &event)
+{
+  WidgetListImpl *list = widget_list();
+  return list && list->row_event (event, this, index_);
+}
+
+bool
+WidgetListRowImpl::can_focus () const
+{
+  return focus_frame_ != NULL;
+}
+
+bool
+WidgetListRowImpl::register_focus_frame (FocusFrameImpl &frame)
+{
+  if (!focus_frame_)
+    focus_frame_ = &frame;
+  return focus_frame_ == &frame;
+}
+
+void
+WidgetListRowImpl::unregister_focus_frame (FocusFrameImpl &frame)
+{
+  if (focus_frame_ == &frame)
+    focus_frame_ = NULL;
+}
+
+WidgetListRowImpl::WidgetListRowImpl() :
+  focus_frame_ (NULL), index_ (INT_MIN)
+{
+  color_scheme (COLOR_BASE);
+}
+
+int
+WidgetListRowImpl::row_index() const
+{
+  return index_;
+}
+
+void
+WidgetListRowImpl::row_index (int i)
+{
+  index_ = i >= 0 ? i : INT_MIN;
+  WidgetListImpl *list = widget_list();
+  if (list && index_ >= 0)
+    color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
+  visible (index_ >= 0);
+  changed ("row_index");
+}
+
+bool
+WidgetListRowImpl::selected () const
+{
+  WidgetListImpl *list = widget_list();
+  return list && index_ >= 0 ? list->selected (index_) : false;
+}
+
+void
+WidgetListRowImpl::selected (bool s)
+{
+  WidgetListImpl *list = widget_list();
+  if (list && index_ >= 0)
+    {
+      if (list->selected (index_) != s)
+        {
+          list->toggle_selected (index_);
+          changed ("selected");
+        }
+      color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
+    }
+}
+
+void
+WidgetListRowImpl::reset (ResetMode mode)
+{}
+
+static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn_Factory:WidgetListRow");
+
 
 // == WidgetListImpl ==
-static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Factory::WidgetList");
-
-const PropertyList&
-WidgetListImpl::__aida_properties__()
-{
-  static Property *properties[] = {};
-  static const PropertyList property_list (properties,
-                                           WidgetListIface::__aida_properties__(),
-                                           MultiContainerImpl::__aida_properties__(),
-                                           AdjustmentSource::__aida_properties__());
-  return property_list;
-}
+static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn_Factory:WidgetList");
 
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
@@ -154,7 +148,7 @@ WidgetListImpl::~WidgetListImpl()
   // release size groups
   while (size_groups_.size())
     {
-      SizeGroup *sg = size_groups_.back();
+      WidgetGroup *sg = size_groups_.back();
       size_groups_.pop_back();
       unref (sg);
     }
@@ -224,6 +218,7 @@ WidgetListImpl::model (const String &modelurl)
   if (oldmodel)
     unref (oldmodel);
   invalidate_model (true, true);
+  changed ("model");
 }
 
 String
@@ -241,9 +236,13 @@ WidgetListImpl::selection_mode () const
 void
 WidgetListImpl::selection_mode (SelectionMode smode)
 {
-  selection_mode_ = smode;
-  validate_selection (0);
-  selection_changed (0, selection_.size());
+  if (selection_mode_ != smode)
+    {
+      selection_mode_ = smode;
+      validate_selection (0);
+      selection_changed (0, selection_.size());
+      changed ("selection_mode");
+    }
 }
 
 void
@@ -781,7 +780,7 @@ WidgetListImpl::fill_row (ListRow *lr, int nthrow)
   Any row = model_->row (nthrow);
   for (uint i = 0; i < lr->cols.size(); i++)
     lr->cols[i]->set_property ("markup_text", row.as_string());
-  Ambience *ambience = lr->lrow->interface<Ambience*>();
+  AmbienceIface *ambience = lr->lrow->interface<AmbienceIface*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");
   lr->lrow->selected (selected (nthrow));
@@ -796,12 +795,12 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   IFDEBUG (dbg_created++);
   WidgetImpl *widget = &Factory::create_ui_child (*this, "RapicornWidgetListRow", Factory::ArgumentList(), false);
   lr->lrow = ref_sink (widget)->interface<WidgetListRowImpl*>();
-  lr->lrow->interface<HBox>().spacing (5); // FIXME
+  lr->lrow->interface<HBoxIface>().spacing (5); // FIXME
   widget = ref_sink (&Factory::create_ui_child (*lr->lrow, "Label", Factory::ArgumentList()));
   lr->cols.push_back (widget);
 
   while (size_groups_.size() < lr->cols.size())
-    size_groups_.push_back (ref_sink (SizeGroup::create_hgroup()));
+    size_groups_.push_back (ref_sink (WidgetGroup::create (" internal WidgetListImpl SizeGroup HSIZE", WIDGET_GROUP_HSIZE)));
   if (with_size_groups)
     for (uint i = 0; i < lr->cols.size(); i++)
       size_groups_[i]->add_widget (*lr->cols[i]);

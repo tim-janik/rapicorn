@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_CONTAINER_HH__
 #define __RAPICORN_CONTAINER_HH__
 
@@ -12,24 +12,23 @@ class ResizeContainerImpl;
 struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface {
   friend              class WidgetImpl;
   friend              class WindowImpl;
-  void                uncross_descendant(WidgetImpl          &descendant);
-  size_t              widget_cross_link   (WidgetImpl           &owner,
-                                         WidgetImpl           &link,
-                                         const WidgetSlot &uncross);
-  void                widget_cross_unlink (WidgetImpl           &owner,
-                                         WidgetImpl           &link,
-                                         size_t              link_id);
-  void                widget_uncross_links(WidgetImpl           &owner,
-                                         WidgetImpl           &link);
+  void                uncross_descendant    (WidgetImpl          &descendant);
+  size_t              widget_cross_link     (WidgetImpl           &owner,
+                                             WidgetImpl           &link,
+                                             const WidgetSlot &uncross);
+  void                widget_cross_unlink   (WidgetImpl           &owner,
+                                             WidgetImpl           &link,
+                                             size_t              link_id);
+  void                widget_uncross_links  (WidgetImpl           &owner,
+                                             WidgetImpl           &link);
+  WidgetGroup*        retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create);
 protected:
   virtual            ~ContainerImpl     ();
   virtual void        add_child         (WidgetImpl           &widget) = 0;
-  virtual void        repack_child      (WidgetImpl           &widget,
-                                         const PackInfo &orig,
-                                         const PackInfo &pnew);
+  virtual void        repack_child      (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew);
   virtual void        remove_child      (WidgetImpl           &widget) = 0;
   virtual void        unparent_child    (WidgetImpl           &widget);
-  virtual void        dispose_widget      (WidgetImpl           &widget);
+  virtual void        dispose_widget    (WidgetImpl           &widget);
   virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDirType    fdir);
   void                expose_enclosure  (); /* expose without children */
@@ -45,11 +44,12 @@ public:
   void                  child_container (ContainerImpl  *child_container);
   ContainerImpl&        child_container ();
   virtual ChildWalker   local_children  () const = 0;
+  virtual void          foreach_recursive  (const std::function<void (WidgetImpl&)> &f) override;
   virtual size_t        n_children      () = 0;
   virtual WidgetImpl*   nth_child       (size_t nth) = 0;
   bool                  has_children    ()                              { return 0 != n_children(); }
-  void                  remove          (WidgetImpl           &widget);
-  void                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL); remove (*widget); }
+  bool                  remove          (WidgetImpl           &widget);
+  bool                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL, 0); return remove (*widget); }
   void                  add             (WidgetImpl                   &widget);
   void                  add             (WidgetImpl                   *widget);
   virtual Affine        child_affine    (const WidgetImpl             &widget); /* container => widget affine */
@@ -63,8 +63,8 @@ public:
   virtual void          render_recursive(RenderContext &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
-  virtual WidgetIface*    create_child    (const std::string      &widget_identifier,
-                                         const StringSeq    &args);
+  virtual WidgetIface* create_widget    (const String &widget_identifier, const StringSeq &args) override;
+  virtual void         remove_widget    (WidgetIface &child) override;
 };
 
 // == Single Child Container ==
@@ -75,7 +75,7 @@ protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   virtual void          render                  (RenderContext&, const Rect&) {}
-  WidgetImpl&             get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
+  WidgetImpl&           get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
   virtual ChildWalker   local_children          () const;
@@ -123,7 +123,7 @@ protected:
   virtual void          render                  (RenderContext&, const Rect&) {}
   virtual ChildWalker   local_children          () const { return value_walker (widgets); }
   virtual size_t        n_children              () { return widgets.size(); }
-  virtual WidgetImpl*     nth_child               (size_t nth) { return nth < widgets.size() ? widgets[nth] : NULL; }
+  virtual WidgetImpl*   nth_child               (size_t nth) { return nth < widgets.size() ? widgets[nth] : NULL; }
   virtual void          add_child               (WidgetImpl   &widget);
   virtual void          remove_child            (WidgetImpl   &widget);
   void                  raise_child             (WidgetImpl   &widget);

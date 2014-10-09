@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "text-pango.hh"
 #if     RAPICORN_WITH_PANGO
 #include <pango/pangoft2.h>
@@ -95,7 +95,7 @@ default_pango_cairo_font_options (PangoContext *pcontext,
   assert_return (fopt != NULL);
   cairo_font_options_set_hint_metrics (fopt, CAIRO_HINT_METRICS_ON); // ON, OFF
   cairo_font_options_set_hint_style (fopt, CAIRO_HINT_STYLE_FULL); // NONE, SLIGHT, MEDIUM, FULL
-  cairo_font_options_set_antialias (fopt, CAIRO_ANTIALIAS_SUBPIXEL); // NONE, GRAY, SUBPIXEL
+  cairo_font_options_set_antialias (fopt, CAIRO_ANTIALIAS_GRAY); // NONE, GRAY, SUBPIXEL
   cairo_font_options_set_subpixel_order (fopt, CAIRO_SUBPIXEL_ORDER_DEFAULT); // RGB, BGR, VRGB, VBGR
   assert_return (CAIRO_STATUS_SUCCESS == cairo_font_options_status (fopt));
   if (cairo)
@@ -703,12 +703,13 @@ public:
   }
 };
 
-/* --- TextPangoImpl (TextEditor::Client) --- */
-class TextPangoImpl : public virtual WidgetImpl, public virtual Text::Editor::Client {
+// == TextPangoImpl (TextBlock) ==
+class TextPangoImpl : public virtual WidgetImpl, public virtual TextBlock {
   PangoLayout    *layout_;
-  int             mark_, cursor_;
-  double          scoffset_;
   TextMode        text_mode_;
+  int             mark_, cursor_, selector_;
+  double          scoffset_;
+  void           *last_selector_attr_;
 protected:
   virtual TextMode text_mode   () const               { return text_mode_; }
   virtual void
@@ -723,10 +724,10 @@ protected:
 public:
   TextPangoImpl() :
     layout_ (NULL),
-    mark_ (-1), cursor_ (-1), scoffset_ (0),
-    text_mode_ (TEXT_MODE_ELLIPSIZED)
+    text_mode_ (TEXT_MODE_ELLIPSIZED), mark_ (-1), cursor_ (-1), selector_ (-1),
+    scoffset_ (0), last_selector_attr_ (NULL)
   {
-    Text::ParaState pstate; // retrieve defaults
+    ParagraphState pstate; // retrieve defaults
     rapicorn_pango_mutex.lock();
     // FIXME: using pstate.font_family as font_desc string here bypasses our default font settings
     layout_ = global_layout_cache.create_layout (pstate.font_family, pstate.align,
@@ -745,7 +746,7 @@ public:
   virtual void
   size_request (Requisition &requisition)
   {
-    Text::ParaState pstate; // retrieve defaults
+    ParagraphState pstate; // retrieve defaults
     PangoRectangle rect = { 0, 0 };
     rapicorn_pango_mutex.lock();
     pango_layout_set_width (layout_, -1);
@@ -762,7 +763,7 @@ public:
   virtual void
   size_allocate (Allocation area, bool changed)
   {
-    Text::ParaState pstate; // retrieve defaults
+    ParagraphState pstate; // retrieve defaults
     PangoRectangle rect = { 0, 0 };
     rapicorn_pango_mutex.lock();
     if (text_mode_ == TEXT_MODE_SINGLE_LINE)
@@ -795,7 +796,7 @@ protected:
 #if 0
     if (sample.size())
       {
-        Text::ParaState pstate; // retrieve defaults
+        ParagraphState pstate; // retrieve defaults
         PangoLayout *playout = pango_layout_copy (layout_);
         pango_layout_set_attributes (playout, NULL);
         pango_layout_set_tabs (playout, NULL);
@@ -824,10 +825,10 @@ protected:
       *byte_length = strlen (str);
     return str;
   }
-  virtual Text::ParaState
+  virtual ParagraphState
   para_state () const
   {
-    Text::ParaState pstate;
+    ParagraphState pstate;
     rapicorn_pango_mutex.lock();
     pstate.align = align_type_from_pango_alignment (pango_layout_get_alignment (layout_));
     pstate.ellipsize = ellipsize_type_from_pango_ellipsize_mode (pango_layout_get_ellipsize (layout_));
@@ -841,10 +842,10 @@ protected:
     assert (pango_font_description_get_size_is_absolute (fdesc) == false);
     pango_font_description_free (fdesc);
     rapicorn_pango_mutex.unlock();
-    return Text::ParaState();
+    return ParagraphState();
   }
   virtual void
-  para_state (const Text::ParaState &pstate)
+  para_state (const ParagraphState &pstate)
   {
     rapicorn_pango_mutex.lock();
     pango_layout_set_alignment (layout_, pango_alignment_from_align_type (pstate.align));
@@ -863,19 +864,19 @@ protected:
       }
     rapicorn_pango_mutex.unlock();
     invalidate();
-    changed();
+    changed ("para_state");
   }
-  virtual Text::AttrState
+  virtual TextAttrState
   attr_state () const
   {
     // FIXME: implement this
-    return Text::AttrState();
+    return TextAttrState();
   }
   virtual void
-  attr_state (const Text::AttrState &astate)
+  attr_state (const TextAttrState &astate)
   {
     // FIXME: implement this
-    changed();
+    changed ("attr_state");
   }
   virtual String
   save_markup () const
@@ -925,7 +926,16 @@ protected:
     else
       mark_ = utf8_align (c, c + byte_index) - c;
     rapicorn_pango_mutex.unlock();
-    changed();
+    changed ("cursor");
+  }
+  virtual void
+  cursor2mark ()
+  {
+    if (cursor_ != mark_)
+      {
+        mark_ = cursor_;
+        changed ("cursor");
+      }
   }
   virtual bool
   mark_at_end () const
@@ -937,8 +947,7 @@ protected:
     return mark_ >= l;
   }
   virtual bool
-  mark_to_coord (double x,
-                 double y)
+  mark_to_coord (double x, double y)
   {
     Rect area = layout_area (NULL);
     if (area.width >= 1 && area.height >= 1)
@@ -984,7 +993,7 @@ protected:
       mark_ = l;
     else
       mark_ = MAX (0, xmark);
-    changed();
+    changed ("cursor");
   }
   virtual void
   mark2cursor ()
@@ -994,7 +1003,9 @@ protected:
         cursor_ = mark_;
         expose();
         scroll_to_cursor();
-        changed();
+        if (selector_ >= 0)
+          selection_changed();
+        changed ("cursor");
       }
   }
   virtual void
@@ -1004,8 +1015,55 @@ protected:
       {
         cursor_ = -1;
         expose();
-        changed();
+        if (selector_ >= 0)
+          selection_changed();
+        changed ("cursor");
       }
+  }
+  virtual void
+  mark2selector ()
+  {
+    if (selector_ != mark_)
+      {
+        selector_ = mark_;
+        expose();
+        selection_changed();
+        changed ("cursor");
+      }
+  }
+  virtual void
+  hide_selector ()
+  {
+    if (selector_ >= 0)
+      {
+        selector_ = -1;
+        expose();
+        selection_changed();
+        changed ("cursor");
+      }
+  }
+  virtual bool
+  get_selection (int *start, int *end, int *nutf8)
+  {
+    if (cursor_ >= 0 && selector_ >= 0)
+      {
+        const int s = MIN (cursor_, selector_);
+        const int e = MAX (cursor_, selector_);
+        if (start)
+          *start = s;
+        if (end)
+          *end = e;
+        if (nutf8)
+          {
+            const char *c = pango_layout_get_text (layout_);
+            int m, n = 0;
+            for (m = s; m < e; n++)
+              m = utf8_next (c + m) - c;
+            *nutf8 = n;
+          }
+        return true;
+      }
+    return false;
   }
   virtual void
   mark_delete (uint n_utf8_chars)
@@ -1019,14 +1077,14 @@ protected:
     String s = c;
     s.erase (mark_, m - mark_);
     pango_layout_set_text (layout_, s.c_str(), -1);
-    // FIXME: adjust attributes
+    // FIXME: adjust attributes, cursor_, selector_
     rapicorn_pango_mutex.unlock();
     invalidate();
-    changed();
+    changed ("text");
+    changed ("cursor");
   }
   virtual void
-  mark_insert (String                 utf8string,
-               const Text::AttrState *astate = NULL)
+  mark_insert (String utf8string, const TextAttrState *astate = NULL)
   {
     rapicorn_pango_mutex.lock();
     String s = pango_layout_get_text (layout_);
@@ -1038,7 +1096,8 @@ protected:
     // FIXME: adjust attributes
     rapicorn_pango_mutex.unlock();
     invalidate();
-    changed();
+    changed ("text");
+    changed ("cursor");
   }
 protected:
   void
@@ -1210,6 +1269,36 @@ protected:
       area.width = area.height = 0;
     return area;
   }
+  static gboolean attribute_filter (PangoAttribute *attr, void *ptr) { return attr == ptr; }
+  void
+  selection_changed()
+  {
+    rapicorn_pango_mutex.lock();
+    bool real_change = false;
+    if (last_selector_attr_)
+      {
+        PangoAttrList *palist = pango_layout_get_attributes (layout_);
+        PangoAttrList *padel = pango_attr_list_filter (palist, attribute_filter, last_selector_attr_);
+        pango_attr_list_unref (padel);
+        last_selector_attr_ = NULL;
+        real_change = true;
+      }
+    if (cursor_ >= 0 && selector_ >= 0)
+      {
+        PangoAttribute *sbg = pango_attr_background_new (0xa8a8, 0xd1d1, 0xffff);
+        sbg->start_index = MIN (cursor_, selector_);
+        sbg->end_index = MAX (cursor_, selector_);
+        PangoAttrList *palist = pango_layout_get_attributes (layout_);
+        pango_attr_list_insert (palist, sbg);
+        last_selector_attr_ = sbg;
+        real_change = true;
+      }
+    if (real_change)
+      pango_layout_set_attributes (layout_, pango_layout_get_attributes (layout_)); // refresh layout caches for new attributes
+    rapicorn_pango_mutex.unlock();
+    if (real_change)
+      sig_selection_changed.emit();
+  }
   virtual void
   render (RenderContext &rcontext, const Rect &rect)
   {
@@ -1228,9 +1317,9 @@ protected:
         const double ax = larea.x, ay = larea.y;
         Color insensitive_glint, insensitive_ink = heritage()->insensitive_ink (state(), &insensitive_glint);
         /* render embossed text */
-        larea.x = ax, larea.y = ay - 1;
+        larea.x = ax, larea.y = ay;
         render_text_gL (cr, larea, vdot_size, insensitive_glint);
-        larea.x = ax - 1, larea.y = ay;
+        larea.x = ax - 1, larea.y = ay - 1;
         render_text_gL (cr, larea, vdot_size, insensitive_ink);
       }
     else
@@ -1240,16 +1329,9 @@ protected:
       }
     rapicorn_pango_mutex.unlock();
   }
-  virtual const PropertyList&
-  __aida_properties__() // escape check-__aida_properties__ ';'
-  {
-    static Property *properties[] = {};
-    static const PropertyList property_list (properties, WidgetImpl::__aida_properties__(), Client::client_property_list());
-    return property_list;
-  }
 };
 
-static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn::Factory::TextPango");
+static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn_Factory:TextPango");
 
 } // Rapicorn
 

@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_BLOBRES_HH__
 #define __RAPICORN_BLOBRES_HH__
 
@@ -48,7 +48,7 @@ class ResourceEntry {
   static const ResourceEntry* find_entry (const String&);
   static void                 reg_add    (ResourceEntry*);
 public:
-  template <size_t N> ResourceEntry (const char *res, const char (&idata) [N], size_t data_size = 0) :
+  template<size_t N>  ResourceEntry (const char *res, const char (&idata) [N], size_t data_size = 0) :
     next (NULL), name (res), pdata (idata), psize (N), dsize (data_size)
   { reg_add (this); }
   /*dtor*/           ~ResourceEntry();

@@ -50,11 +50,7 @@ class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
 
-class _BaseClass_ (object):
-  class _AidaID_:
-    def __init__ (self, _aidaid):
-      assert isinstance (_aidaid, (int, long))
-      self.id = _aidaid
+class _BaseClass_ (_CPY.PyRemoteHandle):
   class __Signal__:
     def __init__ (self, object, pyconnect):
       self.__object = object
@@ -67,9 +63,8 @@ class _BaseClass_ (object):
       return self.connect (_callable)
     def __isub__ (self, connection_id):
       return self.disconnect (connection_id)
-  def __init__ (self, _aida_id):
-    assert isinstance (_aida_id, _BaseClass_._AidaID_)
-    self.__dict__['__aida_pyobject__'] = _aida_id.id
+  def __init__ (self):
+    pass
   def __getattr__ (self, name):
     try:
       getter = getattr (self.__class__, '__pygetter__%s__' % name)
@@ -107,11 +102,9 @@ def __AIDA_pyfactory__create_pyobject__ (type_name, longid):
     raise NameError ("undefined identifier '%s'" % type_name)
   if hasattr (klass, '_enum_lookup'):
     return klass._enum_lookup (longid)
-  if not longid:
-    return None
   if not klass:
     raise NameError ("undefined identifier '%s'" % type_name)
-  return klass (_BaseClass_._AidaID_ (longid))
+  return klass ()
 _CPY.__AIDA_pyfactory__register_callback (__AIDA_pyfactory__create_pyobject__)
 _CPY.__AIDA_BaseRecord__ = _BaseRecord_
 
@@ -250,8 +243,8 @@ MandatoryNamespace.ExtensiveEnum = ExtensiveEnum
 del ExtensiveEnum
 
 class FirstInterface (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (MandatoryNamespace.FirstInterface, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (MandatoryNamespace.FirstInterface, self).__init__()
   def void_func (self): # one way
     return _CPY.__AIDA_pycall__c3f858f5171056cb394e47a2bcd63e16__ (self)
 MandatoryNamespace.FirstInterface = FirstInterface
@@ -680,8 +673,8 @@ __name__ = "InterfaceTests" # NAMESPACE InterfaceTests
 InterfaceTests = __AIDA__open_namespace__ (__name__, __file__)
 
 class UIWidgetArea (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.UIWidgetArea, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.UIWidgetArea, self).__init__()
   def simple_method (self): # returns float64
     return _CPY.__AIDA_pycall__d0dd4c08ba5022c0b1af31ca1ec7037a__ (self)
   def single_arg (self, n): # returns float64
@@ -714,26 +707,26 @@ InterfaceTests.UIWidgetArea = UIWidgetArea
 del UIWidgetArea
 
 class Parent (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.Parent, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.Parent, self).__init__()
 InterfaceTests.Parent = Parent
 del Parent
 
 class Child (InterfaceTests.Parent):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.Child, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.Child, self).__init__()
 InterfaceTests.Child = Child
 del Child
 
 class Descendant (InterfaceTests.Child):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.Descendant, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.Descendant, self).__init__()
 InterfaceTests.Descendant = Descendant
 del Descendant
 
 class GrandChild (InterfaceTests.Descendant):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.GrandChild, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.GrandChild, self).__init__()
 InterfaceTests.GrandChild = GrandChild
 del GrandChild
 
@@ -772,16 +765,16 @@ InterfaceTests.QuickRecord = QuickRecord
 del QuickRecord
 
 class QuickIface (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.QuickIface, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.QuickIface, self).__init__()
   def simple_function (self, i = 9): # one way
     return _CPY.__AIDA_pycall__76ac7a704663d24623abac49621c6802__ (self, i)
 InterfaceTests.QuickIface = QuickIface
 del QuickIface
 
 class MethodTestInterface (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.MethodTestInterface, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.MethodTestInterface, self).__init__()
   def method_with_void (self): # one way
     return _CPY.__AIDA_pycall__1addfccb0a3e01be314f2eb467d7a72b__ (self)
   def method_with_bools (self, input, optval = 0): # returns bool
@@ -810,8 +803,8 @@ InterfaceTests.MethodTestInterface = MethodTestInterface
 del MethodTestInterface
 
 class SignalTestInterface (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.SignalTestInterface, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.SignalTestInterface, self).__init__()
   def __pysignal__sig_void_result__ (self):
     return self.__Signal__ (self, _CPY.__AIDA_pyconnect__e2ae7c707a04333c420330b70d64eb5f__)
   def __pysignal__sig_bool_result__ (self):
@@ -864,22 +857,22 @@ InterfaceTests.SignalTestInterface = SignalTestInterface
 del SignalTestInterface
 
 class ChildInheritingSignals (InterfaceTests.SignalTestInterface):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.ChildInheritingSignals, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.ChildInheritingSignals, self).__init__()
   def __pysignal__sig_child_signal__ (self):
     return self.__Signal__ (self, _CPY.__AIDA_pyconnect__0b181d52b5db5237d1c6370677791f5a__)
 InterfaceTests.ChildInheritingSignals = ChildInheritingSignals
 del ChildInheritingSignals
 
 class AnotherChild (InterfaceTests.SignalTestInterface):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.AnotherChild, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.AnotherChild, self).__init__()
 InterfaceTests.AnotherChild = AnotherChild
 del AnotherChild
 
 class PropertyTester (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (InterfaceTests.PropertyTester, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (InterfaceTests.PropertyTester, self).__init__()
   __pygetter__bool_prop__         = _CPY.__AIDA_pygetter__14469c03fdfc61e43bb8a3b5d9832788__ # PropertyTester.bool_prop
   __pygetter__int32_prop__        = _CPY.__AIDA_pygetter__8a2f1538f2b852fb7d3e8ea6f069a1c0__ # PropertyTester.int32_prop
   __pygetter__int64_prop__        = _CPY.__AIDA_pygetter__c9bb6114fc5c90de400dff0f59e66f63__ # PropertyTester.int64_prop
@@ -921,8 +914,8 @@ RapicornAidaTest.ClickType = ClickType
 del ClickType
 
 class ButtonArea (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (RapicornAidaTest.ButtonArea, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (RapicornAidaTest.ButtonArea, self).__init__()
   def __pysignal__sig_check_activate__ (self):
     return self.__Signal__ (self, _CPY.__AIDA_pyconnect__528a0b92de4a958c4d47eecbae62f654__)
   def __pysignal__sig_activate__ (self):
@@ -939,8 +932,8 @@ RapicornAidaTest.ButtonArea = ButtonArea
 del ButtonArea
 
 class PureMethods (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (RapicornAidaTest.PureMethods, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (RapicornAidaTest.PureMethods, self).__init__()
   def pure_method (self, f): # returns int32
     return _CPY.__AIDA_pycall__f196563f00b6d48488b59c2ed0597dcc__ (self, f)
 RapicornAidaTest.PureMethods = PureMethods
@@ -969,8 +962,8 @@ __name__ = "Other" # NAMESPACE Other
 Other = __AIDA__open_namespace__ (__name__, __file__)
 
 class NameTests (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (Other.NameTests, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (Other.NameTests, self).__init__()
   def args_from_other_namespace (self, qr, qe, sr): # one way
     return _CPY.__AIDA_pycall__d471f88e8c15081c963d2094339d0220__ (self, qr, qe, sr)
 Other.NameTests = NameTests
@@ -981,8 +974,8 @@ __name__ = "BseTest" # NAMESPACE BseTest
 BseTest = __AIDA__open_namespace__ (__name__, __file__)
 
 class Compressor (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (BseTest.Compressor, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (BseTest.Compressor, self).__init__()
   __pygetter__threshold__         = _CPY.__AIDA_pygetter__dea15f2de1c3d8e3e3fc9febf31cdc20__ # Compressor.threshold
   __pygetter__ratio__             = _CPY.__AIDA_pygetter__c61a8d739c7b963bca1ad4eeab1aa56e__ # Compressor.ratio
   __pysetter__threshold__         = _CPY.__AIDA_pysetter__f40a3fd3d07b3d0bbae97c41e3d6a92b__ # Compressor.threshold
@@ -1033,8 +1026,8 @@ BseTest.RecordForGroups = RecordForGroups
 del RecordForGroups
 
 class SoundModule (_BaseClass_):
-  def __init__ (self, _aida_id):
-    super (BseTest.SoundModule, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (BseTest.SoundModule, self).__init__()
 BseTest.SoundModule = SoundModule
 del SoundModule
 

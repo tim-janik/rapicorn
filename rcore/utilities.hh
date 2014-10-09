@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_CORE_UTILITIES_HH__
 #define __RAPICORN_CORE_UTILITIES_HH__
 
@@ -26,6 +26,9 @@ namespace Rapicorn {
 
 // == Convenient Aida Types ==
 using Aida::Any;
+using Aida::any_cast;
+using Aida::Signal;
+using Aida::slot;
 
 // == Common (stdc++) Utilities ==
 using ::std::swap;
@@ -55,14 +58,6 @@ vector_from_array (const T (&array_entries)[S]) /// Construct a std::vector<T> f
     result.push_back (array_entries[i]);
   return result;
 }
-
-/* --- template utilities --- */
-template<class X, class Y> class TraitConvertible {
-  static bool f (...);
-  static int  f (X*);
-public:
-  enum { TRUTH = sizeof (f()) != sizeof (f ((Y*) 0)), };
-};
 
 // === source location strings ===
 String  pretty_file                             (const char *file_dir, const char *file);
@@ -109,7 +104,7 @@ uint64  timestamp_benchmark  ();        // nseconds
 uint64  timestamp_resolution ();        // nseconds
 String  timestamp_format     (uint64 stamp);
 
-/* --- file/path functionality --- */
+/// The Path namespace provides functions for file path manipulation and testing.
 namespace Path {
 String  dirname         (const String &path);
 String  basename        (const String &path);
@@ -132,6 +127,7 @@ bool    equals          (const String &file1,
 char*   memread         (const String &filename,
                          size_t       *lengthp);
 void    memfree         (char         *memread_mem);
+bool    memwrite        (const String &filename, size_t len, const uint8 *bytes);
 String  cwd             ();
 String       vpath_find        (const String &file, const String &mode = "e");
 String       searchpath_find  (const String &searchpath, const String &file, const String &mode = "e");
@@ -141,20 +137,7 @@ extern const String     searchpath_separator;  /* 1char */
 } // Path
 
 /* --- url handling --- */
-void url_show                   (const char           *url);
-void url_show_with_cookie       (const char           *url,
-                                 const char           *url_title,
-                                 const char           *cookie);
-bool url_test_show              (const char           *url);
-bool url_test_show_with_cookie  (const char	      *url,
-                                 const char           *url_title,
-                                 const char           *cookie);
-
-/* --- cleanup registration --- */
-uint cleanup_add                (uint                  timeout_ms,
-                                 void                (*destroy_data) (void*),
-                                 void                 *data);
-void cleanup_force_handlers     (void);
+bool url_show                   (const char           *url);
 
 /* --- zintern support --- */
 uint8*  zintern_decompress      (unsigned int          decompressed_size,

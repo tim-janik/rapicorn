@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# Aida - Abstract Interface Definition Architecture            -*-mode:python-*-
-# Licensed GNU GPL v3 or later: http://www.gnu.org/licenses/gpl.html
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+# Aida IDL Parser                                       -*-mode:python-*-
 import sys, os, Decls
 true, false, length = (True, False, len)
 
@@ -29,6 +29,7 @@ class YYGlobals (object):
     self.parsed_files = []
     self.global_namespace = Decls.Namespace ('', None, self.impl_list)
     self.namespaces = [ self.global_namespace ] # currently open namespaces
+    self.scanner = None
   def configure (self, confdict, implfiles):
     self.config = {}
     self.config.update (confdict)
@@ -42,6 +43,7 @@ class YYGlobals (object):
     typename,srctype,auxinit = fielddecl
     AIn (typename)
     typeinfo = srctype.clone (typename, yy.impl_includes)
+    typeinfo.set_location (*yy.scanner.get_pos())
     typeinfo.typedef_origin = srctype
     self.parse_assign_auxdata ([ (typename, typeinfo, auxinit) ])
     self.namespaces[-1].add_type (typeinfo)
@@ -62,6 +64,7 @@ class YYGlobals (object):
     elif len (enum_values) < 1:
       raise AttributeError ('invalid empty enumeration: %s' % enum_name)
     enum = Decls.TypeInfo (enum_name, Decls.ENUM, yy.impl_includes)
+    enum.set_location (*yy.scanner.get_pos())
     if as_flags:
       enum.set_combinable (True)
     for ev in enum_values:
@@ -78,6 +81,7 @@ class YYGlobals (object):
     elif len (rfields) < 1:
       raise AttributeError ('invalid empty record: %s' % name)
     rec = Decls.TypeInfo (name, Decls.RECORD, yy.impl_includes)
+    rec.set_location (*yy.scanner.get_pos())
     self.parse_assign_auxdata (rfields)
     fdict = {}
     for field in rfields:
@@ -91,6 +95,7 @@ class YYGlobals (object):
     if not iface or (iface.storage == Decls.INTERFACE and
                      iface.is_forward and not addproto):
       iface = Decls.TypeInfo (name, Decls.INTERFACE, yy.impl_includes)
+      iface.set_location (*yy.scanner.get_pos())
       if addproto:
         iface.is_forward = True
       self.namespaces[-1].add_type (iface)
@@ -118,6 +123,7 @@ class YYGlobals (object):
       method_args = method[3]
       # self.parse_assign_auxdata (method_args)
       mtype = Decls.TypeInfo (method[0], Decls.FUNC, yy.impl_includes)
+      mtype.set_location (*yy.scanner.get_pos())
       mtype.set_rtype (method[1])
       mtype.set_pure (method[4])
       adict = {}
@@ -169,6 +175,7 @@ class YYGlobals (object):
       raise AttributeError ('invalid multiple fields in sequence: %s' % name)
     self.parse_assign_auxdata (sfields)
     seq = Decls.TypeInfo (name, Decls.SEQUENCE, yy.impl_includes)
+    seq.set_location (*yy.scanner.get_pos())
     seq.set_elements (sfields[0][0], sfields[0][1])
     self.namespaces[-1].add_type (seq)
   def namespace_match (self, nspace, ns_words, ident, flags):
@@ -220,7 +227,9 @@ class YYGlobals (object):
     if not flags.get ('stream', 0):
       ANOSTREAM (typename, errorident)
     type_info = self.resolve_type (typename, flags.get ('void', 0))
-    return type_info.clone (type_info.name, yy.impl_includes)
+    new_type = type_info.clone (type_info.name, yy.impl_includes)
+    new_type.set_location (*yy.scanner.get_pos())
+    return new_type
   def resolve_type (self, typename, void = False):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
@@ -342,6 +351,8 @@ def parse_try (filename, input_string, implinc):
   if rpath in yy.parsed_files:
     return yy.impl_list # IdlSyntax result
   yy.parsed_files += [ rpath ]
+  saved_yy_scanner = yy.scanner
+  yy.scanner = xscanner
   result, exmsg = (None, None)
   try:
     saved_impl_includes = yy.impl_includes
@@ -370,6 +381,7 @@ def parse_try (filename, input_string, implinc):
     xscanner.print_line_with_pointer (pos, out = wo)
     ecaret = ''.join (wo.content).strip()
     raise Error (errstr, ecaret)
+  yy.scanner = saved_yy_scanner
   return result
 
 def parse_files (config, filepairs):
@@ -402,8 +414,8 @@ parser IdlSyntaxParser:
         token NSIDENT:      r'[a-zA-Z_][a-zA-Z_0-9$]*'      # identifier + '$'
         token INTEGER:      r'[0-9]+'
         token HEXINT:       r'0[xX][0-9abcdefABCDEF]+'
-        token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)?'
-        token FRACTFLOAT:                     r'\.[0-9]+([eE][+-][0-9]+)?'
+        token FULLFLOAT:    r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-]?[0-9]+)?'
+        token FRACTFLOAT:                     r'\.[0-9]+([eE][+-]?[0-9]+)?'
         token STRING:       r'"([^"\\]+|\\.)*"'             # double quotes string
 
 rule IdlSyntax: ( ';'

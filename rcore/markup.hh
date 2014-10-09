@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_MARKUP_HH__
 #define __RAPICORN_MARKUP_HH__
 
@@ -7,6 +7,9 @@
 
 namespace Rapicorn {
 
+/** Simple XML markup parser, based on glib/gmarkup.c.
+ * @DEPRECATED: Nonpublic API, this XML parser is planned to be replaced soon.
+ */
 class MarkupParser {
 public:
   typedef enum {
@@ -45,6 +48,8 @@ public:
                                          int            *char_number,
                                          const char    **input_name_p = NULL);
   virtual void          error           (const Error    &error);
+  // parsing
+  static size_t         seek_to_element (const char     *data, size_t length);
   /* useful when saving */
   static String         escape_text     (const String   &text);
   static String         escape_text     (const char     *text,

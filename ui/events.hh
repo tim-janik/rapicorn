@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_EVENT_HH__
 #define __RAPICORN_EVENT_HH__
 
@@ -24,8 +24,11 @@ enum ModifierState {
   MOD_MASK      = 0x07ff,
 };
 
+/// Common key values, all starting with KEY_, see ui/keysymbols.hh.
 enum KeyValue {
+#ifndef  DOXYGEN
 #include <ui/keysymbols.hh>
+#endif // !DOXYGEN
 };
 
 enum ActivateKeyType {
@@ -41,6 +44,12 @@ FocusDirType    key_value_to_focus_dir    (uint32 keysym);
 bool            key_value_is_focus_dir    (uint32 keysym);
 ActivateKeyType key_value_to_activation   (uint32 keysym);
 bool            key_value_is_cancellation (uint32 keysym);
+
+typedef enum {
+  CONTENT_SOURCE_SELECTION = 1, ///< Current selection of a window or screen, under X11 this is the PRIMARY selection.
+  CONTENT_SOURCE_CLIPBOARD,     ///< Clipboard associated with a window or screen, under X11 this is the global CLIPBOARD.
+} ContentSourceType;
+const char* string_from_content_source_type (ContentSourceType ctype);
 
 typedef enum {
   EVENT_NONE,
@@ -59,6 +68,9 @@ typedef enum {
   KEY_PRESS,
   KEY_CANCELED,
   KEY_RELEASE,
+  CONTENT_DATA,
+  CONTENT_CLEAR,
+  CONTENT_REQUEST,
   SCROLL_UP,          /* button4 */
   SCROLL_DOWN,        /* button5 */
   SCROLL_LEFT,        /* button6 */
@@ -103,7 +115,16 @@ public:
   virtual        ~EventKey();
   /* key press/release */
   uint32          key;  /* of type KeyValue */
-  String          key_name;
+  String          utf8input;
+};
+class EventData : public Event {
+protected:
+  explicit          EventData (EventType, const EventContext&, ContentSourceType, uint64, const String&, const String&, uint64);
+public:
+  virtual          ~EventData();
+  uint64            nonce, request_id;
+  String            data_type, data;
+  ContentSourceType content_source;
 };
 struct EventWinSize : public Event {
 protected:
@@ -140,7 +161,14 @@ EventFocus*     create_event_focus        (EventType           type,
 EventKey*       create_event_key          (EventType           type,
                                            const EventContext &econtext,
                                            uint32              key,
-                                           const char         *name);
+                                           const String       &utf8input);
+EventData*      create_event_data         (EventType           type,
+                                           const EventContext &econtext,
+                                           ContentSourceType   content_source,
+                                           uint64              nonce,
+                                           const String       &data_type,
+                                           const String       &data,
+                                           uint64              request_id = 0);
 EventWinSize*   create_event_win_size     (const EventContext &econtext,
                                            double              width,
                                            double              height,

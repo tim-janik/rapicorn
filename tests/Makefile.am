@@ -1,9 +1,9 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES   += -I$(top_srcdir)
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
-AM_CXXFLAGS = $(RAPICORN_GUI_CFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir)
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
 noinst_PROGRAMS  = benchaida $(EXAMPLES)
 noinst_DATA      =
@@ -35,7 +35,7 @@ ui-xml-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/uitests.xml ; eval "$$TSTDIAGNOSE"
 check: ui-xml-test
 
-# alignment test
+# == Alignment test ==
 # alignment.xml contains: snapshot_file="xtmp-alignment.png
 XML_FILES  += alignment.xml
 EXTRA_DIST += alignment.png
@@ -45,6 +45,18 @@ alignment-png-test: $(srcdir)/alignment.xml $(srcdir)/alignment.png
 	$(Q) $(IMGCHECK) $(srcdir)/alignment.png xtmp-alignment.png ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f xtmp-alignment.png
 check: alignment-png-test
+
+# == Image test (PNG) ==
+XML_FILES  += noise16.xml
+EXTRA_DIST += noise16.png
+noise16-png-test: $(srcdir)/noise16.xml $(srcdir)/noise16.png
+	$(Q) rm -f xtmp-noise16.png
+	$(Q) test $(srcdir) = $(builddir) || cp $(srcdir)/noise16.png $(builddir)
+	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/noise16.xml
+	$(Q) $(IMGCHECK) $(srcdir)/noise16.png xtmp-noise16.png ; eval "$$TSTDIAGNOSE"
+	$(Q) test $(srcdir) = $(builddir) || rm -f $(builddir)/noise16.png
+	$(Q) rm -f xtmp-noise16.png
+check: noise16-png-test
 
 # arrowsize test
 arrowsize-test:
@@ -70,7 +82,7 @@ texting-png-test: $(srcdir)/texting.xml
 check: texting-png-test
 
 xmllint-check:
-	$(Q) cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES) ; eval "$$TSTDIAGNOSE" "'linting $(XML_FILES)'"
+	$(Q) cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES) ; eval "$$TSTDIAGNOSE" "'linting XML_FILES'"
 check: xmllint-check
 
 .PHONY: xmllint-check

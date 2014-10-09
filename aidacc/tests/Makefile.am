@@ -1,22 +1,19 @@
 # Aida - Abstract Interface Definition Architecture
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES += -I$(top_srcdir) # -I$(top_builddir)
-DEFS     += -DRAPICORN_CONVENIENCE
+AM_CPPFLAGS += -I$(top_srcdir) # -I$(top_builddir)
+DEFS        += -DRAPICORN_CONVENIENCE
 
 AIDACC = $(AIDACC_NODEBUG) $(if $(findstring 1, $(V)), --aida-debug)
 AIDACC_NODEBUG = ../aidacc-intern
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
 TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
 
-# == ptptest ==
-noinst_PROGRAMS = ptptest
-ptptest_SOURCES = ptptest.cc
-ptptest_LDFLAGS = -pthread -lpthread
-ptptest_LDADD   = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
-ptptest $(srcdir)/ptptest.cc: typecodetests.typ typecodetests-api.cc
+# automake doesn't always emit CXXCOMPILE
+CXXCOMPILE ?= $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+
 EXTRA_DIST += typecodetests.idl
-typecodetests-api.cc: $(srcdir)/typecodetests.idl $(AIDACC) $(CXXSTUB_PY)
+typecodetests-api.cc: $(srcdir)/typecodetests.idl $(AIDACC_NODEBUG) $(CXXSTUB_PY)
 	$(AM_V_GEN)
 	$(Q) ${AIDACC} -x CxxStub -G clienthh $< -o xgen-$(@F).hh
 	$(Q) ${AIDACC} -x CxxStub -G clientcc $< -o xgen-$(@F).cc
@@ -63,21 +60,10 @@ check-testfail: $(srcdir)/testfail.idl
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check-local: check-testfail
 
-# == Aida Unit Tests ==
-check-aida-standard-types: ptptest
-	$(Q) ./ptptest --tests
-check-local: check-aida-standard-types
-
-# == Test TypeMap ==
-check-aida-format-TypeMap: $(srcdir)/testpass.idl $(TYPEMAP_PY) ptptest
-	$(Q) ${AIDACC} $< -x TypeMap ; eval "$$TSTDIAGNOSE" "'aidacc -x TypeMap'"
-	$(Q) ./ptptest idltypes.map $(TESTPASS_AUXTESTS) >/dev/null ; eval "$$TSTDIAGNOSE" "'ptptest aux-tests'"
-	$(Q) rm -f idltypes.map
-check-local: check-aida-format-TypeMap
-
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G strip-path=$(abs_top_srcdir)/ \
+	  -G iface-base=Rapicorn::BaseObject \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref

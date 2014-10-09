@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_HERITAGE_HH__
 #define __RAPICORN_HERITAGE_HH__
 
@@ -9,23 +9,21 @@ namespace Rapicorn {
 class WindowImpl;
 class WidgetImpl;
 
-class Heritage : public virtual ReferenceCountable {
-  friend        class ClassDoctor;
+class Heritage : public std::enable_shared_from_this<Heritage> {
   class Internals;
   Internals    *internals_;
   WindowImpl   &window_;
-  explicit      Heritage        (WindowImpl &window,
-                                 Internals  *internals);
-  /*Des*/      ~Heritage        ();
-  static
-  Heritage*     create_heritage (WindowImpl     &window,
-                                 WidgetImpl       &widget,
-                                 ColorSchemeType color_scheme);
+  friend           class FriendAllocator<Heritage>; // allows make_shared() access to ctor/dtor
+  explicit         Heritage         (WindowImpl &window, Internals *internals);
 public:
-  Heritage*     adapt_heritage  (WidgetImpl           &widget,
-                                 ColorSchemeType color_scheme);
-  WindowImpl&   window          () const { return window_; }
-  /* colors */
+  typedef std::shared_ptr<Heritage> HeritageP;
+protected:
+  virtual         ~Heritage         ();
+  static HeritageP create_heritage  (WindowImpl &window, WidgetImpl &widget, ColorSchemeType color_scheme);
+public:
+  HeritageP     adapt_heritage  (WidgetImpl &widget, ColorSchemeType color_scheme);
+  WindowImpl&   window          () const                { return window_; }
+  // colors
   Color         get_color       (StateType state,
                                  ColorType ct) const;
   Color         foreground      (StateType st = STATE_NORMAL) const { return get_color (st, COLOR_FOREGROUND); }
@@ -48,13 +46,12 @@ public:
   Color         blue            (StateType st = STATE_NORMAL) const { return get_color (st, COLOR_BLUE); }
   Color         magenta         (StateType st = STATE_NORMAL) const { return get_color (st, COLOR_MAGENTA); }
   Color         insensitive_ink (StateType st = STATE_NORMAL, Color *glint = NULL) const;
-  /* variants */
+  // variants
   Heritage&     selected        ();
-  /* parsing */
-  Color         resolve_color   (const String  &color_name,
-                                 StateType      state,
-                                 ColorType      color_type = COLOR_NONE);
+  // parsing
+  Color         resolve_color   (const String &color_name, StateType state, ColorType color_type = COLOR_NONE);
 };
+typedef Heritage::HeritageP HeritageP;
 
 } // Rapicorn
 

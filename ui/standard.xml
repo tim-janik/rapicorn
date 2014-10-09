@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
+<rapicorn-definitions>
 
-  <tmpl:define id="OuterShell" inherit="Ambience" child-container="OuterShellCavity"
+  <Ambience id="OuterShell" child-container="OuterShellCavity"
     normal-lighting="upper-left">
     <Alignment right-padding="3" top-padding="3" left-padding="3" bottom-padding="3" hscale="0" vscale="0" >
       <VBox id="OuterShellCavity" />
     </Alignment>
-  </tmpl:define>
+  </Ambience>
 
 </rapicorn-definitions>

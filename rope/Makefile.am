@@ -3,9 +3,9 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS = . # tests
 
-INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
-AM_CXXFLAGS = $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS += $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
@@ -30,7 +30,7 @@ $(srcdir)/py-rope.cc: pyrapicorn.cc
 # == __pyrapicorn from pyrapicorn.cc ==
 __pyrapicorn_la_SOURCES	= py-rope.cc # includes pyrapicorn.cc
 __pyrapicorn_la_LIBADD	= $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-__pyrapicorn_la_LDFLAGS  	= -module -avoid-version -no-undefined $(SYMBOLIC_LDFLAGS)
+__pyrapicorn_la_LDFLAGS	= -module -avoid-version -no-undefined $(SYMBOLIC_LDFLAGS) $(AM_LDFLAGS)
 EXTRA_DIST             += py-rope.hh
 
 # === TESTS ===
@@ -55,13 +55,13 @@ check-local: check-PyStub-testpass-generation
 noinst_LTLIBRARIES    = __testpass.la
 __testpass_la_SOURCES = testpystub.cc	# forces C++ syntax check
 __testpass_la_LIBADD  = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-__testpass_la_LDFLAGS = -module -avoid-version -no-undefined $(SYMBOLIC_LDFLAGS) -rpath /nowhere # -rpath forces .so
+__testpass_la_LDFLAGS = -module -avoid-version -no-undefined $(SYMBOLIC_LDFLAGS) -rpath /nowhere $(AM_LDFLAGS) # -rpath forces .so
 testpystub.cc: testcxxpystub.ref
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) check-PyStub-testpass-generation # force testcxxpystub.ref check before using it
 	$(Q) cp $(srcdir)/testcxxpystub.ref xgen-$@
 	$(Q) echo "static PyMethodDef __testpass_methods__[] = { AIDA_PYSTUB_METHOD_DEFS(), { 0 } };" >> xgen-$@
 	$(Q) echo 'PyMODINIT_FUNC init__testpass (void) { Py_InitModule ("__testpass", __testpass_methods__); }' >> xgen-$@
-	$(Q) mv xgen-$@ $@
+	$(Q) (echo '#include <py-rope.hh>' && cat xgen-$@ ) > $@ && rm -f xgen-$@
 check-PyStub-testpass-module: __testpass.la
 	@: # check .cc syntax: already done by building __testpass.so
 	@: # check .py syntax
@@ -70,8 +70,8 @@ check-PyStub-testpass-module: __testpass.la
 	&& $(PYTHON) $(srcdir)/testpystub.ref ; eval "$$TSTDIAGNOSE"
 	@: # cleanups
 	$(Q) rm -f testpystub.cc __testpass.so
+# DISABLED, broken without rapicorn.so module: check-local: check-PyStub-testpass-module
 CLEANFILES += testpystub.cc __testpass.so testpystub.pyc
-check-local: check-PyStub-testpass-module
 # test PyStub files for Rapicorn interfaces
 check-rapicorn-idl: __pyrapicorn.la pyrapicorn.py
 	$(Q) ${AIDACC} $(RAPICORNIDL) > /dev/null ; eval "$$TSTDIAGNOSE"

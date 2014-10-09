@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_CXXAUX_HH__
 #define __RAPICORN_CXXAUX_HH__
 
@@ -10,6 +10,7 @@
 #include <stdint.h>			// uint64_t
 #include <limits.h>                     // {INT|CHAR|...}_{MIN|MAX}
 #include <float.h>                      // {FLT|DBL}_{MIN|MAX|EPSILON}
+#include <memory>
 #include <string>
 #include <vector>
 #include <map>
@@ -75,7 +76,7 @@
 #endif
 /**
  * @def RAPICORN_CONVENIENCE
- * Configuration macro to enable convenience macros.
+ * Compile time configuration macro to enable convenience macros.
  * Defining this before inclusion of rapicorn.hh or rapicorn-core.hh enables several convenience
  * macros that are defined in the global namespace without the usual "RAPICORN_" prefix,
  * see e.g. critical_unless(), UNLIKELY().
@@ -128,12 +129,6 @@
 #define	RAPICORN_SIMPLE_FUNCTION	       (__func__)
 #error  Failed to detect a recent GCC version (>= 4)
 #endif  // !__GNUC__
-
-// == C++11 Keywords ==
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 7
-#define override        /* unimplemented */
-#define final           /* unimplemented */
-#endif // GCC < 4.7
 
 // == Ensure 'uint' in global namespace ==
 #if 	RAPICORN_SIZEOF_SYS_TYPESH_UINT == 0
@@ -222,6 +217,64 @@ typedef vector<String> StringVector;    ///< Convenience alias for a std::vector
 struct Init {
   explicit Init (void (*f) ()) { f(); }
 };
+
+/**
+ * A std::make_shared<>() wrapper class to access private ctor & dtor.
+ * To call std::make_shared<T>() on a class @a T, its constructor and
+ * destructor must be public. For classes with private or protected
+ * constructor or destructor, this class can be used as follows:
+ * @code{.cc}
+ * class Type {
+ *   Type (ctor_args...);                // Private ctor.
+ *   friend class FriendAllocator<Type>; // Allow access to ctor/dtor of Type.
+ * };
+ * std::shared_ptr<Type> t = FriendAllocator<Type>::make_shared (ctor_args...);
+ * @endcode
+ */
+template<class T>
+struct FriendAllocator : std::allocator<T> {
+  /// Construct type @a C object, standard allocator requirement.
+  template<typename C, typename... Args> static inline void
+  construct (C *p, Args &&... args)
+  {
+    ::new ((void*) p) C (std::forward<Args> (args)...);
+  }
+  /// Delete type @a C object, standard allocator requirement.
+  template<typename C> static inline void
+  destroy (C *p)
+  {
+    p->~C ();
+  }
+  /**
+   * Construct an object of type @a T that is wrapped into a std::shared_ptr<T>.
+   * @param args        The list of arguments to pass into a T() constructor.
+   * @return            A std::shared_ptr<T> owning the newly created object.
+   */
+  template<typename ...Args> static inline std::shared_ptr<T>
+  make_shared (Args &&... args)
+  {
+    return std::allocate_shared<T> (FriendAllocator(), std::forward<Args> (args)...);
+  }
+};
+
+// == C++ Traits ==
+/** Check if a type is comparable for equality.
+ * If @a T is a type that can be compared with operator==, provide the member constant @a value equal true, otherwise false.
+ */
+template<class T>
+class IsComparable {
+  template<typename U> static char (&check (int))[1 + sizeof (decltype ( std::declval<U>() == std::declval<U>() ))];
+  template<typename>   static char (&check (...))[1];
+public:
+  static constexpr const bool value = sizeof (check<T> (0)) != 1; ///< True iff @a T supports operator==.
+};
+
+/// Check if a type @a T is a std::shared_ptr<T>.
+template<class T> struct IsSharedPtr                      : std::false_type {};
+template<class T> struct IsSharedPtr<std::shared_ptr<T> > : std::true_type {};
+/// Check if a type @a T is a std::weak_ptr<T>.
+template<class T> struct IsWeakPtr                        : std::false_type {};
+template<class T> struct IsWeakPtr<std::weak_ptr<T> >     : std::true_type {};
 
 } // Rapicorn
 

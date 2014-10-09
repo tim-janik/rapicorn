@@ -1,19 +1,4 @@
-/* Tests
- * Copyright (C) 2005-2006 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rcore/testutils.hh>
 
 namespace {
@@ -144,20 +129,5 @@ data_list_test ()
   TSTART ("DataList/END");
 }
 REGISTER_LOGTEST ("DataList/BEGIN", data_list_test);
-
-class A {};
-class D : public A {};
-
-static void
-trait_convertible_test()
-{
-  TASSERT ((TraitConvertible<int,int>::TRUTH == true));
-  TASSERT ((TraitConvertible<void*,float>::TRUTH == false));
-  TASSERT ((TraitConvertible<A,A>::TRUTH == true));
-  TASSERT ((TraitConvertible<D,D>::TRUTH == true));
-  TASSERT ((TraitConvertible<A,D>::TRUTH == true));
-  TASSERT ((TraitConvertible<D,A>::TRUTH == false));
-}
-REGISTER_TEST ("trait_convertible_test", trait_convertible_test);
 
 } // anon

@@ -1,4 +1,4 @@
-// CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
+// Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 #ifndef __RAPICORN_AIDA_SIGNAL_HH__
 #define __RAPICORN_AIDA_SIGNAL_HH__
 
@@ -251,8 +251,8 @@ protected:
   typedef HandlerLink<FutureFunction>             SignalLink;
 private:
   SignalLink   *callback_ring_; // linked ring of callback nodes
-  /*copy-ctor*/ AsyncSignal (const AsyncSignal&) = delete;
-  AsyncSignal&  operator=   (const AsyncSignal&) = delete;
+  explicit      AsyncSignal (const AsyncSignal&) = delete;  // non-copyable
+  AsyncSignal&  operator=   (const AsyncSignal&) = delete;  // non-assignable
   void
   ensure_ring ()
   {
@@ -333,11 +333,7 @@ public:
     bool
     future_ready ()
     {
-#if __GNUC__ == 4 && __GNUC_MINOR__ == 6
-      return future_.wait_for (std::chrono::nanoseconds (0)) != false; // g++-4.6.2: work around experimental code
-#else
       return future_.wait_for (std::chrono::nanoseconds (0)) == std::future_status::ready;
-#endif
     }
     inline void
     emit_stepwise()
@@ -395,24 +391,25 @@ public:
  * Note that the Signal template types is non-copyable.
  */
 template <typename SignalSignature, class Collector = Lib::CollectorDefault<typename std::function<SignalSignature>::result_type> >
-class Signal /*final*/ :
-    protected Lib::ProtoSignal<SignalSignature, Collector>
+class Signal : protected Lib::ProtoSignal<SignalSignature, Collector>
 {
   typedef Lib::ProtoSignal<SignalSignature, Collector> ProtoSignal;
   typedef typename ProtoSignal::CbFunction             CbFunction;
+public:
+  explicit Signal    (const Signal&) = delete;  // non-copyable
+  Signal&  operator= (const Signal&) = delete;  // non-assignable
+  using ProtoSignal::emit;
   class Connector {
-    Signal &signal_;
-    friend class Signal;
+    friend     class Signal;
+    Signal    &signal_;
     Connector& operator= (const Connector&) = delete;
-    explicit Connector (Signal &signal) : signal_ (signal) {}
+    explicit   Connector (Signal &signal) : signal_ (signal) {}
   public:
     /// Operator to add a new function or lambda as signal handler, returns a handler connection ID.
     size_t operator+= (const CbFunction &cb)              { return signal_.connect (cb); }
     /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
     bool   operator-= (size_t connection_id)              { return signal_.disconnect (connection_id); }
   };
-public:
-  using ProtoSignal::emit;
   /// Signal constructor, supports a default callback as argument.
   Signal (const CbFunction &method = CbFunction()) : ProtoSignal (method) {}
   /// Retrieve a connector object with operator+= and operator-= to connect and disconnect signal handlers.
@@ -480,7 +477,7 @@ private:
   CollectorResult result_;
 };
 
-/// Connector provides a simple (dis-)connect interfaces for signals on SmartHandle
+/// Connector provides a simple (dis-)connect interfaces for signals on RemoteHandle
 template<class Object, class SignalSignature>
 class Connector {
   typedef std::function<SignalSignature> CbFunction;
@@ -519,7 +516,7 @@ public:
  * emission before done() returns true is also supported.
  */
 template <typename SignalSignature>
-class AsyncSignal /*final*/ : protected Lib::AsyncSignal<SignalSignature>
+class AsyncSignal : protected Lib::AsyncSignal<SignalSignature>
 {
   typedef Lib::AsyncSignal<SignalSignature>   BaseSignal;
   typedef typename BaseSignal::CbFunction     CbFunction;

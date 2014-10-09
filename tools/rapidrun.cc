@@ -1,5 +1,6 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rapicorn.hh>
+#include "../rcore/rsvg/svg.hh"       // FIXME
 
 #include <string.h>
 #include <stdlib.h>
@@ -164,7 +165,7 @@ main (int   argc,
   String filename = app.auto_path (argv[1], ".");
 
   /* load GUI definitions, fancy version of app.auto_load() */
-  StringSeq definitions = app.auto_load ("RapicornTest", filename, "");
+  StringSeq definitions = app.auto_load (filename, "");
 
   /* print definitions */
   String dialog;

@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "paintwidgets.hh"
 #include "factory.hh"
 #include "painter.hh"
@@ -11,203 +11,299 @@
 
 namespace Rapicorn {
 
-static DataKey<SizePolicyType> size_policy_key;
+// == ArrowImpl ==
+ArrowImpl::ArrowImpl() :
+  dir_ (DIR_RIGHT)
+{}
 
-const PropertyList&
-Arrow::__aida_properties__()
+ArrowImpl::~ArrowImpl()
+{}
+
+DirType
+ArrowImpl::arrow_dir () const
 {
-  static Property *properties[] = {
-    MakeProperty (Arrow, arrow_dir,   _("Arrow Direction"), _("The direction the arrow points to"), "rw"),
-    MakeProperty (Arrow, size_policy, _("Size Policy"),     _("Policy which determines coupling of width and height"), "rw"),
-  };
-  static const PropertyList property_list (properties, WidgetImpl::__aida_properties__());
-  return property_list;
+  return dir_;
 }
 
-class ArrowImpl : public virtual WidgetImpl, public virtual Arrow {
-  DirType dir_;
-public:
-  explicit ArrowImpl() :
-    dir_ (DIR_RIGHT)
-  {}
-  ~ArrowImpl()
-  {}
-  virtual void    arrow_dir (DirType dir)       { dir_ = dir; expose(); }
-  virtual DirType arrow_dir () const            { return dir_; }
-  virtual void
-  size_policy (SizePolicyType spol)
-  {
-    if (!spol)
-      delete_data (&size_policy_key);
-    else
-      set_data (&size_policy_key, spol);
-  }
-  virtual SizePolicyType
-  size_policy () const
-  {
-    SizePolicyType spol = get_data (&size_policy_key);
-    return spol;
-  }
-protected:
-  virtual void
-  size_request (Requisition &requisition)
-  {
-    requisition.width = 3;
-    requisition.height = 3;
-  }
-  virtual void
-  size_allocate (Allocation area, bool changed)
-  {
-    SizePolicyType spol = size_policy();
-    if (spol == SIZE_POLICY_WIDTH_FROM_HEIGHT)
-      tune_requisition (area.height, -1);
-    else if (spol == SIZE_POLICY_HEIGHT_FROM_WIDTH)
-      tune_requisition (-1, area.width);
-  }
-  virtual void
-  render (RenderContext &rcontext, const Rect &rect)
-  {
-    IRect ia = allocation();
-    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    if (width >= 2 && height >= 2)
-      {
-        cairo_t *cr = cairo_context (rcontext, rect);
-        CPainter painter (cr);
-        painter.draw_dir_arrow (x, y, width, height, foreground(), dir_);
-      }
-  }
-};
-static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn::Factory::Arrow");
+void
+ArrowImpl::arrow_dir (DirType dir)
+{
+  dir_ = dir;
+  expose();
+  changed ("arrow_dir");
+}
+
+static DataKey<SizePolicyType> size_policy_key;
+
+SizePolicyType
+ArrowImpl::size_policy () const
+{
+  SizePolicyType spol = get_data (&size_policy_key);
+  return spol;
+}
 
 void
-DotGrid::dot_type (FrameType ft)
+ArrowImpl::size_policy (SizePolicyType spol)
+{
+  if (!spol)
+    delete_data (&size_policy_key);
+  else
+    set_data (&size_policy_key, spol);
+  invalidate_size();
+  changed ("size_policy");
+}
+
+void
+ArrowImpl::size_request (Requisition &requisition)
+{
+  requisition.width = 3;
+  requisition.height = 3;
+}
+
+void
+ArrowImpl::size_allocate (Allocation area, bool changed)
+{
+  SizePolicyType spol = size_policy();
+  if (spol == SIZE_POLICY_WIDTH_FROM_HEIGHT)
+    tune_requisition (area.height, -1);
+  else if (spol == SIZE_POLICY_HEIGHT_FROM_WIDTH)
+    tune_requisition (-1, area.width);
+}
+
+void
+ArrowImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  IRect ia = allocation();
+  int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
+  if (width >= 2 && height >= 2)
+    {
+      cairo_t *cr = cairo_context (rcontext, rect);
+      CPainter painter (cr);
+      painter.draw_dir_arrow (x, y, width, height, foreground(), dir_);
+    }
+}
+
+static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn_Factory:Arrow");
+
+// == DotGrid ==
+DotGridImpl::DotGridImpl() :
+  normal_dot_ (FRAME_IN),
+  impressed_dot_ (FRAME_IN),
+  n_hdots_ (1), n_vdots_ (1),
+  right_padding_dots_ (0), top_padding_dots_ (0),
+  left_padding_dots_ (0), bottom_padding_dots_ (0)
+{}
+
+DotGridImpl::~DotGridImpl()
+{}
+
+FrameType
+DotGridImpl::dot_type () const
+{
+  RAPICORN_ASSERT_UNREACHED();
+}
+
+void
+DotGridImpl::dot_type (FrameType ft)
 {
   normal_dot (ft);
   impressed_dot (ft);
 }
 
-const PropertyList&
-DotGrid::__aida_properties__()
+FrameType
+DotGridImpl::current_dot ()
 {
-  static Property *properties[] = {
-    MakeProperty (DotGrid, normal_dot, _("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw"),
-    MakeProperty (DotGrid, impressed_dot, _("Impresed Dot"), _("The kind of dot-frame to draw in impressed state"), "rw"),
-    MakeProperty (DotGrid, dot_type, _("Dot Type"), _("The kind of dot-frame to draw in all states"), "w"),
-    MakeProperty (DotGrid, n_hdots, _("H-Dot #"), _("The number of horizontal dots to be drawn"), 0u, 99999u, 3u, "rw"),
-    MakeProperty (DotGrid, n_vdots, _("V-Dot #"), _("The number of vertical dots to be drawn"), 0u, 99999u, 3u, "rw"),
-    MakeProperty (DotGrid, right_padding_dots, _("Right Padding Dots"), _("Amount of padding in dots to add at the child's right side"), 0, 65535, 3, "rw"),
-    MakeProperty (DotGrid, top_padding_dots, _("Top Padding Dots"), _("Amount of padding in dots to add at the child's top side"), 0, 65535, 3, "rw"),
-    MakeProperty (DotGrid, left_padding_dots, _("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), 0, 65535, 3, "rw"),
-    MakeProperty (DotGrid, bottom_padding_dots, _("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), 0, 65535, 3, "rw"),
-  };
-  static const PropertyList property_list (properties, WidgetImpl::__aida_properties__());
-  return property_list;
+  return ancestry_impressed() ? impressed_dot() : normal_dot();
 }
 
-class DotGridImpl : public virtual WidgetImpl, public virtual DotGrid {
-  FrameType normal_dot_, impressed_dot_;
-  uint      n_hdots_, n_vdots_;
-  uint16    right_padding_dots_, top_padding_dots_, left_padding_dots_, bottom_padding_dots_;
-public:
-  explicit DotGridImpl() :
-    normal_dot_ (FRAME_IN),
-    impressed_dot_ (FRAME_IN),
-    n_hdots_ (1), n_vdots_ (1),
-    right_padding_dots_ (0), top_padding_dots_ (0),
-    left_padding_dots_ (0), bottom_padding_dots_ (0)
-  {}
-  ~DotGridImpl()
-  {}
-  virtual void      impressed_dot (FrameType ft)        { impressed_dot_ = ft; expose(); }
-  virtual FrameType impressed_dot () const              { return impressed_dot_; }
-  virtual void      normal_dot    (FrameType ft)        { normal_dot_ = ft; expose(); }
-  virtual FrameType normal_dot    () const              { return normal_dot_; }
-  FrameType         current_dot   () const              { return ancestry_impressed() ? impressed_dot() : normal_dot(); }
-  virtual void      n_hdots       (uint   num)          { n_hdots_ = num; expose(); }
-  virtual uint      n_hdots       () const              { return n_hdots_; }
-  virtual void      n_vdots       (uint   num)          { n_vdots_ = num; expose(); }
-  virtual uint      n_vdots       () const              { return n_vdots_; }
-  virtual uint      right_padding_dots () const         { return right_padding_dots_; }
-  virtual void      right_padding_dots (uint c)         { right_padding_dots_ = c; expose(); }
-  virtual uint      top_padding_dots  () const          { return top_padding_dots_; }
-  virtual void      top_padding_dots  (uint c)          { top_padding_dots_ = c; expose(); }
-  virtual uint      left_padding_dots  () const         { return left_padding_dots_; }
-  virtual void      left_padding_dots  (uint c)         { left_padding_dots_ = c; expose(); }
-  virtual uint      bottom_padding_dots  () const       { return bottom_padding_dots_; }
-  virtual void      bottom_padding_dots  (uint c)       { bottom_padding_dots_ = c; expose(); }
-  virtual void
-  size_request (Requisition &requisition)
-  {
-    uint ythick = 1, xthick = 1;
-    requisition.width = n_hdots_ * (xthick + xthick) + MAX (n_hdots_ - 1, 0) * xthick;
-    requisition.height = n_vdots_ * (ythick + ythick) + MAX (n_vdots_ - 1, 0) * ythick;
-    requisition.width += (right_padding_dots_ + left_padding_dots_) * 3 * xthick;
-    requisition.height += (top_padding_dots_ + bottom_padding_dots_) * 3 * ythick;
-  }
-  virtual void
-  size_allocate (Allocation area, bool changed)
-  {}
-  virtual void
-  render (RenderContext &rcontext, const Rect &rect)
-  {
-    int ythick = 1, xthick = 1, n_hdots = n_hdots_, n_vdots = n_vdots_;
-    IRect ia = allocation();
-    int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-    int rq_width = n_hdots_ * (xthick + xthick) + MAX (n_hdots - 1, 0) * xthick;
-    int rq_height = n_vdots_ * (ythick + ythick) + MAX (n_vdots - 1, 0) * ythick;
-    /* split up extra width */
-    uint hpadding = right_padding_dots_ + left_padding_dots_;
-    double halign = hpadding ? left_padding_dots_ * 1.0 / hpadding : 0.5;
-    if (rq_width < width)
-      x += ifloor ((width - rq_width) * halign);
-    /* split up extra height */
-    uint vpadding = top_padding_dots_ + bottom_padding_dots_;
-    double valign = vpadding ? bottom_padding_dots_ * 1.0 / vpadding : 0.5;
-    if (rq_height < height)
-      y += ifloor ((height - rq_height) * valign);
-    /* draw dots */
-    if (width >= 2 * xthick && height >= 2 * ythick && n_hdots && n_vdots)
-      {
-        /* limit n_hdots */
-        if (rq_width > width)
-          {
-            int w = width - 2 * xthick;         /* dot1 */
-            n_hdots = 1 + w / (3 * xthick);
-          }
-        /* limit n_vdots */
-        if (rq_height > height)
-          {
-            int h = height - 2 * ythick;        /* dot1 */
-            n_vdots = 1 + h / (3 * ythick);
-          }
-        cairo_t *cr = cairo_context (rcontext, rect);
-        CPainter rp (cr);
-        for (int j = 0; j < n_vdots; j++)
-          {
-            int xtmp = 0;
-            for (int i = 0; i < n_hdots; i++)
-              {
-                rp.draw_shaded_rect (x + xtmp, y + 2 * ythick - 1, dark_shadow(),
-                                     x + xtmp + 2 * xthick - 1, y, light_glint());
-                xtmp += 3 * xthick;
-              }
-            y += 3 * ythick;
-          }
-      }
-  }
-};
-static const WidgetFactory<DotGridImpl> dot_grid_factory ("Rapicorn::Factory::DotGrid");
+static inline int
+u31 (int v)
+{
+  return CLAMP (v, 0, INT_MAX);
+}
+
+void
+DotGridImpl::impressed_dot (FrameType ft)
+{
+  impressed_dot_ = ft;
+  expose();
+  changed ("impressed_dot");
+}
+
+FrameType
+DotGridImpl::impressed_dot () const
+{
+  return impressed_dot_;
+}
+
+void
+DotGridImpl::normal_dot (FrameType ft)
+{
+  normal_dot_ = ft;
+  expose();
+  changed ("normal_dot");
+}
+
+FrameType
+DotGridImpl::normal_dot () const
+{
+  return normal_dot_;
+}
+
+void
+DotGridImpl::n_hdots (int num)
+{
+  n_hdots_ = u31 (num);
+  expose();
+  changed ("n_hdots");
+}
+
+int
+DotGridImpl::n_hdots () const
+{
+  return n_hdots_;
+}
+
+void
+DotGridImpl::n_vdots (int num)
+{
+  n_vdots_ = u31 (num);
+  expose();
+  changed ("n_vdots");
+}
+
+int
+DotGridImpl::n_vdots () const
+{
+  return n_vdots_;
+}
+
+int
+DotGridImpl::right_padding_dots () const
+{
+  return right_padding_dots_;
+}
+
+void
+DotGridImpl::right_padding_dots (int c)
+{
+  right_padding_dots_ = u31 (c);
+  expose();
+  changed ("right_padding_dots");
+}
+
+int
+DotGridImpl::top_padding_dots () const
+{
+  return top_padding_dots_;
+}
+
+void
+DotGridImpl::top_padding_dots (int c)
+{
+  top_padding_dots_ = u31 (c);
+  expose();
+  changed ("top_padding_dots");
+}
+
+int
+DotGridImpl::left_padding_dots () const
+{
+  return left_padding_dots_;
+}
+
+void
+DotGridImpl::left_padding_dots (int c)
+{
+  left_padding_dots_ = u31 (c);
+  expose();
+  changed ("left_padding_dots");
+}
+
+int
+DotGridImpl::bottom_padding_dots () const
+{
+  return bottom_padding_dots_;
+}
+
+void
+DotGridImpl::bottom_padding_dots (int c)
+{
+  bottom_padding_dots_ = u31 (c);
+  expose();
+  changed ("bottom_padding_dots");
+}
+
+void
+DotGridImpl::size_request (Requisition &requisition)
+{
+  const uint ythick = 1, xthick = 1;
+  requisition.width = n_hdots_ * (xthick + xthick) + MAX (n_hdots_ - 1, 0) * xthick;
+  requisition.height = n_vdots_ * (ythick + ythick) + MAX (n_vdots_ - 1, 0) * ythick;
+  requisition.width += (right_padding_dots_ + left_padding_dots_) * 3 * xthick;
+  requisition.height += (top_padding_dots_ + bottom_padding_dots_) * 3 * ythick;
+}
+
+void
+DotGridImpl::size_allocate (Allocation area, bool changed)
+{}
+
+void
+DotGridImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  const int ythick = 1, xthick = 1;
+  int n_hdots = n_hdots_, n_vdots = n_vdots_;
+  const IRect ia = allocation();
+  int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
+  const int rq_width = n_hdots_ * (xthick + xthick) + MAX (n_hdots - 1, 0) * xthick;
+  const int rq_height = n_vdots_ * (ythick + ythick) + MAX (n_vdots - 1, 0) * ythick;
+  /* split up extra width */
+  const uint hpadding = right_padding_dots_ + left_padding_dots_;
+  const double halign = hpadding ? left_padding_dots_ * 1.0 / hpadding : 0.5;
+  if (rq_width < width)
+    x += ifloor ((width - rq_width) * halign);
+  /* split up extra height */
+  const uint vpadding = top_padding_dots_ + bottom_padding_dots_;
+  const double valign = vpadding ? bottom_padding_dots_ * 1.0 / vpadding : 0.5;
+  if (rq_height < height)
+    y += ifloor ((height - rq_height) * valign);
+  /* draw dots */
+  if (width >= 2 * xthick && height >= 2 * ythick && n_hdots && n_vdots)
+    {
+      /* limit n_hdots */
+      if (rq_width > width)
+        {
+          const int w = width - 2 * xthick;     // dot1
+          n_hdots = 1 + w / (3 * xthick);
+        }
+      /* limit n_vdots */
+      if (rq_height > height)
+        {
+          const int h = height - 2 * ythick;    // dot1
+          n_vdots = 1 + h / (3 * ythick);
+        }
+      cairo_t *cr = cairo_context (rcontext, rect);
+      CPainter rp (cr);
+      for (int j = 0; j < n_vdots; j++)
+        {
+          int xtmp = 0;
+          for (int i = 0; i < n_hdots; i++)
+            {
+              rp.draw_shaded_rect (x + xtmp, y + 2 * ythick - 1, dark_shadow(),
+                                   x + xtmp + 2 * xthick - 1, y, light_glint());
+              xtmp += 3 * xthick;
+            }
+          y += 3 * ythick;
+        }
+    }
+}
+
+static const WidgetFactory<DotGridImpl> dot_grid_factory ("Rapicorn_Factory:DotGrid");
 
 // == DrawableImpl ==
 DrawableImpl::DrawableImpl() :
   x_ (0), y_ (0)
 {}
-
-const PropertyList&
-DrawableImpl::__aida_properties__ ()
-{
-  return RAPICORN_AIDA_PROPERTY_CHAIN (WidgetImpl::__aida_properties__(), DrawableIface::__aida_properties__());
-}
 
 void
 DrawableImpl::size_request (Requisition &requisition)
@@ -294,6 +390,6 @@ DrawableImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const WidgetFactory<DrawableImpl> drawable_factory ("Rapicorn::Factory::Drawable");
+static const WidgetFactory<DrawableImpl> drawable_factory ("Rapicorn_Factory:Drawable");
 
 } // Rapicorn

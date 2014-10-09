@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "utilities.hh"
 #include "inout.hh"
 #include "main.hh"
@@ -21,10 +21,6 @@
 #include <cstring>
 #include <execinfo.h>
 #include <stdexcept>
-
-#if !__GNUC_PREREQ (3, 4) || (__GNUC__ == 3 && __GNUC_MINOR__ == 4 && __GNUC_PATCHLEVEL__ < 6)
-#error This GNU C++ compiler version is known to be broken - please consult ui/README
-#endif
 
 namespace Rapicorn {
 
@@ -370,7 +366,6 @@ process_handle ()
   return string_format ("%s/%08x", process_info.uts.nodename, process_hash);
 }
 
-/// The Path namespace provides functions for file path manipulation and testing.
 namespace Path {
 
 /**
@@ -743,6 +738,20 @@ memfree (char *memread_mem)
     free (memread_mem);
 }
 
+bool
+memwrite (const String &filename, size_t len, const uint8 *bytes)
+{
+  FILE *file = fopen (filename.c_str(), "w");
+  if (!file)
+    return false;
+  const size_t nbytes = fwrite (bytes, 1, len, file);
+  bool success = ferror (file) == 0 && nbytes == len;
+  success = fclose (file) == 0 && success;
+  if (!success)
+    unlink (filename.c_str());
+  return success;
+}
+
 } // Path
 
 /* --- DataList --- */
@@ -808,7 +817,7 @@ DataList::~DataList()
 
 /* --- url handling --- */
 bool
-url_test_show (const char *url)
+url_show (const char *url)
 {
   static struct {
     const char   *prg, *arg1, *prefix, *postfix;
@@ -892,175 +901,6 @@ url_test_show (const char *url)
   for (i = 0; i < ARRAY_SIZE (www_browsers); i++)
     www_browsers[i].disabled = false;
   return false;
-}
-
-static void
-browser_launch_warning (const char *url)
-{
-  // FIXME: turn browser_launch_warning into a dialog
-  user_warning (UserSource ("URL", __FILE__, __LINE__), "Failed to find and start web browser executable to display URL: %s", url);
-}
-
-void
-url_show (const char *url)
-{
-  bool success = url_test_show (url);
-  if (!success)
-    browser_launch_warning (url);
-}
-
-static void
-unlink_file_name (gpointer data)
-{
-  char *file_name = (char*) data;
-  while (unlink (file_name) < 0 && errno == EINTR);
-  g_free (file_name);
-}
-
-static const gchar*
-url_create_redirect (const char    *url,
-                     const char    *url_title,
-                     const char    *cookie)
-{
-  const char *ver = "0.5";
-  gchar *tname = NULL;
-  gint fd = -1;
-  while (fd < 0)
-    {
-      g_free (tname);
-      tname = g_strdup_printf ("/tmp/Url%08X%04X.html", (int) lrand48(), getpid());
-      fd = open (tname, O_WRONLY | O_CREAT | O_EXCL, 00600);
-      if (fd < 0 && errno != EEXIST)
-        {
-          g_free (tname);
-          return NULL;
-        }
-    }
-  char *text = g_strdup_printf ("<!DOCTYPE HTML SYSTEM>\n"
-                                "<html><head>\n"
-                                "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n"
-                                "<meta http-equiv=\"refresh\" content=\"0; URL=%s\">\n"
-                                "<meta http-equiv=\"set-cookie\" content=\"%s\">\n"
-                                "<title>%s</title>\n"
-                                "</head><body>\n"
-                                "<h1>%s</h1>\n"
-                                "<b>Document Redirection</b><br>\n"
-                                "Your browser is being redirected.\n"
-                                "If it does not support automatic redirections, try <a href=\"%s\">%s</a>.\n"
-                                "<hr>\n"
-                                "<address>RapicornUrl/%s file redirect</address>\n"
-                                "</body></html>\n",
-                                url, cookie, url_title, url_title, url, url, ver);
-  int w, c, l = strlen (text);
-  do
-    w = write (fd, text, l);
-  while (w < 0 && errno == EINTR);
-  g_free (text);
-  do
-    c = close (fd);
-  while (c < 0 && errno == EINTR);
-  if (w != l || c < 0)
-    {
-      while (unlink (tname) < 0 && errno == EINTR)
-        {}
-      g_free (tname);
-      return NULL;
-    }
-  cleanup_add (60 * 1000, unlink_file_name, tname); /* free tname */
-  return tname;
-}
-
-bool
-url_test_show_with_cookie (const char *url,
-                           const char *url_title,
-                           const char *cookie)
-{
-  const char *redirect = url_create_redirect (url, url_title, cookie);
-  if (redirect)
-    return url_test_show (redirect);
-  else
-    return url_test_show (url);
-}
-
-void
-url_show_with_cookie (const char *url,
-                      const char *url_title,
-                      const char *cookie)
-{
-  bool success = url_test_show_with_cookie (url, url_title, cookie);
-  if (!success)
-    browser_launch_warning (url);
-}
-
-/* --- cleanups --- */
-typedef struct {
-  uint           id;
-  GDestroyNotify handler;
-  void          *data;
-} Cleanup;
-
-static Mutex cleanup_mutex;
-static GSList *cleanup_list = NULL;
-
-static void
-cleanup_exec_Lm (Cleanup *cleanup)
-{
-  cleanup_list = g_slist_remove (cleanup_list, cleanup);
-  g_source_remove (cleanup->id);
-  GDestroyNotify handler = cleanup->handler;
-  void *data = cleanup->data;
-  g_free (cleanup);
-  cleanup_mutex.unlock();
-  handler (data);
-  cleanup_mutex.lock();
-}
-
-/**
- * Force all cleanup handlers (see rapicorn_cleanup_add()) to be immediately
- * executed. This function should be called at program exit to execute
- * cleanup handlers which have timeouts that have not yet expired.
- */
-void
-cleanup_force_handlers (void)
-{
-  cleanup_mutex.lock();
-  while (cleanup_list)
-    cleanup_exec_Lm ((Cleanup*) cleanup_list->data);
-  cleanup_mutex.unlock();
-}
-
-static gboolean
-cleanup_exec (gpointer data)
-{
-  cleanup_mutex.lock();
-  cleanup_exec_Lm ((Cleanup*) data);
-  cleanup_mutex.unlock();
-  return FALSE;
-}
-
-/**
- * @param timeout_ms    timeout in milliseconds
- * @param handler       cleanup handler to run
- * @param data          cleanup handler data
- *
- * Register a cleanup handler, the @a handler is guaranteed to be run
- * asyncronously (i.e. not from within cleanup_add()). The cleanup
- * handler will be called as soon as @a timeout_ms has elapsed or
- * cleanup_force_handlers() is called.
- */
-uint
-cleanup_add (guint          timeout_ms,
-             GDestroyNotify handler,
-             void          *data)
-{
-  Cleanup *cleanup = g_new0 (Cleanup, 1);
-  cleanup->handler = handler;
-  cleanup->data = data;
-  cleanup->id = g_timeout_add (timeout_ms, cleanup_exec, cleanup);
-  cleanup_mutex.lock();
-  cleanup_list = g_slist_prepend (cleanup_list, cleanup);
-  cleanup_mutex.unlock();
-  return cleanup->id;
 }
 
 /* --- zintern support --- */

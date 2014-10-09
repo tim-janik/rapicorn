@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rcore/testutils.hh>
 #include <stdio.h>
 #include <unistd.h>
@@ -120,12 +120,11 @@ REGISTER_TEST ("0-Testing/Traps & Failing Conditions", test_failing);
 static void
 test_cpu_info (void)
 {
-  const CPUInfo cpi = cpu_info ();
-  TCMPS (cpi.machine, !=, NULL);
-  String cps = cpu_info_string (cpi);
-  TASSERT (cps.size() != 0);
+  const String cpi = cpu_info ();
+  const size_t cpu_info_separator = cpi.find (' ');
+  TASSERT (cpu_info_separator != cpi.npos && cpi.size() > 0 && cpu_info_separator > 0 && cpu_info_separator + 1 < cpi.size());
   if (Test::verbose())
-    printout ("\n#####\n%s#####\n", cps.c_str());
+    printout ("\nCPUID: %s\n", cpi.c_str());
 }
 REGISTER_TEST ("General/CpuInfo", test_cpu_info);
 
@@ -651,6 +650,31 @@ access_text_resources ()
 /// [Blob-EXAMPLE]
 REGISTER_TEST ("Resource/Test Example", access_text_resources);
 
+static String
+open_temporary (int *fdp)
+{
+  String dir;
+  dir = P_tmpdir;
+  if (!Path::check (dir, "dxw"))
+    dir = "/tmp";
+  String path;
+  for (uint i = 0; i < 77; i++)
+    {
+      path = Path::join (P_tmpdir, string_format ("task%u-%x.tmp", ThisThread::thread_pid(), Test::random_irange (256, 4095)));
+      if (!Path::check (path, "e"))
+        {
+          int temporary_fd = open (path.c_str(), O_RDWR | O_EXCL | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY,
+                                   S_IRUSR | S_IWUSR); // 0600
+          if (temporary_fd >= 0)
+            {
+              *fdp = temporary_fd;
+              return path;
+            }
+        }
+    }
+  RAPICORN_FATAL ("Failed to create temporary file in directory: %s", dir);
+}
+
 static void
 more_blob_tests ()
 {
@@ -659,12 +683,8 @@ more_blob_tests ()
   assert (!!fblob);
   assert (fblob.string().find ("F2GlZ1s5FrRzsA") != String::npos);
   // create a big example file aceeding internal mmap thresholds
-  String temporary_filename; {
-    char tmp_buffer[L_tmpnam + 1], *tmp_filename = tmpnam (tmp_buffer);
-    assert (tmp_filename);
-    temporary_filename = tmp_filename;
-  }
-  int temporary_fd = open (temporary_filename.c_str(), O_WRONLY | O_EXCL | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY, 0600);
+  int temporary_fd = -1;
+  String temporary_filename = open_temporary (&temporary_fd);
   assert (temporary_fd >= 0);
   String string_data =
     string_multiply (string_multiply ("blub", 1024), 128) +
@@ -698,10 +718,10 @@ more_blob_tests ()
 }
 REGISTER_TEST ("Resource/File IO Tests", more_blob_tests);
 
-static void // Test Mutextes before g_thread_init()
+static void // Test Mutextes before GLib's thread initialization
 test_before_thread_init()
 {
-  /* check C++ mutex init + destruct before g_thread_init() */
+  /* check C++ mutex init + destruct before GLib starts up */
   Mutex *mutex = new Mutex;
   Cond *cond = new Cond;
   delete mutex;

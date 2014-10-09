@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rcore/testutils.hh>
 #include <stdlib.h>
 #include <string.h>
@@ -521,7 +521,7 @@ struct RingBufferWriter : public IntSequence {
     TINFO ("%s start.", ThisThread::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
-        uint k, n = Test::rand_int() % MIN (ring_buffer_test_length - l + 1, 65536 * 2);
+        uint k, n = Test::random_int64() % MIN (ring_buffer_test_length - l + 1, 65536 * 2);
         int buffer[n], *b = buffer;
         for (uint i = 0; i < n; i++)
           {

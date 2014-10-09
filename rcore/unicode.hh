@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_UNICODE_HH__
 #define __RAPICORN_UNICODE_HH__
 
@@ -8,6 +8,7 @@ namespace Rapicorn {
 
 namespace Unicode {
 inline bool isvalid      (unichar uc) RAPICORN_CONST;
+inline bool isnoncharacter (unichar uc) RAPICORN_CONST;
 bool        isalnum      (unichar uc) RAPICORN_CONST;
 bool        isalpha      (unichar uc) RAPICORN_CONST;
 bool        iscntrl      (unichar uc) RAPICORN_CONST;
@@ -82,21 +83,27 @@ int                   utf8_from_unichar (unichar         uc,
                                          char            str[8]);
 bool                  utf8_validate     (const String   &string,
                                          int            *bound = NULL);
+bool                  utf8_is_locale_charset ();
 
 /* --- implementation bits --- */
 namespace Unicode {
 inline bool
 isvalid (unichar uc)
-{
-  if (RAPICORN_UNLIKELY (uc > 0xfdcf && uc < 0xfdf0))
-    return false;
-  if (RAPICORN_UNLIKELY ((uc & 0xfffe) == 0xfffe))
-    return false;
+{ // Unicode definition D90, Section 3.9 Unicode Encoding Forms
   if (RAPICORN_UNLIKELY (uc > 0x10ffff))
     return false;
   if (RAPICORN_UNLIKELY ((uc & 0xfffff800) == 0xd800))
     return false;
   return true;
+}
+inline bool
+isnoncharacter (unichar uc)
+{ // Unicode definition D14, Section 3.4 Characters and Encoding
+  if (RAPICORN_UNLIKELY (uc >= 0xfdd0 && uc <= 0xfdef))
+    return true;
+  if (RAPICORN_UNLIKELY ((uc & 0xfffe) == 0xfffe && (uc >> 16) <= 0x10))
+    return true;
+  return false;
 }
 } // Unicode
 

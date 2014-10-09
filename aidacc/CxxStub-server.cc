@@ -1,6 +1,6 @@
 
 #ifndef AIDA_CHECK
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; throw std::runtime_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
+#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
 #endif
 
 namespace { // Anon
@@ -30,31 +30,33 @@ static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 }
 
 // objects
-template<class Target> static inline Target* id2obj (uint64 oid)
+template<class Target> static inline Target*
+remote_handle_to_interface (const RemoteHandle &remote)
 {
-  Rapicorn::Aida::ImplicitBase *instance = server_connection->orbid2instance (oid);
+  Rapicorn::Aida::ImplicitBase *instance = server_connection->interface_from_handle (remote).get();
   return dynamic_cast<Target*> (instance);
 }
 
-static inline uint64 obj2id  (Rapicorn::Aida::ImplicitBase *obj)
-{
-  return server_connection->instance2orbid (obj);
-}
-
-template<class Object> static inline Object*
-smh2obj (const SmartHandle &sh)
-{
-  return id2obj<Object> (sh._orbid());
-}
-
 template<class SMH> static inline SMH
-obj2smh ($AIDA_iface_base$ *self)
+interface_to_remote_handle ($AIDA_iface_base$ *ibase)
 {
-  const uint64 orbid = obj2id (self);
   SMH target;
-  struct Broker : ObjectBroker { using ObjectBroker::tie_handle; };
-  Broker::tie_handle (target, orbid);
+  struct CastingServerConnection : ServerConnection { using ServerConnection::cast_interface_handle; };
+  CastingServerConnection *cs_con = (CastingServerConnection*) server_connection;
+  cs_con->cast_interface_handle (target, Rapicorn::BaseObject::shared_ptr (ibase));
   return target;
+}
+
+template<class Target> static inline void
+field_buffer_add_interface (Rapicorn::Aida::FieldBuffer &fb, Target *instane)
+{
+  server_connection->add_interface (fb, Rapicorn::BaseObject::shared_ptr (instane));
+}
+
+template<class Target> static inline Target*
+field_reader_pop_interface (Rapicorn::Aida::FieldReader &fr)
+{
+  return dynamic_cast<Target*> (server_connection->pop_interface (fr).get());
 }
 
 // messages
@@ -86,13 +88,13 @@ add_header2_emit (FieldBuffer &fb, size_t signal_handler_id, uint64 h, uint64 l)
 static inline FieldBuffer*
 new_call_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return FieldBuffer::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
 }
 
 static inline FieldBuffer*
 new_connect_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ObjectBroker::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::receiver_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return FieldBuffer::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
 }
 
 // slot
@@ -103,3 +105,19 @@ slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
 }
 
 } } // Anon::__AIDA_Local__
+
+namespace Rapicorn { namespace Aida {
+// namespace Rapicorn::Aida needed for argument dependent lookups of the operators
+static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v);
+static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v);
+static void
+operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
+{
+  fb.add_any (v, *__AIDA_Local__::server_connection);
+}
+static void
+operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
+{
+  v = fr.pop_any (*__AIDA_Local__::server_connection);
+}
+} } // Rapicorn::Aida

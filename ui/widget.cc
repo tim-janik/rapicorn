@@ -1,5 +1,6 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "widget.hh"
+#include "binding.hh"
 #include "container.hh"
 #include "adjustment.hh"
 #include "window.hh"
@@ -8,14 +9,11 @@
 #include "factory.hh"
 #include "selector.hh"
 #include "selob.hh"
+#include <algorithm>
 
 #define SZDEBUG(...)    RAPICORN_KEY_DEBUG ("Sizing", __VA_ARGS__)
 
 namespace Rapicorn {
-
-struct ClassDoctor {
-  static void update_widget_heritage (WidgetImpl &widget) { widget.heritage (widget.heritage()); }
-};
 
 EventHandler::EventHandler() :
   sig_event (Aida::slot (*this, &EventHandler::handle_event))
@@ -48,7 +46,6 @@ WidgetIface::impl () const
 WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE | SENSITIVE),
   parent_ (NULL), ainfo_ (NULL), heritage_ (NULL), factory_context_ (NULL),
-  sig_changed (Aida::slot (*this, &WidgetImpl::do_changed)),
   sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
@@ -56,6 +53,12 @@ WidgetImpl::WidgetImpl () :
 void
 WidgetImpl::constructed()
 {}
+
+void
+WidgetImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
+{
+  f (*this);
+}
 
 bool
 WidgetImpl::ancestry_visible () const
@@ -99,20 +102,21 @@ WidgetImpl::ancestry_impressed () const
   return false;
 }
 
+/// Return wether a widget is visible() and not offscreen, see ContainerImpl::change_unviewable()
 bool
 WidgetImpl::viewable() const
 {
   return visible() && !test_any_flag (UNVIEWABLE | PARENT_UNVIEWABLE);
 }
 
-/// Return wether a widget can process key events.
+/// Return wether a widget is sensitive() and can process key events.
 bool
 WidgetImpl::key_sensitive () const
 {
   return sensitive() && ancestry_visible();
 }
 
-/// Return wether a widget can process pointer events.
+/// Return wether a widget is sensitive() and can process pointer events.
 bool
 WidgetImpl::pointer_sensitive () const
 {
@@ -145,7 +149,7 @@ WidgetImpl::propagate_state (bool notify_changed)
     for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
       it->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
-    sig_changed.emit(); // changed() does not imply invalidate(), see above
+    sig_changed.emit (""); // changed() does not imply invalidate(), see above
 }
 
 void
@@ -172,7 +176,7 @@ WidgetImpl::set_flag (uint64 flag, bool on)
           repack (pa, pa); // includes invalidate();
           invalidate_parent(); // request resize even if flagged as invalid already
         }
-      changed();
+      changed ("flags");
     }
 }
 
@@ -219,7 +223,7 @@ WidgetImpl::unset_focus ()
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
-        rwidget->set_focus (NULL);
+        WindowImpl::Internal::set_focus (*rwidget, NULL);
     }
 }
 
@@ -233,12 +237,12 @@ WidgetImpl::grab_focus ()
   // unset old focus
   WindowImpl *rwidget = get_window();
   if (rwidget)
-    rwidget->set_focus (NULL);
+    WindowImpl::Internal::set_focus (*rwidget, NULL);
   // set new focus
   rwidget = get_window();
   if (rwidget && rwidget->get_focus() == NULL)
-    rwidget->set_focus (this);
-  return rwidget->get_focus() == this;
+    WindowImpl::Internal::set_focus (*rwidget, this);
+  return rwidget && rwidget->get_focus() == this;
 }
 
 bool
@@ -274,7 +278,96 @@ WidgetImpl::notify_key_error ()
 {
   WindowImpl *rwidget = get_window();
   if (rwidget)
-    rwidget->beep();
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        screen_window->beep();
+    }
+}
+
+/** Request content data.
+ * Request content data from clipboard or selection, etc. This request will result in the delivery of a
+ * CONTENT_DATA event with a @a data_type possibly different from the requested @a data_type.
+ * The event's @a data_type will be empty if no content data is available.
+ * The @a nonce argument is an ID that should be unique for each new request, it is provided by the
+ * CONTENT_DATA event to associate the originating request.
+ */
+bool
+WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const String &data_type)
+{
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        {
+          screen_window->request_content (csource, nonce, data_type);
+          return true;
+        }
+    }
+  return false;
+}
+
+/** Claim ownership for content requests.
+ * Make this widget the owner for future @a content_source requests (delivered as CONTENT_REQUEST events).
+ * The @a data_types contain a list of acceptable types to retrieve contents.
+ * A CONTENT_CLEAR event may be sent to indicate ownership loss, e.g. because another widget or process took on ownership.
+ */
+bool
+WidgetImpl::own_content (ContentSourceType content_source, uint64 nonce, const StringVector &data_types)
+{
+  assert_return (data_types.size() >= 1, false);
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        {
+          screen_window->set_content_owner (content_source, nonce, data_types);
+          return true;
+        }
+    }
+  return false;
+}
+
+/** Reject ownership for content requests.
+ * Counterpart to WidgetImpl::own_content(), gives up ownership if it was previously acquired.
+ */
+bool
+WidgetImpl::disown_content (ContentSourceType content_source, uint64 nonce)
+{
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        {
+          screen_window->set_content_owner (content_source, nonce, StringVector());
+          return true;
+        }
+    }
+  return false;
+}
+
+/** Provide reply data for CONTENT_REQUEST events.
+ * All CONTENT_REQUEST events need to be honored with provide_content() replies,
+ * the @a nonce argument is provided by the event and must be passed along.
+ * To reject a content request, pass an empty string as @a data_type.
+ */
+bool
+WidgetImpl::provide_content (const String &data_type, const String &data, uint64 request_id)
+{
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      if (screen_window)
+        {
+          screen_window->provide_content (data_type, data, request_id);
+          return true;
+        }
+    }
+  return false;
 }
 
 size_t
@@ -477,14 +570,11 @@ WidgetImpl::finalize()
 
 WidgetImpl::~WidgetImpl()
 {
-  SizeGroup::delete_widget (*this);
+  WidgetGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);
   if (heritage_)
-    {
-      heritage_->unref();
-      heritage_ = NULL;
-    }
+    heritage_ = NULL;
   uint timer_id = get_data (&visual_update_key);
   if (timer_id)
     {
@@ -568,6 +658,50 @@ WidgetImpl::list_commands ()
   return command_list;
 }
 
+struct NamedAny { String name; Any any; };
+typedef vector<NamedAny> NamedAnyVector;
+
+class UserDataKey : public DataKey<NamedAnyVector*> {
+  virtual void destroy (NamedAnyVector *nav) override
+  {
+    delete nav;
+  }
+};
+static UserDataKey user_data_key;
+
+void
+WidgetImpl::set_user_data (const String &name, const Any &any)
+{
+  return_unless (!name.empty());
+  NamedAnyVector *nav = get_data (&user_data_key);
+  if (!nav)
+    {
+      nav = new NamedAnyVector;
+      set_data (&user_data_key, nav);
+    }
+  for (auto it : *nav)
+    if (it.name == name)
+      {
+        it.any = any;
+        return;
+      }
+  NamedAny nany;
+  nany.name = name;
+  nany.any = any;
+  nav->push_back (nany);
+}
+
+Any
+WidgetImpl::get_user_data (const String &name)
+{
+  NamedAnyVector *nav = get_data (&user_data_key);
+  if (nav)
+    for (auto it : *nav)
+      if (it.name == name)
+        return it.any;
+  return Any();
+}
+
 Property*
 WidgetImpl::lookup_property (const String &property_name)
 {
@@ -587,16 +721,95 @@ WidgetImpl::set_property (const String &property_name, const String &value)
     throw Exception ("no such property: " + name() + "::" + property_name);
 }
 
-const PropertyList&
-WidgetImpl::list_properties ()
-{
-  return __aida_properties__();
-}
-
 bool
 WidgetImpl::try_set_property (const String &property_name, const String &value)
 {
   return __aida_setter__ (property_name, value);
+}
+
+static DataKey<ObjectIfaceP> data_context_key;
+
+void
+WidgetImpl::data_context (ObjectIface &dcontext)
+{
+  ObjectIfaceP oip = get_data (&data_context_key);
+  if (oip.get() != &dcontext)
+    {
+      oip = shared_ptr (&dcontext);
+      if (oip)
+        set_data (&data_context_key, shared_ptr (&dcontext));
+      else
+        delete_data (&data_context_key);
+      if (anchored())
+        foreach_recursive ([] (WidgetImpl &widget) { widget.data_context_changed(); });
+    }
+}
+
+ObjectIfaceP
+WidgetImpl::data_context () const
+{
+  ObjectIfaceP oip = get_data (&data_context_key);
+  if (!oip)
+    {
+      WidgetImpl *p = parent();
+      if (p)
+        return p->data_context();
+    }
+  return oip;
+}
+
+typedef vector<BindingP> BindingVector;
+class BindingVectorKey : public DataKey<BindingVector*> {
+  virtual void destroy (BindingVector *data) override
+  {
+    for (auto b : *data)
+      b->reset();
+    delete data;
+  }
+};
+static BindingVectorKey binding_key;
+
+void
+WidgetImpl::data_context_changed ()
+{
+  BindingVector *bv = get_data (&binding_key);
+  if (bv)
+    {
+      ObjectIfaceP dc = data_context();
+      for (BindingP b : *bv)
+        if (dc)
+          b->bind_context (dc);
+        else
+          b->reset();
+    }
+}
+
+void
+WidgetImpl::add_binding (const String &property, const String &binding_path)
+{
+  assert_return (false == anchored());
+  BindingP bp = Binding::make_shared (*this, property, binding_path);
+  BindingVector *bv = get_data (&binding_key);
+  if (!bv)
+    {
+      bv = new BindingVector;
+      set_data (&binding_key, bv);
+    }
+  bv->push_back (bp);
+}
+
+void
+WidgetImpl::remove_binding (const String &property)
+{
+  BindingVector *bv = get_data (&binding_key);
+  if (bv)
+    for (auto bi = bv->begin(); bi != bv->end(); ++bi)
+      if ((*bi)->instance_property() == property)
+        {
+          (*bi)->reset();
+          bv->erase (bi);
+          return;
+      }
 }
 
 static class OvrKey : public DataKey<Requisition> {
@@ -607,6 +820,7 @@ static class OvrKey : public DataKey<Requisition> {
   }
 } override_requisition;
 
+/// Get overriding widget size requisition width (-1 if unset).
 double
 WidgetImpl::width () const
 {
@@ -614,6 +828,7 @@ WidgetImpl::width () const
   return ovr.width >= 0 ? ovr.width : -1;
 }
 
+/// Override widget size requisition width (use -1 to unset).
 void
 WidgetImpl::width (double w)
 {
@@ -623,6 +838,7 @@ WidgetImpl::width (double w)
   invalidate_size();
 }
 
+/// Get overriding widget size requisition height (-1 if unset).
 double
 WidgetImpl::height () const
 {
@@ -630,6 +846,7 @@ WidgetImpl::height () const
   return ovr.height >= 0 ? ovr.height : -1;
 }
 
+/// Override widget size requisition height (use -1 to unset).
 void
 WidgetImpl::height (double h)
 {
@@ -649,19 +866,15 @@ WidgetImpl::propagate_heritage ()
 }
 
 void
-WidgetImpl::heritage (Heritage *heritage)
+WidgetImpl::heritage (HeritageP heritage)
 {
-  Heritage *old_heritage = heritage_;
+  HeritageP old_heritage = heritage_;
   heritage_ = NULL;
   if (heritage)
-    {
-      heritage_ = heritage->adapt_heritage (*this, color_scheme());
-      ref_sink (heritage_);
-    }
-  if (old_heritage)
-    old_heritage->unref();
+    heritage_ = heritage->adapt_heritage (*this, color_scheme());
   if (heritage_ != old_heritage)
     {
+      old_heritage = NULL;
       invalidate();
       propagate_heritage ();
     }
@@ -853,13 +1066,6 @@ WidgetImpl::point (Point p) /* widget coordinates relative */
           p.y >= a.y && p.y < a.y + a.height);
 }
 
-/// Signal emitted when a widget ancestry is added to or removed from a Window
-void
-WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
-{
-  anchored (old_toplevel == NULL);
-}
-
 void
 WidgetImpl::set_parent (ContainerImpl *pcontainer)
 {
@@ -1003,11 +1209,101 @@ WidgetImpl::force_anchor_info () const
   return ainfo;
 }
 
+/// WidgetGroup sprouts are turned into widget group objects for ANCHORED widgets
+struct WidgetGroupSprout {
+  String          group_name;
+  WidgetGroupType group_type;
+  WidgetGroupSprout() : group_type (WidgetGroupType (0)) {}
+  WidgetGroupSprout (const String &name, WidgetGroupType gt) : group_name (name), group_type (gt) {}
+  bool operator== (const WidgetGroupSprout &other) const { return other.group_name == group_name && other.group_type == group_type; }
+};
+class WidgetGroupSproutsKey : public DataKey<vector<WidgetGroupSprout>*> {
+  virtual void destroy (vector<WidgetGroupSprout> *widget_group_sprouts) override
+  {
+    delete widget_group_sprouts;
+  }
+};
+static WidgetGroupSproutsKey widget_group_sprouts_key;
+
 void
-WidgetImpl::changed()
+WidgetImpl::enter_widget_group (const String &group_name, WidgetGroupType group_type)
 {
-  if (!finalizing())
-    sig_changed.emit();
+  assert_return (false == anchored());
+  assert_return (false == group_name.empty());
+  auto *sprouts = get_data (&widget_group_sprouts_key);
+  if (!sprouts)
+    {
+      sprouts = new vector<WidgetGroupSprout>;
+      set_data (&widget_group_sprouts_key, sprouts);
+    }
+  const WidgetGroupSprout sprout (group_name, group_type);
+  auto it = std::find (sprouts->begin(), sprouts->end(), sprout);
+  const bool widget_group_exists = it != sprouts->end();
+  assert_return (false == widget_group_exists);
+  sprouts->push_back (sprout);
+}
+
+void
+WidgetImpl::leave_widget_group (const String &group_name, WidgetGroupType group_type)
+{
+  assert_return (false == anchored());
+  auto *sprouts = get_data (&widget_group_sprouts_key);
+  const WidgetGroupSprout sprout (group_name, group_type);
+  auto it = find (sprouts->begin(), sprouts->end(), sprout);
+  const bool widget_group_exists = it != sprouts->end();
+  assert_return (true == widget_group_exists);
+  sprouts->erase (it);
+}
+
+void
+WidgetImpl::sync_widget_groups (const String &group_list, WidgetGroupType group_type)
+{
+  StringVector add = string_split_any (group_list, ",");
+  string_vector_strip (add);
+  string_vector_erase_empty (add);
+  std::stable_sort (add.begin(), add.end());
+  StringVector del = list_widget_groups (group_type);
+  std::stable_sort (del.begin(), del.end());
+  for (size_t a = 0, d = 0; a < add.size() || d < del.size();)
+    if (d >= del.size() || (a < add.size() && add[a] < del[d]))
+      enter_widget_group (add[a++], group_type);
+    else if (a >= add.size() || add[a] > del[d]) // (d < del.size())
+      leave_widget_group (del[d++], group_type);
+    else // (a < add.size() && d < del.size() && add[a] == del[d])
+      a++, d++;
+}
+
+StringVector
+WidgetImpl::list_widget_groups (WidgetGroupType group_type) const
+{
+  auto *sprouts = get_data (&widget_group_sprouts_key);
+  StringVector strings;
+  if (sprouts)
+    for (auto it : *sprouts)
+      if (it.group_type == group_type)
+        strings.push_back (it.group_name);
+  return strings;
+}
+
+WidgetGroup*
+WidgetImpl::find_widget_group (const String &group_name, WidgetGroupType group, bool force_create)
+{
+  assert_return (force_create == false || anchored(), NULL);
+  return_if (group_name.empty(), NULL);
+  ContainerImpl *container = as_container_impl();
+  for (auto c = container ? container : parent(); c; c = c->parent())
+    {
+      WidgetGroup *widget_group = c->retrieve_widget_group (group_name, group, false);
+      if (widget_group)
+        return widget_group;
+    }
+  if (!force_create)
+    return NULL;
+  // fallback to create on root
+  user_warning (this->user_source(), "creating undefined widget group \"%s\"", group_name);
+  ContainerImpl *r = root();
+  assert (r); // we asserted anchored() earlier
+  return r->retrieve_widget_group (group_name, group, true);
 }
 
 void
@@ -1036,10 +1332,11 @@ WidgetImpl::invalidate (uint64 mask)
       (!had_invalid_allocation && (mask & INVALID_ALLOCATION)))
     {
       invalidate_parent(); // need new size-request from parent
-      SizeGroup::invalidate_widget (*this);
+      WidgetGroup::invalidate_widget (*this);
     }
 }
 
+/// Determine "internal" size requisition of a widget, including overrides, excluding groupings.
 Requisition
 WidgetImpl::inner_size_request()
 {
@@ -1070,6 +1367,19 @@ WidgetImpl::inner_size_request()
   return visible() ? requisition_ : Requisition();
 }
 
+/** Get the size requisition of a widget.
+ *
+ * Determines the size requisition of a widget if its not already calculated.
+ * Changing widget properties like fonts or children of a container may cause
+ * size requisition to be recalculated.
+ * The widget size requisition is determined by the actual widget type or
+ * possibly the container type which takes children into account, see size_request().
+ * Overridden width() and height() are taken into account if specified.
+ * The resulting size can also be affected by size group settings if this widget
+ * has been included into any.
+ * The #INVALID_REQUISITION flag is unset after this method has been called.
+ * @returns The size requested by this widget for layouting.
+ */
 Requisition
 WidgetImpl::requisition ()
 {
@@ -1100,6 +1410,12 @@ WidgetImpl::expose_internal (const Region &region)
     }
 }
 
+/** Invalidate drawing contents of a widget
+ *
+ * Cause the given @a region of @a this widget to be rerendered.
+ * The region is constrained to the clipped_allocation().
+ * This method sets the #INVALID_CONTENT flag.
+ */
 void
 WidgetImpl::expose (const Region &region) // widget relative
 {
@@ -1111,10 +1427,38 @@ WidgetImpl::expose (const Region &region) // widget relative
     }
 }
 
+/// Signal emitted when a widget ancestry is added to or removed from a Window
 void
-WidgetImpl::type_cast_error (const char *dest_type)
+WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
-  fatal ("failed to dynamic_cast<%s> widget: %s", VirtualTypeid::cxx_demangle (dest_type).c_str(), name().c_str());
+  if (anchored())
+    leave_anchored();
+  anchored (old_toplevel == NULL);
+  if (anchored())
+    enter_anchored();
+}
+
+void
+WidgetImpl::enter_anchored ()
+{
+  auto *sprouts = get_data (&widget_group_sprouts_key);
+  if (sprouts)
+    for (const auto sprout : *sprouts)
+      {
+        WidgetGroup *wgroup = find_widget_group (sprout.group_name, sprout.group_type, true);
+        if (wgroup)
+          wgroup->add_widget (*this);
+      }
+  data_context_changed();
+}
+
+void
+WidgetImpl::leave_anchored ()
+{
+  const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
+  for (auto *wgroup : widget_groups)
+    wgroup->remove_widget (*this);
+  data_context_changed();
 }
 
 static WidgetImpl *global_debug_dump_marker = NULL;
@@ -1145,7 +1489,7 @@ WidgetImpl::make_test_dump (TestStream &tstream)
   tstream.push_node (name());
   if (this == global_debug_dump_marker)
     tstream.dump ("debug_dump", String ("1"));
-  const PropertyList &plist = list_properties();
+  const PropertyList &plist = __aida_properties__();
   size_t n_properties = 0;
   Aida::Property **properties = plist.list_properties (&n_properties);
   for (uint i = 0; i < n_properties; i++)
@@ -1337,19 +1681,43 @@ WidgetImpl::vscale (double f)
 }
 
 void
-WidgetImpl::do_changed()
+WidgetImpl::do_changed (const String &name)
 {
+  ObjectImpl::do_changed (name);
 }
 
 void
 WidgetImpl::do_invalidate()
-{
-}
+{}
 
 bool
 WidgetImpl::do_event (const Event &event)
 {
   return false;
+}
+
+String
+WidgetImpl::hsize_group () const
+{
+  return string_join (",", list_widget_groups (WIDGET_GROUP_HSIZE));
+}
+
+void
+WidgetImpl::hsize_group (const String &group_list)
+{
+  sync_widget_groups (group_list, WIDGET_GROUP_HSIZE);
+}
+
+String
+WidgetImpl::vsize_group () const
+{
+  return string_join (",", list_widget_groups (WIDGET_GROUP_VSIZE));
+}
+
+void
+WidgetImpl::vsize_group (const String &group_list)
+{
+  sync_widget_groups (group_list, WIDGET_GROUP_VSIZE);
 }
 
 static DataKey<String> widget_name_key;
@@ -1371,6 +1739,7 @@ WidgetImpl::name (const String &str)
     delete_data (&widget_name_key);
   else
     set_data (&widget_name_key, str);
+  changed ("name");
 }
 
 FactoryContext*
@@ -1385,6 +1754,8 @@ WidgetImpl::factory_context (FactoryContext *fc)
   if (fc)
     assert_return (factory_context_ == NULL);
   factory_context_ = fc;
+  if (factory_context_)
+    constructed();
 }
 
 UserSource
@@ -1410,7 +1781,7 @@ WidgetImpl::color_scheme (ColorSchemeType cst)
         delete_data (&widget_color_scheme_key);
       else
         set_data (&widget_color_scheme_key, cst);
-      ClassDoctor::update_widget_heritage (*this);
+      heritage (heritage()); // forces recalculation/adaption
     }
 }
 
@@ -1422,12 +1793,14 @@ class ClipAreaDataKey : public DataKey<Allocation*> {
 };
 static ClipAreaDataKey clip_area_key;
 
+/// Return clipping area for rendering and event processing if one is set.
 const Allocation*
 WidgetImpl::clip_area () const
 {
   return get_data (&clip_area_key);
 }
 
+/// Assign clipping area for rendering and event processing.
 void
 WidgetImpl::clip_area (const Allocation *clip)
 {
@@ -1437,6 +1810,11 @@ WidgetImpl::clip_area (const Allocation *clip)
     set_data (&clip_area_key, new Rect (*clip));
 }
 
+/** Return widget allocation area accounting for clip_area().
+ *
+ * For any rendering or event processing purposes, clipped_allocation() should be used over allocation().
+ * The unclipped size allocation is just used by @a this widget internally for layouting pusposes, see also set_allocation().
+ */
 Allocation
 WidgetImpl::clipped_allocation () const
 {
@@ -1470,6 +1848,15 @@ WidgetImpl::tune_requisition (Requisition requisition)
   return false;
 }
 
+/** Set size allocation of a widget.
+ *
+ * Allocate the given @a area to @a this widget.
+ * The size allocation is used by the widget for layouting of its contents.
+ * That is, its rendering contents and children of a container will be constrained to the allocation() area.
+ * The optional @a clip area provided constrains which part of the allocation will be rendered
+ * and is sensitive for input event processing, see clipped_allocation().
+ * This method clears the #INVALID_ALLOCATION flag and calls expose() on the widget as needed.
+ */
 void
 WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
 {
@@ -1547,6 +1934,7 @@ WidgetImpl::render_into (cairo_t *cr, const Region &region)
     }
 }
 
+/// Render widget's clipped allication area contents into the rendering context provided.
 void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
@@ -1628,6 +2016,7 @@ WidgetImpl::RenderContext::~RenderContext()
     }
 }
 
+/// Return wether a widget is viewable() and has a non-0 clipped allocation
 bool
 WidgetImpl::drawable () const
 {

@@ -1,32 +1,34 @@
-# Rapicorn - experimental UI toolkit
+# Rapicorn
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS	     = . tests
+SUBDIRS	     = . rsvg tests
 
-INCLUDES   += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
+AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-	aida.hh		blobres.hh	formatter.hh	inout.hh	inifile.hh \
+	aida.hh		aidaprops.hh	\
+	bindable.hh	blobres.hh	formatter.hh	inout.hh	inifile.hh \
         platform.hh	debugtools.hh					utilities.hh  \
 					math.hh				unicode.hh   \
-	objects.hh	aidaprops.hh	\
+	objects.hh	\
         xmlnode.hh	markup.hh					testutils.hh \
 			regex.hh  strings.hh	loop.hh		main.hh	memory.hh \
-	quicktimer.hh	thread.hh	\
+	quicktimer.hh	randomhash.hh	thread.hh	\
 	$(rapicorn_impl_headers) \
 	cpuasm.hh	cxxaux.hh	rcore.hh	aidasignal.hh	\
 )
 rapicorn_cc_sources = $(sort	\
-	aida.cc		blobres.cc	formatter.cc	inout.cc	inifile.cc \
+	aida.cc		aidaprops.cc	\
+	bindable.cc	blobres.cc	formatter.cc	inout.cc	inifile.cc \
         platform.cc	debugtools.cc					utilities.cc  \
 					math.cc				unicode.cc   \
-	objects.cc	aidaprops.cc	\
+	objects.cc	\
         xmlnode.cc	markup.cc					testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	memory.cc \
-	quicktimer.cc	thread.cc	\
+	quicktimer.cc	randomhash.cc	thread.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	aidacxx.hh			\
@@ -37,17 +39,11 @@ rapicorn_generated_headers = $(strip	\
 	rapicornconfig.h		\
 )
 rapicorn_private_files = $(strip	\
-	aidabuiltins.cc			\
-	aidamap.cc			\
 )
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
 )
-EXTRA_DIST += docu.dox
 # rapicorn_generated_files are NOT in EXTRA_DIST
-
-# === CPU flags ===
-AM_CXXFLAGS += @FPU_FLAGS@
 
 # === libraries ===
 # librapicorn-core
@@ -61,18 +57,13 @@ librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
 	-no-undefined $(SYMBOLIC_LDFLAGS)			\
+	$(AM_LDFLAGS)                                           \
 ) # set libtool version and export symbols for resolving
-EXTRA_DIST += $(rapicorn_private_files) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
+EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 
-# == Optimization Targets ==
-OPTIMIZE_SOURCE_FILES = loop.cc
-AM_CXXFLAGS += $(patsubst %, -O3 -minline-all-stringops, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
-
-# keep this .o rule in sync with the corresponding .la rule from Makefile.in
-librapicorncore@RAPICORN_RELEASE@.o: $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) $(librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES)
-	$(CXXLINK) -rpath $(libdir) $(librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS) $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS) # $(librapicorncore@RAPICORN_RELEASE@_la_LIBADD) $(LIBS)
-all-am: librapicorncore@RAPICORN_RELEASE@.o
-CLEANFILES += librapicorncore@RAPICORN_RELEASE@.lo librapicorncore@RAPICORN_RELEASE@.o
+# == Special Optimization Targets ==
+OPTIMIZE_SOURCE_FILES = loop.cc randomhash.cc
+AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
 
 # === API content ===
 api-content:
@@ -106,10 +97,12 @@ CLEANFILES += xtmp-empty.dat xtmp-empty.out
 
 # === configbits.cc ===
 BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
-	git log -n1 --pretty=format:Git-%h --abbrev=11 ; \
+	git log -n1 --pretty=format:Git-%h --abbrev=12 ; \
 	C=`git diff HEAD --raw | wc -l ` ; test "$$C" -lt 1 || echo "+$$C" ) \
 	|| sed -n "1,1{s/.*\# */ChangeLog-/g;p}" <$(top_srcdir)/ChangeLog )
 BUILDID_DEPS=$(shell B=`git rev-parse --git-dir 2>/dev/null` && for r in "`git symbolic-ref -q HEAD || echo HEAD`" packed-refs HEAD ; do echo "$B/$r" ; done)
+buildid:
+	@echo $(BUILDID)
 configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Makefile
 	$(AM_V_GEN)
 	$(Q) cd . \
@@ -122,7 +115,7 @@ configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Ma
 	$(Q) rm -f xgen-$(@F)
 CLEANFILES += xgen-configbits.cc configbits.cc
 $(srcdir)/main.cc: configbits.cc
-.PHONY: PHONY_REBUILDS
+.PHONY: PHONY_REBUILDS buildid
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile
@@ -159,19 +152,13 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @RAPICORN_REVISION_VERSION@)' 		>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- log & i18n domains --- */"						>> xgen-$(@F) \
-	&& echo "#ifndef RAPICORN_LOG_DOMAIN"							>> xgen-$(@F) \
-	&& echo "#ifdef  G_LOG_DOMAIN"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  G_LOG_DOMAIN"					>> xgen-$(@F) \
-	&& echo "#else"										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_LOG_DOMAIN  ((const char*) 0)"				>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
+	&& echo "/* --- i18n domain --- */"							>> xgen-$(@F) \
 	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
 	&& echo "/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, i18ndir_path); */"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- resource paths --- */"							>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \
+	&& echo	'#define RAPICORN_SVGDIR		"${rapicornsvgdir}"'			>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DATADIR       	"${rapicorndatadir}"'			>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
@@ -214,8 +201,9 @@ $(srcdir)/*.cc: aidavariants.hh
 aidavariants.hh: $(srcdir)/aidaproto.hh $(srcdir)/xmanifold.py
 	$(Q) cd . \
 	&& echo "/* Aida Variants -- Generated from: $(^F) */"	 >xtmp-$(@F) \
-	&& echo '# 1 "$(abs_srcdir)/aidaproto.hh"'		>>xtmp-$(@F) \
+	&& echo '# 1 "aidaproto.hh"'				>>xtmp-$(@F) \
 	&& $(srcdir)/xmanifold.py $(srcdir)/aidaproto.hh 18	>>xtmp-$(@F) \
 	&& cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
 CLEANFILES += xtmp-aidavariants.hh aidavariants.hh xgen-aidas.sed
 EXTRA_DIST += aidaproto.hh xmanifold.py
+# not using "$(abs_srcdir)/aidaproto.hh" to avoid hardcoded paths in distribution tarballs

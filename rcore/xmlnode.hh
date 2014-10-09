@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_XMLNODE_HH__
 #define __RAPICORN_XMLNODE_HH__
 
@@ -7,6 +7,9 @@
 
 namespace Rapicorn {
 
+/** Simple XML tree representation.
+ * @DISCOURAGED: Nonpublic API, data structure used internally.
+ */
 class XmlNode : public virtual ReferenceCountable, public virtual DataListContainer {
   String                name_; // element name
   XmlNode              *parent_;

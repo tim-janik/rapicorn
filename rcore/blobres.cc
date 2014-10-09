@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "blobres.hh"
 #include "thread.hh"
 #include "strings.hh"
@@ -50,7 +50,7 @@ ByteBlob<Deleter>::~ByteBlob ()
 template<class Deleter> String
 ByteBlob<Deleter>::string ()
 {
-  if (string_.empty())
+  if (string_.empty() && size_)
     {
       static Mutex mutex;
       ScopedLock<Mutex> g (mutex);
@@ -66,6 +66,7 @@ ByteBlob<Deleter>::string ()
 }
 
 // == ResourceEntry ==
+#ifndef DOXYGEN
 static ResourceEntry *res_head = NULL;
 static Mutex          res_mutex;
 
@@ -96,6 +97,7 @@ ResourceEntry::find_entry (const String &res_name)
       return e;
   return NULL;
 }
+#endif // !DOXYGEN
 
 // == StringBlob ==
 struct StringBlob : public BlobResource {

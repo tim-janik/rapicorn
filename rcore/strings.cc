@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "strings.hh"
 #include "unicode.hh"
 #include "main.hh"
@@ -9,7 +9,6 @@
 #include <libintl.h>
 #include <iconv.h>
 #include <errno.h>
-#include <glib.h>
 
 namespace Rapicorn {
 
@@ -134,57 +133,6 @@ string_totitle (const String &str)
 
 #define STACK_BUFFER_SIZE       3072
 
-/// Formatted printing ala printf() into a String, using the POSIX/C locale.
-RAPICORN_PRINTF (1, 2) String
-string_cprintf (const char *format, ...) // FIXME: unused
-{
-  ScopedPosixLocale posix_locale_scope; // pushes POSIX locale for this scope
-  va_list args;
-  int l;
-  {
-    char buffer[STACK_BUFFER_SIZE];
-    va_start (args, format);
-    l = vsnprintf (buffer, sizeof (buffer), format, args);
-    va_end (args);
-    if (l < 0)
-      return format; // error?
-    if (size_t (l) < sizeof (buffer))
-      return String (buffer, l);
-  }
-  String string;
-  string.resize (l + 1);
-  va_start (args, format);
-  const int j = vsnprintf (&string[0], string.size(), format, args);
-  va_end (args);
-  string.resize (std::min (l, std::max (j, 0)));
-  return string;
-}
-
-/// Formatted printing like string_cprintf using the current locale.
-RAPICORN_PRINTF (1, 2) String
-string_locale_cprintf (const char *format, ...) // FIXME: unused
-{
-  va_list args;
-  int l;
-  {
-    char buffer[STACK_BUFFER_SIZE];
-    va_start (args, format);
-    l = vsnprintf (buffer, sizeof (buffer), format, args);
-    va_end (args);
-    if (l < 0)
-      return format; // error?
-    if (size_t (l) < sizeof (buffer))
-      return String (buffer, l);
-  }
-  String string;
-  string.resize (l + 1);
-  va_start (args, format);
-  const int j = vsnprintf (&string[0], string.size(), format, args);
-  va_end (args);
-  string.resize (std::min (l, std::max (j, 0)));
-  return string;
-}
-
 static inline String
 current_locale_vprintf (const char *format, va_list vargs)
 {
@@ -268,6 +216,70 @@ string_split (const String &string, const String &splitter)
   if (i >= l)
     sv.push_back (string.substr (l, i - l));
   return sv;
+}
+
+/// Split a string, using any of the @a splitchars as delimiter.
+/// Passing "" as @a splitter will split the string between all position.
+StringVector
+string_split_any (const String &string, const String &splitchars)
+{
+  StringVector sv;
+  if (splitchars.empty())
+    {
+      for (uint i = 0; i < string.size(); i++)
+        sv.push_back (string.substr (i, 1));
+    }
+  else
+    {
+      const char *schars = splitchars.c_str();
+      uint i, l = 0;
+      for (i = 0; i < string.size(); i++)
+        if (strchr (schars, string[i]))
+          {
+            if (i >= l)
+              sv.push_back (string.substr (l, i - l));
+            l = i + 1;
+          }
+      if (i >= l)
+        sv.push_back (string.substr (l, i - l));
+    }
+  return sv;
+}
+
+/// Remove empty elements from a string vector.
+void
+string_vector_erase_empty (StringVector &svector)
+{
+  for (size_t i = svector.size(); i; i--)
+    {
+      const size_t idx = i - 1;
+      if (svector[idx].empty())
+        svector.erase (svector.begin() + idx);
+    }
+}
+
+/// Left-strip all elements of a string vector, see string_lstrip().
+void
+string_vector_lstrip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_lstrip (s);
+}
+
+/// Right-strip all elements of a string vector, see string_rstrip().
+void
+string_vector_rstrip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_rstrip (s);
+}
+
+/// Strip all elements of a string vector, see string_strip().
+void
+string_vector_strip (StringVector &svector)
+{
+  for (auto &s : svector)
+    s = string_strip (s);
 }
 
 /** Join a number of strings.
@@ -500,12 +512,10 @@ string_from_errno (int errno_val)
   if (errno_val < 0)
     errno_val = -errno_val;     // fixup library return values
   char buffer[1024] = { 0, };
-  if (strerror_r (errno_val, buffer, sizeof (buffer)) < 0 || !buffer[0])
-    {
-      /* strerror_r() may be broken on GNU systems, especially if _GNU_SOURCE is defined, so fall back to strerror() */
-      return strerror (errno_val);
-    }
-  return buffer;
+  const char *errstr = strerror_r (errno_val, buffer, sizeof (buffer));
+  if (!errstr || !errstr[0]) // fallback for possible strerror_r breakage encountered on _GNU_SOURCE systems
+    return strerror (errno_val);
+  return errstr;
 }
 
 /// Returns whether @a uuid_string contains a properly formatted UUID string.
@@ -840,7 +850,7 @@ memset4 (uint32 *mem, uint32 filler, uint length)
  * @returns @a fallback if no match was found.
  */
 String
-string_vector_find (const StringVector &svector, const String &key, const String &fallback)
+string_vector_find_value (const StringVector &svector, const String &key, const String &fallback)
 {
   for (size_t i = svector.size(); i > 0; i--)
     {

@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_LOOP_HH__
 #define __RAPICORN_LOOP_HH__
 
@@ -144,9 +144,9 @@ public:
   EventLoop* new_slave       (); ///< Creates a new slave loop that is run as part of this main loop.
   static MainLoop*  _new     (); ///< Creates a new main loop object, users can run or iterate this loop directly.
   inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
-  ///@cond
   void set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock);
 private:
+  ///@cond
   struct LockHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
   LockHooks lock_hooks_; bool lock_hooks_locked_;
   ///@endcond

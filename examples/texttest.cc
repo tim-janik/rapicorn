@@ -1,4 +1,4 @@
-// This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
+// Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 #include <rapicorn.hh>
 
 namespace {
@@ -12,10 +12,10 @@ main (int   argc,
   ApplicationH app = init_app (__PRETTY_FILE__, &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
-  app.auto_load ("RapicornExamples", "texttest.xml", argv[0]);
+  app.auto_load ("texttest.xml", argv[0]);
 
   // create and show main window
-  WindowH window = app.create_window ("RapicornExamples:main-shell");
+  WindowH window = app.create_window ("main-shell");
   window.show();
 
   // run event loops while windows are on screen

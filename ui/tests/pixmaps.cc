@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rcore/testutils.hh>
 #include <rapicorn.hh>
 #include <string.h>
@@ -49,8 +34,8 @@ create_sample_pixmap (void)
   uint32 *row = pixmap.row (0);
   row[1] = 0xff667788;
   row = pixmap.row (1);
-  row[0] = Test::rand_int() | 0xff000000;
-  row[1] = Test::rand_int() | 0xff000000;
+  row[0] = Test::random_int64() | 0xff000000;
+  row[1] = Test::random_int64() | 0xff000000;
   row = pixmap.row (2);
   memset (row, 0x80, pixmap.width() * sizeof (row[0]));
   row = pixmap.row (3);

@@ -1,4 +1,4 @@
-// This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
+// Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 #include <rcore/testutils.hh>
 #include <ui/uithread.hh>
 
@@ -8,7 +8,7 @@ using namespace Rapicorn;
 static void
 test_window()
 {
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
 
   // FIXME: this needs porting to use client API
 

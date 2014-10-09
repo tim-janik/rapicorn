@@ -1,7 +1,4 @@
 # Rapicorn
-# Copyright (C) 2005 Tim Janik
-#
-## GNU Lesser General Public License version 2 or any later version.
 include $(top_srcdir)/Makefile.decl
 
 SUBDIRS     = . po data rcore res aidacc ui rope tools tests pytests examples docs
@@ -11,7 +8,6 @@ noinst_DATA =
 
 # === setup ===
 AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
-configure: @DVLBUILD@ acrapicorn.m4	# acrapicorn.m4 is included by configure.in
 
 # === web site ===
 site site-preview site-update:
@@ -50,28 +46,11 @@ MAKE_API_CHECKSUM=$(strip							\
 	  $(MAKE) -C $(top_srcdir)/ui/   $(AM_MAKEFLAGS) api-content    ) | 	\
 	md5sum | sed 's/ .*//'							\
 )
-api-check: # ensure headers don't change if RELEASE=outdated && REVISION=0
-	cd $(srcdir) \
-	&& RAPICORN_CURRENT_CHECKSUM=$$($(MAKE_API_CHECKSUM))			\
-	&& RAPICORN_MONTHLY_VERSION="$$(expr $$(date +%Y%m) - 200000)"		\
-	&& test "$$RAPICORN_CURRENT_CHECKSUM"  = "`cat api-check.md5`"		\
-	|| if [ "$$RAPICORN_MONTHLY_VERSION" =					\
-                "$$(expr @RAPICORN_RELEASE_YEAR@ '*' 100 + @RAPICORN_RELEASE_MONTH@)" \
-		-o "@RAPICORN_REVISION_VERSION@" -gt 0 ]; then			\
-	     echo "$$RAPICORN_CURRENT_CHECKSUM" > api-check.md5 ;		\
-	   else \
-	     MSG1="Rapicorn version needs updating (checksum: $$RAPICORN_CURRENT_CHECKSUM): " ; \
-	     MSG2="@RAPICORN_RELEASE_YEAR@.@RAPICORN_RELEASE_MONTH@.@RAPICORN_REVISION_VERSION@ => " ; \
-	     MSG3="$$[RAPICORN_MONTHLY_VERSION/100].$$[RAPICORN_MONTHLY_VERSION%100].0" ; \
-	     MSG="$$MSG1$$MSG2$$MSG3" ; echo $$MSG | sed 's/./=/g'; echo $$MSG; echo $$MSG | sed 's/./=/g' ; \
-	     exit 1 ; \
-	   fi
 api-checksum:
 	$(MAKE_API_CHECKSUM)
-.PHONY: api-check api-checksum
-#check-am: api-check # check API version upon make check
+.PHONY: api-checksum
 distcheck-hook: # check API version upon make distcheck
-	$(MAKE) $(AM_MAKEFLAGS) -C $(top_srcdir)/ api-check
+	$(MAKE) $(AM_MAKEFLAGS) -C $(top_srcdir)/
 installcheck-local:
 	$(Q) cd . \
 	&& echo '#include <rapicorn-core.hh>'				 > tmpx.cc \
@@ -80,6 +59,7 @@ installcheck-local:
 	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
 	&& echo 'extern "C" int main (int argc, char *argv[]) {'	>> tmpx.cc \
 	&& echo 'ApplicationH app = init_app (".AMtest", &argc, argv);'	>> tmpx.cc \
+	&& echo 'Blob blob = Blob::load (".");'				>> tmpx.cc \
 	&& echo 'return app.run_and_exit(); }'				>> tmpx.cc \
 		; eval "$$TSTDIAGNOSE" "'Create  rapicorn sample program'"
 	$(Q) $(CXX) -Werror tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` \
@@ -96,25 +76,19 @@ check-dynamic_cast:	# check for dynamic_cast of reference types which is broken 
 	&& find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
 			-exec grep -Hn 'dynamic_cast[^<]*<[^>&]*&' {} \;	\
 	| grep '.' ; exit $$[!$$?] # fail on matches
-check-list_properties: # only public interfaces should export properties
-	$(Q) cd $(srcdir) \
-	&& echo "  CHECK  Repel untyped list_properties() method implementations..." \
-	&& ! grep '^[[:space:]]*list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc
-	$(Q) cd $(srcdir) \
-	&& echo "  CHECK  Repel non-interface list_properties() method implementations..." \
-	&& ! grep 'Impl::list_properties[[:space:]]*([^)]*)[^;]*$$' -n ui/*.cc rcore/*.cc \
-	     --exclude ui/widget.cc --exclude ui/container.cc --exclude ui/buttons.cc --exclude ui/window.cc
-check-am: check-dynamic_cast check-list_properties # run source code checks before all others
+check-am: check-dynamic_cast # run source code checks before all others
 
 # === automake fixes ===
 # disable bogus cleanup checks
 distcleancheck_listfiles = true # find . -type f -print
 # distuninstallcheck_listfiles = true # find . -type f -print
+MAINTAINERCLEANFILES += intltool-extract.in  intltool-merge.in  intltool-update.in
 
 # == ChangeLog & Release Rules ==
 ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
 	$(srcdir)/mkrelease.sh ChangeLog -R bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD
 noinst_DATA += ChangeLog
+MAINTAINERCLEANFILES += ChangeLog
 EXTRA_DIST  += ChangeLog mkrelease.sh
 release-news:
 	@$(srcdir)/mkrelease.sh news --first-parent --body
@@ -122,5 +96,5 @@ release-check:
 	@echo "Checking for unlisted contributors..."
 	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw
 release-upload: ChangeLog
-	$(srcdir)/mkrelease.sh upload -U testbit:dist/rapicorn/ -E configure.in:RAPICORN_REVISION_VERSION
+	$(srcdir)/mkrelease.sh upload -U testbit:dist/rapicorn/ -E configure.ac:RAPICORN_REVISION_VERSION
 .PHONY: release-news release-check release-upload

@@ -1,9 +1,9 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-INCLUDES   += -I$(top_srcdir)
-DEFS       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
-AM_CXXFLAGS = $(RAPICORN_CORE_CFLAGS)
+AM_CPPFLAGS += -I$(top_srcdir)
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
 
 # test programs
 noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS)
@@ -12,22 +12,23 @@ LDADDS		 = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
 # == test programs ==
 LOGTEST_PROGS     += testrcore1
 TEST_PROGS        += testrcore1
-testrcore1_SOURCES = multitest.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
+testrcore1_SOURCES = multitest.cc aidatests.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
 testrcore1_LDADD   = $(LDADDS)
 EXTRA_DIST        += data.cc testrcore1.ref
 
 LOGTEST_PROGS     += testrcore2
 TEST_PROGS        += testrcore2
-testrcore2_SOURCES = messages.cc xmltest.cc threads.cc signal2.cc performance.cc
-testrcore2_LDADD   = $(LDADDS) \
+testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
+testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.la \
 		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
-testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) # FIXME
+testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) $(AM_CXXFLAGS) # FIXME
 EXTRA_DIST        += testrcore2.ref
 
 export VPATH	# needed by test programs to find builddir relative input files
 
 # == test resources ==
 ZINTERN     = $(abs_builddir)/../rapicorn-zintern
+RES_FILES   = sample1.svg
 RES_PAIRS   = $(foreach file, $(RES_FILES), test-files/$(notdir $(file)) $(file))
 EXTRA_DIST += $(RES_FILES)
 resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
@@ -37,6 +38,7 @@ resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
 EXTRA_DIST  += resources.cc
 CLEANFILES  += resources.cc
 noinst_DATA  = resources.cc
+svgtool.cc: resources.cc
 
 # === test rules ===
 # validate failing assertions and fatal aborting
@@ -71,3 +73,14 @@ check: check-process-handle
 check-unique-process: testrcore1
 	$(Q) test `./testrcore1 --print-process-handle` != `./testrcore1 --print-process-handle`; eval "$$TSTDIAGNOSE"
 check: check-unique-process
+# check startup entropy
+check-startup-entropy:
+	$(Q) A=`./testrcore2 --entropy` ; B=`./testrcore2 --entropy`; \
+	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+check-system-entropy:
+	$(Q) A=`./testrcore2 --system-entropy` ; B=`./testrcore2 --system-entropy`; \
+	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+check-runtime-entropy:
+	$(Q) A=`./testrcore2 --runtime-entropy` ; B=`./testrcore2 --runtime-entropy`; \
+	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+check: check-startup-entropy check-system-entropy check-runtime-entropy

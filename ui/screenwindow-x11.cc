@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "screenwindow.hh"
 #include "uithread.hh"
 #include <cairo/cairo-xlib.h>
@@ -36,36 +36,73 @@ template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { re
 
 namespace Rapicorn {
 
+template<class Container, class PtrPredicate> typename Container::value_type*
+find_element (Container &container, PtrPredicate f)
+{
+  auto it = std::find_if (container.begin(), container.end(), f);
+  return it == container.end() ? NULL : &*it;
+}
+
 // == X11Widget ==
 struct X11Widget {
-  explicit X11Widget() {}
-  virtual ~X11Widget() {}
+  explicit     X11Widget() {}
+  virtual     ~X11Widget() {}
+  virtual bool timer    (const EventLoop::State &state, int64 *timeout_usecs_p) = 0;
 };
+
+// == EventStake ==
+struct EventStake {
+  Window        window;
+  unsigned long mask;
+  uint          ref_count;
+  bool          destroyed;
+  EventStake() : window (0), mask (0), ref_count (0), destroyed (false) {}
+};
+
+// == IncrTransfer ==
+struct IncrTransfer {
+  Window       window;
+  Atom         property;
+  Atom         type;
+  size_t       byte_width;
+  size_t       offset;
+  vector<char> bytes;
+  uint64       timeout;
+  IncrTransfer() : window (0), property (0), type (0), byte_width (0), offset (0), timeout (0) {}
+};
+#define INCR_TRANSFER_TIMEOUT   (25 * 1000 * 1000)
 
 // == X11Context ==
 class X11Context {
-  MainLoop             &loop_;
-  vector<size_t>        queued_updates_; // XIDs
-  map<size_t, X11Widget*> x11ids_;
+  MainLoop                            &loop_;
+  vector<size_t>                       queued_updates_; // XIDs
+  map<size_t, X11Widget*>              x11ids_;
   AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
   AsyncBlockingQueue<ScreenCommand*>  &reply_queue_;
-  bool                  x11_dispatcher  (const EventLoop::State &state);
-  bool                  x11_io_handler  (PollFD &pfd);
-  void                  process_x11     ();
-  bool                  filter_event    (const XEvent&);
-  void                  process_updates ();
-  bool                  cmd_dispatcher  (const EventLoop::State &state);
+  vector<EventStake>                   event_stakes_;
+  vector<IncrTransfer>                 incr_transfers_;
+  int8                                 shared_mem_;
+  bool                  x11_timer               (const EventLoop::State &state);
+  bool                  x11_dispatcher          (const EventLoop::State &state);
+  bool                  x11_io_handler          (PollFD &pfd);
+  void                  process_x11             ();
+  bool                  filter_event            (const XEvent&);
+  void                  process_updates         ();
+  bool                  cmd_dispatcher          (const EventLoop::State &state);
+  EventStake*           find_event_stake        (Window window, bool create);
+  void                  continue_incr           (Window window, Atom property);
 public:
   ScreenDriver         &screen_driver;
   Display              *display;
-  int                   screen;
   Visual               *visual;
+  size_t                max_request_bytes;
+  size_t                max_property_bytes;
+  int                   screen;
   int                   depth;
   Window                root_window;
   XIM                   input_method;
   XIMStyle              input_style;
-  int8                  shared_mem_;
-  X11Widget*              x11id_get   (size_t xid);
+  X11Widget*            x11id_get   (size_t xid);
   void                  x11id_set   (size_t xid, X11Widget *x11widget);
   Atom                  atom         (const String &text, bool force_create = true);
   String                atom         (Atom atom) const;
@@ -73,11 +110,73 @@ public:
   void                  queue_update (size_t xid);
   void                  run        ();
   bool                  connect    ();
+  void                  ref_events                      (Window window, unsigned long event_mask, const XSetWindowAttributes *attrs = NULL);
+  void                  unref_events                    (Window window);
+  void                  window_destroyed                (Window window);
+  bool                  transfer_incr_property          (Window window, Atom property, Atom type, int element_bits, const void *elements, size_t nelements);
+  String                target_atom_to_mime             (const Atom target_atom);
+  Atom                  mime_to_target_atom             (const String &mime, Atom last_failed = None);
+  void                  mime_list_target_atoms          (const String &mime, vector<Atom> &atoms);
   explicit              X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue);
   virtual              ~X11Context ();
 };
 
+static inline int
+time_cmp (Time t1, Time t2)
+{
+  if (t1 > t2)
+    return t1 - t2 < 2147483647 ? +1 : -1;      // +1: t1 is later than t2
+  if (t1 < t2)
+    return t2 - t1 < 2147483647 ? -1 : +1;      // -1: t1 is earlier than t2
+  return 0;
+}
+
 static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
+
+// == ContentOffer ==
+struct ContentOffer {           // offers_
+  StringVector  content_types;  // selection mime types
+  Time          time;           // selection time
+  Atom          selection;      // e.g. XA_PRIMARY
+  uint64        nonce;
+  ContentOffer() : time (0), selection (0), nonce (0) {}
+};
+
+// == ContentRequest ==
+struct ContentRequest {
+  uint64                 request_id;
+  XSelectionRequestEvent xsr;
+  String                 data_type;
+  String                 data;
+  bool                   data_provided;
+  ContentRequest () : request_id (0), xsr ({ 0, }), data_provided (false) {}
+};
+
+// == SelectionInput ==
+enum SelectionInputState {
+  WAIT_INVALID,
+  WAIT_FOR_NOTIFY,
+  WAIT_FOR_PROPERTY,
+  WAIT_FOR_RESULT,
+};
+struct SelectionInput {                 // isel_
+  SelectionInputState   state;
+  Atom                  slot;           // receiving property (usually RAPICORN_SELECTION)
+  vector<uint8>         data;
+  ContentSourceType     content_source;
+  Atom                  source_atom;    // requested selection
+  uint64                nonce;
+  String                content_type;   // requested type
+  Atom                  target;         // X11 Atom for requested type
+  Window                owner;
+  Time                  time;
+  int                   size_est;       // lower bound provided by INCR response
+  RawData               raw;
+  uint64                timeout;
+  SelectionInput() : state (WAIT_INVALID), slot (0), content_source (ContentSourceType (0)), source_atom (0),
+                     nonce (0), target (0), owner (0), time (0), size_est (0), timeout (0) {}
+};
+#define SELECTION_INPUT_TIMEOUT   (15 * 1000 * 1000)
 
 // == ScreenWindowX11 ==
 struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
@@ -93,15 +192,24 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   int                   last_motion_time_, pending_configures_, pending_exposes_;
   bool                  override_redirect_, crossing_focus_;
   vector<uint32>        queued_updates_;       // "atoms" not yet updated
+  SelectionInput       *isel_;
+  vector<ContentOffer>  offers_;
+  vector<ContentRequest> content_requests_;
   explicit              ScreenWindowX11         (X11Context &_x11context);
   virtual              ~ScreenWindowX11         ();
+  virtual bool          timer                   (const EventLoop::State &state, int64 *timeout_usecs_p);
   void                  destroy_x11_resources   ();
   void                  handle_command          (ScreenCommand *command);
   void                  setup_window            (const ScreenWindow::Setup &setup);
   void                  create_window           (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
   void                  configure_window        (const Config &config, bool sizeevent);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
+  void                  filtered_event          (const XEvent &xevent);
   bool                  process_event           (const XEvent &xevent);
+  bool                  send_selection_notify   (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time);
+  void                  request_selection       (ContentSourceType content_source, Atom source, uint64 nonce, String data_type, Atom last_failed = None);
+  void                  receive_selection       (const XEvent &xev);
+  void                  handle_content_request  (size_t nth, ContentOffer *offer);
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
   void                  force_update            (Window window);
@@ -112,7 +220,7 @@ ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
   x11context (_x11context),
   window_ (None), input_context_ (NULL), wm_icon_ (None), expose_surface_ (NULL),
   last_motion_time_ (0), pending_configures_ (0), pending_exposes_ (0),
-  override_redirect_ (false), crossing_focus_ (false)
+  override_redirect_ (false), crossing_focus_ (false), isel_ (NULL)
 {}
 
 ScreenWindowX11::~ScreenWindowX11()
@@ -122,6 +230,8 @@ ScreenWindowX11::~ScreenWindowX11()
       critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%x im=%p w=0x%x", STRFUNC, expose_surface_, wm_icon_, input_context_, window_);
       destroy_x11_resources(); // shouldn't happen, this potentially issues X11 calls from outside the X11 thread
     }
+  if (isel_)
+    delete isel_;
 }
 
 void
@@ -146,8 +256,37 @@ ScreenWindowX11::destroy_x11_resources()
     {
       XDestroyWindow (x11context.display, window_);
       x11context.x11id_set (window_, NULL);
+      x11context.window_destroyed (window_);
+      x11context.unref_events (window_);
       window_ = 0;
     }
+}
+
+bool
+ScreenWindowX11::timer (const EventLoop::State &state, int64 *timeout_usecs_p)
+{
+  const uint64 now = state.current_time_usecs;
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    {
+      if (isel_ && isel_->timeout <= now)
+        return true;
+      return false;
+    }
+  else if (state.phase == state.DISPATCH)
+    {
+      if (isel_ && isel_->timeout <= now)
+        {
+          // request aborted
+          if (isel_->state != WAIT_INVALID)
+            enqueue_event (create_event_data (CONTENT_DATA, event_context_, isel_->content_source, isel_->nonce, "", ""));
+          delete isel_;
+          isel_ = NULL;
+        }
+      return true;
+    }
+  else if (state.phase == state.DESTROY)
+    ;
+  return false;
 }
 
 void
@@ -201,10 +340,12 @@ ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWi
   setup_window (setup);
   configure_window (config, true);
   // create input context if possible
-  String imerr = x11_input_context (x11context.display, window_, attributes.event_mask,
+  String imerr = x11_input_context (x11context.display, window_, &attributes.event_mask,
                                     x11context.input_method, x11context.input_style, &input_context_);
   if (!imerr.empty())
     XDEBUG ("XIM: window=%u: %s", window_, imerr.c_str());
+  // ensure to keep this window's event mask around
+  x11context.ref_events (window_, attributes.event_mask, &attributes);
   // configure initial state for this window
   XConfigureEvent xev = { ConfigureNotify, create_serial, false, x11context.display, window_, window_,
                           0, 0, request_width, request_height, border, /*above*/ 0, override_redirect_, };
@@ -241,13 +382,34 @@ check_pending (Display *display, Drawable window, int *pending_configures, int *
   *pending_exposes = ps.pending_exposes;
 }
 
+void
+ScreenWindowX11::filtered_event (const XEvent &xevent)
+{
+  const bool sent = xevent.xany.send_event != 0;
+  const char ff = event_context_.synthesized ? 'F' : 'f';
+  switch (xevent.type)
+    {
+    case KeyPress: {    // XIM often filteres our key presses, but we still need to learn about time & modifier updates
+      const char *kind = xevent.type == KeyPress ? "DN" : "UP";
+      const XKeyEvent &xev = xevent.xkey;
+      if (!sent && xev.keycode != 0 && xev.serial != 0)
+        {
+          event_context_.time = xev.time;
+          event_context_.x = xev.x;
+          event_context_.y = xev.y;
+          event_context_.modifiers = ModifierState (xev.state);
+        }
+      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d mod=%x cod=%d", kind, ff, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.state, xev.keycode);
+      break; }
+    }
+}
+
 bool
 ScreenWindowX11::process_event (const XEvent &xevent)
 {
   event_context_.synthesized = xevent.xany.send_event;
-  bool consumed = XFilterEvent (const_cast<XEvent*> (&xevent), window_);
   const char ss = event_context_.synthesized ? 'S' : 's';
-  const char sf = !consumed ? ss : event_context_.synthesized ? 'F' : 'f';
+  bool consumed = false;
   switch (xevent.type)
     {
     case CreateNotify: {
@@ -334,8 +496,68 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const bool deleted = xev.state == PropertyDelete;
       VDEBUG ("Prop%c: %c=%u w=%u prop=%s", deleted ? 'D' : 'C', ss, xev.serial, xev.window, x11context.atom (xev.atom).c_str());
       event_context_.time = xev.time;
-      queued_updates_.push_back (xev.atom);
-      x11context.queue_update (window_);
+      if (isel_ && isel_->slot == xev.atom)
+        receive_selection (xevent);
+      else
+        {
+          queued_updates_.push_back (xev.atom);
+          x11context.queue_update (window_);
+        }
+      consumed = true;
+      break; }
+    case SelectionNotify: {
+      const XSelectionEvent &xev = xevent.xselection;
+      EDEBUG ("SelNy: %c=%u [%lx] %s(%s) -> %ld(%s)", ss, xev.serial,
+              xev.time, x11context.atom (xev.selection), x11context.atom (xev.target),
+              xev.requestor, x11context.atom (xev.property));
+      if (isel_)
+        receive_selection (xevent);
+      consumed = true;
+      break; }
+    case SelectionRequest: {
+      const XSelectionRequestEvent &xev = xevent.xselectionrequest;
+      EDEBUG ("SelRq: %c=%u [%lx] own=%u %s(%s) -> %ld(%s)", ss, xev.serial,
+              xev.time, xev.owner, x11context.atom (xev.selection), x11context.atom (xev.target),
+              xev.requestor, x11context.atom (xev.property));
+      ContentOffer *offer = find_element (offers_, [&xev] (const ContentOffer &o) { return o.selection == xev.selection; });
+      if (offer && xev.target && (xev.time == CurrentTime || time_cmp (xev.time, offer->time) >= 0))
+        {
+          ContentRequest cr;
+          cr.request_id = random_nonce();
+          cr.xsr = xev;
+          content_requests_.push_back (cr);
+          if (xev.target == x11context.atom ("TIMESTAMP") || xev.target == x11context.atom ("TARGETS"))
+            {
+              // we take a shortcut here, b/c no actual content is required
+              const size_t nth = content_requests_.size() - 1;
+              content_requests_[nth].data_provided = true;
+              handle_content_request (nth, offer);
+            }
+          else
+            {
+              ContentSourceType source = offer->selection == XA_PRIMARY ? CONTENT_SOURCE_SELECTION :
+                                         offer->selection == x11context.atom ("CLIPBOARD") ? CONTENT_SOURCE_CLIPBOARD :
+                                         ContentSourceType (0);
+              const String mime_type = x11context.target_atom_to_mime (xev.target);
+              enqueue_event (create_event_data (CONTENT_REQUEST, event_context_, source, offer->nonce, mime_type, "", cr.request_id));
+            }
+        }
+      else
+        send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time); // reject
+      consumed = true;
+      break; }
+    case SelectionClear: {
+      const XSelectionClearEvent &xev = xevent.xselectionclear;
+      EDEBUG ("SelCl: %c=%u [%lx] own=%u %s", ss, xev.serial, xev.time, xev.window, x11context.atom (xev.selection));
+      ContentOffer *offer = find_element (offers_, [&xev] (const ContentOffer &o) { return o.selection == xev.selection; });
+      if (offer && (xev.time == CurrentTime || time_cmp (xev.time, offer->time) >= 0))
+        {
+          ContentSourceType source = offer->selection == XA_PRIMARY ? CONTENT_SOURCE_SELECTION :
+                                     offer->selection == x11context.atom ("CLIPBOARD") ? CONTENT_SOURCE_CLIPBOARD :
+                                     ContentSourceType (0);
+          enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, source, offer->nonce, "", ""));
+          offers_.erase (offers_.begin() + (offer - &offers_[0]));
+        }
       consumed = true;
       break; }
     case Expose: {
@@ -356,24 +578,55 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       const XKeyEvent &xev = xevent.xkey;
       const char  *kind = xevent.type == KeyPress ? "DN" : "UP";
       KeySym keysym = 0;
-      char buffer[512]; // dummy
       int n = 0;
-      Status ximstatus = XBufferOverflow;
-      if (input_context_ && xevent.type == KeyPress)
-        n = Xutf8LookupString (input_context_, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
-      if (ximstatus != XLookupKeySym && ximstatus != XLookupBoth)
+      String utf8data;
+      if (input_context_ && xevent.type == KeyPress) // Xutf8LookupString is undefined for KeyRelease
         {
-          n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
-          ximstatus = XLookupKeySym;
+          Status ximstatus = XBufferOverflow;
+          char buffer[512];
+          n = Xutf8LookupString (input_context_, const_cast<XKeyPressedEvent*> (&xev), buffer, sizeof (buffer), &keysym, &ximstatus);
+          if (ximstatus == XBufferOverflow)
+            {
+              Xutf8ResetIC (input_context_);
+              n = 0;
+              keysym = 0;
+            }
+          if (n > 0 && (ximstatus == XLookupChars || ximstatus == XLookupBoth))
+            utf8data.assign (buffer, n);
+          if (not (ximstatus == XLookupBoth || ximstatus == XLookupKeySym))
+            keysym = 0;
         }
-      buffer[n >= 0 ? MIN (n, int (sizeof (buffer)) - 1) : 0] = 0;
-      char str[8];
-      utf8_from_unichar (key_value_to_unichar (keysym), str);
-      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d sym=%04x str=%s buf=%s", kind, sf, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, uint (keysym), str, buffer);
-      event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
-      if (!consumed && // might have been processed by input context already
-          (ximstatus == XLookupKeySym || ximstatus == XLookupBoth))
-        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), str));
+      else // !input_context_
+        {
+          char buffer[512];
+          n = XLookupString (const_cast<XKeyEvent*> (&xev), buffer, sizeof (buffer), &keysym, NULL);
+          if (n > 0 && xevent.type == KeyPress)
+            {
+              /* XLookupString(3) is documented to return Latin-1 characters, but modern implementations
+               * seem to work locale specific. So we may or may not need to convert to UTF-8. Yay!
+               */
+              if (!utf8_is_locale_charset() || !utf8_validate (String (buffer, n)))
+                for (int i = 0; i < n; i++)
+                  {
+                    const uint8 l1char = buffer[i];                   // Latin-1 character
+                    char utf[8];
+                    const int l = utf8_from_unichar (l1char, utf);    // convert to UTF-8
+                    utf8data.append (utf, l);
+                  }
+              else
+                utf8data.append (buffer, n);
+            }
+          // utf8data is empty for KeyRelease, but we try to fill at least keysym
+        }
+      EDEBUG ("Key%s: %c=%u w=%u c=%u p=%+d%+d mod=%x cod=%d sym=%04x uc=%04x str=%s", kind, ss, xev.serial, xev.window, xev.subwindow, xev.x, xev.y, xev.state, xev.keycode, uint (keysym), key_value_to_unichar (keysym), utf8data);
+      if (xev.send_event || xev.keycode == 0 || xev.serial == 0)
+        ; // avid corrupting event_context_ from synthesized event
+      else
+        {
+          event_context_.time = xev.time; event_context_.x = xev.x; event_context_.y = xev.y; event_context_.modifiers = ModifierState (xev.state);
+        }
+      if (keysym || !utf8data.empty())
+        enqueue_event (create_event_key (xevent.type == KeyPress ? KEY_PRESS : KEY_RELEASE, event_context_, KeyValue (keysym), utf8data));
       consumed = true;
       break; }
     case ButtonPress: case ButtonRelease: {
@@ -494,9 +747,86 @@ ScreenWindowX11::process_event (const XEvent &xevent)
       EDEBUG ("Destr: %c=%u w=%u", ss, xev.serial, xev.window);
       consumed = true;
       break; }
-    default: ;
+    default:
+      EDEBUG ("What?: %c=%u w=%u type=%d", ss, xevent.xany.serial, xevent.xany.window, xevent.xany.type);
+      break;
     }
   return consumed;
+}
+
+void
+ScreenWindowX11::receive_selection (const XEvent &xevent)
+{
+  return_unless (isel_ != NULL);
+  // SelectionNotify (after XConvertSelection)
+  if (xevent.type == SelectionNotify && isel_->state == WAIT_FOR_NOTIFY)
+    {
+      const XSelectionEvent &xev = xevent.xselection;
+      if (window_ == xev.requestor && isel_->source_atom == xev.selection && isel_->time == xev.time)
+        {
+          bool retry = false;
+          if (isel_->slot == xev.property)       // Conversion succeeded (except for Qt, see below)
+            {
+              const bool success = x11_get_property_data (x11context.display, xev.requestor, isel_->slot, isel_->raw, 0, True);
+              if (isel_->raw.property_type == x11context.atom ("INCR"))
+                {
+                  isel_->size_est = isel_->raw.data32.size() > 0 ? isel_->raw.data32[0] : 0;
+                  isel_->raw.data32.clear();
+                  isel_->raw.property_type = None;
+                  isel_->raw.format_returned = 0;
+                  isel_->state = WAIT_FOR_PROPERTY;
+                }
+              else if (!success || isel_->raw.property_type == None)
+                retry = true;                   // Conversion failed (Qt style), might retry other result types
+              else if (success && isel_->raw.property_type == x11context.atom ("TEXT"))
+                retry = true;                   // Work around a Qt bug, might retry other result types
+              else
+                isel_->state = WAIT_FOR_RESULT;  // Property fully received
+            }
+          else // xev.property == None
+            retry = true;                       // Conversion failed, might retry other result types
+          if (retry)
+            {
+              // Conversion failed, try re-requesting using fallbacks
+              SelectionInput *tsel = isel_;
+              isel_ = NULL;
+              request_selection (tsel->content_source, tsel->source_atom, tsel->nonce, tsel->content_type, tsel->target);
+              delete tsel;
+              return;
+            }
+          isel_->timeout = timestamp_realtime() + SELECTION_INPUT_TIMEOUT; // refresh timeout to keep safe from cleanup
+        }
+    }
+  // Property NewValue (after SelectionNotify + INCR)
+  if (xevent.type == PropertyNotify && isel_->state == WAIT_FOR_PROPERTY)
+    {
+      const XPropertyEvent &xev = xevent.xproperty;
+      if (xev.state == PropertyNewValue && isel_->slot == xev.atom)
+        {
+          RawData raw;
+          const bool success = x11_get_property_data (x11context.display, window_, isel_->slot, raw, 0, True);
+          isel_->raw.property_type = raw.property_type;
+          isel_->raw.format_returned = raw.format_returned;
+          isel_->raw.data32.insert (isel_->raw.data32.end(), raw.data32.begin(), raw.data32.end());
+          isel_->raw.data16.insert (isel_->raw.data16.end(), raw.data16.begin(), raw.data16.end());
+          isel_->raw.data8.insert (isel_->raw.data8.end(), raw.data8.begin(), raw.data8.end());
+          if (!success || (raw.data32.size() == 0 && raw.data16.size() == 0 && raw.data8.size() == 0))
+            isel_->state = WAIT_FOR_RESULT; // last property received
+          isel_->timeout = timestamp_realtime() + SELECTION_INPUT_TIMEOUT; // refresh timeout to keep safe from cleanup
+        }
+    }
+  // IPC completed
+  if (isel_->state == WAIT_FOR_RESULT)
+    {
+      isel_->state = WAIT_INVALID;
+      String content_type, content_data;
+      if (isel_->content_type == "text/plain" &&
+          x11_convert_string_property (x11context.display, isel_->raw.property_type, isel_->raw.data8, &content_data))
+        content_type = isel_->content_type;
+      enqueue_event (create_event_data (CONTENT_DATA, event_context_, isel_->content_source, isel_->nonce, content_type, content_data));
+      delete isel_;
+      isel_ = NULL;
+    }
 }
 
 void
@@ -547,13 +877,13 @@ ScreenWindowX11::force_update (Window window)
       state_.visible_alias = x11_get_string_property (x11context.display, window_, x11context.atom (aname));
     else if (aname == "WM_STATE")
       {
-        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, window_, x11context.atom (aname));
+        vector<uint32> datav = x11_get_property_data32 (x11context.display, window_, x11context.atom (aname));
         if (datav.size())
           state_.window_flags = Flags ((state_.window_flags & ~ICONIFY) | (datav[0] == IconicState ? ICONIFY : 0));
       }
     else if (aname == "_NET_WM_STATE")
       {
-        vector<uint32> datav = x11_get_property_data<uint32> (x11context.display, window_, x11context.atom (aname));
+        vector<uint32> datav = x11_get_property_data32 (x11context.display, window_, x11context.atom (aname));
         uint32 f = 0;
         for (size_t i = 0; i < datav.size(); i++)
           if      (datav[i] == x11context.atom ("_NET_WM_STATE_MODAL"))           f += MODAL;
@@ -872,26 +1202,238 @@ ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
     enqueue_event (create_event_win_size (event_context_, state_.width, state_.height, pending_configures_ > 0));
 }
 
+bool
+ScreenWindowX11::send_selection_notify (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time)
+{
+  XEvent xevent = { 0, };
+  XSelectionEvent &notify = xevent.xselection;
+  notify.type = SelectionNotify;
+  notify.serial = 0;
+  notify.send_event = True;
+  notify.display = NULL;
+  notify.requestor = req_window;
+  notify.selection = selection;
+  notify.target = target;
+  notify.property = req_property;
+  notify.time = req_time;
+  // send notify, guard against foreign window deletion
+  XErrorEvent dummy = { 0, };
+  x11_trap_errors (&dummy);
+  Status xstatus = XSendEvent (x11context.display, notify.requestor, False, NoEventMask, &xevent);
+  XSync (x11context.display, False);
+  if (x11_untrap_errors())
+    xstatus = 0;
+  return xstatus != 0; // success
+}
+
+void
+ScreenWindowX11::handle_content_request (const size_t nth, ContentOffer *const offer)
+{
+  assert_return (nth < content_requests_.size());
+  ContentRequest &cr = content_requests_[nth];
+  assert_return (cr.data_provided == true);
+  const XSelectionRequestEvent &xev = cr.xsr;
+  const Atom requestor_property = xev.property ? xev.property : xev.target; // ICCCM convention
+  if (xev.target == x11context.atom ("TIMESTAMP") && offer)
+    {
+      vector<unsigned long> ints;
+      ints.push_back (offer->time);
+      const bool transferred = safe_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("INTEGER"),
+                                                  32, ints.data(), ints.size());
+      send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
+    }
+  else if (xev.target == x11context.atom ("TARGETS") && offer)
+    {
+      vector<Atom> ints;
+      for (const String &type : offer->content_types)
+        x11context.mime_list_target_atoms (type, ints);
+      ints.push_back (x11context.atom ("TIMESTAMP"));
+      ints.push_back (x11context.atom ("TARGETS"));
+      // unhandled: ints.push_back (x11context.atom ("MULTIPLE"));
+      const bool transferred = safe_set_property (x11context.display, xev.requestor, requestor_property, x11context.atom ("ATOM"),
+                                                  32, ints.data(), ints.size());
+      send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
+    }
+  else if (xev.target == x11context.atom ("MULTIPLE"))
+    {
+      // reject; we can implement this if we have suitable test case (X11 client) that requests MULTIPLE
+      send_selection_notify (xev.requestor, xev.selection, xev.target, None, xev.time);
+    }
+  else if (strncmp (&cr.data_type[0], "text/", 5) == 0)
+    {
+      XICCEncodingStyle ecstyle = XUTF8StringStyle;
+      if      (xev.target == x11context.atom ("UTF8_STRING") ||
+               xev.target == x11context.atom ("text/plain;charset=utf-8") ||
+               xev.target == x11context.atom ("text/plain"))
+        ecstyle = XUTF8StringStyle;
+      else if (xev.target == x11context.atom ("TEXT"))
+        ecstyle = XCompoundTextStyle;
+      else if (xev.target == x11context.atom ("COMPOUND_TEXT"))
+        ecstyle = XCompoundTextStyle;
+      else if (xev.target == x11context.atom ("STRING"))
+        ecstyle = XStringStyle;
+      Atom ptype;
+      int pformat;
+      vector<uint8> chars;
+      bool transferred = x11_convert_string_for_text_property (x11context.display, ecstyle, cr.data, &chars, &ptype, &pformat);
+      transferred = transferred && pformat == 8 &&
+                    x11context.transfer_incr_property (xev.requestor, requestor_property, ptype, 8, chars.data(), chars.size());
+      send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
+    }
+  else
+    {
+      const Atom target = x11context.mime_to_target_atom (cr.data_type);
+      const bool transferred = !target ? false :
+                               x11context.transfer_incr_property (xev.requestor, requestor_property,
+                                                                  target, 8, cr.data.data(), cr.data.size());
+      send_selection_notify (xev.requestor, xev.selection, xev.target, transferred ? requestor_property : None, xev.time);
+    }
+  content_requests_.erase (content_requests_.begin() + nth);
+}
+
+void
+ScreenWindowX11::request_selection (ContentSourceType content_source, Atom source, uint64 nonce, String data_type, Atom last_failed)
+{
+  if (!isel_)
+    {
+      SelectionInput *tsel = new SelectionInput();
+      tsel->content_source = content_source;
+      tsel->source_atom = source;
+      tsel->content_type = data_type;
+      tsel->target = x11context.mime_to_target_atom (tsel->content_type, last_failed);
+      tsel->owner = XGetSelectionOwner (x11context.display, tsel->source_atom);
+      if (tsel->owner != None && tsel->target != None)
+        {
+          tsel->nonce = nonce;
+          tsel->time = event_context_.time;
+          tsel->slot = x11context.atom ("RAPICORN_SELECTION");
+          XDeleteProperty (x11context.display, window_, tsel->slot);
+          XConvertSelection (x11context.display, tsel->source_atom, tsel->target, tsel->slot, window_, tsel->time);
+          XDEBUG ("XConvertSelection: [%lx] %s(%s) -> %ld(%s); owner=%ld", tsel->time,
+                  x11context.atom (tsel->source_atom), x11context.atom (tsel->target),
+                  window_, x11context.atom (tsel->slot),
+                  tsel->owner);
+          tsel->state = WAIT_FOR_NOTIFY;
+          isel_ = tsel;
+          isel_->timeout = timestamp_realtime() + SELECTION_INPUT_TIMEOUT; // keep safe from cleanup
+          return; // successfully initiated transfer
+        }
+      delete tsel;
+    }
+  // if PRIMARY is unowned, xterm yields CUT_BUFFER0 (from root window of screen 0, see ICCCM)
+  if (source == XA_PRIMARY && data_type == "text/plain")
+    {
+      source = x11context.atom ("CUT_BUFFER0");
+      String content_data;
+      RawData raw;
+      if (x11_get_property_data (x11context.display, RootWindow (x11context.display, 0), source, raw, 0) &&
+          x11_convert_string_property (x11context.display, raw.property_type, raw.data8, &content_data))
+        {
+          XDEBUG ("XConvertSelection: failed, falling back to %s(%s)", x11context.atom (source), x11context.atom (raw.property_type));
+          enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_source, nonce, data_type, content_data));
+          return; // successfully initiated transfer
+        }
+    }
+  // request rejected
+  enqueue_event (create_event_data (CONTENT_DATA, event_context_, content_source, nonce, "", ""));
+}
+
 void
 ScreenWindowX11::handle_command (ScreenCommand *command)
 {
   switch (command->type)
     {
+      bool found;
     case ScreenCommand::CREATE: case ScreenCommand::OK: case ScreenCommand::ERROR: case ScreenCommand::SHUTDOWN:
       assert_unreached();
     case ScreenCommand::CONFIGURE:
-      configure_window (*command->dconfig, command->dresize);
+      configure_window (*command->config, command->need_resize);
       break;
     case ScreenCommand::BEEP:
       XBell (x11context.display, 0);
       break;
     case ScreenCommand::SHOW:
-      XMapWindow (x11context.display, window_);
+      XMapRaised (x11context.display, window_);
+      break;
+    case ScreenCommand::PRESENT:
+      {
+        const bool user_activation = command->u64;
+        XEvent xevent = { ClientMessage, }; // rest is zeroed
+        xevent.xclient.window = window_;
+        xevent.xclient.message_type = x11context.atom ("_NET_ACTIVE_WINDOW");
+        xevent.xclient.format = 32;
+        xevent.xclient.data.l[0] = user_activation ? 2 : 1; // source indication: 0=unkown, 1=application, 2=user-action
+        xevent.xclient.data.l[1] = event_context_.time;
+        xevent.xclient.data.l[2] = 0; // our currently active window; FIXME: add support for transient dialogs
+        xevent.xclient.data.l[3] = xevent.xclient.data.l[4] = 0;
+        XSendEvent (x11context.display, x11context.root_window, False, SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
+      }
       break;
     case ScreenCommand::BLIT:
       blit (command->surface, *command->region);
       break;
-    case ScreenCommand::PRESENT:   break;  // FIXME
+    case ScreenCommand::OWNER: {
+      const StringVector &data_types = command->string_list;
+      const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
+                             command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
+                             None;
+      ContentOffer *offer = find_element (offers_, [selection] (const ContentOffer &o) { return o.selection == selection; });
+      if (data_types.size() > 0)
+        XSetSelectionOwner (x11context.display, selection, window_, event_context_.time);
+      else if (offer)
+        XSetSelectionOwner (x11context.display, selection, None, event_context_.time);
+      if (window_ == XGetSelectionOwner (x11context.display, selection))
+        {
+          if (!offer)
+            {
+              offers_.resize (offers_.size()+1);
+              offer = &offers_.back();
+              offer->selection = selection;
+              offer->nonce = command->nonce;
+            }
+          if (offer->nonce != command->nonce)
+            {
+              enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, command->source, offer->nonce, "", ""));
+              offer->nonce = command->nonce;
+            }
+          offer->content_types = data_types;
+          offer->time = event_context_.time;
+        }
+      else
+        {
+          if (data_types.size() > 0) // tried to become owner but failed
+            enqueue_event (create_event_data (CONTENT_CLEAR, event_context_, command->source, offer->nonce, "", ""));
+          if (offer)
+            offers_.erase (offers_.begin() + (offer - &offers_[0]));
+          offer = NULL;
+        }
+      break; }
+    case ScreenCommand::CONTENT: {
+      const StringVector &data_types = command->string_list;
+      assert_return (data_types.size() == 1);
+      const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
+                             command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
+                             None;
+      request_selection (command->source, selection, command->nonce, data_types[0]);
+      break; }
+    case ScreenCommand::PROVIDE: {
+      const StringVector &data_types = command->string_list;
+      assert_return (data_types.size() == 2);
+      found = false;
+      for (auto &cr : content_requests_)
+        if (cr.request_id == command->nonce && !cr.data_provided)
+          {
+            cr.data_provided = true;
+            cr.data_type = data_types[0];
+            cr.data = data_types[1];
+            handle_content_request (&cr - &content_requests_[0], NULL);
+            found = true;
+            break;
+          }
+      if (!found)
+        RAPICORN_CRITICAL ("content provided for unknown request_id: %u (data_type=%s data_length=%u)",
+                           command->nonce, data_types[0], data_types[1].size());
+      break; }
     case ScreenCommand::UMOVE:     break;  // FIXME
     case ScreenCommand::URESIZE:   break;  // FIXME
     case ScreenCommand::DESTROY:
@@ -906,8 +1448,9 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
 X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue,
                         AsyncBlockingQueue<ScreenCommand*> &reply_queue) :
   loop_ (*ref_sink (MainLoop::_new())), command_queue_ (command_queue), reply_queue_ (reply_queue),
-  screen_driver (driver), display (NULL), screen (0), visual (NULL), depth (0),
-  root_window (0), input_method (NULL), shared_mem_ (-1)
+  shared_mem_ (-1), screen_driver (driver), display (NULL), visual (NULL),
+  max_request_bytes (0), max_property_bytes (0), screen (0), depth (0),
+  root_window (0), input_method (NULL)
 {
   XDEBUG ("%s: X11Context started", STRFUNC);
   do_once {
@@ -937,6 +1480,10 @@ X11Context::connect()
   if (!display)
     return false;
   XSynchronize (display, dbe_x11sync);
+  max_request_bytes = XExtendedMaxRequestSize (display) * 4;
+  if (!max_request_bytes)
+    max_request_bytes = XMaxRequestSize (display) * 4;
+  max_property_bytes = CLAMP (max_request_bytes - 256, 8192, 1048576);
   screen = DefaultScreen (display);
   visual = DefaultVisual (display, screen);
   depth = DefaultDepth (display, screen);
@@ -999,9 +1546,11 @@ X11Context::run()
   loop_.exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)
   loop_.exec_dispatcher (Aida::slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
+  // process cleanup actions after expiration times
+  loop_.exec_dispatcher (Aida::slot (*this, &X11Context::x11_timer), EventLoop::PRIORITY_NORMAL);
   // ensure enqueued user commands are processed
   loop_.exec_dispatcher (Aida::slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
-  // ensure command_queue events are processed
+  // ensure new command_queue events are noticed
   command_queue_.notifier ([&]() { loop_.wakeup(); });
   // process X11 events
   loop_.run();
@@ -1023,6 +1572,61 @@ X11Context::run()
     }
   // remove sources and close Pfd file descriptor
   loop_.kill_sources();
+}
+
+bool
+X11Context::x11_timer (const EventLoop::State &state)
+{
+  const uint64 now = state.current_time_usecs;
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    {
+      /* lazy timer: we're not forcing event loop wakeups for pending timeouts,
+       * because we're currently just handling non-critical cleanups. the
+       * cleanups are performed after the loop wakes up and timesouts have
+       * expired, however long the loop was sleeping.
+       */
+      for (auto it : incr_transfers_)
+        if (it.timeout <= now)
+          return true;
+      for (auto it : x11ids_)
+        {
+          X11Widget *xw = it.second;
+          int64 timeout_usecs = -1;
+          if (xw->timer (state, &timeout_usecs))
+            return true;
+        }
+      return false;
+    }
+  else if (state.phase == state.DISPATCH)
+    {
+      for (size_t i = 0; i < incr_transfers_.size(); i++)
+        if (incr_transfers_[i].timeout <= now)
+          {
+            // waiting for reply expired, killing request
+            const IncrTransfer &it = incr_transfers_[i];
+            safe_set_property (display, it.window, it.property, it.type, it.byte_width * 8, NULL, 0);
+            incr_transfers_.erase (incr_transfers_.begin() + i); // invalidates iterators
+            return true;
+          }
+      for (auto it : x11ids_)
+        {
+          X11Widget *xw = it.second;
+          int64 timeout_usecs = -1;
+          EventLoop::State wstate = state;
+          wstate.phase = state.CHECK;
+          if (xw->timer (wstate, &timeout_usecs))
+            {
+              wstate.phase = state.DISPATCH;
+              // dispatching X11Widget timer can change everything, e.g. x11ids_
+              xw->timer (wstate, &timeout_usecs);
+              return true;
+            }
+        }
+      return true;
+    }
+  else if (state.phase == state.DESTROY)
+    ;
+  return false;
 }
 
 bool
@@ -1053,15 +1657,18 @@ X11Context::process_x11()
   if (XPending (display))
     {
       XEvent xevent = { 0, };
-      XNextEvent (display, &xevent); // blocks if !XPending
-      bool consumed = filter_event (xevent);
+      XNextEvent (display, &xevent);    // blocks if !XPending
+      XEvent evcopy = xevent;
+      // allow event handling hooks, e.g. needed by XIM
+      bool consumed = XFilterEvent (&evcopy, None);
+      consumed = consumed || filter_event (evcopy);
+      // deliver to owning ScreenWindow
       X11Widget *xwidget = x11id_get (xevent.xany.window);
-      if (xwidget)
-        {
-          ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xwidget);
-          if (scw)
-            consumed = scw->process_event (xevent);
-        }
+      ScreenWindowX11 *scw = !xwidget ? NULL : dynamic_cast<ScreenWindowX11*> (xwidget);
+      if (scw && consumed)
+        scw->filtered_event (xevent);           // preserve bookkeeping of ScreenWindows
+      else if (scw)
+        consumed = scw->process_event (xevent); // ScreenWindow event handling
       if (!consumed)
         {
           const char ss = xevent.xany.send_event ? 'S' : 's';
@@ -1090,14 +1697,91 @@ X11Context::process_updates ()
 bool
 X11Context::filter_event (const XEvent &xevent)
 {
+  const char ss = xevent.xany.send_event ? 'S' : 's';
+  bool filtered = false;
   switch (xevent.type)
     {
-    case MappingNotify:
+    case MappingNotify: { // only sent to X11 clients that previously queried key maps
+      const XMappingEvent &xev = xevent.xmapping;
       XRefreshKeyboardMapping (const_cast<XMappingEvent*> (&xevent.xmapping));
+      EDEBUG ("KyMap: %c=%u win=%u req=Mapping%s first_keycode=%d count=%d", ss, xev.serial, xev.window,
+              xev.request == MappingPointer ? "Pointer" :
+              (xev.request == MappingKeyboard ? "Keyboard" :
+               (xev.request == MappingModifier ? "Modifier" : "Unknown")),
+              xev.first_keycode, xev.count);
+      filtered = true;
+      break; }
+    case PropertyNotify: {
+      const XPropertyEvent &xev = xevent.xproperty;
+      if (!incr_transfers_.empty() && xev.state == PropertyDelete)
+        continue_incr (xev.window, xev.atom);
+      break; }
+    case DestroyNotify: {
+      const XDestroyWindowEvent &xev = xevent.xdestroywindow;
+      if (xev.window)
+        window_destroyed (xev.window);
+      break; }
+    }
+  return filtered;
+}
+
+bool
+X11Context::transfer_incr_property (Window window, Atom property, Atom type, int element_bits, const void *elements, size_t nelements)
+{
+  assert_return (element_bits == 8 || element_bits == 16 || element_bits == 32, false);
+  const long nbytes = nelements * (element_bits / 8);
+  // set property in one chunk
+  if (nbytes < long (max_property_bytes))
+    {
+      const bool transferred = safe_set_property (display, window, property, type, element_bits, elements, nelements);
+      if (transferred)
+        XDEBUG ("Transfer: bits=%d bytes=%d %s -> %ld(%s)", element_bits, nelements * (element_bits / 8),
+                atom (type), window, atom (property));
+      return transferred;
+    }
+  // need to start incremental transfer
+  ref_events (window, PropertyChangeMask); // avoid-race: request PropertyChangeMask before safe_set_property("INCR")
+  if (safe_set_property (display, window, property, atom ("INCR"), 32, &nbytes, 1)) // ICCCM sec. 2.5
+    {
+      IncrTransfer it;
+      it.window = window;
+      it.property = property;
+      it.type = type;
+      it.byte_width = element_bits / 8;
+      it.offset = 0;
+      it.bytes.insert (it.bytes.end(), (const char*) elements, (const char*) elements + nelements * it.byte_width);
+      it.timeout = timestamp_realtime() + INCR_TRANSFER_TIMEOUT;
+      incr_transfers_.push_back (it);
       return true;
-    default:
+    }
+  else
+    {
+      unref_events (window);
       return false;
     }
+}
+
+void
+X11Context::continue_incr (Window window, Atom property)
+{
+  for (IncrTransfer &it : incr_transfers_)
+    if (it.window == window && it.property == property)
+      {
+        const size_t num = MIN (it.bytes.size() - it.offset, max_property_bytes) / it.byte_width;
+        const bool abort = false == safe_set_property (display, it.window, it.property, it.type, it.byte_width * 8,
+                                                       it.bytes.data() + it.offset, num);
+        it.offset += num * it.byte_width;
+        if (num == 0 || abort) // 0-size termination sent
+          {
+            XDEBUG ("IncrTransfer: bits=%d bytes=%d %s -> %ld(%s)", it.byte_width * 8, it.bytes.size(),
+                    atom (it.type), it.window, atom (it.property));
+            unref_events (it.window); // no PropertyChangeMask events are needed beyond this
+            incr_transfers_.erase (incr_transfers_.begin() + (&it - &incr_transfers_[0]));
+          }
+        else // refresh timeout to keep IncrTransfer safe from cleanup timer
+          it.timeout = timestamp_realtime() + INCR_TRANSFER_TIMEOUT;
+        return;
+      }
 }
 
 void
@@ -1123,6 +1807,72 @@ X11Context::x11id_get (size_t xid)
   return x11ids_.end() != it ? it->second : NULL;
 }
 
+EventStake*
+X11Context::find_event_stake (Window window, bool create)
+{
+  for (auto &es : event_stakes_)
+    if (es.window == window)
+      return &es;
+  if (!create)
+    return NULL;
+  EventStake es;
+  es.window = window;
+  event_stakes_.push_back (es);
+  return &event_stakes_[event_stakes_.size()-1];
+}
+
+void
+X11Context::window_destroyed (Window window)
+{
+  EventStake *es  = find_event_stake (window, false);
+  if (es)
+    es->destroyed = true;
+}
+
+void
+X11Context::ref_events (Window window, unsigned long event_mask, const XSetWindowAttributes *attrs)
+{
+  EventStake &es = *find_event_stake (window, true);
+  es.ref_count += 1;
+  if (attrs)
+    es.mask |= attrs->event_mask;
+  if (event_mask & ~es.mask)
+    {
+      es.mask |= event_mask;
+      if (!es.destroyed)
+        {
+          XErrorEvent dummy = { 0, };
+          x11_trap_errors (&dummy);
+          XSelectInput (display, es.window, es.mask);
+          XSync (display, False);
+          if (x11_untrap_errors())
+            es.destroyed = true;
+        }
+    }
+}
+
+void
+X11Context::unref_events (Window window)
+{
+  EventStake *window_event_stake = find_event_stake (window, false);
+  assert_return (window_event_stake != NULL);
+  assert_return (window_event_stake->ref_count > 0);
+  window_event_stake->ref_count -= 1;
+  if (window_event_stake->ref_count == 0)
+    {
+      if (!window_event_stake->destroyed)
+        {
+          XErrorEvent dummy = { 0, };
+          x11_trap_errors (&dummy);
+          XSelectInput (display, window_event_stake->window, 0);
+          XSync (display, False);
+          if (x11_untrap_errors())
+            window_event_stake->destroyed = true;
+        }
+      event_stakes_.erase (event_stakes_.begin() + (window_event_stake - &event_stakes_[0]));
+    }
+}
+
 Atom
 X11Context::atom (const String &text, bool force_create)
 {
@@ -1133,12 +1883,60 @@ X11Context::atom (const String &text, bool force_create)
 String
 X11Context::atom (Atom atom) const
 {
+  if (atom == None)
+    return "<!--None-->";
   // XLib caches atoms well
   char *res = XGetAtomName (display, atom);
   String result (res ? res : "");
   if (res)
     XFree (res);
   return result;
+}
+
+static const char *const mime_target_atoms[] = {           // determine X11 selection property types from mime
+  "text/plain", "UTF8_STRING",                  // works best for all clients, xterm et al
+  "text/plain", "text/plain;charset=utf-8",     // listed in Qt targets, but not transmitted by it
+  "text/plain", "text/plain",                   // listed by Gtk+ targets, but not understood by it
+  "text/plain", "COMPOUND_TEXT",                // understood by all legacy X11 clients
+  "text/plain", "TEXT",
+  "text/plain", "STRING",
+};
+
+String
+X11Context::target_atom_to_mime (const Atom target_atom)
+{
+  // X11 atom lookup
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
+    if (target_atom == atom (mime_target_atoms[i+1]))
+      return mime_target_atoms[i];
+  // direct mime type plausible?
+  const String target = atom (target_atom);
+  if (target.size() && target[0] >= 'a' && target[0] <= 'z' && target.find ('/') != target.npos && target.find ('/') == target.rfind ('/'))
+    return target;      // starts with lower case alpha and has one slash, possibly mime type
+  return "";
+}
+
+Atom
+X11Context::mime_to_target_atom (const String &mime, Atom last_failed)
+{
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
+    if (last_failed)                                    // first find last failing request type
+      {
+        if (last_failed == atom (mime_target_atoms[i+1]))
+          last_failed = None;                           // skipped all types until last request
+        continue;
+      }
+    else if (mime == mime_target_atoms[i])
+      return atom (mime_target_atoms[i+1]);
+  return None;
+}
+
+void
+X11Context::mime_list_target_atoms (const String &mime, vector<Atom> &atoms)
+{
+  for (size_t i = 0; i + 1 < ARRAY_SIZE (mime_target_atoms); i += 2)
+    if (mime == mime_target_atoms[i])
+      atoms.push_back (atom (mime_target_atoms[i+1]));
 }
 
 bool

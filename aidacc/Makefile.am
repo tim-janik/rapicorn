@@ -11,7 +11,6 @@ AIDACCV	            = aidacc-@RAPICORN_RELEASE@	## installed executable name
 AIDACC_INTERN	    = ./aidacc-intern		## internal version used during build time
 AIDACC_VDEBUG	    = $(AIDACC_INTERN) $(if $(findstring 1, $(V)), --aida-debug)
 
-CXXSTUB_PY 	    = $(srcdir)/CxxStub.py
 CLEANFILES         += ${AIDACC_INTERN} ${AIDACCV}
 YAPPS 		    = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
 
@@ -49,26 +48,12 @@ ${AIDACCV}: plic.py Parser.py
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
 EXTRA_DIST += plic.py
 
-GPRINT      = @printf '  %-7s%s\n'
-
-# == Aida Builtins ==
-# Serialize builtins.idl into a TypeMap stored as a C string:
-# --system-typedefs essentially strips the "Aida::..builtin__" prefix,
-# --cc-intern-file  converts the TypeMap into a C string.
-check-builtins: $(srcdir)/builtins.idl ${AIDACC_INTERN}
-	@echo "  CHECK " builtins.idl
-	$(Q) ${AIDACC_VDEBUG} --system-typedefs $< -x TypeMap -o builtins.typ
-	$(Q) ${AIDACC_VDEBUG} --cc-intern-file builtins.typ > builtins.cc
-	@echo "  VERIFY" aidabuiltins.cc
-	$(Q) diff -Nu $(top_srcdir)/rcore/aidabuiltins.cc builtins.cc
-	$(Q) rm -f builtins.typ builtins.cc
-EXTRA_DIST += builtins.idl
-check-local: check-builtins
+GPRINT      = @printf '  %-9s%s\n'
 
 # == Install aidacc Helper Modules ==
 pyutilsdir      = $(libdir)/$(strip ${AIDACCV})/pyutils
 pyutils_PYTHON  = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
-backendfiles    = PrettyDump.py TypeMap.py CxxStub.py TmplFiles.py PyStub.py
+backendfiles    = PrettyDump.py TypeMap.py CxxStub.py ExtractDocs.py TmplFiles.py PyStub.py
 noinst_SCRIPTS += $(backendfiles)
 
 # == Templates & Copy-Paste Files ==
@@ -94,8 +79,8 @@ check-local: check-aidacc-intern-list-formats
 
 # == Post-Installation Test ==
 test-aidacc-installation:
-	$(Q) PATH="$(bindir):$$PATH" ${AIDACCV} -x CxxStub -x TypeMap --list-formats >$(TSTOUT) && \
-	  fgrep -q CxxStub $(TSTOUT) && fgrep -q TypeMap $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) PATH="$(bindir):$$PATH" ${AIDACCV} -x CxxStub -x ExtractDocs -x TypeMap --list-formats >$(TSTOUT) && \
+	  fgrep -q CxxStub $(TSTOUT) && fgrep -q TypeMap $(TSTOUT) && fgrep -q ExtractDocs $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 installcheck-local: test-aidacc-installation
 
 # == 'aidacc' executable link ==

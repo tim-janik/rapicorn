@@ -1,4 +1,4 @@
-/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
+/* This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 */
 #include <rcore/testutils.hh>
 #include <ui/uithread.hh>
 using namespace Rapicorn;
@@ -434,12 +434,12 @@ static void
 test_selector_matching ()
 {
   load_ui_defs();
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
 
   WindowList wl = app.query_windows ("*");
   size_t prev_window_count = wl.size();
 
-  WindowIface *window = app.create_window ("RapicornSelectorTest:test-dialog");
+  WindowIface *window = app.create_window ("test-dialog");
   TASSERT (window != NULL);
   WindowIface *w = app.query_window ("#test-dialog");
   TASSERT (window == w);
@@ -523,6 +523,7 @@ test_selector_matching ()
   test_query (__LINE__, w, "*#test-dialog > *:not(#test-dialog)", 1, "Ambience");
   // classes
   test_query (__LINE__, w, "*.Window", 1, "#test-dialog");
+  test_query (__LINE__, w, "*", -10, ".Object");
   test_query (__LINE__, w, "*", -10, ".Widget");
   test_query (__LINE__, w, "*:not(:empty)", -10, ".Container");
   test_query (__LINE__, w, ".Widget:not(.Container)", -5, ":empty");
@@ -532,9 +533,12 @@ test_selector_matching ()
   test_query (__LINE__, w, "*.Window.Container.Widget", 1, ":root");
   test_query (__LINE__, w, "* > *", -20, ":not(.Window)");
   // pseudo classes :empty :only-child :root :first-child :last-child
-  test_query (__LINE__, w, "* VBox  Button > Frame Label:empty", 4, "Label");
-  test_query (__LINE__, w, "*:empty *", 0);
+  test_query (__LINE__, w, "* VBox  Button > Frame Label", 4, "Label");
+  test_query (__LINE__, w, "* VBox  Button > Frame Label:first-child", 4, "Label");
   test_query (__LINE__, w, "* VBox  Button > Frame Label:only-child", 4, "Label");
+  test_query (__LINE__, w, "* VBox  Button > Frame Label:last-child", 4, "Label");
+  test_query (__LINE__, w, "* Alignment VBox > Frame Arrow:empty", 1, "Arrow");
+  test_query (__LINE__, w, "*:empty *", 0);
   test_query (__LINE__, w, "*:root", 1, ".Window");
   test_query (__LINE__, w, "*:root > *:only-child", 1, "Ambience");
   test_query (__LINE__, w, "*:root > *:last-child:first-child", 1, "Ambience");
@@ -572,7 +576,7 @@ static const char test_dialog_xml[] =
   "<?xml version='1.0' encoding='UTF-8'?>\n"
   "<rapicorn-definitions xmlns:arg='http://rapicorn.org/xmlns' xmlns:def='http://rapicorn.org/xmlns' xmlns:prop='http://rapicorn.org/xmlns'>\n"
   // test-dialog
-  "<tmpl:define id='test-dialog' inherit='Window'>\n"
+  "<Window id='test-dialog'>\n"
   "  <Ambience normal-lighting='upper-left'>\n"
   "    <Alignment padding='5'>\n"
   "      <VBox spacing='3' hexpand='1'>\n"
@@ -605,7 +609,7 @@ static const char test_dialog_xml[] =
   "      </VBox>\n"
   "    </Alignment>\n"
   "  </Ambience>\n"
-  "</tmpl:define>\n"
+  "</Window>\n"
   ""
   "</rapicorn-definitions>\n"
   "";
@@ -615,7 +619,7 @@ load_ui_defs()
 {
   do_once
     {
-      String errs = Factory::parse_ui_data ("RapicornSelectorTest", RAPICORN_STRLOC(), sizeof (test_dialog_xml)-1, test_dialog_xml);
+      String errs = Factory::parse_ui_data ("", RAPICORN_STRLOC(), sizeof (test_dialog_xml)-1, test_dialog_xml);
       if (!errs.empty())
         fatal ("%s:%d: failed to parse internal XML string: %s", __FILE__, __LINE__, errs.c_str());
     }

@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_WINDOW_HH__
 #define __RAPICORN_WINDOW_HH__
 
@@ -9,7 +9,6 @@ namespace Rapicorn {
 
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
-  friend class  WidgetImpl;
   EventLoop            &loop_;
   ScreenWindow*         screen_window_;
   EventContext          last_event_context_;
@@ -44,13 +43,13 @@ public:
   void                  add_grab                                (WidgetImpl *child, bool unconfined = false);
   virtual void          remove_grab                             (WidgetImpl &child);
   void                  remove_grab                             (WidgetImpl *child);
-  virtual WidgetImpl*     get_grab                                (bool                   *unconfined = NULL);
+  virtual WidgetImpl*   get_grab                                (bool                   *unconfined = NULL);
   // main loop
   virtual EventLoop*    get_loop                                ();
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */
-  virtual bool          viewable                                ();
+  virtual bool          screen_viewable                         ();
   virtual void          show                                    ();
   virtual bool          closed                                  ();
   virtual void          close                                   ();
@@ -107,6 +106,7 @@ private:
   bool                  dispatch_focus_event                    (const EventFocus       &fevent);
   bool                  move_focus_dir                          (FocusDirType            focus_dir);
   bool                  dispatch_key_event                      (const Event            &event);
+  bool                  dispatch_data_event                     (const Event            &event);
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
   bool                  dispatch_win_size_event                 (const Event            &event);
   bool                  dispatch_win_delete_event               (const Event            &event);
@@ -134,6 +134,14 @@ private:
     }
   };
   map<ButtonState,uint> button_state_map_;
+public: // tailored member access for WidgetImpl
+  /// @cond INTERNAL
+  class Internal {
+    friend               class WidgetImpl; // only friends can access private class members
+    static ScreenWindow* screen_window (WindowImpl &window)                     { return window.screen_window_; }
+    static void          set_focus     (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
+  };
+  /// @endcond
 };
 
 } // Rapicorn

@@ -1,12 +1,13 @@
 # Makefile.doxygen - Common rules to build Doxygen docs	    -*-mode:makefile;-*-
-# Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 
 DOXYGEN_PROJECT_NUMBER	= ${VERSION}
 DOXYGEN_DOCU_GLOBS	= *.dox *.py *.idl *.h *.H *.hh
 DOXYGEN_CONTENT_GLOBS	= *.c *.C *.cc
 DOXYGEN			= doxygen
-DOXYGEN_V		= @printf '  %-7s%s\n'
+DOXYGEN_V		= @printf '  %-9s%s\n'
 DOXYGEN_Q		= $(if $(findstring 1, $(V)) ,, @)
+Q_DEVNUL		= $(if $(findstring 1, $(V)) ,, >/dev/null 2>&1)
 # ChangeLog to add to the generated documentation
 DOXYGEN_CHANGELOG       ?=
 DOXYGEN_CHANGELOG_TITLE ?= Development ChangeLog
@@ -19,6 +20,8 @@ DOXYGEN_GRAPHICS	?= YES
 DOXYGEN_PROJECT_LINK    ?=
 # Tagfile references for Doxygen
 DOXYGEN_TAGFILES        ?=
+# Extra CSS style sheet for Doxygen output
+DOXYGEN_STYLESHEET	?=
 
 # == doxygen-full ==
 # build doxygen-html/ from scratch ==
@@ -41,11 +44,11 @@ doxygen-check:
 doxygen-srctree:
 	$(DOXYGEN_V) "GEN" doxygen-srctree/
 	$(DOXYGEN_Q) rm -rf doxygen-srctree/ && mkdir -p doxygen-srctree/
-	$(DOXYGEN_V) `test -z "$(DOXYGEN_CHANGELOG)" && echo SKIP || echo GEN` "ChangeLog.dox"
+	$(DOXYGEN_V) `test -z "$(DOXYGEN_CHANGELOG)" && echo SKIP || echo GEN` "changelog.dox"
 	$(DOXYGEN_Q) test -z "$(DOXYGEN_CHANGELOG)" || ( true \
-	&& echo "/*! @page $(PACKAGE_TARNAME)-ChangeLog $(DOXYGEN_CHANGELOG_TITLE)" > doxygen-srctree/ChangeLog.dox \
-	&& sed -r $(DOXYGEN_CHANGELOG_SED) $(DOXYGEN_CHANGELOG)		>> doxygen-srctree/ChangeLog.dox \
-	&& echo ' */' 							>> doxygen-srctree/ChangeLog.dox )
+	&& echo "/*! @page $(PACKAGE_TARNAME)-changelog $(DOXYGEN_CHANGELOG_TITLE)" > doxygen-srctree/changelog.dox \
+	&& sed -r $(DOXYGEN_CHANGELOG_SED) $(DOXYGEN_CHANGELOG)		>> doxygen-srctree/changelog.dox \
+	&& echo ' */' 							>> doxygen-srctree/changelog.dox )
 	$(DOXYGEN_V) `test -z "$(DOXYGEN_NEWS)" && echo SKIP || echo GEN` "NEWS.dox"
 	$(DOXYGEN_Q) test -z "$(DOXYGEN_NEWS)" || ( true \
 	&& echo "/*! @page $(PACKAGE_TARNAME)-NEWS $(DOXYGEN_NEWS_TITLE)" >doxygen-srctree/NEWS.dox \
@@ -68,18 +71,21 @@ doxygen-srctree:
 	   -exec sed  '1,+0s,^,/** @file {} */ ,' {} --in-place \;
 	$(DOXYGEN_V) "PRUNE" "Exclude files..."
 	$(DOXYGEN_Q) rm -f $(patsubst %, doxygen-srctree/%, $(DOXYGEN_EXCLUDES))
+	$(DOXYGEN_V) "GEN" "Documentation page layout..."
+	$(DOXYGEN_Q) $(DOXYGEN) -l doxygen-srctree/DoxygenLayout.xml
+	$(DOXYGEN_Q) test -z "$(DOXYGEN_LAYOUT_DIFF)" || cat $(DOXYGEN_LAYOUT_DIFF) | (cd doxygen-srctree/ && patch -fr - $(Q_DEVNUL))
 
 # sed: escape @ < & > #, add sections, handle * bullets
 DOXYGEN_CHANGELOG_SED = \
 		-e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
-		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/@section commit_\2 \0/' \
+		-e '/^[^ ].*\# [0-9a-f]/s/^(.*)\# ([0-9a-f]+)/<h2 id="\2">\0<\/h2>/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):[ \t]*(\w.*)$$/- @b \1: \2/' \
 		-e 's/^[ \t]+\*? ?([a-zA-Z0-9_.+\/-]+):(.*)/- <em><b>\1:<\/b> \2<\/em>/' \
 		-e "s/^[ \t]+\*? ?(Merge branch)[ \t]+'(.*)'/- \1 '<em>\2<\/em>'/" \
 		-e 's/^/ * /' -e 's/\#/\\\\\#/g'
 DOXYGEN_NEWS_SED = \
 		-e 's/(@\w)/\\\1/g; s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s,\*/,*\&nbps;/,g' \
-		-e '/^\w+.*\b[0-9]/s/^/@section release /' \
+		-e '/^\w+.*\b[0-9]+\./{ h; s/:.*//; s/[^a-zA-Z0-9]/_/g; G; s/\n/ /; s/^/@section /  }' \
 		-e 's/^([ \t]*)([+*-])[ \t]+(\w+)/\1- \3/' \
 		-e 's/^/ * /' -e 's/\#/\\\\\#/g'
 
@@ -99,16 +105,21 @@ doxygen-html: doxygen.cfg doxygen-srctree
 	&& echo "HAVE_DOT	  = $(DOXYGEN_GRAPHICS)" \
 	&& echo "CLASS_DIAGRAMS   = $(DOXYGEN_GRAPHICS)" \
 	&& echo "EXAMPLE_PATH	  = $(top_srcdir)/" \
+	&& echo "LAYOUT_FILE	  = doxygen-srctree/DoxygenLayout.xml" \
 	&& echo "OUTPUT_DIRECTORY = doxygen-tmp/" \
 	&& echo "GENERATE_TAGFILE = doxygen-tmp/html/tagfile.xml" \
 	&& echo "PROJECT_NUMBER   = $(DOXYGEN_PROJECT_NUMBER)" \
 	&& echo "DOT_MULTI_TARGETS = YES" \
+	&& (test -z "$(DOXYGEN_STYLESHEET)" || \
+	     echo "HTML_EXTRA_STYLESHEET = $(DOXYGEN_STYLESHEET)" && \
+	     cp $(DOXYGEN_STYLESHEET) doxygen-tmp/ ) \
 	&& for tagfile in $(DOXYGEN_TAGFILES) ; do \
 	     echo "TAGFILES += $$tagfile" ; done \
 	) > doxygen-tmp/Doxyfile.tmp \
 	&& nice $(DOXYGEN) doxygen-tmp/Doxyfile.tmp > error.log 2>&1
 	$(DOXYGEN_Q) test ! -s error.log && rm -f error.log \
-	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; cat error.log $(DOXYGEN_Q:@=1>/dev/null) ; }
+	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; \
+	     ! grep -E -v -f $(srcdir)/error.ign error.log ; }
 	$(DOXYGEN_V) "POLISH" "HTML Files..."
 	$(DOXYGEN_Q) sed -r $(DOXYGEN_SED_ACCESSKEY_AS_F) -i doxygen-tmp/html/*.html
 	$(DOXYGEN_Q) test -z "$(DOXYGEN_PROJECT_LINK)" || sed -r $(DOXYGEN_SED_PROJECT_LINK) -i doxygen-tmp/html/*.html

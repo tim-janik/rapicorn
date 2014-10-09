@@ -1,6 +1,8 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// Licensed GNU LGPLv2+: http://www.gnu.org/licenses/lgpl.html
+// This file is based on glib/gmarkup.c
+// Copyright (C) 2000-2005, GNU LGPLv2+ by the GLib project
+// Copyright (C) 2005-2014, MPLv2 Tim Janik
 #include "markup.hh"
-// This file is based on glib/gmarkup.c, Copyright 2000, 2003 Red Hat, Inc.
 #include "unicode.hh"
 #include "strings.hh"
 #include <stdio.h>
@@ -1783,5 +1785,37 @@ void
 MarkupParser::recap_pass_through (const String   &pass_through_text,
                                   Error          &error)
 {}
+
+size_t
+MarkupParser::seek_to_element (const char *data, size_t length)
+{
+  const char *p = data, *end = data + length;
+  for (;;)
+    {
+      const char *c = (const char*) memchr (p, '<', end - p);
+      if (!c)
+        return length;          // not found
+      if (c + 7 <= end && c[1] == '!' && c[2] == '-' && c[3] == '-') // <!-- skip comment -->
+        {
+          p = c + 4;            // skip comment opening
+          for (;;)              // seek to comment end
+            {
+              c = (const char*) memchr (p, '-', end - p);
+              if (!c)
+                return length;  // not found (open comment)
+              if (c + 3 <= end && c[1] == '-' && c[2] == '>')
+                {
+                  c += 3;       // skip comment end
+                  break;
+                }
+              else
+                c += 1;         // skip stray '-' inside comment
+            }
+          p = c;
+          continue;             // restart after comment
+        }
+      return c - p;             // position of first opening angle bracket
+    }
+}
 
 } // Rapicorn

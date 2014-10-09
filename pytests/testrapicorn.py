@@ -1,8 +1,8 @@
-# CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0/
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 """
 Rapicorn test program for Python
 """
-from Rapicorn1307 import Rapicorn # Rapicorn modules are versioned
+from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
 import sys
 
 # issue test message
@@ -10,23 +10,23 @@ print "  " + __file__,
 
 # Define main window Widget Tree
 my_window_xml = """
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
-  <tmpl:define id="FixmeWidgetList" inherit="Rapicorn::Factory::WidgetList"/>
-  <tmpl:define id="my-window" inherit="Window">
+<rapicorn-definitions>
+  <Rapicorn_Factory:WidgetList id="FixmeWidgetList"/>
+  <Window id="my-window">
     <VBox>
       <Button hexpand="1" on-click="Window::close()">
         <Label markup-text="Quit"/>
       </Button>
     <FixmeWidgetList />
     </VBox>
-  </tmpl:define>
+  </Window>
 </rapicorn-definitions>
 """
 
 # setup application
 app = Rapicorn.app_init ("testrapicorn.py")     # provide unique application name
-app.load_string ("MyTest", my_window_xml)       # load widget tree
-window = app.create_window ("MyTest:my-window") # create main window
+app.load_string (my_window_xml)                 # load widget tree
+window = app.create_window ("my-window")        # create main window
 
 # property testing
 assert window.name == "my-window"

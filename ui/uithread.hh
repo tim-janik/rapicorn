@@ -1,10 +1,11 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_UITHREAD_HH__
 #define __RAPICORN_UITHREAD_HH__
 
 #include <rapicorn-core.hh>
 #include <ui/application.hh>
 #include <ui/arrangement.hh>
+#include <ui/binding.hh>
 #include <ui/buttons.hh>
 #include <ui/container.hh>
 #include <ui/cmdlib.hh>
@@ -14,9 +15,11 @@
 #include <ui/heritage.hh>
 #include <ui/image.hh>
 #include <ui/widget.hh>
+#include <ui/imageframe.hh>
 #include <ui/layoutcontainers.hh>
 #include <ui/listarea.hh>
 #include <ui/models.hh>
+#include <ui/object.hh>
 #include <ui/paintcontainers.hh>
 #include <ui/paintwidgets.hh>
 #include <ui/painter.hh>

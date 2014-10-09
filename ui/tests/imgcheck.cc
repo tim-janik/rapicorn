@@ -1,19 +1,4 @@
-/* Rapicorn
- * Copyright (C) 2008 Tim Janik
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * A copy of the GNU Lesser General Public License should ship along
- * with this library; if not, see http://www.gnu.org/copyleft/.
- */
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rapicorn.hh>
 #include <rcore/testutils.hh>
 #include <stdlib.h>
@@ -42,13 +27,16 @@ compare_image_files (const String &image1_file,
     return DBL_MAX;
 
   /* check equality */
-  double avgerror = 0, npixels = 0;
-  image1.compare (image2, 0, 0, -1, -1, 0, 0, &avgerror, NULL, NULL, &npixels);
+  double avgerror = 0, maxerr = 0, npixels = 0, nerrors = 0;
+  image1.compare (image2, 0, 0, -1, -1, 0, 0, &avgerror, &maxerr, &nerrors, &npixels);
+  if (0) // debugging
+    printerr ("image difference: avgerror=%f maxerr=%f nerrors=%g npixels=%g (%u * %u)\n",
+              avgerror, maxerr, nerrors, npixels, image1.width(), image1.height());
 
-  return avgerror * npixels;
+  return maxerr;
 }
 
-static double similarity_threshold = 1.0;
+static double similarity_threshold_perc = 6.0;
 
 static void
 help_usage (bool usage_error)
@@ -65,7 +53,7 @@ help_usage (bool usage_error)
   printout ("Compare image1.png and image2.png according to a similarity threshold.\n");
   printout ("\n");
   printout ("Options:\n");
-  printout ("  -t <similarity-threshold>     Threshold to consider images equal.\n");
+  printout ("  -t <threshold_percent>        Threshold to consider images equal.\n");
   printout ("  -h, --help                    Display this help and exit.\n");
   printout ("  -v, --version                 Display version and exit.\n");
 }
@@ -81,7 +69,7 @@ parse_args (int    *argc_p,
     {
       if (strcmp (argv[i], "-t") == 0 && i + 1 < argc)
         {
-          similarity_threshold = string_to_double (argv[i + 1]);
+          similarity_threshold_perc = string_to_double (argv[i + 1]);
           argv[i++] = NULL;
           argv[i] = NULL;
         }
@@ -129,9 +117,9 @@ main (int   argc,
 
   double imgerror = compare_image_files (argv[1], argv[2]);
 
-  if (fabs (imgerror) > similarity_threshold)
-    fatal ("excessive image difference for \"%s\" - \"%s\": %f > %f",
-           argv[1], argv[2], fabs (imgerror), similarity_threshold);
+  if (fabs (imgerror) > similarity_threshold_perc / 100.0)
+    fatal ("excessive image difference for \"%s\" - \"%s\": %f%% > %f%%",
+           argv[1], argv[2], fabs (imgerror) * 100.0, similarity_threshold_perc);
 
   return 0;
 }

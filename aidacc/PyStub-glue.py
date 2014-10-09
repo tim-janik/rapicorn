@@ -47,11 +47,7 @@ class _BaseRecord_:
   def __init__ (self, **entries):
     self.__dict__.update (entries)
 
-class _BaseClass_ (object):
-  class _AidaID_:
-    def __init__ (self, _aidaid):
-      assert isinstance (_aidaid, (int, long))
-      self.id = _aidaid
+class _BaseClass_ (_CPY.PyRemoteHandle):
   class __Signal__:
     def __init__ (self, object, pyconnect):
       self.__object = object
@@ -64,9 +60,8 @@ class _BaseClass_ (object):
       return self.connect (_callable)
     def __isub__ (self, connection_id):
       return self.disconnect (connection_id)
-  def __init__ (self, _aida_id):
-    assert isinstance (_aida_id, _BaseClass_._AidaID_)
-    self.__dict__['__aida_pyobject__'] = _aida_id.id
+  def __init__ (self):
+    pass
   def __getattr__ (self, name):
     try:
       getter = getattr (self.__class__, '__pygetter__%s__' % name)
@@ -104,10 +99,8 @@ def __AIDA_pyfactory__create_pyobject__ (type_name, longid):
     raise NameError ("undefined identifier '%s'" % type_name)
   if hasattr (klass, '_enum_lookup'):
     return klass._enum_lookup (longid)
-  if not longid:
-    return None
   if not klass:
     raise NameError ("undefined identifier '%s'" % type_name)
-  return klass (_BaseClass_._AidaID_ (longid))
+  return klass ()
 _CPY.__AIDA_pyfactory__register_callback (__AIDA_pyfactory__create_pyobject__)
 _CPY.__AIDA_BaseRecord__ = _BaseRecord_

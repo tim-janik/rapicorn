@@ -1,7 +1,7 @@
 #!/bin/bash
 # mkrelease.sh: Copyright (C) 2010 Tim Janik
 #
-## This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 
 MYVERSION="mkrelease.sh version 20100901"
 # 20110407: extract 'contributors' from NEWS files
@@ -49,6 +49,7 @@ usage() {
 	  --body		include commit body for "news"
 	  -C <NEWS>		file with ignored C strings for "contributors"
 	  --first-parent	use git log with --first-parent
+	  -o output		output filename (ChangeLog)
 	  -R <revision>		revision range for "ChangeLog" generation
 	                        last release revision for "news" (auto)
 	  -T <disttarball>	name of distribution tarball (from Makefile)
@@ -69,6 +70,7 @@ REVISIONVAR=
 CONTRBLACK=
 CONTRCFILE=/dev/null
 CONTREXIT=0
+OUTPUT=ChangeLog
 FIRST=
 parse_options=1
 while test $# -ne 0 -a $parse_options = 1; do
@@ -79,6 +81,7 @@ while test $# -ne 0 -a $parse_options = 1; do
     --body)	BODY=true ;;
     -C)		CONTRCFILE="$2" ; shift ;;
     -E)		REVISIONVAR="$2" ; shift ;;
+    -o)		OUTPUT="$2" ; shift ;;
     -R)		R_REVISION="$2" ; shift ;;
     -T)		TARBALL="$2" ; shift ;;
     -U)		REMOTE_URL="$2" ; shift ;;
@@ -114,7 +117,7 @@ done
     die 9 "Failed to create temporary file"
   trap "rm -f $TEMPF" 0 HUP INT QUIT TRAP USR1 PIPE TERM
   # Generate ChangeLog with -prefixed records
-  git log $FIRST --date=short --pretty='%ad  %an 	# %h%n%n%s%n%n%b' --abbrev=11 ${R_REVISION:-HEAD} \
+  git log $FIRST --date=short --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 ${R_REVISION:-HEAD} \
   | {
     # Tab-indent ChangeLog, except for record start
     sed 's/^/	/; s/^	//; /^[ 	]*<unknown>$/d'
@@ -126,7 +129,7 @@ done
     sed '/^\s*$/{ N; /^\s*\n\s*$/D }'
   } > $TEMPF
   # replace atomically
-  mv $TEMPF ChangeLog
+  mv $TEMPF "$OUTPUT"
   exit
 }
 
@@ -278,14 +281,6 @@ done
   msg "Checking for NEWS to cover $VERSION..."
   head -n2 NEWS | grep -q "$VERSION" && ok || \
     fail "note: NEWS fails to describe version $VERSION"
-  msg "Checking release tarball $TARBALL..."
-  test -r "$TARBALL" && ok || fail "note: tarball unreadable"
-  msg "Checking tarball against ChangeLog age..."
-  test "$TARBALL" -nt ChangeLog && ok \
-    || fail "note: ChangeLog appears to be newer; make distcheck"
-  msg "Checking tarball against NEWS age..."
-  test "$TARBALL" -nt NEWS && ok \
-    || fail "note: NEWS appears to be newer; make distcheck"
   [ -n "$REVISIONVAR" ] && {
     msg "Checking revision variable to match version..."
     N=`sed -ne "/^$REVISIONVAR_NAME\s*=\s*[0-9]/ { s/^[^=]*=\s*\([0-9]\+\).*/\1/ ; p ; q }" $REVISIONVAR_FILE`
@@ -298,6 +293,16 @@ done
   msg "Checking for even revision in version $VERSION..."
   test "$REVISION" = `echo "$REVISION / 2 * 2" | bc` && ok \
     || fail "note: refusing to release development version with odd revision: $REVISION"
+  # semi-final checks for tarball sanity, new checks should be added above
+  msg "Checking release tarball $TARBALL..."
+  test -r "$TARBALL" && ok || fail "note: tarball unreadable"
+  msg "Checking tarball against ChangeLog age..."
+  test "$TARBALL" -nt ChangeLog && ok \
+    || fail "note: ChangeLog appears to be newer; make distcheck"
+  msg "Checking tarball against NEWS age..."
+  test "$TARBALL" -nt NEWS && ok \
+    || fail "note: NEWS appears to be newer; make distcheck"
+  # final upstream & upload checks
   msg "Checking master to be the current branch..."
   CBRANCH=`git name-rev --always --name-only HEAD`
   test "$CBRANCH" = master && ok \

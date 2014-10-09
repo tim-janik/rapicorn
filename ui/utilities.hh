@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_UTILITIES_HH__
 #define __RAPICORN_UTILITIES_HH__
 
@@ -12,7 +12,6 @@
 /* --- internally used macros --- */
 #ifdef __RAPICORN_BUILD__
 // convenience macros
-#define MakeProperty                    RAPICORN_AIDA_PROPERTY
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
 #define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
 #endif

@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rapicorn.hh>
 #include <sys/types.h>
 #include <dirent.h>
@@ -80,7 +80,7 @@ ListModelBinding::disconnect()
   assert_return (lrelay_ != NULL);
   store.sig_updates() -= conid_updates_;
   lrelay_.sig_refill() -= conid_refill_;
-  lrelay_ = lrelay_.down_cast (lrelay_._null_handle());
+  lrelay_ = lrelay_.down_cast (lrelay_.__aida_null_handle__());
 }
 
 void
@@ -131,7 +131,7 @@ main (int   argc,
   ApplicationH app = init_app ("RapicornFileView", &argc, argv);
 
   // find and load GUI definitions relative to argv[0]
-  app.auto_load ("RapicornFileView", "fileview.xml", argv[0]);
+  app.auto_load ("fileview.xml", argv[0]);
 
   // create and bind list store
   ListStore &store = *new ListStore();
@@ -145,8 +145,8 @@ main (int   argc,
   fill_test_store (test_store);
 
   // create main window
-  WindowH window = app.create_window ("RapicornFileView:main-dialog", Strings ("list-model=//local/data/fileview/main"));
-  // WindowH window = app.create_window ("RapicornFileView:main-dialog", Strings ("list-model=//local/data/fileview/test_store"));
+  WindowH window = app.create_window ("main-dialog", Strings ("list-model=//local/data/fileview/main"));
+  // Strings ("list-model=//local/data/fileview/test_store")
   window.show();
 
   // load directory data

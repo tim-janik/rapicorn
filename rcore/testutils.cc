@@ -1,10 +1,9 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "testutils.hh"
 #include "main.hh"
 #include "strings.hh"
 
 #include <algorithm>
-#include <glib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -290,6 +289,12 @@ slow()
 }
 
 bool
+normal ()
+{
+  return 0 == (InitSettings::test_codes() & (MODE_READOUT | MODE_SLOW));
+}
+
+bool
 ui_test()
 {
   return flag_test_ui;
@@ -358,40 +363,31 @@ run (void)
   return 0;
 }
 
-char
-rand_bit (void)
+uint64_t
+random_int64 ()
 {
-  return 0 != (rand_int() & (1 << 15));
+  return Rapicorn::random_int64();
 }
 
-int32
-rand_int (void)
+int64_t
+random_irange (int64_t begin, int64_t end)
 {
-  return g_random_int(); // g_test_rand_int();
-}
-
-int32
-rand_int_range (int32 begin,
-                int32 end)
-{
-  return g_random_int_range (begin, end); // g_test_rand_int_range()
+  return Rapicorn::random_irange (begin, end);
 }
 
 double
-test_rand_double (void)
+random_float ()
 {
-  return g_random_double(); // g_test_rand_double()
+  return Rapicorn::random_float();
 }
 
 double
-test_rand_double_range (double range_start,
-                        double range_end)
+random_frange (double begin, double end)
 {
-  return g_random_double_range (range_start, range_end); // g_test_rand_double_range()
+  return Rapicorn::random_frange (begin, end);
 }
 
-} // Test
-} // Rapicorn
+} } // Rapicorn::Test
 
 namespace Rapicorn {
 

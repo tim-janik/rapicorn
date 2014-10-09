@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "window.hh"
 #include "application.hh"
 #include "factory.hh"
@@ -13,12 +13,6 @@ namespace Rapicorn {
 struct ClassDoctor {
   static void widget_set_flag       (WidgetImpl &widget, uint32 flag) { widget.set_flag (flag, true); }
   static void widget_unset_flag     (WidgetImpl &widget, uint32 flag) { widget.unset_flag (flag); }
-  static void set_window_heritage (WindowImpl &window, Heritage *heritage) { window.heritage (heritage); }
-  static Heritage*
-  window_heritage (WindowImpl &window, ColorSchemeType cst)
-  {
-    return Heritage::create_heritage (window, window, cst);
-  }
 };
 
 WindowImpl&
@@ -229,10 +223,10 @@ WindowImpl::WindowImpl() :
 {
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
   WindowTrail::wenter (this);
-  Heritage *hr = ClassDoctor::window_heritage (*this, color_scheme());
-  ref_sink (hr);
-  ClassDoctor::set_window_heritage (*this, hr);
-  unref (hr);
+  struct Heritage : Rapicorn::Heritage {
+    using Rapicorn::Heritage::create_heritage;
+  };
+  heritage (Heritage::create_heritage (*this, *this, color_scheme()));
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_UNVIEWABLE, false);
   /* create event loop (auto-starts) */
@@ -649,6 +643,24 @@ WindowImpl::dispatch_key_event (const Event &event)
 }
 
 bool
+WindowImpl::dispatch_data_event (const Event &event)
+{
+  dispatch_mouse_movement (event);
+  WidgetImpl *focus_widget = get_focus();
+  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_screen_window_event (event))
+    return true;
+  else if (event.type == CONTENT_REQUEST)
+    {
+      // CONTENT_REQUEST events must be answered
+      const EventData *devent = dynamic_cast<const EventData*> (&event);
+      provide_content ("", "", devent->request_id); // no-type, i.e. reject request
+      return true;
+    }
+  else
+    return false;
+}
+
+bool
 WindowImpl::dispatch_scroll_event (const EventScroll &sevent)
 {
   bool handled = false;
@@ -911,6 +923,9 @@ WindowImpl::dispatch_event (const Event &event)
     case KEY_PRESS:
     case KEY_CANCELED:
     case KEY_RELEASE:         return dispatch_key_event (event);
+    case CONTENT_DATA:
+    case CONTENT_CLEAR:
+    case CONTENT_REQUEST:     return dispatch_data_event (event);
     case SCROLL_UP:          // button4
     case SCROLL_DOWN:        // button5
     case SCROLL_LEFT:        // button6
@@ -987,10 +1002,12 @@ WindowImpl::get_loop ()
 }
 
 bool
-WindowImpl::viewable ()
+WindowImpl::screen_viewable ()
 {
   return visible() && screen_window_ && screen_window_->viewable();
 }
+
+static bool startup_window = true;
 
 void
 WindowImpl::idle_show()
@@ -1002,6 +1019,10 @@ WindowImpl::idle_show()
         move_focus (FOCUS_NEXT);
       // size request & show up
       screen_window_->show();
+      // figure if this is the first window triggered by the user startig an app
+      const bool user_action = startup_window;
+      startup_window = false;
+      screen_window_->present (user_action);
     }
 }
 
@@ -1167,6 +1188,6 @@ WindowImpl::synthesize_delete ()
   return true;
 }
 
-static const WidgetFactory<WindowImpl> window_factory ("Rapicorn::Factory::Window");
+static const WidgetFactory<WindowImpl> window_factory ("Rapicorn_Factory:Window");
 
 } // Rapicorn

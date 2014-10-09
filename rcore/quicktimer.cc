@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "quicktimer.hh"
 #include "memory.hh"
 #include <signal.h>
@@ -60,8 +60,9 @@ QuickTimer::init_timers ()
   const bool flipper_realtime   = RAPICORN_FLIPPER ("quick-timer-realtime", "Rapicorn::QuickTimer: Use CLOCK_REALTIME, the system wide realtime clock.");
   const bool flipper_rdtsc      = RAPICORN_FLIPPER ("quick-timer-rdtsc", "Rapicorn::QuickTimer: Use the X86 architecture RDTSC assembler command as a timer.");
   if (flipper_threadfunc &&
+      (
 #ifdef    _POSIX_CPUTIME
-      ((flipper_cputime && timer_create (CLOCK_PROCESS_CPUTIME_ID, &sevent, &quick_timer_ptimer) == 0) ||
+       (flipper_cputime && timer_create (CLOCK_PROCESS_CPUTIME_ID, &sevent, &quick_timer_ptimer) == 0) ||
 #endif
        (flipper_realtime && timer_create (CLOCK_REALTIME, &sevent, &quick_timer_ptimer) == 0)))
     {

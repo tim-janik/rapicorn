@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
-<!-- Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
+<rapicorn-definitions>
 
   <!-- main dialog -->
-  <tmpl:define id="main-shell" inherit="Window" child-container="scroll-box" width="800" height="600" >
-    <tmpl:argument id="test-value1" default="2"/>
-    <tmpl:argument id="test-value2"/>
+  <Window id="main-shell" child-container="scroll-box" width="800" height="600" >
+    <Argument id="test-value1" default="2"/>
+    <Argument id="test-value2"/>
     <Ambience normal-lighting="upper-left">
       <VBox>
 	<ScrollArea hspread="1" vspread="1">
@@ -13,20 +13,20 @@
 	</ScrollArea>
       </VBox>
     </Ambience>
-  </tmpl:define>
+  </Window>
 
   <!-- Button definition -->
-  <tmpl:define id="test-button" inherit="Button" on-click="dummy">
-    <tmpl:argument id="test-button-text" default="ClickMe" />
+  <Button id="test-button" on-click="dummy">
+    <Argument id="test-button-text" default="ClickMe" />
     <Label>
-      <tmpl:property id="markup-text">
+      <Label.markup-text>
 	<font family='Serif'><larger><larger><larger><larger>[ `test_button_text` ]</larger></larger></larger></larger></font>
-      </tmpl:property>
+      </Label.markup-text>
     </Label>
-  </tmpl:define>
+  </Button>
 
   <!-- Button row -->
-  <tmpl:define id="button-row" inherit="HBox" spacing="5" >
-  </tmpl:define>
+  <HBox id="button-row" spacing="5" >
+  </HBox>
 
 </rapicorn-definitions>

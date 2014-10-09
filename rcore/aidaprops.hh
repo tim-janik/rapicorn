@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_AIDA_PROPS_HH__
 #define __RAPICORN_AIDA_PROPS_HH__
 
@@ -105,44 +105,18 @@ create_property (void (Class::*setter) (int), int (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb,
                  int min_value, int max_value, int stepping, const char *hints)
 { return new PropertyRange<Class,int> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
+/* int64 */
 template<class Class> inline Property*
-create_property (void (Class::*setter) (int), int (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, const char *hints)
-{ return new PropertyRange<Class,int> (setter, getter, ident, label, blurb, INT_MIN, INT_MAX, 1, hints); }
-/* int16 */
-template<class Class> inline Property*
-create_property (void (Class::*setter) (int16), int16 (Class::*getter) () const,
+create_property (void (Class::*setter) (int64), int64 (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb,
-                 int16 min_value, int16 max_value, int16 stepping, const char *hints)
-{ return new PropertyRange<Class,int16> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-/* uint */
-template<class Class> inline Property*
-create_property (void (Class::*setter) (uint), uint (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb,
-                 uint min_value, uint max_value, uint stepping, const char *hints)
-{ return new PropertyRange<Class,uint> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-/* uint16 */
-template<class Class> inline Property*
-create_property (void (Class::*setter) (uint16), uint16 (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb,
-                 uint16 min_value, uint16 max_value, uint16 stepping, const char *hints)
-{ return new PropertyRange<Class,uint16> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-/* float */
-template<class Class> inline Property*
-create_property (void (Class::*setter) (float), float (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb,
-                 float min_value, float max_value, float stepping, const char *hints)
-{ return new PropertyRange<Class,float> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
+                 int64 min_value, int64 max_value, int64 stepping, const char *hints)
+{ return new PropertyRange<Class,int64> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
 /* double */
 template<class Class> inline Property*
 create_property (void (Class::*setter) (double), double (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb,
                  double min_value, double max_value, double stepping, const char *hints)
 { return new PropertyRange<Class,double> (setter, getter, ident, label, blurb, min_value, max_value, stepping, hints); }
-template<class Class> inline Property*
-create_property (void (Class::*setter) (double), double (Class::*getter) () const,
-                 const char *ident, const char *label, const char *blurb, const char *hints)
-{ return new PropertyRange<Class,double> (setter, getter, ident, label, blurb, DBL_MIN, DBL_MAX, 1, hints); }
 
 /* --- string --- */
 template<class Class>
@@ -164,22 +138,22 @@ create_property (void (Class::*setter) (const String&), String (Class::*getter) 
 // == Enum Properties ==
 template<class Class, typename Type>
 struct PropertyEnum : Property {
-  const TypeCode enum_type;
+  const EnumValue *const enum_values;
   void (Class::*setter) (Type);
   Type (Class::*getter) () const;
   PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) () const,
                 const char *cident, const char *clabel, const char *cblurb,
-                const TypeCode &etype, const char *chints);
+                const EnumValue *values, const char *chints);
   virtual void   set_value   (PropertyHostInterface &obj, const String &svalue);
   virtual String get_value   (PropertyHostInterface &obj);
   virtual bool   get_range   (PropertyHostInterface &obj, double &minimum, double &maximum, double &stepping) { return false; }
 };
-template<class Class, typename Type> inline Property*
+template<class Class, typename Type,
+         typename std::enable_if<std::is_enum<Type>::value>::type* = nullptr> inline Property*
 create_property (void (Class::*setter) (Type), Type (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb, const char *hints)
 {
-  static const TypeCode etype = TypeCode::from_enum<Type>();
-  return new PropertyEnum<Class,Type> (setter, getter, ident, label, blurb, etype, hints);
+  return new PropertyEnum<Class,Type> (setter, getter, ident, label, blurb, enum_value_list<Type>(), hints);
 }
 
 /* --- implementations --- */
@@ -277,9 +251,9 @@ PropertyString<Class>::get_value (PropertyHostInterface &obj)
 template<class Class, typename Type>
 PropertyEnum<Class,Type>::PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) () const,
                                         const char *cident, const char *clabel, const char *cblurb,
-                                        const TypeCode &etype, const char *chints) :
+                                        const EnumValue *values, const char *chints) :
   Property (cident, clabel, cblurb, chints),
-  enum_type (etype),
+  enum_values (values),
   setter (csetter),
   getter (cgetter)
 {}
@@ -288,12 +262,10 @@ template<class Class, typename Type> void
 PropertyEnum<Class,Type>::set_value (PropertyHostInterface &obj, const String &svalue)
 {
   String error_string;
-  uint64 value = enum_type.enum_parse (svalue.c_str(), &error_string);
-  // if (0 && error_string.size() && !value && string_has_int (svalue))
-  //   value = enum_type.constrain (string_to_int (svalue));
-  if (!error_string.empty())
-    print_warning (String() + __PRETTY_FUNCTION__ + ": invalid enum value name '" + enum_type.name() + "': " + error_string);
-  Type v = Type (value);
+  const EnumValue *ev = enum_value_find (enum_values, svalue.c_str());
+  if (!ev)
+    print_warning (String (__PRETTY_FUNCTION__) + ": invalid enum value name: " + svalue);
+  Type v = Type (ev ? ev->value : 0);
   Class *instance = dynamic_cast<Class*> (&obj);
   (instance->*setter) (v);
 }
@@ -303,7 +275,10 @@ PropertyEnum<Class,Type>::get_value (PropertyHostInterface &obj)
 {
   Class *instance = dynamic_cast<Class*> (&obj);
   Type v = (instance->*getter) ();
-  return enum_type.enum_string (v);
+  const EnumValue *ev = enum_value_find (enum_values, v);
+  if (!ev)
+    print_warning (String (__PRETTY_FUNCTION__) + ": unrecognized enum value");
+  return ev ? ev->ident : "";
 }
 
 } } // Rapicorn::Aida

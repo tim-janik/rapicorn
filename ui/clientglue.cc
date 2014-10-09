@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "clientapi.hh"
 #include "internal.hh"
 #include <stdlib.h>
@@ -42,7 +42,7 @@ init_app (const String &app_ident, int *argcp, char **argv, const StringVector &
   // boot up UI thread
   ApplicationH app = uithread_bootup (argcp, argv, args);
   assert (app != NULL);
-  // assign global smart handle
+  // assign global remote handle
   app_cached = app;
   return app_cached;
 }
@@ -203,8 +203,6 @@ ApplicationH::run_and_exit ()
  * ui-thread and needs to be called before exit(3posix), to avoid parallel
  * execution of the ui-thread while atexit(3posix) handlers or while global
  * destructors are releasing process resources.
- * @param pass_through  The status to return. Useful at the end of main()
- *                      as: return Application::shutdown (exit_status);
  */
 void
 ApplicationH::shutdown()

@@ -1,4 +1,6 @@
-/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -*-mode:c++;-*- */
+/* This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+ *                                                	-*-mode:c++;-*-
+ */
 %option 8bit reentrant stack noyywrap yylineno
 %option ansi-definitions ansi-prototypes nounistd
 %option bison-bridge bison-locations

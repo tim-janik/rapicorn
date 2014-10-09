@@ -1,26 +1,26 @@
 # Copyright (C) 2010 Tim Janik
 #
-# This work is provided "as is"; see: http://rapicorn.org/LICENSE-AS-IS
+# Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 """
 Simple Python test for Rapicorn
 """
 
 import sys
-from Rapicorn1307 import Rapicorn # Rapicorn modules are versioned
+from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
 
 # Define main window Widget Tree
 simple_window_widgets = """
-  <tmpl:define id="simple-window" inherit="Window">
+  <Window id="simple-window">
     <Button on-click="CLICK">
       <Label markup-text="Hello Simple World!" />
     </Button>
-  </tmpl:define>
+  </Window>
 """
 
 # setup application
 app = Rapicorn.app_init ("Simple-Python-Test")  # unique application name
-app.load_string ("SimplePy", simple_window_widgets)     # loads widget tree
-window = app.create_window ("SimplePy:simple-window")  # creates main window
+app.load_string (simple_window_widgets)         # loads widget tree
+window = app.create_window ("simple-window")    # creates main window
 
 # signal connection testing
 def assert_unreachable (*args):

@@ -1,6 +1,7 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "container.hh"
 #include "container.hh"
+#include "sizegroup.hh"
 #include "window.hh"
 #include "factory.hh"
 #include <algorithm>
@@ -29,9 +30,7 @@ struct CrossLinks {
   ContainerImpl *container;
   CrossLink *links;
 };
-static inline void      container_uncross_link_R        (ContainerImpl *container,
-                                                         CrossLink **clinkp,
-                                                         bool        notify_callback = true);
+static inline void container_uncross_link_R (ContainerImpl *container, CrossLink **clinkp, bool notify_callback = true);
 struct CrossLinksKey : public DataKey<CrossLinks*> {
   virtual void
   destroy (CrossLinks *clinks)
@@ -113,8 +112,7 @@ ContainerImpl::widget_cross_unlink (WidgetImpl &owner, WidgetImpl &link, size_t 
 }
 
 void
-ContainerImpl::widget_uncross_links (WidgetImpl &owner,
-                                   WidgetImpl &link)
+ContainerImpl::widget_uncross_links (WidgetImpl &owner, WidgetImpl &link)
 {
   ref (this);
   ref (owner);
@@ -135,8 +133,7 @@ ContainerImpl::widget_uncross_links (WidgetImpl &owner,
 }
 
 static inline bool
-widget_has_ancestor (const WidgetImpl *widget,
-                   const WidgetImpl *ancestor)
+widget_has_ancestor (const WidgetImpl *widget, const WidgetImpl *ancestor)
 {
   /* this duplicates widget->has_ancestor() to optimize speed and
    * to cover the case where widget == ancestor.
@@ -195,9 +192,7 @@ ContainerImpl::uncross_descendant (WidgetImpl &descendant)
 }
 
 static inline void
-container_uncross_link_R (ContainerImpl *container,
-                          CrossLink **clinkp,
-                          bool        notify_callback)
+container_uncross_link_R (ContainerImpl *container, CrossLink **clinkp, bool notify_callback)
 {
   CrossLink *clink = *clinkp;
   /* remove cross link */
@@ -235,6 +230,46 @@ container_uncross_link_R (ContainerImpl *container,
 /* --- ContainerImpl --- */
 ContainerImpl::~ContainerImpl ()
 {}
+
+typedef vector<WidgetGroup*> WidgetGroups;
+class WidgetGroupsKey : public DataKey<WidgetGroups*> {
+  virtual void destroy (WidgetGroups *widget_groups) override
+  {
+    while (!widget_groups->empty())
+      {
+        WidgetGroup *widget_group = widget_groups->back();
+        widget_groups->pop_back();
+        widget_group->unref();
+      }
+    delete widget_groups;
+  }
+};
+static WidgetGroupsKey widget_groups_key;
+
+WidgetGroup*
+ContainerImpl::retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create)
+{
+  WidgetGroups *widget_groups = get_data (&widget_groups_key);
+  if (!widget_groups)
+    {
+      if (!force_create)
+        return NULL;
+      widget_groups = new WidgetGroups;
+      set_data (&widget_groups_key, widget_groups);
+    }
+  else
+    for (auto it : *widget_groups)
+      if (it->name() == group_name && it->type() == group_type)
+        return it;
+  if (force_create)
+    {
+      WidgetGroup *widget_group = WidgetGroup::create (group_name, group_type);
+      widget_group->ref_sink();
+      widget_groups->push_back (widget_group);
+      return widget_group;
+    }
+  return NULL;
+}
 
 const CommandList&
 ContainerImpl::list_commands()
@@ -300,12 +335,12 @@ ContainerImpl::add (WidgetImpl *widget)
   add (*widget);
 }
 
-void
+bool
 ContainerImpl::remove (WidgetImpl &widget)
 {
   ContainerImpl *container = widget.parent();
   if (!container)
-    throw NullPointer();
+    return false;
   widget.ref();
   if (widget.visible())
     {
@@ -321,12 +356,21 @@ ContainerImpl::remove (WidgetImpl &widget)
   container->remove_child (widget);
   widget.invalidate();
   widget.unref();
+  return true;
 }
 
 Affine
 ContainerImpl::child_affine (const WidgetImpl &widget)
 {
   return Affine(); // Identity
+}
+
+void
+ContainerImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
+{
+  f (*this);
+  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    cw->foreach_recursive (f);
 }
 
 void
@@ -566,6 +610,7 @@ ContainerImpl::expose_enclosure ()
   expose (region);
 }
 
+/// Method toggled when a container child switches on- or off-screen, e.g. in a scrolling context
 void
 ContainerImpl::change_unviewable (WidgetImpl &child, bool b)
 {
@@ -641,8 +686,7 @@ ContainerImpl::dump_test_data (TestStream &tstream)
 }
 
 WidgetIface*
-ContainerImpl::create_child (const std::string   &widget_identifier,
-                             const StringSeq &args)
+ContainerImpl::create_widget (const String &widget_identifier, const StringSeq &args) // ContainerIface
 {
   WidgetImpl &widget = Factory::create_ui_widget (widget_identifier, args);
   ref_sink (widget);
@@ -654,6 +698,14 @@ ContainerImpl::create_child (const std::string   &widget_identifier,
   }
   unref (widget);
   return &widget;
+}
+
+void
+ContainerImpl::remove_widget (WidgetIface &child) // ContainerIface method
+{
+  WidgetImpl *widget = dynamic_cast<WidgetImpl*> (&child);
+  if (widget)
+    remove (widget);
 }
 
 SingleContainerImpl::SingleContainerImpl () :

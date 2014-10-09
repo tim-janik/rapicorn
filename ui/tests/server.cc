@@ -1,23 +1,19 @@
-/* Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html */
+/* This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 */
 #include <rcore/testutils.hh>
 #include <ui/uithread.hh>
 using namespace Rapicorn;
 
 static void
-test_server_smart_handle()
+test_server_remote_handle()
 {
-  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_SmartHandle once C++ bindings are ready
+  ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   ApplicationIface *ab = &app;
-  Aida::FieldBuffer8 fb (4);
-  fb.add_object (uint64 ((BaseObject*) ab));
-  // FIXME: Aida::Coupler &c = *rope_thread_coupler();
-  // c.reader.reset (fb);
   ApplicationImpl *am = dynamic_cast<ApplicationImpl*> (ab);
   assert (am == &app);
   ApplicationIface *ai = am;
   assert (ai == ab);
 }
-REGISTER_UITHREAD_TEST ("Server/Smart Handle", test_server_smart_handle);
+REGISTER_UITHREAD_TEST ("Server/Remote Handle", test_server_remote_handle);
 
 static void
 test_stock_resources()
@@ -111,28 +107,25 @@ REGISTER_UITHREAD_TEST ("Server/Application XUrl Map", test_application_xurl);
 static void
 test_idl_enums()
 {
-  Aida::TypeCode at = Aida::TypeMap::lookup ("Rapicorn::AnchorType");
-  assert (at.kind() == Aida::ENUM);
-  assert (at.name() == "Rapicorn::AnchorType");
-  assert (at == Aida::TypeCode::from_enum<Rapicorn::AnchorType>());
-  Aida::EnumValue ev;
-  ev = at.enum_find (0); assert (ev.ident == String ("ANCHOR_NONE"));
-  ev = at.enum_find ("ANCHOR_CENTER"); assert (ev.value == 1);
-  assert (at.enum_combinable() == false);
-  assert (at.enum_string (ANCHOR_NORTH) == "ANCHOR_NORTH");
-  uint64 amask = at.enum_parse ("south-west");
-  assert (amask == ANCHOR_SOUTH_WEST);
-  Aida::TypeCode st = Aida::TypeCode::from_enum<StateType>();
-  assert (st.kind() == Aida::ENUM);
-  assert (st.name() == "Rapicorn::StateType");
-  assert (st.enum_combinable() == true);
-  uint64 smask = st.enum_parse ("STATE_INSENSITIVE|STATE_PRELIGHT|STATE_IMPRESSED");
-  assert (smask == (STATE_INSENSITIVE | STATE_PRELIGHT | STATE_IMPRESSED));
-  assert (st.enum_string (STATE_INSENSITIVE) == "STATE_INSENSITIVE");
-  assert (st.enum_string (STATE_INSENSITIVE|STATE_IMPRESSED) == "STATE_IMPRESSED|STATE_INSENSITIVE");
+  const Aida::EnumValue *avalues = Aida::enum_value_list<AnchorType>();
+  const Aida::EnumValue *ev;
+  ev = enum_value_find (avalues, 0); assert (ev && ev->ident == String ("ANCHOR_NONE"));
+  ev = enum_value_find (avalues, "ANCHOR_CENTER"); assert (ev && ev->value == 1);
+  // assert (avalues.enum_combinable() == false);
+  ev = enum_value_find (avalues, "ANCHOR_NORTH");
+  assert (ev && ev->ident == String ("ANCHOR_NORTH"));
+  // uint64 amask = avalues.enum_parse ("south-west");
+  // assert (amask == ANCHOR_SOUTH_WEST);
+  const Aida::EnumValue *svalues = Aida::enum_value_list<StateType>();
+  ev = enum_value_find (svalues, STATE_INSENSITIVE); assert (ev && ev->ident == String ("STATE_INSENSITIVE"));
+  // assert (svalues.enum_combinable() == true);
+  //uint64 smask = st.enum_parse ("STATE_INSENSITIVE|STATE_PRELIGHT|STATE_IMPRESSED");
+  //assert (smask == (STATE_INSENSITIVE | STATE_PRELIGHT | STATE_IMPRESSED));
+  //assert (st.enum_string (STATE_INSENSITIVE|STATE_IMPRESSED) == "STATE_IMPRESSED|STATE_INSENSITIVE");
 }
 REGISTER_UITHREAD_TEST ("Server/IDL Enums", test_idl_enums);
 
+#if 0 // unused
 static void
 test_type_codes()
 {
@@ -152,3 +145,4 @@ test_type_codes()
   assert (tc.field (2).name() == "variables");  (void) pixbuf.variables;
 }
 REGISTER_UITHREAD_TEST ("Server/IDL Type Codes", test_type_codes);
+#endif

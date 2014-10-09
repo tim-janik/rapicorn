@@ -1,32 +1,70 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_SLIDER_HH__
 #define __RAPICORN_SLIDER_HH__
 
 #include <ui/adjustment.hh>
-#include <ui/container.hh>
+#include <ui/table.hh>
 
 namespace Rapicorn {
 
-class SliderArea : public virtual ContainerImpl {
-  bool                  move              (MoveType);
+class SliderAreaImpl : public virtual TableLayoutImpl, public virtual SliderAreaIface {
+  Adjustment          *adjustment_;
+  size_t               avc_id_, arc_id_;
+  AdjustmentSourceType adjustment_source_;
+  bool                 flip_;
+  void                         unset_adjustment  ();
+  bool                         move              (MoveType);
 protected:
-  virtual const CommandList&    list_commands  ();
-  virtual const PropertyList&   __aida_properties__ ();
-  explicit              SliderArea        ();
-  virtual void          control           (const String   &command_name,
-                                           const String   &arg) = 0;
-  virtual void          slider_changed    ();
+  virtual                     ~SliderAreaImpl    () override;
+  virtual void                 hierarchy_changed (WidgetImpl *old_toplevel) override;
+  virtual const CommandList&   list_commands     () override;
+  virtual void                 slider_changed    ();
   typedef Aida::Signal<void ()> SignalSliderChanged;
 public:
-  virtual bool          flipped           () const = 0;
-  virtual void          flipped           (bool flip) = 0;
-  virtual Adjustment*   adjustment        () const = 0;
-  virtual void          adjustment        (Adjustment     &adjustment) = 0;
-  virtual
-  AdjustmentSourceType  adjustment_source () const = 0;
-  virtual void          adjustment_source (AdjustmentSourceType adj_source) = 0;
-  SignalSliderChanged   sig_slider_changed;
+  explicit                     SliderAreaImpl    ();
+  Adjustment*                  adjustment        () const;
+  void                         adjustment        (Adjustment &adjustment);
+  virtual AdjustmentSourceType adjustment_source () const override;
+  virtual void                 adjustment_source (AdjustmentSourceType adj_source) override;
+  virtual bool                 flipped           () const override;
+  virtual void                 flipped           (bool flip) override;
+  SignalSliderChanged          sig_slider_changed;
 };
+
+class SliderTroughImpl : public virtual SingleContainerImpl, public virtual SliderTroughIface, public virtual EventHandler {
+  SliderAreaImpl *slider_area_;
+  size_t conid_slider_changed_;
+  double                nvalue                  ();
+  void                  reallocate_child        ();
+protected:
+  virtual void          size_request            (Requisition &requisition) override;
+  virtual void          size_allocate           (Allocation area, bool changed) override;
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
+  virtual bool          handle_event            (const Event &event) override;
+  virtual void          reset                   (ResetMode mode = RESET_ALL) override;
+  virtual              ~SliderTroughImpl        () override;
+public:
+  explicit              SliderTroughImpl        ();
+  bool                  flipped                 () const;
+  Adjustment*           adjustment              () const;
+};
+
+class SliderSkidImpl : public virtual SingleContainerImpl, public virtual SliderSkidIface, public virtual EventHandler {
+  uint                  button_;
+  double                coffset_;
+  bool                  vertical_skid_;
+  bool                  flipped                 () const;
+  virtual bool          vertical_skid           () const override;
+  virtual void          vertical_skid           (bool vs) override;
+protected:
+  virtual void          size_request            (Requisition &requisition) override;
+  virtual void          reset                   (ResetMode mode = RESET_ALL) override;
+  virtual bool          handle_event            (const Event &event) override;
+public:
+  explicit              SliderSkidImpl          ();
+  virtual              ~SliderSkidImpl          () override;
+};
+
 
 } // Rapicorn
 

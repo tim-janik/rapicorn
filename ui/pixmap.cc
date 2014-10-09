@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_SERVERAPI_HH_
 #include "clientapi.hh" // includes pixmap.hh
 #endif
@@ -100,6 +100,21 @@ PixmapT<Pixbuf>::try_resize (uint width, uint height)
 
 #define SQR(x)  ((x) * (x))
 
+/**
+ * @param source          Source pixmap to compare with
+ * @param sx, sy          Origin of the source rectangle to compare
+ * @param swidth, sheight Size of the source rectangle to compare
+ * @param tx, ty          Origin of the target rectangle to compare
+ * @param averrp          Average distance encountered in all pixel differences (0..1)
+ * @param maxerrp         Maximum distance encountered in all pixel differences (0..1)
+ * @param nerrp           Number of pixel differences counted
+ * @param npixp           Number of total pixels compared (swidth * sheight)
+ * @returns               False if no pixel differences where found, else True
+ *
+ * Compare a rectangle of the @a source pixmap with a rectangle of @a this pixmap.
+ * A simple sum difference is calculated per pixel (differences can vary between 0.0 and 1.0)
+ * and accumulated for all pixels in the rectangle.
+ */
 template<class Pixbuf> bool
 PixmapT<Pixbuf>::compare (const Pixbuf &source,
                           uint sx, uint sy, int swidth, int sheight,
@@ -130,9 +145,10 @@ PixmapT<Pixbuf>::compare (const Pixbuf &source,
       for (int j = 0; j < swidth; j++)
         if (r1[tx + j] != r2[sx + j])
           {
-            int8 *p1 = (int8*) &r1[tx + j], *p2 = (int8*) &r2[sx + j];
+            const double scale = 1.0 / 510.0; // 510 == 255 * sqrt (4)
+            const uint8 *p1 = (uint8*) &r1[tx + j], *p2 = (uint8*) &r2[sx + j];
             double pixerr = sqrt (SQR (p1[0] - p2[0]) + SQR (p1[1] - p2[1]) +
-                                  SQR (p1[2] - p2[2]) + SQR (p1[3] - p2[3]));
+                                  SQR (p1[2] - p2[2]) + SQR (p1[3] - p2[3])) * scale;
             errmax = MAX (errmax, pixerr);
             erraccu += pixerr;
             nerr++;

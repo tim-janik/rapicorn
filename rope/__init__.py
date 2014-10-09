@@ -1,11 +1,11 @@
-# Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 """Rapicorn - experimental UI toolkit
 
 More details at http://www.rapicorn.org/.
 """
 
 # Import Aida helper module
-from Aida1307 import loop as _Aida_loop
+from Aida1410 import loop as _Aida_loop
 
 # Load generated C++ API
 import __pyrapicorn as _cxxrapicorn
@@ -35,8 +35,8 @@ class _RapicornSource (_Aida_loop.Source):
 
 # Main event loop intergration for Rapicorn.Application
 class MainApplication (Rapicorn.Application):
-  def __init__ (self, _aida_id):
-    super (MainApplication, self).__init__ (_aida_id)
+  def __init__ (self):
+    super (MainApplication, self).__init__()
     self.__dict__['__cached_exitable'] = False
     self.sig_missing_primary += lambda: Rapicorn.app.__dict__.__setitem__ ('__cached_exitable', True)
   def iterate (self, may_block, may_dispatch):
@@ -70,6 +70,7 @@ class MainApplication (Rapicorn.Application):
 
 # Application Initialization
 Rapicorn.app = None
+Rapicorn._appclass = MainApplication
 def app_init (application_name = None):
   from pyrapicorn import Rapicorn
   assert Rapicorn.app == None
@@ -78,9 +79,41 @@ def app_init (application_name = None):
   if application_name == None:
     import os
     application_name = os.path.abspath (sys.argv[0] or '-')
-  orbid = _cxxrapicorn._init_dispatcher (application_name, sys.argv)
-  # setup global Application
-  Rapicorn.app = MainApplication (pyrapicorn._BaseClass_._AidaID_ (orbid))
+  # initialize and setup global Application
+  Rapicorn.app = _cxxrapicorn._init_dispatcher (application_name, sys.argv, "Rapicorn._appclass")
+  del Rapicorn._appclass
   return Rapicorn.app
 Rapicorn.app_init = app_init
 del app_init
+
+# Bindable decorator to use Python objects as data_context
+def Bindable (klass):
+  """Change objects of klass to hook up with a BindableRelay in __init__ and notify the relay from __setattr__."""
+  assert Rapicorn.app != None
+  # hook into __setattr__ to notify the relay
+  orig__setattr__ = getattr (klass, '__setattr__', None)
+  def __setattr__ (self, name, value):
+    if orig__setattr__:
+      orig__setattr__ (self, name, value)
+    else: # old style class
+      self.__dict__[name] = value
+    if hasattr (self, '__aida_relay__'):
+      self.__aida_relay__.report_notify (name)
+  klass.__setattr__ = __setattr__
+  # hook into __init__ to setup a relay that dispatches property changes
+  orig__init__ = getattr (klass, '__init__')
+  def __init__ (self, *args, **kwargs):
+    orig__init__ (self, *args, **kwargs)
+    def relay_set (path, nonce, value):
+      setattr (self, path, value)
+      self.__aida_relay__.report_result (nonce, None, "")
+    def relay_get (path, nonce):
+      v = getattr (self, path, None)
+      self.__aida_relay__.report_result (nonce, v, "")
+    self.__aida_relay__ = Rapicorn.app.create_bindable_relay()
+    self.__aida_relay__.sig_relay_get += relay_get
+    self.__aida_relay__.sig_relay_set += relay_set
+  klass.__init__ = __init__
+  return klass
+Rapicorn.Bindable = Bindable
+del Bindable

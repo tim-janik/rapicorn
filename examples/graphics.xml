@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
-<!-- Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
+<rapicorn-definitions>
 
   <!-- Frames -->
-  <tmpl:define id="frame-test" inherit="HBox" spacing="10">
+  <HBox id="frame-test" spacing="10">
     <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
 	    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
 		    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
@@ -58,10 +58,10 @@
 			  </Frame></Frame></Frame></Frame>
 		  </Frame></Frame></Frame></Frame>
 	  </Frame></Frame></Frame></Frame>
-  </tmpl:define>
+  </HBox>
 
   <!-- test dialog -->
-  <tmpl:define id="graphics-dialog" inherit="Window" title="Rapicorn Example: Graphics">
+  <Window id="graphics-dialog" title="Rapicorn Example: Graphics">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="3" >
@@ -77,6 +77,6 @@
 	</VBox>
       </Alignment>
     </Ambience>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

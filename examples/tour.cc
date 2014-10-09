@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rapicorn.hh>
 
 namespace {
@@ -36,10 +36,10 @@ main (int   argc,
 #endif
 
   // load GUI definition file, relative to argv[0]
-  app.auto_load ("RapicornTest", "tour.xml", argv[0]);
+  app.auto_load ("tour.xml", argv[0]);
 
   // create window, handle commands
-  WindowH window = app.create_window ("RapicornTest:tour-dialog");
+  WindowH window = app.create_window ("tour-dialog");
   window.sig_commands() += [&window] (const String &command, const StringSeq &args) -> bool { return custom_commands (window, command, args); };
 
   // display window and enter main event loop

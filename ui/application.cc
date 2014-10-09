@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "application.hh"
 #include "window.hh"
 #include "factory.hh"
@@ -241,25 +241,30 @@ ApplicationImpl::auto_path (const String  &file_name,
 }
 
 StringSeq
-ApplicationImpl::auto_load (const String  &defs_domain,
-                            const String  &file_name,
-                            const String  &binary_path,
-                            const String  &i18n_domain)
+ApplicationImpl::auto_load (const String &file_name, const String &binary_path, const String &i18n_domain)
 {
   String fullname = auto_path (file_name, binary_path, true);
   StringSeq definitions;
-  String errs = Factory::parse_ui_file (defs_domain, fullname, i18n_domain, &definitions);
-  if (!errs.empty())
-    fatal ("%s: %s", fullname.c_str(), errs.c_str());
+  size_t flen = 0;
+  String errors;
+  char *fdata = Path::memread (fullname, &flen);
+  if (!fdata)
+    errors = strerror (errno ? errno : ENOENT);
+  else
+    {
+      errors = Factory::parse_ui_data ("", fullname, flen, fdata, i18n_domain, &definitions);
+      Path::memfree (fdata);
+    }
+  if (!errors.empty())
+    fatal ("%s: %s", fullname.c_str(), errors.c_str());
   return definitions;
 }
 
 void
-ApplicationImpl::load_string (const std::string &defs_domain,
-                              const std::string &xml_string,
+ApplicationImpl::load_string (const std::string &xml_string,
                               const std::string &i18n_domain)
 {
-  String errs = Factory::parse_ui_data (defs_domain, "<ApplicationImpl::load_string>", xml_string.size(), xml_string.data(), i18n_domain);
+  String errs = Factory::parse_ui_data ("", "<ApplicationImpl::load_string>", xml_string.size(), xml_string.data(), i18n_domain);
   if (!errs.empty())
     fatal ("failed to parse string: %s\n%s", errs.c_str(), xml_string.c_str());
 }

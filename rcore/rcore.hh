@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #ifndef __RAPICORN_CORE_HH__
 #define __RAPICORN_CORE_HH__
 
@@ -6,6 +6,7 @@
 #include <rcore/aida.hh>
 #include <rcore/aidacxx.hh>
 #include <rcore/aidaprops.hh>
+#include <rcore/bindable.hh>
 #include <rcore/blobres.hh>
 #include <rcore/cpuasm.hh>
 #include <rcore/cxxaux.hh>
@@ -20,6 +21,7 @@
 #include <rcore/memory.hh>
 #include <rcore/objects.hh>
 #include <rcore/quicktimer.hh>
+#include <rcore/randomhash.hh>
 #include <rcore/thread.hh>
 #include <rcore/math.hh>
 #include <rcore/unicode.hh>

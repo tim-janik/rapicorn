@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
-<!-- Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
+<rapicorn-definitions>
 
   <!-- property test -->
-  <tmpl:define id="property-test" inherit="TestWidget" assert_value="foobar">
-    <tmpl:property id="value">foobar</tmpl:property>
-  </tmpl:define>
+  <TestWidget id="property-test" assert_value="foobar">
+    <TestWidget.value>foobar</TestWidget.value>
+  </TestWidget>
 
   <!-- test dialog -->
-  <tmpl:define id="test-dialog" inherit="Window">
-    <tmpl:argument id="zonk" default="zonking"/>
+  <Window id="test-dialog">
+    <Argument id="zonk" default="zonking"/>
     <Alignment padding="10">
       <VBox>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> syntax:" />
 	<TestWidget assert_value="frobnicate">
-	  <tmpl:property id="value">frobnicate</tmpl:property>
+	  <TestWidget.value>frobnicate</TestWidget.value>
 	</TestWidget>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> in definitions:" />
 	<property-test />
@@ -22,12 +22,12 @@
 	<TestWidget assert_value="zonking" value="`zonk`" />
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> evaluation:" />
 	<TestWidget assert_value="zonking">
-	  <tmpl:property id="value">`zonk`</tmpl:property>
+	  <TestWidget.value>`zonk`</TestWidget.value>
 	</TestWidget>
 	<Label plain-text="Checking backtick in attributes:" />
-	<TestWidget assert_value="``"><tmpl:property id="value" evaluate="false">&#x60;</tmpl:property></TestWidget>
+	<TestWidget assert_value="``"><TestWidget.value evaluate="false">&#x60;</TestWidget.value></TestWidget>
       </VBox>
     </Alignment>
-  </tmpl:define>
+  </Window>
 
 </rapicorn-definitions>

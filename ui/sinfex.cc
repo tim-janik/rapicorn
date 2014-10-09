@@ -1,4 +1,4 @@
-// Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html
+// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <stdlib.h>
 #include <unistd.h>
 #include <cstring>
@@ -392,16 +392,24 @@ using namespace Rapicorn;
 #define YYSELF  (*(SinfexParser*) flex_yyget_extra (yyscanner))
 extern void* flex_yyget_extra (void *yyscanner); // flex forward declaration, needed by bison
 
+// *** Adjust GCC diagnostics for ygen/lgen code that we cannot fix
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+
 /* bison generated parser */
 #include "sinfex.ygen"
 #undef  yylval
 #undef  yylloc
+#undef  YY_NULL // work around bison & flex disagreeing on nullptr vs 0
 
 /* flex generated lexer */
 #include "sinfex.lgen"
 #undef  yylval
 #undef  yylloc
 #undef  YYSELF
+
+// *** Restore GCC diagnostics after ygen/lgen code
+#pragma GCC diagnostic pop
 
 /* glue scanning layers of flex and bison together */
 static int

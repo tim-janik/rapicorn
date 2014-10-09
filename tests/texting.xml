@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
-<!-- Licensed GNU LGPL v3 or later: http://www.gnu.org/licenses/lgpl.html -->
-<rapicorn-definitions xmlns:tmpl="http://rapicorn.org/xmlns:tmpl">
+<!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
+<rapicorn-definitions>
 
   <!-- test dialog -->
-  <tmpl:define id="main-shell" inherit="Window" auto_focus="0">
+  <Window id="main-shell" auto_focus="0">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <VBox sensitive="1" spacing="5" hexpand="1">
 	<Label markup-text="Regular Text" />
 	<Label markup-text="Insensitive Text" sensitive="0" />
 	<Frame frame-type="in">
 	  <FocusFrame frame-type="none">
-	    <TextEditor>
-	      <Label markup-text="Editable Text Editor Text" />
-	    </TextEditor>
+	    <TextEditor markup-text="Editable Text Editor Text" />
 	  </FocusFrame>
 	</Frame>
       </VBox>
     </Ambience>
-  </tmpl:define>
+  </Window>
 </rapicorn-definitions>
