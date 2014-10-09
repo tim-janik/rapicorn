@@ -1,7 +1,7 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 
 # setup Rapicorn test
-from Rapicorn1307 import Rapicorn # Rapicorn modules are versioned
+from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
 app = Rapicorn.app_init()
 
 def show_and_display (win): # show and run main loop until the window is fully displayed

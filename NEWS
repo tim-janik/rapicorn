@@ -1,6 +1,27 @@
-* Task List: New high level overview: https://testbit.eu/wiki/Rapicorn_Task_List
+Rapicorn 14.10.0:	(2014-10-09)
 
-Rapicorn 13.07.0:
+* Project is re-license under MPLv2.
+* Task List: New high level overview: http://testbit.eu/wiki/Rapicorn_Task_List
+* Major documentation improvements plus new illustrations.
+* Added coverage report generation.
+* Extended dynamic Any to contain arbitrary C++ structures.
+* Made image processing more robust.
+* Integrated SVG image rendering branch.
+* Support property element syntax in XML UI files.
+* Simplified XML UI syntax for widget definitions and arguments.
+* Added simple XML UI data bindings for Python.
+* XML UI support for hsize-group & vsize-group.
+* Now all widget APIs are exported through IDL definitions.
+* Fixed X11 compose key handling.
+* Added X11 selection copy and paste.
+* Added Keccak for SHAKE & SHA3 hashing and CSPRNG.
+* Added remote reference counting across IDL threads.
+* Lots of bug fixes, code cleanups and elimination of old/unused code.
+* Portability fixes for 32bit, 64bit, Ubuntu 14.04 and 14.10.
+* Removed tarball dependencies: doxygen dot bison flex
+* Build infrastructure and dependency updates: glib-2.32 g++-4.7
+
+Rapicorn 13.07.0:	(2013-07-06)
 
 * Aida: Optimizations and cleanups in the IPC implementation.
 * Aida: Protocol extension to retrieve initial remote handle.

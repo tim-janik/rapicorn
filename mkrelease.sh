@@ -281,14 +281,6 @@ done
   msg "Checking for NEWS to cover $VERSION..."
   head -n2 NEWS | grep -q "$VERSION" && ok || \
     fail "note: NEWS fails to describe version $VERSION"
-  msg "Checking release tarball $TARBALL..."
-  test -r "$TARBALL" && ok || fail "note: tarball unreadable"
-  msg "Checking tarball against ChangeLog age..."
-  test "$TARBALL" -nt ChangeLog && ok \
-    || fail "note: ChangeLog appears to be newer; make distcheck"
-  msg "Checking tarball against NEWS age..."
-  test "$TARBALL" -nt NEWS && ok \
-    || fail "note: NEWS appears to be newer; make distcheck"
   [ -n "$REVISIONVAR" ] && {
     msg "Checking revision variable to match version..."
     N=`sed -ne "/^$REVISIONVAR_NAME\s*=\s*[0-9]/ { s/^[^=]*=\s*\([0-9]\+\).*/\1/ ; p ; q }" $REVISIONVAR_FILE`
@@ -301,6 +293,16 @@ done
   msg "Checking for even revision in version $VERSION..."
   test "$REVISION" = `echo "$REVISION / 2 * 2" | bc` && ok \
     || fail "note: refusing to release development version with odd revision: $REVISION"
+  # semi-final checks for tarball sanity, new checks should be added above
+  msg "Checking release tarball $TARBALL..."
+  test -r "$TARBALL" && ok || fail "note: tarball unreadable"
+  msg "Checking tarball against ChangeLog age..."
+  test "$TARBALL" -nt ChangeLog && ok \
+    || fail "note: ChangeLog appears to be newer; make distcheck"
+  msg "Checking tarball against NEWS age..."
+  test "$TARBALL" -nt NEWS && ok \
+    || fail "note: NEWS appears to be newer; make distcheck"
+  # final upstream & upload checks
   msg "Checking master to be the current branch..."
   CBRANCH=`git name-rev --always --name-only HEAD`
   test "$CBRANCH" = master && ok \

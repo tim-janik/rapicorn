@@ -1,7 +1,7 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 # [HelloRapicorn-EXAMPLE]
 # Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
-import Rapicorn1307 as Rapicorn
+import Rapicorn1410 as Rapicorn
 
 # Setup the application object, unsing a unique application name.
 app = Rapicorn.app_init ("Hello Rapicorn")

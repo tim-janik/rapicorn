@@ -6,7 +6,7 @@ Simple Python test for Rapicorn
 """
 
 import sys
-from Rapicorn1307 import Rapicorn # Rapicorn modules are versioned
+from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
 
 # Define main window Widget Tree
 simple_window_widgets = """
