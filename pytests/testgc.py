@@ -23,7 +23,7 @@ if not '-i' in sys.argv:
   sys.exit (0)
 
 # Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
-from Rapicorn1307 import Rapicorn
+from Rapicorn1410 import Rapicorn
 
 # Setup the application object, unsing a unique application name.
 app = Rapicorn.app_init ("Test Rapicorn GC")
