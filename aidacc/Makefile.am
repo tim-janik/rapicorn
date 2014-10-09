@@ -50,20 +50,6 @@ EXTRA_DIST += plic.py
 
 GPRINT      = @printf '  %-9s%s\n'
 
-# == Aida Builtins ==
-# Serialize builtins.idl into a TypeMap stored as a C string:
-# --system-typedefs essentially strips the "Aida::..builtin__" prefix,
-# --cc-intern-file  converts the TypeMap into a C string.
-check-builtins: $(srcdir)/builtins.idl ${AIDACC_INTERN}
-	@echo "  CHECK " builtins.idl
-	$(Q) ${AIDACC_VDEBUG} --system-typedefs $< -x TypeMap -o builtins.typ
-	$(Q) ${AIDACC_VDEBUG} --cc-intern-file builtins.typ > builtins.cc
-	@echo "  VERIFY" aidabuiltins.cc
-	$(Q) diff -Nu $(top_srcdir)/rcore/aidabuiltins.cc builtins.cc
-	$(Q) rm -f builtins.typ builtins.cc
-EXTRA_DIST += builtins.idl
-check-local: check-builtins
-
 # == Install aidacc Helper Modules ==
 pyutilsdir      = $(libdir)/$(strip ${AIDACCV})/pyutils
 pyutils_PYTHON  = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
