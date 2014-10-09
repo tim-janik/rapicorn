@@ -6,9 +6,9 @@ builtin(include, ld-symbolic.m4)dnl # include special macros
 # Initialize autoconf for Rapicorn
 AC_INIT([rapicorn],m4_esyscmd([
 # Rapicorn version numbers
-RAPICORN_RELEASE_YEAR=13     	# increment on ABI/API change
-RAPICORN_RELEASE_MONTH=07    	# increment on ABI/API change
-RAPICORN_REVISION_VERSION=1 	# ABI compatible increments, devel versions are odd
+RAPICORN_RELEASE_YEAR=14     	# increment on ABI/API change
+RAPICORN_RELEASE_MONTH=10    	# increment on ABI/API change
+RAPICORN_REVISION_VERSION=0 	# ABI compatible increments, devel versions are odd
 RAPICORN_RELEASE_CANDIDATE=	#rc1 # RAPICORN_RELEASE_CANDIDATE may contain rc[0-9]+ or nothing
 RAPICORN_VERSION=$RAPICORN_RELEASE_YEAR.$RAPICORN_RELEASE_MONTH.$RAPICORN_REVISION_VERSION
 echo -n $RAPICORN_VERSION${RAPICORN_RELEASE_CANDIDATE:+-}${RAPICORN_RELEASE_CANDIDATE}
