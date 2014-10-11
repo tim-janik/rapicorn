@@ -259,9 +259,12 @@ get_cpu_info (void)
 }
 
 /** Retrieve string identifying the runtime CPU type.
- * The returned string starts with a word describing the CPU architecture and ends with a word describing the CPU vendor.
- * Inbetween are words identifying various processor flags.
- * @return Example CPUID: "AMD64 FPU MMX MMXEXT AuthenticAMD"
+ * The returned string contains: number of online CPUs, a string
+ * describing the CPU architecture, the vendor and finally
+ * a number of flag words describing CPU features plus a trailing space.
+ * This allows checks for CPU features via a simple string search for
+ * " FEATURE ".
+ * @return Example: "4 AMD64 GenuineIntel FPU TSC HTT CMPXCHG16B MMX MMXEXT SSESYS SSE SSE2 SSE3 SSSE3 SSE4.1 SSE4.2 "
  */
 String
 cpu_info()
