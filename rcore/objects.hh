@@ -135,6 +135,7 @@ public:
   {
     return object ? std::shared_ptr<Class> (ref (object), shared_ptr_deleter) : std::shared_ptr<Class>();
   }
+  Aida::ImplicitBaseP shared_from_this () { return shared_ptr (this); }
   // keep clear, add new API to ObjectImpl or ObjectIface
 };
 typedef Aida::PropertyList PropertyList; // import PropertyList from Aida namespace
