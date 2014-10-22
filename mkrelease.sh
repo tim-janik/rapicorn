@@ -3,19 +3,7 @@
 #
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 
-MYVERSION="mkrelease.sh version 20100901"
-# 20110407: extract 'contributors' from NEWS files
-# 20100910: fixed 'commit-stamps' outside of git repos
-# 20100901: check HEAD against upstream repository, upload last
-# 20100831: implemented 'shellvar' command
-# 20100827: implemented 'news' command
-# 20100421: added tagging, even revision checking and revision bumping
-# 20100420: implemented rsync based 'upload' for release tarballs
-# 20090605: ported to git-1.6.0
-# 20080515: take packed-refs into account as git stamp file
-# 20070820: implemented 'commit-stamps', handle non-symbolic git stamp files
-# 20070518: implemented 'ChangeLog' generation from git"
-# 20060217: implemented scp based remote file updates
+MYVERSION="mkrelease version 20120801"
 
 # === initial setup ===
 SCRIPT_NAME="$0"
@@ -28,6 +16,14 @@ die() {
   exit $estatus
 }
 unset R_REVISION
+function match() {	# perform wildcard string match: match "*.*" unmatched1 foo.dat unmatched2...
+  pattern="$1" ; searchtext="$2"
+  case "$searchtext" in
+    $pattern) return 0 ;; # $pattern must be unquoted to allow *?[]
+  esac
+  return 1
+}
+
 
 # === Usage ===
 usage() {
@@ -39,10 +35,9 @@ usage() {
 	  ChangeLog		generate ChangeLog from git history
 	  news			list commits since last release tag
 	  upload		check and upload release tarball
-	  shellvar <FILE:VAR>	shell-eval VAR variable assignment in FILE
 	Options:
 	  -h, --help		usage help
-	  -v, --version		issue version and brief history
+	  -v, --version		issue version
 	  -E <FILE:VAR>         revision variable to increment during "upload"
 	                        (e.g. configure.ac:MICRO)
 	  -B <A,B,C...>		ignored names for "contributors"
@@ -56,6 +51,10 @@ usage() {
 	  -U <remoteurl>	remote release URL (e.g. example.com:distdir)
 	  -V <releaseversion>	release version (from Makefile)
 	  -X			expect no strings to be found for "contributors"
+	Configuration (Makefile):
+	  MKRELEASE_UPLOAD_URL	remote release URL
+	  MKRELEASE_REVISION_VAR
+				revision variable to increment during "upload"
 EOF
   [ -z "$1" ] || exit $1
 }
@@ -65,8 +64,8 @@ unset COMMAND
 VERSION=_parse
 TARBALL=_parse
 BODY=false
-REMOTE_URL=
-REVISIONVAR=
+REMOTE_URL=_parse
+REVISIONVAR=_parse
 CONTRBLACK=
 CONTRCFILE=/dev/null
 CONTREXIT=0
@@ -91,11 +90,7 @@ while test $# -ne 0 -a $parse_options = 1; do
     --)		parse_options=0 ;;
     *)		[ -z "$COMMAND" ] || usage 1
 		COMMAND="$1"
-		[ "$COMMAND" = shellvar ] && {
-		  shift
-		  [ $# -ge 1 ] || usage 1
-		  SHELLVAR="$1"
-		} ;;
+		;;
   esac
   shift
 done
@@ -221,6 +216,11 @@ done
     done
     exit 1
   }
+  skipop() {
+    match "*:$1:*" ":$MKRELEASE_SKIP:" || return 1
+    skip
+    return 0
+  }
   msg2() {
     M1="  $1 " ; shift
     M2="$@"
@@ -245,15 +245,19 @@ done
     [ -z "$TARBALL" ] && die "Failed to determine release tarball"
   }
   msg2 "Determine tarball..." "$TARBALL"
+  # read REMOTE_URL from Makefile.am
+  [ "$REMOTE_URL" = _parse ] && check_makefile && REMOTE_URL="`parse_makefile_var MKRELEASE_UPLOAD_URL`"
   # ensure remote host from remote URL
   REMOTE_HOST=`printf "%s" "$REMOTE_URL" | sed -e 's/:.*//'`
   msg2 "Determine remote host..." "$REMOTE_HOST"
-  [ -z "$REMOTE_URL" ] && die "remote release destination unkown, use -U"
+  [ -z "$REMOTE_URL" ] && die "remote release destination unkown, use -U or MKRELEASE_UPLOAD_URL"
   [ -z "$REMOTE_HOST" ] && die "Failed to determine remote host"
   # extract remote path, slash terminated
   REMOTE_PATH=`printf "%s" "$REMOTE_URL" | sed -ne '/:/ { s/[^:]*:// ; p ; q }'`
   case "$REMOTE_PATH" in *[^/]) REMOTE_PATH="$REMOTE_PATH/" ;; esac
   msg2 "Determine remote path..." "$REMOTE_PATH"
+  # read REVISIONVAR from Makefile.am
+  [ "$REVISIONVAR" = _parse ] && check_makefile && REVISIONVAR="`parse_makefile_var MKRELEASE_REVISION_VAR`"
   # extract file from REVISIONVAR
   REVISIONVAR_FILE=`printf "%s" "$REVISIONVAR" | sed -e 's/:.*//'`
   REVISIONVAR_NAME=`printf "%s" "$REVISIONVAR" | sed -ne '/:/ { s/[^:]*:// ; p ; q }'`
@@ -265,8 +269,10 @@ done
   }
   # release checks
   msg "Checking for a clean $VERSION working tree..."
-  test 0 = `git diff HEAD | wc -l` && ok \
-    || fail "note: use 'git diff HEAD' to view working tree changes"
+  skipop "clean" || {
+    test 0 = `git diff HEAD | wc -l` && ok \
+      || fail "note: use 'git diff HEAD' to view working tree changes"
+  }
   msg "Checking untagged revision $VERSION..."
   RNAME=`! git rev-parse --verify -q "$VERSION"` && ok \
     || fail "note: a revision named '$VERSION' already exists: $RNAME" \
@@ -279,8 +285,10 @@ done
   done
   $TST && ok || fail "note: ChangeLog outdated; see: $SCRIPT_NAME ChangeLog"
   msg "Checking for NEWS to cover $VERSION..."
-  head -n2 NEWS | grep -q "$VERSION" && ok || \
-    fail "note: NEWS fails to describe version $VERSION"
+  skipop "news" || {
+    head -n2 NEWS | grep -q "$VERSION" && ok || \
+      fail "note: NEWS fails to describe version $VERSION"
+  }
   [ -n "$REVISIONVAR" ] && {
     msg "Checking revision variable to match version..."
     N=`sed -ne "/^$REVISIONVAR_NAME\s*=\s*[0-9]/ { s/^[^=]*=\s*\([0-9]\+\).*/\1/ ; p ; q }" $REVISIONVAR_FILE`
@@ -291,21 +299,29 @@ done
       || fail "note: unexisting file in git HEAD: $REVISIONVAR_FILE"
   }
   msg "Checking for even revision in version $VERSION..."
-  test "$REVISION" = `echo "$REVISION / 2 * 2" | bc` && ok \
-    || fail "note: refusing to release development version with odd revision: $REVISION"
+  skipop "evenrev" || {
+    test "$REVISION" = `echo "$REVISION / 2 * 2" | bc` && ok \
+      || fail "note: refusing to release development version with odd revision: $REVISION"
+  }
   # semi-final checks for tarball sanity, new checks should be added above
   msg "Checking release tarball $TARBALL..."
-  test -r "$TARBALL" && ok || fail "note: tarball unreadable"
+  skipop "tarball" || {
+    test -r "$TARBALL" && ok || fail "note: tarball unreadable"
+  }
   msg "Checking tarball against ChangeLog age..."
-  test "$TARBALL" -nt ChangeLog && ok \
-    || fail "note: ChangeLog appears to be newer; make distcheck"
+  skipop "changelogage" || {
+    test "$TARBALL" -nt ChangeLog && ok \
+      || fail "note: ChangeLog appears to be newer; make distcheck"
+  }
   msg "Checking tarball against NEWS age..."
-  test "$TARBALL" -nt NEWS && ok \
-    || fail "note: NEWS appears to be newer; make distcheck"
+  skipop "newsage" || {
+    test "$TARBALL" -nt NEWS && ok \
+      || fail "note: NEWS appears to be newer; make distcheck"
+  }
   # final upstream & upload checks
   msg "Checking master to be the current branch..."
-  CBRANCH=`git name-rev --always --name-only HEAD`
-  test "$CBRANCH" = master && ok \
+  CBRANCH=`{ git symbolic-ref -q HEAD || git rev-parse HEAD ; }`
+  test "$CBRANCH" = refs/heads/master && ok \
     || fail "note: expecting releases to be made from 'master' branch"
   msg "Checking HEAD to match upstream repository..."
   HBRANCH=`git symbolic-ref HEAD | sed s,^refs/heads/,,`
@@ -323,9 +339,9 @@ done
     || fail "note: file already exists: $REMOTE_HOST:$REMOTE_PATH$TARBALL"
   # planned steps
   msg2 "* Planned: tag HEAD as '$VERSION' release..."
+  msg2 "* Planned: upload tarball $TARBALL..."
   [ -n "$REVISIONVAR" ] && \
     msg2 "* Planned: commit revision increment of $REVISIONVAR_FILE:$REVISIONVAR_NAME"
-  msg2 "* Planned: upload tarball $TARBALL..."
   read -ei n -p "--- Proceed as planned [y/n]? " ANS
   case "$ANS" in
     Y|YES|Yes|y|yes|1) msg "Confirmed planned procedures..." ; ok ;;
@@ -335,55 +351,46 @@ done
   msg_ "* Tagging HEAD as '$VERSION' release..."
   git tag -m "Released $TARBALL" "$VERSION" && ok || fail
   git tag -n1 -l "$VERSION" | sed 's/^/  > /'
-  # bump version
-  needs_head_push=false
-  [ -n "$REVISIONVAR" ] && {
-    N=$((1 + $REVISION))
-    msg "Increment $REVISIONVAR_FILE:$REVISIONVAR_NAME to $N..."
-    TEMPF="`mktemp -t yyREVfile.$$XXXXXX`" && touch $TEMPF || \
-      die 9 "Failed to create temporary file"
-    trap "rm -f $TEMPF" 0 HUP INT QUIT TRAP USR1 PIPE TERM
-    sed "0,/^\($REVISIONVAR_NAME\s*=\s*\)[0-9]\+/s//\1$N/" < "$REVISIONVAR_FILE" > $TEMPF \
-      && ok || fail
-    mv $TEMPF "$REVISIONVAR_FILE"
-    git diff -U0 "$REVISIONVAR_FILE" | sed 's/^/  > /'
-    git commit -v -m "$REVISIONVAR_FILE: revision increment of $REVISIONVAR_NAME to $N" \
-      -- "$REVISIONVAR_FILE" | sed 's/^/  > /' || die "git commit failed"
-    msg_ "* Comitted revision increment of $REVISIONVAR_NAME to $N" ; ok
-    needs_head_push=true
-  }
   # upload
   msg_ "* Uploading release tarball $TARBALL..."
   rsync -lpt --delay-updates "$TARBALL" "$REMOTE_HOST:$REMOTE_PATH" && ok \
     || fail "note: rsync transfer failed"
   RLS=$(ssh -x "$REMOTE_HOST" ls -l \`readlink -f "$REMOTE_PATH/$TARBALL"\`)
   msg2 ">" "$RLS"
+  # bump version
+  needs_head_push=false
+  [ -n "$REVISIONVAR" ] && {
+    N=$((1 + $REVISION))
+    msg "Increment $REVISIONVAR_FILE:$REVISIONVAR_NAME to $N..."
+    TEMPF="`mktemp -t mkrtempf.$$XXXXXX`" && touch $TEMPF || \
+      die 9 "Failed to create temporary file"
+    TEMPS="`mktemp -t mkrtemps.$$XXXXXX`" && touch $TEMPS || \
+      die 9 "Failed to create temporary file"
+    trap "rm -f $TEMPF" 0 HUP INT QUIT TRAP USR1 PIPE TERM
+    sed "0,/^\($REVISIONVAR_NAME\s*=\s*\)[0-9]\+/s//\1$N/" < "$REVISIONVAR_FILE" > $TEMPF \
+      && ok || fail
+    cp "$REVISIONVAR_FILE" $TEMPS && touch $TEMPS -r "$REVISIONVAR_FILE" || \
+      die 9 "Failed to record time stamp for: $REVISIONVAR_FILE"
+    mv $TEMPF "$REVISIONVAR_FILE"
+    git diff -U0 "$REVISIONVAR_FILE" | sed 's/^/  > /'
+    git commit -v -m "$REVISIONVAR_FILE: revision increment of $REVISIONVAR_NAME to $N" \
+      -- "$REVISIONVAR_FILE" | sed 's/^/  > /' || die "git commit failed"
+    msg_ "* Comitted revision increment of $REVISIONVAR_NAME to $N" ; ok
+    needs_head_push=true
+    # checkout tag at VERSION
+    msg_ "* Checkout $VERSION" "..."
+    git checkout "$VERSION"
+    # restore REVISIONVAR_FILE timestamp
+    cmp $TEMPS "$REVISIONVAR_FILE" && touch "$REVISIONVAR_FILE" -r $TEMPS
+    rm -f $TEMPS
+  }
   # push notes
   $needs_head_push && \
     CHASH=`git rev-list -n1 "$VERSION"`
-    msg2 "Note, push HEAD with:      # git push origin $CHASH:master"
-    msg2 "Note, update 'devel' with: # git checkout devel && git merge --ff-only $CHASH"
+    msg2 "Note, push HEAD with:      # git push origin master" # $CHASH
+    msg2 "Note, update 'devel' with: # git checkout devel && git merge --ff-only master" # $CHASH
   msg2 "Note, push tag with:       # git push origin '$VERSION'"
   msg2 "Done."
-  exit
-}
-
-# === shellvar ===
-[ "$COMMAND" = "shellvar" ] && {
-  ECHO_N=echo\ -n
-  test -t 1 && ECHO_N=echo # include trailing newline on terminals
-  # extract file from SHELLVAR
-  SHELLVAR_FILE=`printf "%s" "$SHELLVAR" | sed -e 's/:.*//'`
-  SHELLVAR_NAME=`printf "%s" "$SHELLVAR" | sed -ne '/:/ { s/[^:]*:// ; p ; q }'`
-  [ -z "$SHELLVAR_FILE" ] && die 3 "Failed to extract file from: $SHELLVAR"
-  [ -z "$SHELLVAR_NAME" ] && die 3 "Failed to extract variable from: $SHELLVAR"
-  [ -r "$SHELLVAR_FILE" ] || die 3 "Failed to read file: $SHELLVAR_FILE"
-  sed -n "/^\s*$SHELLVAR_NAME=/{p;q}" "$SHELLVAR_FILE" | grep -q . \
-    || die 3 "$SHELLVAR_FILE: Failed to detect variable assignment: $SHELLVAR_NAME="
-  ( echo "set -e"
-    sed -n "/^\s*[A-Za-z][A-Za-z0-9_]\+=/p; /^\s*$SHELLVAR_NAME=/q" "$SHELLVAR_FILE" \
-    && echo $ECHO_N \"\$"$SHELLVAR_NAME"\" ) | "$SHELL" \
-      || die 3 "$SHELLVAR_FILE: Error while evaluating variable assignments for: $SHELLVAR_NAME="
   exit
 }
 
