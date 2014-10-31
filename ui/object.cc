@@ -11,6 +11,10 @@ ObjectImpl::~ObjectImpl()
 {}
 
 void
+ObjectImpl::dispose ()
+{}
+
+void
 ObjectImpl::changed (const String &name)
 {
   if (!finalizing())

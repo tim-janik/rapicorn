@@ -228,10 +228,6 @@ BaseObject::shared_ptr_deleter (BaseObject *object)
   object->unref();
 }
 
-void
-BaseObject::dispose ()
-{}
-
 // == ReferenceCountable ==
 static __attribute__ ((noinline)) size_t
 stack_ptrdiff (const void *stackvariable, const void *data)

@@ -13,6 +13,7 @@ typedef std::shared_ptr<ObjectIface> ObjectIfaceP;
 class ObjectImpl : public virtual ObjectIface, public virtual DataListContainer {
 protected:
   virtual /*dtor*/                 ~ObjectImpl    () override;
+  virtual void                      dispose       ();
   virtual void                      do_changed    (const String &name);
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;

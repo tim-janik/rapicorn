@@ -125,8 +125,6 @@ template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 /// Legacy type, will be merged/dissolved into ObjectImpl and ImplicitBase.
 class BaseObject : public virtual ReferenceCountable, public virtual Aida::ImplicitBase {
   static void shared_ptr_deleter (BaseObject*);
-protected:
-  virtual void                 dispose   ();
 public:
   template<class Class, typename std::enable_if<std::is_base_of<BaseObject, Class>::value>::type* = nullptr>
   static std::shared_ptr<Class> shared_ptr (Class *object) ///< Wrap BaseObject or derived type into a std::shared_ptr<>().
