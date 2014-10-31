@@ -607,9 +607,8 @@ interface Application : Object {
   WindowList    query_windows   (String selector) = 0;  ///< Returns all Window matches for @a selector.
   WindowList    list_windows    () = 0;
   /// @name Application Factory
-  BindableRelay create_bindable_relay    () = 0;        ///< Create a BindableRelay, usually for uses in @a data_context.
-  /// Create a ListModelRelay coupled with a ListModel registered as @a name.
-  ListModelRelay create_list_model_relay (String name = "") = 0;
+  BindableRelay  create_bindable_relay   () = 0;	///< Create a BindableRelay, usually for uses in @a data_context.
+  ListModelRelay create_list_model_relay () = 0;	///< Create a ListModelRelay coupled with a ListModel.
   /// @name Test counter for debugging/profiling
   void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.
   void          test_counter_add        (int32 val) = 0;  ///< Testing, add to the test counter.

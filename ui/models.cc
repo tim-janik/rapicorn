@@ -92,17 +92,11 @@ ListModelRelayImpl::create_list_model_relay()
 }
 
 ListModelRelayIface*
-ApplicationImpl::create_list_model_relay (const std::string &name)
+ApplicationImpl::create_list_model_relay ()
 {
   struct Accessor : public ListModelRelayImpl { using ListModelRelayImpl::create_list_model_relay; };
   ListModelRelayImpl &lmr = Accessor::create_list_model_relay();
-  if (ApplicationImpl::the().xurl_add (name, *lmr.model()))
-    return &lmr;
-  else
-    {
-      unref (ref_sink (lmr));
-      return NULL;
-    }
+  return &lmr; // FIXME: this leaks, badly
 }
 
 MemoryListStore::MemoryListStore (int n_columns) :
