@@ -65,45 +65,45 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   int                   first_row_, last_row_, multi_sel_range_start_;
   void                  model_updated           (const UpdateRequest &ur);
   void                  selection_changed       (int first, int length);
-  virtual void          invalidate_parent ();
+  virtual void          invalidate_parent       () override;
 protected:
   void                  change_selection        (int current, int previous, bool toggle, bool range, bool preserve);
-  virtual bool          key_press_event         (const EventKey &event);
-  virtual bool          button_event            (const EventButton &event, WidgetListRowImpl *lrow, int index);
-  virtual bool          handle_event            (const Event    &event);
-  virtual bool          row_event               (const Event    &event, WidgetListRowImpl *lrow, int index);
-  virtual void          reset                   (ResetMode       mode);
-  virtual bool          can_focus               () const { return true; }
-  virtual bool          move_focus              (FocusDirType    fdir);
-  virtual void          focus_lost              ();
+  bool                  key_press_event         (const EventKey &event);
+  bool                  button_event            (const EventButton &event, WidgetListRowImpl *lrow, int index);
+  virtual bool          handle_event            (const Event &event) override;
+  virtual bool          row_event               (const Event &event, WidgetListRowImpl *lrow, int index) ;
+  virtual void          reset                   (ResetMode mode) override;
+  virtual bool          can_focus               () const override               { return true; }
+  virtual bool          move_focus              (FocusDirType fdir) override;
+  virtual void          focus_lost              () override;
   bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
   void                  toggle_selected         (int row);
   void                  deselect_all            ();
 public:
   // == WidgetListIface ==
-  virtual std::string                   model           () const;
-  virtual void                          model           (const std::string &modelurl);
-  virtual SelectionMode                 selection_mode  () const;
-  virtual void                          selection_mode  (SelectionMode smode);
-  virtual void                          set_selection   (const BoolSeq &selection);
-  virtual BoolSeq                       get_selection   ();
-  virtual void                          select_range    (int first, int length);
-  virtual void                          unselect_range  (int first, int length);
+  virtual std::string                   model           () const override;
+  virtual void                          model           (const std::string &modelurl) override;
+  virtual SelectionMode                 selection_mode  () const override;
+  virtual void                          selection_mode  (SelectionMode smode) override;
+  virtual void                          set_selection   (const BoolSeq &selection) override;
+  virtual BoolSeq                       get_selection   () override;
+  virtual void                          select_range    (int first, int length) override;
+  virtual void                          unselect_range  (int first, int length) override;
   // == WidgetListImpl ==
   explicit              WidgetListImpl          ();
-  virtual              ~WidgetListImpl          ();
+  virtual              ~WidgetListImpl          () override;
   bool                  validate_selection      (int fallback = 0);
   bool                  has_selection           () const;
-  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel);
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   Adjustment&           hadjustment             () const;
   Adjustment&           vadjustment             () const;
   Adjustment*           get_adjustment          (AdjustmentSourceType adj_source,
                                                  const String        &name);
   void                  invalidate_model        (bool invalidate_heights,
                                                  bool invalidate_widgets);
-  virtual void          visual_update           ();
-  virtual void          size_request            (Requisition &requisition);
-  virtual void          size_allocate           (Allocation area, bool changed);
+  virtual void          visual_update           () override;
+  virtual void          size_request            (Requisition &requisition) override;
+  virtual void          size_allocate           (Allocation area, bool changed) override;
   int                   focus_row               ();
   bool                  grab_row_focus          (int next_focus, int old_focus = -1);
   /* sizing and positioning */
