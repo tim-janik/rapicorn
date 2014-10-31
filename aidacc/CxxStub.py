@@ -460,6 +460,8 @@ class Generator:
     if self.gen_mode == G4SERVANT:       # ->* _servant and ->* _handle operators
       s += '%s* operator->* (%s &sh, Rapicorn::Aida::_ServantType);\n' % (classC, classH)
       s += '%s operator->* (%s *obj, Rapicorn::Aida::_HandleType);\n' % (classH, classC)
+      s += 'typedef std::shared_ptr<%s> %sP;\n' % (classC, classC)
+      s += 'typedef std::weak_ptr  <%s> %sW;\n' % (classC, classC)
     # typedef alias
     if self.gen_mode == G4STUB:
       s += self.generate_shortalias (type_info)
