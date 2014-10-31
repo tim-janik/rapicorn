@@ -96,11 +96,15 @@ ListModelBinding::refill (const UpdateRequest &urequest)
 }
 
 static bool
-app_bind_list_store (ListStore &store, const String &path)
+app_bind_list_store (ListStore &store, const String &path, ListModelH *lm = NULL)
 {
+  if (lm)
+    *lm = ListModelH(); // NULL/empty
   ListModelRelayH lrelay_ = ApplicationH::the().create_list_model_relay (path);
   if (lrelay_ == NULL)
     return false;
+  if (lm)
+    *lm = lrelay_.model();
   ListModelBinding *lbinding = new ListModelBinding (store, lrelay_);
   (void) lbinding; // ownership is kept via DataKey on ListStore
   return true;
@@ -135,7 +139,8 @@ main (int   argc,
 
   // create and bind list store
   ListStore &store = *new ListStore();
-  bool bsuccess = app_bind_list_store (store, "//local/data/fileview/main");
+  ListModelH lmh;
+  bool bsuccess = app_bind_list_store (store, "//local/data/fileview/main", &lmh);
   assert (bsuccess);
 
   // create, bind and fill testing list store
@@ -145,8 +150,11 @@ main (int   argc,
   fill_test_store (test_store);
 
   // create main window
-  WindowH window = app.create_window ("main-dialog", Strings ("list-model=//local/data/fileview/main"));
-  // Strings ("list-model=//local/data/fileview/test_store")
+  WindowH window = app.create_window ("main-dialog"); // Strings ("list-model=//local/data/fileview/main")
+  WidgetListH wl = WidgetListH::down_cast (window.query_selector (".WidgetList"));
+  assert (wl != NULL);
+  wl.set_list_model (lmh);
+
   window.show();
 
   // load directory data

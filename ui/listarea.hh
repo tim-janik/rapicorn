@@ -89,6 +89,7 @@ public:
   virtual BoolSeq                       get_selection   () override;
   virtual void                          select_range    (int first, int length) override;
   virtual void                          unselect_range  (int first, int length) override;
+  virtual void                          set_list_model  (ListModelIface &model) override;
   // == WidgetListImpl ==
   explicit              WidgetListImpl          ();
   virtual              ~WidgetListImpl          () override;

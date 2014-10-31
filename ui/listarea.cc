@@ -199,9 +199,20 @@ WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source, const String &n
 void
 WidgetListImpl::model (const String &modelurl)
 {
-  ListModelIface *lmi = ApplicationImpl::the().xurl_find (modelurl);
+  critical ("deprecated property does not work: WidgetListImpl::model");
+}
+
+String
+WidgetListImpl::model () const
+{
+  return ""; // FIME: property deprectaed
+}
+
+void
+WidgetListImpl::set_list_model (ListModelIface &model)
+{
   ListModelIface *oldmodel = model_;
-  model_ = lmi;
+  model_ = &model;
   row_heights_.clear();
   if (oldmodel)
     {
@@ -219,12 +230,6 @@ WidgetListImpl::model (const String &modelurl)
     unref (oldmodel);
   invalidate_model (true, true);
   changed ("model");
-}
-
-String
-WidgetListImpl::model () const
-{
-  return ""; // FIME: use xurl_path (not model_->plor_name)
 }
 
 SelectionMode
