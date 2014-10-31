@@ -55,9 +55,9 @@ interface_to_remote_handle (Rapicorn::BaseObject *ibase)
 }
 
 template<class Target> static inline void
-field_buffer_add_interface (Rapicorn::Aida::FieldBuffer &fb, Target *instane)
+field_buffer_add_interface (Rapicorn::Aida::FieldBuffer &fb, Target *instance)
 {
-  server_connection->add_interface (fb, instane ? instane->shared_from_this() : ImplicitBaseP());
+  server_connection->add_interface (fb, instance ? instance->shared_from_this() : ImplicitBaseP());
 }
 
 template<class Target> static inline Target*
