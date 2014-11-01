@@ -53,10 +53,10 @@ field_buffer_add_interface (Rapicorn::Aida::FieldBuffer &fb, Target *instance)
   server_connection->add_interface (fb, instance ? instance->shared_from_this() : ImplicitBaseP());
 }
 
-template<class Target> static inline Target*
+template<class Target> static inline std::shared_ptr<Target>
 field_reader_pop_interface (Rapicorn::Aida::FieldReader &fr)
 {
-  return dynamic_cast<Target*> (server_connection->pop_interface (fr).get());
+  return std::dynamic_pointer_cast<Target> (server_connection->pop_interface (fr));
 }
 
 // messages

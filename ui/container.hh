@@ -63,7 +63,7 @@ public:
   virtual void          render_recursive(RenderContext &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
-  virtual WidgetIface* create_widget    (const String &widget_identifier, const StringSeq &args) override;
+  virtual WidgetIfaceP create_widget    (const String &widget_identifier, const StringSeq &args) override;
   virtual void         remove_widget    (WidgetIface &child) override;
 };
 

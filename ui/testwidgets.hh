@@ -60,7 +60,7 @@ public:
 
 class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidgetIface {
   bool bool_; int int_; double float_; std::string string_; TestEnum enum_;
-  Requisition rec_; StringSeq seq_; IdlTestWidgetIface *self_;
+  Requisition rec_; StringSeq seq_; IdlTestWidgetIfaceW self_;
 protected:
   virtual void                size_request  (Requisition &req) override;
   virtual void                size_allocate (Allocation area, bool changed) override;
@@ -80,7 +80,7 @@ public:
   virtual void                record_prop   (const Requisition &r) override;
   virtual StringSeq           sequence_prop () const override;
   virtual void                sequence_prop (const StringSeq &s) override;
-  virtual IdlTestWidgetIface* self_prop     () const override;
+  virtual IdlTestWidgetIfaceP self_prop     () const override;
   virtual void                self_prop     (IdlTestWidgetIface *s) override;
 };
 

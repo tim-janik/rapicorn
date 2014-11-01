@@ -446,16 +446,16 @@ IdlTestWidgetImpl::sequence_prop (const StringSeq &s)
   changed ("sequence_prop");
 }
 
-IdlTestWidgetIface*
+IdlTestWidgetIfaceP
 IdlTestWidgetImpl::self_prop () const
 {
-  return self_;
+  return self_.lock();
 }
 
 void
 IdlTestWidgetImpl::self_prop (IdlTestWidgetIface *s)
 {
-  self_ = s;
+  self_ = shared_ptr_cast<IdlTestWidgetIface> (s);
   changed ("self_prop");
 }
 

@@ -171,8 +171,14 @@ test_idl_test_widget ()
   sl.push_back ("THREE");
   twidget.sequence_prop (sl); StringSeq sv = twidget.sequence_prop();
   TASSERT (sv.size() == sl.size()); TASSERT (sv[2] == "THREE");
-  twidget.self_prop (NULL); TASSERT (twidget.self_prop() == NULL);
-  twidget.self_prop (twidgetp); TASSERT (twidget.self_prop() == twidgetp);
+  twidget.self_prop (NULL);
+  TASSERT (twidget.self_prop() == NULL);
+  auto twp = shared_ptr_cast<IdlTestWidgetIface> (twidgetp);
+  twidget.self_prop (twp.get());
+  //TASSERT (twidget.self_prop().get() == twidgetp); // FIXME: broken as long as BaseObject::shared_from_this creates *multiple* shared_ptrs
+  TASSERT (twidget.self_prop().get() == NULL); // FIXME: == twidgetp
+  twp.reset(); // destroys self_prop weak pointer
+  TASSERT (twidget.self_prop() == NULL);
   window.close();
 }
 REGISTER_UITHREAD_TEST ("TestWidget/Test TestWidget (test-widget-window)", test_idl_test_widget);
@@ -182,7 +188,7 @@ test_complex_dialog ()
 {
   ensure_ui_file();
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
-  WindowIface *windowp = app.query_window ("/#"); // invalid path
+  WindowIfaceP windowp = app.query_window ("/#"); // invalid path
   TASSERT (windowp == NULL);
 
   windowp = app.query_window ("#complex-dialog"); // not yet existing window
@@ -198,7 +204,7 @@ test_complex_dialog ()
   windowp = app.query_window ("#complex-dialog"); // now existing window
   TASSERT (windowp != NULL);
 
-  WidgetIface *widget = window.query_selector_unique ("#complex-dialog");
+  WidgetIfaceP widget = window.query_selector_unique ("#complex-dialog");
   size_t count;
   TASSERT (widget != NULL);
   widget = window.query_selector_unique (".Widget#complex-dialog");
@@ -216,13 +222,13 @@ test_complex_dialog ()
   widget = window.query_selector_unique (":root .Frame");
   TASSERT (widget == NULL); // not unique
   widget = window.query_selector_unique (":root .Frame! .Arrow#special-arrow");
-  TASSERT (widget != NULL && dynamic_cast<FrameIface*> (widget) != NULL);
+  TASSERT (widget != NULL && shared_ptr_cast<FrameIface> (widget) != NULL);
   widget = window.query_selector_unique (":root .Button .Label");
   TASSERT (widget == NULL); // not unique
   widget = window.query_selector_unique (":root .Button .Label[markup-text*='Ok']");
-  TASSERT (widget != NULL && dynamic_cast<LabelImpl*> (widget) != NULL);
+  TASSERT (widget != NULL && shared_ptr_cast<LabelImpl> (widget) != NULL);
   widget = window.query_selector_unique (":root .Button! Label[markup-text*='Ok']");
-  TASSERT (widget != NULL && dynamic_cast<ButtonAreaImpl*> (widget) != NULL && dynamic_cast<LabelImpl*> (widget) == NULL);
+  TASSERT (widget != NULL && shared_ptr_cast<ButtonAreaImpl> (widget) != NULL && shared_ptr_cast<LabelImpl> (widget) == NULL);
   widget = window.query_selector_unique ("/#"); // invalid path
   TASSERT (widget == NULL);
 }

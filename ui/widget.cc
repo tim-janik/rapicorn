@@ -431,12 +431,12 @@ WidgetImpl::match_selector (const String &selector)
   return Selector::Matcher::query_selector_bool (selector, *sallocator.widget_selob (*this));
 }
 
-WidgetIface*
+WidgetIfaceP
 WidgetImpl::query_selector (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   Selector::Selob *selob = Selector::Matcher::query_selector_first (selector, *sallocator.widget_selob (*this));
-  return selob ? sallocator.selob_widget (*selob) : NULL;
+  return shared_ptr_cast<WidgetIface> (selob ? sallocator.selob_widget (*selob) : NULL);
 }
 
 WidgetSeq
@@ -454,12 +454,12 @@ WidgetImpl::query_selector_all (const String &selector)
   return widgets;
 }
 
-WidgetIface*
+WidgetIfaceP
 WidgetImpl::query_selector_unique (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   Selector::Selob *selob = Selector::Matcher::query_selector_unique (selector, *sallocator.widget_selob (*this));
-  return selob ? sallocator.selob_widget (*selob) : NULL;
+  return shared_ptr_cast<WidgetIface> (selob ? sallocator.selob_widget (*selob) : NULL);
 }
 
 uint

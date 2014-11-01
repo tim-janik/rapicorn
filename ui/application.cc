@@ -40,9 +40,8 @@ ApplicationImpl::the ()
   return *the_app;
 }
 
-WindowIface*
-ApplicationImpl::create_window (const std::string    &window_identifier,
-                                const StringSeq      &arguments)
+WindowIfaceP
+ApplicationImpl::create_window (const String &window_identifier, const StringSeq &arguments)
 {
   WidgetImpl &widget = Factory::create_ui_widget (window_identifier, arguments);
   WindowIface *window = dynamic_cast<WindowIface*> (&widget);
@@ -52,7 +51,7 @@ ApplicationImpl::create_window (const std::string    &window_identifier,
       critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), widget.typeid_name().c_str());
       unref (widget);
     }
-  return window;
+  return shared_ptr_cast<WindowIface> (window);
 }
 
 String
@@ -143,7 +142,7 @@ ApplicationImpl::close_all ()
   // FIXME: use WindowImpl::close_all
 }
 
-WindowIface*
+WindowIfaceP
 ApplicationImpl::query_window (const String &selector)
 {
   Selector::SelobAllocator sallocator;
@@ -156,7 +155,7 @@ ApplicationImpl::query_window (const String &selector)
     }
   vector<Selector::Selob*> result = Selector::Matcher::query_selector_objects (selector, input.begin(), input.end());
   if (result.size() == 1) // unique
-    return dynamic_cast<WindowIface*> (sallocator.selob_widget (*result[0]));
+    return shared_ptr_cast<WindowIface> (sallocator.selob_widget (*result[0]));
   return NULL;
 }
 

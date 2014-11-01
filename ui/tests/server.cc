@@ -34,9 +34,9 @@ static void
 test_application_list_model_relay()
 {
   ApplicationImpl &app = ApplicationImpl::the();
-  ListModelRelayIface *lmr = app.create_list_model_relay();
+  ListModelRelayIfaceP lmr = app.create_list_model_relay();
   TASSERT (lmr);
-  ListModelIface *model = lmr->model();
+  ListModelIfaceP model = lmr->model();
   TASSERT (model);
   TASSERT (model->count() == 0);
   AnySeq aseq;
@@ -50,7 +50,6 @@ test_application_list_model_relay()
   lmr->fill (0, aseq);
   a = model->row (0);
   TASSERT (a.as_string() == "cell");
-  // FIXME: leaking: no way to release lmr & model
 }
 REGISTER_UITHREAD_TEST ("Server/Application ListModelRelay", test_application_list_model_relay);
 

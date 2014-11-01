@@ -685,7 +685,7 @@ ContainerImpl::dump_test_data (TestStream &tstream)
     cw->make_test_dump (tstream);
 }
 
-WidgetIface*
+WidgetIfaceP
 ContainerImpl::create_widget (const String &widget_identifier, const StringSeq &args) // ContainerIface
 {
   WidgetImpl &widget = Factory::create_ui_widget (widget_identifier, args);
@@ -697,7 +697,7 @@ ContainerImpl::create_widget (const String &widget_identifier, const StringSeq &
     return NULL;
   }
   unref (widget);
-  return &widget;
+  return shared_ptr_cast<WidgetIface> (&widget);
 }
 
 void

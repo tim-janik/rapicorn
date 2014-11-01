@@ -347,9 +347,9 @@ private:
   void               leave_anchored  ();
 public:
   virtual bool         match_selector        (const String &selector);
-  virtual WidgetIface* query_selector        (const String &selector);
+  virtual WidgetIfaceP query_selector        (const String &selector);
   virtual WidgetSeq    query_selector_all    (const String &selector);
-  virtual WidgetIface* query_selector_unique (const String &selector);
+  virtual WidgetIfaceP query_selector_unique (const String &selector);
   template<class C> typename
   InterfaceMatch<C>::Result interface        (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;
