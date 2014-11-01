@@ -76,20 +76,23 @@ SelobWidget::get_sibling (int64 dir)
   if (container && dir < 0)
     {
       WidgetImpl *last = NULL;
-      for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); last = &*cw, cw++)
-        if (&widget_ == &*cw)
-          break;
+      for (auto childp : *container)
+        {
+          if (&widget_ == &*childp)
+            break;
+          last = &*childp;
+        }
       if (last)
         return allocator_.widget_selob (*last);
     }
   else if (container && dir > 0)
     {
-      for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
-        if (&widget_ == &*cw)
+      for (WidgetImpl **iter = container->begin(); iter < container->end(); iter++)
+        if (&widget_ == *iter)
           {
-            cw++;
-            if (cw.has_next())
-              return allocator_.widget_selob (*cw);
+            iter++;
+            if (iter < container->end())
+              return allocator_.widget_selob (**iter);
             break;
           }
     }

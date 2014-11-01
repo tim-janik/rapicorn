@@ -102,9 +102,9 @@ ArrangementImpl::child_area ()
 {
   Rect rect; /* empty */
   Allocation parea = allocation();
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto childp : *this)
     {
-      WidgetImpl &child = *cw;
+      WidgetImpl &child = *childp;
       Allocation area = local_child_allocation (child, parea.width, parea.height);
       rect.rect_union (Rect (Point (area.x, area.y), 1, 1));
       rect.rect_union (Rect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
@@ -117,9 +117,9 @@ ArrangementImpl::size_request (Requisition &requisition)
 {
   Rect rect; /* empty */
   bool chspread = false, cvspread = false, need_origin = false;
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto childp : *this)
     {
-      WidgetImpl &child = *cw;
+      WidgetImpl &child = *childp;
       /* size request all children */
       // Requisition rq = child.requisition();
       if (!child.visible())
@@ -155,9 +155,9 @@ ArrangementImpl::size_request (Requisition &requisition)
 void
 ArrangementImpl::size_allocate (Allocation area, bool changed)
 {
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto childp : *this)
     {
-      WidgetImpl &child = *cw;
+      WidgetImpl &child = *childp;
       if (!child.visible())
         continue;
       Allocation carea = local_child_allocation (child, area.width, area.height);

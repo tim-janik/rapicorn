@@ -369,16 +369,16 @@ void
 ContainerImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
 {
   f (*this);
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->foreach_recursive (f);
+  for (auto child : *this)
+    child->foreach_recursive (f);
 }
 
 void
 ContainerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
   WidgetImpl::hierarchy_changed (old_toplevel);
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->sig_hierarchy_changed.emit (old_toplevel);
+  for (auto child : *this)
+    child->sig_hierarchy_changed.emit (old_toplevel);
 }
 
 void
@@ -530,9 +530,8 @@ ContainerImpl::move_focus (FocusDirType fdir)
     return true;
   // copy children
   vector<WidgetImpl*> children;
-  ChildWalker lw = local_children();
-  while (lw.has_next())
-    children.push_back (&*lw++);
+  for (auto child : *this)
+    children.push_back (&*child);
   // sort children according to direction and current focus
   const Allocation &area = allocation();
   Point upper_left (area.x, area.y + area.height);
@@ -599,10 +598,10 @@ ContainerImpl::expose_enclosure ()
 {
   // expose without children
   Region region (clipped_allocation());
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    if (cw->drawable())
+  for (auto childp : *this)
+    if (childp->drawable())
       {
-        WidgetImpl &child = *cw;
+        WidgetImpl &child = *childp;
         Region cregion (child.clipped_allocation());
         cregion.affine (child_affine (child).invert());
         region.subtract (cregion);
@@ -621,9 +620,9 @@ void
 ContainerImpl::point_children (Point               p, /* window coordinates relative */
                                std::vector<WidgetImpl*> &stack)
 {
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto childp : *this)
     {
-      WidgetImpl &child = *cw;
+      WidgetImpl &child = *childp;
       Point cp = child_affine (child).point (p);
       if (child.point (cp))
         {
@@ -646,15 +645,15 @@ ContainerImpl::screen_window_point_children (Point                   p, /* scree
 void
 ContainerImpl::render_recursive (RenderContext &rcontext)
 {
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto childp : *this)
     {
-      WidgetImpl &child = *cw;
+      WidgetImpl &child = *childp;
       if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
         {
           if (child.test_any_flag (INVALID_REQUISITION))
-            critical ("rendering widget with invalid %s: %s (%p)", "requisition", cw->name().c_str(), &child);
+            critical ("rendering widget with invalid %s: %s (%p)", "requisition", child.name().c_str(), &child);
           if (child.test_any_flag (INVALID_ALLOCATION))
-            critical ("rendering widget with invalid %s: %s (%p)", "allocation", cw->name().c_str(), &child);
+            critical ("rendering widget with invalid %s: %s (%p)", "allocation", child.name().c_str(), &child);
           child.render_widget (rcontext);
         }
     }
@@ -665,9 +664,9 @@ ContainerImpl::debug_tree (String indent)
 {
   printerr ("%s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), this->name().c_str(), this,
             allocation().width, allocation().height, allocation().x, allocation().y);
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto childp : *this)
     {
-      WidgetImpl &child = *cw;
+      WidgetImpl &child = *childp;
       ContainerImpl *c = child.as_container_impl();
       if (c)
         c->debug_tree (indent + "  ");
@@ -681,8 +680,8 @@ void
 ContainerImpl::dump_test_data (TestStream &tstream)
 {
   WidgetImpl::dump_test_data (tstream);
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
-    cw->make_test_dump (tstream);
+  for (auto child : *this)
+    child->make_test_dump (tstream);
 }
 
 WidgetIfaceP
@@ -712,13 +711,20 @@ SingleContainerImpl::SingleContainerImpl () :
   child_widget (NULL)
 {}
 
-ContainerImpl::ChildWalker
-SingleContainerImpl::local_children () const
+WidgetImpl**
+SingleContainerImpl::begin () const
 {
-  WidgetImpl **iter = const_cast<WidgetImpl**> (&child_widget), **iend = iter;
+  WidgetImpl **iter = const_cast<WidgetImpl**> (&child_widget);
+  return iter;
+}
+
+WidgetImpl**
+SingleContainerImpl::end () const
+{
+  WidgetImpl **iter = const_cast<WidgetImpl**> (&child_widget);
   if (child_widget)
-    iend++;
-  return value_walker (PointerIterator<WidgetImpl*> (iter), PointerIterator<WidgetImpl*> (iend));
+    iter++;
+  return iter;
 }
 
 void
@@ -951,6 +957,21 @@ ResizeContainerImpl::invalidate_parent ()
 
 MultiContainerImpl::MultiContainerImpl ()
 {}
+
+WidgetImpl**
+MultiContainerImpl::begin () const
+{
+  WidgetImpl *const *iter = widgets.data();
+  return const_cast<WidgetImpl**> (iter);
+}
+
+WidgetImpl**
+MultiContainerImpl::end () const
+{
+  WidgetImpl *const *iter = widgets.data();
+  iter += widgets.end() - widgets.begin();
+  return const_cast<WidgetImpl**> (iter);
+}
 
 void
 MultiContainerImpl::add_child (WidgetImpl &widget)

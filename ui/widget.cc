@@ -146,8 +146,8 @@ WidgetImpl::propagate_state (bool notify_changed)
   if (was_viewable != viewable())
     invalidate();       // changing viewable forces invalidation, regardless of notify_changed
   if (container)
-    for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
-      it->propagate_state (notify_changed);
+    for (auto child : *container)
+      child->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
     sig_changed.emit (""); // changed() does not imply invalidate(), see above
 }
@@ -417,8 +417,8 @@ WidgetImpl::match_interface (bool wself, bool wparent, bool children, InterfaceM
     {
       ContainerImpl *container = self->as_container_impl();
       if (container)
-        for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
-          if (cw->match_interface (1, 0, 1, imatcher))
+        for (auto child : *container)
+          if (child->match_interface (1, 0, 1, imatcher))
             return true;
     }
   return false;
@@ -861,8 +861,8 @@ WidgetImpl::propagate_heritage ()
 {
   ContainerImpl *container = this->as_container_impl();
   if (container)
-    for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
-      it->heritage (heritage_);
+    for (auto child : *container)
+      child->heritage (heritage_);
 }
 
 void

@@ -39,11 +39,11 @@ protected:
   virtual void        dump_test_data    (TestStream &tstream);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
 public:
+  virtual WidgetImpl**  begin           () const = 0;
+  virtual WidgetImpl**  end             () const = 0;
   WidgetImpl*           get_focus_child () const;
-  typedef Walker<WidgetImpl>  ChildWalker;
   void                  child_container (ContainerImpl  *child_container);
   ContainerImpl&        child_container ();
-  virtual ChildWalker   local_children  () const = 0;
   virtual void          foreach_recursive  (const std::function<void (WidgetImpl&)> &f) override;
   virtual size_t        n_children      () = 0;
   virtual WidgetImpl*   nth_child       (size_t nth) = 0;
@@ -78,7 +78,8 @@ protected:
   WidgetImpl&           get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
   virtual void          pre_finalize            ();
   virtual              ~SingleContainerImpl     ();
-  virtual ChildWalker   local_children          () const;
+  virtual WidgetImpl**  begin                   () const override;
+  virtual WidgetImpl**  end                     () const override;
   virtual size_t        n_children              () { return child_widget ? 1 : 0; }
   virtual WidgetImpl*   nth_child               (size_t nth) { return nth == 0 ? child_widget : NULL; }
   bool                  has_visible_child       () { return child_widget && child_widget->visible(); }
@@ -121,7 +122,8 @@ protected:
   virtual void          pre_finalize            ();
   virtual              ~MultiContainerImpl      ();
   virtual void          render                  (RenderContext&, const Rect&) {}
-  virtual ChildWalker   local_children          () const { return value_walker (widgets); }
+  virtual WidgetImpl**  begin                   () const override;
+  virtual WidgetImpl**  end                     () const override;
   virtual size_t        n_children              () { return widgets.size(); }
   virtual WidgetImpl*   nth_child               (size_t nth) { return nth < widgets.size() ? widgets[nth] : NULL; }
   virtual void          add_child               (WidgetImpl   &widget);
