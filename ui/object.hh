@@ -25,6 +25,31 @@ public:
 inline bool operator== (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 == &object2; }
 inline bool operator!= (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 != &object2; }
 
+/** Shorthand for std::dynamic_pointer_cast<>().
+ * Convert @a sptr into a std::shared_ptr<>() of template argument type @a Target.
+ * If sptr is NULL or the cast was unsuccessfull, the returned pointer is empty.
+ */
+template<class Target> std::shared_ptr<Target>
+shared_ptr_cast (Aida::ImplicitBaseP sptr)
+{
+  if (sptr)
+    return std::dynamic_pointer_cast<Target> (sptr);
+  else
+    return NULL;
+}
+
+/** Shorthand for std::dynamic_pointer_cast<>() and shared_from_this().
+ * Convert @a iface into a std::shared_ptr<>() via shared_from_this() and cast the result
+ * with std::dynamic_pointer_cast<>() into the template argument type @a Target.
+ * If iface is NULL or the cast was unsuccessfull, the returned pointer is empty.
+ */
+template<class Target> std::shared_ptr<Target>
+shared_ptr_cast (ObjectIface *iface) // FIXME: Aida::ImplicitBase
+{
+  return shared_ptr_cast<Target> (iface ? iface->shared_from_this() : NULL);
+}
+
+// Implementation details
 struct ObjectImpl::InterfaceMatcher {
   explicit      InterfaceMatcher (const String &ident) : ident_ (ident), match_found_ (false) {}
   bool          done             () const { return match_found_; }
