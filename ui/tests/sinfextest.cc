@@ -255,6 +255,8 @@ sinfex_shell (void)
 
 namespace ServerTests {
 
+void sinfex_shell_wrapper (void);
+
 void
 sinfex_shell_wrapper (void)
 {
