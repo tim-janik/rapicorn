@@ -390,6 +390,11 @@ class Generator:
   def generate_interface_class (self, type_info, class_name_list):
     s, classC, classH, classFull = '\n', self.C (type_info), self.C4client (type_info), self.namespaced_identifier (type_info.name)
     class_name_list += [ classFull ]
+    if self.gen_mode == G4SERVANT:
+      s += 'class %s;\n' % classC
+      s += 'typedef std::shared_ptr<%s> %sP;\n' % (classC, classC)
+      s += 'typedef std::weak_ptr  <%s> %sW;\n' % (classC, classC)
+      s += '\n'
     # declare
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
@@ -460,8 +465,6 @@ class Generator:
     if self.gen_mode == G4SERVANT:       # ->* _servant and ->* _handle operators
       s += '%s* operator->* (%s &sh, Rapicorn::Aida::_ServantType);\n' % (classC, classH)
       s += '%s operator->* (%s *obj, Rapicorn::Aida::_HandleType);\n' % (classH, classC)
-      s += 'typedef std::shared_ptr<%s> %sP;\n' % (classC, classC)
-      s += 'typedef std::weak_ptr  <%s> %sW;\n' % (classC, classC)
     # typedef alias
     if self.gen_mode == G4STUB:
       s += self.generate_shortalias (type_info)
