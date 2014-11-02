@@ -1,5 +1,5 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-#include <ui/widget.hh> // unguarded, because item.hh includes commands.hh
+#include <ui/widget.hh> // unguarded, because widget.hh includes commands.hh
 
 #ifndef __RAPICORN_COMMANDS_HH__
 #define __RAPICORN_COMMANDS_HH__
@@ -12,7 +12,7 @@ struct Command {
   bool         needs_arg;
   explicit     Command (const char *cident, const char *cblurb, bool has_arg);
   virtual     ~Command();
-  virtual bool exec (Deletable *obj, const StringSeq &args) = 0;
+  virtual bool exec (ObjectImpl *obj, const StringSeq &args) = 0;
 };
 typedef std::shared_ptr<Command> CommandP;
 
@@ -41,7 +41,7 @@ struct CommandDataArg : Command {
   Data data;
   CommandDataArg (bool (Class::*method) (Data, const String&),
                   const char *cident, const char *cblurb, const Data &method_data);
-  virtual bool exec (Deletable *obj, const StringSeq &args);
+  virtual bool exec (ObjectImpl *obj, const StringSeq &args);
 };
 template<class Class, class Data> inline CommandP
 create_command (bool (Class::*method) (Data, const String&),
@@ -56,7 +56,7 @@ struct CommandData : Command {
   Data data;
   CommandData (bool (Class::*method) (Data),
                const char *cident, const char *cblurb, const Data &method_data);
-  virtual bool exec (Deletable *obj, const StringSeq&);
+  virtual bool exec (ObjectImpl *obj, const StringSeq&);
 };
 template<class Class, class Data> inline CommandP
 create_command (bool (Class::*method) (Data),
@@ -70,7 +70,7 @@ struct CommandArg: Command {
   bool (Class::*command_method) (const StringSeq &args);
   CommandArg (bool (Class::*method) (const String&),
               const char *cident, const char *cblurb);
-  virtual bool exec (Deletable *obj, const StringSeq &args);
+  virtual bool exec (ObjectImpl *obj, const StringSeq &args);
 };
 template<class Class> inline CommandP
 create_command (bool (Class::*method) (const String&),
@@ -87,7 +87,7 @@ CommandDataArg<Class,Data>::CommandDataArg (bool (Class::*method) (Data, const S
   data (method_data)
 {}
 template<class Class, typename Data> bool
-CommandDataArg<Class,Data>::exec (Deletable *obj, const StringSeq &args)
+CommandDataArg<Class,Data>::exec (ObjectImpl *obj, const StringSeq &args)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
@@ -103,7 +103,7 @@ CommandArg<Class>::CommandArg (bool (Class::*method) (const String&),
   command_method (method)
 {}
 template<class Class> bool
-CommandArg<Class>::exec (Deletable *obj, const StringSeq &args)
+CommandArg<Class>::exec (ObjectImpl *obj, const StringSeq &args)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
@@ -120,7 +120,7 @@ CommandData<Class,Data>::CommandData (bool (Class::*method) (Data),
   data (method_data)
 {}
 template<class Class, typename Data> bool
-CommandData<Class,Data>::exec (Deletable *obj, const StringSeq&)
+CommandData<Class,Data>::exec (ObjectImpl *obj, const StringSeq&)
 {
   Class *instance = dynamic_cast<Class*> (obj);
   if (!instance)
