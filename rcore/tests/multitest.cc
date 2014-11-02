@@ -276,19 +276,6 @@ test_files (void)
 }
 REGISTER_TEST ("General/FileChecks", test_files);
 
-static void
-test_virtual_typeid()
-{
-  struct TypeA : public virtual VirtualTypeid {};
-  struct TypeB : public virtual VirtualTypeid {};
-  TypeA a;
-  TypeB b;
-  TCMP (a.typeid_name(), !=, b.typeid_name());
-  TCMPS (strstr (a.typeid_name().c_str(), "TypeA"), !=, NULL);
-  TCMPS (strstr (b.typeid_name().c_str(), "TypeB"), !=, NULL);
-}
-REGISTER_TEST ("General/VirtualTypeid", test_virtual_typeid);
-
 struct SomeObject : public BaseObject {};
 
 static void

@@ -6,16 +6,6 @@
 
 namespace Rapicorn {
 
-// == VirtualTypeid ==
-VirtualTypeid::~VirtualTypeid ()
-{ /* virtual destructor ensures vtable */ }
-
-String
-VirtualTypeid::typeid_name ()
-{
-  return cxx_demangle (typeid (*this).name());
-}
-
 /** Demangle a std::typeinfo.name() string into a proper C++ type name.
  * This function uses abi::__cxa_demangle() from <cxxabi.h> to demangle C++ type names,
  * which works for g++, libstdc++, clang++, libc++.

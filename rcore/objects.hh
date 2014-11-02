@@ -8,13 +8,6 @@
 
 namespace Rapicorn {
 
-// == VirtualTypeid ==
-class VirtualTypeid {
-protected:
-  virtual      ~VirtualTypeid      ();
-public:
-  String        typeid_name        ();
-};
 String          cxx_demangle       (const char *mangled_identifier);
 
 // == ClassDoctor (used for private class copies) ==
@@ -34,7 +27,7 @@ class ClassDoctor {};
  * type for classes that may or may not need this feature (e.g. objects that
  * can but often aren't used for signal handler connections).
  */
-struct Deletable : public virtual VirtualTypeid {
+struct Deletable {
   /**
    * DeletionHook is the base implementation class for hooks which are hooked
    * up into the deletion phase of a Rapicorn::Deletable.
