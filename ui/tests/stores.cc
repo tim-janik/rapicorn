@@ -97,11 +97,10 @@ store_updated (const UpdateRequest &urequest)
 static void
 test_basic_memory_store ()
 {
-  MemoryListStore *store = new MemoryListStore (1);
-  ref_sink (store);
+  MemoryListStoreP store (new MemoryListStore (1));
   // check model/store identity (for memory stores)
   ListModelIface &m1 = *store;
-  assert (&m1 == store);
+  assert (&m1 == &*store);
   store->sig_updated() += store_updated;
   // basic store assertions
   assert (store->count() == 0);
@@ -123,7 +122,6 @@ test_basic_memory_store ()
   store->insert (1, row);
   assert (store_inserted_counter > last_counter);
   assert (store->row (1).as_int() == 2);
-  unref (store);
 }
 REGISTER_UITHREAD_TEST ("Stores/Basic memory store", test_basic_memory_store);
 
@@ -146,29 +144,28 @@ stringify_model (ListModelIface &model)
 static void
 test_store_modifications ()
 {
-  MemoryListStore &store = *new MemoryListStore (4);
-  ref_sink (store);
+  MemoryListStoreP store (new MemoryListStore (4));
   for (uint i = 0; i < 4; i++)
     {
       Any row;
       for (uint j = 0; j < 1; j++) // FIXME: "j < 4" - support sequences in Any
         row <<= string_format ("%02x", 16 * (i + 1) + j + 1);
-      store.insert (-1, row);
+      store->insert (-1, row);
     }
   Any row;
   // store modifications
   row <<= "Newly_appended_last_row";
-  store.insert (-1, row);
+  store->insert (-1, row);
   row <<= "Newly_prepended_first_row";
-  store.insert (0, row);
+  store->insert (0, row);
 
-  row = store.row (1);
+  row = store->row (1);
   row <<= "Extra_text_added_to_row_1";
-  store.update_row (1, row);
+  store->update_row (1, row);
 
-  store.remove (2, 1);
+  store->remove (2, 1);
   row <<= "Replacement_for_removed_row_2";
-  store.insert (2, row);
+  store->insert (2, row);
 
   // test verification
   String e = "[\n"
@@ -179,12 +176,10 @@ test_store_modifications ()
              "  (41),\n" // FIXME: (41,42,43,44)
              "  (Newly_appended_last_row),\n"
              "]";
-  String s = stringify_model (store);
+  String s = stringify_model (*store);
   if (Test::verbose())
     printout ("%s: model:\n%s\n", __func__, s.c_str());
   TCMP (e, ==, s);
-  // cleanup
-  unref (store);
 }
 REGISTER_UITHREAD_TEST ("Stores/Memory Store Modifications", test_store_modifications);
 

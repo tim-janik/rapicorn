@@ -29,6 +29,8 @@ public:
   virtual ListModelIfaceP       model           () override             { return model_; }
   void                          refill          (int start, int length);
 };
+typedef std::shared_ptr<ListModelRelayImpl> ListModelRelayImplP;
+typedef std::weak_ptr  <ListModelRelayImpl> ListModelRelayImplW;
 
 class MemoryListStore : public virtual ListModelIface {
   vector<Any>           rows_;
@@ -42,7 +44,8 @@ public:
   void                  update_row      (uint n, const Any &aseq);
   void                  remove          (uint start, uint length);
 };
-
+typedef std::shared_ptr<MemoryListStore> MemoryListStoreP;
+typedef std::weak_ptr  <MemoryListStore> MemoryListStoreW;
 
 } // Rapicorn
 

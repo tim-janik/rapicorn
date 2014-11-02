@@ -22,36 +22,23 @@ ApplicationImpl::ApplicationImpl() :
   tc_ (0)
 {}
 
-static ApplicationImpl *the_app = NULL;
-static void
-create_application (const StringVector &args)
-{
-  if (the_app)
-    fatal ("librapicornui: multiple calls to Rapicorn::init_app()");
-  the_app = new ApplicationImpl();
-}
-static InitHook _create_application ("ui-thread/00 Creating Application Singleton", create_application);
-
 ApplicationImpl&
 ApplicationImpl::the ()
 {
-  if (!the_app)
-    fatal ("librapicornui: library uninitialized, call Rapicorn::init_app() first");
+  static std::shared_ptr<ApplicationImpl> the_app (new ApplicationImpl());
   return *the_app;
 }
+static InitHook _create_application ("ui-thread/00 Creating Application Singleton",
+                                     [] (const StringVector &args) { ApplicationImpl::the(); });
 
 WindowIfaceP
 ApplicationImpl::create_window (const String &window_identifier, const StringSeq &arguments)
 {
-  WidgetImpl &widget = Factory::create_ui_widget (window_identifier, arguments);
-  WindowIface *window = dynamic_cast<WindowIface*> (&widget);
+  WidgetImplP widget = Factory::create_ui_widget (window_identifier, arguments);
+  WindowIfaceP window = shared_ptr_cast<WindowIface> (widget);
   if (!window)
-    {
-      ref_sink (widget);
-      critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), widget.typeid_name().c_str());
-      unref (widget);
-    }
-  return shared_ptr_cast<WindowIface> (window);
+    critical ("%s: constructed widget lacks window interface: %s", window_identifier.c_str(), widget->typeid_name());
+  return window;
 }
 
 String
@@ -132,7 +119,7 @@ ApplicationIface::finishable ()
 void
 ApplicationImpl::close_all ()
 {
-  vector<WindowIface*> candidates = windows_;
+  vector<WindowIfaceP> candidates = windows_;
   for (auto wip : candidates)
     {
       auto alive = find (windows_.begin(), windows_.end(), wip);
@@ -147,9 +134,9 @@ ApplicationImpl::query_window (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   vector<Selector::Selob*> input;
-  for (vector<WindowIface*>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
+  for (vector<WindowIfaceP>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
-      WidgetImpl *widget = dynamic_cast<WidgetImpl*> (*it);
+      WidgetImplP widget = shared_ptr_cast<WidgetImpl> (*it);
       if (widget)
         input.push_back (sallocator.widget_selob (*widget));
     }
@@ -164,9 +151,9 @@ ApplicationImpl::query_windows (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   vector<Selector::Selob*> input;
-  for (vector<WindowIface*>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
+  for (vector<WindowIfaceP>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
-      WidgetImpl *widget = dynamic_cast<WidgetImpl*> (*it);
+      WidgetImplP widget = shared_ptr_cast<WidgetImpl> (*it);
       if (widget)
         input.push_back (sallocator.widget_selob (*widget));
     }
@@ -181,9 +168,9 @@ WindowList
 ApplicationImpl::list_windows ()
 {
   WindowList wl;
-  for (uint i = 0; i < windows_.size(); i++)
+  for (size_t i = 0; i < windows_.size(); i++)
     {
-      WindowHandle wh = windows_[i]->*Aida::_handle;
+      WindowHandle wh = (&*windows_[i])->*Aida::_handle;
       wl.push_back (wh);
     }
   return wl;
@@ -192,8 +179,7 @@ ApplicationImpl::list_windows ()
 void
 ApplicationImpl::add_window (WindowIface &window)
 {
-  ref_sink (window);
-  windows_.push_back (&window);
+  windows_.push_back (shared_ptr_cast<WindowIface> (&window));
 }
 
 void
@@ -205,12 +191,13 @@ ApplicationImpl::lost_primaries()
 bool
 ApplicationImpl::remove_window (WindowIface &window)
 {
-  vector<WindowIface*>::iterator it = std::find (windows_.begin(), windows_.end(), &window);
-  if (it == windows_.end())
-    return false;
-  windows_.erase (it);
-  unref (window);
-  return true;
+  for (auto it = windows_.begin(); it != windows_.end(); ++it)
+    if (&window == &**it)
+      {
+        windows_.erase (it);
+        return true;
+      }
+  return false;
 }
 
 void

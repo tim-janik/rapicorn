@@ -70,9 +70,9 @@ test_cxx_server_gui ()
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   WindowIface &window = *app.create_window ("Window");
   TOK();
-  WidgetImpl &twidget = Factory::create_ui_widget ("TestWidget");
+  WidgetImplP twidget = Factory::create_ui_widget ("TestWidget");
   TOK();
-  window.impl().add (twidget);
+  window.impl().add (*twidget);
   TOK();
   /* close window (and exit main loop) after first expose */
   window.impl().sig_displayed() += [&window]() { window.close(); };
@@ -175,9 +175,9 @@ test_idl_test_widget ()
   TASSERT (twidget.self_prop() == NULL);
   auto twp = shared_ptr_cast<IdlTestWidgetIface> (twidgetp);
   twidget.self_prop (twp.get());
-  //TASSERT (twidget.self_prop().get() == twidgetp); // FIXME: broken as long as BaseObject::shared_from_this creates *multiple* shared_ptrs
-  TASSERT (twidget.self_prop().get() == NULL); // FIXME: == twidgetp
+  TASSERT (twidget.self_prop().get() == twidgetp);
   twp.reset(); // destroys self_prop weak pointer
+  twidget.self_prop (NULL);
   TASSERT (twidget.self_prop() == NULL);
   window.close();
 }

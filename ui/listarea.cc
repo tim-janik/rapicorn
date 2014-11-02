@@ -24,12 +24,12 @@ WidgetListRowImpl::dump_private_data (TestStream &tstream)
   if (list && index_ >= 0)
     {
       ListRow *lr = list->row_map_[index_];
-      if (lr && lr->lrow == this)
+      if (lr && this == &*lr->lrow)
         kind = 1;
       else
         {
           lr = list->off_map_[index_];
-          if (lr && lr->lrow == this)
+          if (lr && this == &*lr->lrow)
             kind = 2;
           else
             kind = 3;
@@ -211,8 +211,8 @@ WidgetListImpl::model () const
 void
 WidgetListImpl::set_list_model (ListModelIface &model)
 {
-  ListModelIface *oldmodel = model_;
-  model_ = &model;
+  ListModelIfaceP oldmodel = model_;
+  model_ = shared_ptr_cast<ListModelIface> (&model);
   row_heights_.clear();
   if (oldmodel)
     {
@@ -222,12 +222,9 @@ WidgetListImpl::set_list_model (ListModelIface &model)
     }
   if (model_)
     {
-      ref_sink (model_);
       row_heights_.resize (model_->count(), -1);
       conid_updated_ = model_->sig_updated() += Aida::slot (*this, &WidgetListImpl::model_updated);
     }
-  if (oldmodel)
-    unref (oldmodel);
   invalidate_model (true, true);
   changed ("model");
 }
@@ -798,10 +795,13 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   Any row = model_->row (nthrow);
   ListRow *lr = new ListRow();
   IFDEBUG (dbg_created++);
-  WidgetImpl *widget = &Factory::create_ui_child (*this, "RapicornWidgetListRow", Factory::ArgumentList(), false);
-  lr->lrow = ref_sink (widget)->interface<WidgetListRowImpl*>();
+  WidgetImplP widget = Factory::create_ui_child (*this, "RapicornWidgetListRow", Factory::ArgumentList(), false);
+  assert (widget != NULL);
+  lr->lrow = shared_ptr_cast<WidgetListRowImpl> (widget);
+  assert (lr->lrow != NULL);
   lr->lrow->interface<HBoxIface>().spacing (5); // FIXME
-  widget = ref_sink (&Factory::create_ui_child (*lr->lrow, "Label", Factory::ArgumentList()));
+  widget = Factory::create_ui_child (*lr->lrow, "Label", Factory::ArgumentList());
+  assert (widget != NULL);
   lr->cols.push_back (widget);
 
   while (size_groups_.size() < lr->cols.size())
@@ -810,7 +810,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
     for (uint i = 0; i < lr->cols.size(); i++)
       size_groups_[i]->add_widget (*lr->cols[i]);
 
-  add (lr->lrow);
+  add (*lr->lrow);
   return lr;
 }
 
@@ -848,10 +848,7 @@ WidgetListImpl::destroy_row (ListRow *lr)
   assert_return (lr && lr->lrow);
   ContainerImpl *parent = lr->lrow->parent();
   if (parent)
-    parent->remove (lr->lrow);
-  for (uint i = 0; i < lr->cols.size(); i++)
-    unref (lr->cols[i]);
-  unref (lr->lrow);
+    parent->remove (*lr->lrow);
   delete lr;
 }
 

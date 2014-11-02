@@ -123,15 +123,8 @@ template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 
 // == BaseObject ==
 /// Legacy type, will be merged/dissolved into ObjectImpl and ImplicitBase.
-class BaseObject : public virtual ReferenceCountable, public virtual Aida::ImplicitBase {
-  static void shared_ptr_deleter (BaseObject*);
+class BaseObject : public virtual Deletable, public virtual Aida::ImplicitBase {
 public:
-  template<class Class, typename std::enable_if<std::is_base_of<BaseObject, Class>::value>::type* = nullptr>
-  static std::shared_ptr<Class> shared_ptr (Class *object) ///< Wrap BaseObject or derived type into a std::shared_ptr<>().
-  {
-    return object ? std::shared_ptr<Class> (ref (object), shared_ptr_deleter) : std::shared_ptr<Class>();
-  }
-  Aida::ImplicitBaseP shared_from_this () { return shared_ptr (this); }
   // keep clear, add new API to ObjectImpl or ObjectIface
 };
 typedef Aida::PropertyList PropertyList; // import PropertyList from Aida namespace

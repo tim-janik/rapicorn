@@ -7,7 +7,7 @@
 namespace Rapicorn {
 
 class ApplicationImpl : public ApplicationIface {
-  vector<WindowIface*> windows_;
+  vector<WindowIfaceP> windows_;
   int                  tc_;
 public:
   explicit            ApplicationImpl        ();

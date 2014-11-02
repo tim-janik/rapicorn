@@ -86,7 +86,7 @@ WindowImpl::command_dispatcher (const EventLoop::State &state)
     return commands_emission_ && commands_emission_->pending();
   else if (state.phase == state.DISPATCH)
     {
-      ref (this);
+      WindowImplP guard_this = shared_ptr_cast<WindowImpl> (this);
       commands_emission_->dispatch();                   // invoke signal handlers
       bool handled = false;
       if (commands_emission_->has_value())
@@ -100,7 +100,6 @@ WindowImpl::command_dispatcher (const EventLoop::State &state)
           delete emi;
           last_command_ = "";
         }
-      unref (this);
       return true;
     }
   else if (state.phase == state.DESTROY)
@@ -118,7 +117,7 @@ WindowImpl::command_dispatcher (const EventLoop::State &state)
 
 struct CurrentFocus {
   WidgetImpl *focus_widget;
-  size_t    uncross_id;
+  size_t      uncross_id;
   CurrentFocus (WidgetImpl *f = NULL, size_t i = 0) : focus_widget (f), uncross_id (i) {}
 };
 static DataKey<CurrentFocus> focus_widget_key;
@@ -235,8 +234,19 @@ WindowImpl::WindowImpl() :
   loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
   loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
   loop_.flag_primary (false);
-  ApplicationImpl::the().add_window (*this);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
+}
+
+void
+temp_window_factory_workaround (ObjectIfaceP o)
+{
+  ObjectIface *oi = o.get();
+  if (oi)
+    {
+      WindowImpl *w = dynamic_cast<WindowImpl*> (oi);
+      if (w)
+        ApplicationImpl::the().add_window (*w);
+    }
 }
 
 void
@@ -330,16 +340,16 @@ WindowImpl::beep()
     screen_window_->beep();
 }
 
-vector<WidgetImpl*>
-WindowImpl::widget_difference (const vector<WidgetImpl*> &clist, /* preserves order of clist */
-                               const vector<WidgetImpl*> &cminus)
+vector<WidgetImplP>
+WindowImpl::widget_difference (const vector<WidgetImplP> &clist, /* preserves order of clist */
+                               const vector<WidgetImplP> &cminus)
 {
   map<WidgetImpl*,bool> mminus;
   for (uint i = 0; i < cminus.size(); i++)
-    mminus[cminus[i]] = true;
-  vector<WidgetImpl*> result;
+    mminus[&*cminus[i]] = true;
+  vector<WidgetImplP> result;
   for (uint i = 0; i < clist.size(); i++)
-    if (!mminus[clist[i]])
+    if (!mminus[&*clist[i]])
       result.push_back (clist[i]);
   return result;
 }
@@ -348,15 +358,15 @@ bool
 WindowImpl::dispatch_mouse_movement (const Event &event)
 {
   last_event_context_ = event;
-  vector<WidgetImpl*> pierced;
+  vector<WidgetImplP> pierced;
   /* figure all entered children */
   bool unconfined;
-  WidgetImpl *grab_widget = get_grab (&unconfined);
+  WidgetImpl* grab_widget = get_grab (&unconfined);
   if (grab_widget)
     {
       if (unconfined or grab_widget->screen_window_point (Point (event.x, event.y)))
         {
-          pierced.push_back (ref (grab_widget));        /* grab-widget receives all mouse events */
+          pierced.push_back (shared_ptr_cast<WidgetImpl> (grab_widget));        // grab-widget receives all mouse events
           ContainerImpl *container = grab_widget->interface<ContainerImpl*>();
           if (container)                              /* deliver to hovered grab-widget children as well */
             container->screen_window_point_children (Point (event.x, event.y), pierced);
@@ -364,32 +374,30 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
     }
   else if (drawable())
     {
-      pierced.push_back (ref (this)); /* window receives all mouse events */
+      pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all mouse events
       if (entered_)
         screen_window_point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
-  vector<WidgetImpl*> left_children = widget_difference (last_entered_children_, pierced);
+  vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
   EventMouse *leave_event = create_event_mouse (MOUSE_LEAVE, EventContext (event));
-  for (vector<WidgetImpl*>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
+  for (vector<WidgetImplP>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
     (*it)->process_event (*leave_event);
   delete leave_event;
   /* send enter events */
-  vector<WidgetImpl*> entered_children = widget_difference (pierced, last_entered_children_);
+  vector<WidgetImplP> entered_children = widget_difference (pierced, last_entered_children_);
   EventMouse *enter_event = create_event_mouse (MOUSE_ENTER, EventContext (event));
-  for (vector<WidgetImpl*>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
+  for (vector<WidgetImplP>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
     (*it)->process_event (*enter_event);
   delete enter_event;
   /* send actual move event */
   bool handled = false;
   EventMouse *move_event = create_event_mouse (MOUSE_MOVE, EventContext (event));
-  for (vector<WidgetImpl*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
+  for (vector<WidgetImplP>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     if (!handled && (*it)->sensitive())
       handled = (*it)->process_event (*move_event);
   delete move_event;
-  /* cleanup */
-  for (vector<WidgetImpl*>::reverse_iterator it = last_entered_children_.rbegin(); it != last_entered_children_.rend(); it++)
-    (*it)->unref();
+  /* update entered children */
   last_entered_children_ = pierced;
   return handled;
 }
@@ -397,24 +405,21 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
 bool
 WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
 {
-  vector<WidgetImpl*> pierced;
+  vector<WidgetImplP> pierced;
   /* figure all entered children */
   WidgetImpl *grab_widget = get_grab();
   if (grab_widget)
-    pierced.push_back (ref (grab_widget));
+    pierced.push_back (shared_ptr_cast<WidgetImpl> (grab_widget));
   else if (drawable())
     {
-      pierced.push_back (ref (this)); /* window receives all events */
+      pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all events
       screen_window_point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
   bool handled = false;
-  for (vector<WidgetImpl*>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
-    {
-      if (!handled && (*it)->sensitive())
-        handled = (*it)->process_event (event);
-      (*it)->unref();
-    }
+  for (vector<WidgetImplP>::reverse_iterator it = pierced.rbegin(); it != pierced.rend() && !handled; it++)
+    if ((*it)->sensitive())
+      handled = (*it)->process_event (event);
   return handled;
 }
 
@@ -424,13 +429,13 @@ WindowImpl::dispatch_button_press (const EventButton &bevent)
   uint press_count = bevent.type - BUTTON_PRESS + 1;
   assert (press_count >= 1 && press_count <= 3);
   /* figure all entered children */
-  const vector<WidgetImpl*> &pierced = last_entered_children_;
+  const vector<WidgetImplP> &pierced = last_entered_children_;
   /* send actual event */
   bool handled = false;
-  for (vector<WidgetImpl*>::const_reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
+  for (vector<WidgetImplP>::const_reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     if (!handled && (*it)->sensitive())
       {
-        ButtonState bs (*it, bevent.button);
+        ButtonState bs (&**it, bevent.button);
         if (button_state_map_[bs] == 0)                /* no press delivered for <button> on <widget> yet */
           {
             button_state_map_[bs] = press_count;       /* record single press */
@@ -473,14 +478,13 @@ WindowImpl::cancel_widget_events (WidgetImpl *widget)
   /* cancel enter events */
   for (int i = last_entered_children_.size(); i > 0;)
     {
-      WidgetImpl *current = last_entered_children_[--i]; /* walk backwards */
-      if (widget == current || !widget)
+      WidgetImplP current = last_entered_children_[--i]; /* walk backwards */
+      if (widget == &*current || !widget)
         {
+          last_entered_children_.erase (last_entered_children_.begin() + i);
           EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context_);
           current->process_event (*mevent);
           delete mevent;
-          current->unref();
-          last_entered_children_.erase (last_entered_children_.begin() + i);
         }
     }
   /* cancel button press events */
@@ -532,10 +536,9 @@ WindowImpl::dispatch_leave_event (const EventMouse &mevent)
       /* send leave events */
       while (last_entered_children_.size())
         {
-          WidgetImpl *widget = last_entered_children_.back();
+          WidgetImplP widget = last_entered_children_.back();
           last_entered_children_.pop_back();
           widget->process_event (mevent);
-          widget->unref();
         }
     }
   return false;
@@ -570,9 +573,7 @@ WindowImpl::dispatch_focus_event (const EventFocus &fevent)
 bool
 WindowImpl::move_focus_dir (FocusDirType focus_dir)
 {
-  WidgetImpl *new_focus = NULL, *old_focus = get_focus();
-  if (old_focus)
-    ref (old_focus);
+  WidgetImplP new_focus = NULL, old_focus = shared_ptr_cast<WidgetImpl> (get_focus());
 
   switch (focus_dir)
     {
@@ -593,8 +594,6 @@ WindowImpl::move_focus_dir (FocusDirType focus_dir)
       if (old_focus == new_focus)
         return false; // should have moved focus but failed
     }
-  if (old_focus)
-    unref (old_focus);
   if (old_focus && !get_focus() && (focus_dir == FOCUS_NEXT || focus_dir == FOCUS_PREV))
     {
       // wrap around once Tab focus leaves window
@@ -875,7 +874,7 @@ WindowImpl::get_grab (bool *unconfined)
       {
         if (unconfined)
           *unconfined = grab_stack_[i].unconfined;
-        return grab_stack_[i].widget;
+        return &*grab_stack_[i].widget;
       }
   return NULL;
 }
@@ -946,14 +945,13 @@ WindowImpl::event_dispatcher (const EventLoop::State &state)
     return screen_window_ && screen_window_->has_event();
   else if (state.phase == state.DISPATCH)
     {
-      ref (this);
+      const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
       Event *event = screen_window_ ? screen_window_->pop_event() : NULL;
       if (event)
         {
           dispatch_event (*event);
           delete event;
         }
-      unref (this);
       return true;
     }
   else if (state.phase == state.DESTROY)
@@ -970,10 +968,9 @@ WindowImpl::resizing_dispatcher (const EventLoop::State &state)
     return need_resize;
   else if (state.phase == state.DISPATCH)
     {
-      ref (this);
+      const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
       if (need_resize)
         resize_window();
-      unref (this);
       return true;
     }
   return false;
@@ -986,10 +983,9 @@ WindowImpl::drawing_dispatcher (const EventLoop::State &state)
     return exposes_pending();
   else if (state.phase == state.DISPATCH)
     {
-      ref (this);
+      const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
       if (exposes_pending())
         draw_now();
-      unref (this);
       return true;
     }
   return false;
@@ -1082,9 +1078,9 @@ WindowImpl::has_screen_window ()
 void
 WindowImpl::destroy_screen_window ()
 {
+  const WidgetImplP guard_this = shared_ptr_cast_noexcept<WidgetImpl> (this);
   if (!screen_window_)
     return; // during destruction, ref_count == 0
-  ref (this);
   screen_window_->destroy();
   screen_window_ = NULL;
   loop_.flag_primary (false);
@@ -1098,7 +1094,6 @@ WindowImpl::destroy_screen_window ()
       loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
       loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
     }
-  unref (this);
 }
 
 void

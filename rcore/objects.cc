@@ -221,12 +221,6 @@ Deletable::invoke_deletion_hooks()
 }
 
 // == BaseObject ==
-/// Static unref function for the ::shared_ptr() Deleter.
-void
-BaseObject::shared_ptr_deleter (BaseObject *object)
-{
-  object->unref();
-}
 
 // == ReferenceCountable ==
 static __attribute__ ((noinline)) size_t

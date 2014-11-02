@@ -33,11 +33,12 @@ public:
   virtual void  selected               (bool s) override;
   virtual void  reset                  (ResetMode mode = RESET_ALL) override;
 };
+typedef std::shared_ptr<WidgetListRowImpl> WidgetListRowImplP;
 
 /// @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
 struct ListRow {
-  vector<WidgetImpl*> cols; // FIXME
-  WidgetListRowImpl *lrow;
+  vector<WidgetImplP> cols; // FIXME
+  WidgetListRowImplP lrow;
   Allocation     area;
   uint           allocated : 1;
   ListRow() : lrow (NULL), allocated (0) {}
@@ -51,7 +52,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   friend class WidgetListRowImpl;
   typedef map<int64,ListRow*>  RowMap;
   typedef std::deque<int>      SizeQueue;
-  ListModelIface        *model_;
+  ListModelIfaceP        model_;
   size_t                 conid_updated_;
   vector<int>            row_heights_;
   mutable Adjustment    *hadjustment_, *vadjustment_;

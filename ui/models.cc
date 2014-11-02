@@ -5,11 +5,8 @@
 namespace Rapicorn {
 
 ListModelRelayImpl::ListModelRelayImpl () :
-  // model_ (std::make_shared<RelayModel>())
-  model_ (shared_ptr_cast<RelayModel> (new RelayModel()))
-{
-  unref (ref_sink (model_.get())); // eliminate floating flag, shared_ptr holds an extra reference
-}
+  model_ (std::make_shared<RelayModel>())
+{}
 
 ListModelRelayImpl::~ListModelRelayImpl ()
 {
@@ -88,10 +85,7 @@ ListModelRelayImpl::refill (int start, int length)
 ListModelRelayImplP
 ListModelRelayImpl::create_list_model_relay ()
 {
-  // auto sptr = FriendAllocator<ListModelRelayImpl>::make_shared ();
-  auto sptr = shared_ptr_cast<ListModelRelayImpl> (new ListModelRelayImpl());
-  unref (ref_sink (sptr.get())); // eliminate floating flag, shared_ptr holds an extra reference
-  return sptr;
+  return FriendAllocator<ListModelRelayImpl>::make_shared ();
 }
 
 ListModelRelayIfaceP

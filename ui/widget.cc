@@ -562,14 +562,9 @@ void
 WidgetImpl::visual_update ()
 {}
 
-void
-WidgetImpl::finalize()
-{
-  sig_finalize.emit();
-}
-
 WidgetImpl::~WidgetImpl()
 {
+  dtor_finalizing();
   WidgetGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);
@@ -735,9 +730,9 @@ WidgetImpl::data_context (ObjectIface &dcontext)
   ObjectIfaceP oip = get_data (&data_context_key);
   if (oip.get() != &dcontext)
     {
-      oip = shared_ptr (&dcontext);
+      oip = shared_ptr_cast<ObjectIface> (&dcontext);
       if (oip)
-        set_data (&data_context_key, shared_ptr (&dcontext));
+        set_data (&data_context_key, oip);
       else
         delete_data (&data_context_key);
       if (anchored())
@@ -1066,27 +1061,32 @@ WidgetImpl::point (Point p) /* widget coordinates relative */
           p.y >= a.y && p.y < a.y + a.height);
 }
 
+ContainerImplP
+WidgetImpl::parentp () const
+{
+  return shared_ptr_cast<ContainerImpl> (parent());
+}
+
 void
 WidgetImpl::set_parent (ContainerImpl *pcontainer)
 {
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     controller->reset();
-  ContainerImpl *pc = parent();
-  if (pc)
+  ContainerImpl* old_parent = parent();
+  const ContainerImplP guard_parent = shared_ptr_cast_noexcept<ContainerImpl> (old_parent);
+  if (old_parent)
     {
-      ref (pc);
       WindowImpl *rtoplevel = get_window();
       invalidate();
       if (heritage())
         heritage (NULL);
-      pc->unparent_child (*this);
+      old_parent->unparent_child (*this);
       parent_ = NULL;
       ainfo_ = NULL;
       propagate_state (false); // propagate PARENT_VISIBLE, PARENT_SENSITIVE
       if (anchored() and rtoplevel)
         sig_hierarchy_changed.emit (rtoplevel);
-      unref (pc);
     }
   if (pcontainer)
     {
@@ -1304,6 +1304,13 @@ WidgetImpl::find_widget_group (const String &group_name, WidgetGroupType group, 
   ContainerImpl *r = root();
   assert (r); // we asserted anchored() earlier
   return r->retrieve_widget_group (group_name, group, true);
+}
+
+void
+WidgetImpl::changed (const String &name)
+{
+  if (!finalizing())
+    ObjectImpl::changed (name);
 }
 
 void

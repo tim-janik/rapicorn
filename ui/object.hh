@@ -11,6 +11,7 @@ typedef std::shared_ptr<ObjectIface> ObjectIfaceP;
 
 /// ObjectImpl is the base type for all server side objects in Rapicorn and implements the IDL base type ObjectIface.
 class ObjectImpl : public virtual ObjectIface, public virtual DataListContainer {
+  static void shared_ptr_deleter (ObjectImpl *object) { delete object; }
 protected:
   virtual /*dtor*/                 ~ObjectImpl    () override;
   virtual void                      dispose       ();
@@ -20,10 +21,14 @@ protected:
 public:
   explicit                          ObjectImpl    ();
   Signal<void (const String &name)> sig_changed;
-  void                              changed       (const String &name);
+  virtual void                      changed       (const String &name);
+  ObjectIfaceP            temp_factory_workaround ()    { return std::shared_ptr<ObjectImpl> (this, shared_ptr_deleter); }
 };
 inline bool operator== (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 == &object2; }
 inline bool operator!= (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 != &object2; }
+
+/// Internal helper to deal with bad_weak_ptr exceptions.
+Aida::ImplicitBaseP exception_safe_shared_from_this (Aida::ImplicitBase *iface, int mode);
 
 /** Shorthand for std::dynamic_pointer_cast<>().
  * Convert @a sptr into a std::shared_ptr<>() of template argument type @a Target.
@@ -44,9 +49,18 @@ shared_ptr_cast (Aida::ImplicitBaseP sptr)
  * If iface is NULL or the cast was unsuccessfull, the returned pointer is empty.
  */
 template<class Target> std::shared_ptr<Target>
-shared_ptr_cast (ObjectIface *iface) // FIXME: Aida::ImplicitBase
+shared_ptr_cast (Aida::ImplicitBase *iface)
 {
-  return shared_ptr_cast<Target> (iface ? iface->shared_from_this() : NULL);
+  return shared_ptr_cast<Target> (iface ? exception_safe_shared_from_this (iface, 0) : NULL);
+}
+
+/** No-exception variant of shared_ptr_cast<>().
+ * Returns NULL if shared_ptr_cast<>() throws std::bad_weak_ptr.
+ */
+template<class Target> std::shared_ptr<Target>
+shared_ptr_cast_noexcept (Aida::ImplicitBase *iface)
+{
+  return shared_ptr_cast<Target> (iface ? exception_safe_shared_from_this (iface, 1) : NULL);
 }
 
 // Implementation details

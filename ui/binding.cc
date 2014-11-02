@@ -83,10 +83,7 @@ BindableRelayIfaceP
 ApplicationImpl::create_bindable_relay ()
 {
   struct BindableRelayImpl : public Rapicorn::BindableRelayImpl {};
-  // return std::make_shared<BindableRelayImpl>();
-  auto sptr = shared_ptr_cast<BindableRelayIface> (new BindableRelayImpl());
-  unref (ref_sink (sptr.get())); // eliminate floating flag, shared_ptr holds an extra reference
-  return sptr;
+  return std::make_shared<BindableRelayImpl>();
 }
 
 // == Binding ==

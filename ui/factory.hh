@@ -18,9 +18,9 @@ String      parse_ui_data       (const String           &uinamespace,
                                  const char             *data,
                                  const String           &i18n_domain = "",
                                  vector<String>         *definitions = NULL);
-WidgetImpl& create_ui_widget    (const String           &widget_identifier,
+WidgetImplP create_ui_widget    (const String           &widget_identifier,
                                  const ArgumentList     &arguments = ArgumentList());
-WidgetImpl& create_ui_child     (ContainerImpl &container, const String &widget_identifier,
+WidgetImplP create_ui_child     (ContainerImpl &container, const String &widget_identifier,
                                  const ArgumentList &arguments, bool autoadd = true);
 
 void        create_ui_children  (ContainerImpl          &container,
@@ -49,7 +49,7 @@ protected:
   static void   sanity_check_identifier (const char                 *namespaced_ident);
 public:
   explicit              WidgetTypeFactory (const char               *namespaced_ident);
-  virtual WidgetImpl*   create_widget     (FactoryContext           *fc) const = 0;
+  virtual WidgetImplP   create_widget     (FactoryContext           *fc) const = 0;
   virtual void          type_name_list    (std::vector<const char*> &names) const = 0;
   inline String         type_name         () const                          { return qualified_type; }
 };
@@ -59,12 +59,15 @@ public:
 // namespace Rapicorn
 
 /* --- widget factory template --- */
+void temp_window_factory_workaround (ObjectIfaceP o);
 template<class Type>
 class WidgetFactory : Factory::WidgetTypeFactory {
-  virtual WidgetImpl*
+  virtual WidgetImplP
   create_widget (FactoryContext *fc) const override
   {
-    WidgetImpl *widget = new Type();
+    ObjectIfaceP object = (new Type())->temp_factory_workaround();
+    temp_window_factory_workaround (object);
+    WidgetImplP widget = shared_ptr_cast<WidgetImpl> (object);
     widget->factory_context (fc);
     return widget;
   }
