@@ -8,6 +8,12 @@
 
 namespace Rapicorn {
 
+// == Misc Helpers ==
+typedef Aida::PropertyList PropertyList; /// Import PropertyList from Aida namespace
+typedef Aida::Property     Property;     /// Import Property from Aida namespace
+
+class NullInterface : std::exception {};
+
 String          cxx_demangle       (const char *mangled_identifier);
 
 // == ClassDoctor (used for private class copies) ==
@@ -75,16 +81,6 @@ template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return ob
 template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
 template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
 template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-
-// == BaseObject ==
-/// Legacy type, will be merged/dissolved into ObjectImpl and ImplicitBase.
-class BaseObject : public virtual Aida::ImplicitBase {
-public:
-  // keep clear, add new API to ObjectImpl or ObjectIface
-};
-typedef Aida::PropertyList PropertyList; // import PropertyList from Aida namespace
-typedef Aida::Property     Property;     // import Property from Aida namespace
-class NullInterface : std::exception {};
 
 // == Implementation Details ==
 inline void

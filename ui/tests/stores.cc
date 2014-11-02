@@ -23,11 +23,9 @@ test_any_seq ()
   const Any *a; aseq[5] >>= a;          assert (*a == Any());
   aseq.clear();                         assert (aseq.size() == 0);
 #if 0 // FIXME: unimplemented
-  struct TestObject : public virtual BaseObject {};
+  struct TestObject {};
   TestObject *to = new TestObject();
-  ref_sink (to);
   a1.push_head (*to);
-  unref (to);
 #endif
 }
 REGISTER_UITHREAD_TEST ("Stores/AnySeq basics", test_any_seq);

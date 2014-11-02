@@ -64,7 +64,7 @@ public:
                                          double  page_size = 0);
 };
 
-class AdjustmentSource : public virtual BaseObject {
+class AdjustmentSource {
 public:
   virtual Adjustment*   get_adjustment  (AdjustmentSourceType   adj_source,
                                          const String          &name = "") = 0;

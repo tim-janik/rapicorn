@@ -276,8 +276,6 @@ test_files (void)
 }
 REGISTER_TEST ("General/FileChecks", test_files);
 
-struct SomeObject : public BaseObject {};
-
 static void
 test_id_allocator ()
 {
