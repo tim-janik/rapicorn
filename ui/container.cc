@@ -556,18 +556,18 @@ ContainerImpl::move_focus (FocusDirType fdir)
       break;
     }
   // skip children beyond last focus descendant
-  Walker<WidgetImpl*> cw = walker (children);
+  auto citer = children.begin();
   if (last_child && (fdir == FOCUS_NEXT || fdir == FOCUS_PREV))
-    while (cw.has_next())
-      if (last_child == *cw++)
+    while (citer < children.end())
+      if (last_child == *citer++)
         break;
   // let remaining descendants handle movement
-  while (cw.has_next())
+  while (citer < children.end())
     {
-      WidgetImpl *child = *cw;
+      WidgetImpl *child = *citer;
       if (child->move_focus (fdir))
         return true;
-      cw++;
+      citer++;
     }
   return false;
 }
