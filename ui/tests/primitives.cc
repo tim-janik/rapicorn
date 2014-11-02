@@ -193,4 +193,17 @@ test_hsv_rgb()
 REGISTER_UITHREAD_TEST ("Primitives/Test Hsv <=> Rgb Conversion", test_hsv_rgb);
 REGISTER_UITHREAD_SLOWTEST ("Primitives/Test Hsv <=> Rgb Conversion", test_hsv_rgb);
 
+static void
+test_typeid_name()
+{
+  struct TypeA : public virtual ObjectImpl {};
+  struct TypeB : public virtual ObjectImpl {};
+  TypeA a;
+  TypeB b;
+  TCMP (a.typeid_name(), !=, b.typeid_name());
+  TCMPS (strstr (a.typeid_name().c_str(), "TypeA"), !=, NULL);
+  TCMPS (strstr (b.typeid_name().c_str(), "TypeB"), !=, NULL);
+}
+REGISTER_TEST ("General/typeid_name()", test_typeid_name);
+
 } // anon

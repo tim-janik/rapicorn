@@ -24,4 +24,10 @@ void
 ObjectImpl::do_changed (const String &name)
 {}
 
+String
+ObjectImpl::typeid_name ()
+{
+  return cxx_demangle (typeid (*this).name());
+}
+
 } // Rapicorn

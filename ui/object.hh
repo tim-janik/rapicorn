@@ -22,6 +22,7 @@ public:
   explicit                          ObjectImpl    ();
   Signal<void (const String &name)> sig_changed;
   virtual void                      changed       (const String &name);
+  String                            typeid_name   ();
   ObjectIfaceP            temp_factory_workaround ()    { return std::shared_ptr<ObjectImpl> (this, shared_ptr_deleter); }
 };
 inline bool operator== (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 == &object2; }
