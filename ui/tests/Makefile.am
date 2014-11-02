@@ -24,7 +24,7 @@ export VPATH   # needed by test programs to find builddir relative input files
 # == Test Programs ==
 LOGTEST_PROGS       += servertests
 TEST_PROGS          += servertests
-servertests_SOURCES  = servertests.cc walker.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc \
+servertests_SOURCES  = servertests.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc \
 		       widgets.cc primitives.cc testwidgets.cc sinfextest.cc stores.cc testselector.cc
 servertests_LDADD    = $(LDADDS) $(READLINELIBS)
 XML_FILES    	    += factory.xml testwidgets.xml

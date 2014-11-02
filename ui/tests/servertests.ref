@@ -3,6 +3,3 @@
 ### ** +  lt-servertests  + ** ###
 ### ** +------------------+ ** ###
 
-# Test:  General/Walker Iterator Types ...
-test_walker: 321 321 321 321 321 321 321 321 321 321 321 321 321 321 
-  TEST   General/Walker Iterator Types:                                  OK
