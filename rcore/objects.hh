@@ -17,44 +17,6 @@ class ClassDoctor;
 class ClassDoctor {};
 #endif
 
-// == Deletable ==
-/**
- * Deletable is a virtual base class that can be derived from (usually with
- * public virtual) to ensure an object has a vtable and a virtual destructor.
- * Also, it allows deletion hooks to be called during the objects destructor,
- * by deriving from Rapicorn::Deletable::DeletionHook. No extra per-object space is
- * consumed to allow deletion hooks, which makes Deletable a suitable base
- * type for classes that may or may not need this feature (e.g. objects that
- * can but often aren't used for signal handler connections).
- */
-struct Deletable {
-  /**
-   * DeletionHook is the base implementation class for hooks which are hooked
-   * up into the deletion phase of a Rapicorn::Deletable.
-   */
-  class DeletionHook {
-    DeletionHook    *prev;
-    DeletionHook    *next;
-    friend class Deletable;
-  protected:
-    virtual     ~DeletionHook          (); /* { if (deletable) deletable_remove_hook (deletable); deletable = NULL; } */
-    virtual void monitoring_deletable  (Deletable &deletable) = 0;
-    virtual void dismiss_deletable     () = 0;
-  public:
-    explicit     DeletionHook          () : prev (NULL), next (NULL) {}
-    bool         deletable_add_hook    (void      *any)              { return false; }
-    bool         deletable_add_hook    (Deletable *deletable);
-    bool         deletable_remove_hook (void      *any)              { return false; }
-    bool         deletable_remove_hook (Deletable *deletable);
-  };
-private:
-  void           add_deletion_hook     (DeletionHook *hook);
-  void           remove_deletion_hook  (DeletionHook *hook);
-protected:
-  void           invoke_deletion_hooks ();
-  virtual       ~Deletable             ();
-};
-
 // == DataListContainer ==
 /**
  * By using a DataKey, DataListContainer objects allow storage and retrieval of custom data members in a typesafe fashion.
@@ -77,7 +39,7 @@ public: /// @name Accessing custom data members
 };
 
 // == ReferenceCountable ==
-class ReferenceCountable : public virtual Deletable {
+class ReferenceCountable {
   volatile mutable uint32 ref_field;
   static const uint32     FLOATING_FLAG = 1 << 31;
   inline uint32 ref_get    () const                             { return Lib::atomic_load (&ref_field); }
@@ -116,7 +78,7 @@ template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
 
 // == BaseObject ==
 /// Legacy type, will be merged/dissolved into ObjectImpl and ImplicitBase.
-class BaseObject : public virtual Deletable, public virtual Aida::ImplicitBase {
+class BaseObject : public virtual Aida::ImplicitBase {
 public:
   // keep clear, add new API to ObjectImpl or ObjectIface
 };
