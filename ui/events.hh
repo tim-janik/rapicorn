@@ -84,7 +84,7 @@ typedef enum {
 const char* string_from_event_type (EventType etype);
 
 struct EventContext;
-class Event : public Deletable {
+class Event {
   RAPICORN_CLASS_NON_COPYABLE (Event);
 protected:
   explicit        Event (EventType, const EventContext&);

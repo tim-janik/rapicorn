@@ -205,6 +205,9 @@ WidgetTypeFactory::WidgetTypeFactory (const char *namespaced_ident) :
   qualified_type (namespaced_ident)
 {}
 
+WidgetTypeFactory::~WidgetTypeFactory ()
+{}
+
 void
 WidgetTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 {

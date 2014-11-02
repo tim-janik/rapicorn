@@ -41,12 +41,13 @@ UserSource       factory_context_source    (FactoryContext *fc);
 String           factory_context_impl_type (FactoryContext *fc);
 
 /* --- widget type registration --- */
-struct WidgetTypeFactory : protected Deletable {
+struct WidgetTypeFactory {
   const String  qualified_type;
   RAPICORN_CLASS_NON_COPYABLE (WidgetTypeFactory);
 protected:
   static void   register_widget_factory (const WidgetTypeFactory    &itfactory);
   static void   sanity_check_identifier (const char                 *namespaced_ident);
+  virtual              ~WidgetTypeFactory ();
 public:
   explicit              WidgetTypeFactory (const char               *namespaced_ident);
   virtual WidgetImplP   create_widget     (FactoryContext           *fc) const = 0;
