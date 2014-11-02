@@ -6,47 +6,31 @@
 
 namespace Rapicorn {
 
-struct Command : ReferenceCountable {
+struct Command {
   const String ident;
   const String blurb;
   bool         needs_arg;
-  Command (const char *cident, const char *cblurb, bool has_arg);
-  virtual bool   exec (Deletable *obj, const StringSeq &args) = 0;
-protected:
-  virtual ~Command();
+  explicit     Command (const char *cident, const char *cblurb, bool has_arg);
+  virtual     ~Command();
+  virtual bool exec (Deletable *obj, const StringSeq &args) = 0;
 };
+typedef std::shared_ptr<Command> CommandP;
 
-struct CommandList {
-  uint      n_commands;
-  Command **commands;
-  CommandList () : n_commands (0), commands (NULL) {}
+struct CommandList : vector<CommandP> {
+  CommandList () {}
   template<typename Array>
-  CommandList (Array             &a,
-               const CommandList &chain = CommandList()) :
-    n_commands (0),
-    commands (NULL)
+  CommandList (Array &a, const CommandList &chain = CommandList())
   {
-    uint array_length = sizeof (a) / sizeof (a[0]);
-    n_commands = array_length + chain.n_commands;
-    commands = new Command*[n_commands];
-    uint i;
-    for (i = 0; i < array_length; i++)
-      commands[i] = ref_sink (a[i]);
-    for (; i < n_commands; i++)
-      commands[i] = ref (chain.commands[i - array_length]);
-  }
-  ~CommandList()
-  {
-    for (uint i = 0; i < n_commands; i++)
-      unref (commands[i]);
-    delete[] commands;
+    const size_t array_length = sizeof (a) / sizeof (a[0]);
+    for (size_t i = 0; i < array_length; i++)
+      push_back (a[i]);
+    for (auto cmd : chain)
+      push_back (cmd);
   }
 };
 
 #define RAPICORN_MakeNamedCommand(Type, cident, blurb, method, data)   \
   create_command (&Type::method, cident, blurb, data)
-#define RAPICORN_MakeSimpleCommand(Type, method, blurb)                 \
-  create_command (&Type::method, #method, blurb)
 
 /* --- command implementations --- */
 /* command with data and arg string */
@@ -59,10 +43,10 @@ struct CommandDataArg : Command {
                   const char *cident, const char *cblurb, const Data &method_data);
   virtual bool exec (Deletable *obj, const StringSeq &args);
 };
-template<class Class, class Data> inline Command*
+template<class Class, class Data> inline CommandP
 create_command (bool (Class::*method) (Data, const String&),
                 const char *ident, const char *blurb, const Data &method_data)
-{ return new CommandDataArg<Class,Data> (method, ident, blurb, method_data); }
+{ return std::make_shared<CommandDataArg<Class,Data>> (method, ident, blurb, method_data); }
 
 /* command with data */
 template<class Class, class Data>
@@ -74,10 +58,10 @@ struct CommandData : Command {
                const char *cident, const char *cblurb, const Data &method_data);
   virtual bool exec (Deletable *obj, const StringSeq&);
 };
-template<class Class, class Data> inline Command*
+template<class Class, class Data> inline CommandP
 create_command (bool (Class::*method) (Data),
                 const char *ident, const char *blurb, const Data &method_data)
-{ return new CommandData<Class,Data> (method, ident, blurb, method_data); }
+{ return std::make_shared<CommandData<Class,Data>> (method, ident, blurb, method_data); }
 
 /* command with arg string */
 template<class Class>
@@ -88,24 +72,10 @@ struct CommandArg: Command {
               const char *cident, const char *cblurb);
   virtual bool exec (Deletable *obj, const StringSeq &args);
 };
-template<class Class> inline Command*
+template<class Class> inline CommandP
 create_command (bool (Class::*method) (const String&),
                 const char *ident, const char *blurb)
-{ return new CommandArg<Class> (method, ident, blurb); }
-
-/* simple command */
-template<class Class>
-struct CommandSimple : Command {
-  typedef bool (Class::*CommandMethod) ();
-  bool (Class::*command_method) ();
-  CommandSimple (bool (Class::*method) (),
-                 const char *cident, const char *cblurb);
-  virtual bool exec (Deletable *obj, const StringSeq&);
-};
-template<class Class> inline Command*
-create_command (bool (Class::*method) (),
-                const char *ident, const char *blurb)
-{ return new CommandSimple<Class> (method, ident, blurb); }
+{ return std::make_shared<CommandArg<Class>> (method, ident, blurb); }
 
 /* --- implementations --- */
 /* command with data and arg string */
@@ -156,22 +126,6 @@ CommandData<Class,Data>::exec (Deletable *obj, const StringSeq&)
   if (!instance)
     fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_name().c_str());
   return (instance->*command_method) (data);
-}
-
-/* simple command */
-template<class Class>
-CommandSimple<Class>::CommandSimple (bool (Class::*method) (),
-                                     const char *cident, const char *cblurb) :
-  Command (cident, cblurb, false),
-  command_method (method)
-{}
-template<class Class> bool
-CommandSimple<Class>::exec (Deletable *obj, const StringSeq&)
-{
-  Class *instance = dynamic_cast<Class*> (obj);
-  if (!instance)
-    fatal ("Rapicorn::Command: invalid command object: %s", obj->typeid_name().c_str());
-  return (instance->*command_method) ();
 }
 
 } // Rapicorn

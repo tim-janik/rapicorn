@@ -269,7 +269,7 @@ ScrollPortImpl::scroll (EventType scroll_dir)
 const CommandList&
 ScrollPortImpl::list_commands ()
 {
-  static Command *commands[] = {
+  static CommandP commands[] = {
     MakeNamedCommand (ScrollPortImpl, "scroll-up",    _("Scroll upwards"),    scroll, SCROLL_UP),
     MakeNamedCommand (ScrollPortImpl, "scroll-left",  _("Scroll leftwards"),  scroll, SCROLL_LEFT),
     MakeNamedCommand (ScrollPortImpl, "scroll-down",  _("Scroll downwards"),  scroll, SCROLL_DOWN),

@@ -124,8 +124,7 @@ protected:
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
   virtual bool                activate_widget   ();
-  virtual bool                custom_command    (const String       &command_name,
-                                                 const StringSeq    &command_args);
+  virtual bool                custom_command    (const String &command_name, const StringSeq &command_args);
   virtual void                set_user_data     (const String &name, const Any &any);
   virtual Any                 get_user_data     (const String &name);
   void                        heritage          (HeritageP heritage);

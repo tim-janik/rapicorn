@@ -13,7 +13,6 @@
 #ifdef __RAPICORN_BUILD__
 // convenience macros
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
-#define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
 #endif
 
 namespace Rapicorn {

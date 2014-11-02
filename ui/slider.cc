@@ -39,7 +39,7 @@ SliderAreaImpl::move (MoveType movement)
 const CommandList&
 SliderAreaImpl::list_commands ()
 {
-  static Command *commands[] = {
+  static CommandP commands[] = {
     MakeNamedCommand (SliderAreaImpl, "increment", _("Increment slider"), move, MOVE_STEP_FORWARD),
     MakeNamedCommand (SliderAreaImpl, "decrement", _("Decrement slider"), move, MOVE_STEP_BACKWARD),
     MakeNamedCommand (SliderAreaImpl, "page-increment", _("Large slider increment"), move, MOVE_PAGE_FORWARD),

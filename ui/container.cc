@@ -263,15 +263,6 @@ ContainerImpl::retrieve_widget_group (const String &group_name, WidgetGroupType 
   return NULL;
 }
 
-const CommandList&
-ContainerImpl::list_commands()
-{
-  static Command *commands[] = {
-  };
-  static const CommandList command_list (commands, WidgetImpl::list_commands());
-  return command_list;
-}
-
 static DataKey<ContainerImpl*> child_container_key;
 
 void

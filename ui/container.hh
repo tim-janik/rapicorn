@@ -53,8 +53,6 @@ public:
   void                  add             (WidgetImpl                   &widget);
   void                  add             (WidgetImpl                   *widget);
   virtual Affine        child_affine    (const WidgetImpl             &widget); /* container => widget affine */
-  virtual
-  const CommandList&    list_commands   (); /* essentially chaining to WidgetImpl:: */
   virtual void          point_children  (Point                   p, /* widget coordinates relative */
                                          std::vector<WidgetImplP>     &stack);
   void    screen_window_point_children  (Point                   p, /* screen_window coordinates relative */

@@ -589,8 +589,8 @@ WidgetImpl::lookup_command (const String &command_name)
   if (!cmap)
     {
       cmap = new CommandMap;
-      for (uint i = 0; i < clist.n_commands; i++)
-        (*cmap)[clist.commands[i]->ident] = clist.commands[i];
+      for (auto cmdp : clist)
+        (*cmap)[cmdp->ident] = cmdp.get();
       clist_map[&clist] = cmap;
     }
   CommandMap::iterator it = cmap->find (command_name);
@@ -647,7 +647,7 @@ WidgetImpl::custom_command (const String    &command_name,
 const CommandList&
 WidgetImpl::list_commands ()
 {
-  static Command *commands[] = {
+  static CommandP commands[] = {
   };
   static const CommandList command_list (commands);
   return command_list;
