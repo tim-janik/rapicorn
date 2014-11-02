@@ -202,6 +202,17 @@ print_warning (const String &msg)
 }
 
 // == ImplicitBase ==
+/// Noexcept version of shared_from_this() that returns NULL.
+ImplicitBaseP
+ImplicitBase::shared_from_this (std::nullptr_t)
+{
+  try {
+    return shared_from_this();
+  } catch (const std::bad_weak_ptr&) {
+    return NULL;
+  }
+}
+
 ImplicitBase::~ImplicitBase()
 {
   // this destructor implementation forces vtable emission

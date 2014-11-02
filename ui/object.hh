@@ -27,9 +27,6 @@ public:
 inline bool operator== (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 == &object2; }
 inline bool operator!= (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 != &object2; }
 
-/// Internal helper to deal with bad_weak_ptr exceptions.
-Aida::ImplicitBaseP exception_safe_shared_from_this (Aida::ImplicitBase *iface, int mode);
-
 /** Shorthand for std::dynamic_pointer_cast<>().
  * Convert @a sptr into a std::shared_ptr<>() of template argument type @a Target.
  * If sptr is NULL or the cast was unsuccessfull, the returned pointer is empty.
@@ -51,7 +48,7 @@ shared_ptr_cast (Aida::ImplicitBaseP sptr)
 template<class Target> std::shared_ptr<Target>
 shared_ptr_cast (Aida::ImplicitBase *iface)
 {
-  return shared_ptr_cast<Target> (iface ? exception_safe_shared_from_this (iface, 0) : NULL);
+  return shared_ptr_cast<Target> (iface ? iface->shared_from_this() : NULL);
 }
 
 /** No-exception variant of shared_ptr_cast<>().
@@ -60,7 +57,7 @@ shared_ptr_cast (Aida::ImplicitBase *iface)
 template<class Target> std::shared_ptr<Target>
 shared_ptr_cast_noexcept (Aida::ImplicitBase *iface)
 {
-  return shared_ptr_cast<Target> (iface ? exception_safe_shared_from_this (iface, 1) : NULL);
+  return shared_ptr_cast<Target> (iface ? iface->shared_from_this (NULL) : NULL);
 }
 
 // Implementation details

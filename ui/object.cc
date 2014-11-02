@@ -24,17 +24,4 @@ void
 ObjectImpl::do_changed (const String &name)
 {}
 
-Aida::ImplicitBaseP
-exception_safe_shared_from_this (Aida::ImplicitBase *iface, int mode)
-{
-  if (mode == 0)
-    return iface->shared_from_this();
-  // mode == 1
-  try {
-    return iface->shared_from_this();
-  } catch(const std::bad_weak_ptr& e) {
-    return NULL;
-  }
-}
-
 } // Rapicorn

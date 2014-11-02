@@ -114,6 +114,10 @@ protected:
   std::string                 __aida_getter__     (const std::string &property_name);
 public:
   virtual std::string        __aida_type_name__   () const = 0; ///< Retrieve the IDL type name of an instance.
+  std::shared_ptr
+  <const ImplicitBase>       shared_from_this     () const { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
+  ImplicitBaseP              shared_from_this     ()       { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
+  ImplicitBaseP              shared_from_this     (std::nullptr_t);
 };
 
 // == Any Type ==
