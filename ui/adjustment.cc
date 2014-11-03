@@ -216,15 +216,10 @@ public:
   }
 };
 
-Adjustment*
-Adjustment::create (double  value,
-                    double  lower,
-                    double  upper,
-                    double  step_increment,
-                    double  page_increment,
-                    double  page_size)
+AdjustmentP
+Adjustment::create (double value, double lower, double upper, double step_increment, double page_increment, double page_size)
 {
-  AdjustmentSimpleImpl *adj = new AdjustmentSimpleImpl();
+  auto adj = std::make_shared<AdjustmentSimpleImpl>();
   adj->freeze();
   adj->lower (lower);
   adj->upper (upper);

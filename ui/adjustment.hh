@@ -14,7 +14,11 @@ enum MoveType {
   MOVE_PAGE_BACKWARD,
 };
 
-class Adjustment : public virtual ReferenceCountable {
+class Adjustment;
+typedef std::shared_ptr<Adjustment> AdjustmentP;
+typedef std::weak_ptr  <Adjustment> AdjustmentW;
+
+class Adjustment : public virtual std::enable_shared_from_this<Adjustment> {
   typedef Aida::Signal<void ()> SignalValueChanged;
   typedef Aida::Signal<void ()> SignalRangeChanged;
 protected:
@@ -56,7 +60,7 @@ public:
   bool                  move_flipped    (MoveType move);
   String                string          ();
   /* factory */
-  static Adjustment*    create          (double  value = 0,
+  static AdjustmentP    create          (double  value = 0,
                                          double  lower = 0,
                                          double  upper = 100,
                                          double  step_increment = 1,

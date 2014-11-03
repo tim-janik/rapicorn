@@ -55,7 +55,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   ListModelIfaceP        model_;
   size_t                 conid_updated_;
   vector<int>            row_heights_;
-  mutable Adjustment    *hadjustment_, *vadjustment_;
+  mutable AdjustmentP    hadjustment_, vadjustment_;
   RowMap                 row_map_, off_map_;
   vector<bool>           selection_;
   vector<WidgetGroup*>   size_groups_;
