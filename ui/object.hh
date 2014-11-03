@@ -32,8 +32,16 @@ inline bool operator!= (const ObjectImpl &object1, const ObjectImpl &object2) { 
  * Convert @a sptr into a std::shared_ptr<>() of template argument type @a Target.
  * If sptr is NULL or the cast was unsuccessfull, the returned pointer is empty.
  */
-template<class Target> std::shared_ptr<Target>
-shared_ptr_cast (Aida::ImplicitBaseP sptr)
+template<class Target, class Source> std::shared_ptr<Target>
+shared_ptr_cast (std::shared_ptr<Source> &sptr)
+{
+  if (sptr)
+    return std::dynamic_pointer_cast<Target> (sptr);
+  else
+    return NULL;
+}
+template<class Target, class Source> const std::shared_ptr<Target>
+shared_ptr_cast (const std::shared_ptr<Source> &sptr)
 {
   if (sptr)
     return std::dynamic_pointer_cast<Target> (sptr);
@@ -46,10 +54,13 @@ shared_ptr_cast (Aida::ImplicitBaseP sptr)
  * with std::dynamic_pointer_cast<>() into the template argument type @a Target.
  * If iface is NULL or the cast was unsuccessfull, the returned pointer is empty.
  */
-template<class Target> std::shared_ptr<Target>
-shared_ptr_cast (Aida::ImplicitBase *iface)
+template<class Target, class Source> std::shared_ptr<Target>
+shared_ptr_cast (Source *instance)
 {
-  return shared_ptr_cast<Target> (iface ? iface->shared_from_this() : NULL);
+  if (instance)
+    return std::dynamic_pointer_cast<Target> (instance->shared_from_this());
+  else
+    return NULL;
 }
 
 /** No-exception variant of shared_ptr_cast<>().
