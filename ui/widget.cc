@@ -1463,7 +1463,7 @@ void
 WidgetImpl::leave_anchored ()
 {
   const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
-  for (auto *wgroup : widget_groups)
+  for (auto wgroup : widget_groups)
     wgroup->remove_widget (*this);
   data_context_changed();
 }

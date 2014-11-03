@@ -6,7 +6,12 @@
 
 namespace Rapicorn {
 
-class WidgetGroup : public virtual ReferenceCountable {
+class WidgetGroup;
+typedef std::shared_ptr<WidgetGroup> WidgetGroupP;
+typedef std::weak_ptr  <WidgetGroup> WidgetGroupW;
+
+class WidgetGroup : public virtual std::enable_shared_from_this<WidgetGroup> {
+  friend class        FriendAllocator<WidgetGroup>;
   const String        name_;
   const WidgetGroupType type_;
 protected:
@@ -16,7 +21,7 @@ protected:
   virtual void        widget_transit     (WidgetImpl &widget) {}
   virtual void        widget_invalidated (WidgetImpl &widget) {}
 public:
-  typedef vector<WidgetGroup*> GroupVector;
+  typedef vector<WidgetGroupP> GroupVector;
   String              name              () const { return name_; }                  ///< Get WidgetGroup name
   WidgetGroupType     type              () const { return type_; }                  ///< Get WidgetGroup  type
   void                add_widget        (WidgetImpl &widget);                       ///< Add a widget to group
@@ -24,13 +29,17 @@ public:
   static void         delete_widget     (WidgetImpl &widget);
   static void         invalidate_widget (WidgetImpl &widget);
   static GroupVector  list_groups       (WidgetImpl &widget);                       ///< List all groups a widget has been added to
-  static WidgetGroup* create            (const String &name, WidgetGroupType type); ///< Create WidgetGroup from @a name and @a type
+  static WidgetGroupP create            (const String &name, WidgetGroupType type); ///< Create WidgetGroup from @a name and @a type
 };
 
 /* --- SizeGroup --- */
+class SizeGroup;
+typedef std::shared_ptr<SizeGroup> SizeGroupP;
+typedef std::weak_ptr  <SizeGroup> SizeGroupW;
+
 class SizeGroup : public virtual WidgetGroup {
   friend              class WidgetImpl;
-  friend              class WidgetGroup;
+  friend class        FriendAllocator<SizeGroup>;
   Requisition         req_;
   uint                active_ : 1;
   uint                all_dirty_ : 1;        // need resize

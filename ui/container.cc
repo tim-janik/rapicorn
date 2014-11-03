@@ -223,15 +223,14 @@ container_uncross_link_R (ContainerImpl *container, CrossLink **clinkp, bool not
 ContainerImpl::~ContainerImpl ()
 {}
 
-typedef vector<WidgetGroup*> WidgetGroups;
+typedef vector<WidgetGroupP> WidgetGroups;
 class WidgetGroupsKey : public DataKey<WidgetGroups*> {
   virtual void destroy (WidgetGroups *widget_groups) override
   {
     while (!widget_groups->empty())
       {
-        WidgetGroup *widget_group = widget_groups->back();
+        WidgetGroupP widget_group = widget_groups->back();
         widget_groups->pop_back();
-        widget_group->unref();
       }
     delete widget_groups;
   }
@@ -252,13 +251,12 @@ ContainerImpl::retrieve_widget_group (const String &group_name, WidgetGroupType 
   else
     for (auto it : *widget_groups)
       if (it->name() == group_name && it->type() == group_type)
-        return it;
+        return &*it;
   if (force_create)
     {
-      WidgetGroup *widget_group = WidgetGroup::create (group_name, group_type);
-      widget_group->ref_sink();
+      WidgetGroupP widget_group = WidgetGroup::create (group_name, group_type);
       widget_groups->push_back (widget_group);
-      return widget_group;
+      return &*widget_group;
     }
   return NULL;
 }

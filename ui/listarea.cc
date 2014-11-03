@@ -1,6 +1,5 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "listarea.hh"
-#include "sizegroup.hh"
 #include "factory.hh"
 #include "application.hh"
 
@@ -148,9 +147,8 @@ WidgetListImpl::~WidgetListImpl()
   // release size groups
   while (size_groups_.size())
     {
-      WidgetGroup *sg = size_groups_.back();
+      WidgetGroupP sg = size_groups_.back();
       size_groups_.pop_back();
-      unref (sg);
     }
 }
 
@@ -805,7 +803,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   lr->cols.push_back (widget);
 
   while (size_groups_.size() < lr->cols.size())
-    size_groups_.push_back (ref_sink (WidgetGroup::create (" internal WidgetListImpl SizeGroup HSIZE", WIDGET_GROUP_HSIZE)));
+    size_groups_.push_back (WidgetGroup::create (" internal WidgetListImpl SizeGroup HSIZE", WIDGET_GROUP_HSIZE));
   if (with_size_groups)
     for (uint i = 0; i < lr->cols.size(); i++)
       size_groups_[i]->add_widget (*lr->cols[i]);

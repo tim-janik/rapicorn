@@ -4,6 +4,7 @@
 
 #include <ui/adjustment.hh>
 #include <ui/container.hh>
+#include <ui/sizegroup.hh>
 #include <ui/layoutcontainers.hh>
 #include <ui/paintcontainers.hh>
 #include <deque>
@@ -58,7 +59,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   mutable AdjustmentP    hadjustment_, vadjustment_;
   RowMap                 row_map_, off_map_;
   vector<bool>           selection_;
-  vector<WidgetGroup*>   size_groups_;
+  vector<WidgetGroupP>   size_groups_;
   SelectionMode          selection_mode_;
   bool                   virtualized_pixel_scrolling_;
   bool                   need_scroll_layout_;
