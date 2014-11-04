@@ -1074,7 +1074,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
   if (controller)
     controller->reset();
   ContainerImpl* old_parent = parent();
-  const ContainerImplP guard_parent = shared_ptr_cast_noexcept<ContainerImpl> (old_parent);
+  const ContainerImplP guard_parent = shared_ptr_cast<ContainerImpl*> (old_parent);
   if (old_parent)
     {
       WindowImpl *rtoplevel = get_window();

@@ -17,6 +17,95 @@ template<> struct Atomic<__int128> : Lib::Atomic<__int128> {
 namespace {
 using namespace Rapicorn;
 
+// == shared_ptr ==
+static void
+test_shared_ptr_cast ()
+{
+  struct A : std::enable_shared_from_this<A> {
+    virtual ~A() {}
+  };
+  // yield NULL from NULL pointers
+  std::shared_ptr<A> null1 = shared_ptr_cast<A> ((A*) NULL);
+  TASSERT (null1.get() == NULL);
+  const std::shared_ptr<A> null2 = shared_ptr_cast<A> ((const A*) NULL);
+  TASSERT (null2.get() == NULL);
+  // yield NULL from bad_weak_ptr
+  const A &ca = A(); // bad_weak_ptr
+  const std::shared_ptr<A> null3 = shared_ptr_cast<A*> (&ca);
+  TASSERT (null3.get() == NULL);
+  A &a = const_cast<A&> (ca);
+  std::shared_ptr<A> null4 = shared_ptr_cast<A*> (&a);
+  TASSERT (null4.get() == NULL);
+  // NULL -> NULL for shared_ptr<T>
+  std::shared_ptr<A> ap;
+  std::shared_ptr<A> null5 = shared_ptr_cast<A> (ap);
+  TASSERT (null5.get() == NULL);
+  const std::shared_ptr<A> null6 = shared_ptr_cast<A> (const_cast<const std::shared_ptr<A>&> (ap));
+  TASSERT (null6.get() == NULL);
+  // NULL -> NULL for shared_ptr<T*>
+  std::shared_ptr<A> null7 = shared_ptr_cast<A*> (ap);
+  TASSERT (null7.get() == NULL);
+  const std::shared_ptr<A> null8 = shared_ptr_cast<A*> (const_cast<const std::shared_ptr<A>&> (ap));
+  TASSERT (null8.get() == NULL);
+  // yield NULL from bad_weak_ptr of different type
+  struct B : A {};
+  const B &cb = B(); // bad_weak_ptr
+  const std::shared_ptr<B> null9 = shared_ptr_cast<B*> (&cb);
+  TASSERT (null9.get() == NULL);
+  B &b = const_cast<B&> (cb);
+  std::shared_ptr<B> nulla = shared_ptr_cast<B*> (&b);
+  TASSERT (nulla.get() == NULL);
+  // throw bad_weak_ptr from shared_ptr_cast
+  int seen_bad_weak_ptr = 0;
+  try {
+    auto dummy = shared_ptr_cast<B> (&b);
+  } catch (const std::bad_weak_ptr&) {
+    seen_bad_weak_ptr++;
+  }
+  TASSERT (seen_bad_weak_ptr == 1);
+  try {
+    auto dummy = shared_ptr_cast<B> (&cb);
+  } catch (const std::bad_weak_ptr&) {
+    seen_bad_weak_ptr++;
+  }
+  TASSERT (seen_bad_weak_ptr == 2);
+  // yield NULL from shared_ptr<T*> of wrong type
+  struct D : A {};
+  std::shared_ptr<D> dp (new D());
+  TASSERT (dp->shared_from_this() != NULL); // good weak_ptr
+  std::shared_ptr<B> nullb = shared_ptr_cast<B*> (dp.get());
+  TASSERT (nullb.get() == NULL);
+  const D *cd = dp.get();
+  std::shared_ptr<B> nullc = shared_ptr_cast<B*> (cd);
+  TASSERT (nullc.get() == NULL);
+  // yield NULL from shared_ptr<T> of wrong type
+  std::shared_ptr<B> nulld = shared_ptr_cast<B> (dp.get());
+  TASSERT (nulld.get() == NULL);
+  std::shared_ptr<B> nulle = shared_ptr_cast<B> (cd);
+  TASSERT (nulle.get() == NULL);
+  // check that shared_ptr_cast<T> is actually working
+  std::shared_ptr<A> p1 = dp;
+  auto p2 = shared_ptr_cast<D> (p1);
+  TASSERT (p2 != NULL);
+  auto p3 = shared_ptr_cast<D> (const_cast<const std::shared_ptr<A>&> (p1));
+  TASSERT (p3 != NULL);
+  auto p4 = shared_ptr_cast<D> (cd);
+  TASSERT (p4 != NULL);
+  auto p5 = shared_ptr_cast<D> (const_cast<D*> (cd));
+  TASSERT (p5 != NULL);
+  // check that shared_ptr_cast<T*> is actually working
+  auto p6 = shared_ptr_cast<D*> (p1);
+  TASSERT (p6 != NULL);
+  auto p7 = shared_ptr_cast<D*> (const_cast<const std::shared_ptr<A>&> (p1));
+  TASSERT (p7 != NULL);
+  auto p8 = shared_ptr_cast<D*> (cd);
+  TASSERT (p8 != NULL);
+  auto p9 = shared_ptr_cast<D*> (const_cast<D*> (cd));
+  TASSERT (p9 != NULL);
+}
+REGISTER_TEST ("Threads/C++ shared_ptr_cast", test_shared_ptr_cast);
+
+
 // == constexpr ctors ==
 // the following code checks constexpr initialization of types. these checks are run
 // before main(), so we have to roll our own assertion and cannot register a real test.

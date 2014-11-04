@@ -146,8 +146,8 @@ ContainerImpl::uncross_descendant (WidgetImpl &descendant)
 {
   assert (descendant.has_ancestor (*this)); // could be disabled for performance
   WidgetImpl *widget = &descendant;
-  const WidgetImplP guard_this = shared_ptr_cast_noexcept<WidgetImpl> (this);
-  const WidgetImplP guard_widget = shared_ptr_cast_noexcept<WidgetImpl> (widget);
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
+  const WidgetImplP guard_widget = shared_ptr_cast<WidgetImpl*> (widget);
   ContainerImpl *cc = widget->as_container_impl();
  restart_search:
   CrossLinks *clinks = get_data (&cross_links_key);
@@ -317,7 +317,7 @@ ContainerImpl::add (WidgetImpl *widget)
 bool
 ContainerImpl::remove (WidgetImpl &widget)
 {
-  const WidgetImplP guard_widget = shared_ptr_cast_noexcept<WidgetImpl> (&widget);
+  const WidgetImplP guard_widget = shared_ptr_cast<WidgetImpl*> (&widget);
   ContainerImpl *container = widget.parent();
   if (!container)
     return false;
@@ -379,7 +379,7 @@ static DataKey<WidgetImpl*> focus_child_key;
 void
 ContainerImpl::unparent_child (WidgetImpl &widget)
 {
-  const WidgetImplP guard_this = shared_ptr_cast_noexcept<WidgetImpl> (this);
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
   if (&widget == get_data (&focus_child_key))
     delete_data (&focus_child_key);
   ContainerImpl *ancestor = this;

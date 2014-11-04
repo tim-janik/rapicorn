@@ -1078,7 +1078,7 @@ WindowImpl::has_screen_window ()
 void
 WindowImpl::destroy_screen_window ()
 {
-  const WidgetImplP guard_this = shared_ptr_cast_noexcept<WidgetImpl> (this);
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
   if (!screen_window_)
     return; // during destruction, ref_count == 0
   screen_window_->destroy();
