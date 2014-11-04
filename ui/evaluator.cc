@@ -193,11 +193,9 @@ expand_eval_expressions (const char           *warning_entity,
           else
             {
               const String expr = expression.substr (d + 1, e - d - 1);
-              Sinfex *sinfex = Sinfex::parse_string (expr);
-              ref_sink (sinfex);
+              SinfexP sinfex = Sinfex::parse_string (expr);
               Sinfex::Value value = sinfex->eval (scope);
               result += value.string();
-              unref (sinfex);
             }
           i = e + 1;
         }

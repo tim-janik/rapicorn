@@ -21,11 +21,9 @@ using namespace Rapicorn;
 static void
 test_basics ()
 {
-  Sinfex *sinfex = Sinfex::parse_string ("21");
-  ref_sink (sinfex);
+  SinfexP sinfex = Sinfex::parse_string ("21");
   assert (sinfex != NULL);
   assert (sinfex->eval (*(Sinfex::Scope*) NULL).real() == 21);
-  unref (sinfex);
 }
 REGISTER_UITHREAD_TEST ("Sinfex/Basics", test_basics);
 
@@ -234,8 +232,7 @@ sinfex_shell (void)
 #endif
       if (malloc_string)
         {
-          Sinfex *sinfex = Sinfex::parse_string (malloc_string);
-          ref_sink (sinfex);
+          SinfexP sinfex = Sinfex::parse_string (malloc_string);
           free (malloc_string);
           EvalScope scope;
           Sinfex::Value v = sinfex->eval (scope);
@@ -243,7 +240,6 @@ sinfex_shell (void)
           if (v.isreal())
             s = string_format ("%.15g", v.real());
           printf ("= %s\n", s.c_str());
-          unref (sinfex);
         }
     }
   while (malloc_string);
