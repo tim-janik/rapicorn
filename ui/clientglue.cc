@@ -66,6 +66,9 @@ exit_app (int status)
   ::exit (status);
 }
 
+class AppSource;
+typedef std::shared_ptr<AppSource> AppSourceP;
+
 class AppSource : public EventLoop::Source {
   Rapicorn::Aida::BaseConnection &connection_;
   PollFD pfd_;
@@ -78,7 +81,6 @@ class AppSource : public EventLoop::Source {
         main_loop()->finishable() && loop_)            // local
       main_loop()->quit();
   }
-public:
   AppSource (Rapicorn::Aida::BaseConnection &connection) :
     connection_ (connection), last_seen_primary (false), need_check_primary (false)
   {
@@ -114,6 +116,10 @@ public:
       }
     return true;
   }
+  friend class FriendAllocator<AppSource>;
+public:
+  static AppSourceP create (Rapicorn::Aida::BaseConnection &connection)
+  { return FriendAllocator<AppSource>::make_shared (connection); }
   void
   queue_check_primaries()
   {
@@ -137,16 +143,13 @@ ApplicationH::main_loop()
 {
   assert_return (the() != NULL, NULL);
   static MainLoop *app_loop = NULL;
-  static EventLoop *slave = NULL;
-  static AppSource *source = NULL;
   do_once
     {
       MainLoop *mloop = MainLoop::_new();
       ref_sink (mloop);
-      slave = mloop->new_slave();
+      static EventLoop *slave = mloop->new_slave();
       ref_sink (slave);
-      source = new AppSource (*ApplicationHandle::__aida_connection__());
-      ref_sink (source);
+      AppSourceP source = AppSource::create (*ApplicationHandle::__aida_connection__());
       slave->add (source);
       source->queue_check_primaries();
       app_loop = mloop;

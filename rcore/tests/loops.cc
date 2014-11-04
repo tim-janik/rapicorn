@@ -122,6 +122,9 @@ quick_rand32 (void)
   return accu;
 }
 
+class CheckSource;
+typedef std::shared_ptr<CheckSource> CheckSourceP;
+
 class CheckSource : public virtual EventLoop::Source {
   enum {
     INITIALIZED = 1,
@@ -129,11 +132,9 @@ class CheckSource : public virtual EventLoop::Source {
     CHECKED,
     DISPATCHED,
     DESTROYED,
-    FINALIZED,
     DESTRUCTED
   };
   uint          state_;
-public:
   CheckSource () :
     state_ (0)
   {
@@ -180,24 +181,20 @@ public:
     state_ = DESTROYED;
     check_source_destroyed_counter++;
   }
-  virtual void
-  finalize ()
-  {
-    RAPICORN_ASSERT (state_ == DESTROYED);
-    // RAPICORN_ASSERT (state_ == INITIALIZED || state_ == DESTROYED);
-    EventLoop::Source::finalize();
-    state_ = FINALIZED;
-  }
   virtual
   ~CheckSource ()
   {
-    RAPICORN_ASSERT (state_ == FINALIZED);
+    RAPICORN_ASSERT (state_ == DESTROYED);
     state_ = DESTRUCTED;
     check_source_counter--;
   }
+  friend class FriendAllocator<CheckSource>;
+public:
+  static CheckSourceP create ()
+  { return FriendAllocator<CheckSource>::make_shared(); }
 };
 
-static CheckSource *check_sources[997] = { NULL, };
+static CheckSourceP check_sources[997] = { NULL, };
 
 static void
 test_event_loop_sources()
@@ -212,8 +209,7 @@ test_event_loop_sources()
   const uint nsrc = quick_rand32() % (1 + ARRAY_SIZE (check_sources));
   for (uint i = 0; i < nsrc; i++)
     {
-      check_sources[i] = new CheckSource();
-      ref (check_sources[i]);
+      check_sources[i] = CheckSource::create();
       loop->add (check_sources[i], quick_rand32());
     }
   TASSERT (check_source_counter == nsrc);
@@ -230,7 +226,7 @@ test_event_loop_sources()
   TCMP (check_source_destroyed_counter, ==, nsrc); /* checks execution of enough destroy() handlers */
   TASSERT (check_source_counter == nsrc);
   for (uint i = 0; i < nsrc; i++)
-    unref (check_sources[i]);
+    check_sources[i] = NULL;
   TASSERT (check_source_counter == 0);
   unref (loop);
 }
