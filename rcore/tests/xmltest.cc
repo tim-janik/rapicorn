@@ -12,23 +12,20 @@ xml_tree_test (void)
 {
   const char *input_file = "test-input";
   MarkupParser::Error error;
-  XmlNode *xnode = XmlNode::parse_xml ("testdata", xml_data1, strlen (xml_data1), &error);
-  if (xnode)
-    ref_sink (xnode);
+  XmlNodeP xnode = XmlNode::parse_xml ("testdata", xml_data1, strlen (xml_data1), &error);
   if (error.code)
     fatal ("%s:%d:%d:error.code=%d: %s", input_file, error.line_number, error.char_number, error.code, error.message.c_str());
   else
     TCMP (xnode, !=, nullptr);
   /* check root */
   TCMP (xnode->name(), ==, "toplevel-tag");
-  vector<XmlNode*>::const_iterator cit;
   uint testmask = 0;
   /* various checks */
-  for (cit = xnode->children_begin(); cit != xnode->children_end(); cit++)
+  for (auto cit = xnode->children_begin(); cit != xnode->children_end(); cit++)
     if ((*cit)->name() == "child1")
       {
         /* check attribute parsing */
-        XmlNode *child = *cit;
+        XmlNodeP child = *cit;
         TCMP (child->has_attribute ("a"), ==, true);
         TCMP (child->has_attribute ("A"), ==, false);
         TCMP (child->get_attribute ("a"), ==, "a");
@@ -40,7 +37,7 @@ xml_tree_test (void)
     else if ((*cit)->name() == "child2")
       {
         /* check nested children */
-        XmlNode *child = *cit;
+        XmlNodeP child = *cit;
         const char *children[] = { "child3", "x", "y", "z", "A", "B", "C" };
         for (uint i = 0; i < ARRAY_SIZE (children); i++)
           {
@@ -53,14 +50,14 @@ xml_tree_test (void)
     else if ((*cit)->name() == "child4")
       {
         /* check simple text */
-        XmlNode *child = *cit;
+        XmlNodeP child = *cit;
         TCMP (child->text(), ==, "foo-blah");
         testmask |= 4;
       }
     else if ((*cit)->name() == "child5")
       {
         /* check text reconstruction */
-        const XmlNode *child = *cit;
+        const XmlNodeP child = *cit;
         TCMP (child->text(), ==, "foobarbaseldroehn!");
         // printout ("[node:line=%u:char=%u]", child->parsed_line(), child->parsed_char());
         testmask |= 8;
@@ -78,9 +75,6 @@ xml_tree_test (void)
   TCMP (oa[3], ==, "foofoo");
   TCMP (oa[4], ==, "coffee");
   TCMP (oa[5], ==, "last");
-  /* cleanup */
-  if (xnode)
-    unref (xnode);
 }
 REGISTER_TEST ("XML-Tests/Test XmlNode", xml_tree_test);
 

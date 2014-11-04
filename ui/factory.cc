@@ -136,7 +136,7 @@ WidgetTypeFactory::register_widget_factory (const WidgetTypeFactory &itfactory)
   widget_type_factories.push_back (&itfactory);
 }
 
-typedef map<String, const XmlNode*> GadgetDefinitionMap;
+typedef map<String, const XmlNodeP> GadgetDefinitionMap;
 static GadgetDefinitionMap gadget_definition_map;
 static vector<String>      local_namespace_list;
 static vector<String>      gadget_namespace_list;
@@ -146,26 +146,26 @@ gadget_definition_lookup (const String &widget_identifier, const XmlNode *contex
 {
   GadgetDefinitionMap::iterator it = gadget_definition_map.find (widget_identifier);
   if (it != gadget_definition_map.end())
-    return it->second; // non-namespace lookup succeeded
+    return &*it->second; // non-namespace lookup succeeded
   if (context_node)
     {
       const NodeData &ndata = xml_node_data (*context_node);
       if (!ndata.domain.empty())
         it = gadget_definition_map.find (ndata.domain + ":" + widget_identifier);
       if (it != gadget_definition_map.end())
-        return it->second; // lookup in context namespace succeeded
+        return &*it->second; // lookup in context namespace succeeded
     }
   for (ssize_t i = local_namespace_list.size() - 1; i >= 0; i--)
     {
       it = gadget_definition_map.find (local_namespace_list[i] + ":" + widget_identifier);
       if (it != gadget_definition_map.end())
-        return it->second; // namespace searchpath lookup succeeded
+        return &*it->second; // namespace searchpath lookup succeeded
     }
   for (ssize_t i = gadget_namespace_list.size() - 1; i >= 0; i--)
     {
       it = gadget_definition_map.find (gadget_namespace_list[i] + ":" + widget_identifier);
       if (it != gadget_definition_map.end())
-        return it->second; // namespace searchpath lookup succeeded
+        return &*it->second; // namespace searchpath lookup succeeded
     }
 #if 0
   printerr ("%s: FAIL, no '%s' in namespaces:", __func__, widget_identifier.c_str());
@@ -461,7 +461,7 @@ Builder::parse_call_args (const StringVector &call_names, const StringVector &ca
   XmlNode::ConstNodes &children = dnode_->children();
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
-      const XmlNode *cnode = *it;
+      const XmlNode *cnode = &**it;
       if (cnode->name() == "Argument")
         {
           const String aname = canonify_dashes (cnode->get_attribute ("id")); // canonify argument id
@@ -574,7 +574,7 @@ Builder::apply_props (const XmlNode *pnode, WidgetImpl &widget)
   XmlNode::ConstNodes &children = pnode->children();
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
-      const XmlNode *cnode = *it;
+      const XmlNode *cnode = &**it;
       String prop_object, prop_name;
       if (cnode->istext() || !is_property (*cnode, &prop_object, &prop_name))
         continue;
@@ -676,7 +676,7 @@ Builder::call_children (const XmlNode *pnode, WidgetImpl &widget, vector<WidgetI
   ContainerImpl *container = NULL;
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
-      const XmlNode *cnode = *it;
+      const XmlNode *cnode = &**it;
       if (cnode->istext() || is_property (*cnode))
         continue;
       else if (cnode->name() == "Argument")
@@ -818,7 +818,7 @@ assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
   XmlNode::ConstNodes &children = xnode->children();
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
-      const XmlNode *cnode = *it;
+      const XmlNode *cnode = &**it;
       if (cnode->istext() || is_property (*cnode) || cnode->name() == "Argument")
         continue;
       assign_xml_node_data_recursive (const_cast<XmlNode*> (cnode), domain);
@@ -826,18 +826,18 @@ assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
 }
 
 static String
-register_ui_node (const String &domain, XmlNode *xnode, vector<String> *definitions)
+register_ui_node (const String &domain, XmlNodeP xnode, vector<String> *definitions)
 {
   const String &nname = definition_name (*xnode);
   String ident = domain.empty () ? nname : domain + ":" + nname;
   GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
   if (it != gadget_definition_map.end())
     return string_format ("%s: redefinition of: %s (previously at %s)",
-                          node_location (xnode).c_str(), ident.c_str(), node_location (it->second).c_str());
-  assign_xml_node_data_recursive (xnode, domain);
+                          node_location (&*xnode).c_str(), ident.c_str(), node_location (&*it->second).c_str());
+  assign_xml_node_data_recursive (&*xnode, domain);
   NodeData &ndata = NodeData::from_xml_node (*xnode);
   ndata.gadget_definition = true;
-  gadget_definition_map[ident] = ref_sink (xnode);
+  gadget_definition_map.insert (std::make_pair (ident, xnode));
   if (definitions)
     definitions->push_back (ident);
   FDEBUG ("register: %s", ident.c_str());
@@ -854,10 +854,10 @@ register_rapicorn_definitions (const String &domain, XmlNode *xnode, vector<Stri
   XmlNode::ConstNodes children = xnode->children();
   for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
     {
-      const XmlNode *cnode = *it;
+      const XmlNodeP cnode = *it;
       if (cnode->istext())
         continue; // ignore top level text
-      const String cerr = register_ui_node (domain, const_cast<XmlNode*> (cnode), definitions);
+      const String cerr = register_ui_node (domain, cnode, definitions);
       if (!cerr.empty())
         return cerr;
     }
@@ -873,16 +873,12 @@ parse_ui_data_internal (const String &domain, const String &data_name, size_t da
   if (estart + 21 < data_length && strncmp (data + estart, "<rapicorn-definitions", 21) != 0 && data[estart + 1] != '?')
     pseudoroot = "rapicorn-definitions";
   MarkupParser::Error perror;
-  XmlNode *xnode = XmlNode::parse_xml (data_name, data, data_length, &perror, pseudoroot);
-  if (xnode)
-    ref_sink (xnode);
+  XmlNodeP xnode = XmlNode::parse_xml (data_name, data, data_length, &perror, pseudoroot);
   String errstr;
   if (perror.code)
     errstr = string_format ("%s:%d:%d: %s", data_name.c_str(), perror.line_number, perror.char_number, perror.message.c_str());
   else
-    errstr = register_rapicorn_definitions (domain, xnode, definitions);
-  if (xnode)
-    unref (xnode);
+    errstr = register_rapicorn_definitions (domain, &*xnode, definitions);
   return errstr;
 }
 

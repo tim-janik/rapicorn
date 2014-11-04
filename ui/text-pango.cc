@@ -630,10 +630,10 @@ class XmlToPango : Rapicorn::MarkupParser {
       }
   }
   void
-  apply_tags (const vector<XmlNode*> &nodes)
+  apply_tags (const vector<XmlNodeP> &nodes)
   {
     /* apply nodes */
-    for (vector<XmlNode*>::const_iterator it = nodes.begin(); it != nodes.end(); it++)
+    for (vector<XmlNodeP>::const_iterator it = nodes.begin(); it != nodes.end(); it++)
       {
         const XmlNode &xnode = **it;
         if (!xnode.istext())
@@ -665,8 +665,8 @@ class XmlToPango : Rapicorn::MarkupParser {
   apply_node (XmlNode &xnode)
   {
     /* apply node */
-    vector<XmlNode*> nodes;
-    nodes.push_back (&xnode);
+    vector<XmlNodeP> nodes;
+    nodes.push_back (shared_ptr_cast<XmlNode> (&xnode));
     apply_tags (nodes);
     /* handle errors */
     if (error_.size())
@@ -893,15 +893,13 @@ protected:
     rapicorn_pango_mutex.lock();
     MarkupParser::Error perror;
     const char *input_file = "TextPango::markup_text";
-    XmlNode *xnode = XmlNode::parse_xml (input_file, markup.c_str(), markup.size(), &perror, "text");
+    XmlNodeP xnode = XmlNode::parse_xml (input_file, markup.c_str(), markup.size(), &perror, "text");
     if (perror.code)
       err = string_format ("%s:%d:%d: %s", input_file, perror.line_number, perror.char_number, perror.message.c_str());
     if (xnode)
       {
-        ref_sink (xnode);
         if (!err.size())
           err = XmlToPango::apply_markup_tree (layout_, *xnode, input_file);
-        unref (xnode);
       }
     rapicorn_pango_mutex.unlock();
     if (err.size())
