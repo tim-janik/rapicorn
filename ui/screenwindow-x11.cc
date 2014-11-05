@@ -1539,8 +1539,6 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
 void
 X11Context::run()
 {
-  // perform unlock/lock around poll() calls
-  // loop_->set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
   // ensure X11 file descriptor changes are handled
   loop_->exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)

@@ -107,8 +107,8 @@ public:
 struct EventLoop::QuickPfdArray : public QuickArray<PollFD> {
   QuickPfdArray (uint n_reserved, PollFD *reserved) : QuickArray (n_reserved, reserved) {}
 };
-struct QuickSourceArray : public QuickArray<EventLoop::SourceP*> {
-  QuickSourceArray (uint n_reserved, EventLoop::SourceP **reserved) : QuickArray (n_reserved, reserved) {}
+struct QuickSourcePArray : public QuickArray<EventLoop::SourceP*> {
+  QuickSourcePArray (uint n_reserved, EventLoop::SourceP **reserved) : QuickArray (n_reserved, reserved) {}
 };
 
 // === EventLoop ===
@@ -268,9 +268,8 @@ EventLoop::wakeup ()
 // === MainLoop ===
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  rr_index_ (0), running_ (true), quit_code_ (0), lock_hooks_locked_ (false)
+  rr_index_ (0), running_ (true), quit_code_ (0)
 {
-  set_lock_hooks ([] () { return false; }, [] () {}, [] () {});
   ScopedLock<Mutex> locker (main_loop_.mutex());
   add_loop_L (*this);
   const int err = eventfd_.open();
@@ -294,18 +293,6 @@ MainLoop::~MainLoop()
   assert (loops_.size() == 1 && loops_[0] == this);
   loops_.resize (0);
   assert_return (loops_.empty() == true);
-  assert_return (lock_hooks_locked_ == false);
-}
-
-void
-MainLoop::set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock)
-{
-  ScopedLock<Mutex> locker (mutex_);
-  assert_return (lock_hooks_locked_ == false);
-  assert_return (sense && lock && unlock);
-  lock_hooks_.sense  = sense;
-  lock_hooks_.lock   = lock;
-  lock_hooks_.unlock = unlock;
 }
 
 void
@@ -447,7 +434,7 @@ EventLoop::collect_sources_Lm (State &state)
   if (UNLIKELY (!state.seen_primary && primary_))
     state.seen_primary = true;
   SourceP* arraymem[7]; // using a vector+malloc here shows up in the profiles
-  QuickSourceArray poll_candidates (ARRAY_SIZE (arraymem), arraymem);
+  QuickSourcePArray poll_candidates (ARRAY_SIZE (arraymem), arraymem);
   // determine dispatch priority & collect sources for preparing
   dispatch_priority_ = supraint_priobase; // dispatch priority, cover full int32 range initially
   for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
@@ -634,20 +621,12 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     timeout_msecs = 1;
   if (!may_block || any_dispatchable)
     timeout_msecs = 0;
-  LockHooks lock_hooks = lock_hooks_;
-  lock_hooks_locked_ = true; // protect hooks from alterations
   main_mutex.unlock();
-  const bool needs_locking = lock_hooks.sense();
-  if (needs_locking)
-    lock_hooks.unlock();
   int presult;
   do
     presult = poll ((struct pollfd*) &pfda[0], pfda.size(), MIN (timeout_msecs, INT_MAX));
   while (presult < 0 && errno == EAGAIN); // EINTR may indicate a signal
-  if (needs_locking)
-    lock_hooks.lock();
   main_mutex.lock();
-  lock_hooks_locked_ = false;
   if (presult < 0)
     critical ("MainLoop: poll() failed: %s", strerror());
   else if (pfda[wakeup_idx].revents)

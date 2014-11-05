@@ -100,9 +100,7 @@ public:
   UIThread (Initializer *idata) :
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
     main_loop_ (MainLoop::create())
-  {
-    // main_loop_->set_lock_hooks (...);
-  }
+  {}
   bool  running() const { return running_; }
   void
   start()

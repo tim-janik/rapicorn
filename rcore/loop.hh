@@ -151,12 +151,6 @@ public:
   EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
   static MainLoopP  create   (); ///< Creates a new main loop object, users can run or iterate this loop directly.
   inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
-  void set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock);
-private:
-  ///@cond
-  struct LockHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
-  LockHooks lock_hooks_; bool lock_hooks_locked_;
-  ///@endcond
 };
 
 // === EventLoop::State ===
