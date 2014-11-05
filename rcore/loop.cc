@@ -107,14 +107,15 @@ public:
 struct EventLoop::QuickPfdArray : public QuickArray<PollFD> {
   QuickPfdArray (uint n_reserved, PollFD *reserved) : QuickArray (n_reserved, reserved) {}
 };
-struct EventLoop::QuickSourceArray : public QuickArray<Source*> {
-  QuickSourceArray (uint n_reserved, Source **reserved) : QuickArray (n_reserved, reserved) {}
+struct QuickSourceArray : public QuickArray<EventLoop::SourceP*> {
+  QuickSourceArray (uint n_reserved, EventLoop::SourceP **reserved) : QuickArray (n_reserved, reserved) {}
 };
 
 // === EventLoop ===
 EventLoop::EventLoop (MainLoop &main) :
   main_loop_ (main), dispatch_priority_ (0), primary_ (false)
 {
+  poll_sources_.reserve (7);
   // we cannot *use* main_loop_ yet, because we might be called from within MainLoop::MainLoop(), see SlaveLoop()
 }
 
@@ -445,7 +446,8 @@ EventLoop::collect_sources_Lm (State &state)
     }
   if (UNLIKELY (!state.seen_primary && primary_))
     state.seen_primary = true;
-  vector<SourceP> poll_candidates;
+  SourceP* arraymem[7]; // using a vector+malloc here shows up in the profiles
+  QuickSourceArray poll_candidates (ARRAY_SIZE (arraymem), arraymem);
   // determine dispatch priority & collect sources for preparing
   dispatch_priority_ = supraint_priobase; // dispatch priority, cover full int32 range initially
   for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
@@ -462,15 +464,15 @@ EventLoop::collect_sources_Lm (State &state)
       if (source.priority_ < dispatch_priority_ ||              // prepare preempting sources
           (source.priority_ == dispatch_priority_ &&
            source.loop_state_ == NEEDS_DISPATCH))               // re-poll sources that need dispatching
-        poll_candidates.push_back (*lit);                       // collect only, adding ref() next
+        poll_candidates.push (&*lit);                           // collect only, adding ref() next
     }
   // ensure ref counts on all prepare sources
   assert (poll_sources_.empty());
   for (size_t i = 0; i < poll_candidates.size(); i++)
-    if (poll_candidates[i]->priority_ < dispatch_priority_ ||   // throw away lower priority sources
-        (poll_candidates[i]->priority_ == dispatch_priority_ &&
-         poll_candidates[i]->loop_state_ == NEEDS_DISPATCH))    // re-poll sources that need dispatching
-      poll_sources_.push_back (poll_candidates[i]);
+    if ((*poll_candidates[i])->priority_ < dispatch_priority_ || // throw away lower priority sources
+        ((*poll_candidates[i])->priority_ == dispatch_priority_ &&
+         (*poll_candidates[i])->loop_state_ == NEEDS_DISPATCH)) // re-poll sources that need dispatching
+      poll_sources_.push_back (*poll_candidates[i]);
 }
 
 bool

@@ -47,7 +47,6 @@ class EventLoop : public virtual std::enable_shared_from_this<EventLoop>
   class DispatcherSource;
   typedef std::shared_ptr<DispatcherSource> DispatcherSourceP;
   class QuickPfdArray;          // pseudo vector<PollFD>
-  class QuickSourceArray;       // pseudo vector<Source*>
   friend class MainLoop;
 public:
   class State;
