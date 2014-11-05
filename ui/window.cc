@@ -216,7 +216,7 @@ WindowImpl::forcefully_close_all ()
 }
 
 WindowImpl::WindowImpl() :
-  loop_ (*ref_sink (uithread_main_loop()->new_slave())),
+  loop_ (uithread_main_loop()->create_slave()),
   screen_window_ (NULL), commands_emission_ (NULL), notify_displayed_id_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
@@ -229,11 +229,11 @@ WindowImpl::WindowImpl() :
   set_flag (PARENT_SENSITIVE, true);
   set_flag (PARENT_UNVIEWABLE, false);
   /* create event loop (auto-starts) */
-  loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-  loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-  loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
-  loop_.flag_primary (false);
+  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
+  loop_->flag_primary (false);
   change_flags_silently (ANCHORED, true);       /* window is always anchored */
 }
 
@@ -260,7 +260,7 @@ WindowImpl::~WindowImpl()
   WindowTrail::wleave (this);
   if (notify_displayed_id_)
     {
-      loop_.try_remove (notify_displayed_id_);
+      loop_->try_remove (notify_displayed_id_);
       notify_displayed_id_ = 0;
     }
   if (screen_window_)
@@ -274,9 +274,8 @@ WindowImpl::~WindowImpl()
   if (has_children())
     remove (get_child());
   /* shutdown event loop */
-  loop_.kill_sources();
+  loop_->kill_sources();
   /* this should be done last */
-  unref (&loop_);
   const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
 }
 
@@ -330,7 +329,7 @@ WindowImpl::do_invalidate ()
 {
   ViewportImpl::do_invalidate();
   // we just need to make sure to be woken up, since flags are set appropriately already
-  loop_.wakeup();
+  loop_->wakeup();
 }
 
 void
@@ -772,7 +771,7 @@ WindowImpl::draw_now ()
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
       if (!notify_displayed_id_)
-        notify_displayed_id_ = loop_.exec_update (Aida::slot (*this, &WindowImpl::notify_displayed));
+        notify_displayed_id_ = loop_->exec_update (Aida::slot (*this, &WindowImpl::notify_displayed));
       const uint64 stop = timestamp_realtime();
       EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
               x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
@@ -994,7 +993,7 @@ WindowImpl::drawing_dispatcher (const EventLoop::State &state)
 EventLoop*
 WindowImpl::get_loop ()
 {
-  return &loop_;
+  return &*loop_;
 }
 
 bool
@@ -1057,15 +1056,15 @@ WindowImpl::create_screen_window ()
                 config_.alias = program_alias();
               pending_win_size_ = true;
               screen_window_ = sdriver->create_screen_window (setup, config_);
-              screen_window_->set_event_wakeup ([this] () { loop_.wakeup(); /* thread safe */ });
+              screen_window_->set_event_wakeup ([this] () { loop_->wakeup(); /* thread safe */ });
             }
           else
             fatal ("failed to find and open any screen driver");
         }
       RAPICORN_ASSERT (screen_window_ != NULL);
-      loop_.flag_primary (true); // FIXME: depends on WM-managable
+      loop_->flag_primary (true); // FIXME: depends on WM-managable
       EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::idle_show);
-      loop_.exec_now (sl);
+      loop_->exec_now (sl);
     }
 }
 
@@ -1083,16 +1082,16 @@ WindowImpl::destroy_screen_window ()
     return; // during destruction, ref_count == 0
   screen_window_->destroy();
   screen_window_ = NULL;
-  loop_.flag_primary (false);
-  loop_.kill_sources();
+  loop_->flag_primary (false);
+  loop_->kill_sources();
   // reset widget state where needed
   cancel_widget_events (NULL);
   if (!finalizing())
     {
-      loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-      loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-      loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-      loop_.exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
+      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
+      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
     }
 }
 

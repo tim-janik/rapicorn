@@ -138,21 +138,17 @@ public:
 
 #include <rcore/testutils.hh>
 namespace Rapicorn {
-MainLoop*
+MainLoopP
 ApplicationH::main_loop()
 {
   assert_return (the() != NULL, NULL);
-  static MainLoop *app_loop = NULL;
+  static MainLoopP app_loop = NULL;
   do_once
     {
-      MainLoop *mloop = MainLoop::_new();
-      ref_sink (mloop);
-      static EventLoop *slave = mloop->new_slave();
-      ref_sink (slave);
+      app_loop = MainLoop::create();
       AppSourceP source = AppSource::create (*ApplicationHandle::__aida_connection__());
-      slave->add (source);
+      app_loop->add (source);
       source->queue_check_primaries();
-      app_loop = mloop;
     }
   return app_loop;
 }

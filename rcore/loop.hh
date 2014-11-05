@@ -33,8 +33,12 @@ struct PollFD   /// Mirrors struct pollfd for poll(3posix)
 };
 
 // === EventLoop ===
+class EventLoop;
+typedef std::shared_ptr<EventLoop> EventLoopP;
 class MainLoop;
-class EventLoop : public virtual ReferenceCountable /// Loop object, polling for events and executing callbacks in accordance.
+typedef std::shared_ptr<MainLoop> MainLoopP;
+/// Loop object, polling for events and executing callbacks in accordance.
+class EventLoop : public virtual std::enable_shared_from_this<EventLoop>
 {
   class TimedSource;
   typedef std::shared_ptr<TimedSource> TimedSourceP;
@@ -118,8 +122,10 @@ public:
 };
 
 // === MainLoop ===
-class MainLoop : public EventLoop /// An EventLoop implementation that offers public API for running the loop.
+/// An EventLoop implementation that offers public API for running the loop.
+class MainLoop : public EventLoop
 {
+  friend                class FriendAllocator<MainLoop>;
   friend                class EventLoop;
   friend                class SlaveLoop;
   Mutex                 mutex_;
@@ -143,8 +149,8 @@ public:
   bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
   void       kill_loops      (); ///< Kill all sources in this loop and all slave loops.
-  EventLoop* new_slave       (); ///< Creates a new slave loop that is run as part of this main loop.
-  static MainLoop*  _new     (); ///< Creates a new main loop object, users can run or iterate this loop directly.
+  EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
+  static MainLoopP  create   (); ///< Creates a new main loop object, users can run or iterate this loop directly.
   inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
   void set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock);
 private:

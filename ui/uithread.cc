@@ -95,13 +95,13 @@ class UIThread {
   pthread_mutex_t         thread_mutex_;
   volatile bool           running_;
   Initializer            *idata_;
-  MainLoop               &main_loop_; // FIXME: non-NULL only while running
+  const MainLoopP         main_loop_;
 public:
   UIThread (Initializer *idata) :
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
-    main_loop_ (*ref_sink (MainLoop::_new()))
+    main_loop_ (MainLoop::create())
   {
-    // main_loop_.set_lock_hooks (...);
+    // main_loop_->set_lock_hooks (...);
   }
   bool  running() const { return running_; }
   void
@@ -128,11 +128,10 @@ public:
   queue_stop()
   {
     pthread_mutex_lock (&thread_mutex_);
-    if (&main_loop_)
-      main_loop_.quit();
+    main_loop_->quit();
     pthread_mutex_unlock (&thread_mutex_);
   }
-  MainLoop*         main_loop()   { return &main_loop_; }
+  MainLoopP         main_loop()   { return main_loop_; }
 private:
   ~UIThread ()
   {
@@ -146,7 +145,7 @@ private:
     // idata_core() already called
     ThisThread::affinity (string_to_int (string_vector_find_value (*idata_->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
-    ServerConnectionSourceP server_source = ServerConnectionSource::create (main_loop_);
+    ServerConnectionSourceP server_source = ServerConnectionSource::create (*main_loop_);
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -180,13 +179,13 @@ public:
 
     initialize();
     assert_return (idata_ == NULL);
-    main_loop_.run();
+    main_loop_->run();
     WindowImpl::forcefully_close_all();
     ScreenDriver::forcefully_close_all();
-    while (!main_loop_.finishable())
-      if (!main_loop_.iterate (false))
+    while (!main_loop_->finishable())
+      if (!main_loop_->iterate (false))
         break;  // handle primary idle handlers like exec_now
-    main_loop_.kill_loops();
+    main_loop_->kill_loops();
 
     assert (running_ == true);
     const bool stopped_twice = !__sync_fetch_and_sub (&running_, +1);
@@ -199,7 +198,7 @@ public:
 };
 static UIThread *the_uithread = NULL;
 
-MainLoop*
+MainLoopP
 uithread_main_loop ()
 {
   return the_uithread ? the_uithread->main_loop() : NULL;

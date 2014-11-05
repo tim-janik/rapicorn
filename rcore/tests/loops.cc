@@ -66,9 +66,8 @@ test_loop_basics()
 {
   const uint max_runs = 1999;
   /* basal loop tests */
-  MainLoop *loop = MainLoop::_new();
+  MainLoopP loop = MainLoop::create();
   TASSERT (loop);
-  ref_sink (loop);
   /* oneshot test */
   TASSERT (test_callback_touched == false);
   uint tcid = loop->exec_now (test_callback);
@@ -106,7 +105,6 @@ test_loop_basics()
   err = close (pipe_fds[0]);
   TASSERT (err == -1);          // fd should have already been auto-closed by PollFDSource
   loop->iterate_pending();
-  unref (loop);
 }
 REGISTER_TEST ("Loops/Test Basics", test_loop_basics);
 
@@ -200,9 +198,8 @@ static void
 test_event_loop_sources()
 {
   const uint max_runs = 999;
-  MainLoop *loop = MainLoop::_new();
+  MainLoopP loop = MainLoop::create();
   TASSERT (loop);
-  ref_sink (loop);
   loop->iterate_pending();
   /* source state checks */
   TASSERT (check_source_counter == 0);
@@ -228,7 +225,6 @@ test_event_loop_sources()
   for (uint i = 0; i < nsrc; i++)
     check_sources[i] = NULL;
   TASSERT (check_source_counter == 0);
-  unref (loop);
 }
 REGISTER_TEST ("Loops/Test Event Sources", test_event_loop_sources);
 
@@ -241,9 +237,8 @@ test_loop_round_robin (void)
   const EventLoop::BoolSlot increment_round_robin_1 = [round_robin_1p] () { return round_robin_increment (round_robin_1p); };
   const EventLoop::BoolSlot increment_round_robin_2 = [round_robin_2p] () { return round_robin_increment (round_robin_2p); };
   const uint rungroup = 977;
-  MainLoop *loop = MainLoop::_new();
+  MainLoopP loop = MainLoop::create();
   TASSERT (loop);
-  ref_sink (loop);
   for (uint i = 0; i < 77; i++)
     loop->iterate (false);
   /* We're roughly checking round-robin execution behaviour, by checking if
@@ -282,12 +277,9 @@ test_loop_round_robin (void)
   TASSERT (round_robin_1 < rungroup && round_robin_2 >= rungroup);
   loop->kill_sources();
   // check round-robin for loops
-  EventLoop *dummy1 = loop->new_slave();
-  EventLoop *slave = loop->new_slave();
-  EventLoop *dummy2 = loop->new_slave();
-  ref_sink (slave);
-  ref_sink (dummy1);
-  ref_sink (dummy2);
+  EventLoopP dummy1 = loop->create_slave();
+  EventLoopP slave = loop->create_slave();
+  EventLoopP dummy2 = loop->create_slave();
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
   loop->exec_background (increment_round_robin_1);
@@ -297,15 +289,11 @@ test_loop_round_robin (void)
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
   loop->kill_sources();
   slave->kill_sources();
-  unref (loop);
-  unref (slave);
-  unref (dummy1);
-  unref (dummy2);
 }
 REGISTER_TEST ("Loops/Test Round Robin Looping", test_loop_round_robin);
 
 static String loop_breadcrumbs = "";
-static MainLoop *breadcrumb_loop = NULL;
+static MainLoopP breadcrumb_loop = NULL;
 static void handler_d();
 static void handler_a() { loop_breadcrumbs += "a"; TASSERT (loop_breadcrumbs == "a"); }
 static void handler_b()
@@ -319,8 +307,7 @@ static void
 test_loop_priorities (void)
 {
   TASSERT (!breadcrumb_loop);
-  breadcrumb_loop = MainLoop::_new();
-  ref_sink (breadcrumb_loop);
+  breadcrumb_loop = MainLoop::create();
   for (uint i = 0; i < 7; i++)
     breadcrumb_loop->iterate (false);
   breadcrumb_loop->exec_normal (handler_a);
@@ -329,7 +316,6 @@ test_loop_priorities (void)
   breadcrumb_loop->iterate_pending();
   TASSERT (loop_breadcrumbs == "abDc");
   breadcrumb_loop->kill_sources();
-  unref (breadcrumb_loop);
   breadcrumb_loop = NULL;
 }
 REGISTER_TEST ("Loops/Test Loop Priorities", test_loop_priorities);

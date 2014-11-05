@@ -13,7 +13,7 @@ typedef std::weak_ptr<WindowImpl>   WindowImplW;
 
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
-  EventLoop            &loop_;
+  const EventLoopP      loop_;
   ScreenWindow*         screen_window_;
   EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;

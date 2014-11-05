@@ -272,17 +272,26 @@ MainLoop::MainLoop() :
   set_lock_hooks ([] () { return false; }, [] () {}, [] () {});
   ScopedLock<Mutex> locker (main_loop_.mutex());
   add_loop_L (*this);
-  int err = eventfd_.open();
+  const int err = eventfd_.open();
   if (err < 0)
     fatal ("MainLoop: failed to create wakeup pipe: %s", strerror (-err));
   // running_ and eventfd_ need to be setup here, so calling quit() before run() works
 }
 
+MainLoopP
+MainLoop::create ()
+{
+  MainLoopP mloop = FriendAllocator<MainLoop>::make_shared();
+  return mloop;
+}
+
 MainLoop::~MainLoop()
 {
-  kill_loops(); // this->kill_sources_Lm()
+  // slave loops keep MainLoop alive, so here we should only have one loops_ element: this
+  kill_loops(); // essentially just: this->kill_sources_Lm()
   ScopedLock<Mutex> locker (mutex_);
-  remove_loop_L (*this);
+  assert (loops_.size() == 1 && loops_[0] == this);
+  loops_.resize (0);
   assert_return (loops_.empty() == true);
   assert_return (lock_hooks_locked_ == false);
 }
@@ -326,33 +335,21 @@ MainLoop::remove_loop_L (EventLoop &loop)
 void
 MainLoop::kill_loops()
 {
+  vector<EventLoopP> loops; // initialize *before* locker, so loops->dtor is called last
   ScopedLock<Mutex> locker (mutex_);
-  EventLoop *spare = this;
-  // create referenced loop list
-  std::list<EventLoop*> loops;
   for (size_t i = 0; i < loops_.size(); i++)
-    {
-      loops.push_back (loops_[i]);
-      if (spare != loops_[i]) // avoid ref(this) during dtor
-        ref (loops_[i]);
-    }
-  // kill loops
-  for (std::list<EventLoop*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
-    {
-      EventLoop &loop = **lit;
-      if (this == &loop.main_loop_)
-        loop.kill_sources_Lm();
-    }
+    if (loops_[i] != this)
+      {
+        EventLoopP loop = shared_ptr_cast<EventLoop*> (loops_[i]); // may yield NULL during loop->dtor
+        if (loop)
+          loops.push_back (loop);
+      }
+  for (auto loop : loops)
+    loop->kill_sources_Lm();
   this->kill_sources_Lm();
   // cleanup
   locker.unlock();
-  for (std::list<EventLoop*>::iterator lit = loops.begin(); lit != loops.end(); lit++)
-    {
-      if (spare != *lit) // avoid unref(this) during dtor
-        unref (*lit); // unlocked
-    }
-  locker.lock();
-  wakeup_poll();
+  // here, loops is destroyed and releases the shared_ptrs *after* locker was released
 }
 
 int
@@ -605,12 +602,16 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   const PollFD wakeup = { eventfd_.inputfd(), PollFD::IN, 0 };
   const uint wakeup_idx = 0; // wakeup_idx = pfda.size();
   pfda.push (wakeup);
-  // create referenced loop list
-  const uint nloops = loops_.size();
-  EventLoop* loops[nloops];
-  bool dispatchable[nloops];
-  for (size_t i = 0; i < nloops; i++)
-    loops[i] = ref (loops_[i]);
+  // create pollable loop list
+  EventLoopP loops[loops_.size()];
+  size_t j = 0;
+  for (size_t i = 0; i < loops_.size(); i++)
+    {
+      EventLoopP loop = shared_ptr_cast<EventLoop*> (loops_[i]); // may yield NULL during loop->dtor
+      if (loop)
+        loops[j++] = loop;
+    }
+  const size_t nloops = j;
   // collect
   state.phase = state.COLLECT;
   state.seen_primary = false;
@@ -619,6 +620,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   // prepare
   state.phase = state.PREPARE;
   state.current_time_usecs = timestamp_realtime();
+  bool dispatchable[nloops];
   for (size_t i = 0; i < nloops; i++)
     {
       dispatchable[i] = loops[i]->prepare_sources_Lm (state, &timeout_usecs, pfda);
@@ -633,10 +635,10 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   LockHooks lock_hooks = lock_hooks_;
   lock_hooks_locked_ = true; // protect hooks from alterations
   main_mutex.unlock();
-  int presult;
   const bool needs_locking = lock_hooks.sense();
   if (needs_locking)
     lock_hooks.unlock();
+  int presult;
   do
     presult = poll ((struct pollfd*) &pfda[0], pfda.size(), MIN (timeout_msecs, INT_MAX));
   while (presult < 0 && errno == EAGAIN); // EINTR may indicate a signal
@@ -674,18 +676,19 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   for (size_t i = 0; i < nloops; i++)
     {
       loops[i]->unpoll_sources_U(); // unlocked
-      unref (loops[i]); // unlocked
+      loops[i] = NULL; // unlocked
     }
   main_mutex.lock();
   return any_dispatchable; // need to dispatch or recheck
 }
 
 struct SlaveLoop : public EventLoop {
-  SlaveLoop (MainLoop &main) :
-    EventLoop (main)
+  friend class FriendAllocator<SlaveLoop>;
+  const MainLoopP main_loop_ref_;
+  SlaveLoop (MainLoopP main) :
+    EventLoop (*main), main_loop_ref_ (main)
   {
     ScopedLock<Mutex> locker (main_loop_.mutex());
-    ref (main_loop_);
     main_loop_.add_loop_L (*this);
   }
   ~SlaveLoop()
@@ -693,21 +696,13 @@ struct SlaveLoop : public EventLoop {
     ScopedLock<Mutex> locker (main_loop_.mutex());
     kill_sources_Lm();
     main_loop_.remove_loop_L (*this);
-    locker.unlock();
-    unref (main_loop_); // unlocked
   }
 };
 
-EventLoop*
-MainLoop::new_slave ()
+EventLoopP
+MainLoop::create_slave()
 {
-  return new SlaveLoop (*this);
-}
-
-MainLoop*
-MainLoop::_new ()
-{
-  return new MainLoop();
+  return FriendAllocator<SlaveLoop>::make_shared (shared_ptr_cast<MainLoop> (this));
 }
 
 // === EventLoop::State ===

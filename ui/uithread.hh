@@ -41,7 +41,7 @@
 namespace Rapicorn {
 
 void                 uithread_test_trigger (void (*) ());
-MainLoop*            uithread_main_loop    ();
+MainLoopP            uithread_main_loop    ();
 bool                 uithread_is_current   ();
 
 /// Register a standard test function for execution in the ui-thread.

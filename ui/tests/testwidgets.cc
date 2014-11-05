@@ -9,15 +9,13 @@ using namespace Rapicorn;
 static void
 run_main_loop_recursive (bool blocking_while_primary = true)
 {
-  MainLoop *main_loop = uithread_main_loop();
+  MainLoopP main_loop = uithread_main_loop();
   assert_return (main_loop != NULL);
-  ref (main_loop);
   if (!blocking_while_primary)
     main_loop->iterate_pending();
   else
     while (!main_loop->finishable())
       main_loop->iterate (true);
-  unref (main_loop);
 }
 
 static void

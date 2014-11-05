@@ -74,7 +74,7 @@ struct IncrTransfer {
 
 // == X11Context ==
 class X11Context {
-  MainLoop                            &loop_;
+  const MainLoopP                      loop_;
   vector<size_t>                       queued_updates_; // XIDs
   map<size_t, X11Widget*>              x11ids_;
   AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
@@ -1447,7 +1447,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
 // == X11Context ==
 X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue,
                         AsyncBlockingQueue<ScreenCommand*> &reply_queue) :
-  loop_ (*ref_sink (MainLoop::_new())), command_queue_ (command_queue), reply_queue_ (reply_queue),
+  loop_ (MainLoop::create()), command_queue_ (command_queue), reply_queue_ (reply_queue),
   shared_mem_ (-1), screen_driver (driver), display (NULL), visual (NULL),
   max_request_bytes (0), max_property_bytes (0), screen (0), depth (0),
   root_window (0), input_method (NULL)
@@ -1465,8 +1465,7 @@ X11Context::~X11Context ()
   assert_return (!display);
   assert_return (x11ids_.empty());
   assert_return (command_queue_.pending() == false);
-  loop_.kill_sources();
-  unref (&loop_);
+  loop_->kill_sources();
   XDEBUG ("%s: X11Context stopped", STRFUNC);
 }
 
@@ -1514,7 +1513,7 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
             reply_queue_.push (new ScreenCommand (ScreenCommand::OK, screen_window));
             break;
           case ScreenCommand::SHUTDOWN:
-            loop_.quit();
+            loop_->quit();
             delete cmd;
             reply_queue_.push (new ScreenCommand (ScreenCommand::OK, NULL));
             assert_return (x11ids_.empty(), true);
@@ -1541,19 +1540,19 @@ void
 X11Context::run()
 {
   // perform unlock/lock around poll() calls
-  // loop_.set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
+  // loop_->set_lock_hooks ([] () { return true; }, [&x11locker] () { x11locker.lock(); }, [&x11locker] () { x11locker.unlock(); });
   // ensure X11 file descriptor changes are handled
-  loop_.exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
+  loop_->exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)
-  loop_.exec_dispatcher (Aida::slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
+  loop_->exec_dispatcher (Aida::slot (*this, &X11Context::x11_dispatcher), EventLoop::PRIORITY_NORMAL);
   // process cleanup actions after expiration times
-  loop_.exec_dispatcher (Aida::slot (*this, &X11Context::x11_timer), EventLoop::PRIORITY_NORMAL);
+  loop_->exec_dispatcher (Aida::slot (*this, &X11Context::x11_timer), EventLoop::PRIORITY_NORMAL);
   // ensure enqueued user commands are processed
-  loop_.exec_dispatcher (Aida::slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
+  loop_->exec_dispatcher (Aida::slot (*this, &X11Context::cmd_dispatcher), EventLoop::PRIORITY_NOW);
   // ensure new command_queue events are noticed
-  command_queue_.notifier ([&]() { loop_.wakeup(); });
+  command_queue_.notifier ([&]() { loop_->wakeup(); });
   // process X11 events
-  loop_.run();
+  loop_->run();
   // prevent wakeups on stale objects
   command_queue_.notifier (NULL);
   // close down
@@ -1571,7 +1570,7 @@ X11Context::run()
       display = NULL;
     }
   // remove sources and close Pfd file descriptor
-  loop_.kill_sources();
+  loop_->kill_sources();
 }
 
 bool
@@ -1954,7 +1953,7 @@ X11Context::queue_update (size_t xid)
   const bool need_handler = queued_updates_.empty();
   queued_updates_.push_back (xid);
   if (need_handler)
-    loop_.exec_timer (50, Aida::slot (*this, &X11Context::process_updates));
+    loop_->exec_timer (50, Aida::slot (*this, &X11Context::process_updates));
 }
 
 } // Rapicorn
