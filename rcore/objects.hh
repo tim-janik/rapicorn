@@ -44,66 +44,6 @@ public: /// @name Accessing custom data members
   template<typename Type> inline void delete_data (DataKey<Type> *key)            { data_list.del (key); }
 };
 
-// == ReferenceCountable ==
-class ReferenceCountable {
-  volatile mutable uint32 ref_field;
-  static const uint32     FLOATING_FLAG = 1 << 31;
-  inline uint32 ref_get    () const                             { return Lib::atomic_load (&ref_field); }
-  inline bool   ref_cas    (uint32 oldv, uint32 newv) const     { return __sync_bool_compare_and_swap (&ref_field, oldv, newv); }
-  inline void   fast_ref   () const;
-  inline void   fast_unref () const;
-  void          real_unref () const;
-  RAPICORN_CLASS_NON_COPYABLE (ReferenceCountable);
-protected:
-  virtual      ~ReferenceCountable ();
-  virtual void  delete_this        ();
-  virtual void  pre_finalize       ();
-  virtual void  finalize           ();
-  inline uint32 ref_count          () const                     { return ref_get() & ~FLOATING_FLAG; }
-public:
-  bool     floating           () const                          { return 0 != (ref_get() & FLOATING_FLAG); }
-  void     ref                () const                          { fast_ref(); }
-  void     ref_sink           () const;
-  bool     finalizing         () const                          { return ref_count() < 1; }
-  void     unref              () const                          { fast_unref(); }
-  void     ref_diag           (const char *msg = NULL) const;
-  explicit ReferenceCountable (uint allow_stack_magic = 0);
-  template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
-  template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
-  template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return obj; }
-  template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
-  template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
-  template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-};
-template<class Obj> static Obj& ref      (Obj &obj) { obj.ref();       return obj; }
-template<class Obj> static Obj* ref      (Obj *obj) { obj->ref();      return obj; }
-template<class Obj> static Obj& ref_sink (Obj &obj) { obj.ref_sink();  return obj; }
-template<class Obj> static Obj* ref_sink (Obj *obj) { obj->ref_sink(); return obj; }
-template<class Obj> static void unref    (Obj &obj) { obj.unref(); }
-template<class Obj> static void unref    (Obj *obj) { obj->unref(); }
-
-// == Implementation Details ==
-inline void
-ReferenceCountable::fast_ref () const
-{
-  // fast-path: use one atomic op and deferred checks
-  uint32 old_ref = __sync_fetch_and_add (&ref_field, 1);
-  uint32 new_ref = old_ref + 1;                       // ...and_add (,1)
-  RAPICORN_ASSERT (old_ref & ~FLOATING_FLAG);         // check dead objects
-  RAPICORN_ASSERT (new_ref & ~FLOATING_FLAG);         // check overflow
-}
-
-inline void
-ReferenceCountable::fast_unref () const
-{
-  RAPICORN_CFENCE;
-  uint32 old_ref = ref_field; // skip read-barrier for fast-path
-  if (RAPICORN_LIKELY (old_ref & ~(FLOATING_FLAG | 1)) && // old_ref >= 2
-      RAPICORN_LIKELY (ref_cas (old_ref, old_ref - 1)))
-    return; // trying fast-path with single atomic op
-  real_unref();
-}
-
 } // Rapicorn
 
 #endif // __RAPICORN_CORE_OBJECTS_HH__
