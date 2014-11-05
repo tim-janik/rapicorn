@@ -21,7 +21,7 @@ main (int   argc,
   init_core_test (argv[0], &argc, argv, iargs);
   ApplicationH app = init_app (argv[0], &argc, argv, iargs);
   double calls = 0, slowest = 0, fastest = 9e+9;
-  for (uint j = 0; j < 29; j++)
+  for (uint j = 0; j < 97; j++)
     {
       app.test_counter_set (0);
       const int count = 7000;
