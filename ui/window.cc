@@ -1083,16 +1083,8 @@ WindowImpl::destroy_screen_window ()
   screen_window_->destroy();
   screen_window_ = NULL;
   loop_->flag_primary (false);
-  loop_->kill_sources();
   // reset widget state where needed
   cancel_widget_events (NULL);
-  if (!finalizing())
-    {
-      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
-      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
-    }
 }
 
 void
