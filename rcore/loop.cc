@@ -250,6 +250,16 @@ EventLoop::kill_sources_Lm()
   locker.lock();
 }
 
+/** Remove all sources from a loop and prevent any further execution.
+ * The destroy_loop() method removes all sources from a loop and in
+ * case of a slave EventLoop (see create_slave()) removes it from its
+ * associated main loop. Calling destroy_loop() on a main loop also
+ * calls destroy_loop() for all its slave loops.
+ * Note that MainLoop objects are artificially kept alive until
+ * MainLoop::destroy_loop() is called, so calling destroy_loop() is
+ * mandatory for MainLoop objects to prevent object leaks.
+ * This method must be called only once on a loop.
+ */
 void
 EventLoop::destroy_loop()
 {
@@ -283,6 +293,10 @@ MainLoop::MainLoop() :
   // running_ and eventfd_ need to be setup here, so calling quit() before run() works
 }
 
+/** Create a new main loop object, users can run or iterate this loop directly.
+ * Note that MainLoop objects have special lifetime semantics that keep them
+ * alive until they are explicitely destroyed with destroy_loop().
+ */
 MainLoopP
 MainLoop::create ()
 {

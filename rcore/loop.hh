@@ -91,7 +91,7 @@ public:
                         = PRIORITY_NORMAL);     ///< Adds a new source to the loop with custom priority.
   void remove          (uint            id);    ///< Removes a source from loop, the source must be present.
   bool try_remove      (uint            id);    ///< Tries to remove a source, returns if successfull.
-  void destroy_loop    (void);                  ///< Remove all sources from this loop, prevents all further execution.
+  void destroy_loop    (void);
   bool has_primary     (void);                  ///< Indicates whether loop contains primary sources.
   bool flag_primary    (bool            on);
   template<class BoolVoidFunctor>
@@ -149,7 +149,7 @@ public:
   bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
   EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
-  static MainLoopP  create   (); ///< Creates a new main loop object, users can run or iterate this loop directly.
+  static MainLoopP  create   ();
   inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
 };
 
