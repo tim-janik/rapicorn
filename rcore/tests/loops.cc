@@ -219,7 +219,7 @@ test_event_loop_sources()
         TOK();
     }
   TASSERT (check_source_counter == nsrc);
-  loop->kill_sources();
+  loop->destroy_loop();
   TCMP (check_source_destroyed_counter, ==, nsrc); /* checks execution of enough destroy() handlers */
   TASSERT (check_source_counter == nsrc);
   for (uint i = 0; i < nsrc; i++)
@@ -241,13 +241,14 @@ test_loop_round_robin (void)
   TASSERT (loop);
   for (uint i = 0; i < 77; i++)
     loop->iterate (false);
+  uint id1, id2;
   /* We're roughly checking round-robin execution behaviour, by checking if
    * two concurrently running handlers are both executed. If one starves,
    * we'll catch that.
    */
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  loop->exec_now (increment_round_robin_1);
-  loop->exec_now (increment_round_robin_2);
+  id1 = loop->exec_now (increment_round_robin_1);
+  id2 = loop->exec_now (increment_round_robin_2);
   /* We make an educated guess at loop iterations needed for two handlers
    * to execute >= rungroup times. No correlation is guaranteed here, but
    * we guess that any count in significant excess of 2 * rungroup should
@@ -257,38 +258,46 @@ test_loop_round_robin (void)
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
-  loop->kill_sources();
+  loop->remove (id1);
+  loop->remove (id2);
   // we should be able to repeat the check
-  loop->exec_background (increment_round_robin_1);
-  loop->exec_background (increment_round_robin_2);
+  id1 = loop->exec_background (increment_round_robin_1);
+  id2 = loop->exec_background (increment_round_robin_2);
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
-  loop->kill_sources();
+  loop->remove (id1);
+  loop->remove (id2);
   // cross-check, intentionally cause starvation of one handler
-  loop->exec_background (increment_round_robin_1);
-  loop->exec_now (increment_round_robin_2);
+  id1 = loop->exec_background (increment_round_robin_1);
+  id2 = loop->exec_now (increment_round_robin_2);
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 < rungroup && round_robin_2 >= rungroup);
-  loop->kill_sources();
+  loop->remove (id1);
+  loop->remove (id2);
   // check round-robin for loops
   EventLoopP dummy1 = loop->create_slave();
   EventLoopP slave = loop->create_slave();
   EventLoopP dummy2 = loop->create_slave();
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  loop->exec_background (increment_round_robin_1);
-  slave->exec_normal (increment_round_robin_2);
+  id1 = loop->exec_background (increment_round_robin_1);
+  id2 = slave->exec_normal (increment_round_robin_2);
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
-  loop->kill_sources();
-  slave->kill_sources();
+  if (1) // verbose, cleanups will also happen automatically from MainLoop::destroy_loop
+    {
+      loop->remove (id1);
+      slave->remove (id2);
+      slave->destroy_loop();
+    }
+  loop->destroy_loop();
 }
 REGISTER_TEST ("Loops/Test Round Robin Looping", test_loop_round_robin);
 
@@ -315,7 +324,7 @@ test_loop_priorities (void)
   breadcrumb_loop->exec_normal (handler_c);
   breadcrumb_loop->iterate_pending();
   TASSERT (loop_breadcrumbs == "abDc");
-  breadcrumb_loop->kill_sources();
+  breadcrumb_loop->destroy_loop();
   breadcrumb_loop = NULL;
 }
 REGISTER_TEST ("Loops/Test Loop Priorities", test_loop_priorities);

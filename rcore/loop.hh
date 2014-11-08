@@ -54,7 +54,7 @@ public:
   typedef std::shared_ptr<Source> SourceP;
 protected:
   typedef std::vector<SourceP>    SourceList;
-  MainLoop     &main_loop_;
+  MainLoop     *main_loop_;
   SourceList    sources_;
   int64         dispatch_priority_;
   vector<SourceP> poll_sources_;
@@ -91,7 +91,7 @@ public:
                         = PRIORITY_NORMAL);     ///< Adds a new source to the loop with custom priority.
   void remove          (uint            id);    ///< Removes a source from loop, the source must be present.
   bool try_remove      (uint            id);    ///< Tries to remove a source, returns if successfull.
-  void kill_sources    (void);                  ///< Remove all sources from this loop, prevents all further execution.
+  void destroy_loop    (void);                  ///< Remove all sources from this loop, prevents all further execution.
   bool has_primary     (void);                  ///< Indicates whether loop contains primary sources.
   bool flag_primary    (bool            on);
   template<class BoolVoidFunctor>
@@ -106,7 +106,7 @@ public:
   uint exec_update     (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "update" (important idle), returning true repeats callback.
   template<class BoolVoidFunctor>
   uint exec_background (BoolVoidFunctor &&bvf); ///< Execute a callback with background priority (when idle), returning true repeats callback.
-  MainLoop* main_loop  () const { return &main_loop_; }        ///< Get the main loop for this loop.
+  MainLoop* main_loop  () const { return main_loop_; }  ///< Get the main loop for this loop.
   /// Execute a single dispatcher callback for prepare, check, dispatch.
   uint exec_dispatcher (const DispatcherSlot &sl, int priority = PRIORITY_NORMAL);
   /// Execute a callback after a specified timeout, returning true repeats callback.
@@ -128,7 +128,7 @@ class MainLoop : public EventLoop
   friend                class EventLoop;
   friend                class SlaveLoop;
   Mutex                 mutex_;
-  vector<EventLoop*>    loops_;
+  vector<EventLoopP>    loops_;
   EventFd               eventfd_;
   uint                  rr_index_;
   bool                  running_;
@@ -136,7 +136,8 @@ class MainLoop : public EventLoop
   bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
-  void                  remove_loop_L       (EventLoop &loop);  ///< Removes a slave loop from this main loop.
+  void                  kill_loop_Lm        (EventLoop &loop);  ///< Destroy a slave loop and all its sources.
+  void                  kill_loops_Lm       ();                 ///< Destroy this loop and all slave loops.
   bool                  iterate_loops_Lm    (State&, bool b, bool d);
   explicit              MainLoop            ();
 public:
@@ -147,7 +148,6 @@ public:
   bool       finishable      (); ///< Indicates wether this loop has no primary sources left to process.
   bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
-  void       kill_loops      (); ///< Kill all sources in this loop and all slave loops.
   EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
   static MainLoopP  create   (); ///< Creates a new main loop object, users can run or iterate this loop directly.
   inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.

@@ -183,7 +183,7 @@ public:
     while (!main_loop_->finishable())
       if (!main_loop_->iterate (false))
         break;  // handle primary idle handlers like exec_now
-    main_loop_->kill_loops();
+    main_loop_->destroy_loop();
 
     assert (running_ == true);
     const bool stopped_twice = !__sync_fetch_and_sub (&running_, +1);

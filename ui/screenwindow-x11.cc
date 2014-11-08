@@ -1568,7 +1568,7 @@ X11Context::run()
       display = NULL;
     }
   // remove sources and close Pfd file descriptor
-  loop_->kill_sources();
+  loop_->destroy_loop();
   loop_ = NULL;
 }
 

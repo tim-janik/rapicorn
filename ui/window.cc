@@ -274,7 +274,7 @@ WindowImpl::~WindowImpl()
   if (has_children())
     remove (get_child());
   /* shutdown event loop */
-  loop_->kill_sources();
+  loop_->destroy_loop();
   /* this should be done last */
   const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
 }
