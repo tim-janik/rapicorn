@@ -74,7 +74,7 @@ struct IncrTransfer {
 
 // == X11Context ==
 class X11Context {
-  const MainLoopP                      loop_;
+  MainLoopP                            loop_;
   vector<size_t>                       queued_updates_; // XIDs
   map<size_t, X11Widget*>              x11ids_;
   AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
@@ -1447,7 +1447,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
 // == X11Context ==
 X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue,
                         AsyncBlockingQueue<ScreenCommand*> &reply_queue) :
-  loop_ (MainLoop::create()), command_queue_ (command_queue), reply_queue_ (reply_queue),
+  loop_ (NULL), command_queue_ (command_queue), reply_queue_ (reply_queue),
   shared_mem_ (-1), screen_driver (driver), display (NULL), visual (NULL),
   max_request_bytes (0), max_property_bytes (0), screen (0), depth (0),
   root_window (0), input_method (NULL)
@@ -1465,7 +1465,6 @@ X11Context::~X11Context ()
   assert_return (!display);
   assert_return (x11ids_.empty());
   assert_return (command_queue_.pending() == false);
-  loop_->kill_sources();
   XDEBUG ("%s: X11Context stopped", STRFUNC);
 }
 
@@ -1539,6 +1538,7 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
 void
 X11Context::run()
 {
+  loop_ = MainLoop::create();
   // ensure X11 file descriptor changes are handled
   loop_->exec_io_handler (Aida::slot (*this, &X11Context::x11_io_handler), ConnectionNumber (display), "r", EventLoop::PRIORITY_NORMAL);
   // ensure queued X11 events are processed (i.e. ones already read from fd)
@@ -1569,6 +1569,7 @@ X11Context::run()
     }
   // remove sources and close Pfd file descriptor
   loop_->kill_sources();
+  loop_ = NULL;
 }
 
 bool
