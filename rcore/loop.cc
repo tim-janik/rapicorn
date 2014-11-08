@@ -618,15 +618,10 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   const uint wakeup_idx = 0; // wakeup_idx = pfda.size();
   pfda.push (wakeup);
   // create pollable loop list
-  EventLoopP loops[loops_.size()];
-  size_t j = 0;
-  for (size_t i = 0; i < loops_.size(); i++)
-    {
-      EventLoopP loop = shared_ptr_cast<EventLoop*> (loops_[i]); // may yield NULL during loop->dtor
-      if (loop)
-        loops[j++] = loop;
-    }
-  const size_t nloops = j;
+  const size_t nloops = loops_.size();
+  EventLoopP loops[nloops];
+  for (size_t i = 0; i < nloops; i++)
+    loops[i] = loops_[i];
   // collect
   state.phase = state.COLLECT;
   state.seen_primary = false;
@@ -683,7 +678,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   for (size_t i = 0; i < nloops; i++)
     {
       loops[i]->unpoll_sources_U(); // unlocked
-      loops[i] = NULL; // unlocked
+      loops[i] = NULL; // dtor, unlocked
     }
   main_mutex.lock();
   return any_dispatchable; // need to dispatch or recheck
