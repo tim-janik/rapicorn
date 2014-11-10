@@ -386,13 +386,13 @@ test_selector_validation ()
 REGISTER_UITHREAD_TEST ("Selector/Validation", test_selector_validation);
 
 static void
-test_query (int line, WidgetIface *iroot, const String &selector, ssize_t expect, const String &expected_type = "")
+test_query (int line, WidgetIfaceP iroot, const String &selector, ssize_t expect, const String &expected_type = "")
 {
-  WidgetImpl *root = dynamic_cast<WidgetImpl*> (iroot);
+  WidgetImpl *root = shared_ptr_cast<WidgetImpl> (iroot).get();
   TASSERT (root != NULL);
 
-  WidgetIface *query_first = root->query_selector (selector);
-  WidgetIface *query_unique = root->query_selector_unique (selector);
+  WidgetIfaceP query_first = root->query_selector (selector);
+  WidgetIfaceP query_unique = root->query_selector_unique (selector);
   WidgetSeq qa_itseq = root->query_selector_all (selector);
   WidgetIfaceVector query_all (qa_itseq);
 
@@ -411,7 +411,7 @@ test_query (int line, WidgetIface *iroot, const String &selector, ssize_t expect
   TASSERT_AT (line, expect != 1 || query_unique != NULL);
   TASSERT_AT (line, query_unique == NULL || query_unique == query_first);
   TASSERT_AT (line, query_all.size() >= (query_first != NULL));
-  TASSERT_AT (line, query_first == NULL || query_all[0] == query_first); // query_all.size() >= 1
+  TASSERT_AT (line, query_first == NULL || query_all[0] == query_first.get()); // query_all.size() >= 1
   if (expect >= 0)
     {
       size_t expected = expect;
@@ -439,9 +439,9 @@ test_selector_matching ()
   WindowList wl = app.query_windows ("*");
   size_t prev_window_count = wl.size();
 
-  WindowIface *window = app.create_window ("test-dialog");
+  WindowIfaceP window = app.create_window ("test-dialog");
   TASSERT (window != NULL);
-  WindowIface *w = app.query_window ("#test-dialog");
+  WindowIfaceP w = app.query_window ("#test-dialog");
   TASSERT (window == w);
 
   wl = app.query_windows ("*");
@@ -562,7 +562,7 @@ test_selector_matching ()
   test_query (__LINE__, w, "*.Window TestWidget#test-widget::test-parent:not(:empty)", 1, "HBox"); // pseudo element and combinator
   test_query (__LINE__, w, "*.Window TestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // like above with subject indicator
 
-  WidgetIface *i1 = w->query_selector ("#special-arrow");
+  WidgetIfaceP i1 = w->query_selector ("#special-arrow");
   TASSERT (i1);
   TASSERT (i1->query_selector_all ("*").size() == 1);
 

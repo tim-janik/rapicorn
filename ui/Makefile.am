@@ -106,26 +106,26 @@ MAINTAINERCLEANFILES += interfaces.dox
 # build serverapi.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
 serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
-	${AIDACC} -x CxxStub -G serverhh -G iface-base=Rapicorn::BaseObject \
+	${AIDACC} -x CxxStub -G serverhh \
 	  -G cppguard=__RAPICORN_SERVERAPI_HH_ \
 	  --insertions $(srcdir)/serverinsert.hh $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 serverglue.cc: serverapi.cc
 serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
-	${AIDACC} -x CxxStub -G servercc -G iface-base=Rapicorn::BaseObject \
+	${AIDACC} -x CxxStub -G servercc \
 	  -G apikey=$(RAPICORN_NAMESPACE_NAME) -G strip-path=$(abs_top_srcdir)/ \
 	  --inclusions '"widget.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
 EXTRA_DIST += clientinsert.hh
 clientapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/clientinsert.hh
-	${AIDACC} -x CxxStub -G clienthh -G iface-base=Rapicorn::BaseObject \
+	${AIDACC} -x CxxStub -G clienthh \
 	  -G cppguard=__RAPICORN_CLIENTAPI_HH_ \
 	  --insertions $(srcdir)/clientinsert.hh $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
 clientglue.cc: clientapi.cc
 clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
-	${AIDACC} -x CxxStub -G clientcc -G iface-base=Rapicorn::BaseObject \
+	${AIDACC} -x CxxStub -G clientcc \
 	  -G apikey=$(RAPICORN_NAMESPACE_NAME) -G strip-path=$(abs_top_srcdir)/ \
 	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@

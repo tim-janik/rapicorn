@@ -31,78 +31,27 @@ test_stock_resources()
 REGISTER_UITHREAD_TEST ("Server/Stock Resources", test_stock_resources);
 
 static void
-test_application_xurl()
+test_application_list_model_relay()
 {
   ApplicationImpl &app = ApplicationImpl::the();
-  bool success;
-
-  struct Dummy : public ListModelRelayImpl { using ListModelRelayImpl::create_list_model_relay; };
-  ListModelRelayIface &lmr1 = Dummy::create_list_model_relay ();
-  ListModelIface      &lm1  = *lmr1.model();
-  ListModelRelayIface &lmr2 = Dummy::create_list_model_relay ();
-  ListModelIface      &lm2  = *lmr2.model();
-  ListModelRelayIface &lmr3 = Dummy::create_list_model_relay ();
-  ListModelIface      &lm3  = *lmr3.model();
-  ListModelIface *lmi;
-  String path;
-
-  // model1 + lmr1 tests
-  lmi = app.xurl_find ("//local/data/unknown");                 TASSERT (lmi == NULL);
-  lmi = app.xurl_find ("//local/data/model1");                  TASSERT (lmi == NULL);
-  path = app.xurl_path (lm1);                                   TASSERT (path == "");
-  success = app.xurl_add ("//local/data/model1", lm1);          TASSERT (success == true);
-  path = app.xurl_path (lm1);                                   TASSERT (path == "//local/data/model1");
-  success = app.xurl_add ("//local/data/model1", lm1);          TASSERT (success == false);
-  success = app.xurl_add ("//local/data/model1", lm2);          TASSERT (success == false);
-  success = app.xurl_add ("//local/data/unknown", lm1);         TASSERT (success == false);
-  lmi = app.xurl_find ("//local/data/model1");                  TASSERT (lmi == &lm1);
-  success = app.xurl_sub (lm1);                                 TASSERT (success == true);
-  success = app.xurl_sub (lm1);                                 TASSERT (success == false);
-  path = app.xurl_path (lm1);                                   TASSERT (path == "");
-  lmi = app.xurl_find ("//local/data/model1");                  TASSERT (lmi == NULL);
-  success = app.xurl_add ("//local/data/model1", lm1);          TASSERT (success == true);
-  path = app.xurl_path (lm1);                                   TASSERT (path == "//local/data/model1");
-
-  // model2 + lmr2 tests
-  lmi = app.xurl_find ("//local/data/model2");                  TASSERT (lmi == NULL);
-  path = app.xurl_path (lm2);                                   TASSERT (path == "");
-  success = app.xurl_sub (lm2);                                 TASSERT (success == false);
-  success = app.xurl_add ("//local/data/model2", lm2);          TASSERT (success == true);
-  path = app.xurl_path (lm2);                                   TASSERT (path == "//local/data/model2");
-  success = app.xurl_add ("//local/data/model2", lm1);          TASSERT (success == false);
-  success = app.xurl_add ("//local/data/model2", lm3);          TASSERT (success == false);
-  success = app.xurl_add ("//local/data/unknown", lm2);         TASSERT (success == false);
-  lmi = app.xurl_find ("//local/data/model2");                  TASSERT (lmi == &lm2);
-  success = app.xurl_sub (lm2);                                 TASSERT (success == true);
-  success = app.xurl_sub (lm2);                                 TASSERT (success == false);
-  lmi = app.xurl_find ("//local/data/model2");                  TASSERT (lmi == NULL);
-  success = app.xurl_add ("//local/data/model2", lm2);          TASSERT (success == true);
-  lmi = app.xurl_find ("//local/data/model2");                  TASSERT (lmi == &lm2);
-
-  // model3 + lmr3 tests
-  lmi = app.xurl_find ("//local/data/model3");                  TASSERT (lmi == NULL);
-  path = app.xurl_path (lm3);                                   TASSERT (path == "");
-  success = app.xurl_add ("//local/data/model3", lm3);          TASSERT (success == true);
-  path = app.xurl_path (lm3);                                   TASSERT (path == "//local/data/model3");
-  success = app.xurl_add ("//local/data/unknown", lm3);         TASSERT (success == false);
-  lmi = app.xurl_find ("//local/data/model3");                  TASSERT (lmi == &lm3);
-
-  // removal checks
-  lmi = app.xurl_find ("//local/data/model1");                  TASSERT (lmi == &lm1);
-  unref (ref_sink (lmr1));
-  lmi = app.xurl_find ("//local/data/model1");                  TASSERT (lmi == NULL);
-
-  lmi = app.xurl_find ("//local/data/model2");                  TASSERT (lmi == &lm2);
-  success = app.xurl_sub (lm2);                                 TASSERT (success == true);
-  success = app.xurl_sub (lm2);                                 TASSERT (success == false);
-  unref (ref_sink (lmr2));
-  lmi = app.xurl_find ("//local/data/model2");                  TASSERT (lmi == NULL);
-
-  lmi = app.xurl_find ("//local/data/model3");                  TASSERT (lmi == &lm3);
-  unref (ref_sink (lmr3));
-  lmi = app.xurl_find ("//local/data/model3");                  TASSERT (lmi == NULL);
+  ListModelRelayIfaceP lmr = app.create_list_model_relay();
+  TASSERT (lmr);
+  ListModelIfaceP model = lmr->model();
+  TASSERT (model);
+  TASSERT (model->count() == 0);
+  AnySeq aseq;
+  TASSERT (aseq.size() == 0);
+  aseq.append_back() <<= "cell";
+  TASSERT (aseq.size() == 1);
+  lmr->update (UpdateRequest (UPDATE_INSERTION, UpdateSpan (0, 1)));
+  TASSERT (model->count() == 1);
+  Any a = model->row (0);
+  TASSERT (a.kind() == Aida::UNTYPED);
+  lmr->fill (0, aseq);
+  a = model->row (0);
+  TASSERT (a.as_string() == "cell");
 }
-REGISTER_UITHREAD_TEST ("Server/Application XUrl Map", test_application_xurl);
+REGISTER_UITHREAD_TEST ("Server/Application ListModelRelay", test_application_list_model_relay);
 
 static void
 test_idl_enums()

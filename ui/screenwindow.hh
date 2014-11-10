@@ -10,7 +10,7 @@ class ScreenDriver;
 class ScreenCommand;
 
 /// Interface class for managing window contents on screens and display devices.
-class ScreenWindow : public virtual Deletable, public virtual std::enable_shared_from_this<ScreenWindow> {
+class ScreenWindow : public virtual std::enable_shared_from_this<ScreenWindow> {
   RAPICORN_CLASS_NON_COPYABLE (ScreenWindow);
 public:
   /// Flags used to request and reflect certain window operations and states.

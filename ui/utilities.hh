@@ -13,7 +13,6 @@
 #ifdef __RAPICORN_BUILD__
 // convenience macros
 #define MakeNamedCommand                RAPICORN_MakeNamedCommand
-#define MakeSimpleCommand               RAPICORN_MakeSimpleCommand
 #endif
 
 namespace Rapicorn {
@@ -278,105 +277,6 @@ template<class Iterator> ValueIteratorRange<Iterator>
 value_iterator_range (const Iterator &begin, const Iterator &end)
 {
   return ValueIteratorRange<Iterator> (begin, end);
-}
-
-/* --- Walker (easy to use iterator_range (begin(), end()) substitute) --- */
-template<typename Value> class Walker {
-  /* auxillary Walker classes */
-  struct AdapterBase {
-    virtual bool         done    () = 0;
-    virtual void         inc     () = 0;
-    virtual AdapterBase* clone   () const = 0;
-    virtual void*        element () const = 0;
-    virtual bool         equals  (const AdapterBase &eb) const = 0;
-    virtual             ~AdapterBase () {}
-  };
-  AdapterBase *adapter;
-public:
-  template<class Iterator> class Adapter : public AdapterBase {
-    Iterator ibegin, iend;
-  public:
-    explicit Adapter (const Iterator &cbegin, const Iterator &cend) :
-      ibegin (cbegin), iend (cend)
-    {}
-    virtual bool         done    ()             { return ibegin == iend; }
-    virtual void         inc     ()             { ibegin.operator++(); }
-    virtual AdapterBase* clone   () const       { return new Adapter (ibegin, iend); }
-    virtual void*        element () const       { return (void*) ibegin.operator->(); }
-    virtual bool         equals  (const AdapterBase &eb) const
-    {
-      const Adapter *we = dynamic_cast<const Adapter*> (&eb);
-      return we && ibegin == we->ibegin && iend == we->iend;
-    }
-  };
-  /* Walker API */
-  typedef Value       value_type;
-  typedef value_type& reference;
-  typedef value_type* pointer;
-  Walker&   operator= (const Walker &w)         { adapter = w.adapter ? w.adapter->clone() : NULL; return *this; }
-  bool      done       () const                 { return !adapter || adapter->done(); }
-  bool      has_next   () const                 { return !done(); }
-  pointer   operator-> () const                 { return reinterpret_cast<pointer> (adapter ? adapter->element() : NULL); }
-  reference operator*  () const                 { return *operator->(); }
-  Walker&   operator++ ()                       { if (adapter) adapter->inc(); return *this; }
-  Walker    operator++ (int)                    { Walker dup (*this); if (adapter) adapter->inc(); return dup; }
-  bool      operator== (const Walker &w) const  { return w.adapter == adapter || (adapter && w.adapter && adapter->equals (*w.adapter)); }
-  bool      operator!= (const Walker &w) const  { return !operator== (w); }
-  ~Walker()                                     { if (adapter) delete adapter; adapter = NULL; }
-  Walker (const Walker &w)                      : adapter (w.adapter ? w.adapter->clone() : NULL) {}
-  Walker (AdapterBase *cadapter = NULL)         : adapter (cadapter) {}
-};
-template<class Container> Walker<const typename Container::const_iterator::value_type>
-walker (const Container &container)
-{
-  typedef typename Container::const_iterator          Iterator;
-  typedef Walker<const typename Iterator::value_type> Walker;
-  typedef typename Walker::template Adapter<Iterator> Adapter;
-  return Walker (new Adapter (container.begin(), container.end()));
-}
-template<class Container> Walker<typename Container::iterator::value_type>
-walker (Container &container)
-{
-  typedef typename Container::iterator                Iterator;
-  typedef Walker<typename Iterator::value_type>       Walker;
-  typedef typename Walker::template Adapter<Iterator> Adapter;
-  return Walker (new Adapter (container.begin(), container.end()));
-}
-template<class Container> Walker<typename Dereference<const typename Container::const_iterator::value_type>::Value>
-value_walker (const Container &container)
-{
-  typedef typename Container::const_iterator                               Iterator;
-  typedef typename Dereference<const typename Iterator::value_type>::Value Value;
-  typedef Walker<Value>                                                    Walker;
-  typedef ValueIterator<Iterator>                                          VIterator;
-  typedef typename Walker::template Adapter<VIterator>                     Adapter;
-  return Walker (new Adapter (VIterator (container.begin()), VIterator (container.end())));
-}
-template<class Container> Walker<typename Dereference<typename Container::iterator::value_type>::Value>
-value_walker (Container &container)
-{
-  typedef typename Container::iterator                               Iterator;
-  typedef typename Dereference<typename Iterator::value_type>::Value Value;
-  typedef Walker<Value>                                              Walker;
-  typedef ValueIterator<Iterator>                                    VIterator;
-  typedef typename Walker::template Adapter<VIterator>               Adapter;
-  return Walker (new Adapter (VIterator (container.begin()), VIterator (container.end())));
-}
-template<class Iterator> Walker<typename Iterator::value_type>
-walker (const Iterator &begin, const Iterator &end)
-{
-  typedef Walker<typename Iterator::value_type>       Walker;
-  typedef typename Walker::template Adapter<Iterator> Adapter;
-  return Walker (new Adapter (begin, end));
-}
-template<class Iterator> Walker<typename Dereference<typename Iterator::value_type>::Value>
-value_walker (const Iterator &begin, const Iterator &end)
-{
-  typedef typename Dereference<typename Iterator::value_type>::Value Value;
-  typedef Walker<Value>                                              Walker;
-  typedef ValueIterator<Iterator>                                    VIterator;
-  typedef typename Walker::template Adapter<VIterator>               Adapter;
-  return Walker (new Adapter (VIterator (begin), VIterator (end)));
 }
 
 } // Rapicorn

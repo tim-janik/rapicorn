@@ -12,21 +12,22 @@ namespace Rapicorn {
 
 /* --- Widget structures and forward decls --- */
 typedef Rect Allocation;
-class WidgetImpl;
 class AnchorInfo;
 class SizeGroup;
 class WidgetGroup;
 class Adjustment;
-class ContainerImpl;
 class ResizeContainerImpl;
 class WindowImpl;
 class ViewportImpl;
-typedef std::shared_ptr<ObjectIface> ObjectIfaceP;
 namespace Selector { class Selob; }
 enum WidgetGroupType { WIDGET_GROUP_HSIZE = 1, WIDGET_GROUP_VSIZE };
 
+class ContainerImpl;
+typedef std::shared_ptr<ContainerImpl> ContainerImplP;
+typedef std::weak_ptr<ContainerImpl>   ContainerImplW;
+
 /* --- event handler --- */
-class EventHandler : public virtual ReferenceCountable {
+class EventHandler : public virtual Aida::ImplicitBase {
   typedef Aida::Signal<bool (const Event&), Aida::CollectorWhile0<bool>> EventSignal;
 protected:
   virtual bool  handle_event    (const Event    &event);
@@ -38,6 +39,10 @@ public:
   } ResetMode;
   virtual void  reset           (ResetMode       mode = RESET_ALL) = 0;
 };
+
+class WidgetImpl;
+typedef std::shared_ptr<WidgetImpl> WidgetImplP;
+typedef std::weak_ptr<WidgetImpl>   WidgetImplW;
 
 /// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
 /// More details about widgets are covered in @ref Widget.
@@ -89,6 +94,7 @@ protected:
     INVALID_REQUISITION       = 1 << 18, ///< Flag indicates the need update widget's size requisition, see requisition()
     INVALID_ALLOCATION        = 1 << 19, ///< Flag indicates the need update widget's allocation, see set_allocation()
     INVALID_CONTENT           = 1 << 20, ///< Flag indicates that the widget's entire contents need to be repainted, see expose()
+    FINALIZING                = 1 << 21, ///< Flag used internally to short-cut destructor phase.
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
@@ -113,12 +119,12 @@ protected:
   virtual void                visual_update        ();
   /* misc */
   virtual                     ~WidgetImpl       ();
-  virtual void                finalize          ();
+  void                        dtor_finalizing   ()              { change_flags_silently (FINALIZING, true); }
+  bool                        finalizing        () const        { return test_any_flag (FINALIZING); }
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
   virtual bool                activate_widget   ();
-  virtual bool                custom_command    (const String       &command_name,
-                                                 const StringSeq    &command_args);
+  virtual bool                custom_command    (const String &command_name, const StringSeq &command_args);
   virtual void                set_user_data     (const String &name, const Any &any);
   virtual Any                 get_user_data     (const String &name);
   void                        heritage          (HeritageP heritage);
@@ -211,6 +217,7 @@ public:
   virtual const CommandList&  list_commands     ();
   /* parents */
   ContainerImpl*              parent            () const { return parent_; }
+  ContainerImplP              parentp           () const;
   ContainerImpl*              root              () const;
   bool                        has_ancestor      (const WidgetImpl &ancestor) const;
   WidgetImpl*                 common_ancestor   (const WidgetImpl &other) const;
@@ -225,6 +232,7 @@ public:
   void                        cross_unlink      (WidgetImpl &link, size_t link_id);
   void                        uncross_links     (WidgetImpl &link);
   /* invalidation / changes */
+  virtual void                changed           (const String &name) override;
   void                        invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
@@ -233,9 +241,8 @@ public:
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
-  Aida::Signal<void ()>                   sig_finalize;
-  Aida::Signal<void ()>                   sig_invalidate;
-  Aida::Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
+  Signal<void ()>                   sig_invalidate;
+  Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
   /* event handling */
   bool                       process_event               (const Event &event);  // widget coordinates relative
   bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative
@@ -347,9 +354,9 @@ private:
   void               leave_anchored  ();
 public:
   virtual bool         match_selector        (const String &selector);
-  virtual WidgetIface* query_selector        (const String &selector);
+  virtual WidgetIfaceP query_selector        (const String &selector);
   virtual WidgetSeq    query_selector_all    (const String &selector);
-  virtual WidgetIface* query_selector_unique (const String &selector);
+  virtual WidgetIfaceP query_selector_unique (const String &selector);
   template<class C> typename
   InterfaceMatch<C>::Result interface        (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;

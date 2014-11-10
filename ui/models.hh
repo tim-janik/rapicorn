@@ -6,6 +6,8 @@
 
 namespace Rapicorn {
 
+class ListModelRelayImpl;
+typedef std::shared_ptr<ListModelRelayImpl> ListModelRelayImplP;
 class ListModelRelayImpl : public virtual ListModelRelayIface {
   struct RelayModel : public virtual ListModelIface {
     vector<Any>                 rows_;
@@ -13,18 +15,22 @@ class ListModelRelayImpl : public virtual ListModelRelayIface {
     virtual Any                 row             (int n);
     virtual void                delete_this     ()              { /* do nothing for embedded object */ }
   };
-  RelayModel                    model_;
+  typedef std::shared_ptr<RelayModel> RelayModelP;
+  RelayModelP                   model_;
   void                          emit_updated            (UpdateKind kind, uint start, uint length);
   explicit                      ListModelRelayImpl      ();
+  friend class                  FriendAllocator<ListModelRelayImpl>;    // provide make_shared for non-public ctor
 protected:
   virtual                      ~ListModelRelayImpl      ();
-  static ListModelRelayImpl&    create_list_model_relay ();
+  static ListModelRelayImplP    create_list_model_relay ();
 public:
-  virtual void                  update          (const UpdateRequest &urequest);
-  virtual void                  fill            (int first, const AnySeq &aseq);
-  virtual ListModelIface*       model           ()              { return &model_; }
+  virtual void                  update          (const UpdateRequest &urequest) override;
+  virtual void                  fill            (int first, const AnySeq &aseq) override;
+  virtual ListModelIfaceP       model           () override             { return model_; }
   void                          refill          (int start, int length);
 };
+typedef std::shared_ptr<ListModelRelayImpl> ListModelRelayImplP;
+typedef std::weak_ptr  <ListModelRelayImpl> ListModelRelayImplW;
 
 class MemoryListStore : public virtual ListModelIface {
   vector<Any>           rows_;
@@ -38,7 +44,8 @@ public:
   void                  update_row      (uint n, const Any &aseq);
   void                  remove          (uint start, uint length);
 };
-
+typedef std::shared_ptr<MemoryListStore> MemoryListStoreP;
+typedef std::weak_ptr  <MemoryListStore> MemoryListStoreW;
 
 } // Rapicorn
 

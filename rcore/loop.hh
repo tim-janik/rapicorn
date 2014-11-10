@@ -33,39 +33,44 @@ struct PollFD   /// Mirrors struct pollfd for poll(3posix)
 };
 
 // === EventLoop ===
+class EventLoop;
+typedef std::shared_ptr<EventLoop> EventLoopP;
 class MainLoop;
-class EventLoop : public virtual ReferenceCountable /// Loop object, polling for events and executing callbacks in accordance.
+typedef std::shared_ptr<MainLoop> MainLoopP;
+/// Loop object, polling for events and executing callbacks in accordance.
+class EventLoop : public virtual std::enable_shared_from_this<EventLoop>
 {
   class TimedSource;
+  typedef std::shared_ptr<TimedSource> TimedSourceP;
   class PollFDSource;
+  typedef std::shared_ptr<PollFDSource> PollFDSourceP;
   class DispatcherSource;
+  typedef std::shared_ptr<DispatcherSource> DispatcherSourceP;
   class QuickPfdArray;          // pseudo vector<PollFD>
-  class QuickSourceArray;       // pseudo vector<Source*>
   friend class MainLoop;
 public:
-  class Source;
   class State;
+  class Source;
+  typedef std::shared_ptr<Source> SourceP;
 protected:
-  typedef std::vector<Source*>    SourceList;
-  MainLoop     &main_loop_;
+  typedef std::vector<SourceP>    SourceList;
+  MainLoop     *main_loop_;
   SourceList    sources_;
   int64         dispatch_priority_;
-  QuickSourceArray &poll_sources_;
-  uint64        pollmem1[3];
-  Source*       pollmem2[7];
+  vector<SourceP> poll_sources_;
   bool          primary_;
   explicit      EventLoop        (MainLoop&);
   virtual      ~EventLoop        ();
-  Source*       find_first_L     ();
-  Source*       find_source_L    (uint id);
+  SourceP&      find_first_L     ();
+  SourceP&      find_source_L    (uint id);
   bool          has_primary_L    (void);
-  void          remove_source_Lm (Source *source);
+  void          remove_source_Lm (SourceP source);
   void          kill_sources_Lm  (void);
   void          unpoll_sources_U    ();
   void          collect_sources_Lm  (State&);
   bool          prepare_sources_Lm  (State&, int64*, QuickPfdArray&);
   bool          check_sources_Lm    (State&, const QuickPfdArray&);
-  Source*       dispatch_source_Lm  (State&);
+  SourceP       dispatch_source_Lm  (State&);
 public:
   typedef std::function<void (void)>         VoidSlot;
   typedef std::function<bool (void)>         BoolSlot;
@@ -82,11 +87,11 @@ public:
   static const int PRIORITY_BACKGROUND = +300 + 500;    ///< Unimportant, used when everything else done (G*LOW)
   void wakeup   ();                                     ///< Wakeup loop from polling.
   // source handling
-  uint add             (Source *loop_source, int priority
+  uint add             (SourceP loop_source, int priority
                         = PRIORITY_NORMAL);     ///< Adds a new source to the loop with custom priority.
   void remove          (uint            id);    ///< Removes a source from loop, the source must be present.
   bool try_remove      (uint            id);    ///< Tries to remove a source, returns if successfull.
-  void kill_sources    (void);                  ///< Remove all sources from this loop, prevents all further execution.
+  void destroy_loop    (void);
   bool has_primary     (void);                  ///< Indicates whether loop contains primary sources.
   bool flag_primary    (bool            on);
   template<class BoolVoidFunctor>
@@ -101,7 +106,7 @@ public:
   uint exec_update     (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "update" (important idle), returning true repeats callback.
   template<class BoolVoidFunctor>
   uint exec_background (BoolVoidFunctor &&bvf); ///< Execute a callback with background priority (when idle), returning true repeats callback.
-  MainLoop* main_loop  () const { return &main_loop_; }        ///< Get the main loop for this loop.
+  MainLoop* main_loop  () const { return main_loop_; }  ///< Get the main loop for this loop.
   /// Execute a single dispatcher callback for prepare, check, dispatch.
   uint exec_dispatcher (const DispatcherSlot &sl, int priority = PRIORITY_NORMAL);
   /// Execute a callback after a specified timeout, returning true repeats callback.
@@ -116,12 +121,14 @@ public:
 };
 
 // === MainLoop ===
-class MainLoop : public EventLoop /// An EventLoop implementation that offers public API for running the loop.
+/// An EventLoop implementation that offers public API for running the loop.
+class MainLoop : public EventLoop
 {
+  friend                class FriendAllocator<MainLoop>;
   friend                class EventLoop;
   friend                class SlaveLoop;
   Mutex                 mutex_;
-  vector<EventLoop*>    loops_;
+  vector<EventLoopP>    loops_;
   EventFd               eventfd_;
   uint                  rr_index_;
   bool                  running_;
@@ -129,7 +136,8 @@ class MainLoop : public EventLoop /// An EventLoop implementation that offers pu
   bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
-  void                  remove_loop_L       (EventLoop &loop);  ///< Removes a slave loop from this main loop.
+  void                  kill_loop_Lm        (EventLoop &loop);  ///< Destroy a slave loop and all its sources.
+  void                  kill_loops_Lm       ();                 ///< Destroy this loop and all slave loops.
   bool                  iterate_loops_Lm    (State&, bool b, bool d);
   explicit              MainLoop            ();
 public:
@@ -140,16 +148,9 @@ public:
   bool       finishable      (); ///< Indicates wether this loop has no primary sources left to process.
   bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
-  void       kill_loops      (); ///< Kill all sources in this loop and all slave loops.
-  EventLoop* new_slave       (); ///< Creates a new slave loop that is run as part of this main loop.
-  static MainLoop*  _new     (); ///< Creates a new main loop object, users can run or iterate this loop directly.
+  EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
+  static MainLoopP  create   ();
   inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
-  void set_lock_hooks (std::function<bool()> sense, std::function<void()> lock, std::function<void()> unlock);
-private:
-  ///@cond
-  struct LockHooks { std::function<bool()> sense; std::function<void()> lock; std::function<void()> unlock; };
-  LockHooks lock_hooks_; bool lock_hooks_locked_;
-  ///@endcond
 };
 
 // === EventLoop::State ===
@@ -162,7 +163,7 @@ struct EventLoop::State {
 };
 
 // === EventLoop::Source ===
-class EventLoop::Source : public virtual ReferenceCountable /// EventLoop source for callback execution.
+class EventLoop::Source /// EventLoop source for callback execution.
 {
   friend        class EventLoop;
   RAPICORN_CLASS_NON_COPYABLE (Source);
@@ -182,8 +183,8 @@ protected:
   uint         n_pfds      ();
   explicit     Source      ();
   uint         source_id   () { return loop_ ? id_ : 0; }
-public:
   virtual     ~Source      ();
+public:
   virtual bool prepare     (const State &state,
                             int64 *timeout_usecs_p) = 0;    ///< Prepare the source for dispatching (true return) or polling (false).
   virtual bool check       (const State &state) = 0;        ///< Check the source and its PollFD descriptors for dispatching (true return).
@@ -203,6 +204,7 @@ public:
 // === EventLoop::DispatcherSource ===
 class EventLoop::DispatcherSource : public virtual EventLoop::Source /// EventLoop source for timer execution.
 {
+  friend class FriendAllocator<DispatcherSource>;
   DispatcherSlot slot_;
 protected:
   virtual     ~DispatcherSource ();
@@ -210,13 +212,16 @@ protected:
   virtual bool check            (const State &state);
   virtual bool dispatch         (const State &state);
   virtual void destroy          ();
-public:
   explicit     DispatcherSource (const DispatcherSlot &slot);
+public:
+  static DispatcherSourceP create (const DispatcherSlot &slot)
+  { return FriendAllocator<DispatcherSource>::make_shared (slot); }
 };
 
 // === EventLoop::TimedSource ===
 class EventLoop::TimedSource : public virtual EventLoop::Source /// EventLoop source for timer execution.
 {
+  friend class FriendAllocator<TimedSource>;
   uint64     expiration_usecs_;
   uint       interval_msecs_;
   bool       first_interval_;
@@ -231,14 +236,19 @@ protected:
                              int64 *timeout_usecs_p);
   virtual bool check        (const State &state);
   virtual bool dispatch     (const State &state);
+  explicit     TimedSource (const BoolSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs);
+  explicit     TimedSource (const VoidSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs);
 public:
-  explicit     TimedSource (const BoolSlot &slot, uint initial_interval_msecs = 0, uint repeat_interval_msecs = 0);
-  explicit     TimedSource (const VoidSlot &slot, uint initial_interval_msecs = 0, uint repeat_interval_msecs = 0);
+  static TimedSourceP create (const BoolSlot &slot, uint initial_interval_msecs = 0, uint repeat_interval_msecs = 0)
+  { return FriendAllocator<TimedSource>::make_shared (slot, initial_interval_msecs, repeat_interval_msecs); }
+  static TimedSourceP create (const VoidSlot &slot, uint initial_interval_msecs = 0, uint repeat_interval_msecs = 0)
+  { return FriendAllocator<TimedSource>::make_shared (slot, initial_interval_msecs, repeat_interval_msecs); }
 };
 
 // === EventLoop::PollFDSource ===
 class EventLoop::PollFDSource : public virtual EventLoop::Source /// EventLoop source for IO callbacks.
 {
+  friend class FriendAllocator<PollFDSource>;
 protected:
   void          construct       (const String &mode);
   virtual      ~PollFDSource    ();
@@ -257,9 +267,13 @@ private:
     BPfdSlot bool_poll_slot_;
     VPfdSlot void_poll_slot_;
   };
-public:
   explicit      PollFDSource    (const BPfdSlot &slot, int fd, const String &mode);
   explicit      PollFDSource    (const VPfdSlot &slot, int fd, const String &mode);
+public:
+  static PollFDSourceP create (const BPfdSlot &slot, int fd, const String &mode)
+  { return FriendAllocator<PollFDSource>::make_shared (slot, fd, mode); }
+  static PollFDSourceP create (const VPfdSlot &slot, int fd, const String &mode)
+  { return FriendAllocator<PollFDSource>::make_shared (slot, fd, mode); }
 };
 
 // === EventLoop methods ===
@@ -268,7 +282,7 @@ EventLoop::exec_now (BoolVoidFunctor &&bvf)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  TimedSource *tsource = new TimedSource (slot);
+  TimedSourceP tsource = TimedSource::create (slot);
   tsource->primary (true);
   return add (tsource, PRIORITY_NOW);
 }
@@ -278,7 +292,7 @@ EventLoop::exec_next (BoolVoidFunctor &&bvf)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (new TimedSource (slot), PRIORITY_NEXT);
+  return add (TimedSource::create (slot), PRIORITY_NEXT);
 }
 
 template<class BoolVoidFunctor> uint
@@ -286,7 +300,7 @@ EventLoop::exec_notify (BoolVoidFunctor &&bvf)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (new TimedSource (slot), PRIORITY_NOTIFY);
+  return add (TimedSource::create (slot), PRIORITY_NOTIFY);
 }
 
 template<class BoolVoidFunctor> uint
@@ -294,7 +308,7 @@ EventLoop::exec_normal (BoolVoidFunctor &&bvf)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (new TimedSource (slot), PRIORITY_NORMAL);
+  return add (TimedSource::create (slot), PRIORITY_NORMAL);
 }
 
 template<class BoolVoidFunctor> uint
@@ -302,7 +316,7 @@ EventLoop::exec_update (BoolVoidFunctor &&bvf)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (new TimedSource (slot), PRIORITY_UPDATE);
+  return add (TimedSource::create (slot), PRIORITY_UPDATE);
 }
 
 template<class BoolVoidFunctor> uint
@@ -310,13 +324,13 @@ EventLoop::exec_background (BoolVoidFunctor &&bvf)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (new TimedSource (slot), PRIORITY_BACKGROUND);
+  return add (TimedSource::create (slot), PRIORITY_BACKGROUND);
 }
 
 inline uint
 EventLoop::exec_dispatcher (const DispatcherSlot &slot, int priority)
 {
-  return add (new DispatcherSource (slot), priority);
+  return add (DispatcherSource::create (slot), priority);
 }
 
 template<class BoolVoidFunctor> uint
@@ -324,7 +338,7 @@ EventLoop::exec_timer (uint timeout_ms, BoolVoidFunctor &&bvf, int priority)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (new TimedSource (slot, timeout_ms, timeout_ms), priority);
+  return add (TimedSource::create (slot, timeout_ms, timeout_ms), priority);
 }
 
 template<class BoolVoidFunctor> uint
@@ -332,7 +346,7 @@ EventLoop::exec_timer (uint initial_timeout_ms, uint repeat_timeout_ms, BoolVoid
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (new TimedSource (slot, initial_timeout_ms, repeat_timeout_ms), priority);
+  return add (TimedSource::create (slot, initial_timeout_ms, repeat_timeout_ms), priority);
 }
 
 template<class BoolVoidPollFunctor> uint
@@ -340,7 +354,7 @@ EventLoop::exec_io_handler (BoolVoidPollFunctor &&bvf, int fd, const String &mod
 {
   typedef decltype (bvf (*(PollFD*) 0)) ReturnType;
   std::function<ReturnType (PollFD&)> slot (bvf);
-  return add (new PollFDSource (slot, fd, mode), priority);
+  return add (PollFDSource::create (slot, fd, mode), priority);
 }
 
 } // Rapicorn

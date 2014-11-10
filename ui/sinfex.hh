@@ -6,14 +6,18 @@
 
 namespace Rapicorn {
 
-class Sinfex : public virtual ReferenceCountable {
+class Sinfex;
+typedef std::shared_ptr<Sinfex> SinfexP;
+typedef std::weak_ptr  <Sinfex> SinfexW;
+
+class Sinfex {
   RAPICORN_CLASS_NON_COPYABLE (Sinfex);
 protected:
   uint          *start_;
   explicit       Sinfex ();
   virtual       ~Sinfex ();
 public:
-  static Sinfex* parse_string (const String &expression);
+  static SinfexP parse_string (const String &expression);
   class          Value;
   struct Scope {
     virtual Value resolve_variable        (const String        &entity,

@@ -79,7 +79,7 @@ REGISTER_UITHREAD_TEST ("labelmarkup/Test Markup Parser", test_markup_parser);
 static void
 test_text_markup()
 {
-  WidgetImpl &label = Factory::create_ui_widget ("Label");
+  WidgetImplP label = Factory::create_ui_widget ("Label");
   TOK();
   TOK();
   String test_markup =
@@ -99,9 +99,9 @@ test_text_markup()
     "<tt>teletype</tt> "
     "<smaller>smaller</smaller> "
     "<larger>larger</larger>";
-  label.set_property ("markup_text", test_markup);
+  label->set_property ("markup_text", test_markup);
   TOK();
-  String str = label.get_property ("markup_text");
+  String str = label->get_property ("markup_text");
   const char *markup_result = str.c_str();
   // g_printerr ("MARKUP: %s\n", markup_result);
   TASSERT (strstr (markup_result, "<I"));
@@ -111,9 +111,9 @@ test_text_markup()
   TASSERT (strstr (markup_result, "<U"));
   TASSERT (strstr (markup_result, "underline<"));
   /* try re-parsing */
-  label.set_property ("markup_text", markup_result);
+  label->set_property ("markup_text", markup_result);
   TOK();
-  str = label.get_property ("markup_text");
+  str = label->get_property ("markup_text");
   markup_result = str.c_str();
   TASSERT (strstr (markup_result, "<I"));
   TASSERT (strstr (markup_result, "italic<"));

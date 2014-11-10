@@ -4,15 +4,13 @@
 
 namespace Rapicorn {
 
-ListModelRelayImpl::ListModelRelayImpl ()
-{
-  ref_sink (&model_); // ref-counting must be accurate even for embedded objects
-}
+ListModelRelayImpl::ListModelRelayImpl () :
+  model_ (std::make_shared<RelayModel>())
+{}
 
 ListModelRelayImpl::~ListModelRelayImpl ()
 {
-  unref (&model_); // model_.delete_this is a NOP
-  assert (model_.finalizing() == true); // ugly part, asks for ref_count==0
+  model_.reset();
 }
 
 Any
@@ -25,7 +23,7 @@ ListModelRelayImpl::RelayModel::row (int r)
 void
 ListModelRelayImpl::emit_updated (UpdateKind kind, uint start, uint length)
 {
-  model_.sig_updated.emit (UpdateRequest (kind, UpdateSpan (start, length)));
+  model_->sig_updated.emit (UpdateRequest (kind, UpdateSpan (start, length)));
 }
 
 void
@@ -35,26 +33,26 @@ ListModelRelayImpl::update (const UpdateRequest &urequest)
     {
     case UPDATE_INSERTION:
       assert_return (urequest.rowspan.start >= 0);
-      assert_return (urequest.rowspan.start <= model_.count());
+      assert_return (urequest.rowspan.start <= model_->count());
       assert_return (urequest.rowspan.length >= 0);
-      model_.rows_.insert (model_.rows_.begin() + urequest.rowspan.start, urequest.rowspan.length, Any());
-      model_.sig_updated.emit (urequest);
+      model_->rows_.insert (model_->rows_.begin() + urequest.rowspan.start, urequest.rowspan.length, Any());
+      model_->sig_updated.emit (urequest);
       refill (urequest.rowspan.start, urequest.rowspan.length);
       break;
     case UPDATE_CHANGE:
       assert_return (urequest.rowspan.start >= 0);
-      assert_return (urequest.rowspan.start <= model_.count());
+      assert_return (urequest.rowspan.start <= model_->count());
       assert_return (urequest.rowspan.length >= 0);
-      assert_return (urequest.rowspan.start + urequest.rowspan.length <= model_.count());
+      assert_return (urequest.rowspan.start + urequest.rowspan.length <= model_->count());
       refill (urequest.rowspan.start, urequest.rowspan.length); // emits UPDATE_CHANGE later
       break;
     case UPDATE_DELETION:
       assert_return (urequest.rowspan.start >= 0);
-      assert_return (urequest.rowspan.start <= model_.count());
+      assert_return (urequest.rowspan.start <= model_->count());
       assert_return (urequest.rowspan.length >= 0);
-      assert_return (urequest.rowspan.start + urequest.rowspan.length <= model_.count());
-      model_.rows_.erase (model_.rows_.begin() + urequest.rowspan.start, model_.rows_.begin() + urequest.rowspan.start + urequest.rowspan.length);
-      model_.sig_updated.emit (urequest);
+      assert_return (urequest.rowspan.start + urequest.rowspan.length <= model_->count());
+      model_->rows_.erase (model_->rows_.begin() + urequest.rowspan.start, model_->rows_.begin() + urequest.rowspan.start + urequest.rowspan.length);
+      model_->sig_updated.emit (urequest);
       break;
     case UPDATE_READ: ;
     }
@@ -64,11 +62,11 @@ void
 ListModelRelayImpl::fill (int first, const AnySeq &anyseq)
 {
   assert_return (first >= 0);
-  if (first >= model_.count())
+  if (first >= model_->count())
     return;
   size_t i;
-  for (i = 0; i < anyseq.size() && first + i < model_.rows_.size(); i++)
-    model_.rows_[first + i] = anyseq[i];
+  for (i = 0; i < anyseq.size() && first + i < model_->rows_.size(); i++)
+    model_->rows_[first + i] = anyseq[i];
   if (i)
     emit_updated (UPDATE_CHANGE, first, i);
 }
@@ -77,32 +75,24 @@ void
 ListModelRelayImpl::refill (int start, int length)
 {
   assert_return (start >= 0);
-  assert_return (start < model_.count());
+  assert_return (start < model_->count());
   assert_return (length >= 0);
-  length = MIN (start + length, model_.count()) - start;
+  length = MIN (start + length, model_->count()) - start;
   if (length)
     sig_refill.emit (UpdateRequest (UPDATE_READ, UpdateSpan (start, length)));
 }
 
-ListModelRelayImpl&
-ListModelRelayImpl::create_list_model_relay()
+ListModelRelayImplP
+ListModelRelayImpl::create_list_model_relay ()
 {
-  ListModelRelayImpl *relay = new ListModelRelayImpl ();
-  return *relay;
+  return FriendAllocator<ListModelRelayImpl>::make_shared ();
 }
 
-ListModelRelayIface*
-ApplicationImpl::create_list_model_relay (const std::string &name)
+ListModelRelayIfaceP
+ApplicationImpl::create_list_model_relay ()
 {
   struct Accessor : public ListModelRelayImpl { using ListModelRelayImpl::create_list_model_relay; };
-  ListModelRelayImpl &lmr = Accessor::create_list_model_relay();
-  if (ApplicationImpl::the().xurl_add (name, *lmr.model()))
-    return &lmr;
-  else
-    {
-      unref (ref_sink (lmr));
-      return NULL;
-    }
+  return Accessor::create_list_model_relay();
 }
 
 MemoryListStore::MemoryListStore (int n_columns) :

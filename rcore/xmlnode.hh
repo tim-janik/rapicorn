@@ -7,10 +7,14 @@
 
 namespace Rapicorn {
 
+class XmlNode;
+typedef std::shared_ptr<XmlNode> XmlNodeP;
+typedef std::weak_ptr  <XmlNode> XmlNodeW;
+
 /** Simple XML tree representation.
  * @DISCOURAGED: Nonpublic API, data structure used internally.
  */
-class XmlNode : public virtual ReferenceCountable, public virtual DataListContainer {
+class XmlNode : public virtual DataListContainer, public virtual std::enable_shared_from_this<XmlNode> {
   String                name_; // element name
   XmlNode              *parent_;
   StringVector          attribute_names_;
@@ -24,7 +28,7 @@ protected:
   virtual              ~XmlNode         ();
   static void           set_parent      (XmlNode *c, XmlNode *p);
 public:
-  typedef const vector<XmlNode*>     ConstNodes;
+  typedef const vector<XmlNodeP>     ConstNodes;
   typedef ConstNodes::const_iterator ConstChildIter;
   String                name            () const                { return name_; }
   XmlNode*              parent          () const                { return parent_; }
@@ -59,16 +63,16 @@ public:
   bool                  break_within    () const;
   String                xml_string      (uint64          indent = 0, bool include_outer = true, uint64 recursion_depth = -1) const;
   /* nodes */
-  static XmlNode*       create_text     (const String   &utf8text,
+  static XmlNodeP       create_text     (const String   &utf8text,
                                          uint            line,
                                          uint            _char,
                                          const String   &file);
-  static XmlNode*       create_parent   (const String   &element_name,
+  static XmlNodeP       create_parent   (const String   &element_name,
                                          uint            line,
                                          uint            _char,
                                          const String   &file);
   /* IO */
-  static XmlNode*       parse_xml       (const String   &input_name,
+  static XmlNodeP       parse_xml       (const String   &input_name,
                                          const char     *utf8data,
                                          ssize_t         utf8data_len,
                                          MarkupParser::Error *error,

@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 class SliderAreaImpl : public virtual TableLayoutImpl, public virtual SliderAreaIface {
-  Adjustment          *adjustment_;
+  AdjustmentP          adjustment_;
   size_t               avc_id_, arc_id_;
   AdjustmentSourceType adjustment_source_;
   bool                 flip_;

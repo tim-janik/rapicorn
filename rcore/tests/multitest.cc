@@ -107,13 +107,12 @@ test_failing ()
 
   if (Test::trap_fork_silent())
     {
-      struct ReferenceCountableWrapper : public ReferenceCountable {};
-      ReferenceCountableWrapper invalid_ref_countable_on_stack; // fatal: object allocated on stack instead of heap
+      fatal ("example allocation error");
       _exit (0);
     }
   TASSERT (Test::trap_aborted() == true);
   TASSERT (Test::trap_stderr().find ("alloc") != String::npos);
-  TASSERT (Test::trap_stderr().find ("stack") != String::npos);
+  TASSERT (Test::trap_stderr().find ("example") != String::npos);
 }
 REGISTER_TEST ("0-Testing/Traps & Failing Conditions", test_failing);
 
@@ -275,21 +274,6 @@ test_files (void)
   TCMP (Path::check (argv0, "s"), ==, FALSE);
 }
 REGISTER_TEST ("General/FileChecks", test_files);
-
-static void
-test_virtual_typeid()
-{
-  struct TypeA : public virtual VirtualTypeid {};
-  struct TypeB : public virtual VirtualTypeid {};
-  TypeA a;
-  TypeB b;
-  TCMP (a.typeid_name(), !=, b.typeid_name());
-  TCMPS (strstr (a.typeid_name().c_str(), "TypeA"), !=, NULL);
-  TCMPS (strstr (b.typeid_name().c_str(), "TypeB"), !=, NULL);
-}
-REGISTER_TEST ("General/VirtualTypeid", test_virtual_typeid);
-
-struct SomeObject : public BaseObject {};
 
 static void
 test_id_allocator ()

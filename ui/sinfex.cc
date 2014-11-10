@@ -373,12 +373,12 @@ SinfexParser::yyread (int   max_size,
   return 0;
 }
 
-Sinfex*
+SinfexP
 Sinfex::parse_string (const String &expression)
 {
   SinfexParser yyself;
   yyself.yyparse_string (expression);
-  return new SinfexExpression (yyself.estk);
+  return SinfexP (new SinfexExpression (yyself.estk));
 }
 
 } // Rapicorn

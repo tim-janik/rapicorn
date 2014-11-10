@@ -39,7 +39,7 @@ struct TextAttrState {
 };
 
 /// Interface for editable text widgets.
-class TextBlock {
+class TextBlock : public virtual Aida::ImplicitBase {
 protected:
   virtual String      save_markup  () const = 0;
   virtual void        load_markup  (const String &markup) = 0;
@@ -78,13 +78,14 @@ public:
   // notifications
   Aida::Signal<void ()> sig_selection_changed;        ///< Notification signal for operations that affected the selection.
 };
+typedef std::shared_ptr<TextBlock> TextBlockP;
 
 /// Text layout controller supporting edits, selection and pasting.
 class TextControllerImpl : public virtual SingleContainerImpl, public virtual EventHandler {
   int        cursor_;
   TextMode   text_mode_;
   bool       allow_edits_;
-  TextBlock *cached_tblock_;
+  TextBlockP cached_tblock_;
   size_t     tblock_sig_;
   String     clipboard_;
   uint64     clipboard_nonce_, selection_nonce_, paste_nonce_;

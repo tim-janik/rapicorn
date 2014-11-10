@@ -15,9 +15,7 @@ SliderAreaImpl::SliderAreaImpl() :
   flip_ (false),
   sig_slider_changed (Aida::slot (*this, &SliderAreaImpl::slider_changed))
 {
-  Adjustment *adj = Adjustment::create();
-  adjustment (*adj);
-  adj->unref();
+  adjustment (*Adjustment::create());
 }
 
 SliderAreaImpl::~SliderAreaImpl()
@@ -39,7 +37,7 @@ SliderAreaImpl::move (MoveType movement)
 const CommandList&
 SliderAreaImpl::list_commands ()
 {
-  static Command *commands[] = {
+  static CommandP commands[] = {
     MakeNamedCommand (SliderAreaImpl, "increment", _("Increment slider"), move, MOVE_STEP_FORWARD),
     MakeNamedCommand (SliderAreaImpl, "decrement", _("Decrement slider"), move, MOVE_STEP_BACKWARD),
     MakeNamedCommand (SliderAreaImpl, "page-increment", _("Large slider increment"), move, MOVE_PAGE_FORWARD),
@@ -52,13 +50,12 @@ SliderAreaImpl::list_commands ()
 void
 SliderAreaImpl::unset_adjustment()
 {
-  if (avc_id_)
+  if (adjustment_ && avc_id_)
     adjustment_->sig_value_changed() -= avc_id_;
   avc_id_ = 0;
-  if (arc_id_)
+  if (adjustment_ && arc_id_)
     adjustment_->sig_range_changed() -= arc_id_;
   arc_id_ = 0;
-  adjustment_->unref();
   adjustment_ = NULL;
 }
 
@@ -116,10 +113,9 @@ SliderAreaImpl::flipped (bool flip)
 void
 SliderAreaImpl::adjustment (Adjustment &adjustment)
 {
-  adjustment.ref();
-  if (adjustment_)
-    unset_adjustment();
-  adjustment_ = &adjustment;
+  AdjustmentP newadj = shared_ptr_cast<Adjustment> (&adjustment);
+  unset_adjustment();
+  adjustment_ = newadj;
   avc_id_ = adjustment_->sig_value_changed() += [this] () { sig_slider_changed.emit(); };
   arc_id_ = adjustment_->sig_range_changed() += [this] () { sig_slider_changed.emit(); };
   changed ("adjustment");
@@ -128,7 +124,7 @@ SliderAreaImpl::adjustment (Adjustment &adjustment)
 Adjustment*
 SliderAreaImpl::adjustment () const
 {
-  return adjustment_;
+  return &*adjustment_;
 }
 
 static const WidgetFactory<SliderAreaImpl> slider_area_factory ("Rapicorn_Factory:SliderArea");

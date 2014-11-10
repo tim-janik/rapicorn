@@ -7,7 +7,7 @@
 namespace Rapicorn {
 
 class ApplicationImpl : public ApplicationIface {
-  vector<WindowIface*> windows_;
+  vector<WindowIfaceP> windows_;
   int                  tc_;
 public:
   explicit            ApplicationImpl        ();
@@ -19,16 +19,16 @@ public:
                                               const std::string &i18n_domain = "") override;
   virtual void        load_string            (const std::string &xml_string,
                                               const std::string &i18n_domain = "") override;
-  virtual WindowIface* create_window         (const std::string &window_identifier,
+  virtual WindowIfaceP create_window         (const std::string &window_identifier,
                                               const StringSeq &arguments = StringSeq()) override;
   void                add_window             (WindowIface &window);
   bool                remove_window          (WindowIface &window);
   virtual void        close_all              () override;
-  virtual WindowIface*query_window           (const String &selector) override;
+  virtual WindowIfaceP query_window          (const String &selector) override;
   virtual WindowList  query_windows          (const String &selector) override;
   virtual WindowList  list_windows           () override;
-  virtual BindableRelayIface*  create_bindable_relay   () override;
-  virtual ListModelRelayIface* create_list_model_relay (const std::string &name = "") override;
+  virtual BindableRelayIfaceP  create_bindable_relay   () override;
+  virtual ListModelRelayIfaceP create_list_model_relay () override;
   virtual void        test_counter_set       (int val) override;
   virtual void        test_counter_add       (int val) override;
   virtual int         test_counter_get       () override;

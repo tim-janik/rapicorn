@@ -94,11 +94,7 @@ void
 XmlNode::set_parent (XmlNode *c,
                      XmlNode *p)
 {
-  if (p)
-    ref_sink (c);
   c->parent_ = p;
-  if (!p)
-    unref (c);
 }
 
 static DataKey<uint64> xml_node_flags_key;
@@ -123,7 +119,7 @@ XmlNode::first_child (const String &element_name) const
   if (c)
     for (ConstNodes::const_iterator it = c->begin(); it != c->end(); it++)
       if (element_name == (*it)->name())
-        return *it;
+        return &**it;
   return NULL;
 }
 
@@ -131,14 +127,13 @@ void
 XmlNode::steal_children (XmlNode &parent)
 {
   ConstNodes cl = parent.children();
-  for (uint i = 0; i < cl.size(); i++)
-    ref (cl[i]);
-  for (uint i = cl.size(); i > 0; i++)
+  vector<XmlNodeP> temp;
+  for (auto c : cl)
+    temp.push_back (c);
+  for (size_t i = cl.size(); i > 0; i++)
     parent.del_child (*cl[i-1]);
-  for (uint i = 0; i < cl.size(); i++)
-    add_child (*cl[i]);
-  for (uint i = 0; i < cl.size(); i++)
-    unref (cl[i]);
+  for (auto c : temp)
+    add_child (*c);
 }
 
 void
@@ -171,6 +166,7 @@ namespace { // Anon
 using namespace Rapicorn;
 
 class XmlNodeText : public virtual XmlNode {
+  friend class FriendAllocator<XmlNodeText>;
   String                text_;
   // XmlNodeText
   virtual String        text            () const         { return text_; }
@@ -188,14 +184,15 @@ public:
 };
 
 class XmlNodeParent : public virtual XmlNode {
-  vector<XmlNode*>      children_;
+  friend class FriendAllocator<XmlNodeParent>;
+  vector<XmlNodeP>      children_;
   // XmlNodeText
   virtual String
   text () const
   {
     String result;
-    for (vector<XmlNode*>::const_iterator it = children_.begin(); it != children_.end(); it++)
-      result.append ((*it)->text());
+    for (auto c : children_)
+      result.append (c->text());
     return result;
   }
   /* XmlNodeParent */
@@ -204,7 +201,7 @@ class XmlNodeParent : public virtual XmlNode {
   add_child (XmlNode &child)
   {
     assert_return (child.parent() == NULL, false);
-    children_.push_back (&child);
+    children_.push_back (shared_ptr_cast<XmlNode> (&child));
     set_parent (&child, this);
     return true;
   }
@@ -212,11 +209,12 @@ class XmlNodeParent : public virtual XmlNode {
   del_child (XmlNode &child)
   {
     /* walk backwards so removing the last child is O(1) */
-    for (vector<XmlNode*>::reverse_iterator rit = children_.rbegin(); rit != children_.rend(); rit++)
-      if (&child == *rit)
+    for (vector<XmlNodeP>::reverse_iterator rit = children_.rbegin(); rit != children_.rend(); rit++)
+      if (&child == &**rit)
         {
-          vector<XmlNode*>::iterator it = (++rit).base(); // see reverse_iterator.base() documentation
-          assert (&child == *it);
+          XmlNodeP childp = *rit; // protect child during deletion
+          vector<XmlNodeP>::iterator it = (++rit).base(); // see reverse_iterator.base() documentation
+          assert (&child == &**it);
           children_.erase (it);
           assert (child.parent() == this);
           set_parent (&child, NULL);
@@ -239,8 +237,8 @@ public:
 };
 
 class XmlNodeParser : public Rapicorn::MarkupParser {
-  vector<XmlNode*> node_stack_;
-  XmlNode         *first_;
+  vector<XmlNodeP> node_stack_;
+  XmlNodeP         first_;
   XmlNodeParser (const String &input_name) :
     MarkupParser (input_name), first_ (NULL)
   {}
@@ -253,12 +251,12 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
                  ConstStrings  &attribute_values,
                  Error         &error)
   {
-    XmlNode *current = node_stack_.size() ? node_stack_[node_stack_.size() - 1] : NULL;
+    XmlNodeP current = node_stack_.size() ? node_stack_[node_stack_.size() - 1] : NULL;
     if (element_name.size() < 1 || !element_name[0]) /* paranoid checks */
       error.set (INVALID_ELEMENT, String() + "invalid element name: <" + escape_text (element_name) + "/>");
     int xline, xchar;
     get_position (&xline, &xchar);
-    XmlNode *xnode = XmlNode::create_parent (element_name, xline, xchar, input_name());
+    XmlNodeP xnode = XmlNode::create_parent (element_name, xline, xchar, input_name());
     for (uint i = 0; i < attribute_names.size(); i++)
       xnode->set_attribute (attribute_names[i], attribute_values[i]);
     if (current)
@@ -269,7 +267,6 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
           {
             error.set (INVALID_ELEMENT, String() + "multiple toplevel elements: "
                        "<" + escape_text (first_->name()) + "/> <" + escape_text (element_name) + "/>");
-            unref (first_); // prevent leaks
             first_ = NULL;
           }
         first_ = xnode;
@@ -286,17 +283,17 @@ class XmlNodeParser : public Rapicorn::MarkupParser {
   text (const String  &text,
         Error         &error)
   {
-    XmlNode *current = node_stack_.size() ? node_stack_[node_stack_.size() - 1] : NULL;
+    XmlNodeP current = node_stack_.size() ? node_stack_[node_stack_.size() - 1] : NULL;
     int xline, xchar;
     get_position (&xline, &xchar);
-    XmlNode *xnode = XmlNode::create_text (text, xline, xchar, input_name());
+    XmlNodeP xnode = XmlNode::create_text (text, xline, xchar, input_name());
     if (current)
       current->add_child (*xnode);
     else
       first_ = xnode;
   }
 public:
-  static XmlNode*
+  static XmlNodeP
   parse_xml (const String        &input_name,
              const char          *utf8data,
              ssize_t              utf8data_len,
@@ -323,25 +320,25 @@ public:
 
 namespace Rapicorn {
 
-XmlNode*
+XmlNodeP
 XmlNode::create_text (const String &utf8text,
                       uint          line,
                       uint          _char,
                       const String &file)
 {
-  return new XmlNodeText (utf8text, line, _char, file);
+  return FriendAllocator<XmlNodeText>::make_shared (utf8text, line, _char, file);
 }
 
-XmlNode*
+XmlNodeP
 XmlNode::create_parent (const String &element_name,
                         uint          line,
                         uint          _char,
                         const String &file)
 {
-  return new XmlNodeParent (element_name, line, _char, file);
+  return FriendAllocator<XmlNodeParent>::make_shared (element_name, line, _char, file);
 }
 
-XmlNode*
+XmlNodeP
 XmlNode::parse_xml (const String        &input_name,
                     const char          *utf8data,
                     ssize_t              utf8data_len,
@@ -349,7 +346,7 @@ XmlNode::parse_xml (const String        &input_name,
                     const String        &roottag)
 {
   MarkupParser::Error perror;
-  XmlNode *xnode = XmlNodeParser::parse_xml (input_name, utf8data, utf8data_len, perror, roottag);
+  XmlNodeP xnode = XmlNodeParser::parse_xml (input_name, utf8data, utf8data_len, perror, roottag);
   if (error)
     *error = perror;
   return xnode;

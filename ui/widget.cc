@@ -146,8 +146,8 @@ WidgetImpl::propagate_state (bool notify_changed)
   if (was_viewable != viewable())
     invalidate();       // changing viewable forces invalidation, regardless of notify_changed
   if (container)
-    for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
-      it->propagate_state (notify_changed);
+    for (auto child : *container)
+      child->propagate_state (notify_changed);
   if (notify_changed && !finalizing())
     sig_changed.emit (""); // changed() does not imply invalidate(), see above
 }
@@ -417,8 +417,8 @@ WidgetImpl::match_interface (bool wself, bool wparent, bool children, InterfaceM
     {
       ContainerImpl *container = self->as_container_impl();
       if (container)
-        for (ContainerImpl::ChildWalker cw = container->local_children(); cw.has_next(); cw++)
-          if (cw->match_interface (1, 0, 1, imatcher))
+        for (auto child : *container)
+          if (child->match_interface (1, 0, 1, imatcher))
             return true;
     }
   return false;
@@ -431,12 +431,12 @@ WidgetImpl::match_selector (const String &selector)
   return Selector::Matcher::query_selector_bool (selector, *sallocator.widget_selob (*this));
 }
 
-WidgetIface*
+WidgetIfaceP
 WidgetImpl::query_selector (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   Selector::Selob *selob = Selector::Matcher::query_selector_first (selector, *sallocator.widget_selob (*this));
-  return selob ? sallocator.selob_widget (*selob) : NULL;
+  return shared_ptr_cast<WidgetIface> (selob ? sallocator.selob_widget (*selob) : NULL);
 }
 
 WidgetSeq
@@ -454,12 +454,12 @@ WidgetImpl::query_selector_all (const String &selector)
   return widgets;
 }
 
-WidgetIface*
+WidgetIfaceP
 WidgetImpl::query_selector_unique (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   Selector::Selob *selob = Selector::Matcher::query_selector_unique (selector, *sallocator.widget_selob (*this));
-  return selob ? sallocator.selob_widget (*selob) : NULL;
+  return shared_ptr_cast<WidgetIface> (selob ? sallocator.selob_widget (*selob) : NULL);
 }
 
 uint
@@ -562,14 +562,9 @@ void
 WidgetImpl::visual_update ()
 {}
 
-void
-WidgetImpl::finalize()
-{
-  sig_finalize.emit();
-}
-
 WidgetImpl::~WidgetImpl()
 {
+  dtor_finalizing();
   WidgetGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);
@@ -594,8 +589,8 @@ WidgetImpl::lookup_command (const String &command_name)
   if (!cmap)
     {
       cmap = new CommandMap;
-      for (uint i = 0; i < clist.n_commands; i++)
-        (*cmap)[clist.commands[i]->ident] = clist.commands[i];
+      for (auto cmdp : clist)
+        (*cmap)[cmdp->ident] = cmdp.get();
       clist_map[&clist] = cmap;
     }
   CommandMap::iterator it = cmap->find (command_name);
@@ -652,7 +647,7 @@ WidgetImpl::custom_command (const String    &command_name,
 const CommandList&
 WidgetImpl::list_commands ()
 {
-  static Command *commands[] = {
+  static CommandP commands[] = {
   };
   static const CommandList command_list (commands);
   return command_list;
@@ -735,9 +730,9 @@ WidgetImpl::data_context (ObjectIface &dcontext)
   ObjectIfaceP oip = get_data (&data_context_key);
   if (oip.get() != &dcontext)
     {
-      oip = shared_ptr (&dcontext);
+      oip = shared_ptr_cast<ObjectIface> (&dcontext);
       if (oip)
-        set_data (&data_context_key, shared_ptr (&dcontext));
+        set_data (&data_context_key, oip);
       else
         delete_data (&data_context_key);
       if (anchored())
@@ -861,8 +856,8 @@ WidgetImpl::propagate_heritage ()
 {
   ContainerImpl *container = this->as_container_impl();
   if (container)
-    for (ContainerImpl::ChildWalker it = container->local_children(); it.has_next(); it++)
-      it->heritage (heritage_);
+    for (auto child : *container)
+      child->heritage (heritage_);
 }
 
 void
@@ -1066,27 +1061,32 @@ WidgetImpl::point (Point p) /* widget coordinates relative */
           p.y >= a.y && p.y < a.y + a.height);
 }
 
+ContainerImplP
+WidgetImpl::parentp () const
+{
+  return shared_ptr_cast<ContainerImpl> (parent());
+}
+
 void
 WidgetImpl::set_parent (ContainerImpl *pcontainer)
 {
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     controller->reset();
-  ContainerImpl *pc = parent();
-  if (pc)
+  ContainerImpl* old_parent = parent();
+  const ContainerImplP guard_parent = shared_ptr_cast<ContainerImpl*> (old_parent);
+  if (old_parent)
     {
-      ref (pc);
       WindowImpl *rtoplevel = get_window();
       invalidate();
       if (heritage())
         heritage (NULL);
-      pc->unparent_child (*this);
+      old_parent->unparent_child (*this);
       parent_ = NULL;
       ainfo_ = NULL;
       propagate_state (false); // propagate PARENT_VISIBLE, PARENT_SENSITIVE
       if (anchored() and rtoplevel)
         sig_hierarchy_changed.emit (rtoplevel);
-      unref (pc);
     }
   if (pcontainer)
     {
@@ -1307,6 +1307,13 @@ WidgetImpl::find_widget_group (const String &group_name, WidgetGroupType group, 
 }
 
 void
+WidgetImpl::changed (const String &name)
+{
+  if (!finalizing())
+    ObjectImpl::changed (name);
+}
+
+void
 WidgetImpl::invalidate_parent ()
 {
   /* propagate (size) invalidation from children to parents */
@@ -1456,7 +1463,7 @@ void
 WidgetImpl::leave_anchored ()
 {
   const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
-  for (auto *wgroup : widget_groups)
+  for (auto wgroup : widget_groups)
     wgroup->remove_widget (*this);
   data_context_changed();
 }

@@ -9,12 +9,14 @@
 
 namespace Rapicorn {
 
+class ServerConnectionSource;
+typedef std::shared_ptr<ServerConnectionSource> ServerConnectionSourceP;
+
 class ServerConnectionSource : public virtual EventLoop::Source {
   static Aida::BaseConnection *connection_;
   const char             *WHERE;
   PollFD                  pollfd_;
   bool                    last_seen_primary_, need_check_primary_;
-public:
   ServerConnectionSource (EventLoop &loop) :
     WHERE ("Rapicorn::UIThread::ServerConnection"),
     last_seen_primary_ (false), need_check_primary_ (false)
@@ -23,11 +25,19 @@ public:
     connection_ = ApplicationIface::__aida_connection__();
     assert (connection_ != NULL); // essentially allows only singletons
     primary (false);
-    loop.add (this, EventLoop::PRIORITY_NORMAL);
     pollfd_.fd = connection_->notify_fd();
     pollfd_.events = PollFD::IN;
     pollfd_.revents = 0;
-    add_poll (&pollfd_);
+  }
+  friend class FriendAllocator<ServerConnectionSource>;
+public:
+  static ServerConnectionSourceP
+  create (EventLoop &loop)
+  {
+    ServerConnectionSourceP self = FriendAllocator<ServerConnectionSource>::make_shared (loop);
+    loop.add (self, EventLoop::PRIORITY_NORMAL);
+    self->add_poll (&self->pollfd_);
+    return self;
   }
 private:
   ~ServerConnectionSource ()
@@ -85,14 +95,12 @@ class UIThread {
   pthread_mutex_t         thread_mutex_;
   volatile bool           running_;
   Initializer            *idata_;
-  MainLoop               &main_loop_; // FIXME: non-NULL only while running
+  const MainLoopP         main_loop_;
 public:
   UIThread (Initializer *idata) :
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
-    main_loop_ (*ref_sink (MainLoop::_new()))
-  {
-    // main_loop_.set_lock_hooks (...);
-  }
+    main_loop_ (MainLoop::create())
+  {}
   bool  running() const { return running_; }
   void
   start()
@@ -118,11 +126,10 @@ public:
   queue_stop()
   {
     pthread_mutex_lock (&thread_mutex_);
-    if (&main_loop_)
-      main_loop_.quit();
+    main_loop_->quit();
     pthread_mutex_unlock (&thread_mutex_);
   }
-  MainLoop*         main_loop()   { return &main_loop_; }
+  MainLoopP         main_loop()   { return main_loop_; }
 private:
   ~UIThread ()
   {
@@ -136,8 +143,7 @@ private:
     // idata_core() already called
     ThisThread::affinity (string_to_int (string_vector_find_value (*idata_->args, "cpu-affinity=", "-1")));
     // initialize ui_thread loop before components
-    ServerConnectionSource *server_source = ref_sink (new ServerConnectionSource (main_loop_));
-    (void) server_source;
+    ServerConnectionSourceP server_source = ServerConnectionSource::create (*main_loop_);
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -151,7 +157,7 @@ private:
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
     // Setup root handle for remote calls
-    ApplicationImpl::the().__aida_connection__()->remote_origin (BaseObject::shared_ptr (&ApplicationImpl::the()));
+    ApplicationImpl::the().__aida_connection__()->remote_origin (ApplicationImpl::the().shared_from_this());
     // Complete initialization by signalling caller
     idata_->done = true;
     idata_->mutex.lock();
@@ -171,13 +177,13 @@ public:
 
     initialize();
     assert_return (idata_ == NULL);
-    main_loop_.run();
+    main_loop_->run();
     WindowImpl::forcefully_close_all();
     ScreenDriver::forcefully_close_all();
-    while (!main_loop_.finishable())
-      if (!main_loop_.iterate (false))
+    while (!main_loop_->finishable())
+      if (!main_loop_->iterate (false))
         break;  // handle primary idle handlers like exec_now
-    main_loop_.kill_loops();
+    main_loop_->destroy_loop();
 
     assert (running_ == true);
     const bool stopped_twice = !__sync_fetch_and_sub (&running_, +1);
@@ -190,7 +196,7 @@ public:
 };
 static UIThread *the_uithread = NULL;
 
-MainLoop*
+MainLoopP
 uithread_main_loop ()
 {
   return the_uithread ? the_uithread->main_loop() : NULL;

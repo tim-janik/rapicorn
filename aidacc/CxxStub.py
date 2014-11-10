@@ -92,7 +92,7 @@ class Generator:
   def R (self, type_node):                              # construct Return type
     tname = self.C (type_node)
     if self.gen_mode == G4SERVANT and type_node.storage == Decls.INTERFACE:
-      tname += '*'
+      tname += 'P'
     return tname
   def M (self, type_node):                              # construct Member type
     if self.gen_mode == G4STUB and type_node.storage == Decls.INTERFACE:
@@ -390,6 +390,11 @@ class Generator:
   def generate_interface_class (self, type_info, class_name_list):
     s, classC, classH, classFull = '\n', self.C (type_info), self.C4client (type_info), self.namespaced_identifier (type_info.name)
     class_name_list += [ classFull ]
+    if self.gen_mode == G4SERVANT:
+      s += 'class %s;\n' % classC
+      s += 'typedef std::shared_ptr<%s> %sP;\n' % (classC, classC)
+      s += 'typedef std::weak_ptr  <%s> %sW;\n' % (classC, classC)
+      s += '\n'
     # declare
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
@@ -452,7 +457,9 @@ class Generator:
     s += '};\n'
     if self.gen_mode == G4SERVANT:
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %s*);\n' % self.C (type_info)
+      s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %sP&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s*&);\n' % self.C (type_info)
+      s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %sP&);\n' % self.C (type_info)
     else: # G4STUB
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, const %s&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s&);\n' % self.C (type_info)
@@ -570,12 +577,20 @@ class Generator:
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % (classC, classC) # dtor
     s += 'void\n'
+    s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %sP &ptr)\n{\n' % classC
+    s += '  fb <<= ptr.get();\n'
+    s += '}\n'
+    s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %s *obj)\n{\n' % classC
     s += '  __AIDA_Local__::field_buffer_add_interface (fb, obj);\n'
     s += '}\n'
     s += 'void\n'
-    s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
+    s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %sP &obj)\n{\n' % classC
     s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr);\n' % classC
+    s += '}\n'
+    s += 'void\n'
+    s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
+    s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr).get();\n' % classC
     s += '}\n'
     s += '%s*\noperator->* (%s &sh, Rapicorn::Aida::_ServantType)\n{\n' % (classC, classH)
     s += '  return __AIDA_Local__::remote_handle_to_interface<%s> (sh);\n' % classC
@@ -678,7 +693,7 @@ class Generator:
     s += '  '
     hasret = mtype.rtype.storage != Decls.VOID
     if hasret:
-      s += self.V ('', mtype.rtype) + 'rval = '
+      s += self.R (mtype.rtype) + ' rval = '
     # call out
     s += 'self->' + mtype.name + ' ('
     s += ', '.join (self.U ('arg_' + a[0], a[1]) for a in mtype.args)
@@ -695,10 +710,10 @@ class Generator:
     s += '}\n'
     return s
   def generate_property_prototype (self, class_info, fident, ftype, pad = 0):
-    s, v, v0, ptr = '', '', '', ''
+    s, v, v0, rptr, ptr = '', '', '', '', ''
     copydoc = 'See ' + self.type2cpp (class_info) + '::' + fident
     if self.gen_mode == G4SERVANT:
-      v, v0, ptr = 'virtual ', ' = 0', '*'
+      v, v0, rptr, ptr = 'virtual ', ' = 0', 'P', '*'
     tname = self.C (ftype)
     pid = fident + ' ' * max (0, pad - len (fident))
     if ftype.storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
@@ -708,7 +723,7 @@ class Generator:
       s += '  ' + v + self.F (tname)  + pid + ' () const%s; \t///< %s\n' % (v0, copydoc)
       s += '  ' + v + self.F ('void') + pid + ' (const ' + tname + '&)%s; \t///< %s\n' % (v0, copydoc)
     elif ftype.storage == Decls.INTERFACE:
-      s += '  ' + v + self.F (tname + ptr)  + pid + ' () const%s; \t///< %s\n' % (v0, copydoc)
+      s += '  ' + v + self.F (tname + rptr)  + pid + ' () const%s; \t///< %s\n' % (v0, copydoc)
       s += '  ' + v + self.F ('void') + pid + ' (' + tname + ptr + ')%s; \t///< %s\n' % (v0, copydoc)
     return s
   def generate_client_property_stub (self, class_info, fident, ftype):
@@ -787,7 +802,7 @@ class Generator:
     s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
     # return var
     s += '  '
-    s += self.V ('', ftype) + 'rval = '
+    s += self.R (ftype) + ' rval = '
     # call out
     s += 'self->' + fident + ' ();\n'
     # store return value
@@ -862,7 +877,7 @@ class Generator:
     s += '  if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }\n'
     s += '  Rapicorn::Aida::uint64 emit_result_id;\n'
     if async:
-      s += '  ' + self.V ('', stype.rtype) + 'rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);\n'
+      s += '  ' + self.R (stype.rtype) + ' rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);\n'
       s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, %s, 2);\n' % digest # invalidates fbr
       s += '  rb <<= emit_result_id;\n'
       s += self.generate_proto_add_args ('rb', class_info, '', [('rval', stype.rtype)], '')
@@ -925,7 +940,7 @@ class Generator:
       s += '    auto future = promise->get_future();\n'
       s += '    const size_t lambda_id = 1 + size_t (promise.get());\n' # generate unique (non-pointer) id
       s += '    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {\n'
-      s += '      ' + self.V ('retval', stype.rtype) + ';\n'
+      s += '      ' + self.R (stype.rtype) + ' retval;\n'
       s += '    ' + self.generate_proto_pop_args ('frr', class_info, '', [('retval', stype.rtype)], '')
       s += '      promise->set_value (retval);\n'
       s += '    };\n'

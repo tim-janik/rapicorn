@@ -136,8 +136,7 @@ MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++0x)
 BOTHCCXXFLAGS=
 if test "x$enable_debug" = "xyes"; then
   MC_EVAR_ADD(BOTHCCXXFLAGS,      -DG_ENABLE_DEBUG)
-  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -g)
-  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -ggdb3)
+  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -g3)
   MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fno-omit-frame-pointer)
   MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fverbose-asm)
   dnl # MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Q -ftime-report -fmem-report)

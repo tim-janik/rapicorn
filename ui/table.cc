@@ -108,9 +108,9 @@ TableLayoutImpl::is_row_used (int srow)
 {
   const uint row = srow;
   if (row < rows_.size())
-    for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    for (auto child : *this)
       {
-        const PackInfo &pi = cw->pack_info();
+        const PackInfo &pi = child->pack_info();
         if (row >= bottom_attach (pi) && row < top_attach (pi))
           return true;
       }
@@ -122,9 +122,9 @@ TableLayoutImpl::is_col_used (int scol)
 {
   const uint col = scol;
   if (col < cols_.size())
-    for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    for (auto child : *this)
       {
-        const PackInfo &pi = cw->pack_info();
+        const PackInfo &pi = child->pack_info();
         if (col >= left_attach (pi) && col < right_attach (pi))
           return true;
       }
@@ -140,9 +140,9 @@ TableLayoutImpl::resize_table (uint n_cols, uint n_rows)
     return;
   /* grow as children require */
   if (n_rows < rows_.size() || n_cols < cols_.size())
-    for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+    for (auto child : *this)
       {
-        const PackInfo &pi = cw->pack_info();
+        const PackInfo &pi = child->pack_info();
         n_rows = MAX (n_rows, top_attach (pi));
         n_cols = MAX (n_cols, right_attach (pi));
       }
@@ -172,17 +172,17 @@ void
 TableLayoutImpl::expand_table (const uint first_col, const uint n_cols, const uint first_row, const uint n_rows)
 {
   resize_table (cols_.size() + n_cols, rows_.size() + n_rows);
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto child : *this)
     {
-      const PackInfo &pi = cw->pack_info();
+      const PackInfo &pi = child->pack_info();
       if (left_attach (pi) >= first_col)
-        cw->hposition (cw->hposition() + n_cols);
+        child->hposition (child->hposition() + n_cols);
       else if (first_col < right_attach (pi))
-        cw->hspan (cw->hspan() + n_cols);
+        child->hspan (child->hspan() + n_cols);
       if (bottom_attach (pi) >= first_row)
-        cw->vposition (cw->vposition() + n_rows);
+        child->vposition (child->vposition() + n_rows);
       else if (first_row < top_attach (pi))
-        cw->vspan (cw->vspan() + n_rows);
+        child->vspan (child->vspan() + n_rows);
     }
 }
 
@@ -265,19 +265,19 @@ TableLayoutImpl::size_request_init()
     }
 
   bool chspread = false, cvspread = false;
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto child : *this)
     {
       // size request all children
-      if (!cw->visible())
+      if (!child->visible())
         continue;
-      const PackInfo &pi = cw->pack_info();
-      chspread |= cw->hspread();
-      cvspread |= cw->vspread();
+      const PackInfo &pi = child->pack_info();
+      chspread |= child->hspread();
+      cvspread |= child->vspread();
       // expand cols with single-column expand children
-      if (left_attach (pi) + 1 == right_attach (pi) && cw->hexpand())
+      if (left_attach (pi) + 1 == right_attach (pi) && child->hexpand())
         cols_[left_attach (pi)].expand = true;
       // expand rows with single-column expand children
-      if (bottom_attach (pi) + 1 == top_attach (pi) && cw->vexpand())
+      if (bottom_attach (pi) + 1 == top_attach (pi) && child->vexpand())
         rows_[bottom_attach (pi)].expand = true;
     }
   set_flag (HSPREAD_CONTAINER, chspread);
@@ -287,12 +287,12 @@ TableLayoutImpl::size_request_init()
 void
 TableLayoutImpl::size_request_pass1()
 {
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto child : *this)
     {
-      if (!cw->visible())
+      if (!child->visible())
         continue;
-      Requisition crq = cw->requisition();
-      const PackInfo &pi = cw->pack_info();
+      Requisition crq = child->requisition();
+      const PackInfo &pi = child->pack_info();
       /* fetch requisition from single-column children */
       if (left_attach (pi) + 1 == right_attach (pi))
         {
@@ -331,15 +331,15 @@ TableLayoutImpl::size_request_pass2()
 void
 TableLayoutImpl::size_request_pass3()
 {
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto child : *this)
     {
-      if (!cw->visible())
+      if (!child->visible())
         continue;
-      const PackInfo &pi = cw->pack_info();
+      const PackInfo &pi = child->pack_info();
       /* request remaining space for multi-column children */
       if (left_attach (pi) + 1 != right_attach (pi))
         {
-          Requisition crq = cw->requisition();
+          Requisition crq = child->requisition();
           /* Check and see if there is already enough space for the child. */
           uint width = 0;
           for (uint col = left_attach (pi); col < right_attach (pi); col++)
@@ -378,7 +378,7 @@ TableLayoutImpl::size_request_pass3()
       /* request remaining space for multi-row children */
       if (bottom_attach (pi) + 1 != top_attach (pi))
         {
-          Requisition crq = cw->requisition();
+          Requisition crq = child->requisition();
           /* Check and see if there is already enough space for the child. */
           uint height = 0;
           for (uint row = bottom_attach (pi); row < top_attach (pi); row++)
@@ -444,36 +444,36 @@ TableLayoutImpl::size_allocate_init()
       rows_[row].empty = true;
     }
   /* adjust the row and col flags from expand/shrink flags of single row/col children */
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto child : *this)
     {
-      if (!cw->visible())
+      if (!child->visible())
         continue;
-      const PackInfo &pi = cw->pack_info();
+      const PackInfo &pi = child->pack_info();
       if (left_attach (pi) + 1 == right_attach (pi))
         {
-          cols_[left_attach (pi)].expand |= cw->hexpand();
-          cols_[left_attach (pi)].shrink &= cw->hshrink();
+          cols_[left_attach (pi)].expand |= child->hexpand();
+          cols_[left_attach (pi)].shrink &= child->hshrink();
           cols_[left_attach (pi)].empty = false;
         }
       if (bottom_attach (pi) + 1 == top_attach (pi))
         {
-          rows_[bottom_attach (pi)].expand |= cw->vexpand();
-          rows_[bottom_attach (pi)].shrink &= cw->vshrink();
+          rows_[bottom_attach (pi)].expand |= child->vexpand();
+          rows_[bottom_attach (pi)].shrink &= child->vshrink();
           rows_[bottom_attach (pi)].empty = false;
         }
     }
   /* adjust the row and col flags from expand/shrink flags of multi row/col children */
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto child : *this)
     {
-      if (!cw->visible())
+      if (!child->visible())
         continue;
-      const PackInfo &pi = cw->pack_info();
+      const PackInfo &pi = child->pack_info();
       if (left_attach (pi) + 1 != right_attach (pi))
         {
           uint col;
           for (col = left_attach (pi); col < right_attach (pi); col++)
             cols_[col].empty = false;
-          if (cw->hexpand())
+          if (child->hexpand())
             {
               for (col = left_attach (pi); col < right_attach (pi); col++)
                 if (cols_[col].expand)
@@ -482,7 +482,7 @@ TableLayoutImpl::size_allocate_init()
                 for (col = left_attach (pi); col < right_attach (pi); col++)
                   cols_[col].need_expand = true;
             }
-          if (!cw->hshrink())
+          if (!child->hshrink())
             {
               for (col = left_attach (pi); col < right_attach (pi); col++)
                 if (!cols_[col].shrink)
@@ -497,7 +497,7 @@ TableLayoutImpl::size_allocate_init()
           uint row;
           for (row = bottom_attach (pi); row < top_attach (pi); row++)
             rows_[row].empty = false;
-          if (cw->vexpand())
+          if (child->vexpand())
             {
               for (row = bottom_attach (pi); row < top_attach (pi); row++)
                 if (rows_[row].expand)
@@ -506,7 +506,7 @@ TableLayoutImpl::size_allocate_init()
                 for (row = bottom_attach (pi); row < top_attach (pi); row++)
                   rows_[row].need_expand = true;
             }
-          if (!cw->vshrink())
+          if (!child->vshrink())
             {
               for (row = bottom_attach (pi); row < top_attach (pi); row++)
                 if (!rows_[row].shrink)
@@ -781,12 +781,12 @@ void
 TableLayoutImpl::size_allocate_pass2 ()
 {
   Allocation area = allocation(), child_area;
-  for (ChildWalker cw = local_children(); cw.has_next(); cw++)
+  for (auto child : *this)
     {
-      if (!cw->visible())
+      if (!child->visible())
         continue;
-      const PackInfo &pi = cw->pack_info();
-      Requisition crq = cw->requisition();
+      const PackInfo &pi = child->pack_info();
+      Requisition crq = child->requisition();
       int x = ifloor (area.x);
       for (uint col = 0; col < left_attach (pi); col++)
         x += cols_[col].allocation + cols_[col].spacing;
@@ -839,7 +839,7 @@ TableLayoutImpl::size_allocate_pass2 ()
           child_area.height = height;
         }
       /* allocate child */
-      cw->set_allocation (child_area);
+      child->set_allocation (child_area);
     }
 }
 

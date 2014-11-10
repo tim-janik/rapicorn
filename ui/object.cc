@@ -11,14 +11,23 @@ ObjectImpl::~ObjectImpl()
 {}
 
 void
+ObjectImpl::dispose ()
+{}
+
+void
 ObjectImpl::changed (const String &name)
 {
-  if (!finalizing())
-    sig_changed.emit (name);
+  sig_changed.emit (name);
 }
 
 void
 ObjectImpl::do_changed (const String &name)
 {}
+
+String
+ObjectImpl::typeid_name ()
+{
+  return cxx_demangle (typeid (*this).name());
+}
 
 } // Rapicorn

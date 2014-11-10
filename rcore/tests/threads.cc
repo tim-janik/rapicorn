@@ -17,6 +17,95 @@ template<> struct Atomic<__int128> : Lib::Atomic<__int128> {
 namespace {
 using namespace Rapicorn;
 
+// == shared_ptr ==
+static void
+test_shared_ptr_cast ()
+{
+  struct A : std::enable_shared_from_this<A> {
+    virtual ~A() {}
+  };
+  // yield NULL from NULL pointers
+  std::shared_ptr<A> null1 = shared_ptr_cast<A> ((A*) NULL);
+  TASSERT (null1.get() == NULL);
+  const std::shared_ptr<A> null2 = shared_ptr_cast<A> ((const A*) NULL);
+  TASSERT (null2.get() == NULL);
+  // yield NULL from bad_weak_ptr
+  const A &ca = A(); // bad_weak_ptr
+  const std::shared_ptr<A> null3 = shared_ptr_cast<A*> (&ca);
+  TASSERT (null3.get() == NULL);
+  A &a = const_cast<A&> (ca);
+  std::shared_ptr<A> null4 = shared_ptr_cast<A*> (&a);
+  TASSERT (null4.get() == NULL);
+  // NULL -> NULL for shared_ptr<T>
+  std::shared_ptr<A> ap;
+  std::shared_ptr<A> null5 = shared_ptr_cast<A> (ap);
+  TASSERT (null5.get() == NULL);
+  const std::shared_ptr<A> null6 = shared_ptr_cast<A> (const_cast<const std::shared_ptr<A>&> (ap));
+  TASSERT (null6.get() == NULL);
+  // NULL -> NULL for shared_ptr<T*>
+  std::shared_ptr<A> null7 = shared_ptr_cast<A*> (ap);
+  TASSERT (null7.get() == NULL);
+  const std::shared_ptr<A> null8 = shared_ptr_cast<A*> (const_cast<const std::shared_ptr<A>&> (ap));
+  TASSERT (null8.get() == NULL);
+  // yield NULL from bad_weak_ptr of different type
+  struct B : A {};
+  const B &cb = B(); // bad_weak_ptr
+  const std::shared_ptr<B> null9 = shared_ptr_cast<B*> (&cb);
+  TASSERT (null9.get() == NULL);
+  B &b = const_cast<B&> (cb);
+  std::shared_ptr<B> nulla = shared_ptr_cast<B*> (&b);
+  TASSERT (nulla.get() == NULL);
+  // throw bad_weak_ptr from shared_ptr_cast
+  int seen_bad_weak_ptr = 0;
+  try {
+    auto dummy = shared_ptr_cast<B> (&b);
+  } catch (const std::bad_weak_ptr&) {
+    seen_bad_weak_ptr++;
+  }
+  TASSERT (seen_bad_weak_ptr == 1);
+  try {
+    auto dummy = shared_ptr_cast<B> (&cb);
+  } catch (const std::bad_weak_ptr&) {
+    seen_bad_weak_ptr++;
+  }
+  TASSERT (seen_bad_weak_ptr == 2);
+  // yield NULL from shared_ptr<T*> of wrong type
+  struct D : A {};
+  std::shared_ptr<D> dp (new D());
+  TASSERT (dp->shared_from_this() != NULL); // good weak_ptr
+  std::shared_ptr<B> nullb = shared_ptr_cast<B*> (dp.get());
+  TASSERT (nullb.get() == NULL);
+  const D *cd = dp.get();
+  std::shared_ptr<B> nullc = shared_ptr_cast<B*> (cd);
+  TASSERT (nullc.get() == NULL);
+  // yield NULL from shared_ptr<T> of wrong type
+  std::shared_ptr<B> nulld = shared_ptr_cast<B> (dp.get());
+  TASSERT (nulld.get() == NULL);
+  std::shared_ptr<B> nulle = shared_ptr_cast<B> (cd);
+  TASSERT (nulle.get() == NULL);
+  // check that shared_ptr_cast<T> is actually working
+  std::shared_ptr<A> p1 = dp;
+  auto p2 = shared_ptr_cast<D> (p1);
+  TASSERT (p2 != NULL);
+  auto p3 = shared_ptr_cast<D> (const_cast<const std::shared_ptr<A>&> (p1));
+  TASSERT (p3 != NULL);
+  auto p4 = shared_ptr_cast<D> (cd);
+  TASSERT (p4 != NULL);
+  auto p5 = shared_ptr_cast<D> (const_cast<D*> (cd));
+  TASSERT (p5 != NULL);
+  // check that shared_ptr_cast<T*> is actually working
+  auto p6 = shared_ptr_cast<D*> (p1);
+  TASSERT (p6 != NULL);
+  auto p7 = shared_ptr_cast<D*> (const_cast<const std::shared_ptr<A>&> (p1));
+  TASSERT (p7 != NULL);
+  auto p8 = shared_ptr_cast<D*> (cd);
+  TASSERT (p8 != NULL);
+  auto p9 = shared_ptr_cast<D*> (const_cast<D*> (cd));
+  TASSERT (p9 != NULL);
+}
+REGISTER_TEST ("Threads/C++ shared_ptr_cast", test_shared_ptr_cast);
+
+
 // == constexpr ctors ==
 // the following code checks constexpr initialization of types. these checks are run
 // before main(), so we have to roll our own assertion and cannot register a real test.
@@ -645,84 +734,5 @@ test_ring_buffer ()
 }
 REGISTER_TEST ("Threads/AsyncRingBuffer", test_ring_buffer);
 REGISTER_SLOWTEST ("Threads/AsyncRingBuffer (slow)", test_ring_buffer);
-
-/* --- late deletable destruction --- */
-static bool deletable_destructor = false;
-struct MyDeletable : public virtual Deletable {
-  virtual
-  ~MyDeletable()
-  {
-    deletable_destructor = true;
-  }
-  void
-  force_deletion_hooks()
-  {
-    invoke_deletion_hooks();
-  }
-};
-struct MyDeletableHook : public Deletable::DeletionHook {
-  Deletable *deletable;
-  explicit     MyDeletableHook () :
-    deletable (NULL)
-  {}
-  virtual void
-  monitoring_deletable (Deletable &deletable_obj)
-  {
-    TCMP (deletable, ==, nullptr);
-    deletable = &deletable_obj;
-  }
-  virtual void
-  dismiss_deletable ()
-  {
-    if (deletable)
-      deletable = NULL;
-    // not deleting this, due to stack allocation
-  }
-  virtual
-  ~MyDeletableHook ()
-  {
-    // g_printerr ("~MyDeletableHook(): deletable=%p\n", deletable);
-    if (deletable)
-      deletable_remove_hook (deletable);
-    deletable = NULL;
-  }
-};
-
-static MyDeletable early_deletable __attribute__ ((init_priority (101)));
-static MyDeletable late_deletable __attribute__ ((init_priority (65535)));
-
-static void
-test_deletable_destruction ()
-{
-  {
-    MyDeletable test_deletable;
-    TOK();
-    MyDeletableHook dhook1;
-    // g_printerr ("TestHook=%p\n", (Deletable::DeletionHook*) &dhook1);
-    dhook1.deletable_add_hook (&test_deletable);
-    TOK();
-    dhook1.deletable_remove_hook (&test_deletable);
-    dhook1.dismiss_deletable();
-    TOK();
-    MyDeletableHook dhook2;
-    dhook2.deletable_add_hook (&test_deletable);
-    test_deletable.force_deletion_hooks ();
-    TOK();
-    MyDeletableHook dhook3;
-    dhook3.deletable_add_hook (&test_deletable);
-    TOK();
-    /* automatic deletion hook invocation */
-    /* FIXME: deletable destructor is called first and doesn't auto-remove
-     * - if deletion hooks were ring-linked, we could at least catch this case in ~DeletionHook
-     */
-  }
-  MyDeletable *deletable2 = new MyDeletable;
-  TCMP (deletable2, !=, nullptr);
-  deletable_destructor = false;
-  delete deletable2;
-  TCMP (deletable_destructor, ==, true);
-  /* early_deletable and late_deletable are only tested at program end */
-}
-REGISTER_TEST ("Threads/Deletable destruction", test_deletable_destruction);
 
 } // Anon

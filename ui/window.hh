@@ -7,21 +7,25 @@
 
 namespace Rapicorn {
 
+class WindowImpl;
+typedef std::shared_ptr<WindowImpl> WindowImplP;
+typedef std::weak_ptr<WindowImpl>   WindowImplW;
+
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
-  EventLoop            &loop_;
+  const EventLoopP      loop_;
   ScreenWindow*         screen_window_;
   EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;
   String                     last_command_;
-  vector<WidgetImpl*>     last_entered_children_;
+  vector<WidgetImplP>   last_entered_children_;
   ScreenWindow::Config  config_;
   uint                  notify_displayed_id_;
   uint                  auto_focus_ : 1;
   uint                  entered_ : 1;
   uint                  pending_win_size_ : 1;
   uint                  pending_expose_ : 1;
-  void          uncross_focus           (WidgetImpl        &fwidget);
+  void                  uncross_focus           (WidgetImpl        &fwidget);
 protected:
   void          set_focus               (WidgetImpl         *widget);
   virtual void  set_parent              (ContainerImpl    *parent);
@@ -30,7 +34,7 @@ public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
   virtual WindowImpl*   as_window_impl          ()              { return this; }
-  WidgetImpl*             get_focus               () const;
+  WidgetImpl*           get_focus               () const;
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
   static  void          forcefully_close_all    ();
   // properties
@@ -70,8 +74,8 @@ private:
   virtual              ~WindowImpl                              ();
   virtual void          dispose_widget                          (WidgetImpl               &widget);
   /* misc */
-  vector<WidgetImpl*>   widget_difference                       (const vector<WidgetImpl*>    &clist, /* preserves order of clist */
-                                                                 const vector<WidgetImpl*>    &cminus);
+  vector<WidgetImplP>   widget_difference                       (const vector<WidgetImplP>    &clist, /* preserves order of clist */
+                                                                 const vector<WidgetImplP>    &cminus);
   /* sizing */
   void                  resize_window                           (const Allocation *new_area = NULL);
   virtual void          do_invalidate                           ();

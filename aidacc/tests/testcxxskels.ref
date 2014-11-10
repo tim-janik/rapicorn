@@ -9,6 +9,10 @@
 
 namespace MandatoryNamespace {
 
+class I_FirstInterfaceIface;
+typedef std::shared_ptr<I_FirstInterfaceIface> I_FirstInterfaceIfaceP;
+typedef std::weak_ptr  <I_FirstInterfaceIface> I_FirstInterfaceIfaceW;
+
 /** @interface FirstInterface
  * See also the corresponding C++ servant class I_FirstInterfaceIface. */
 /// See also the corresponding IDL class FirstInterface.
@@ -25,7 +29,9 @@ public:
   virtual void                          void_func             (); 	///< See FirstInterface::void_func()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIfaceP&);
 I_FirstInterfaceIface* operator->* (FirstInterfaceHandle &sh, Rapicorn::Aida::_ServantType);
 FirstInterfaceHandle operator->* (I_FirstInterfaceIface *obj, Rapicorn::Aida::_HandleType);
 
@@ -62,6 +68,10 @@ typedef std::string AuxStr;
 } // Auxdata
 
 namespace InterfaceTests {
+
+class I_UIWidgetAreaIface;
+typedef std::shared_ptr<I_UIWidgetAreaIface> I_UIWidgetAreaIfaceP;
+typedef std::weak_ptr  <I_UIWidgetAreaIface> I_UIWidgetAreaIfaceW;
 
 /** @interface UIWidgetArea
  * See also the corresponding C++ servant class I_UIWidgetAreaIface. */
@@ -104,9 +114,15 @@ public:
   virtual void                          on_click2in         (const std::string &command); 	///< See UIWidgetArea::on_click2in()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIfaceP&);
 I_UIWidgetAreaIface* operator->* (UIWidgetAreaHandle &sh, Rapicorn::Aida::_ServantType);
 UIWidgetAreaHandle operator->* (I_UIWidgetAreaIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_ParentIface;
+typedef std::shared_ptr<I_ParentIface> I_ParentIfaceP;
+typedef std::weak_ptr  <I_ParentIface> I_ParentIfaceW;
 
 /** @interface Parent
  * See also the corresponding C++ servant class I_ParentIface. */
@@ -123,9 +139,15 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIfaceP&);
 I_ParentIface* operator->* (ParentHandle &sh, Rapicorn::Aida::_ServantType);
 ParentHandle operator->* (I_ParentIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_ChildIface;
+typedef std::shared_ptr<I_ChildIface> I_ChildIfaceP;
+typedef std::weak_ptr  <I_ChildIface> I_ChildIfaceW;
 
 /** @interface Child
  * See also the corresponding C++ servant class I_ChildIface. */
@@ -141,9 +163,15 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIfaceP&);
 I_ChildIface* operator->* (ChildHandle &sh, Rapicorn::Aida::_ServantType);
 ChildHandle operator->* (I_ChildIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_DescendantIface;
+typedef std::shared_ptr<I_DescendantIface> I_DescendantIfaceP;
+typedef std::weak_ptr  <I_DescendantIface> I_DescendantIfaceW;
 
 /** @interface Descendant
  * See also the corresponding C++ servant class I_DescendantIface. */
@@ -159,9 +187,15 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIfaceP&);
 I_DescendantIface* operator->* (DescendantHandle &sh, Rapicorn::Aida::_ServantType);
 DescendantHandle operator->* (I_DescendantIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_GrandChildIface;
+typedef std::shared_ptr<I_GrandChildIface> I_GrandChildIfaceP;
+typedef std::weak_ptr  <I_GrandChildIface> I_GrandChildIfaceW;
 
 /** @interface GrandChild
  * See also the corresponding C++ servant class I_GrandChildIface. */
@@ -177,9 +211,15 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIfaceP&);
 I_GrandChildIface* operator->* (GrandChildHandle &sh, Rapicorn::Aida::_ServantType);
 GrandChildHandle operator->* (I_GrandChildIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_QuickIfaceIface;
+typedef std::shared_ptr<I_QuickIfaceIface> I_QuickIfaceIfaceP;
+typedef std::weak_ptr  <I_QuickIfaceIface> I_QuickIfaceIfaceW;
 
 /** @interface QuickIface
  * See also the corresponding C++ servant class I_QuickIfaceIface. */
@@ -197,9 +237,15 @@ public:
   virtual void                          simple_function   (int i = 9); 	///< See QuickIface::simple_function()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIfaceP&);
 I_QuickIfaceIface* operator->* (QuickIfaceHandle &sh, Rapicorn::Aida::_ServantType);
 QuickIfaceHandle operator->* (I_QuickIfaceIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_MethodTestInterfaceIface;
+typedef std::shared_ptr<I_MethodTestInterfaceIface> I_MethodTestInterfaceIfaceP;
+typedef std::weak_ptr  <I_MethodTestInterfaceIface> I_MethodTestInterfaceIfaceW;
 
 /** @interface MethodTestInterface
  * See also the corresponding C++ servant class I_MethodTestInterfaceIface. */
@@ -231,17 +277,23 @@ public:
                                                                     const QuickRecord &optval = QuickRecord()); 	///< See MethodTestInterface::method_with_record()
   virtual QuickSequence                 method_with_sequence       (const QuickSequence &input,
                                                                     const QuickSequence &optval = QuickSequence()); 	///< See MethodTestInterface::method_with_sequence()
-  virtual I_GrandChildIface*            method_with_interface      (I_GrandChildIface &input,
+  virtual I_GrandChildIfaceP            method_with_interface      (I_GrandChildIface &input,
                                                                     I_GrandChildIface &optval = *(I_GrandChildIface*) NULL); 	///< See MethodTestInterface::method_with_interface()
   virtual Rapicorn::Aida::Any           method_with_anys           (const Rapicorn::Aida::Any &input,
                                                                     const Rapicorn::Aida::Any &optval); 	///< See MethodTestInterface::method_with_anys()
-  virtual I_QuickIfaceIface*            method_with_quickiface     (I_QuickIfaceIface &input,
+  virtual I_QuickIfaceIfaceP            method_with_quickiface     (I_QuickIfaceIface &input,
                                                                     I_QuickIfaceIface &iface0 = *(I_QuickIfaceIface*) NULL); 	///< See MethodTestInterface::method_with_quickiface()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIfaceP&);
 I_MethodTestInterfaceIface* operator->* (MethodTestInterfaceHandle &sh, Rapicorn::Aida::_ServantType);
 MethodTestInterfaceHandle operator->* (I_MethodTestInterfaceIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_SignalTestInterfaceIface;
+typedef std::shared_ptr<I_SignalTestInterfaceIface> I_SignalTestInterfaceIfaceP;
+typedef std::weak_ptr  <I_SignalTestInterfaceIface> I_SignalTestInterfaceIfaceW;
 
 /** @interface SignalTestInterface
  * See also the corresponding C++ servant class I_SignalTestInterfaceIface. */
@@ -265,9 +317,9 @@ public:
   typedef Rapicorn::Aida::AsyncSignal<QuickEnum ()> Signal_enum_result;
   typedef Rapicorn::Aida::AsyncSignal<QuickRecord ()> Signal_record_result;
   typedef Rapicorn::Aida::AsyncSignal<QuickSequence ()> Signal_sequence_result;
-  typedef Rapicorn::Aida::AsyncSignal<I_GrandChildIface* ()> Signal_interface_result;
+  typedef Rapicorn::Aida::AsyncSignal<I_GrandChildIfaceP ()> Signal_interface_result;
   typedef Rapicorn::Aida::AsyncSignal<Rapicorn::Aida::Any ()> Signal_any_result;
-  typedef Rapicorn::Aida::AsyncSignal<I_SignalTestInterfaceIface* ()> Signal_self_result;
+  typedef Rapicorn::Aida::AsyncSignal<I_SignalTestInterfaceIfaceP ()> Signal_self_result;
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_arg;
   typedef Rapicorn::Aida::Signal<void (bool b)> Signal_bool_arg;
   typedef Rapicorn::Aida::Signal<void (int i)> Signal_int32_arg;
@@ -306,9 +358,15 @@ public:
   Signal_self_args sig_self_args;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SignalTestInterfaceIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SignalTestInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SignalTestInterfaceIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_SignalTestInterfaceIfaceP&);
 I_SignalTestInterfaceIface* operator->* (SignalTestInterfaceHandle &sh, Rapicorn::Aida::_ServantType);
 SignalTestInterfaceHandle operator->* (I_SignalTestInterfaceIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_ChildInheritingSignalsIface;
+typedef std::shared_ptr<I_ChildInheritingSignalsIface> I_ChildInheritingSignalsIfaceP;
+typedef std::weak_ptr  <I_ChildInheritingSignalsIface> I_ChildInheritingSignalsIfaceW;
 
 /** @interface ChildInheritingSignals
  * See also the corresponding C++ servant class I_ChildInheritingSignalsIface. */
@@ -326,9 +384,15 @@ public:
   Signal_child_signal sig_child_signal;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignalsIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignalsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildInheritingSignalsIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildInheritingSignalsIfaceP&);
 I_ChildInheritingSignalsIface* operator->* (ChildInheritingSignalsHandle &sh, Rapicorn::Aida::_ServantType);
 ChildInheritingSignalsHandle operator->* (I_ChildInheritingSignalsIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_AnotherChildIface;
+typedef std::shared_ptr<I_AnotherChildIface> I_AnotherChildIfaceP;
+typedef std::weak_ptr  <I_AnotherChildIface> I_AnotherChildIfaceW;
 
 /** @interface AnotherChild
  * See also the corresponding C++ servant class I_AnotherChildIface. */
@@ -344,9 +408,15 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIfaceP&);
 I_AnotherChildIface* operator->* (AnotherChildHandle &sh, Rapicorn::Aida::_ServantType);
 AnotherChildHandle operator->* (I_AnotherChildIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_PropertyTesterIface;
+typedef std::shared_ptr<I_PropertyTesterIface> I_PropertyTesterIfaceP;
+typedef std::weak_ptr  <I_PropertyTesterIface> I_PropertyTesterIfaceW;
 
 /** @interface PropertyTester
  * See also the corresponding C++ servant class I_PropertyTesterIface. */
@@ -377,20 +447,26 @@ public:
   virtual void                          record_prop    (const QuickRecord&) = 0; 	///< See PropertyTester::record_prop
   virtual QuickSequence                 sequence_prop  () const = 0; 	///< See PropertyTester::sequence_prop
   virtual void                          sequence_prop  (const QuickSequence&) = 0; 	///< See PropertyTester::sequence_prop
-  virtual I_GrandChildIface*            interface_prop () const = 0; 	///< See PropertyTester::interface_prop
+  virtual I_GrandChildIfaceP            interface_prop () const = 0; 	///< See PropertyTester::interface_prop
   virtual void                          interface_prop (I_GrandChildIface*) = 0; 	///< See PropertyTester::interface_prop
-  virtual I_PropertyTesterIface*        self_prop      () const = 0; 	///< See PropertyTester::self_prop
+  virtual I_PropertyTesterIfaceP        self_prop      () const = 0; 	///< See PropertyTester::self_prop
   virtual void                          self_prop      (I_PropertyTesterIface*) = 0; 	///< See PropertyTester::self_prop
   virtual Rapicorn::Aida::Any           any_prop       () const = 0; 	///< See PropertyTester::any_prop
   virtual void                          any_prop       (const Rapicorn::Aida::Any&) = 0; 	///< See PropertyTester::any_prop
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PropertyTesterIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PropertyTesterIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIfaceP&);
 I_PropertyTesterIface* operator->* (PropertyTesterHandle &sh, Rapicorn::Aida::_ServantType);
 PropertyTesterHandle operator->* (I_PropertyTesterIface *obj, Rapicorn::Aida::_HandleType);
 } // InterfaceTests
 
 namespace RapicornAidaTest {
+
+class I_ButtonAreaIface;
+typedef std::shared_ptr<I_ButtonAreaIface> I_ButtonAreaIfaceP;
+typedef std::weak_ptr  <I_ButtonAreaIface> I_ButtonAreaIfaceW;
 
 /** @interface ButtonArea
  * See also the corresponding C++ servant class I_ButtonAreaIface. */
@@ -419,11 +495,17 @@ public:
   Signal_activate sig_activate;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ButtonAreaIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ButtonAreaIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ButtonAreaIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_ButtonAreaIfaceP&);
 I_ButtonAreaIface* operator->* (ButtonAreaHandle &sh, Rapicorn::Aida::_ServantType);
 ButtonAreaHandle operator->* (I_ButtonAreaIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_PureMethodsIface;
+
+class I_PureMethodsIface;
+typedef std::shared_ptr<I_PureMethodsIface> I_PureMethodsIfaceP;
+typedef std::weak_ptr  <I_PureMethodsIface> I_PureMethodsIfaceW;
 
 /** @interface PureMethods
  * See also the corresponding C++ servant class I_PureMethodsIface. */
@@ -441,12 +523,18 @@ public:
   virtual int                           pure_method        (double f) = 0; 	///< See PureMethods::pure_method()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIfaceP&);
 I_PureMethodsIface* operator->* (PureMethodsHandle &sh, Rapicorn::Aida::_ServantType);
 PureMethodsHandle operator->* (I_PureMethodsIface *obj, Rapicorn::Aida::_HandleType);
 } // RapicornAidaTest
 
 namespace Other {
+
+class I_NameTestsIface;
+typedef std::shared_ptr<I_NameTestsIface> I_NameTestsIfaceP;
+typedef std::weak_ptr  <I_NameTestsIface> I_NameTestsIfaceW;
 
 /** @interface NameTests
  * See also the corresponding C++ servant class I_NameTestsIface. */
@@ -466,12 +554,18 @@ public:
                                                                    const OtherNamespace::SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIfaceP&);
 I_NameTestsIface* operator->* (NameTestsHandle &sh, Rapicorn::Aida::_ServantType);
 NameTestsHandle operator->* (I_NameTestsIface *obj, Rapicorn::Aida::_HandleType);
 } // Other
 
 namespace BseTest {
+
+class I_CompressorIface;
+typedef std::shared_ptr<I_CompressorIface> I_CompressorIfaceP;
+typedef std::weak_ptr  <I_CompressorIface> I_CompressorIfaceW;
 
 /** @interface Compressor
  * See also the corresponding C++ servant class I_CompressorIface. */
@@ -492,9 +586,15 @@ public:
   virtual void                          ratio     (double) = 0; 	///< See Compressor::ratio
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_CompressorIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_CompressorIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIfaceP&);
 I_CompressorIface* operator->* (CompressorHandle &sh, Rapicorn::Aida::_ServantType);
 CompressorHandle operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleType);
+
+class I_SoundModuleIface;
+typedef std::shared_ptr<I_SoundModuleIface> I_SoundModuleIfaceP;
+typedef std::weak_ptr  <I_SoundModuleIface> I_SoundModuleIfaceW;
 
 /** @interface SoundModule
  * See also the corresponding C++ servant class I_SoundModuleIface. */
@@ -511,7 +611,9 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIface*);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIface*&);
+void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIfaceP&);
 I_SoundModuleIface* operator->* (SoundModuleHandle &sh, Rapicorn::Aida::_ServantType);
 SoundModuleHandle operator->* (I_SoundModuleIface *obj, Rapicorn::Aida::_HandleType);
 } // BseTest
@@ -655,7 +757,7 @@ InterfaceTests::I_MethodTestInterfaceIface::method_with_sequence (const Interfac
   return InterfaceTests::QuickSequence();
 }
 
-InterfaceTests::I_GrandChildIface*
+InterfaceTests::I_GrandChildIfaceP
 InterfaceTests::I_MethodTestInterfaceIface::method_with_interface (InterfaceTests::I_GrandChildIface &input,
                                                                    InterfaceTests::I_GrandChildIface &optval)
 {
@@ -669,7 +771,7 @@ InterfaceTests::I_MethodTestInterfaceIface::method_with_anys (const Rapicorn::Ai
   return Rapicorn::Aida::Any();
 }
 
-InterfaceTests::I_QuickIfaceIface*
+InterfaceTests::I_QuickIfaceIfaceP
 InterfaceTests::I_MethodTestInterfaceIface::method_with_quickiface (InterfaceTests::I_QuickIfaceIface &input,
                                                                     InterfaceTests::I_QuickIfaceIface &iface0)
 {

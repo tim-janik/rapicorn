@@ -197,9 +197,8 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
   /* find the first focus descendant that fits the scroll area */
   fwidget = rfwidget; /* fallback to innermost focus widget */
   const Rect area = allocation();
-  for (Walker<WidgetImpl*> w = walker (fwidgets); w.has_next(); w++)
+  for (WidgetImpl *widget : fwidgets)
     {
-      WidgetImpl *widget = *w;
       Rect a = widget->allocation();
       if (!translate_from (*widget, 1, &a))
         {
@@ -269,7 +268,7 @@ ScrollPortImpl::scroll (EventType scroll_dir)
 const CommandList&
 ScrollPortImpl::list_commands ()
 {
-  static Command *commands[] = {
+  static CommandP commands[] = {
     MakeNamedCommand (ScrollPortImpl, "scroll-up",    _("Scroll upwards"),    scroll, SCROLL_UP),
     MakeNamedCommand (ScrollPortImpl, "scroll-left",  _("Scroll leftwards"),  scroll, SCROLL_LEFT),
     MakeNamedCommand (ScrollPortImpl, "scroll-down",  _("Scroll downwards"),  scroll, SCROLL_DOWN),

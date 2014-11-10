@@ -4,14 +4,14 @@
 namespace Rapicorn {
 
 // == WidgetGroup ==
-WidgetGroup*
+WidgetGroupP
 WidgetGroup::create (const String &name, WidgetGroupType type)
 {
   assert_return (name.empty() == false, NULL);
   if (type == WIDGET_GROUP_HSIZE || type == WIDGET_GROUP_VSIZE)
-    return new SizeGroup (name, type);
+    return FriendAllocator<SizeGroup>::make_shared (name, type);
   else
-    return new WidgetGroup (name, type);
+    return FriendAllocator<WidgetGroup>::make_shared (name, type);
 }
 
 WidgetGroup::WidgetGroup (const String &name, WidgetGroupType type) :
@@ -25,7 +25,7 @@ WidgetGroup::~WidgetGroup()
 
 static DataKey<WidgetGroup::GroupVector> widget_group_key;
 
-vector<WidgetGroup*>
+vector<WidgetGroupP>
 WidgetGroup::list_groups (WidgetImpl &widget)
 {
   return widget.get_data (&widget_group_key);
@@ -34,12 +34,11 @@ WidgetGroup::list_groups (WidgetImpl &widget)
 void
 WidgetGroup::add_widget (WidgetImpl &widget)
 {
-  ref (this); // ref_pair_1
   // add widget to group's list
   widgets_.push_back (&widget);
   // add group to widget's list
   GroupVector wgv = widget.get_data (&widget_group_key);
-  wgv.push_back (this);
+  wgv.push_back (shared_ptr_cast<WidgetGroup> (this));
   widget.set_data (&widget_group_key, wgv);
   widget_transit (widget);
 }
@@ -47,7 +46,6 @@ WidgetGroup::add_widget (WidgetImpl &widget)
 void
 WidgetGroup::remove_widget (WidgetImpl &widget)
 {
-  ref (this); // ref_pair_2
   widget_transit (widget);
   // remove widget from group's list
   bool found_one = false;
@@ -56,20 +54,18 @@ WidgetGroup::remove_widget (WidgetImpl &widget)
       {
         widgets_.erase (widgets_.begin() + i);
         found_one = true;
-        unref (this); // ref_pair_1
         break;
       }
   if (!found_one)
     {
       critical ("attempt to remove unknown widget (%s) from group: %p", widget.name().c_str(), this);
-      unref (this); // ref_pair_2
       return;
     }
   // remove group from widget's list */
   found_one = false;
   GroupVector wgv = widget.get_data (&widget_group_key);
   for (uint i = 0; i < wgv.size(); i++)
-    if (wgv[i] == this)
+    if (this == &*wgv[i])
       {
         wgv.erase (wgv.begin() + i);
         found_one = true;
@@ -81,7 +77,6 @@ WidgetGroup::remove_widget (WidgetImpl &widget)
     widget.delete_data (&widget_group_key);
   else
     widget.set_data (&widget_group_key, wgv);
-  unref (this); // ref_pair_2
 }
 
 void
@@ -168,7 +163,7 @@ SizeGroup::widget_requisition (WidgetImpl &widget)
       for (size_t i = 0; i < wgl.size(); i++)
         if (wgl[i]->type() == WIDGET_GROUP_HSIZE || wgl[i]->type() == WIDGET_GROUP_VSIZE)
           {
-            SizeGroup *sg = dynamic_cast<SizeGroup*> (wgl[i]);
+            SizeGroupP sg = shared_ptr_cast<SizeGroup> (wgl[i]);
             if (!sg->active())
               continue;
             Requisition gr = sg->group_requisition();

@@ -104,8 +104,8 @@ template<> const EnumValue* enum_value_list<TypeKind> ();
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 
 // == ImplicitBase ==
-class ImplicitBase /// Abstract base interface that all IDL interfaces are implicitely derived from.
-{
+/// Abstract base interface that all IDL interfaces are implicitely derived from.
+class ImplicitBase : public virtual std::enable_shared_from_this<ImplicitBase> {
 protected:
   virtual                     ~ImplicitBase       () = 0; // abstract class
   virtual const PropertyList& __aida_properties__ () = 0; ///< Retrieve the list of properties for @a this instance.
@@ -114,6 +114,10 @@ protected:
   std::string                 __aida_getter__     (const std::string &property_name);
 public:
   virtual std::string        __aida_type_name__   () const = 0; ///< Retrieve the IDL type name of an instance.
+  std::shared_ptr
+  <const ImplicitBase>       shared_from_this     () const { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
+  ImplicitBaseP              shared_from_this     ()       { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
+  ImplicitBaseP              shared_from_this     (std::nullptr_t);
 };
 
 // == Any Type ==

@@ -63,7 +63,6 @@ check-local: check-testfail
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G strip-path=$(abs_top_srcdir)/ \
-	  -G iface-base=Rapicorn::BaseObject \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref

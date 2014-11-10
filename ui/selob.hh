@@ -12,7 +12,7 @@ namespace Selector {
 class SelobAllocator;
 
 class SelobWidget : public Selob {
-  WidgetImpl       &widget_;
+  WidgetImplP       widget_;
   SelobWidget      *parent_;
   int64           n_children_;
   SelobAllocator &allocator_;

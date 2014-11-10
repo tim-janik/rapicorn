@@ -43,20 +43,20 @@ interface_to_remote_handle ($AIDA_iface_base$ *ibase)
   SMH target;
   struct CastingServerConnection : ServerConnection { using ServerConnection::cast_interface_handle; };
   CastingServerConnection *cs_con = (CastingServerConnection*) server_connection;
-  cs_con->cast_interface_handle (target, Rapicorn::BaseObject::shared_ptr (ibase));
+  cs_con->cast_interface_handle (target, ibase ? ibase->shared_from_this() : ImplicitBaseP());
   return target;
 }
 
 template<class Target> static inline void
-field_buffer_add_interface (Rapicorn::Aida::FieldBuffer &fb, Target *instane)
+field_buffer_add_interface (Rapicorn::Aida::FieldBuffer &fb, Target *instance)
 {
-  server_connection->add_interface (fb, Rapicorn::BaseObject::shared_ptr (instane));
+  server_connection->add_interface (fb, instance ? instance->shared_from_this() : ImplicitBaseP());
 }
 
-template<class Target> static inline Target*
+template<class Target> static inline std::shared_ptr<Target>
 field_reader_pop_interface (Rapicorn::Aida::FieldReader &fr)
 {
-  return dynamic_cast<Target*> (server_connection->pop_interface (fr).get());
+  return std::dynamic_pointer_cast<Target> (server_connection->pop_interface (fr));
 }
 
 // messages

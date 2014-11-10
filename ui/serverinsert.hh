@@ -21,12 +21,6 @@ class_scope:Window:
   WindowImpl&       impl ();
   const WindowImpl& impl () const;
 
-class_scope:Application:
-  static bool            xurl_add   (const String &model_path, ListModelIface &model);
-  static bool            xurl_sub   (ListModelIface &model);
-  static ListModelIface* xurl_find  (const String &model_path);
-  static String          xurl_path  (const ListModelIface &model);
-
 IGNORE: // close last _scope
 }; // close dummy class scope
 

@@ -80,10 +80,7 @@ TextControllerImpl::~TextControllerImpl()
     {
       cached_tblock_->sig_selection_changed() -= tblock_sig_;
       tblock_sig_ = 0;
-      ReferenceCountable *trash = dynamic_cast<WidgetImpl*> (cached_tblock_);
       cached_tblock_ = NULL;
-      if (trash)
-        unref (trash);
     }
 }
 
@@ -91,8 +88,8 @@ void
 TextControllerImpl::constructed()
 {
   SingleContainerImpl::constructed();
-  WidgetImpl &label = Factory::create_ui_widget ("Rapicorn_Factory_TextBlock");
-  add (label);
+  WidgetImplP label = Factory::create_ui_widget ("Rapicorn_Factory_TextBlock");
+  add (*label);
   update_text_block();
 }
 
@@ -101,31 +98,21 @@ TextControllerImpl::get_text_block()
 {
   // check if text block changed
   TextBlock *candidate = interface<TextBlock*>();
-  if (cached_tblock_ == candidate)
-    return cached_tblock_;
+  if (candidate == &*cached_tblock_)
+    return candidate;
   // adjust to new text block
-  TextBlock *const old = cached_tblock_;
-  const size_t old_sig = tblock_sig_;
-  ReferenceCountable *base = dynamic_cast<WidgetImpl*> (candidate);
-  cached_tblock_ = base ? candidate : NULL;
-  if (base)
+  TextBlockP next_tblock = shared_ptr_cast<TextBlock> (candidate);
+  if (cached_tblock_)
+    cached_tblock_->sig_selection_changed() -= tblock_sig_;
+  cached_tblock_ = next_tblock;
+  if (cached_tblock_)
     {
-      ref (base);
       tblock_sig_ = cached_tblock_->sig_selection_changed() += Aida::slot (this, &TextControllerImpl::selection_changed);
+      update_text_block(); // update new text block
     }
   else
     tblock_sig_ = 0;
-  // cleanup old
-  base = dynamic_cast<WidgetImpl*> (old);
-  if (base)
-    {
-      old->sig_selection_changed() -= old_sig;
-      unref (base);
-    }
-  // update new text block
-  if (cached_tblock_)
-    update_text_block();
-  return cached_tblock_;
+  return &*cached_tblock_;
 }
 
 void
@@ -142,8 +129,7 @@ TextControllerImpl::update_text_block ()
 bool
 TextControllerImpl::can_focus () const
 {
-  TextBlock *tblock = cached_tblock_;
-  return allow_edits_ && tblock != NULL;
+  return allow_edits_ && cached_tblock_ != NULL;
 }
 
 void
