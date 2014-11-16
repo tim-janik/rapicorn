@@ -28,8 +28,6 @@ struct BBox {
 enum class RenderSize {
   STATIC,       ///< Keep the SVG elements native size.
   ZOOM,         ///< Zoom the SVG element according to scale factors.
-  STRETCH,      ///< Adjust the SVG element according to scale factors while keeping thickness, roundings, etc.
-  WARP          ///< Stretch only inner parts of the SVG element according to scale factors.
 };
 
 typedef std::shared_ptr<Element> ElementP;      ///< Smart pointer to an Svg::Element.

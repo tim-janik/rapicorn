@@ -7,8 +7,6 @@
 #include "rsvg-private.h"
 #include "../main.hh"
 
-#include "svg-tweak.h"
-
 /* A note on coordinate system increments:
  * - Librsvg:  X to right, Y downwards.
  * - Cairo:    X to right, Y downwards.
@@ -36,8 +34,6 @@ namespace Rapicorn {
 /// @namespace Rapicorn::Svg The Rapicorn::Svg namespace provides functions for handling and rendering of SVG files and elements.
 namespace Svg {
 
-static DebugOption dbe_svg_tweaks = RAPICORN_DEBUG_OPTION ("svg-tweaks", "Print debugging information to aid SVG development");
-
 BBox::BBox () :
   x (-1), y (-1), width (0), height (0)
 {}
@@ -45,18 +41,6 @@ BBox::BBox () :
 BBox::BBox (double _x, double _y, double w, double h) :
   x (_x), y (_y), width (w), height (h)
 {}
-
-struct Tweaker {
-  double cx_, cy_, lx_, rx_, by_, ty_;
-  RenderSize rsize_;
-  cairo_matrix_t *matrix_;
-  explicit      Tweaker         (double cx, double cy, double lx, double rx, double by, double ty,
-                                 RenderSize rsize, cairo_matrix_t *cmatrix = NULL) :
-    cx_ (cx), cy_ (cy), lx_ (lx), rx_ (rx), by_ (by), ty_ (ty),
-    rsize_ (rsize), matrix_ (cmatrix) {}
-  bool          point_tweak     (double vx, double vy, double *px, double *py);
-  static void   thread_set      (Tweaker *tweaker);
-};
 
 struct ElementImpl : public Element {
   String        id_;
@@ -147,71 +131,9 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
       cairo_translate (cr, -x_, -y_); // shift sub into top_left of surface
       rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
       break;
-    case RenderSize::STRETCH:
-      cairo_translate (cr, -x_, -y_); // shift sub into top_left of surface
-      {
-        cairo_matrix_t cmatrix;
-        cairo_matrix_init_identity (&cmatrix);
-        cairo_matrix_scale (&cmatrix, xscale, yscale); // scale matrix as requested
-        cairo_matrix_translate (&cmatrix, -x_, -y_); // shift matrix by top_left surface offset
-        Tweaker tw (0, 0, 0, 0, 0, 0, rsize, &cmatrix);
-        tw.thread_set (&tw);
-        rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
-        tw.thread_set (NULL);
-      }
-      break;
-    case RenderSize::WARP:
-      cairo_translate (cr, -x_, -y_); // shift sub into top_left of surface
-      {
-        const BBox target (0, 0, width_ * xscale, height_ * yscale);
-        const double rx = (target.width - width_) / 2.0;
-        const double lx = (target.width - width_) - rx;
-        const double ty = (target.height - height_) / 2.0;
-        const double by = (target.height - height_) - ty;
-        Tweaker tw (x_ + width_ / 2.0, y_ + height_ / 2.0, lx, rx, ty, by, rsize);
-        svg_tweak_debugging = dbe_svg_tweaks;
-        if (svg_tweak_debugging)
-          printerr ("TWEAK: mid = %g %g ; shiftx = %g %g ; shifty = %g %g ; (dim = %d,%d,%dx%d)\n",
-                    x_ + width_ / 2.0, y_ + height_ / 2.0, lx, rx, ty, by,
-                    x_, y_, width_, height_);
-        tw.thread_set (&tw);
-        rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
-        tw.thread_set (NULL);
-      }
-      break;
     }
   cairo_destroy (cr);
   return rendered;
-}
-
-bool
-Tweaker::point_tweak (double vx, double vy, double *px, double *py)
-{
-  bool mod = 0;
-  switch (rsize_)
-    {
-    case RenderSize::STRETCH:   // linear path & pattern stretching
-      cairo_matrix_transform_point (matrix_, px, py);
-      mod = true;
-      break;
-    case RenderSize::WARP:      // nonlinear shifting away from center
-      {
-        const double eps = 0.0001;
-        // FIXME: for filters to work, the document page must grow so that it contains the tweaked
-        // item without clipping. e.g. an item (5,6,7x8) requires a document size at least: 12x14
-        if (vx > cx_ + eps)
-          *px += lx_ + rx_, mod = 1;
-        else if (vx >= cx_ - eps)
-          *px += lx_, mod = 1;
-        if (vy > cy_ + eps)
-          *py += ty_ + by_, mod = 1;
-        else if (vy >= cy_ - eps)
-          *py += ty_, mod = 1;
-      }
-      break;
-    default: ; // silence gcc
-    }
-  return mod;
 }
 
 struct FileImpl : public File {
@@ -355,57 +277,5 @@ init_svg_lib (const StringVector &args)
 }
 static InitHook _init_svg_lib ("core/35 Init SVG Lib", init_svg_lib);
 
-static __thread Tweaker *thread_tweaker = NULL;
-
-void
-Tweaker::thread_set (Tweaker *tweaker)
-{
-  if (tweaker)
-    assert_return (thread_tweaker == NULL);
-  thread_tweaker = tweaker;
-}
-
 } // Svg
 } // Rapicorn
-
-extern "C" {
-
-int svg_tweak_debugging = 0;
-
-int
-svg_tweak_point_tweak (double  vx, double  vy,
-                       double *px, double *py,
-                       const double affine[6],
-                       const double iaffine[6])
-{
-  if (!Rapicorn::Svg::thread_tweaker)
-    return false;
-  const double sx = affine_x (vx, vy, affine), sy = affine_y (vx, vy, affine);
-  double x = affine_x (*px, *py, affine), y = affine_y (*px, *py, affine);
-  if (Rapicorn::Svg::thread_tweaker->point_tweak (sx, sy, &x, &y))
-    {
-      *px = affine_x (x, y, iaffine);
-      *py = affine_y (x, y, iaffine);
-      return true;
-    }
-  return false;
-}
-
-int
-svg_tweak_point_simple (double *px, double *py, const double affine[6], const double iaffine[6])
-{
-  return svg_tweak_point_tweak (*px, *py, px, py, affine, iaffine);
-}
-
-cairo_matrix_t*
-svg_tweak_matrix ()
-{
-  cairo_matrix_t *tmatrix = NULL;
-  if (Rapicorn::Svg::thread_tweaker)
-    {
-      tmatrix = Rapicorn::Svg::thread_tweaker->matrix_;
-    }
-  return tmatrix;
-}
-
-} // extern "C"

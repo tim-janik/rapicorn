@@ -17,7 +17,7 @@ rcore_rsvg_sources = $(sort		\
 	rsvg-structure.c rsvg-structure.h rsvg-styles.c rsvg-styles.h rsvg-text.c rsvg-text.h \
 	rsvg-cairo-draw.c rsvg-cairo-draw.h rsvg-cairo-render.c rsvg-cairo-render.h rsvg-cairo-clip.h rsvg-cairo-clip.c \
 	rsvg-cond.c rsvg-base.c rsvg.c rsvg-gobject.c rsvg-file-util.c rsvg-xml.c rsvg-xml.h \
-	svg.hh svg.cc svg-tweak.h librsvg-enum-types.c \
+	svg.hh svg.cc librsvg-enum-types.c \
 )
 rcore_rsvg_headers = $(sort rsvg.h rsvg-cairo.h )
 rcore_rsvg_generated_headers = $(strip	\
