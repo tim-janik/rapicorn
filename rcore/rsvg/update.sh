@@ -47,16 +47,3 @@ cp \
         rsvg-cond.c rsvg-base.c rsvg.c rsvg-gobject.c rsvg-file-util.c rsvg-xml.c rsvg-xml.h \
   	rsvg.h rsvg-cairo.h \
   ../
-
-# patch source files
-UUID=`uuidgen | sed s/-//g`
-cat <<-__EOF | patch -p0
-	--- ../rsvg-gobject.c
-	+++ ../rsvg-gobject.c
-	@@ -328,1 +328,1 @@
-	-                                             "RsvgHandle", &rsvg_type_info, (GTypeFlags) 0);
-	+                                             "Rapicorn_RsvgHandle_$UUID", &rsvg_type_info, (GTypeFlags) 0);
-	@@ -337,1 +337,1 @@ rsvg_handle_get_type (void)
-	-            g_type_register_static (G_TYPE_OBJECT, "RsvgHandle", &rsvg_type_info, (GTypeFlags) 0);
-	+            g_type_register_static (G_TYPE_OBJECT, "Rapicorn_RsvgHandle_$UUID", &rsvg_type_info, (GTypeFlags) 0);
-__EOF
