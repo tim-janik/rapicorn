@@ -286,7 +286,7 @@ dump_node (RsvgNode *self, int64 depth, int64 maxdepth)
     return;
   for (int64 i = 0; i < depth; i++)
     printerr (" ");
-  printerr ("<%s/>\n", self->type->str);
+  printerr ("<0x%02x/>\n", self->type);
   for (uint i = 0; i < self->children->len; i++)
     {
       RsvgNode *child = (RsvgNode*) g_ptr_array_index (self->children, i);
