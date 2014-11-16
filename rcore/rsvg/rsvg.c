@@ -44,26 +44,20 @@
 #include "rsvg-cairo.h"
 #include "rsvg-cairo-draw.h"
 
-static void
-rsvg_pixmap_destroy (gchar * pixels, gpointer data)
-{
-    g_free (pixels);
-}
-
 /**
  * rsvg_handle_get_pixbuf_sub:
  * @handle: An #RsvgHandle
- * @id: The id of an element inside the SVG, or %NULL to render the whole SVG. For
- * example, if you have a layer called "layer1" that you wish to render, pass 
- * "##layer1" as the id.
+ * @id: (nullable): The id of an element inside the SVG, or %NULL to
+ * render the whole SVG. For example, if you have a layer called
+ * "layer1" that you wish to render, pass "##layer1" as the id.
  *
- * Returns the pixbuf loaded by #handle.  The pixbuf returned will be reffed, so
+ * Returns the pixbuf loaded by @handle.  The pixbuf returned will be reffed, so
  * the caller of this function must assume that ref.  If insufficient data has
  * been read to create the pixbuf, or an error occurred in loading, then %NULL
  * will be returned.  Note that the pixbuf may not be complete until
  * @rsvg_handle_close has been called.
  *
- * Returns: the pixbuf loaded by #handle, or %NULL.
+ * Returns: (transfer full) (nullable): the pixbuf loaded by @handle, or %NULL.
  *
  * Since: 2.14
  **/
@@ -72,10 +66,8 @@ rsvg_handle_get_pixbuf_sub (RsvgHandle * handle, const char *id)
 {
     RsvgDimensionData dimensions;
     GdkPixbuf *output = NULL;
-    guint8 *pixels;
     cairo_surface_t *surface;
     cairo_t *cr;
-    int rowstride;
 
     g_return_val_if_fail (handle != NULL, NULL);
 
@@ -86,35 +78,25 @@ rsvg_handle_get_pixbuf_sub (RsvgHandle * handle, const char *id)
     if (!(dimensions.width && dimensions.height))
         return NULL;
 
-    rowstride = dimensions.width * 4;
-
-    pixels = g_try_malloc0 (dimensions.width * dimensions.height * 4UL);
-    if (!pixels)
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+                                          dimensions.width, dimensions.height);
+    if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS) {
+        cairo_surface_destroy (surface);
         return NULL;
+    }
 
-    surface = cairo_image_surface_create_for_data (pixels,
-                                                   CAIRO_FORMAT_ARGB32,
-                                                   dimensions.width, dimensions.height, rowstride);
     cr = cairo_create (surface);
-    cairo_surface_destroy (surface);
 
-    if (rsvg_handle_render_cairo_sub (handle, cr, id)) {
-        rsvg_cairo_to_pixbuf (pixels, rowstride, dimensions.height);
-
-        output = gdk_pixbuf_new_from_data (pixels,
-                                           GDK_COLORSPACE_RGB,
-                                           TRUE,
-                                           8,
-                                           dimensions.width,
-                                           dimensions.height,
-                                           rowstride,
-                                           (GdkPixbufDestroyNotify) rsvg_pixmap_destroy, NULL);
-	} else {
-        g_free (pixels);
-        output = NULL;
-	}
+    if (!rsvg_handle_render_cairo_sub (handle, cr, id)) {
+        cairo_destroy (cr);
+        cairo_surface_destroy (surface);
+        return NULL;
+    }
 
     cairo_destroy (cr);
+
+    output = rsvg_cairo_surface_to_pixbuf (surface);
+    cairo_surface_destroy (surface);
 
     return output;
 }
@@ -123,13 +105,13 @@ rsvg_handle_get_pixbuf_sub (RsvgHandle * handle, const char *id)
  * rsvg_handle_get_pixbuf:
  * @handle: An #RsvgHandle
  *
- * Returns the pixbuf loaded by #handle.  The pixbuf returned will be reffed, so
+ * Returns the pixbuf loaded by @handle.  The pixbuf returned will be reffed, so
  * the caller of this function must assume that ref.  If insufficient data has
  * been read to create the pixbuf, or an error occurred in loading, then %NULL
  * will be returned.  Note that the pixbuf may not be complete until
  * @rsvg_handle_close has been called.
  *
- * Returns: the pixbuf loaded by #handle, or %NULL.
+ * Returns: (transfer full) (nullable): the pixbuf loaded by @handle, or %NULL.
  **/
 GdkPixbuf *
 rsvg_handle_get_pixbuf (RsvgHandle * handle)

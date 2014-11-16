@@ -27,8 +27,9 @@
 #ifndef RSVG_PRIVATE_H
 #define RSVG_PRIVATE_H
 
+#include <cairo.h>
+
 #include "rsvg.h"
-#include "rsvg-bpath-util.h"
 
 #include <libxml/SAX.h>
 #include <libxml/xmlmemory.h>
@@ -52,7 +53,6 @@ typedef struct _RsvgDefs RsvgDefs;
 typedef struct _RsvgNode RsvgNode;
 typedef struct _RsvgFilter RsvgFilter;
 typedef struct _RsvgNodeChars RsvgNodeChars;
-typedef struct _RsvgIRect RsvgIRect;
 
 /* prepare for gettext */
 #ifndef _
@@ -115,8 +115,6 @@ typedef struct _RsvgIRect RsvgIRect;
  */
 #define RSVG_ONE_MINUS_EPSILON (1.0 - DBL_EPSILON)
 
-GType _rsvg_register_types (GTypeModule * module);
-
 struct RsvgSaxHandler {
     void (*free) (RsvgSaxHandler * self);
     void (*start_element) (RsvgSaxHandler * self, const char *name, RsvgPropertyBag * atts);
@@ -124,7 +122,17 @@ struct RsvgSaxHandler {
     void (*characters) (RsvgSaxHandler * self, const char *ch, int len);
 };
 
+typedef enum {
+    RSVG_LOAD_POLICY_STRICT
+} RsvgLoadPolicy;
+
+#define RSVG_LOAD_POLICY_DEFAULT (RSVG_LOAD_POLICY_STRICT)
+
 struct RsvgHandlePrivate {
+    RsvgHandleFlags flags;
+
+    RsvgLoadPolicy load_policy;
+
     gboolean is_disposed;
     gboolean is_closed;
 
@@ -153,6 +161,7 @@ struct RsvgHandlePrivate {
 
     xmlParserCtxtPtr ctxt;
     GError **error;
+    GCancellable *cancellable;
 
     double dpi_x;
     double dpi_y;
@@ -169,16 +178,12 @@ struct RsvgHandlePrivate {
     gboolean in_loop;		/* see get_dimension() */
 
     gboolean first_write;
-#if GLIB_CHECK_VERSION (2, 24, 0)
     GInputStream *data_input_stream; /* for rsvg_handle_write of svgz data */
-#elif defined(HAVE_GSF)
-    void *gzipped_data;         /* really a GsfOutput */
-#endif
 };
 
 typedef struct {
+    cairo_rectangle_t rect;
     gboolean active;
-    double x, y, w, h;
 } RsvgViewBox;
 
 /*Contextual information for the drawing phase*/
@@ -199,71 +204,127 @@ struct RsvgDrawingCtx {
 
 /*Abstract base class for context for our backends (one as yet)*/
 
+typedef enum {
+  RSVG_RENDER_TYPE_INVALID,
+
+  RSVG_RENDER_TYPE_BASE,
+
+  RSVG_RENDER_TYPE_CAIRO = 8,
+  RSVG_RENDER_TYPE_CAIRO_CLIP
+} RsvgRenderType;
+
 struct RsvgRender {
+    RsvgRenderType type;
+
     void (*free) (RsvgRender * self);
 
     PangoContext    *(*create_pango_context)    (RsvgDrawingCtx * ctx);
     void             (*render_pango_layout)	    (RsvgDrawingCtx * ctx, PangoLayout *layout,
                                                  double x, double y);
-    void             (*render_path)             (RsvgDrawingCtx * ctx, const RsvgBpathDef * path);
-    void             (*render_image)            (RsvgDrawingCtx * ctx, const GdkPixbuf * pixbuf,
+    void             (*render_path)             (RsvgDrawingCtx * ctx, const cairo_path_t *path);
+    void             (*render_surface)          (RsvgDrawingCtx * ctx, cairo_surface_t *surface,
                                                  double x, double y, double w, double h);
     void             (*pop_discrete_layer)      (RsvgDrawingCtx * ctx);
     void             (*push_discrete_layer)     (RsvgDrawingCtx * ctx);
     void             (*add_clipping_rect)       (RsvgDrawingCtx * ctx, double x, double y,
                                                  double w, double h);
-    GdkPixbuf       *(*get_image_of_node)       (RsvgDrawingCtx * ctx, RsvgNode * drawable,
+    cairo_surface_t *(*get_surface_of_node)     (RsvgDrawingCtx * ctx, RsvgNode * drawable,
                                                  double w, double h);
 };
 
+static inline RsvgRender *
+_rsvg_render_check_type (RsvgRender *render,
+                         RsvgRenderType type)
+{
+  g_assert ((render->type & type) == type);
+  return render;
+}
+
+#define _RSVG_RENDER_CIC(render, render_type, RenderCType) \
+  ((RenderCType*) _rsvg_render_check_type ((render), (render_type)))
 
 typedef struct {
     double length;
     char factor;
 } RsvgLength;
 
-struct _RsvgIRect {
-    int x0, y0, x1, y1;
-};
-
 typedef struct {
-    gdouble x, y, w, h;
+    cairo_rectangle_t rect;
+    cairo_matrix_t affine;
     gboolean virgin;
-    double affine[6];
 } RsvgBbox;
-
-typedef enum {
-    RSVG_SIZE_ZOOM,
-    RSVG_SIZE_WH,
-    RSVG_SIZE_WH_MAX,
-    RSVG_SIZE_ZOOM_MAX
-} RsvgSizeType;
 
 typedef enum {
     objectBoundingBox, userSpaceOnUse
 } RsvgCoordUnits;
 
-struct RsvgSizeCallbackData {
-    RsvgSizeType type;
-    double x_zoom;
-    double y_zoom;
-    gint width;
-    gint height;
+typedef enum {
+    RSVG_NODE_TYPE_INVALID = 0,
 
-    gboolean keep_aspect_ratio;
-};
+    RSVG_NODE_TYPE_CHARS,
+    RSVG_NODE_TYPE_CIRCLE,
+    RSVG_NODE_TYPE_CLIP_PATH,
+    RSVG_NODE_TYPE_COMPONENT_TRANFER_FUNCTION,
+    RSVG_NODE_TYPE_DEFS,
+    RSVG_NODE_TYPE_ELLIPSE,
+    RSVG_NODE_TYPE_FILTER,
+    RSVG_NODE_TYPE_GROUP,
+    RSVG_NODE_TYPE_IMAGE,
+    RSVG_NODE_TYPE_LIGHT_SOURCE,
+    RSVG_NODE_TYPE_LINE,
+    RSVG_NODE_TYPE_LINEAR_GRADIENT,
+    RSVG_NODE_TYPE_MARKER,
+    RSVG_NODE_TYPE_MASK,
+    RSVG_NODE_TYPE_PATH,
+    RSVG_NODE_TYPE_PATTERN,
+    RSVG_NODE_TYPE_POLYGON,
+    RSVG_NODE_TYPE_POLYLINE,
+    RSVG_NODE_TYPE_RADIAL_GRADIENT,
+    RSVG_NODE_TYPE_RECT,
+    RSVG_NODE_TYPE_STOP,
+    RSVG_NODE_TYPE_SVG,
+    RSVG_NODE_TYPE_SWITCH,
+    RSVG_NODE_TYPE_SYMBOL,
+    RSVG_NODE_TYPE_TEXT,
+    RSVG_NODE_TYPE_TREF,
+    RSVG_NODE_TYPE_TSPAN,
+    RSVG_NODE_TYPE_USE,
 
-void _rsvg_size_callback (int *width, int *height, gpointer data);
+    /* Filter primitives */
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE = 64,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_BLEND,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_COLOUR_MATRIX,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_COMPONENT_TRANSFER,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_COMPOSITE,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_CONVOLVE_MATRIX,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_DIFFUSE_LIGHTING,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_DISPLACEMENT_MAP,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_ERODE,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_FLOOD,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_GAUSSIAN_BLUR,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_IMAGE,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_MERGE,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_MERGE_NODE,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_OFFSET,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_SPECULAR_LIGHTING,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_TILE,
+    RSVG_NODE_TYPE_FILTER_PRIMITIVE_TURBULENCE,
+
+} RsvgNodeType;
 
 struct _RsvgNode {
     RsvgState *state;
     RsvgNode *parent;
-    GString *type;
     GPtrArray *children;
+    RsvgNodeType type;
+    const char *name; /* owned by the xmlContext, invalid after parsing! */
     void (*free) (RsvgNode * self);
     void (*draw) (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate);
     void (*set_atts) (RsvgNode * self, RsvgHandle * ctx, RsvgPropertyBag *);
 };
+
+#define RSVG_NODE_TYPE(node)                ((node)->type)
+#define RSVG_NODE_IS_FILTER_PRIMITIVE(node) (RSVG_NODE_TYPE((node)) & RSVG_NODE_TYPE_FILTER_PRIMITIVE)
 
 struct _RsvgNodeChars {
     RsvgNode super;
@@ -272,96 +333,89 @@ struct _RsvgNodeChars {
 
 typedef void (*RsvgPropertyBagEnumFunc) (const char *key, const char *value, gpointer user_data);
 
+G_GNUC_INTERNAL
 RsvgPropertyBag	    *rsvg_property_bag_new       (const char **atts);
-RsvgPropertyBag	    *rsvg_property_bag_ref       (RsvgPropertyBag * bag);
+G_GNUC_INTERNAL
+RsvgPropertyBag	    *rsvg_property_bag_dup       (RsvgPropertyBag * bag);
+G_GNUC_INTERNAL
 void                 rsvg_property_bag_free      (RsvgPropertyBag * bag);
-G_CONST_RETURN char *rsvg_property_bag_lookup    (RsvgPropertyBag * bag, const char *key);
+G_GNUC_INTERNAL
+const char          *rsvg_property_bag_lookup    (RsvgPropertyBag * bag, const char *key);
+G_GNUC_INTERNAL
 guint                rsvg_property_bag_size	     (RsvgPropertyBag * bag);
+G_GNUC_INTERNAL
 void                 rsvg_property_bag_enumerate (RsvgPropertyBag * bag, RsvgPropertyBagEnumFunc func,
                                                   gpointer user_data);
-
+/* for some reason this one's public... */
 GdkPixbuf *rsvg_pixbuf_from_data_with_size_data (const guchar * buff,
                                                  size_t len,
-                                                 struct RsvgSizeCallbackData *data,
+                                                 gpointer data,
                                                  const char *base_uri, GError ** error);
-
+G_GNUC_INTERNAL
 gboolean     rsvg_eval_switch_attributes	(RsvgPropertyBag * atts, gboolean * p_has_cond);
-GdkPixbuf   *_rsvg_pixbuf_new_cleared       (GdkColorspace colorspace, gboolean has_alpha,
-                                             int bits_per_sample, int width, int height);
-
+G_GNUC_INTERNAL
 gchar       *rsvg_get_base_uri_from_filename    (const gchar * file_name);
-GByteArray  *_rsvg_acquire_xlink_href_resource  (const char *href,
-                                                 const char *base_uri, GError ** err);
-
+G_GNUC_INTERNAL
 void rsvg_pop_discrete_layer    (RsvgDrawingCtx * ctx);
+G_GNUC_INTERNAL
 void rsvg_push_discrete_layer   (RsvgDrawingCtx * ctx);
-void rsvg_render_path           (RsvgDrawingCtx * ctx, const char *d);
-void rsvg_render_image          (RsvgDrawingCtx * ctx, GdkPixbuf * pb,
+G_GNUC_INTERNAL
+void rsvg_render_path           (RsvgDrawingCtx * ctx, const cairo_path_t *path);
+G_GNUC_INTERNAL
+void rsvg_render_surface        (RsvgDrawingCtx * ctx, cairo_surface_t *surface,
                                  double x, double y, double w, double h);
+G_GNUC_INTERNAL
 void rsvg_render_free           (RsvgRender * render);
+G_GNUC_INTERNAL
 void rsvg_add_clipping_rect     (RsvgDrawingCtx * ctx, double x, double y, double w, double h);
-GdkPixbuf *rsvg_get_image_of_node (RsvgDrawingCtx * ctx, RsvgNode * drawable, double w, double h);
-
-
-void _rsvg_affine_invert (double dst_affine[6], const double src_affine[6]);
-
-/* flip the matrix, FALSE, FALSE is a simple copy operation, and
-   TRUE, TRUE equals a rotation by 180 degrees */
-void _rsvg_affine_flip (double dst_affine[6], const double src_affine[6], int horz, int vert);
-
-void _rsvg_affine_multiply (double dst[6], const double src1[6], const double src2[6]);
-
-/* set up the identity matrix */
-void _rsvg_affine_identity (double dst[6]);
-
-/* set up a scaling matrix */
-void _rsvg_affine_scale (double dst[6], double sx, double sy);
-
-/* set up a rotation matrix; theta is given in degrees */
-void _rsvg_affine_rotate (double dst[6], double theta);
-
-/* set up a shearing matrix; theta is given in degrees */
-void _rsvg_affine_shear (double dst[6], double theta);
-
-/* set up a translation matrix */
-void _rsvg_affine_translate (double dst[6], double tx, double ty);
-
-
-/* find the affine's "expansion factor", i.e. the scale amount */
-double _rsvg_affine_expansion (const double src[6]);
-
-/* Determine whether the affine transformation is rectilinear,
-   i.e. whether a rectangle aligned to the grid is transformed into
-   another rectangle aligned to the grid. */
-int _rsvg_affine_rectilinear (const double src[6]);
-
-/* Determine whether two affine transformations are equal within grid allignment */
-int _rsvg_affine_equal (double matrix1[6], double matrix2[6]);
-
+G_GNUC_INTERNAL
+cairo_surface_t *rsvg_cairo_surface_from_pixbuf (const GdkPixbuf *pixbuf);
+G_GNUC_INTERNAL
+GdkPixbuf *rsvg_cairo_surface_to_pixbuf (cairo_surface_t *surface);
+G_GNUC_INTERNAL
+cairo_surface_t *rsvg_get_surface_of_node (RsvgDrawingCtx * ctx, RsvgNode * drawable, double w, double h);
+G_GNUC_INTERNAL
 void rsvg_node_set_atts (RsvgNode * node, RsvgHandle * ctx, RsvgPropertyBag * atts);
-
+G_GNUC_INTERNAL
 void rsvg_drawing_ctx_free (RsvgDrawingCtx * handle);
-
-void rsvg_bbox_init     (RsvgBbox * self, double *affine);
+G_GNUC_INTERNAL
+void rsvg_bbox_init     (RsvgBbox * self, cairo_matrix_t *matrix);
+G_GNUC_INTERNAL
 void rsvg_bbox_insert   (RsvgBbox * dst, RsvgBbox * src);
+G_GNUC_INTERNAL
 void rsvg_bbox_clip     (RsvgBbox * dst, RsvgBbox * src);
-
+G_GNUC_INTERNAL
 double _rsvg_css_normalize_length       (const RsvgLength * in, RsvgDrawingCtx * ctx, char dir);
+G_GNUC_INTERNAL
 double _rsvg_css_hand_normalize_length  (const RsvgLength * in, gdouble pixels_per_inch,
                                          gdouble width_or_height, gdouble font_size);
 double _rsvg_css_normalize_font_size    (RsvgState * state, RsvgDrawingCtx * ctx);
-
+G_GNUC_INTERNAL
 RsvgLength _rsvg_css_parse_length (const char *str);
-
+G_GNUC_INTERNAL
 void _rsvg_push_view_box    (RsvgDrawingCtx * ctx, double w, double h);
+G_GNUC_INTERNAL
 void _rsvg_pop_view_box	    (RsvgDrawingCtx * ctx);
-
+G_GNUC_INTERNAL
 void rsvg_SAX_handler_struct_init (void);
-
+G_GNUC_INTERNAL
 char *rsvg_get_url_string (const char *str);
-
+G_GNUC_INTERNAL
 void rsvg_return_if_fail_warning (const char *pretty_function,
                                   const char *expression, GError ** error);
+
+G_GNUC_INTERNAL
+guint8* _rsvg_handle_acquire_data (RsvgHandle *handle,
+                                   const char *uri,
+                                   char **content_type,
+                                   gsize *len,
+                                   GError **error);
+G_GNUC_INTERNAL
+GInputStream *_rsvg_handle_acquire_stream (RsvgHandle *handle,
+                                           const char *uri,
+                                           char **content_type,
+                                           GError **error);
+
 
 #define rsvg_return_if_fail(expr, error)    G_STMT_START{			\
      if G_LIKELY(expr) { } else                                     \

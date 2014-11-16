@@ -34,199 +34,82 @@
 #include <math.h>
 #include <errno.h>
 #include "rsvg-css.h"
-#include <gio/gio.h>
+#include "rsvg-io.h"
 
-static GByteArray *
-rsvg_acquire_base64_resource (const char *data, GError ** error)
+cairo_surface_t *
+rsvg_cairo_surface_new_from_href (RsvgHandle *handle,
+                                  const char *href,
+                                  GError **error)
 {
-    GByteArray *array = NULL;
-    gsize data_len, written_len;
-    int state = 0;
-    guint save = 0;
+    guint8 *data;
+    gsize data_len;
+    char *mime_type = NULL;
+    GdkPixbufLoader *loader = NULL;
+    GdkPixbuf *pixbuf = NULL;
+    cairo_surface_t *surface = NULL;
 
-    rsvg_return_val_if_fail (data != NULL, NULL, error);
+    data = _rsvg_handle_acquire_data (handle, href, &mime_type, &data_len, error);
+    if (data == NULL)
+        return NULL;
 
-    while (*data)
-        if (*data++ == ',')
-            break;
-
-    data_len = strlen (data);
-    array = g_byte_array_sized_new (data_len / 4 * 3);
-    written_len = g_base64_decode_step (data, data_len, array->data,
-                                        &state, &save);
-    g_byte_array_set_size (array, written_len);
-
-    return array;
-}
-
-gchar *
-rsvg_get_file_path (const gchar * filename, const gchar * base_uri)
-{
-    gchar *absolute_filename;
-
-    if (g_file_test (filename, G_FILE_TEST_EXISTS) || g_path_is_absolute (filename)) {
-        absolute_filename = g_strdup (filename);
+    if (mime_type) {
+        loader = gdk_pixbuf_loader_new_with_mime_type (mime_type, error);
     } else {
-        gchar *tmpcdir;
-        gchar *base_filename;
-
-        if (base_uri) {
-            base_filename = g_filename_from_uri (base_uri, NULL, NULL);
-            if (base_filename != NULL) {
-                tmpcdir = g_path_get_dirname (base_filename);
-                g_free (base_filename);
-            } else 
-                return NULL;
-        } else
-            tmpcdir = g_get_current_dir ();
-
-        absolute_filename = g_build_filename (tmpcdir, filename, NULL);
-        g_free (tmpcdir);
-    }
-
-    return absolute_filename;
-}
-
-static GByteArray *
-rsvg_acquire_file_resource (const char *filename, const char *base_uri, GError ** error)
-{
-    GByteArray *array;
-    gchar *path;
-    gchar *data = NULL;
-    gsize length;
-
-    rsvg_return_val_if_fail (filename != NULL, NULL, error);
-
-    path = rsvg_get_file_path (filename, base_uri);
-    if (path == NULL)
-        return NULL;
-
-    if (!g_file_get_contents (path, &data, &length, error)) {
-        g_free (path);
-        return NULL;
-    }
-
-    array = g_byte_array_new ();
-
-    g_byte_array_append (array, (guint8 *)data, length);
-    g_free (data);
-    g_free (path);
-
-    return array;
-}
-
-static GByteArray *
-rsvg_acquire_vfs_resource (const char *filename, const char *base_uri, GError ** error)
-{
-    GByteArray *array;
-
-    GFile *file;
-    char *data;
-    gsize size;
-    gboolean res = FALSE;
-
-    rsvg_return_val_if_fail (filename != NULL, NULL, error);
-
-    file = g_file_new_for_uri (filename);
-
-    if (!(res = g_file_load_contents (file, NULL, &data, &size, NULL, error))) {
-        if (base_uri != NULL) {
-            GFile *base;
-
-            g_clear_error (error);
-
-            g_object_unref (file);
-
-            base = g_file_new_for_uri (base_uri);
-            file = g_file_resolve_relative_path (base, filename);
-            g_object_unref (base);
-
-            res = g_file_load_contents (file, NULL, &data, &size, NULL, error);
-        }
-    }
-
-    g_object_unref (file);
-
-    if (res) {
-        array = g_byte_array_new ();
-
-        g_byte_array_append (array, (guint8 *)data, size);
-        g_free (data);
-    } else {
-        return NULL;
-    }
-
-    return array;
-}
-
-GByteArray *
-_rsvg_acquire_xlink_href_resource (const char *href, const char *base_uri, GError ** err)
-{
-    GByteArray *arr = NULL;
-
-    if (!(href && *href))
-        return NULL;
-
-    if (!strncmp (href, "data:", 5))
-        arr = rsvg_acquire_base64_resource (href, NULL);
-
-    if (!arr)
-        arr = rsvg_acquire_file_resource (href, base_uri, NULL);
-
-    if (!arr)
-        arr = rsvg_acquire_vfs_resource (href, base_uri, NULL);
-
-    return arr;
-}
-
-GdkPixbuf *
-rsvg_pixbuf_new_from_href (const char *href, const char *base_uri, GError ** error)
-{
-    GByteArray *arr;
-
-    arr = _rsvg_acquire_xlink_href_resource (href, base_uri, error);
-    if (arr) {
-        GdkPixbufLoader *loader;
-        GdkPixbuf *pixbuf = NULL;
-        int res;
-
         loader = gdk_pixbuf_loader_new ();
-
-        res = gdk_pixbuf_loader_write (loader, arr->data, arr->len, error);
-        g_byte_array_free (arr, TRUE);
-
-        if (!res) {
-            gdk_pixbuf_loader_close (loader, NULL);
-            g_object_unref (loader);
-            return NULL;
-        }
-
-        if (!gdk_pixbuf_loader_close (loader, error)) {
-            g_object_unref (loader);
-            return NULL;
-        }
-
-        pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
-
-        if (!pixbuf) {
-            g_object_unref (loader);
-            g_set_error (error,
-                         GDK_PIXBUF_ERROR,
-                         GDK_PIXBUF_ERROR_FAILED,
-                         _
-                         ("Failed to load image '%s': reason not known, probably a corrupt image file"),
-                         href);
-            return NULL;
-        }
-
-        g_object_ref (pixbuf);
-
-        g_object_unref (loader);
-
-        return pixbuf;
     }
 
-    return NULL;
+    if (loader == NULL)
+        goto out;
+
+    if (!gdk_pixbuf_loader_write (loader, data, data_len, error)) {
+        gdk_pixbuf_loader_close (loader, NULL);
+        goto out;
+    }
+
+    if (!gdk_pixbuf_loader_close (loader, error))
+        goto out;
+
+    pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+
+    if (!pixbuf) {
+        g_set_error (error,
+                     GDK_PIXBUF_ERROR,
+                     GDK_PIXBUF_ERROR_FAILED,
+                      _("Failed to load image '%s': reason not known, probably a corrupt image file"),
+                      href);
+        goto out;
+    }
+
+    surface = rsvg_cairo_surface_from_pixbuf (pixbuf);
+
+    if (mime_type == NULL) {
+        /* Try to get the information from the loader */
+        GdkPixbufFormat *format;
+        char **mime_types;
+
+        if ((format = gdk_pixbuf_loader_get_format (loader)) != NULL) {
+            mime_types = gdk_pixbuf_format_get_mime_types (format);
+
+            if (mime_types != NULL)
+                mime_type = g_strdup (mime_types[0]);
+            g_strfreev (mime_types);
+        }
+    }
+
+    if ((handle->priv->flags & RSVG_HANDLE_FLAG_KEEP_IMAGE_DATA) != 0 &&
+        mime_type != NULL &&
+        cairo_surface_set_mime_data (surface, mime_type, data,
+                                     data_len, g_free, data) == CAIRO_STATUS_SUCCESS) {
+        data = NULL; /* transferred to the surface */
+    }
+
+  out:
+    if (loader)
+        g_object_unref (loader);
+    g_free (mime_type);
+    g_free (data);
+
+    return surface;
 }
 
 void
@@ -275,8 +158,8 @@ rsvg_node_image_free (RsvgNode * self)
     rsvg_state_finalize (z->super.state);
     g_free (z->super.state);
     z->super.state = NULL;
-    if (z->img)
-        g_object_unref (z->img);
+    if (z->surface)
+        cairo_surface_destroy (z->surface);
     _rsvg_node_free(self);
 }
 
@@ -285,10 +168,10 @@ rsvg_node_image_draw (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate)
 {
     RsvgNodeImage *z = (RsvgNodeImage *) self;
     unsigned int aspect_ratio = z->preserve_aspect_ratio;
-    GdkPixbuf *img = z->img;
     gdouble x, y, w, h;
+    cairo_surface_t *surface = z->surface;
 
-    if (img == NULL)
+    if (surface == NULL)
         return;
 
     x = _rsvg_css_normalize_length (&z->x, ctx, 'h');
@@ -304,10 +187,12 @@ rsvg_node_image_draw (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate)
         rsvg_add_clipping_rect (ctx, x, y, w, h);
     }
 
-    rsvg_preserve_aspect_ratio (aspect_ratio, (double) gdk_pixbuf_get_width (img),
-                                (double) gdk_pixbuf_get_height (img), &w, &h, &x, &y);
+    rsvg_preserve_aspect_ratio (aspect_ratio, 
+                                (double) cairo_image_surface_get_width (surface),
+                                (double) cairo_image_surface_get_height (surface), 
+                                &w, &h, &x, &y);
 
-    rsvg_render_image (ctx, img, x, y, w, h);
+    rsvg_render_surface (ctx, surface, x, y, w, h);
 
     rsvg_pop_discrete_layer (ctx);
 }
@@ -330,11 +215,13 @@ rsvg_node_image_set_atts (RsvgNode * self, RsvgHandle * ctx, RsvgPropertyBag * a
         /* path is used by some older adobe illustrator versions */
         if ((value = rsvg_property_bag_lookup (atts, "path"))
             || (value = rsvg_property_bag_lookup (atts, "xlink:href"))) {
-            image->img = rsvg_pixbuf_new_from_href (value, rsvg_handle_get_base_uri (ctx), NULL);
+            image->surface = rsvg_cairo_surface_new_from_href (ctx,
+                                                               value, 
+                                                               NULL);
 
-            if (!image->img) {
+            if (!image->surface) {
 #ifdef G_ENABLE_DEBUG
-                g_warning (_("Couldn't load image: %s\n"), value);
+                g_warning ("Couldn't load image: %s\n", value);
 #endif
             }
         }
@@ -356,9 +243,9 @@ rsvg_new_image (void)
 {
     RsvgNodeImage *image;
     image = g_new (RsvgNodeImage, 1);
-    _rsvg_node_init (&image->super);
+    _rsvg_node_init (&image->super, RSVG_NODE_TYPE_IMAGE);
     g_assert (image->super.state);
-    image->img = NULL;
+    image->surface = NULL;
     image->preserve_aspect_ratio = RSVG_ASPECT_RATIO_XMID_YMID;
     image->x = image->y = image->w = image->h = _rsvg_css_parse_length ("0");
     image->super.free = rsvg_node_image_free;

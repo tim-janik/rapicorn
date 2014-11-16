@@ -1,11 +1,8 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=4 sts=4 ts=4 expandtab: */
 /*
-   rsvg-shapes.h: Draw SVG shapes
-
    Copyright (C) 2000 Eazel, Inc.
    Copyright (C) 2002, 2003, 2004, 2005 Dom Lachowicz <cinamod@hotmail.com>
    Copyright (C) 2003, 2004, 2005 Caleb Moore <c.moore@student.unsw.edu.au>
+   Copyright © 2011, 2012 Christian Persch
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public License as
@@ -21,43 +18,29 @@
    License along with this program; if not, write to the
    Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
-
-   Authors: Raph Levien <raph@artofcode.com>, 
-            Dom Lachowicz <cinamod@hotmail.com>, 
-            Caleb Moore <c.moore@student.unsw.edu.au>
 */
 
-#ifndef RSVG_SHAPES_H
-#define RSVG_SHAPES_H
+#ifndef RSVG_IO_H
+#define RSVG_IO_H
 
-#include <cairo.h>
-
-#include "rsvg-structure.h"
-
-G_BEGIN_DECLS 
+#include <glib.h>
+#include <gio/gio.h>
 
 G_GNUC_INTERNAL
-RsvgNode *rsvg_new_path (void);
-G_GNUC_INTERNAL
-RsvgNode *rsvg_new_polygon (void);
-G_GNUC_INTERNAL
-RsvgNode *rsvg_new_polyline (void);
-G_GNUC_INTERNAL
-RsvgNode *rsvg_new_line (void);
-G_GNUC_INTERNAL
-RsvgNode *rsvg_new_rect (void);
-G_GNUC_INTERNAL
-RsvgNode *rsvg_new_circle (void);
-G_GNUC_INTERNAL
-RsvgNode *rsvg_new_ellipse (void);
+gchar *_rsvg_io_get_file_path (const gchar *filename, 
+                               const gchar *basedir);
 
-typedef struct _RsvgNodePath RsvgNodePath;
+guint8* _rsvg_io_acquire_data (const char *uri,
+                               const char *base_uri,
+                               char **mime_type,
+                               gsize *len,
+                               GCancellable *cancellable,
+                               GError **error);
 
-struct _RsvgNodePath {
-    RsvgNode super;
-    cairo_path_t *path;
-};
+GInputStream *_rsvg_io_acquire_stream (const char *uri,
+                                       const char *base_uri,
+                                       char **mime_type,
+                                       GCancellable *cancellable,
+                                       GError **error);
 
-G_END_DECLS
-
-#endif                          /* RSVG_SHAPES_H */
+#endif /* RSVG_IO_H */

@@ -32,23 +32,27 @@
 
 G_BEGIN_DECLS 
 
+G_GNUC_INTERNAL
 PangoContext    *rsvg_cairo_create_pango_context    (RsvgDrawingCtx *ctx);
+G_GNUC_INTERNAL
 void         rsvg_cairo_render_pango_layout	    (RsvgDrawingCtx *ctx, PangoLayout *layout, 
                                                  double x, double y);
+G_GNUC_INTERNAL
 void         rsvg_cairo_render_path             (RsvgDrawingCtx *ctx, 
-                                                 const RsvgBpathDef * path);
-void         rsvg_cairo_render_image            (RsvgDrawingCtx *ctx, const GdkPixbuf * img, 
+                                                 const cairo_path_t *path);
+G_GNUC_INTERNAL
+void         rsvg_cairo_render_surface          (RsvgDrawingCtx *ctx, cairo_surface_t *surface,
                                                  double x, double y, double w, double h);
+G_GNUC_INTERNAL
 void         rsvg_cairo_push_discrete_layer	    (RsvgDrawingCtx *ctx);
+G_GNUC_INTERNAL
 void         rsvg_cairo_pop_discrete_layer      (RsvgDrawingCtx *ctx);
+G_GNUC_INTERNAL
 void         rsvg_cairo_add_clipping_rect       (RsvgDrawingCtx *ctx,
                                                  double x, double y, double width, double height);
-
-GdkPixbuf   *rsvg_cairo_get_image_of_node       (RsvgDrawingCtx *ctx, RsvgNode *drawable, 
+G_GNUC_INTERNAL
+cairo_surface_t*rsvg_cairo_get_surface_of_node  (RsvgDrawingCtx *ctx, RsvgNode *drawable, 
                                                  double width, double height);
-
-void         rsvg_cairo_to_pixbuf           (guint8 * pixels, int rowstride, int height);
-void         rsvg_pixbuf_to_cairo           (guint8 * pixels, int rowstride, int height);
 
 G_END_DECLS
 

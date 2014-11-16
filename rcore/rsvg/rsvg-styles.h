@@ -27,6 +27,7 @@
 #ifndef RSVG_STYLES_H
 #define RSVG_STYLES_H
 
+#include <cairo.h>
 #include "rsvg.h"
 #include "rsvg-paint-server.h"
 
@@ -50,11 +51,6 @@ typedef enum {
     TEXT_ANCHOR_END
 } TextAnchor;
 
-enum {
-    FILL_RULE_EVENODD = 0,
-    FILL_RULE_NONZERO = 1
-};
-
 typedef enum {
     UNICODE_BIDI_NORMAL = 0,
     UNICODE_BIDI_EMBED = 1,
@@ -62,64 +58,11 @@ typedef enum {
 } UnicodeBidi;
 
 typedef enum {
-    SHAPE_RENDERING_AUTO = 0,
-    SHAPE_RENDERING_OPTIMIZE_SPEED,
-    SHAPE_RENDERING_CRISP_EDGES,
-    SHAPE_RENDERING_GEOMETRIC_PRECISION
-} ShapeRenderingProperty;
-
-typedef enum {
-    TEXT_RENDERING_AUTO = 0,
-    TEXT_RENDERING_OPTIMIZE_SPEED,
-    TEXT_RENDERING_OPTIMIZE_LEGIBILITY,
-    TEXT_RENDERING_GEOMETRIC_PRECISION
-} TextRenderingProperty;
-
-typedef enum {
-    RSVG_COMP_OP_CLEAR,
-    RSVG_COMP_OP_SRC,
-    RSVG_COMP_OP_DST,
-    RSVG_COMP_OP_SRC_OVER,
-    RSVG_COMP_OP_DST_OVER,
-    RSVG_COMP_OP_SRC_IN,
-    RSVG_COMP_OP_DST_IN,
-    RSVG_COMP_OP_SRC_OUT,
-    RSVG_COMP_OP_DST_OUT,
-    RSVG_COMP_OP_SRC_ATOP,
-    RSVG_COMP_OP_DST_ATOP,
-    RSVG_COMP_OP_XOR,
-    RSVG_COMP_OP_PLUS,
-    RSVG_COMP_OP_MULTIPLY,
-    RSVG_COMP_OP_SCREEN,
-    RSVG_COMP_OP_OVERLAY,
-    RSVG_COMP_OP_DARKEN,
-    RSVG_COMP_OP_LIGHTEN,
-    RSVG_COMP_OP_COLOR_DODGE,
-    RSVG_COMP_OP_COLOR_BURN,
-    RSVG_COMP_OP_HARD_LIGHT,
-    RSVG_COMP_OP_SOFT_LIGHT,
-    RSVG_COMP_OP_DIFFERENCE,
-    RSVG_COMP_OP_EXCLUSION
-} RsvgCompOpType;
-
-typedef enum {
     RSVG_ENABLE_BACKGROUND_ACCUMULATE,
     RSVG_ENABLE_BACKGROUND_NEW
 } RsvgEnableBackgroundType;
 
 /* enums and data structures are ABI compatible with libart */
-
-typedef enum {
-    RSVG_PATH_STROKE_JOIN_MITER,
-    RSVG_PATH_STROKE_JOIN_ROUND,
-    RSVG_PATH_STROKE_JOIN_BEVEL
-} RsvgPathStrokeJoinType;
-
-typedef enum {
-    RSVG_PATH_STROKE_CAP_BUTT,
-    RSVG_PATH_STROKE_CAP_ROUND,
-    RSVG_PATH_STROKE_CAP_SQUARE
-} RsvgPathStrokeCapType;
 
 typedef struct _RsvgVpathDash RsvgVpathDash;
 
@@ -133,8 +76,8 @@ struct _RsvgVpathDash {
 
 struct _RsvgState {
     RsvgState *parent;
-    double affine[6];
-    double personal_affine[6];
+    cairo_matrix_t affine;
+    cairo_matrix_t personal_affine;
 
     RsvgFilter *filter;
     void *mask;
@@ -163,9 +106,9 @@ struct _RsvgState {
     double miter_limit;
     gboolean has_miter_limit;
 
-    RsvgPathStrokeCapType cap;
+    cairo_line_cap_t cap;
     gboolean has_cap;
-    RsvgPathStrokeJoinType join;
+    cairo_line_join_t join;
     gboolean has_join;
 
     RsvgLength font_size;
@@ -186,6 +129,8 @@ struct _RsvgState {
     gboolean has_font_decor;
     PangoDirection text_dir;
     gboolean has_text_dir;
+    PangoGravity text_gravity;
+    gboolean has_text_gravity;
     UnicodeBidi unicode_bidi;
     gboolean has_unicode_bidi;
     TextAnchor text_anchor;
@@ -229,50 +174,72 @@ struct _RsvgState {
     gboolean has_middleMarker;
     gboolean has_endMarker;
 
-    RsvgCompOpType comp_op;
+    cairo_operator_t comp_op;
     RsvgEnableBackgroundType enable_background;
 
-    ShapeRenderingProperty shape_rendering_type;
+    cairo_antialias_t shape_rendering_type;
     gboolean has_shape_rendering_type;
-    
-    TextRenderingProperty text_rendering_type;
+
+    cairo_antialias_t text_rendering_type;
     gboolean has_text_rendering_type;
 
     GHashTable *styles;
 };
 
+G_GNUC_INTERNAL
 RsvgState *rsvg_state_new (void);
 
+G_GNUC_INTERNAL
 void rsvg_state_init        (RsvgState * state);
+G_GNUC_INTERNAL
 void rsvg_state_reinit      (RsvgState * state);
+G_GNUC_INTERNAL
 void rsvg_state_clone       (RsvgState * dst, const RsvgState * src);
+G_GNUC_INTERNAL
 void rsvg_state_inherit     (RsvgState * dst, const RsvgState * src);
+G_GNUC_INTERNAL
 void rsvg_state_reinherit   (RsvgState * dst, const RsvgState * src);
+G_GNUC_INTERNAL
 void rsvg_state_dominate    (RsvgState * dst, const RsvgState * src);
+G_GNUC_INTERNAL
 void rsvg_state_override    (RsvgState * dst, const RsvgState * src);
+G_GNUC_INTERNAL
 void rsvg_state_finalize    (RsvgState * state);
+G_GNUC_INTERNAL
 void rsvg_state_free_all    (RsvgState * state);
 
+G_GNUC_INTERNAL
 void rsvg_parse_style_pairs (RsvgHandle * ctx, RsvgState * state, RsvgPropertyBag * atts);
+G_GNUC_INTERNAL
 void rsvg_parse_style	    (RsvgHandle * ctx, RsvgState * state, const char *str);
+G_GNUC_INTERNAL
 void rsvg_parse_cssbuffer   (RsvgHandle * ctx, const char *buff, size_t buflen);
-
+G_GNUC_INTERNAL
 void rsvg_parse_style_attrs (RsvgHandle * ctx, RsvgState * state, const char *tag,
                              const char *klazz, const char *id, RsvgPropertyBag * atts);
 
+G_GNUC_INTERNAL
 gdouble rsvg_viewport_percentage (gdouble width, gdouble height);
+G_GNUC_INTERNAL
 gdouble rsvg_dpi_percentage      (RsvgHandle * ctx);
 
-gboolean rsvg_parse_transform   (double dst[6], const char *src);
+G_GNUC_INTERNAL
+gboolean rsvg_parse_transform   (cairo_matrix_t *matrix, const char *src);
 
+G_GNUC_INTERNAL
 RsvgState *rsvg_state_parent    (RsvgState * state);
 
+G_GNUC_INTERNAL
 void       rsvg_state_pop       (RsvgDrawingCtx * ctx);
+G_GNUC_INTERNAL
 void       rsvg_state_push      (RsvgDrawingCtx * ctx);
+G_GNUC_INTERNAL
 RsvgState *rsvg_current_state   (RsvgDrawingCtx * ctx);
 
+G_GNUC_INTERNAL
 void rsvg_state_reinherit_top	(RsvgDrawingCtx * ctx, RsvgState * state, int dominate);
 
+G_GNUC_INTERNAL
 void rsvg_state_reconstruct	(RsvgState * state, RsvgNode * current);
 
 G_END_DECLS
