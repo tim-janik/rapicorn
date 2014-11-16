@@ -10,10 +10,11 @@ GLIB_MKENUMS = glib-mkenums
 rcore_rsvg_public_headers = $(strip	\
 )
 rcore_rsvg_sources = $(sort		\
-	rsvg-affine.c librsvg-features.c rsvg-bpath-util.c rsvg-bpath-util.h rsvg-css.c rsvg-css.h rsvg-defs.c rsvg-defs.h \
-	rsvg-image.c rsvg-image.h rsvg-paint-server.c rsvg-paint-server.h rsvg-path.c rsvg-path.h rsvg-private.h \
+	librsvg-features.c rsvg-css.c rsvg-css.h rsvg-defs.c rsvg-defs.h rsvg-image.c rsvg-image.h \
+	rsvg-io.c rsvg-io.h rsvg-paint-server.c rsvg-paint-server.h rsvg-path.c rsvg-path.h rsvg-private.h \
 	rsvg-base-file-util.c rsvg-filter.c rsvg-filter.h rsvg-marker.c rsvg-marker.h rsvg-mask.c rsvg-mask.h \
-	rsvg-shapes.c rsvg-shapes.h rsvg-structure.c rsvg-structure.h rsvg-styles.c rsvg-styles.h rsvg-text.c rsvg-text.h \
+	rsvg-shapes.c rsvg-shapes.h rsvg-size-callback.c rsvg-size-callback.h \
+	rsvg-structure.c rsvg-structure.h rsvg-styles.c rsvg-styles.h rsvg-text.c rsvg-text.h \
 	rsvg-cairo-draw.c rsvg-cairo-draw.h rsvg-cairo-render.c rsvg-cairo-render.h rsvg-cairo-clip.h rsvg-cairo-clip.c \
 	rsvg-cond.c rsvg-base.c rsvg.c rsvg-gobject.c rsvg-file-util.c rsvg-xml.c rsvg-xml.h \
 	svg.hh svg.cc svg-tweak.h librsvg-enum-types.c \
