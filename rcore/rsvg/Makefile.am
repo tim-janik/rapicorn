@@ -2,8 +2,8 @@
 include $(top_srcdir)/Makefile.decl
 
 AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CFLAGS   += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS)
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__ -DRSVG_COMPILATION
+AM_CFLAGS   += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS) -Wno-missing-prototypes -Wno-missing-declarations
 AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS) $(RAPICORN_RSVG_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
