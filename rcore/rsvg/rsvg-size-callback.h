@@ -1,8 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=4 sts=4 ts=4 expandtab: */
 /*
-   rsvg-text.h: Text handling routines for RSVG
-
    Copyright (C) 2000 Eazel, Inc.
    Copyright (C) 2002 Dom Lachowicz <cinamod@hotmail.com>
 
@@ -24,23 +20,33 @@
    Author: Raph Levien <raph@artofcode.com>
 */
 
-#ifndef RSVG_TEXT_H
-#define RSVG_TEXT_H
+#ifndef RSVG_SIZE_CALLBACK_H
+#define RSVG_SIZE_CALLBACK_H
 
-#include "rsvg.h"
-#include "rsvg-shapes.h"
+#include <glib.h>
 
-G_BEGIN_DECLS 
+G_BEGIN_DECLS
+
+typedef enum {
+    RSVG_SIZE_ZOOM,
+    RSVG_SIZE_WH,
+    RSVG_SIZE_WH_MAX,
+    RSVG_SIZE_ZOOM_MAX
+} RsvgSizeType;
+
+struct RsvgSizeCallbackData {
+    RsvgSizeType type;
+    double x_zoom;
+    double y_zoom;
+    gint width;
+    gint height;
+
+    gboolean keep_aspect_ratio;
+};
 
 G_GNUC_INTERNAL
-RsvgNode    *rsvg_new_text	    (void);
-G_GNUC_INTERNAL
-RsvgNode    *rsvg_new_tspan	    (void);
-G_GNUC_INTERNAL
-RsvgNode    *rsvg_new_tref	    (void);
-G_GNUC_INTERNAL
-char	    *rsvg_make_valid_utf8   (const char *str, int len);
+void _rsvg_size_callback (int *width, int *height, gpointer data);
 
 G_END_DECLS
 
-#endif                          /* RSVG_TEXT_H */
+#endif /* RSVG_SIZE_CALLBACK_H */

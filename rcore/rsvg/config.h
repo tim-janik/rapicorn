@@ -1,3 +1,3 @@
-// librsvg 2.34.1
-// git://git.gnome.org/librsvg HEAD=ab225933eb778751ed786bb82a1e8f2bdd89a187
+// librsvg 2.40.6
+// git://git.gnome.org/librsvg HEAD=5ba4343bccc7e1765f38f87490b3d6a3a500fde1
 #include "configure.h"

@@ -27,7 +27,7 @@
 #include "rsvg-private.h"
 #include "rsvg-defs.h"
 #include "rsvg-styles.h"
-#include "rsvg-image.h"
+#include "rsvg-io.h"
 
 #include <glib.h>
 
@@ -35,8 +35,8 @@ struct _RsvgDefs {
     GHashTable *hash;
     GPtrArray *unnamed;
     GHashTable *externs;
-    gchar *base_uri;
     GSList *toresolve;
+    RsvgHandle *ctx;
 };
 
 typedef struct _RsvgResolutionPending RsvgResolutionPending;
@@ -47,7 +47,7 @@ struct _RsvgResolutionPending {
 };
 
 RsvgDefs *
-rsvg_defs_new (void)
+rsvg_defs_new (RsvgHandle *handle)
 {
     RsvgDefs *result = g_new (RsvgDefs, 1);
 
@@ -55,16 +55,10 @@ rsvg_defs_new (void)
     result->externs =
         g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_object_unref);
     result->unnamed = g_ptr_array_new ();
-    result->base_uri = NULL;
     result->toresolve = NULL;
+    result->ctx = handle; /* no need to take a ref here */
 
     return result;
-}
-
-void
-rsvg_defs_set_base_uri (RsvgDefs * self, gchar * base_uri)
-{
-    self->base_uri = base_uri;
 }
 
 static int
@@ -72,25 +66,28 @@ rsvg_defs_load_extern (const RsvgDefs * defs, const char *name)
 {
     RsvgHandle *handle;
     gchar *filename, *base_uri;
-    GByteArray *chars;
+    guint8 *data;
+    gsize data_len;
+    gboolean rv;
 
-    filename = rsvg_get_file_path (name, defs->base_uri);
+    filename = _rsvg_io_get_file_path (name, rsvg_handle_get_base_uri (defs->ctx));
 
-    chars = _rsvg_acquire_xlink_href_resource (name, defs->base_uri, NULL);
+    data = _rsvg_handle_acquire_data (defs->ctx, name, NULL, &data_len, NULL);
 
-    if (chars) {
+    if (data) {
         handle = rsvg_handle_new ();
 
         base_uri = rsvg_get_base_uri_from_filename (filename);
         rsvg_handle_set_base_uri (handle, base_uri);
         g_free (base_uri);
 
-        if (rsvg_handle_write (handle, chars->data, chars->len, NULL) &&
-            rsvg_handle_close (handle, NULL)) {
+        rv = rsvg_handle_write (handle, data, data_len, NULL);
+        rv = rsvg_handle_close (handle, NULL) && rv;
+        if (rv) {
             g_hash_table_insert (defs->externs, g_strdup (name), handle);
         }
 
-        g_byte_array_free (chars, TRUE);
+        g_free (data);
     }
 
     g_free (filename);
@@ -156,6 +153,20 @@ rsvg_defs_register_memory (RsvgDefs * defs, RsvgNode * val)
     g_ptr_array_add (defs->unnamed, val);
 }
 
+static void
+rsvg_defs_free_toresolve (RsvgDefs *defs)
+{
+    GSList *l;
+
+    for (l = defs->toresolve; l ; l = l ->next) {
+        RsvgResolutionPending *data = l->data;
+
+        g_free (data->name);
+        g_free (data);
+    }
+    g_slist_free (defs->toresolve);
+}
+
 void
 rsvg_defs_free (RsvgDefs * defs)
 {
@@ -169,6 +180,7 @@ rsvg_defs_free (RsvgDefs * defs)
     g_ptr_array_free (defs->unnamed, TRUE);
 
     g_hash_table_destroy (defs->externs);
+    rsvg_defs_free_toresolve (defs);
 
     g_free (defs);
 }
@@ -186,13 +198,14 @@ rsvg_defs_add_resolver (RsvgDefs * defs, RsvgNode ** tochange, const gchar * nam
 void
 rsvg_defs_resolve_all (RsvgDefs * defs)
 {
-    while (defs->toresolve) {
-        RsvgResolutionPending *data;
-        data = defs->toresolve->data;
-        *(data->tochange) = rsvg_defs_lookup (defs, data->name);
-        g_free (data->name);
-        g_free (data);
-        defs->toresolve = g_slist_delete_link (defs->toresolve, defs->toresolve);
+    GSList *l;
 
+    for (l = defs->toresolve; l ; l = l ->next) {
+        RsvgResolutionPending *data = l->data;
+
+        *(data->tochange) = rsvg_defs_lookup (defs, data->name);
     }
+
+    rsvg_defs_free_toresolve (defs);
+    defs->toresolve = NULL;
 }

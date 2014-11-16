@@ -28,6 +28,7 @@
 #define RSVG_PAINT_SERVER_H
 
 #include <glib.h>
+#include <cairo.h>
 #include "rsvg-defs.h"
 
 G_BEGIN_DECLS 
@@ -43,12 +44,6 @@ typedef struct _RsvgPaintServer RsvgPaintServer;
 
 typedef struct _RsvgPSCtx RsvgPSCtx;
 
-typedef enum {
-    RSVG_GRADIENT_PAD,
-    RSVG_GRADIENT_REFLECT,
-    RSVG_GRADIENT_REPEAT
-} RsvgGradientSpread;
-
 struct _RsvgGradientStop {
     RsvgNode super;
     double offset;
@@ -58,8 +53,8 @@ struct _RsvgGradientStop {
 struct _RsvgLinearGradient {
     RsvgNode super;
     gboolean obj_bbox;
-    double affine[6];           /* user space to actual at time of gradient def */
-    RsvgGradientSpread spread;
+    cairo_matrix_t affine; /* user space to actual at time of gradient def */
+    cairo_extend_t spread;
     RsvgLength x1, y1, x2, y2;
     guint32 current_color;
     gboolean has_current_color;
@@ -76,8 +71,8 @@ struct _RsvgLinearGradient {
 struct _RsvgRadialGradient {
     RsvgNode super;
     gboolean obj_bbox;
-    double affine[6];           /* user space to actual at time of gradient def */
-    RsvgGradientSpread spread;
+    cairo_matrix_t affine; /* user space to actual at time of gradient def */
+    cairo_extend_t spread;
     RsvgLength cx, cy, r, fx, fy;
     guint32 current_color;
     gboolean has_current_color;
@@ -96,7 +91,7 @@ struct _RsvgPattern {
     RsvgNode super;
     gboolean obj_cbbox;
     gboolean obj_bbox;
-    double affine[6];           /* user space to actual at time of gradient def */
+    cairo_matrix_t affine; /* user space to actual at time of gradient def */
     RsvgLength x, y, width, height;
     RsvgViewBox vbox;
     unsigned int preserve_aspect_ratio;
@@ -114,7 +109,7 @@ struct _RsvgPattern {
 
 struct _RsvgSolidColour {
     gboolean currentcolour;
-    guint32 rgb;
+    guint32 argb;
 };
 
 typedef struct _RsvgSolidColour RsvgPaintServerColour;
@@ -142,20 +137,32 @@ struct _RsvgPaintServer {
 };
 
 /* Create a new paint server based on a specification string. */
+G_GNUC_INTERNAL
 RsvgPaintServer	    *rsvg_paint_server_parse    (gboolean * inherit, const RsvgDefs * defs,
                                                  const char *str, guint32 current_color);
+G_GNUC_INTERNAL
 void                 rsvg_paint_server_ref      (RsvgPaintServer * ps);
+G_GNUC_INTERNAL
 void                 rsvg_paint_server_unref    (RsvgPaintServer * ps);
+G_GNUC_INTERNAL
 RsvgRadialGradient  *rsvg_clone_radial_gradient (const RsvgRadialGradient * grad,
                                                  gboolean * shallow_cloned);
+G_GNUC_INTERNAL
 RsvgLinearGradient  *rsvg_clone_linear_gradient (const RsvgLinearGradient * grad,
                                                  gboolean * shallow_cloned);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_linear_gradient  (void);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_radial_gradient  (void);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_stop	        (void);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_pattern      (void);
+G_GNUC_INTERNAL
 void rsvg_pattern_fix_fallback          (RsvgPattern * pattern);
+G_GNUC_INTERNAL
 void rsvg_linear_gradient_fix_fallback	(RsvgLinearGradient * grad);
+G_GNUC_INTERNAL
 void rsvg_radial_gradient_fix_fallback	(RsvgRadialGradient * grad);
 
 G_END_DECLS

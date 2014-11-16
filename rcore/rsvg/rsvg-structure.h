@@ -36,11 +36,17 @@
 
 G_BEGIN_DECLS 
 
-RsvgNode * rsvg_new_use (void);
+G_GNUC_INTERNAL
+RsvgNode *rsvg_new_use (void);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_symbol (void);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_svg (void);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_defs (void);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_group (void);
+G_GNUC_INTERNAL
 RsvgNode *rsvg_new_switch (void);
 
 typedef struct _RsvgNodeGroup RsvgNodeGroup;
@@ -50,6 +56,7 @@ typedef struct _RsvgNodeSvg RsvgNodeSvg;
 
 struct _RsvgNodeGroup {
     RsvgNode super;
+    char *name;
 };
 
 struct _RsvgNodeSymbol {
@@ -70,17 +77,23 @@ struct _RsvgNodeSvg {
     RsvgLength x, y, w, h;
     RsvgViewBox vbox;
     RsvgPropertyBag *atts;
-    GdkPixbuf *img;
 };
 
+G_GNUC_INTERNAL
 void rsvg_pop_def_group     (RsvgHandle * ctx);
+G_GNUC_INTERNAL
 void rsvg_node_group_pack   (RsvgNode * self, RsvgNode * child);
-
+G_GNUC_INTERNAL
 void rsvg_node_draw         (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate);
+G_GNUC_INTERNAL
 void _rsvg_node_draw_children   (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate);
+G_GNUC_INTERNAL
 void _rsvg_node_finalize    (RsvgNode * self);
+G_GNUC_INTERNAL
 void _rsvg_node_free        (RsvgNode * self);
-void _rsvg_node_init        (RsvgNode * self);
+G_GNUC_INTERNAL
+void _rsvg_node_init        (RsvgNode * self, RsvgNodeType type);
+G_GNUC_INTERNAL
 void _rsvg_node_svg_apply_atts  (RsvgNodeSvg * self, RsvgHandle * ctx);
 
 G_END_DECLS
