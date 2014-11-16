@@ -1988,61 +1988,6 @@ rsvg_push_discrete_layer (RsvgDrawingCtx * ctx)
     ctx->render->push_discrete_layer (ctx);
 }
 
-#include "svg-tweak.h"
-
-static void
-tweak_bpath (RsvgBpathDef *bpd,
-             const double  affine[6],
-             const double  iaffine[6])
-{
-    int i;
-    double lx = 0, ly = 0;
-    for (i = 0; i < bpd->n_bpath; i++)
-        {
-            const RsvgBpath saved = bpd->bpath[i]; // save last unconverted coords for relative commands
-            const char *what;
-            switch (bpd->bpath[i].code)
-                {
-                case RSVG_MOVETO:
-                    what = "MOVETO";
-                    svg_tweak_point_simple (&bpd->bpath[i].x3, &bpd->bpath[i].y3, affine, iaffine);
-                    break;
-                case RSVG_MOVETO_OPEN:
-                    what = "OPENTO";
-                    svg_tweak_point_simple (&bpd->bpath[i].x3, &bpd->bpath[i].y3, affine, iaffine);
-                    break;
-                case RSVG_LINETO:
-                    what = "LINETO";
-                    svg_tweak_point_simple (&bpd->bpath[i].x3, &bpd->bpath[i].y3, affine, iaffine);
-                    break;
-                case RSVG_CURVETO:
-                    what = "CURVETO";
-                    if (i)
-                        lx = (lx + saved.x3) / 2., ly = (ly + saved.y3) / 2.;
-                    else // CURVETO as first path element
-                        lx = (saved.x1 + saved.x3) / 2., ly = (saved.y1 + saved.y3) / 2.;
-                    // lx,ly is now centered between curve end points
-                    svg_tweak_point_tweak (lx, ly, &bpd->bpath[i].x1, &bpd->bpath[i].y1, affine, iaffine);
-                    svg_tweak_point_tweak (lx, ly, &bpd->bpath[i].x2, &bpd->bpath[i].y2, affine, iaffine);
-                    svg_tweak_point_tweak (lx, ly, &bpd->bpath[i].x3, &bpd->bpath[i].y3, affine, iaffine);
-                    break;
-                case RSVG_END:
-                    what = "END";
-                    break;
-                default:
-                    what = "UNKNOWN";
-                    break;
-                }
-            lx = saved.x3, ly = saved.y3;
-            if (svg_tweak_debugging)
-                {
-                    dprintf (2, "PATH[%d]: %s: %g,%g %g,%g %g,%g\n", i, what, saved.x1, saved.y1, saved.x2, saved.y2, saved.x3, saved.y3);
-                    dprintf (2, " -> [%d]: %s: %g,%g %g,%g %g,%g\n", i, what, bpd->bpath[i].x1, bpd->bpath[i].y1,
-                             bpd->bpath[i].x2, bpd->bpath[i].y2, bpd->bpath[i].x3, bpd->bpath[i].y3);
-                }
-        }
-}
-
 void
 rsvg_render_path (RsvgDrawingCtx * ctx, const cairo_path_t *path)
 {
