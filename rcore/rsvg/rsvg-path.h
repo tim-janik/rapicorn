@@ -27,12 +27,44 @@
 #ifndef RSVG_PATH_H
 #define RSVG_PATH_H
 
-#include "rsvg-bpath-util.h"
+#include <glib.h>
+#include <cairo.h>
 
 G_BEGIN_DECLS 
 
-RsvgBpathDef *rsvg_parse_path (const char *path_str);
+typedef struct {
+    GArray *path_data;
+    int     last_move_to_index;
+} RsvgPathBuilder;
+
+G_GNUC_INTERNAL
+void rsvg_path_builder_init (RsvgPathBuilder *builder,
+                             int n_elements);
+G_GNUC_INTERNAL
+void rsvg_path_builder_move_to (RsvgPathBuilder *builder,
+                                double x,
+                                double y);
+G_GNUC_INTERNAL
+void rsvg_path_builder_line_to (RsvgPathBuilder *builder,
+                                double x,
+                                double y);
+G_GNUC_INTERNAL
+void rsvg_path_builder_curve_to (RsvgPathBuilder *builder,
+                                 double x1,
+                                 double y1,
+                                 double x2,
+                                 double y2,
+                                 double x3,
+                                 double y3);
+G_GNUC_INTERNAL
+void rsvg_path_builder_close_path (RsvgPathBuilder *builder);
+G_GNUC_INTERNAL
+cairo_path_t *rsvg_path_builder_finish (RsvgPathBuilder *builder);
+G_GNUC_INTERNAL
+cairo_path_t *rsvg_parse_path (const char *path_str);
+G_GNUC_INTERNAL
+void rsvg_cairo_path_destroy (cairo_path_t *path);
 
 G_END_DECLS
 
-#endif                          /* RSVG_PATH_H */
+#endif /* RSVG_PATH_H */

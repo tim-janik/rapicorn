@@ -26,32 +26,32 @@
 
 #include "config.h"
 #include "rsvg.h"
+#include "rsvg-io.h"
 #include "rsvg-private.h"
 
 static gboolean
 rsvg_handle_fill_with_data (RsvgHandle * handle,
                             const guint8 * data, gsize data_len, GError ** error)
 {
+    gboolean rv;
+
     rsvg_return_val_if_fail (data != NULL, FALSE, error);
     rsvg_return_val_if_fail (data_len != 0, FALSE, error);
 
-    if (!rsvg_handle_write (handle, data, data_len, error))
-        return FALSE;
-    if (!rsvg_handle_close (handle, error))
-        return FALSE;
+    rv = rsvg_handle_write (handle, data, data_len, error);
 
-    return TRUE;
+    return rsvg_handle_close (handle, rv ? error : NULL) && rv;
 }
 
 /**
  * rsvg_handle_new_from_data:
- * @data: The SVG data
- * @data_len: The length of #data, in bytes
+ * @data: (array length=data_len): The SVG data
+ * @data_len: The length of @data, in bytes
  * @error: return location for errors
  *
- * Loads the SVG specified by #data.
+ * Loads the SVG specified by @data.
  *
- * Returns: A RsvgHandle or %NULL if an error occurs.
+ * Returns: A #RsvgHandle or %NULL if an error occurs.
  * Since: 2.14
  */
 RsvgHandle *
@@ -76,33 +76,32 @@ rsvg_handle_new_from_data (const guint8 * data, gsize data_len, GError ** error)
  * @file_name: The file name to load. If built with gnome-vfs, can be a URI.
  * @error: return location for errors
  *
- * Loads the SVG specified by #file_name.
+ * Loads the SVG specified by @file_name.
  *
- * Returns: A RsvgHandle or %NULL if an error occurs.
+ * Returns: A #RsvgHandle or %NULL if an error occurs.
  * Since: 2.14
  */
 RsvgHandle *
 rsvg_handle_new_from_file (const gchar * file_name, GError ** error)
 {
     gchar *base_uri;
-    GByteArray *f;
+    guint8 *data;
+    gsize data_len;
     RsvgHandle *handle = NULL;
 
     rsvg_return_val_if_fail (file_name != NULL, NULL, error);
 
     base_uri = rsvg_get_base_uri_from_filename (file_name);
-    f = _rsvg_acquire_xlink_href_resource (file_name, base_uri, error);
+    data = _rsvg_io_acquire_data (file_name, base_uri, NULL, &data_len, NULL, error);
 
-    if (f) {
+    if (data) {
         handle = rsvg_handle_new ();
-        if (handle) {
-            rsvg_handle_set_base_uri (handle, base_uri);
-            if (!rsvg_handle_fill_with_data (handle, f->data, f->len, error)) {
-                g_object_unref (handle);
-                handle = NULL;
-            }
+        rsvg_handle_set_base_uri (handle, base_uri);
+        if (!rsvg_handle_fill_with_data (handle, data, data_len, error)) {
+            g_object_unref (handle);
+            handle = NULL;
         }
-        g_byte_array_free (f, TRUE);
+        g_free (data);
     }
 
     g_free (base_uri);

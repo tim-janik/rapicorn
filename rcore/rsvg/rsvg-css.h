@@ -27,8 +27,11 @@
 #define RSVG_CSS_H
 
 #include <glib.h>
+
+#ifdef RSVG_COMPILATION
 #include <pango/pango.h>
 #include "rsvg-private.h"
+#endif
 
 G_BEGIN_DECLS
 
@@ -44,28 +47,45 @@ G_BEGIN_DECLS
 #define RSVG_ASPECT_RATIO_XMAX_YMAX (1 << 8)
 #define RSVG_ASPECT_RATIO_SLICE (1 << 31)
 
-int	    rsvg_css_parse_aspect_ratio	    (const char *str);
-
+/* This one is semi-public for mis-use in rsvg-convert */
 guint32	    rsvg_css_parse_color        (const char *str, gboolean * inherit);
+
+#ifdef RSVG_COMPILATION
+
+G_GNUC_INTERNAL
+int	    rsvg_css_parse_aspect_ratio	    (const char *str);
+G_GNUC_INTERNAL
 guint       rsvg_css_parse_opacity	    (const char *str);
+G_GNUC_INTERNAL
 double      rsvg_css_parse_angle        (const char *str);
+G_GNUC_INTERNAL
 double      rsvg_css_parse_frequency    (const char *str);
+G_GNUC_INTERNAL
 double      rsvg_css_parse_time         (const char *str);
-
+G_GNUC_INTERNAL
 PangoStyle   rsvg_css_parse_font_style      (const char *str, gboolean * inherit);
+G_GNUC_INTERNAL
 PangoVariant rsvg_css_parse_font_variant    (const char *str, gboolean * inherit);
+G_GNUC_INTERNAL
 PangoWeight	 rsvg_css_parse_font_weight	    (const char *str, gboolean * inherit);
+G_GNUC_INTERNAL
 PangoStretch rsvg_css_parse_font_stretch    (const char *str, gboolean * inherit);
+G_GNUC_INTERNAL
 const char  *rsvg_css_parse_font_family	    (const char *str, gboolean * inherit);
-
+G_GNUC_INTERNAL
 RsvgViewBox	  rsvg_css_parse_vbox           (const char *vbox);
+G_GNUC_INTERNAL
 void          rsvg_css_parse_number_optional_number	(const char *str, double *x, double *y);
+G_GNUC_INTERNAL
 gchar       **rsvg_css_parse_list           (const char *in_str, guint * out_list_len);
+G_GNUC_INTERNAL
 gdouble	     *rsvg_css_parse_number_list    (const char *in_str, guint * out_list_len);
-
+G_GNUC_INTERNAL
 gboolean      rsvg_css_parse_overflow       (const char *str, gboolean * inherit);
-
+G_GNUC_INTERNAL
 char        **rsvg_css_parse_xml_attribute_string   (const char *attribute_string);
+
+#endif /* RSVG_COMPILATION */
 
 G_END_DECLS
 

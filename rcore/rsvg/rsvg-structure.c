@@ -103,8 +103,10 @@ _rsvg_node_dont_set_atts (RsvgNode * node, RsvgHandle * ctx, RsvgPropertyBag * a
 }
 
 void
-_rsvg_node_init (RsvgNode * self)
+_rsvg_node_init (RsvgNode * self,
+                 RsvgNodeType type)
 {
+    self->type = type;
     self->parent = NULL;
     self->children = g_ptr_array_new ();
     self->state = g_new (RsvgState, 1);
@@ -112,7 +114,6 @@ _rsvg_node_init (RsvgNode * self)
     self->free = _rsvg_node_free;
     self->draw = _rsvg_node_draw_nothing;
     self->set_atts = _rsvg_node_dont_set_atts;
-    self->type = NULL;
 }
 
 void
@@ -124,8 +125,6 @@ _rsvg_node_finalize (RsvgNode * self)
     }
     if (self->children != NULL)
         g_ptr_array_free (self->children, TRUE);
-    if (self->type != NULL)
-        g_string_free (self->type, TRUE);
 }
 
 void
@@ -157,7 +156,7 @@ rsvg_new_group (void)
 {
     RsvgNodeGroup *group;
     group = g_new (RsvgNodeGroup, 1);
-    _rsvg_node_init (&group->super);
+    _rsvg_node_init (&group->super, RSVG_NODE_TYPE_GROUP);
     group->super.draw = _rsvg_node_draw_children;
     group->super.set_atts = rsvg_node_group_set_atts;
     return &group->super;
@@ -166,8 +165,8 @@ rsvg_new_group (void)
 void
 rsvg_pop_def_group (RsvgHandle * ctx)
 {
-    if (ctx->priv->currentnode != NULL)
-        ctx->priv->currentnode = ctx->priv->currentnode->parent;
+    g_assert (ctx->priv->currentnode != NULL);
+    ctx->priv->currentnode = ctx->priv->currentnode->parent;
 }
 
 void
@@ -200,7 +199,7 @@ rsvg_node_use_draw (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate)
     RsvgNodeUse *use = (RsvgNodeUse *) self;
     RsvgNode *child;
     RsvgState *state;
-    double affine[6];
+    cairo_matrix_t affine;
     double x, y, w, h;
     x = _rsvg_css_normalize_length (&use->x, ctx, 'h');
     y = _rsvg_css_normalize_length (&use->y, ctx, 'v');
@@ -218,9 +217,9 @@ rsvg_node_use_draw (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate)
         return;
 
     state = rsvg_current_state (ctx);
-    if (strcmp (child->type->str, "symbol")) {
-        _rsvg_affine_translate (affine, x, y);
-        _rsvg_affine_multiply (state->affine, affine, state->affine);
+    if (RSVG_NODE_TYPE (child) != RSVG_NODE_TYPE_SYMBOL) {
+        cairo_matrix_init_translate (&affine, x, y);
+        cairo_matrix_multiply (&state->affine, &affine, &state->affine);
 
         rsvg_push_discrete_layer (ctx);
         rsvg_state_push (ctx);
@@ -232,23 +231,27 @@ rsvg_node_use_draw (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate)
 
         if (symbol->vbox.active) {
             rsvg_preserve_aspect_ratio
-                (symbol->preserve_aspect_ratio, symbol->vbox.w, symbol->vbox.h, &w, &h, &x, &y);
+                (symbol->preserve_aspect_ratio,
+                 symbol->vbox.rect.width, symbol->vbox.rect.height,
+                 &w, &h, &x, &y);
 
-            _rsvg_affine_translate (affine, x, y);
-            _rsvg_affine_multiply (state->affine, affine, state->affine);
-            _rsvg_affine_scale (affine, w / symbol->vbox.w, h / symbol->vbox.h);
-            _rsvg_affine_multiply (state->affine, affine, state->affine);
-            _rsvg_affine_translate (affine, -symbol->vbox.x, -symbol->vbox.y);
-            _rsvg_affine_multiply (state->affine, affine, state->affine);
+            cairo_matrix_init_translate (&affine, x, y);
+            cairo_matrix_multiply (&state->affine, &affine, &state->affine);
 
-            _rsvg_push_view_box (ctx, symbol->vbox.w, symbol->vbox.h);
+            cairo_matrix_init_scale (&affine, w / symbol->vbox.rect.width, h / symbol->vbox.rect.height);
+            cairo_matrix_multiply (&state->affine, &affine, &state->affine);
+
+            cairo_matrix_init_translate (&affine, -symbol->vbox.rect.x, -symbol->vbox.rect.y);
+            cairo_matrix_multiply (&state->affine, &affine, &state->affine);
+
+            _rsvg_push_view_box (ctx, symbol->vbox.rect.width, symbol->vbox.rect.height);
             rsvg_push_discrete_layer (ctx);
             if (!state->overflow || (!state->has_overflow && child->state->overflow))
-                rsvg_add_clipping_rect (ctx, symbol->vbox.x, symbol->vbox.y,
-                                        symbol->vbox.w, symbol->vbox.h);
+                rsvg_add_clipping_rect (ctx, symbol->vbox.rect.x, symbol->vbox.rect.y,
+                                        symbol->vbox.rect.width, symbol->vbox.rect.height);
         } else {
-            _rsvg_affine_translate (affine, x, y);
-            _rsvg_affine_multiply (state->affine, affine, state->affine);
+            cairo_matrix_init_translate (&affine, x, y);
+            cairo_matrix_multiply (&state->affine, &affine, &state->affine);
             rsvg_push_discrete_layer (ctx);
         }
 
@@ -267,7 +270,7 @@ rsvg_node_svg_draw (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate)
 {
     RsvgNodeSvg *sself;
     RsvgState *state;
-    gdouble affine[6], affine_old[6], affine_new[6];
+    cairo_matrix_t affine, affine_old, affine_new;
     guint i;
     double nx, ny, nw, nh;
     sself = (RsvgNodeSvg *) self;
@@ -281,44 +284,38 @@ rsvg_node_svg_draw (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate)
 
     state = rsvg_current_state (ctx);
 
-    for (i = 0; i < 6; i++)
-        affine_old[i] = state->affine[i];
+    affine_old = state->affine;
 
     if (sself->vbox.active) {
         double x = nx, y = ny, w = nw, h = nh;
         rsvg_preserve_aspect_ratio (sself->preserve_aspect_ratio,
-                                    sself->vbox.w, sself->vbox.h, &w, &h, &x, &y);
-        affine[0] = w / sself->vbox.w;
-        affine[1] = 0;
-        affine[2] = 0;
-        affine[3] = h / sself->vbox.h;
-        affine[4] = x - sself->vbox.x * w / sself->vbox.w;
-        affine[5] = y - sself->vbox.y * h / sself->vbox.h;
-        _rsvg_affine_multiply (state->affine, affine, state->affine);
-        _rsvg_push_view_box (ctx, sself->vbox.w, sself->vbox.h);
+                                    sself->vbox.rect.width, sself->vbox.rect.height,
+                                    &w, &h, &x, &y);
+        cairo_matrix_init (&affine,
+                           w / sself->vbox.rect.width,
+                           0,
+                           0,
+                           h / sself->vbox.rect.height,
+                           x - sself->vbox.rect.x * w / sself->vbox.rect.width,
+                           y - sself->vbox.rect.y * h / sself->vbox.rect.height);
+        cairo_matrix_multiply (&state->affine, &affine, &state->affine);
+        _rsvg_push_view_box (ctx, sself->vbox.rect.width, sself->vbox.rect.height);
     } else {
-        affine[0] = 1;
-        affine[1] = 0;
-        affine[2] = 0;
-        affine[3] = 1;
-        affine[4] = nx;
-        affine[5] = ny;
-        _rsvg_affine_multiply (state->affine, affine, state->affine);
+        cairo_matrix_init_translate (&affine, nx, ny);
+        cairo_matrix_multiply (&state->affine, &affine, &state->affine);
         _rsvg_push_view_box (ctx, nw, nh);
     }
-    for (i = 0; i < 6; i++)
-        affine_new[i] = state->affine[i];
+
+    affine_new = state->affine;
 
     rsvg_push_discrete_layer (ctx);
 
     /* Bounding box addition must be AFTER the discrete layer push, 
        which must be AFTER the transformation happens. */
     if (!state->overflow && self->parent) {
-        for (i = 0; i < 6; i++)
-            state->affine[i] = affine_old[i];
+        state->affine = affine_old;
         rsvg_add_clipping_rect (ctx, nx, ny, nw, nh);
-        for (i = 0; i < 6; i++)
-            state->affine[i] = affine_new[i];
+        state->affine = affine_new;
     }
 
     for (i = 0; i < self->children->len; i++) {
@@ -362,7 +359,7 @@ rsvg_node_svg_set_atts (RsvgNode * self, RsvgHandle * ctx, RsvgPropertyBag * att
          * style element is not loaded yet here, so we need to store those attribues
          * to be applied later.
          */
-        svg->atts = rsvg_property_bag_ref(atts);
+        svg->atts = rsvg_property_bag_dup(atts);
     }
 }
 
@@ -370,7 +367,7 @@ void
 _rsvg_node_svg_apply_atts (RsvgNodeSvg * self, RsvgHandle * ctx)
 {
     const char *id = NULL, *klazz = NULL, *value;
-    if (rsvg_property_bag_size (self->atts)) {
+    if (self->atts && rsvg_property_bag_size (self->atts)) {
         if ((value = rsvg_property_bag_lookup (self->atts, "class")))
             klazz = value;
         if ((value = rsvg_property_bag_lookup (self->atts, "id")))
@@ -397,7 +394,7 @@ rsvg_new_svg (void)
 {
     RsvgNodeSvg *svg;
     svg = g_new (RsvgNodeSvg, 1);
-    _rsvg_node_init (&svg->super);
+    _rsvg_node_init (&svg->super, RSVG_NODE_TYPE_SVG);
     svg->vbox.active = FALSE;
     svg->preserve_aspect_ratio = RSVG_ASPECT_RATIO_XMID_YMID;
     svg->x = _rsvg_css_parse_length ("0");
@@ -407,6 +404,7 @@ rsvg_new_svg (void)
     svg->super.draw = rsvg_node_svg_draw;
     svg->super.free = _rsvg_svg_free;
     svg->super.set_atts = rsvg_node_svg_set_atts;
+    svg->atts = NULL;
     return &svg->super;
 }
 
@@ -444,7 +442,7 @@ rsvg_new_use (void)
 {
     RsvgNodeUse *use;
     use = g_new (RsvgNodeUse, 1);
-    _rsvg_node_init (&use->super);
+    _rsvg_node_init (&use->super, RSVG_NODE_TYPE_USE);
     use->super.draw = rsvg_node_use_draw;
     use->super.set_atts = rsvg_node_use_set_atts;
     use->x = _rsvg_css_parse_length ("0");
@@ -485,7 +483,7 @@ rsvg_new_symbol (void)
 {
     RsvgNodeSymbol *symbol;
     symbol = g_new (RsvgNodeSymbol, 1);
-    _rsvg_node_init (&symbol->super);
+    _rsvg_node_init (&symbol->super, RSVG_NODE_TYPE_SYMBOL);
     symbol->vbox.active = FALSE;
     symbol->preserve_aspect_ratio = RSVG_ASPECT_RATIO_XMID_YMID;
     symbol->super.draw = _rsvg_node_draw_nothing;
@@ -498,7 +496,7 @@ rsvg_new_defs (void)
 {
     RsvgNodeGroup *group;
     group = g_new (RsvgNodeGroup, 1);
-    _rsvg_node_init (&group->super);
+    _rsvg_node_init (&group->super, RSVG_NODE_TYPE_DEFS);
     group->super.draw = _rsvg_node_draw_nothing;
     group->super.set_atts = rsvg_node_group_set_atts;
     return &group->super;
@@ -533,7 +531,7 @@ rsvg_new_switch (void)
 {
     RsvgNodeGroup *group;
     group = g_new (RsvgNodeGroup, 1);
-    _rsvg_node_init (&group->super);
+    _rsvg_node_init (&group->super, RSVG_NODE_TYPE_SWITCH);
     group->super.draw = _rsvg_node_switch_draw;
     group->super.set_atts = rsvg_node_group_set_atts;
     return &group->super;

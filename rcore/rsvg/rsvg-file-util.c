@@ -36,95 +36,20 @@
 #include "config.h"
 #include "rsvg.h"
 #include "rsvg-private.h"
+#include "rsvg-io.h"
+#include "rsvg-size-callback.h"
 
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #define SVG_BUFFER_SIZE (1024 * 8)
-
-void
-_rsvg_size_callback (int *width, int *height, gpointer data)
-{
-    struct RsvgSizeCallbackData *real_data = (struct RsvgSizeCallbackData *) data;
-    double zoomx, zoomy, zoom;
-
-    int in_width, in_height;
-
-    in_width = *width;
-    in_height = *height;
-
-    switch (real_data->type) {
-    case RSVG_SIZE_ZOOM:
-        if (*width < 0 || *height < 0)
-            return;
-
-        *width = floor (real_data->x_zoom * *width + 0.5);
-        *height = floor (real_data->y_zoom * *height + 0.5);
-        break;
-
-    case RSVG_SIZE_ZOOM_MAX:
-        if (*width < 0 || *height < 0)
-            return;
-
-        *width = floor (real_data->x_zoom * *width + 0.5);
-        *height = floor (real_data->y_zoom * *height + 0.5);
-
-        if (*width > real_data->width || *height > real_data->height) {
-            zoomx = (double) real_data->width / *width;
-            zoomy = (double) real_data->height / *height;
-            zoom = MIN (zoomx, zoomy);
-
-            *width = floor (zoom * *width + 0.5);
-            *height = floor (zoom * *height + 0.5);
-        }
-        break;
-
-    case RSVG_SIZE_WH_MAX:
-        if (*width < 0 || *height < 0)
-            return;
-
-        zoomx = (double) real_data->width / *width;
-        zoomy = (double) real_data->height / *height;
-        if (zoomx < 0)
-            zoom = zoomy;
-        else if (zoomy < 0)
-            zoom = zoomx;
-        else
-            zoom = MIN (zoomx, zoomy);
-
-        *width = floor (zoom * *width + 0.5);
-        *height = floor (zoom * *height + 0.5);
-        break;
-
-    case RSVG_SIZE_WH:
-        if (real_data->width != -1)
-            *width = real_data->width;
-        if (real_data->height != -1)
-            *height = real_data->height;
-        break;
-
-    default:
-        g_assert_not_reached ();
-    }
-
-    if (real_data->keep_aspect_ratio) {
-        int out_min = MIN (*width, *height);
-
-        if (out_min == *width) {
-            *height = in_height * ((double) *width / (double) in_width);
-        } else {
-            *width = in_width * ((double) *height / (double) in_height);
-        }
-    }
-}
 
 /* private */
 GdkPixbuf *
 rsvg_pixbuf_from_data_with_size_data (const guchar * buff,
                                       size_t len,
-                                      struct RsvgSizeCallbackData *data,
+                                      /* RsvgSizeCallbackData */ gpointer data,
                                       const char *base_uri, GError ** error)
 {
     RsvgHandle *handle;
@@ -141,6 +66,7 @@ rsvg_pixbuf_from_data_with_size_data (const guchar * buff,
     rsvg_handle_set_base_uri (handle, base_uri);
 
     if (!rsvg_handle_write (handle, buff, len, error)) {
+        (void) rsvg_handle_close (handle, NULL);
         g_object_unref (handle);
         return NULL;
     }
@@ -157,9 +83,11 @@ rsvg_pixbuf_from_data_with_size_data (const guchar * buff,
 }
 
 static GdkPixbuf *
-rsvg_pixbuf_from_stdio_file_with_size_data (GByteArray * f,
-                                            struct RsvgSizeCallbackData *data,
-                                            gchar * base_uri, GError ** error)
+rsvg_pixbuf_from_stdio_file_with_size_data (guint8 *data,
+                                            gsize data_len,
+                                            struct RsvgSizeCallbackData *cb_data,
+                                            gchar * base_uri, 
+                                            GError ** error)
 {
     RsvgHandle *handle;
     GdkPixbuf *retval;
@@ -171,10 +99,11 @@ rsvg_pixbuf_from_stdio_file_with_size_data (GByteArray * f,
         return NULL;
     }
 
-    rsvg_handle_set_size_callback (handle, _rsvg_size_callback, data, NULL);
+    rsvg_handle_set_size_callback (handle, _rsvg_size_callback, cb_data, NULL);
     rsvg_handle_set_base_uri (handle, base_uri);
 
-    if (!rsvg_handle_write (handle, f->data, f->len, error)) {
+    if (!rsvg_handle_write (handle, data, data_len, error)) {
+        (void) rsvg_handle_close (handle, NULL);
         g_object_unref (handle);
         return NULL;
     }
@@ -192,17 +121,20 @@ rsvg_pixbuf_from_stdio_file_with_size_data (GByteArray * f,
 
 static GdkPixbuf *
 rsvg_pixbuf_from_file_with_size_data (const gchar * file_name,
-                                      struct RsvgSizeCallbackData *data, GError ** error)
+                                      struct RsvgSizeCallbackData *cb_data, 
+                                      GError ** error)
 {
     GdkPixbuf *pixbuf;
-    GByteArray *f;
+    guint8 *data;
+    gsize data_len;
     GString *base_uri = g_string_new (file_name);
 
-    f = _rsvg_acquire_xlink_href_resource (file_name, base_uri->str, error);
+    data = _rsvg_io_acquire_data (file_name, base_uri->str, NULL, &data_len, NULL, error);
 
-    if (f) {
-        pixbuf = rsvg_pixbuf_from_stdio_file_with_size_data (f, data, base_uri->str, error);
-        g_byte_array_free (f, TRUE);
+    if (data) {
+        pixbuf = rsvg_pixbuf_from_stdio_file_with_size_data (data, data_len,
+                                                             cb_data, base_uri->str, error);
+        g_free (data);
     } else {
         pixbuf = NULL;
     }

@@ -23,6 +23,8 @@
    Authors: Caleb Moore <c.moore@student.unsw.edu.au>
 */
 
+#include "config.h"
+
 #include "rsvg-marker.h"
 #include "rsvg-private.h"
 #include "rsvg-styles.h"
@@ -32,6 +34,7 @@
 #include "rsvg-filter.h"
 #include "rsvg-mask.h"
 #include "rsvg-image.h"
+#include "rsvg-path.h"
 
 #include <string.h>
 #include <math.h>
@@ -84,7 +87,7 @@ rsvg_new_marker (void)
 {
     RsvgMarker *marker;
     marker = g_new (RsvgMarker, 1);
-    _rsvg_node_init (&marker->super);
+    _rsvg_node_init (&marker->super, RSVG_NODE_TYPE_MARKER);
     marker->orient = 0;
     marker->orientAuto = FALSE;
     marker->preserve_aspect_ratio = RSVG_ASPECT_RATIO_XMID_YMID;
@@ -100,25 +103,25 @@ void
 rsvg_marker_render (RsvgMarker * self, gdouble x, gdouble y, gdouble orient, gdouble linewidth,
 		    RsvgDrawingCtx * ctx)
 {
-    gdouble affine[6];
-    gdouble taffine[6];
+    cairo_matrix_t affine, taffine;
     unsigned int i;
     gdouble rotation;
     RsvgState *state = rsvg_current_state (ctx);
 
-    _rsvg_affine_translate (taffine, x, y);
-    _rsvg_affine_multiply (affine, taffine, state->affine);
+    cairo_matrix_init_translate (&taffine, x, y);
+    cairo_matrix_multiply (&affine, &taffine, &state->affine);
 
     if (self->orientAuto)
-        rotation = orient * 180. / M_PI;
+        rotation = orient;
     else
-        rotation = self->orient;
-    _rsvg_affine_rotate (taffine, rotation);
-    _rsvg_affine_multiply (affine, taffine, affine);
+        rotation = self->orient * M_PI / 180.;
+
+    cairo_matrix_init_rotate (&taffine, rotation);
+    cairo_matrix_multiply (&affine, &taffine, &affine);
 
     if (self->bbox) {
-        _rsvg_affine_scale (taffine, linewidth, linewidth);
-        _rsvg_affine_multiply (affine, taffine, affine);
+        cairo_matrix_init_scale (&taffine, linewidth, linewidth);
+        cairo_matrix_multiply (&affine, &taffine, &affine);
     }
 
     if (self->vbox.active) {
@@ -130,25 +133,28 @@ rsvg_marker_render (RsvgMarker * self, gdouble x, gdouble y, gdouble orient, gdo
         y = 0;
 
         rsvg_preserve_aspect_ratio (self->preserve_aspect_ratio,
-                                    self->vbox.w, self->vbox.h, &w, &h, &x, &y);
+                                    self->vbox.rect.width,
+                                    self->vbox.rect.height,
+                                    &w, &h, &x, &y);
 
-        x = -self->vbox.x * w / self->vbox.w;
-        y = -self->vbox.y * h / self->vbox.h;
+        x = -self->vbox.rect.x * w / self->vbox.rect.width;
+        y = -self->vbox.rect.y * h / self->vbox.rect.height;
 
-        taffine[0] = w / self->vbox.w;
-        taffine[1] = 0.;
-        taffine[2] = 0.;
-        taffine[3] = h / self->vbox.h;
-        taffine[4] = x;
-        taffine[5] = y;
-        _rsvg_affine_multiply (affine, taffine, affine);
-        _rsvg_push_view_box (ctx, self->vbox.w, self->vbox.h);
+        cairo_matrix_init (&taffine,
+                           w / self->vbox.rect.width,
+                           0,
+                           0,
+                           h / self->vbox.rect.height,
+                           x,
+                           y);
+        cairo_matrix_multiply (&affine, &taffine, &affine);
+        _rsvg_push_view_box (ctx, self->vbox.rect.width, self->vbox.rect.height);
     }
-    _rsvg_affine_translate (taffine,
-                            -_rsvg_css_normalize_length (&self->refX, ctx, 'h'),
-                            -_rsvg_css_normalize_length (&self->refY, ctx, 'v'));
-    _rsvg_affine_multiply (affine, taffine, affine);
 
+    cairo_matrix_init_translate (&taffine,
+                                 -_rsvg_css_normalize_length (&self->refX, ctx, 'h'),
+                                 -_rsvg_css_normalize_length (&self->refY, ctx, 'v'));
+    cairo_matrix_multiply (&affine, &taffine, &affine);
 
     rsvg_state_push (ctx);
     state = rsvg_current_state (ctx);
@@ -157,8 +163,7 @@ rsvg_marker_render (RsvgMarker * self, gdouble x, gdouble y, gdouble orient, gdo
 
     rsvg_state_reconstruct (state, &self->super);
 
-    for (i = 0; i < 6; i++)
-        state->affine[i] = affine[i];
+    state->affine = affine;
 
     rsvg_push_discrete_layer (ctx);
 
@@ -166,7 +171,8 @@ rsvg_marker_render (RsvgMarker * self, gdouble x, gdouble y, gdouble orient, gdo
 
     if (!state->overflow) {
         if (self->vbox.active)
-            rsvg_add_clipping_rect (ctx, self->vbox.x, self->vbox.y, self->vbox.w, self->vbox.h);
+            rsvg_add_clipping_rect (ctx, self->vbox.rect.x, self->vbox.rect.y,
+                                    self->vbox.rect.width, self->vbox.rect.height);
         else
             rsvg_add_clipping_rect (ctx, 0, 0,
                                     _rsvg_css_normalize_length (&self->width, ctx, 'h'),
@@ -198,27 +204,27 @@ rsvg_marker_parse (const RsvgDefs * defs, const char *str)
         val = rsvg_defs_lookup (defs, name);
         g_free (name);
 
-        if (val && (!strcmp (val->type->str, "marker")))
+        if (val && RSVG_NODE_TYPE (val) == RSVG_NODE_TYPE_MARKER)
             return val;
     }
     return NULL;
 }
 
 void
-rsvg_render_markers (const RsvgBpathDef * bpath_def, RsvgDrawingCtx * ctx)
+rsvg_render_markers (RsvgDrawingCtx * ctx,
+                     const cairo_path_t *path)
 {
-    int i;
-
     double x, y;
     double lastx, lasty;
-    double nextx, nexty;
     double linewidth;
-    RsvgPathcode code, lastcode, nextcode;
+    cairo_path_data_type_t code, nextcode;
 
     RsvgState *state;
     RsvgMarker *startmarker;
     RsvgMarker *middlemarker;
     RsvgMarker *endmarker;
+    cairo_path_data_t *data, *nextdata, *end;
+    cairo_path_data_t nextp;
 
     state = rsvg_current_state (ctx);
 
@@ -235,30 +241,44 @@ rsvg_render_markers (const RsvgBpathDef * bpath_def, RsvgDrawingCtx * ctx)
 
     x = 0;
     y = 0;
-    code = RSVG_END;
-    nextx = bpath_def->bpath[0].x3;
-    nexty = bpath_def->bpath[0].y3;
-    nextcode = bpath_def->bpath[0].code;
 
-    for (i = 0; i < bpath_def->n_bpath - 1; i++) {
+    if (path->num_data <= 0)
+        return;
+
+    end = &path->data[path->num_data];
+    data = &path->data[0];
+    nextcode = data[0].header.type;
+    if (data[0].header.length > 1)
+        nextp = data[data[0].header.length - 1];
+    else
+        nextp.point.x = nextp.point.y = 0.;
+
+    for ( ; data < end; data = nextdata) {
         lastx = x;
         lasty = y;
-        lastcode = code;
-        x = nextx;
-        y = nexty;
+        x = nextp.point.x;
+        y = nextp.point.y;
         code = nextcode;
-        nextx = bpath_def->bpath[i + 1].x3;
-        nexty = bpath_def->bpath[i + 1].y3;
-        nextcode = bpath_def->bpath[i + 1].code;
 
-        if (nextcode == RSVG_MOVETO ||
-            nextcode == RSVG_MOVETO_OPEN ||
-            nextcode == RSVG_END) {
+        nextdata = data + data->header.length;
+        if (nextdata < end) {
+            nextcode = nextdata->header.type;
+            if (nextdata->header.length > 1) {
+                nextp = nextdata[nextdata->header.length - 1];
+            } else {
+                /* keep nextp unchanged */
+            }
+        } else {
+            nextcode = CAIRO_PATH_MOVE_TO;
+        }
+
+        if (nextcode == CAIRO_PATH_MOVE_TO ||
+            code == CAIRO_PATH_CLOSE_PATH) {
             if (endmarker) {
-                if (code == RSVG_CURVETO) {
+                if (code == CAIRO_PATH_CURVE_TO) {
                     rsvg_marker_render (endmarker, x, y,
-                                        atan2 (y - bpath_def->bpath[i].y2,
-                                               x - bpath_def->bpath[i].x2),
+                                        atan2 (y - data[2].point.y,
+                                               x - data[2].point.x),
                                         linewidth, ctx);
                 } else {
                     rsvg_marker_render (endmarker, x, y,
@@ -266,39 +286,39 @@ rsvg_render_markers (const RsvgBpathDef * bpath_def, RsvgDrawingCtx * ctx)
                                         linewidth, ctx);
                 }
             }
-        } else if (code == RSVG_MOVETO ||
-                   code == RSVG_MOVETO_OPEN) {
+        } else if (code == CAIRO_PATH_MOVE_TO ||
+                   code == CAIRO_PATH_CLOSE_PATH) {
             if (startmarker) {
-                if (nextcode == RSVG_CURVETO) {
+                if (nextcode == CAIRO_PATH_CURVE_TO) {
                     rsvg_marker_render (startmarker, x, y,
-                                        atan2 (bpath_def->bpath[i + 1].y1 - y,
-                                               bpath_def->bpath[i + 1].x1 - x),
+                                        atan2 (nextdata[1].point.y - y,
+                                               nextdata[1].point.x - x),
                                         linewidth,
                                         ctx);
                 } else {
                     rsvg_marker_render (startmarker, x, y,
-                                        atan2 (nexty - y, nextx - x),
+                                        atan2 (nextp.point.y - y, nextp.point.x - x),
                                         linewidth,
-					                    ctx);
+                                        ctx);
                 }
             }
         } else {
             if (middlemarker) {
                 double xdifin, ydifin, xdifout, ydifout, intot, outtot, angle;
 
-                if (code == RSVG_CURVETO) {
-                    xdifin = x - bpath_def->bpath[i].x2;
-                    ydifin = y - bpath_def->bpath[i].y2;
+                if (code == CAIRO_PATH_CURVE_TO) {
+                    xdifin = x - data[2].point.x;
+                    ydifin = y - data[2].point.y;
                 } else {
                     xdifin = x - lastx;
                     ydifin = y - lasty;
                 }
-                if (nextcode == RSVG_CURVETO) {
-                    xdifout = bpath_def->bpath[i+1].x1 - x;
-                    ydifout = bpath_def->bpath[i+1].y1 - y;
+                if (nextcode == CAIRO_PATH_CURVE_TO) {
+                    xdifout = nextdata[1].point.x - x;
+                    ydifout = nextdata[1].point.y - y;
                 } else {
-                    xdifout = nextx - x;
-                    ydifout = nexty - y;
+                    xdifout = nextp.point.x - x;
+                    ydifout = nextp.point.y - y;
                 }
 
                 intot = sqrt (xdifin * xdifin + ydifin * ydifin);

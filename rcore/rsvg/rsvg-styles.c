@@ -23,6 +23,8 @@
 
    Author: Raph Levien <raph@artofcode.com>
 */
+#include "config.h"
+
 #include <string.h>
 #include <math.h>
 
@@ -35,12 +37,43 @@
 #include "rsvg-mask.h"
 #include "rsvg-marker.h"
 
+#include <libcroco/libcroco.h>
+
 #define RSVG_DEFAULT_FONT "Times New Roman"
+
+enum {
+  SHAPE_RENDERING_AUTO = CAIRO_ANTIALIAS_DEFAULT,
+  SHAPE_RENDERING_OPTIMIZE_SPEED = CAIRO_ANTIALIAS_NONE,
+  SHAPE_RENDERING_CRISP_EDGES = CAIRO_ANTIALIAS_NONE,
+  SHAPE_RENDERING_GEOMETRIC_PRECISION = CAIRO_ANTIALIAS_DEFAULT
+};
+
+enum {
+  TEXT_RENDERING_AUTO = CAIRO_ANTIALIAS_DEFAULT,
+  TEXT_RENDERING_OPTIMIZE_SPEED = CAIRO_ANTIALIAS_NONE,
+  TEXT_RENDERING_OPTIMIZE_LEGIBILITY = CAIRO_ANTIALIAS_DEFAULT,
+  TEXT_RENDERING_GEOMETRIC_PRECISION = CAIRO_ANTIALIAS_DEFAULT
+};
 
 typedef struct _StyleValueData {
     gchar *value;
     gboolean important;
 } StyleValueData;
+
+/*
+ * _rsvg_cairo_matrix_init_shear: Set up a shearing matrix.
+ * @dst: Where to store the resulting affine transform.
+ * @theta: Shear angle in degrees.
+ *
+ * Sets up a shearing matrix. In the standard libart coordinate system
+ * and a small value for theta, || becomes \\. Horizontal lines remain
+ * unchanged.
+ **/
+static void
+_rsvg_cairo_matrix_init_shear (cairo_matrix_t *dst, double theta)
+{
+  cairo_matrix_init (dst, 1., 0., tan (theta * M_PI / 180.0), 1., 0., 0);
+}
 
 static StyleValueData *
 style_value_data_new (const gchar *value, gboolean important)
@@ -81,8 +114,8 @@ rsvg_state_init (RsvgState * state)
     memset (state, 0, sizeof (RsvgState));
 
     state->parent = NULL;
-    _rsvg_affine_identity (state->affine);
-    _rsvg_affine_identity (state->personal_affine);
+    cairo_matrix_init_identity (&state->affine);
+    cairo_matrix_init_identity (&state->personal_affine);
     state->mask = NULL;
     state->opacity = 0xff;
     state->adobe_blend = 0;
@@ -91,13 +124,13 @@ rsvg_state_init (RsvgState * state)
     state->stroke_opacity = 0xff;
     state->stroke_width = _rsvg_css_parse_length ("1");
     state->miter_limit = 4;
-    state->cap = RSVG_PATH_STROKE_CAP_BUTT;
-    state->join = RSVG_PATH_STROKE_JOIN_MITER;
+    state->cap = CAIRO_LINE_CAP_BUTT;
+    state->join = CAIRO_LINE_JOIN_MITER;
     state->stop_opacity = 0xff;
-    state->fill_rule = FILL_RULE_NONZERO;
-    state->clip_rule = FILL_RULE_NONZERO;
+    state->fill_rule = CAIRO_FILL_RULE_WINDING;
+    state->clip_rule = CAIRO_FILL_RULE_WINDING;
     state->enable_background = RSVG_ENABLE_BACKGROUND_ACCUMULATE;
-    state->comp_op = RSVG_COMP_OP_SRC_OVER;
+    state->comp_op = CAIRO_OPERATOR_OVER;
     state->overflow = FALSE;
     state->flood_color = 0;
     state->flood_opacity = 255;
@@ -109,6 +142,7 @@ rsvg_state_init (RsvgState * state)
     state->font_weight = PANGO_WEIGHT_NORMAL;
     state->font_stretch = PANGO_STRETCH_NORMAL;
     state->text_dir = PANGO_DIRECTION_LTR;
+    state->text_gravity = PANGO_GRAVITY_SOUTH;
     state->unicode_bidi = UNICODE_BIDI_NORMAL;
     state->text_anchor = TEXT_ANCHOR_START;
     state->letter_spacing = _rsvg_css_parse_length ("0.0");
@@ -148,6 +182,7 @@ rsvg_state_init (RsvgState * state)
     state->has_font_stretch = FALSE;
     state->has_font_decor = FALSE;
     state->has_text_dir = FALSE;
+    state->has_text_gravity = FALSE;
     state->has_unicode_bidi = FALSE;
     state->has_text_anchor = FALSE;
     state->has_letter_spacing = FALSE;
@@ -269,6 +304,8 @@ rsvg_state_inherit_run (RsvgState * dst, const RsvgState * src,
         dst->font_decor = src->font_decor;
     if (function (dst->has_text_dir, src->has_text_dir))
         dst->text_dir = src->text_dir;
+    if (function (dst->has_text_gravity, src->has_text_gravity))
+        dst->text_gravity = src->text_gravity;
     if (function (dst->has_unicode_bidi, src->has_unicode_bidi))
         dst->unicode_bidi = src->unicode_bidi;
     if (function (dst->has_text_anchor, src->has_text_anchor))
@@ -435,6 +472,9 @@ rsvg_parse_style_pair (RsvgHandle * ctx,
     if (data && data->important && !important)
         return;
 
+    if (name == NULL || value == NULL)
+        return;
+
     g_hash_table_insert (state->styles,
                          (gpointer) g_strdup (name),
                          (gpointer) style_value_data_new (value, important));
@@ -492,55 +532,55 @@ rsvg_parse_style_pair (RsvgHandle * ctx,
             state->enable_background = RSVG_ENABLE_BACKGROUND_ACCUMULATE;
     } else if (g_str_equal (name, "comp-op")) {
         if (g_str_equal (value, "clear"))
-            state->comp_op = RSVG_COMP_OP_CLEAR;
+            state->comp_op = CAIRO_OPERATOR_CLEAR;
         else if (g_str_equal (value, "src"))
-            state->comp_op = RSVG_COMP_OP_SRC;
+            state->comp_op = CAIRO_OPERATOR_SOURCE;
         else if (g_str_equal (value, "dst"))
-            state->comp_op = RSVG_COMP_OP_DST;
+            state->comp_op = CAIRO_OPERATOR_DEST;
         else if (g_str_equal (value, "src-over"))
-            state->comp_op = RSVG_COMP_OP_SRC_OVER;
+            state->comp_op = CAIRO_OPERATOR_OVER;
         else if (g_str_equal (value, "dst-over"))
-            state->comp_op = RSVG_COMP_OP_DST_OVER;
+            state->comp_op = CAIRO_OPERATOR_DEST_OVER;
         else if (g_str_equal (value, "src-in"))
-            state->comp_op = RSVG_COMP_OP_SRC_IN;
+            state->comp_op = CAIRO_OPERATOR_IN;
         else if (g_str_equal (value, "dst-in"))
-            state->comp_op = RSVG_COMP_OP_DST_IN;
+            state->comp_op = CAIRO_OPERATOR_DEST_IN;
         else if (g_str_equal (value, "src-out"))
-            state->comp_op = RSVG_COMP_OP_SRC_OUT;
+            state->comp_op = CAIRO_OPERATOR_OUT;
         else if (g_str_equal (value, "dst-out"))
-            state->comp_op = RSVG_COMP_OP_DST_OUT;
+            state->comp_op = CAIRO_OPERATOR_DEST_OUT;
         else if (g_str_equal (value, "src-atop"))
-            state->comp_op = RSVG_COMP_OP_SRC_ATOP;
+            state->comp_op = CAIRO_OPERATOR_ATOP;
         else if (g_str_equal (value, "dst-atop"))
-            state->comp_op = RSVG_COMP_OP_DST_ATOP;
+            state->comp_op = CAIRO_OPERATOR_DEST_ATOP;
         else if (g_str_equal (value, "xor"))
-            state->comp_op = RSVG_COMP_OP_XOR;
+            state->comp_op = CAIRO_OPERATOR_XOR;
         else if (g_str_equal (value, "plus"))
-            state->comp_op = RSVG_COMP_OP_PLUS;
+            state->comp_op = CAIRO_OPERATOR_ADD;
         else if (g_str_equal (value, "multiply"))
-            state->comp_op = RSVG_COMP_OP_MULTIPLY;
+            state->comp_op = CAIRO_OPERATOR_MULTIPLY;
         else if (g_str_equal (value, "screen"))
-            state->comp_op = RSVG_COMP_OP_SCREEN;
+            state->comp_op = CAIRO_OPERATOR_SCREEN;
         else if (g_str_equal (value, "overlay"))
-            state->comp_op = RSVG_COMP_OP_OVERLAY;
+            state->comp_op = CAIRO_OPERATOR_OVERLAY;
         else if (g_str_equal (value, "darken"))
-            state->comp_op = RSVG_COMP_OP_DARKEN;
+            state->comp_op = CAIRO_OPERATOR_DARKEN;
         else if (g_str_equal (value, "lighten"))
-            state->comp_op = RSVG_COMP_OP_LIGHTEN;
+            state->comp_op = CAIRO_OPERATOR_LIGHTEN;
         else if (g_str_equal (value, "color-dodge"))
-            state->comp_op = RSVG_COMP_OP_COLOR_DODGE;
+            state->comp_op = CAIRO_OPERATOR_COLOR_DODGE;
         else if (g_str_equal (value, "color-burn"))
-            state->comp_op = RSVG_COMP_OP_COLOR_BURN;
+            state->comp_op = CAIRO_OPERATOR_COLOR_BURN;
         else if (g_str_equal (value, "hard-light"))
-            state->comp_op = RSVG_COMP_OP_HARD_LIGHT;
+            state->comp_op = CAIRO_OPERATOR_HARD_LIGHT;
         else if (g_str_equal (value, "soft-light"))
-            state->comp_op = RSVG_COMP_OP_SOFT_LIGHT;
+            state->comp_op = CAIRO_OPERATOR_SOFT_LIGHT;
         else if (g_str_equal (value, "difference"))
-            state->comp_op = RSVG_COMP_OP_DIFFERENCE;
+            state->comp_op = CAIRO_OPERATOR_DIFFERENCE;
         else if (g_str_equal (value, "exclusion"))
-            state->comp_op = RSVG_COMP_OP_EXCLUSION;
+            state->comp_op = CAIRO_OPERATOR_EXCLUSION;
         else
-            state->comp_op = RSVG_COMP_OP_SRC_OVER;
+            state->comp_op = CAIRO_OPERATOR_OVER;
     } else if (g_str_equal (name, "display")) {
         state->has_visible = TRUE;
         if (g_str_equal (value, "none"))
@@ -576,17 +616,17 @@ rsvg_parse_style_pair (RsvgHandle * ctx,
     } else if (g_str_equal (name, "fill-rule")) {
         state->has_fill_rule = TRUE;
         if (g_str_equal (value, "nonzero"))
-            state->fill_rule = FILL_RULE_NONZERO;
+            state->fill_rule = CAIRO_FILL_RULE_WINDING;
         else if (g_str_equal (value, "evenodd"))
-            state->fill_rule = FILL_RULE_EVENODD;
+            state->fill_rule = CAIRO_FILL_RULE_EVEN_ODD;
         else
             state->has_fill_rule = FALSE;
     } else if (g_str_equal (name, "clip-rule")) {
         state->has_clip_rule = TRUE;
         if (g_str_equal (value, "nonzero"))
-            state->clip_rule = FILL_RULE_NONZERO;
+            state->clip_rule = CAIRO_FILL_RULE_WINDING;
         else if (g_str_equal (value, "evenodd"))
-            state->clip_rule = FILL_RULE_EVENODD;
+            state->clip_rule = CAIRO_FILL_RULE_EVEN_ODD;
         else
             state->has_clip_rule = FALSE;
     } else if (g_str_equal (name, "stroke")) {
@@ -602,11 +642,11 @@ rsvg_parse_style_pair (RsvgHandle * ctx,
     } else if (g_str_equal (name, "stroke-linecap")) {
         state->has_cap = TRUE;
         if (g_str_equal (value, "butt"))
-            state->cap = RSVG_PATH_STROKE_CAP_BUTT;
+            state->cap = CAIRO_LINE_CAP_BUTT;
         else if (g_str_equal (value, "round"))
-            state->cap = RSVG_PATH_STROKE_CAP_ROUND;
+            state->cap = CAIRO_LINE_CAP_ROUND;
         else if (g_str_equal (value, "square"))
-            state->cap = RSVG_PATH_STROKE_CAP_SQUARE;
+            state->cap = CAIRO_LINE_CAP_SQUARE;
         else
             g_warning (_("unknown line cap style %s\n"), value);
     } else if (g_str_equal (name, "stroke-opacity")) {
@@ -615,11 +655,11 @@ rsvg_parse_style_pair (RsvgHandle * ctx,
     } else if (g_str_equal (name, "stroke-linejoin")) {
         state->has_join = TRUE;
         if (g_str_equal (value, "miter"))
-            state->join = RSVG_PATH_STROKE_JOIN_MITER;
+            state->join = CAIRO_LINE_JOIN_MITER;
         else if (g_str_equal (value, "round"))
-            state->join = RSVG_PATH_STROKE_JOIN_ROUND;
+            state->join = CAIRO_LINE_JOIN_ROUND;
         else if (g_str_equal (value, "bevel"))
-            state->join = RSVG_PATH_STROKE_JOIN_BEVEL;
+            state->join = CAIRO_LINE_JOIN_BEVEL;
         else
             g_warning (_("unknown line join style %s\n"), value);
     } else if (g_str_equal (name, "font-size")) {
@@ -667,7 +707,7 @@ rsvg_parse_style_pair (RsvgHandle * ctx,
     } else if (g_str_equal (name, "unicode-bidi")) {
         state->has_unicode_bidi = TRUE;
         if (g_str_equal (value, "inherit")) {
-            state->unicode_bidi = PANGO_DIRECTION_LTR;
+            state->unicode_bidi = UNICODE_BIDI_NORMAL;
             state->has_unicode_bidi = FALSE;
         } else if (g_str_equal (value, "embed"))
             state->unicode_bidi = UNICODE_BIDI_EMBED;
@@ -679,17 +719,22 @@ rsvg_parse_style_pair (RsvgHandle * ctx,
         /* TODO: these aren't quite right... */
 
         state->has_text_dir = TRUE;
+        state->has_text_gravity = TRUE;
         if (g_str_equal (value, "inherit")) {
             state->text_dir = PANGO_DIRECTION_LTR;
             state->has_text_dir = FALSE;
-        } else if (g_str_equal (value, "lr-tb") || g_str_equal (value, "tb"))
-            state->text_dir = PANGO_DIRECTION_TTB_LTR;
-        else if (g_str_equal (value, "rl"))
-            state->text_dir = PANGO_DIRECTION_RTL;
-        else if (g_str_equal (value, "tb-rl") || g_str_equal (value, "rl-tb"))
-            state->text_dir = PANGO_DIRECTION_TTB_RTL;
-        else
+            state->text_gravity = PANGO_GRAVITY_SOUTH;
+            state->has_text_gravity = FALSE;
+        } else if (g_str_equal (value, "lr-tb") || g_str_equal (value, "lr")) {
             state->text_dir = PANGO_DIRECTION_LTR;
+            state->text_gravity = PANGO_GRAVITY_SOUTH;
+        } else if (g_str_equal (value, "rl-tb") || g_str_equal (value, "rl")) {
+            state->text_dir = PANGO_DIRECTION_RTL;
+            state->text_gravity = PANGO_GRAVITY_SOUTH;
+        } else if (g_str_equal (value, "tb-rl") || g_str_equal (value, "tb")) {
+            state->text_dir = PANGO_DIRECTION_LTR;
+            state->text_gravity = PANGO_GRAVITY_EAST;
+        }
     } else if (g_str_equal (name, "text-anchor")) {
         state->has_text_anchor = TRUE;
         if (g_str_equal (value, "inherit")) {
@@ -881,16 +926,20 @@ parse_style_value (const gchar *string, gchar **value, gboolean *important)
     gchar **strings;
 
     strings = g_strsplit (string, "!", 2);
-    if (g_strv_length (strings) == 2 &&
+
+    if (strings == NULL || strings[0] == NULL) {
+        g_strfreev (strings);
+        return FALSE;
+    }
+
+    if (strings[1] != NULL && strings[2] == NULL &&
         g_str_equal (g_strstrip (strings[1]), "important")) {
         *important = TRUE;
     } else {
         *important = FALSE;
     }
-    if (strings[0])
-        *value = g_strdup (g_strstrip (strings[0]));
-    else
-        *value = g_strdup ("");
+
+    *value = g_strdup (g_strstrip (strings[0]));
 
     g_strfreev (strings);
 
@@ -916,14 +965,14 @@ rsvg_parse_style (RsvgHandle * ctx, RsvgState * state, const char *str)
         if (!values)
             continue;
 
-        if (g_strv_length (values)  == 2) {
+        if (g_strv_length (values) == 2) {
             gboolean important;
             gchar *style_value = NULL;
-            parse_style_value (values[1], &style_value, &important);
-            rsvg_parse_style_pair (ctx, state,
-                                   g_strstrip (values[0]),
-                                   style_value,
-                                   important);
+            if (parse_style_value (values[1], &style_value, &important))
+                rsvg_parse_style_pair (ctx, state,
+                                       g_strstrip (values[0]),
+                                       style_value,
+                                       important);
             g_free (style_value);
         }
         g_strfreev (values);
@@ -960,10 +1009,6 @@ rsvg_css_define_style (RsvgHandle * ctx,
                              (gpointer) style_value_data_new (style_value, important));
     }
 }
-
-#ifdef HAVE_LIBCROCO
-
-#include <libcroco/libcroco.h>
 
 typedef struct _CSSUserData {
     RsvgHandle *ctx;
@@ -1081,13 +1126,15 @@ init_sac_handler (CRDocHandler * a_handler)
     a_handler->unrecoverable_error = ccss_unrecoverable_error;
 }
 
-static void
-rsvg_real_parse_cssbuffer (RsvgHandle * ctx, const char *buff, size_t buflen)
+void
+rsvg_parse_cssbuffer (RsvgHandle * ctx, const char *buff, size_t buflen)
 {
-    enum CRStatus status = CR_OK;
     CRParser *parser = NULL;
     CRDocHandler *css_handler = NULL;
     CSSUserData user_data;
+
+    if (buff == NULL || buflen == 0)
+        return;
 
     css_handler = cr_doc_handler_new ();
     init_sac_handler (css_handler);
@@ -1097,16 +1144,16 @@ rsvg_real_parse_cssbuffer (RsvgHandle * ctx, const char *buff, size_t buflen)
 
     /* TODO: fix libcroco to take in const strings */
     parser = cr_parser_new_from_buf ((guchar *) buff, (gulong) buflen, CR_UTF_8, FALSE);
-    status = cr_parser_set_sac_handler (parser, css_handler);
-
-    if (status != CR_OK) {
-        g_warning (_("Error setting CSS SAC handler\n"));
-        cr_parser_destroy (parser);
+    if (parser == NULL) {
+        cr_doc_handler_unref (css_handler);
         return;
     }
 
-    status = cr_parser_set_use_core_grammar (parser, FALSE);
-    status = cr_parser_parse (parser);
+    cr_parser_set_sac_handler (parser, css_handler);
+    cr_doc_handler_unref (css_handler);
+
+    cr_parser_set_use_core_grammar (parser, FALSE);
+    cr_parser_parse (parser);
 
     cr_parser_destroy (parser);
 }
@@ -1116,127 +1163,47 @@ ccss_import_style (CRDocHandler * a_this,
                    GList * a_media_list,
                    CRString * a_uri, CRString * a_uri_default_ns, CRParsingLocation * a_location)
 {
-    if (a_uri) {
-        GByteArray *stylesheet_data;
-        CSSUserData *user_data;
+    CSSUserData *user_data = (CSSUserData *) a_this->app_data;
+    guint8 *stylesheet_data;
+    gsize stylesheet_data_len;
+    char *mime_type = NULL;
 
-        user_data = (CSSUserData *) a_this->app_data;
+    if (a_uri == NULL)
+        return;
 
-        stylesheet_data =
-            _rsvg_acquire_xlink_href_resource ((gchar *) cr_string_peek_raw_str (a_uri),
-                                               rsvg_handle_get_base_uri (user_data->ctx), NULL);
-        if (stylesheet_data) {
-            rsvg_real_parse_cssbuffer (user_data->ctx, (const char *) stylesheet_data->data,
-                                       (size_t) stylesheet_data->len);
-            g_byte_array_free (stylesheet_data, TRUE);
-        }
+    stylesheet_data = _rsvg_handle_acquire_data (user_data->ctx,
+                                                 (gchar *) cr_string_peek_raw_str (a_uri),
+                                                 &mime_type,
+                                                 &stylesheet_data_len,
+                                                 NULL);
+    if (stylesheet_data == NULL || 
+        mime_type == NULL || 
+        strcmp (mime_type, "text/css") != 0) {
+        g_free (stylesheet_data);
+        g_free (mime_type);
+        return;
     }
-}
 
-#else                           /* !HAVE_LIBCROCO */
-
-static void
-rsvg_real_parse_cssbuffer (RsvgHandle * ctx, const char *buff, size_t buflen)
-{
-    /*
-     * Extremely poor man's CSS parser. Not robust. Not compliant.
-     * See also: http://www.w3.org/TR/REC-CSS2/syndata.html
-     */
-
-    size_t loc = 0;
-
-    while (loc < buflen) {
-        gchar **selectors;
-        gchar **styles;
-        guint i;
-        GString *selector = g_string_new (NULL);
-        GString *style_props = g_string_new (NULL);
-
-        /* advance to the style's name */
-        while (loc < buflen && g_ascii_isspace (buff[loc]))
-            loc++;
-
-        /* advance to the first { that defines the style's properties */
-        while (loc < buflen && buff[loc] != '{')
-            g_string_append_c (selector, buff[loc++]);
-        loc++;
-
-        while (loc < buflen && g_ascii_isspace (buff[loc]))
-            loc++;
-
-        while (loc < buflen && buff[loc] != '}') {
-            /* suck in and append our property */
-            while (loc < buflen && buff[loc] != ';' && buff[loc] != '}')
-                g_string_append_c (style_props, buff[loc++]);
-
-            if (loc == buflen || buff[loc] == '}')
-                break;
-            else {
-                g_string_append_c (style_props, ';');
-
-                /* advance to the next property */
-                loc++;
-                while (loc < buflen && g_ascii_isspace (buff[loc]))
-                    loc++;
-            }
-        }
-
-        selectors = g_strsplit (selector->str, ",", -1);
-        styles = g_strsplit (style_props->str, ";", -1);
-        for (i = 0; i < g_strv_length (selectors); i++) {
-            guint j;
-            for (j = 0; j < g_strv_length (styles); j++) {
-                gchar **values;
-                values = g_strsplit (styles[j], ":", 2);
-                if (g_strv_length (values) == 2) {
-                    gchar *style_value = NULL;
-                    gboolean important;
-                    parse_style_value (g_strstrip (values[1]), &style_value, &important);
-                    rsvg_css_define_style (ctx,
-                                           g_strstrip (selectors[i]),
-                                           g_strstrip (values[0]),
-                                           g_strstrip (style_value),
-                                           important);
-                    g_free (style_value);
-                }
-                g_strfreev (values);
-            }
-        }
-        g_strfreev (selectors);
-        g_strfreev (styles);
-
-        g_string_free (selector, TRUE);
-        g_string_free (style_props, TRUE);
-
-        loc++;
-        while (loc < buflen && g_ascii_isspace (buff[loc]))
-            loc++;
-    }
-}
-
-#endif                          /* HAVE_LIBCROCO */
-
-void
-rsvg_parse_cssbuffer (RsvgHandle * ctx, const char *buff, size_t buflen)
-{
-    /* delegate off to the builtin or libcroco implementation */
-    rsvg_real_parse_cssbuffer (ctx, buff, buflen);
+    rsvg_parse_cssbuffer (user_data->ctx, (const char *) stylesheet_data,
+                          stylesheet_data_len);
+    g_free (stylesheet_data);
+    g_free (mime_type);
 }
 
 /* Parse an SVG transform string into an affine matrix. Reference: SVG
    working draft dated 1999-07-06, section 8.5. Return TRUE on
    success. */
 gboolean
-rsvg_parse_transform (double dst[6], const char *src)
+rsvg_parse_transform (cairo_matrix_t *dst, const char *src)
 {
     int idx;
     char keyword[32];
     double args[6];
     int n_args;
     guint key_len;
-    double tmp_affine[6];
+    cairo_matrix_t affine;
 
-    _rsvg_affine_identity (dst);
+    cairo_matrix_init_identity (dst);
 
     idx = 0;
     while (src[idx]) {
@@ -1300,49 +1267,52 @@ rsvg_parse_transform (double dst[6], const char *src)
         if (!strcmp (keyword, "matrix")) {
             if (n_args != 6)
                 return FALSE;
-            _rsvg_affine_multiply (dst, args, dst);
+
+            cairo_matrix_init (&affine, args[0], args[1], args[2], args[3], args[4], args[5]);
+            cairo_matrix_multiply (dst, &affine, dst);
         } else if (!strcmp (keyword, "translate")) {
             if (n_args == 1)
                 args[1] = 0;
             else if (n_args != 2)
                 return FALSE;
-            _rsvg_affine_translate (tmp_affine, args[0], args[1]);
-            _rsvg_affine_multiply (dst, tmp_affine, dst);
+            cairo_matrix_init_translate (&affine, args[0], args[1]);
+            cairo_matrix_multiply (dst, &affine, dst);
         } else if (!strcmp (keyword, "scale")) {
             if (n_args == 1)
                 args[1] = args[0];
             else if (n_args != 2)
                 return FALSE;
-            _rsvg_affine_scale (tmp_affine, args[0], args[1]);
-            _rsvg_affine_multiply (dst, tmp_affine, dst);
+            cairo_matrix_init_scale (&affine, args[0], args[1]);
+            cairo_matrix_multiply (dst, &affine, dst);
         } else if (!strcmp (keyword, "rotate")) {
             if (n_args == 1) {
-                _rsvg_affine_rotate (tmp_affine, args[0]);
-                _rsvg_affine_multiply (dst, tmp_affine, dst);
+
+                cairo_matrix_init_rotate (&affine, args[0] * M_PI / 180.);
+                cairo_matrix_multiply (dst, &affine, dst);
             } else if (n_args == 3) {
-                _rsvg_affine_translate (tmp_affine, args[1], args[2]);
-                _rsvg_affine_multiply (dst, tmp_affine, dst);
+                cairo_matrix_init_translate (&affine, args[1], args[2]);
+                cairo_matrix_multiply (dst, &affine, dst);
 
-                _rsvg_affine_rotate (tmp_affine, args[0]);
-                _rsvg_affine_multiply (dst, tmp_affine, dst);
+                cairo_matrix_init_rotate (&affine, args[0] * M_PI / 180.);
+                cairo_matrix_multiply (dst, &affine, dst);
 
-                _rsvg_affine_translate (tmp_affine, -args[1], -args[2]);
-                _rsvg_affine_multiply (dst, tmp_affine, dst);
+                cairo_matrix_init_translate (&affine, -args[1], -args[2]);
+                cairo_matrix_multiply (dst, &affine, dst);
             } else
                 return FALSE;
         } else if (!strcmp (keyword, "skewX")) {
             if (n_args != 1)
                 return FALSE;
-            _rsvg_affine_shear (tmp_affine, args[0]);
-            _rsvg_affine_multiply (dst, tmp_affine, dst);
+            _rsvg_cairo_matrix_init_shear (&affine, args[0]);
+            cairo_matrix_multiply (dst, &affine, dst);
         } else if (!strcmp (keyword, "skewY")) {
             if (n_args != 1)
                 return FALSE;
-            _rsvg_affine_shear (tmp_affine, args[0]);
+            _rsvg_cairo_matrix_init_shear (&affine, args[0]);
             /* transpose the affine, given that we know [1] is zero */
-            tmp_affine[1] = tmp_affine[2];
-            tmp_affine[2] = 0;
-            _rsvg_affine_multiply (dst, tmp_affine, dst);
+            affine.yx = affine.xy;
+            affine.xy = 0.;
+            cairo_matrix_multiply (dst, &affine, dst);
         } else
             return FALSE;       /* unknown keyword */
     }
@@ -1350,7 +1320,7 @@ rsvg_parse_transform (double dst[6], const char *src)
 }
 
 /**
- * rsvg_parse_transform_attr: Parse transform attribute and apply to state.
+ * rsvg_parse_transform_attr:
  * @ctx: Rsvg context.
  * @state: State in which to apply the transform.
  * @str: String containing transform.
@@ -1360,11 +1330,11 @@ rsvg_parse_transform (double dst[6], const char *src)
 static void
 rsvg_parse_transform_attr (RsvgHandle * ctx, RsvgState * state, const char *str)
 {
-    double affine[6];
+    cairo_matrix_t affine;
 
-    if (rsvg_parse_transform (affine, str)) {
-        _rsvg_affine_multiply (state->personal_affine, affine, state->personal_affine);
-        _rsvg_affine_multiply (state->affine, affine, state->affine);
+    if (rsvg_parse_transform (&affine, str)) {
+        cairo_matrix_multiply (&state->personal_affine, &affine, &state->personal_affine);
+        cairo_matrix_multiply (&state->affine, &affine, &state->affine);
     }
 }
 
@@ -1399,11 +1369,11 @@ rsvg_lookup_apply_css_style (RsvgHandle * ctx, const char *target, RsvgState * s
 }
 
 /**
- * rsvg_parse_style_attrs: Parse style attribute.
+ * rsvg_parse_style_attrs:
  * @ctx: Rsvg context.
  * @state: Rsvg state
- * @tag: The SVG tag we're processing (eg: circle, ellipse), optionally %NULL
- * @klazz: The space delimited class list, optionally %NULL
+ * @tag: (nullable): The SVG tag we're processing (eg: circle, ellipse), optionally %NULL
+ * @klazz: (nullable): The space delimited class list, optionally %NULL
  * @atts: Attributes in SAX style.
  *
  * Parses style and transform attributes and modifies state at top of
@@ -1529,26 +1499,56 @@ rsvg_state_free_all (RsvgState * state)
     }
 }
 
+/**
+ * rsvg_property_bag_new:
+ * @atts: (array zero-terminated=1): list of alternating attributes
+ *   and values
+ * 
+ * The property bag will NOT copy the attributes and values. If you need
+ * to store them for later, use rsvg_property_bag_dup().
+ * 
+ * Returns: (transfer full): a new property bag
+ */
 RsvgPropertyBag *
 rsvg_property_bag_new (const char **atts)
 {
     RsvgPropertyBag *bag;
     int i;
 
-    bag = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+    bag = g_hash_table_new (g_str_hash, g_str_equal);
 
     if (atts != NULL) {
         for (i = 0; atts[i] != NULL; i += 2)
-            g_hash_table_insert (bag, (gpointer) g_strdup(atts[i]), (gpointer) g_strdup(atts[i + 1]));
+            g_hash_table_insert (bag, (gpointer) atts[i], (gpointer) atts[i + 1]);
     }
 
     return bag;
 }
 
+/**
+ * rsvg_property_bag_dup:
+ * @bag: property bag to duplicate
+ * 
+ * Returns a copy of @bag that owns the attributes and values.
+ * 
+ * Returns: (transfer full): a new property bag
+ */
 RsvgPropertyBag *
-rsvg_property_bag_ref (RsvgPropertyBag * bag)
+rsvg_property_bag_dup (RsvgPropertyBag * bag)
 {
-    return g_hash_table_ref (bag);
+    RsvgPropertyBag *dup;
+    GHashTableIter iter;
+    gpointer key, value;
+
+    dup = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+    g_hash_table_iter_init (&iter, bag);
+    while (g_hash_table_iter_next (&iter, &key, &value))
+      g_hash_table_insert (dup, 
+                           (gpointer) g_strdup ((char *) key),
+                           (gpointer) g_strdup ((char *) value));
+
+    return dup;
 }
 
 void
@@ -1557,7 +1557,7 @@ rsvg_property_bag_free (RsvgPropertyBag * bag)
     g_hash_table_unref (bag);
 }
 
-G_CONST_RETURN char *
+const char *
 rsvg_property_bag_lookup (RsvgPropertyBag * bag, const char *key)
 {
     return (const char *) g_hash_table_lookup (bag, (gconstpointer) key);
@@ -1587,10 +1587,8 @@ rsvg_state_push (RsvgDrawingCtx * ctx)
     rsvg_state_init (data);
 
     if (baseon) {
-        int i;
         rsvg_state_reinherit (data, baseon);
-        for (i = 0; i < 6; i++)
-            data->affine[i] = baseon->affine[i];
+        data->affine = baseon->affine;
         data->parent = baseon;
     }
 
@@ -1641,9 +1639,9 @@ rsvg_state_reinherit_top (RsvgDrawingCtx * ctx, RsvgState * state, int dominate)
                 rsvg_state_dominate (current, parent);
             else
                 rsvg_state_reinherit (current, parent);
-            _rsvg_affine_multiply (current->affine,
-                                   current->affine,
-                                   parent->affine);
+            cairo_matrix_multiply (&current->affine,
+                                   &current->affine,
+                                   &parent->affine);
         }
     }
 }

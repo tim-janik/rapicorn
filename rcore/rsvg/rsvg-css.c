@@ -39,6 +39,10 @@
 #include <errno.h>
 #include <math.h>
 
+#include <libxml/parser.h>
+
+#include <libcroco/libcroco.h>
+
 #define POINTS_PER_INCH (72.0)
 #define CM_PER_INCH     (2.54)
 #define MM_PER_INCH     (25.4)
@@ -48,7 +52,7 @@
 #define UNSETINHERIT() G_STMT_START {if (inherit != NULL) *inherit = FALSE;} G_STMT_END
 
 /**
- * rsvg_css_parse_vbox
+ * rsvg_css_parse_vbox:
  * @vbox: The CSS viewBox
  * @x : The X output
  * @y: The Y output
@@ -65,8 +69,8 @@ rsvg_css_parse_vbox (const char *vbox)
     guint list_len;
     vb.active = FALSE;
 
-    vb.x = vb.y = 0;
-    vb.w = vb.h = 0;
+    vb.rect.x = vb.rect.y = 0;
+    vb.rect.width = vb.rect.height = 0;
 
     list = rsvg_css_parse_number_list (vbox, &list_len);
 
@@ -76,10 +80,10 @@ rsvg_css_parse_vbox (const char *vbox)
         g_free (list);
         return vb;
     } else {
-        vb.x = list[0];
-        vb.y = list[1];
-        vb.w = list[2];
-        vb.h = list[3];
+        vb.rect.x = list[0];
+        vb.rect.y = list[1];
+        vb.rect.width = list[2];
+        vb.rect.height = list[3];
         vb.active = TRUE;
 
         g_free (list);
@@ -231,11 +235,12 @@ _rsvg_css_normalize_length (const RsvgLength * in, RsvgDrawingCtx * ctx, char di
         return in->length;
     else if (in->factor == 'p') {
         if (dir == 'h')
-            return in->length * ctx->vb.w;
+            return in->length * ctx->vb.rect.width;
         if (dir == 'v')
-            return in->length * ctx->vb.h;
+            return in->length * ctx->vb.rect.height;
         if (dir == 'o')
-            return in->length * rsvg_viewport_percentage (ctx->vb.w, ctx->vb.h);
+            return in->length * rsvg_viewport_percentage (ctx->vb.rect.width,
+                                                          ctx->vb.rect.height);
     } else if (in->factor == 'm' || in->factor == 'x') {
         double font = _rsvg_css_normalize_font_size (rsvg_current_state (ctx), ctx);
         if (in->factor == 'm')
@@ -277,47 +282,35 @@ _rsvg_css_hand_normalize_length (const RsvgLength * in, gdouble pixels_per_inch,
 }
 
 static gint
-rsvg_css_clip_rgb_percent (gdouble in_percent)
+rsvg_css_clip_rgb_percent (const char *s, double max)
 {
-    /* spec says to clip these values */
-    if (in_percent > 100.)
-        return 255;
-    else if (in_percent <= 0.)
-        return 0;
-    return (gint) floor (255. * in_percent / 100. + 0.5);
-}
+    double value;
+    char *end;
 
-static gint
-rsvg_css_clip_rgb (gint rgb)
-{
-    /* spec says to clip these values */
-    if (rgb > 255)
-        return 255;
-    else if (rgb < 0)
-        return 0;
-    return rgb;
-}
+    value = g_ascii_strtod (s, &end);
 
-typedef struct {
-    const char *const name;
-    guint rgb;
-} ColorPair;
-
-/* compare function callback for bsearch */
-static int
-rsvg_css_color_compare (const void *a, const void *b)
-{
-    const char *needle = (const char *) a;
-    const ColorPair *haystack = (const ColorPair *) b;
-
-    return g_ascii_strcasecmp (needle, haystack->name);
+    if (*end == '%') {
+        value = CLAMP (value, 0, 100) / 100.0;
+    }
+    else {
+        value = CLAMP (value, 0, max) / max;
+    }
+    
+    return (gint) floor (value * 255 + 0.5);
 }
 
 /* pack 3 [0,255] ints into one 32 bit one */
-#define PACK_RGB(r,g,b) (((r) << 16) | ((g) << 8) | (b))
+#define PACK_RGBA(r,g,b,a) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))
+#define PACK_RGB(r,g,b) PACK_RGBA(r, g, b, 255)
 
 /**
+ * rsvg_css_parse_color:
+ * @str: string to parse
+ * @inherit: whether to inherit
+ *
  * Parse a CSS2 color specifier, return RGB value
+ *
+ * Returns: and RGB value
  */
 guint32
 rsvg_css_parse_color (const char *str, gboolean * inherit)
@@ -345,224 +338,83 @@ rsvg_css_parse_color (const char *str, gboolean * inherit)
             val = ((val & 0xf00) << 8) | ((val & 0x0f0) << 4) | (val & 0x00f);
             val |= val << 4;
         }
+
+        val |= 0xff000000; /* opaque */
     }
-    /* i want to use g_str_has_prefix but it isn't in my gstrfuncs.h?? */
-    else if (strstr (str, "rgb") != NULL) {
-        gint r, g, b;
+    else if (g_str_has_prefix (str, "rgb")) {
+        gint r, g, b, a;
+        gboolean has_alpha;
+        guint nb_toks;
+        char **toks;
+
         r = g = b = 0;
+        a = 255;
 
-        if (strstr (str, "%") != 0) {
-            guint i, nb_toks;
-            char **toks;
-
-            /* assume rgb (9%, 100%, 23%) */
-            for (i = 0; str[i] != '('; i++);
-
-            i++;
-
-            toks = rsvg_css_parse_list (str + i, &nb_toks);
-
-            if (toks) {
-                if (nb_toks == 3) {
-                    r = rsvg_css_clip_rgb_percent (g_ascii_strtod (toks[0], NULL));
-                    g = rsvg_css_clip_rgb_percent (g_ascii_strtod (toks[1], NULL));
-                    b = rsvg_css_clip_rgb_percent (g_ascii_strtod (toks[2], NULL));
-                }
-
-                g_strfreev (toks);
-            }
-        } else {
-            /* assume "rgb (r, g, b)" */
-            if (3 == sscanf (str, " rgb ( %d , %d , %d ) ", &r, &g, &b)) {
-                r = rsvg_css_clip_rgb (r);
-                g = rsvg_css_clip_rgb (g);
-                b = rsvg_css_clip_rgb (b);
-            } else
-                r = g = b = 0;
+        if (str[3] == 'a') {
+            /* "rgba" */
+            has_alpha = TRUE;
+            str += 4;
+        }
+        else {
+            /* "rgb" */
+            has_alpha = FALSE;
+            str += 3;
         }
 
-        val = PACK_RGB (r, g, b);
+        str = strchr (str, '(');
+        if (str == NULL)
+          return val;
+
+        toks = rsvg_css_parse_list (str + 1, &nb_toks);
+
+        if (toks) {
+            if (nb_toks == (has_alpha ? 4 : 3)) {
+                r = rsvg_css_clip_rgb_percent (toks[0], 255.0);
+                g = rsvg_css_clip_rgb_percent (toks[1], 255.0);
+                b = rsvg_css_clip_rgb_percent (toks[2], 255.0);
+                if (has_alpha)
+                    a = rsvg_css_clip_rgb_percent (toks[3], 1.0);
+                else
+                    a = 255;
+            }
+
+            g_strfreev (toks);
+        }
+
+        val = PACK_RGBA (r, g, b, a);
     } else if (!strcmp (str, "inherit"))
         UNSETINHERIT ();
     else {
-        static const ColorPair color_list[] = {
-            {"aliceblue", PACK_RGB (240, 248, 255)},
-            {"antiquewhite", PACK_RGB (250, 235, 215)},
-            {"aqua", PACK_RGB (0, 255, 255)},
-            {"aquamarine", PACK_RGB (127, 255, 212)},
-            {"azure", PACK_RGB (240, 255, 255)},
-            {"beige", PACK_RGB (245, 245, 220)},
-            {"bisque", PACK_RGB (255, 228, 196)},
-            {"black", PACK_RGB (0, 0, 0)},
-            {"blanchedalmond", PACK_RGB (255, 235, 205)},
-            {"blue", PACK_RGB (0, 0, 255)},
-            {"blueviolet", PACK_RGB (138, 43, 226)},
-            {"brown", PACK_RGB (165, 42, 42)},
-            {"burlywood", PACK_RGB (222, 184, 135)},
-            {"cadetblue", PACK_RGB (95, 158, 160)},
-            {"chartreuse", PACK_RGB (127, 255, 0)},
-            {"chocolate", PACK_RGB (210, 105, 30)},
-            {"coral", PACK_RGB (255, 127, 80)},
-            {"cornflowerblue", PACK_RGB (100, 149, 237)},
-            {"cornsilk", PACK_RGB (255, 248, 220)},
-            {"crimson", PACK_RGB (220, 20, 60)},
-            {"cyan", PACK_RGB (0, 255, 255)},
-            {"darkblue", PACK_RGB (0, 0, 139)},
-            {"darkcyan", PACK_RGB (0, 139, 139)},
-            {"darkgoldenrod", PACK_RGB (184, 132, 11)},
-            {"darkgray", PACK_RGB (169, 169, 169)},
-            {"darkgreen", PACK_RGB (0, 100, 0)},
-            {"darkgrey", PACK_RGB (169, 169, 169)},
-            {"darkkhaki", PACK_RGB (189, 183, 107)},
-            {"darkmagenta", PACK_RGB (139, 0, 139)},
-            {"darkolivegreen", PACK_RGB (85, 107, 47)},
-            {"darkorange", PACK_RGB (255, 140, 0)},
-            {"darkorchid", PACK_RGB (153, 50, 204)},
-            {"darkred", PACK_RGB (139, 0, 0)},
-            {"darksalmon", PACK_RGB (233, 150, 122)},
-            {"darkseagreen", PACK_RGB (143, 188, 143)},
-            {"darkslateblue", PACK_RGB (72, 61, 139)},
-            {"darkslategray", PACK_RGB (47, 79, 79)},
-            {"darkslategrey", PACK_RGB (47, 79, 79)},
-            {"darkturquoise", PACK_RGB (0, 206, 209)},
-            {"darkviolet", PACK_RGB (148, 0, 211)},
-            {"deeppink", PACK_RGB (255, 20, 147)},
-            {"deepskyblue", PACK_RGB (0, 191, 255)},
-            {"dimgray", PACK_RGB (105, 105, 105)},
-            {"dimgrey", PACK_RGB (105, 105, 105)},
-            {"dodgerblue", PACK_RGB (30, 144, 255)},
-            {"firebrick", PACK_RGB (178, 34, 34)},
-            {"floralwhite", PACK_RGB (255, 255, 240)},
-            {"forestgreen", PACK_RGB (34, 139, 34)},
-            {"fuchsia", PACK_RGB (255, 0, 255)},
-            {"gainsboro", PACK_RGB (220, 220, 220)},
-            {"ghostwhite", PACK_RGB (248, 248, 255)},
-            {"gold", PACK_RGB (255, 215, 0)},
-            {"goldenrod", PACK_RGB (218, 165, 32)},
-            {"gray", PACK_RGB (128, 128, 128)},
-            {"green", PACK_RGB (0, 128, 0)},
-            {"greenyellow", PACK_RGB (173, 255, 47)},
-            {"grey", PACK_RGB (128, 128, 128)},
-            {"honeydew", PACK_RGB (240, 255, 240)},
-            {"hotpink", PACK_RGB (255, 105, 180)},
-            {"indianred", PACK_RGB (205, 92, 92)},
-            {"indigo", PACK_RGB (75, 0, 130)},
-            {"ivory", PACK_RGB (255, 255, 240)},
-            {"khaki", PACK_RGB (240, 230, 140)},
-            {"lavender", PACK_RGB (230, 230, 250)},
-            {"lavenderblush", PACK_RGB (255, 240, 245)},
-            {"lawngreen", PACK_RGB (124, 252, 0)},
-            {"lemonchiffon", PACK_RGB (255, 250, 205)},
-            {"lightblue", PACK_RGB (173, 216, 230)},
-            {"lightcoral", PACK_RGB (240, 128, 128)},
-            {"lightcyan", PACK_RGB (224, 255, 255)},
-            {"lightgoldenrodyellow", PACK_RGB (250, 250, 210)},
-            {"lightgray", PACK_RGB (211, 211, 211)},
-            {"lightgreen", PACK_RGB (144, 238, 144)},
-            {"lightgrey", PACK_RGB (211, 211, 211)},
-            {"lightpink", PACK_RGB (255, 182, 193)},
-            {"lightsalmon", PACK_RGB (255, 160, 122)},
-            {"lightseagreen", PACK_RGB (32, 178, 170)},
-            {"lightskyblue", PACK_RGB (135, 206, 250)},
-            {"lightslategray", PACK_RGB (119, 136, 153)},
-            {"lightslategrey", PACK_RGB (119, 136, 153)},
-            {"lightsteelblue", PACK_RGB (176, 196, 222)},
-            {"lightyellow", PACK_RGB (255, 255, 224)},
-            {"lime", PACK_RGB (0, 255, 0)},
-            {"limegreen", PACK_RGB (50, 205, 50)},
-            {"linen", PACK_RGB (250, 240, 230)},
-            {"magenta", PACK_RGB (255, 0, 255)},
-            {"maroon", PACK_RGB (128, 0, 0)},
-            {"mediumaquamarine", PACK_RGB (102, 205, 170)},
-            {"mediumblue", PACK_RGB (0, 0, 205)},
-            {"mediumorchid", PACK_RGB (186, 85, 211)},
-            {"mediumpurple", PACK_RGB (147, 112, 219)},
-            {"mediumseagreen", PACK_RGB (60, 179, 113)},
-            {"mediumslateblue", PACK_RGB (123, 104, 238)},
-            {"mediumspringgreen", PACK_RGB (0, 250, 154)},
-            {"mediumturquoise", PACK_RGB (72, 209, 204)},
-            {"mediumvioletred", PACK_RGB (199, 21, 133)},
-            {"midnightblue", PACK_RGB (25, 25, 112)},
-            {"mintcream", PACK_RGB (245, 255, 250)},
-            {"mistyrose", PACK_RGB (255, 228, 225)},
-            {"moccasin", PACK_RGB (255, 228, 181)},
-            {"navajowhite", PACK_RGB (255, 222, 173)},
-            {"navy", PACK_RGB (0, 0, 128)},
-            {"oldlace", PACK_RGB (253, 245, 230)},
-            {"olive", PACK_RGB (128, 128, 0)},
-            {"olivedrab", PACK_RGB (107, 142, 35)},
-            {"orange", PACK_RGB (255, 165, 0)},
-            {"orangered", PACK_RGB (255, 69, 0)},
-            {"orchid", PACK_RGB (218, 112, 214)},
-            {"palegoldenrod", PACK_RGB (238, 232, 170)},
-            {"palegreen", PACK_RGB (152, 251, 152)},
-            {"paleturquoise", PACK_RGB (175, 238, 238)},
-            {"palevioletred", PACK_RGB (219, 112, 147)},
-            {"papayawhip", PACK_RGB (255, 239, 213)},
-            {"peachpuff", PACK_RGB (255, 218, 185)},
-            {"peru", PACK_RGB (205, 133, 63)},
-            {"pink", PACK_RGB (255, 192, 203)},
-            {"plum", PACK_RGB (221, 160, 203)},
-            {"powderblue", PACK_RGB (176, 224, 230)},
-            {"purple", PACK_RGB (128, 0, 128)},
-            {"red", PACK_RGB (255, 0, 0)},
-            {"rosybrown", PACK_RGB (188, 143, 143)},
-            {"royalblue", PACK_RGB (65, 105, 225)},
-            {"saddlebrown", PACK_RGB (139, 69, 19)},
-            {"salmon", PACK_RGB (250, 128, 114)},
-            {"sandybrown", PACK_RGB (244, 164, 96)},
-            {"seagreen", PACK_RGB (46, 139, 87)},
-            {"seashell", PACK_RGB (255, 245, 238)},
-            {"sienna", PACK_RGB (160, 82, 45)},
-            {"silver", PACK_RGB (192, 192, 192)},
-            {"skyblue", PACK_RGB (135, 206, 235)},
-            {"slateblue", PACK_RGB (106, 90, 205)},
-            {"slategray", PACK_RGB (119, 128, 144)},
-            {"slategrey", PACK_RGB (119, 128, 144)},
-            {"snow", PACK_RGB (255, 255, 250)},
-            {"springgreen", PACK_RGB (0, 255, 127)},
-            {"steelblue", PACK_RGB (70, 130, 180)},
-            {"tan", PACK_RGB (210, 180, 140)},
-            {"teal", PACK_RGB (0, 128, 128)},
-            {"thistle", PACK_RGB (216, 191, 216)},
-            {"tomato", PACK_RGB (255, 99, 71)},
-            {"turquoise", PACK_RGB (64, 224, 208)},
-            {"violet", PACK_RGB (238, 130, 238)},
-            {"wheat", PACK_RGB (245, 222, 179)},
-            {"white", PACK_RGB (255, 255, 255)},
-            {"whitesmoke", PACK_RGB (245, 245, 245)},
-            {"yellow", PACK_RGB (255, 255, 0)},
-            {"yellowgreen", PACK_RGB (154, 205, 50)}
-        };
+        CRRgb rgb;
 
-        ColorPair *result = bsearch (str, color_list,
-                                     sizeof (color_list) / sizeof (color_list[0]),
-                                     sizeof (ColorPair),
-                                     rsvg_css_color_compare);
-
-        /* default to black on failed lookup */
-        if (result == NULL) {
+        if (cr_rgb_set_from_name (&rgb, (const guchar *) str) == CR_OK) {
+            val = PACK_RGB (rgb.red, rgb.green, rgb.blue);
+        } else {
+            /* default to opaque black on failed lookup */
             UNSETINHERIT ();
-            val = 0;
-        } else
-            val = result->rgb;
+            val = PACK_RGB (0, 0, 0);
+        }
     }
 
     return val;
 }
 
 #undef PACK_RGB
+#undef PACK_RGBA
 
 guint
 rsvg_css_parse_opacity (const char *str)
 {
-    char *end_ptr;
+    char *end_ptr = NULL;
     double opacity;
 
     opacity = g_ascii_strtod (str, &end_ptr);
 
-    if (end_ptr && end_ptr[0] == '%')
-        opacity *= 0.01;
+    if (((opacity == -HUGE_VAL || opacity == HUGE_VAL) && (ERANGE == errno)) ||
+        *end_ptr != '\0')
+        opacity = 1.;
+
+    opacity = CLAMP (opacity, 0., 1.);
 
     return (guint) floor (opacity * 255. + 0.5);
 }
@@ -962,321 +814,64 @@ rsvg_css_parse_overflow (const char *str, gboolean * inherit)
     return 0;
 }
 
-/***********************************************************************/
-/***********************************************************************/
-
-/* 
-   Code largely based on xmltok_impl.c from Expat
-
-   Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
-   and Clark Cooper
-   Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006 Expat maintainers.
-   
-   Permission is hereby granted, free of charge, to any person obtaining
-   a copy of this software and associated documentation files (the
-   "Software"), to deal in the Software without restriction, including
-   without limitation the rights to use, copy, modify, merge, publish,
-   distribute, sublicense, and/or sell copies of the Software, and to
-   permit persons to whom the Software is furnished to do so, subject to
-   the following conditions:
-   
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
-   
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-typedef struct {
-    const char *name;
-    const char *valuePtr;
-    const char *valueEnd;
-    char normalized;
-} ATTRIBUTE;
-
-#define PTRCALL
-#define PTRFASTCALL
-#define PREFIX(x) x
-typedef void ENCODING;
-
-#define BYTE_TO_ASCII(enc, p) (*(p))
-
-/* minimum bytes per character */
-#define MINBPC(enc) 1
-
-#define BYTE_TYPE(enc, p) utf8_byte_type_table[(int)(*(p))]
-
-#define ASCII_SPACE 0x20
-
-enum {
-    BT_NONXML,
-    BT_MALFORM,
-    BT_LT,
-    BT_AMP,
-    BT_RSQB,
-    BT_LEAD2,
-    BT_LEAD3,
-    BT_LEAD4,
-    BT_TRAIL,
-    BT_CR,
-    BT_LF,
-    BT_GT,
-    BT_QUOT,
-    BT_APOS,
-    BT_EQUALS,
-    BT_QUEST,
-    BT_EXCL,
-    BT_SOL,
-    BT_SEMI,
-    BT_NUM,
-    BT_LSQB,
-    BT_S,
-    BT_NMSTRT,
-    BT_COLON,
-    BT_HEX,
-    BT_DIGIT,
-    BT_NAME,
-    BT_MINUS,
-    BT_OTHER,                   /* known not to be a name or name start character */
-    BT_NONASCII,                /* might be a name or name start character */
-    BT_PERCNT,
-    BT_LPAR,
-    BT_RPAR,
-    BT_AST,
-    BT_PLUS,
-    BT_COMMA,
-    BT_VERBAR
-};
-
-static const char utf8_byte_type_table[] = {
-    /* 0x00 */ BT_NONXML, BT_NONXML, BT_NONXML, BT_NONXML,
-    /* 0x04 */ BT_NONXML, BT_NONXML, BT_NONXML, BT_NONXML,
-    /* 0x08 */ BT_NONXML, BT_S, BT_LF, BT_NONXML,
-    /* 0x0C */ BT_NONXML, BT_CR, BT_NONXML, BT_NONXML,
-    /* 0x10 */ BT_NONXML, BT_NONXML, BT_NONXML, BT_NONXML,
-    /* 0x14 */ BT_NONXML, BT_NONXML, BT_NONXML, BT_NONXML,
-    /* 0x18 */ BT_NONXML, BT_NONXML, BT_NONXML, BT_NONXML,
-    /* 0x1C */ BT_NONXML, BT_NONXML, BT_NONXML, BT_NONXML,
-    /* 0x20 */ BT_S, BT_EXCL, BT_QUOT, BT_NUM,
-    /* 0x24 */ BT_OTHER, BT_PERCNT, BT_AMP, BT_APOS,
-    /* 0x28 */ BT_LPAR, BT_RPAR, BT_AST, BT_PLUS,
-    /* 0x2C */ BT_COMMA, BT_MINUS, BT_NAME, BT_SOL,
-    /* 0x30 */ BT_DIGIT, BT_DIGIT, BT_DIGIT, BT_DIGIT,
-    /* 0x34 */ BT_DIGIT, BT_DIGIT, BT_DIGIT, BT_DIGIT,
-    /* 0x38 */ BT_DIGIT, BT_DIGIT, BT_COLON, BT_SEMI,
-    /* 0x3C */ BT_LT, BT_EQUALS, BT_GT, BT_QUEST,
-    /* 0x40 */ BT_OTHER, BT_HEX, BT_HEX, BT_HEX,
-    /* 0x44 */ BT_HEX, BT_HEX, BT_HEX, BT_NMSTRT,
-    /* 0x48 */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_NMSTRT,
-    /* 0x4C */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_NMSTRT,
-    /* 0x50 */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_NMSTRT,
-    /* 0x54 */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_NMSTRT,
-    /* 0x58 */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_LSQB,
-    /* 0x5C */ BT_OTHER, BT_RSQB, BT_OTHER, BT_NMSTRT,
-    /* 0x60 */ BT_OTHER, BT_HEX, BT_HEX, BT_HEX,
-    /* 0x64 */ BT_HEX, BT_HEX, BT_HEX, BT_NMSTRT,
-    /* 0x68 */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_NMSTRT,
-    /* 0x6C */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_NMSTRT,
-    /* 0x70 */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_NMSTRT,
-    /* 0x74 */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_NMSTRT,
-    /* 0x78 */ BT_NMSTRT, BT_NMSTRT, BT_NMSTRT, BT_OTHER,
-    /* 0x7C */ BT_VERBAR, BT_OTHER, BT_OTHER, BT_OTHER,
-    /* 0x80 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0x84 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0x88 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0x8C */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0x90 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0x94 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0x98 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0x9C */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xA0 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xA4 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xA8 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xAC */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xB0 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xB4 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xB8 */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xBC */ BT_TRAIL, BT_TRAIL, BT_TRAIL, BT_TRAIL,
-    /* 0xC0 */ BT_LEAD2, BT_LEAD2, BT_LEAD2, BT_LEAD2,
-    /* 0xC4 */ BT_LEAD2, BT_LEAD2, BT_LEAD2, BT_LEAD2,
-    /* 0xC8 */ BT_LEAD2, BT_LEAD2, BT_LEAD2, BT_LEAD2,
-    /* 0xCC */ BT_LEAD2, BT_LEAD2, BT_LEAD2, BT_LEAD2,
-    /* 0xD0 */ BT_LEAD2, BT_LEAD2, BT_LEAD2, BT_LEAD2,
-    /* 0xD4 */ BT_LEAD2, BT_LEAD2, BT_LEAD2, BT_LEAD2,
-    /* 0xD8 */ BT_LEAD2, BT_LEAD2, BT_LEAD2, BT_LEAD2,
-    /* 0xDC */ BT_LEAD2, BT_LEAD2, BT_LEAD2, BT_LEAD2,
-    /* 0xE0 */ BT_LEAD3, BT_LEAD3, BT_LEAD3, BT_LEAD3,
-    /* 0xE4 */ BT_LEAD3, BT_LEAD3, BT_LEAD3, BT_LEAD3,
-    /* 0xE8 */ BT_LEAD3, BT_LEAD3, BT_LEAD3, BT_LEAD3,
-    /* 0xEC */ BT_LEAD3, BT_LEAD3, BT_LEAD3, BT_LEAD3,
-    /* 0xF0 */ BT_LEAD4, BT_LEAD4, BT_LEAD4, BT_LEAD4,
-    /* 0xF4 */ BT_LEAD4, BT_NONXML, BT_NONXML, BT_NONXML,
-    /* 0xF8 */ BT_NONXML, BT_NONXML, BT_NONXML, BT_NONXML,
-    /* 0xFC */ BT_NONXML, BT_NONXML, BT_MALFORM, BT_MALFORM
-};
-
-/* This must only be called for a well-formed start-tag or empty
-   element tag.  Returns the number of attributes.  Pointers to the
-   first attsMax attributes are stored in atts.
-*/
-
-static int PTRCALL
-PREFIX (getAtts) (const ENCODING * enc, const char *ptr, int attsMax, ATTRIBUTE * atts) {
-    enum { other, inName, inValue } state = inName;
-    int nAtts = 0;
-    int open = 0;               /* defined when state == inValue;
-                                   initialization just to shut up compilers */
-
-    for (ptr += MINBPC (enc);; ptr += MINBPC (enc)) {
-        switch (BYTE_TYPE (enc, ptr)) {
-
-#define START_NAME \
-      if (state == other) { \
-        if (nAtts < attsMax) { \
-          atts[nAtts].name = ptr; \
-          atts[nAtts].normalized = 1; \
-        } \
-        state = inName; \
-      }
-
-#define LEAD_CASE(n) \
-    case BT_LEAD ## n: START_NAME ptr += (n - MINBPC(enc)); break;
-            LEAD_CASE (2) LEAD_CASE (3) LEAD_CASE (4)
-#undef LEAD_CASE
-        case BT_NONASCII:
-        case BT_NMSTRT:
-        case BT_HEX:
-            START_NAME break;
-#undef START_NAME
-        case BT_QUOT:
-            if (state != inValue) {
-                if (nAtts < attsMax)
-                    atts[nAtts].valuePtr = ptr + MINBPC (enc);
-                state = inValue;
-                open = BT_QUOT;
-            } else if (open == BT_QUOT) {
-                state = other;
-                if (nAtts < attsMax)
-                    atts[nAtts].valueEnd = ptr;
-                nAtts++;
-            }
-            break;
-        case BT_APOS:
-            if (state != inValue) {
-                if (nAtts < attsMax)
-                    atts[nAtts].valuePtr = ptr + MINBPC (enc);
-                state = inValue;
-                open = BT_APOS;
-            } else if (open == BT_APOS) {
-                state = other;
-                if (nAtts < attsMax)
-                    atts[nAtts].valueEnd = ptr;
-                nAtts++;
-            }
-            break;
-        case BT_AMP:
-            if (nAtts < attsMax)
-                atts[nAtts].normalized = 0;
-            break;
-        case BT_S:
-            if (state == inName)
-                state = other;
-            else if (state == inValue
-                     && nAtts < attsMax
-                     && atts[nAtts].normalized
-                     && (ptr == atts[nAtts].valuePtr
-                         || BYTE_TO_ASCII (enc, ptr) != ASCII_SPACE
-                         || BYTE_TO_ASCII (enc, ptr + MINBPC (enc)) == ASCII_SPACE
-                         || BYTE_TYPE (enc, ptr + MINBPC (enc)) == open))
-                atts[nAtts].normalized = 0;
-            break;
-        case BT_CR:
-        case BT_LF:
-            /* This case ensures that the first attribute name is counted
-               Apart from that we could just change state on the quote. */
-            if (state == inName)
-                state = other;
-            else if (state == inValue && nAtts < attsMax)
-                atts[nAtts].normalized = 0;
-            break;
-        case BT_GT:
-        case BT_SOL:
-            if (state != inValue)
-                return nAtts;
-            break;
-        default:
-            break;
-        }
-    }
-    /* not reached */
+static void
+rsvg_xml_noerror (void *data, xmlErrorPtr error)
+{
 }
 
-static int PTRFASTCALL PREFIX (nameLength) (const ENCODING * enc, const char *ptr) {
-    const char *start = ptr;
-    for (;;) {
-        switch (BYTE_TYPE (enc, ptr)) {
-#define LEAD_CASE(n) \
-    case BT_LEAD ## n: ptr += n; break;
-            LEAD_CASE (2) LEAD_CASE (3) LEAD_CASE (4)
-#undef LEAD_CASE
-        case BT_NONASCII:
-        case BT_NMSTRT:
-#ifdef XML_NS
-        case BT_COLON:
-#endif
-        case BT_HEX:
-        case BT_DIGIT:
-        case BT_NAME:
-        case BT_MINUS:
-            ptr += MINBPC (enc);
-            break;
-        default:
-            return (int) (ptr - start);
-        }
-    }
-}
-
+/* This is quite hacky and not entirely correct, but apparently 
+ * libxml2 has NO support for parsing pseudo attributes as defined 
+ * by the xml-styleheet spec.
+ */
 char **
 rsvg_css_parse_xml_attribute_string (const char *attribute_string)
 {
-    int i, nb_atts;
-    ATTRIBUTE *attributes;
-    int attrSize = 16;
-    ENCODING *enc = NULL;
-    char **atts;
-    char *_attribute_string;
+    xmlSAXHandler handler;
+    xmlParserCtxtPtr parser;
+    xmlDocPtr doc;
+    xmlNodePtr node;
+    xmlAttrPtr attr;
+    char *tag;
+    GPtrArray *attributes;
+    char **retval = NULL;
 
-    _attribute_string = g_strdup_printf ("<tag %s />\n", attribute_string);
-    attributes = g_new (ATTRIBUTE, attrSize);
+    tag = g_strdup_printf ("<rsvg-hack %s />\n", attribute_string);
 
-    nb_atts = getAtts (enc, _attribute_string, attrSize, attributes);
-    if (nb_atts > attrSize) {
-        attrSize = nb_atts;
-        g_free (attributes);
+    memset (&handler, 0, sizeof (handler));
+    xmlSAX2InitDefaultSAXHandler (&handler, 0);
+    handler.serror = rsvg_xml_noerror;
+    parser = xmlCreatePushParserCtxt (&handler, NULL, tag, strlen (tag) + 1, NULL);
+    parser->options |= XML_PARSE_NONET;
 
-        attributes = g_new (ATTRIBUTE, attrSize);
-        nb_atts = getAtts (enc, _attribute_string, attrSize, attributes);
+    if (xmlParseDocument (parser) != 0)
+        goto done;
+
+    if ((doc = parser->myDoc) == NULL ||
+        (node = doc->children) == NULL ||
+        strcmp (node->name, "rsvg-hack") != 0 ||
+        node->next != NULL ||
+        node->properties == NULL)
+          goto done;
+
+    attributes = g_ptr_array_new ();
+    for (attr = node->properties; attr; attr = attr->next) {
+        xmlNodePtr content = attr->children;
+
+        g_ptr_array_add (attributes, g_strdup ((char *) attr->name));
+        if (content)
+          g_ptr_array_add (attributes, g_strdup ((char *) content->content));
+        else
+          g_ptr_array_add (attributes, g_strdup (""));
     }
 
-    atts = g_new0 (char *, ((2 * nb_atts) + 1));
-    for (i = 0; i < nb_atts; i++) {
-        atts[(2 * i)] = g_strdup (attributes[i].name);
-        atts[(2 * i)][nameLength (enc, attributes[i].name)] = '\0';
-        atts[(2 * i) + 1] = g_strdup (attributes[i].valuePtr);
-        atts[(2 * i) + 1][attributes[i].valueEnd - attributes[i].valuePtr] = '\0';
-    }
+    g_ptr_array_add (attributes, NULL);
+    retval = (char **) g_ptr_array_free (attributes, FALSE);
 
-    g_free (attributes);
-    g_free (_attribute_string);
+  done:
+    if (parser->myDoc)
+      xmlFreeDoc (parser->myDoc);
+    xmlFreeParserCtxt (parser);
+    g_free (tag);
 
-    return atts;
+    return retval;
 }
