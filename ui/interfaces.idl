@@ -1,5 +1,4 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-//                                                      -*-mode:c++;-*-
 
 /**
  * @file
@@ -662,3 +661,9 @@ interface TestContainer : Container {
 };
 
 } // Rapicorn
+
+/* Emacs settings (#Specifying-File-Variables):
+ * Local Variables:
+ * mode: c++
+ * End:
+ */
