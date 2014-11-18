@@ -2,17 +2,14 @@
 #ifndef __RAPICORN_IMAGE_HH__
 #define __RAPICORN_IMAGE_HH__
 
-#include <ui/widget.hh>
+#include <ui/imagerenderer.hh>
 
 namespace Rapicorn {
 
-class ImageImpl : public virtual WidgetImpl, public virtual ImageIface {
-public: struct  ImageBackend;
+class ImageImpl : public virtual ImageRendererImpl, public virtual ImageIface {
 private:
   String                image_url_, stock_id_;
-  std::shared_ptr<ImageBackend> image_backend_;
 protected:
-  void                  load_pixmap     ();
   void                  stock           (const String &stock_id);
   String                stock           () const;
   virtual void          size_request    (Requisition &requisition);

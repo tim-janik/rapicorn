@@ -2,26 +2,23 @@
 #ifndef __RAPICORN_IMAGE_RENDERER_HH__
 #define __RAPICORN_IMAGE_RENDERER_HH__
 
-#include <ui/container.hh>
+#include <ui/widget.hh>
 
 namespace Rapicorn {
 
-class ImageRendererImpl : public virtual SingleContainerImpl {
-  class SvgElementP;
-  union { uint64 mem_[(sizeof (std::shared_ptr<void>) + 7) / 8]; char dummy_; } svgelep_; // SvgElementP memory
-  String                element_;
-  bool                  overlap_child_;
-  SvgElementP&          svg_element_ptr () const;
-protected:
-  virtual              ~ImageRendererImpl() override;
-  virtual void          size_request    (Requisition &requisition) override;
-  virtual void          size_allocate   (Allocation area, bool changed) override;
-  virtual void          do_invalidate   () override;
-  virtual void          render          (RenderContext &rcontext, const Rect &rect) override;
+class ImageRendererImpl : public virtual WidgetImpl {
 public:
-  explicit              ImageRendererImpl();
-  void                  set_element     (const String &id);
-  void                  set_overlap     (bool overlap);
+  struct        ImageBackend;
+private:
+  std::shared_ptr<ImageBackend> image_backend_;
+protected:
+  explicit ImageRendererImpl ();
+  virtual ~ImageRendererImpl () override;
+  void     get_image_size   (Requisition &image_size);
+  void     get_fill_area    (Allocation &fill_area);
+  void     paint_image      (RenderContext &rcontext, const Rect &rect);
+  bool     load_source      (const String &resource, const String &element_id);
+  void     load_pixmap      (Pixmap pixmap);
 };
 
 } // Rapicorn
