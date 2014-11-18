@@ -44,9 +44,6 @@
     </Alignment>
   </Rapicorn_Factory:Frame>
 
-  <!-- ImageFrame -->
-  <Rapicorn_Factory:ImageFrame id="ImageFrame"/>
-
   <!-- DotGrid -->
   <Rapicorn_Factory:DotGrid id="DotGrid"/>
 

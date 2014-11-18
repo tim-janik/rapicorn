@@ -528,14 +528,6 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
-/// Image class prototype for SVG display.
-/// See also the corresponding implementation class ImageFrameImpl.
-/// @EXPERIMENTAL: ImageFrame will be merged into Image.
-interface ImageFrame : Container {
-  String element       = String (_("Element"), _("The SVG element ID to be rendered."), "rw");
-  bool   overlap_child = Bool (_("Overlap Child"), _("Draw child on top of container area."), "rw");
-};
-
 /// A widget for text display.
 /// See also the corresponding implementation class LabelImpl.
 interface Label : Container {

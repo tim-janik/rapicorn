@@ -1,5 +1,5 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-#include "imageframe.hh"
+#include "imagerenderer.hh"
 #include "factory.hh"
 #include "../rcore/rsvg/svg.hh"
 
@@ -72,32 +72,18 @@ ImageFrameImpl::svg_element_ptr () const
   return *(SvgElementP*) &svgelep_;
 }
 
-String
-ImageFrameImpl::element () const
-{
-  return element_;
-}
-
 void
-ImageFrameImpl::element (const String &id)
+ImageFrameImpl::set_element (const String &id)
 {
   element_ = id;
   invalidate();
-  changed ("element");
-}
-
-bool
-ImageFrameImpl::overlap_child () const
-{
-  return overlap_child_;
 }
 
 void
-ImageFrameImpl::overlap_child (bool overlap)
+ImageFrameImpl::set_overlap (bool overlap)
 {
   overlap_child_ = overlap;
   invalidate();
-  changed ("overlap_child");
 }
 
 void

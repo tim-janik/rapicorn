@@ -1,12 +1,12 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-#ifndef __RAPICORN_IMAGE_FRAME_HH__
-#define __RAPICORN_IMAGE_FRAME_HH__
+#ifndef __RAPICORN_IMAGE_RENDERER_HH__
+#define __RAPICORN_IMAGE_RENDERER_HH__
 
 #include <ui/container.hh>
 
 namespace Rapicorn {
 
-class ImageFrameImpl : public virtual SingleContainerImpl, public virtual ImageFrameIface {
+class ImageFrameImpl : public virtual SingleContainerImpl {
   class SvgElementP;
   union { uint64 mem_[(sizeof (std::shared_ptr<void>) + 7) / 8]; char dummy_; } svgelep_; // SvgElementP memory
   String                element_;
@@ -20,12 +20,10 @@ protected:
   virtual void          render          (RenderContext &rcontext, const Rect &rect) override;
 public:
   explicit              ImageFrameImpl  ();
-  virtual String        element         () const override;
-  virtual void          element         (const String &id) override;
-  virtual bool          overlap_child   () const override;
-  virtual void          overlap_child   (bool overlap) override;
+  void                  set_element     (const String &id);
+  void                  set_overlap     (bool overlap);
 };
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_IMAGE_FRAME_HH__ */
+#endif  /* __RAPICORN_IMAGE_RENDERER_HH__ */
