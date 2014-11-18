@@ -23,9 +23,8 @@ ImageImpl::pixbuf() const
 void
 ImageImpl::source (const String &image_url)
 {
-  return_unless (image_url_ != image_url);
-  image_url_ = image_url;
-  if (!load_source (image_url_, ""))
+  source_ = image_url;
+  if (!load_source (source_, element_))
     {
       auto pixmap = Pixmap();
       pixmap.load_pixstream (get_broken16_pixdata());
@@ -38,7 +37,28 @@ ImageImpl::source (const String &image_url)
 String
 ImageImpl::source() const
 {
-  return image_url_;
+  return source_;
+}
+
+void
+ImageImpl::element (const String &element_id)
+{
+  // FIXME: setting source() + element() loads+parses SVG files twice
+  element_ = element_id;
+  if (!load_source (source_, element_))
+    {
+      auto pixmap = Pixmap();
+      pixmap.load_pixstream (get_broken16_pixdata());
+      assert_return (pixmap.width() > 0 && pixmap.height() > 0);
+      load_pixmap (pixmap);
+    }
+  invalidate();
+}
+
+String
+ImageImpl::element() const
+{
+  return element_;
 }
 
 void

@@ -8,7 +8,7 @@ namespace Rapicorn {
 
 class ImageImpl : public virtual ImageRendererImpl, public virtual ImageIface {
 private:
-  String                image_url_, stock_id_;
+  String                source_, element_, stock_id_;
 protected:
   void                  stock           (const String &stock_id);
   String                stock           () const;
@@ -16,10 +16,12 @@ protected:
   virtual void          size_allocate   (Allocation area, bool changed);
   virtual void          render          (RenderContext &rcontext, const Rect &rect);
 public:
-  virtual void          pixbuf          (const Pixbuf &pixbuf);
-  virtual Pixbuf        pixbuf          () const;
-  virtual void          source          (const String &uri);
-  virtual String        source          () const;
+  virtual void          pixbuf          (const Pixbuf &pixbuf) override;
+  virtual Pixbuf        pixbuf          () const override;
+  virtual void          source          (const String &uri) override;
+  virtual String        source          () const override;
+  virtual String        element         () const override;
+  virtual void          element         (const String &id) override;
 };
 
 } // Rapicorn

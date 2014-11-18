@@ -525,6 +525,7 @@ interface Drawable : Widget {
 /// See also the corresponding implementation class ImageImpl.
 interface Image : Widget {
   String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
+  String 	element = String (_("Element"), _("Element ID within SVG files to be rendered."), "rw");
   Pixbuf        pixbuf;
 };
 
