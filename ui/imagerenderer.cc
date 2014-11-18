@@ -49,45 +49,45 @@ library_lookup (const String &elementid)
   return ep;
 }
 
-// == ImageFrameImpl ==
-class ImageFrameImpl::SvgElementP : public Svg::ElementP
+// == ImageRendererImpl ==
+class ImageRendererImpl::SvgElementP : public Svg::ElementP
 {};
 
-ImageFrameImpl::ImageFrameImpl() :
+ImageRendererImpl::ImageRendererImpl() :
   overlap_child_ (false)
 {
   static_assert (sizeof (SvgElementP) == sizeof (svgelep_), "std::shared_ptr<> size inveriant");
   new (&svgelep_) SvgElementP();
 }
 
-ImageFrameImpl::~ImageFrameImpl()
+ImageRendererImpl::~ImageRendererImpl()
 {
   svg_element_ptr().~SvgElementP();
 }
 
-ImageFrameImpl::SvgElementP&
-ImageFrameImpl::svg_element_ptr () const
+ImageRendererImpl::SvgElementP&
+ImageRendererImpl::svg_element_ptr () const
 {
   // we use a dedicated accessor for SvgElementP aka Svg::ElementP, to hide SVG headers from our .hh file
   return *(SvgElementP*) &svgelep_;
 }
 
 void
-ImageFrameImpl::set_element (const String &id)
+ImageRendererImpl::set_element (const String &id)
 {
   element_ = id;
   invalidate();
 }
 
 void
-ImageFrameImpl::set_overlap (bool overlap)
+ImageRendererImpl::set_overlap (bool overlap)
 {
   overlap_child_ = overlap;
   invalidate();
 }
 
 void
-ImageFrameImpl::do_invalidate()
+ImageRendererImpl::do_invalidate()
 {
   Svg::ElementP &sep = svg_element_ptr();
   if (element_.empty())
@@ -102,7 +102,7 @@ ImageFrameImpl::do_invalidate()
 }
 
 void
-ImageFrameImpl::size_request (Requisition &requisition)
+ImageRendererImpl::size_request (Requisition &requisition)
 {
   SingleContainerImpl::size_request (requisition);
   Svg::ElementP &sep = svg_element_ptr();
@@ -120,7 +120,7 @@ ImageFrameImpl::size_request (Requisition &requisition)
 }
 
 void
-ImageFrameImpl::size_allocate (Allocation area, bool changed)
+ImageRendererImpl::size_allocate (Allocation area, bool changed)
 {
   if (has_visible_child())
     {
@@ -140,7 +140,7 @@ ImageFrameImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
+ImageRendererImpl::render (RenderContext &rcontext, const Rect &render_rect)
 {
   Svg::ElementP &sep = svg_element_ptr();
   const Allocation &area = allocation();
@@ -171,6 +171,6 @@ ImageFrameImpl::render (RenderContext &rcontext, const Rect &render_rect)
     }
 }
 
-static const WidgetFactory<ImageFrameImpl> image_frame_factory ("Rapicorn_Factory:ImageFrame");
+static const WidgetFactory<ImageRendererImpl> image_frame_factory ("Rapicorn_Factory:ImageRenderer");
 
 } // Rapicorn
