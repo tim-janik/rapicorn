@@ -529,6 +529,11 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
+/// The LayerPainter container allows rendering widgets on top of each other.
+/// See also the corresponding implementation class LayerPainterImpl.
+interface LayerPainter : Container {
+};
+
 /// A widget for text display.
 /// See also the corresponding implementation class LabelImpl.
 interface Label : Container {

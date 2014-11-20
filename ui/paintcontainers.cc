@@ -624,4 +624,50 @@ FocusFrameImpl::tight_focus (bool tf)
 
 static const WidgetFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn_Factory:FocusFrame");
 
+
+// == LayerPainterImpl ==
+LayerPainterImpl::LayerPainterImpl()
+{}
+
+LayerPainterImpl::~LayerPainterImpl()
+{}
+
+void
+LayerPainterImpl::size_request (Requisition &requisition)
+{
+  bool chspread = false, cvspread = false;
+  Requisition combo;
+  for (auto childp : *this)
+    {
+      WidgetImpl &child = *childp;
+      /* size request all children */
+      // Requisition rq = child.requisition();
+      if (!child.visible())
+        continue;
+      chspread |= child.hspread();
+      cvspread |= child.vspread();
+      const Requisition crq = child.requisition();
+      combo.width = MAX (combo.width, crq.width);
+      combo.height = MAX (combo.height, crq.height);
+    }
+  requisition = combo;
+  set_flag (HSPREAD_CONTAINER, chspread);
+  set_flag (VSPREAD_CONTAINER, cvspread);
+}
+
+void
+LayerPainterImpl::size_allocate (Allocation area, bool changed)
+{
+  for (auto childp : *this)
+    {
+      WidgetImpl &child = *childp;
+      if (!child.visible())
+        continue;
+      Allocation carea = layout_child (child, area);
+      child.set_allocation (carea);
+    }
+}
+
+static const WidgetFactory<LayerPainterImpl> layer_painter_factory ("Rapicorn_Factory:LayerPainter");
+
 } // Rapicorn
