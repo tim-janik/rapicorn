@@ -175,11 +175,21 @@ ImageRendererImpl::paint_image (RenderContext &rcontext, const Rect &rect)
   const Rect &area = allocation();
   const Requisition ims = image_backend_->image_size();
   Rect view; // image position relative to allocation
-  view.width = MIN (ims.width, area.width);
-  view.height = MIN (ims.height, area.height);
-  // position image
-  view.x = area.x + iround (0.5 * (area.width - view.width));
-  view.y = area.y + iround (0.5 * (area.height - view.height));
+  switch (2)
+    {
+    case 1: // center image
+      view.width = MIN (ims.width, area.width);
+      view.height = MIN (ims.height, area.height);
+      view.x = area.x + iround (0.5 * (area.width - view.width));
+      view.y = area.y + iround (0.5 * (area.height - view.height));
+      break;
+    case 2: // stretch image
+      view.x = area.x;
+      view.y = area.y;
+      view.width = area.width;
+      view.height = area.height;
+      break;
+    }
   // render image into cairo_context
   const auto mkcontext = [&] (const Rect &crect) { return cairo_context (rcontext, crect); };
   image_backend_->render_image (mkcontext, rect, view);
