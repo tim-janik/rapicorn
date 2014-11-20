@@ -9,16 +9,15 @@ namespace Rapicorn {
 class ImageRendererImpl : public virtual WidgetImpl {
 public:
   struct        ImageBackend;
-private:
-  std::shared_ptr<ImageBackend> image_backend_;
 protected:
+  typedef std::shared_ptr<ImageBackend> ImageBackendP;
   explicit ImageRendererImpl ();
   virtual ~ImageRendererImpl () override;
-  void     get_image_size   (Requisition &image_size);
-  void     get_fill_area    (Allocation &fill_area);
-  void     paint_image      (RenderContext &rcontext, const Rect &rect);
-  bool     load_source      (const String &resource, const String &element_id);
-  void     load_pixmap      (Pixmap pixmap);
+  void     get_image_size    (const ImageBackendP &image_backend, Requisition &image_size);
+  void     get_fill_area     (const ImageBackendP &image_backend, Allocation &fill_area);
+  void     paint_image       (const ImageBackendP &image_backend, RenderContext &rcontext, const Rect &rect);
+  ImageBackendP load_source  (const String &resource, const String &element_id) __attribute__ ((warn_unused_result));
+  ImageBackendP load_pixmap  (Pixmap pixmap) __attribute__ ((warn_unused_result));
 };
 
 } // Rapicorn

@@ -118,10 +118,10 @@ ImageRendererImpl::ImageRendererImpl()
 ImageRendererImpl::~ImageRendererImpl()
 {}
 
-bool
+ImageRendererImpl::ImageBackendP
 ImageRendererImpl::load_source (const String &resource, const String &element_id)
 {
-  image_backend_ = NULL;
+  ImageBackendP image_backend;
   Blob blob = Blob::load (resource);
   if (string_endswith (blob.name(), ".svg"))
     {
@@ -130,37 +130,37 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
       auto svge = svgf ? svgf->lookup (element_id) : Svg::Element::none();
       SVGDEBUG ("lookup: %s%s: %s", resource, element_id, svge ? "OK" : "failed");
       if (svge)
-        image_backend_ = std::make_shared<SvgBackend> (svgf, svge);
+        image_backend = std::make_shared<SvgBackend> (svgf, svge);
     }
   else
     {
       auto pixmap = Pixmap (blob);
       if (pixmap.width() && pixmap.height())
-        image_backend_ = std::make_shared<PixBackend> (pixmap);
+        image_backend = std::make_shared<PixBackend> (pixmap);
     }
-  return image_backend_ != NULL;
+  return image_backend;
 }
 
-void
+ImageRendererImpl::ImageBackendP
 ImageRendererImpl::load_pixmap (Pixmap pixmap)
 {
+  ImageBackendP image_backend;
   if (pixmap.width() && pixmap.height())
-    image_backend_ = std::make_shared<PixBackend> (pixmap);
-  else
-    image_backend_ = NULL;
+    image_backend = std::make_shared<PixBackend> (pixmap);
+  return image_backend;
 }
 
 void
-ImageRendererImpl::get_image_size (Requisition &image_size)
+ImageRendererImpl::get_image_size (const ImageBackendP &image_backend, Requisition &image_size)
 {
-  image_size = image_backend_ ? image_backend_->image_size() : Requisition();
+  image_size = image_backend ? image_backend->image_size() : Requisition();
 }
 
 void
-ImageRendererImpl::get_fill_area (Allocation &fill_area)
+ImageRendererImpl::get_fill_area (const ImageBackendP &image_backend, Allocation &fill_area)
 {
   Requisition image_size;
-  get_image_size (image_size);
+  get_image_size (image_backend, image_size);
   fill_area.x = 0;
   fill_area.y = 0;
   fill_area.width = image_size.width;
@@ -168,12 +168,12 @@ ImageRendererImpl::get_fill_area (Allocation &fill_area)
 }
 
 void
-ImageRendererImpl::paint_image (RenderContext &rcontext, const Rect &rect)
+ImageRendererImpl::paint_image (const ImageBackendP &image_backend, RenderContext &rcontext, const Rect &rect)
 {
-  return_unless (image_backend_ != NULL);
+  return_unless (image_backend != NULL);
   // figure image size
   const Rect &area = allocation();
-  const Requisition ims = image_backend_->image_size();
+  const Requisition ims = image_backend->image_size();
   Rect view; // image position relative to allocation
   switch (2)
     {
@@ -192,7 +192,7 @@ ImageRendererImpl::paint_image (RenderContext &rcontext, const Rect &rect)
     }
   // render image into cairo_context
   const auto mkcontext = [&] (const Rect &crect) { return cairo_context (rcontext, crect); };
-  image_backend_->render_image (mkcontext, rect, view);
+  image_backend->render_image (mkcontext, rect, view);
 }
 
 } // Rapicorn

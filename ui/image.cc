@@ -5,12 +5,13 @@
 
 namespace Rapicorn {
 
+// == ImageImpl ==
 static const uint8* get_broken16_pixdata (void);
 
 void
 ImageImpl::pixbuf (const Pixbuf &pixbuf)
 {
-  load_pixmap (Pixmap (pixbuf));
+  image_backend_ = load_pixmap (Pixmap (pixbuf));
   invalidate();
 }
 
@@ -24,12 +25,13 @@ void
 ImageImpl::source (const String &image_url)
 {
   source_ = image_url;
-  if (!load_source (source_, element_))
+  image_backend_ = load_source (source_, element_);
+  if (!image_backend_)
     {
       auto pixmap = Pixmap();
       pixmap.load_pixstream (get_broken16_pixdata());
       assert_return (pixmap.width() > 0 && pixmap.height() > 0);
-      load_pixmap (pixmap);
+      image_backend_ = load_pixmap (pixmap);
     }
   invalidate();
 }
@@ -45,12 +47,13 @@ ImageImpl::element (const String &element_id)
 {
   // FIXME: setting source() + element() loads+parses SVG files twice
   element_ = element_id;
-  if (!load_source (source_, element_))
+  image_backend_ = load_source (source_, element_);
+  if (!image_backend_)
     {
       auto pixmap = Pixmap();
       pixmap.load_pixstream (get_broken16_pixdata());
       assert_return (pixmap.width() > 0 && pixmap.height() > 0);
-      load_pixmap (pixmap);
+      image_backend_ = load_pixmap (pixmap);
     }
   invalidate();
 }
@@ -69,13 +72,13 @@ ImageImpl::stock (const String &stock_id)
   Blob blob = Stock::stock_image (stock_id_);
   auto pixmap = Pixmap (blob);
   if (pixmap.width() && pixmap.height())
-    load_pixmap (pixmap);
+    image_backend_ = load_pixmap (pixmap);
   else
     {
       auto pixmap = Pixmap();
       pixmap.load_pixstream (get_broken16_pixdata());
       assert_return (pixmap.width() > 0 && pixmap.height() > 0);
-      load_pixmap (pixmap);
+      image_backend_ = load_pixmap (pixmap);
     }
   invalidate();
 }
@@ -90,7 +93,7 @@ void
 ImageImpl::size_request (Requisition &requisition)
 {
   Requisition irq;
-  get_image_size (irq);
+  get_image_size (image_backend_, irq);
   requisition.width += irq.width;
   requisition.height += irq.height;
 }
@@ -104,7 +107,7 @@ ImageImpl::size_allocate (Allocation area, bool changed)
 void
 ImageImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  paint_image (rcontext, rect);
+  paint_image (image_backend_, rcontext, rect);
 }
 
 static const WidgetFactory<ImageImpl> image_factory ("Rapicorn_Factory:Image");
