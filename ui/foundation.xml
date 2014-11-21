@@ -64,6 +64,9 @@
   <!-- LayerPainter -->
   <Rapicorn_Factory:LayerPainter id="LayerPainter"/>
 
+  <!-- StatePainter -->
+  <Rapicorn_Factory:StatePainter id="StatePainter"/>
+
   <!-- Window -->
   <Rapicorn_Factory:Window id="Window"/>
 

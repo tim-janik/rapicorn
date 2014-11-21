@@ -521,6 +521,11 @@ interface Drawable : Widget {
   void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
 };
 
+/// The LayerPainter container allows rendering widgets on top of each other.
+/// See also the corresponding implementation class LayerPainterImpl.
+interface LayerPainter : Container {
+};
+
 /// Image widgets are used to display pixel or vector images.
 /// See also the corresponding implementation class ImageImpl.
 interface Image : Widget {
@@ -529,9 +534,17 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
-/// The LayerPainter container allows rendering widgets on top of each other.
-/// See also the corresponding implementation class LayerPainterImpl.
-interface LayerPainter : Container {
+/// The StatePainter widget displays state dependent SVG image elements.
+/// See also the corresponding implementation class StatePainterImpl.
+interface StatePainter : Widget {
+  String source              = String (_("Source URL"), _("Resource to load an SVG image from."), "rw");
+  String element             = String (_("Element"), _("SVG Element ID to be rendered."), "rw");
+  String normal_element      = String (_("Element"), _("SVG Element ID for STATE_NORMAL."), "rw");
+  String prelight_element    = String (_("Element"), _("SVG Element ID for STATE_PRELIGHT."), "rw");
+  String impressed_element   = String (_("Element"), _("SVG Element ID for STATE_IMPRESSED."), "rw");
+  String insensitive_element = String (_("Element"), _("SVG Element ID for STATE_INSENSITIVE."), "rw");
+  String default_element     = String (_("Element"), _("SVG Element ID for STATE_DEFAULT."), "rw");
+  String focus_element       = String (_("Element"), _("SVG Element ID for STATE_FOCUS."), "rw");
 };
 
 /// A widget for text display.
