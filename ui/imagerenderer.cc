@@ -104,28 +104,35 @@ public:
   virtual void
   render_image (const std::function<cairo_t* (const Rect&)> &mkcontext, const Rect &render_rect, const Rect &image_rect)
   {
+    // render SVG image into surface
+    const auto bbox = svge_->bbox();
+    const uint svg_width = bbox.width + 0.5, svg_height = bbox.height + 0.5, svg_npixels = svg_width * svg_height;
+    uint8 *svg_pixels = new uint8[svg_npixels * 4];
+    std::fill (svg_pixels, svg_pixels + svg_npixels * 4, 0x00000000);
+    cairo_surface_t *svg_surface = cairo_image_surface_create_for_data (svg_pixels, CAIRO_FORMAT_ARGB32,
+                                                                        svg_width, svg_height, 4 * svg_width);
+    CHECK_CAIRO_STATUS (cairo_surface_status (svg_surface));
+    const bool svg_rendered = svge_->render (svg_surface, Svg::RenderSize::STATIC, 1, 1);
+    critical_unless (svg_rendered == true);
+    // render surface into context
     Rect rect = image_rect;
     rect.intersect (render_rect);
     return_unless (rect.width > 0 && rect.height > 0);
-    const uint npixels = rect.width * rect.height;
-    uint8 *pixels = new uint8[npixels * 4];
-    std::fill (pixels, pixels + npixels * 4, 0);
-    cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32,
-                                                                    rect.width, rect.height, 4 * rect.width);
-    CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-    cairo_surface_set_device_offset (surface, -(rect.x - image_rect.x), -(rect.y - image_rect.y)); // offset into image
-    const auto bbox = svge_->bbox();
-    const bool rendered = svge_->render (surface, Svg::RenderSize::ZOOM, image_rect.width / bbox.width, image_rect.height / bbox.height);
-    if (rendered)
-      { // FIXME: optimize by creating surface from rcontext directly?
-        cairo_t *cr = mkcontext (rect);
-        cairo_set_source_surface (cr, surface, rect.x, rect.y); // shift into allocation area
-        cairo_paint (cr);
+    cairo_t *cr = mkcontext (rect);
+    cairo_set_source_surface (cr, svg_surface, 0, 0); // (ix,iy) are set in the matrix below
+    cairo_matrix_t matrix;
+    cairo_matrix_init_identity (&matrix);
+    const double xscale = svg_width / image_rect.width, yscale = svg_height / image_rect.height;
+    if (xscale != 1.0 || yscale != 1.0)
+      {
+        cairo_matrix_scale (&matrix, xscale, yscale);
+        cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
       }
-    else
-      critical ("failed to render SVG file");
-    cairo_surface_destroy (surface);
-    delete[] pixels;
+    cairo_matrix_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
+    cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+    cairo_paint (cr);
+    cairo_surface_destroy (svg_surface);
+    delete[] svg_pixels;
   }
 };
 
