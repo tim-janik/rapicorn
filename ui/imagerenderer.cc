@@ -73,10 +73,28 @@ public:
 struct SvgBackend : public virtual ImageBackend {
   Svg::FileP    svgf_;
   Svg::ElementP svge_;
+  const Svg::Span hscale_spans_[3], vscale_spans_[3];
 public:
-  SvgBackend (Svg::FileP svgf, Svg::ElementP svge) :
-    svgf_ (svgf), svge_ (svge)
-  {}
+  SvgBackend (Svg::FileP svgf, Svg::ElementP svge, const Svg::Span (&hscale_spans)[3], const Svg::Span (&vscale_spans)[3]) :
+    svgf_ (svgf), svge_ (svge), hscale_spans_ (hscale_spans), vscale_spans_ (vscale_spans)
+  {
+    SVGDEBUG ("SvgImage: id=%s hscale_spans={ l=%u r=%u, l=%u r=%u, l=%u r=%u } vscale_spans={ l=%u r=%u, l=%u r=%u, l=%u r=%u }",
+              svge_->info().id,
+              hscale_spans_[0].length, hscale_spans_[0].resizable,
+              hscale_spans_[1].length, hscale_spans_[1].resizable,
+              hscale_spans_[2].length, hscale_spans_[2].resizable,
+              vscale_spans_[0].length, vscale_spans_[0].resizable,
+              vscale_spans_[1].length, vscale_spans_[1].resizable,
+              vscale_spans_[2].length, vscale_spans_[2].resizable);
+    size_t hsum = 0;
+    for (size_t i = 0; i < ARRAY_SIZE (hscale_spans_); i++)
+      hsum += hscale_spans_[i].length;
+    critical_unless (hsum == svge_->bbox().width);
+    size_t vsum = 0;
+    for (size_t i = 0; i < ARRAY_SIZE (vscale_spans_); i++)
+      vsum += vscale_spans_[i].length;
+    critical_unless (vsum == svge_->bbox().height);
+  }
   virtual Requisition
   image_size ()
   {
@@ -128,9 +146,55 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
       auto svgf = Svg::File::load (blob);
       SVGDEBUG ("loading: %s: %s", resource, strerror (errno));
       auto svge = svgf ? svgf->lookup (element_id) : Svg::Element::none();
-      SVGDEBUG ("lookup: %s%s: %s", resource, element_id, svge ? "OK" : "failed");
+      SVGDEBUG (" lookup: %s%s: %s", resource, element_id, svge ? svge->bbox().to_string() : "failed");
       if (svge)
-        image_backend = std::make_shared<SvgBackend> (svgf, svge);
+        {
+          const Svg::BBox ibox = svge->bbox();
+          Svg::Span hscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
+          hscale_spans[1].length = ibox.width;
+          hscale_spans[1].resizable = 1;
+          Svg::Span vscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
+          vscale_spans[1].length = ibox.height;
+          vscale_spans[1].resizable = 1;
+          if (string_endswith (element_id, ".9"))
+            {
+              const double ix1 = ibox.x, ix2 = ibox.x + ibox.width, iy1 = ibox.y, iy2 = ibox.y + ibox.height;
+              Svg::ElementP auxe;
+              auxe = svgf->lookup (element_id + ".hscale");
+              if (auxe)
+                {
+                  const Svg::BBox bbox = auxe->bbox();
+                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                  const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
+                  if (bx1 < bx2)
+                    {
+                      hscale_spans[0].resizable = 0, hscale_spans[0].length = bx1 - ix1;
+                      hscale_spans[1].resizable = 1, hscale_spans[1].length = bx2 - bx1;
+                      hscale_spans[2].resizable = 0, hscale_spans[2].length = ix2 - bx2;
+                    }
+                }
+              auxe = svgf->lookup (element_id + ".vscale");
+              if (auxe)
+                {
+                  const Svg::BBox bbox = auxe->bbox();
+                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                  const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
+                  if (by1 < by2)
+                    {
+                      vscale_spans[0].resizable = 0, vscale_spans[0].length = by1 - iy1;
+                      vscale_spans[1].resizable = 1, vscale_spans[1].length = by2 - by1;
+                      vscale_spans[2].resizable = 0, vscale_spans[2].length = iy2 - by2;
+                    }
+                }
+              auxe = svgf->lookup (element_id + ".hfill");
+              if (auxe)
+                SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+              auxe = svgf->lookup (element_id + ".vfill");
+              if (auxe)
+                SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+            }
+          image_backend = std::make_shared<SvgBackend> (svgf, svge, hscale_spans, vscale_spans);
+        }
     }
   else
     {
