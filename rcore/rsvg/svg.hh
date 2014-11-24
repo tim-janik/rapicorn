@@ -21,8 +21,9 @@ struct Info {
 /// A BBox provides bounding box information for SVG elements.
 struct BBox {
   double x, y, width, height;
-  BBox ();
-  BBox (double, double, double, double);
+  explicit BBox      ();
+  explicit BBox      (double, double, double, double);
+  String   to_string ();
 };
 
 enum class RenderSize {

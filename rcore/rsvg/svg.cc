@@ -30,6 +30,12 @@ BBox::BBox (double _x, double _y, double w, double h) :
   x (_x), y (_y), width (w), height (h)
 {}
 
+String
+BBox::to_string ()
+{
+  return string_format ("%.7g,%.7g,%.7g,%.7g", x, y, width, height);
+}
+
 struct ElementImpl : public Element {
   String        id_;
   int           x_, y_, width_, height_, rw_, rh_; // relative to bottom_left
