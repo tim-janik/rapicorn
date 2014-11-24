@@ -266,7 +266,6 @@ FileImpl::lookup (const String &elementid)
 static void
 init_svg_lib (const StringVector &args)
 {
-  g_type_init(); // NOP on subsequent invocations
   File::add_search_dir (RAPICORN_SVGDIR);
 }
 static InitHook _init_svg_lib ("core/35 Init SVG Lib", init_svg_lib);
