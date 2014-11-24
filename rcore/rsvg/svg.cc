@@ -17,18 +17,6 @@
  * - ACAD:     X to right, Y upwards.
  */
 
-static double
-affine_x (const double x, const double y, const double affine[6])
-{
-  return affine[0] * x + affine[2] * y + affine[4];
-}
-
-static double
-affine_y (const double x, const double y, const double affine[6])
-{
-  return affine[1] * x + affine[3] * y + affine[5];
-}
-
 namespace Rapicorn {
 
 /// @namespace Rapicorn::Svg The Rapicorn::Svg namespace provides functions for handling and rendering of SVG files and elements.
