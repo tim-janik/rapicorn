@@ -270,5 +270,85 @@ init_svg_lib (const StringVector &args)
 }
 static InitHook _init_svg_lib ("core/35 Init SVG Lib", init_svg_lib);
 
+// == Span ==
+/** Distribute @a amount across the @a length fields of all @a spans.
+ * Increase (or decrease in case of a negative @a amount) the @a lentgh
+ * of all @a resizable @a spans to distribute @a amount most equally.
+ * Spans are considered resizable if the @a resizable field is >=
+ * @a resizable_level.
+ * Precedence will be given to spans in the middle of the list.
+ * If @a amount is negative, each span will only be shrunk up to its
+ * existing length, the rest is evenly distributed among the remaining
+ * shrnkable spans. If no spans are left to be resized,
+ * the remaining @a amount is be returned.
+ * @return Reminder of @a amount that could not be distributed.
+ */
+ssize_t
+Span::distribute (const size_t n_spans, Span *spans, ssize_t amount, size_t resizable_level)
+{
+  if (n_spans == 0 || amount == 0)
+    return amount;
+  assert (spans);
+  // distribute amount
+  if (amount > 0)
+    {
+      // sort expandable spans by mid-point distance with right-side bias for odd amounts
+      size_t n = 0;
+      Span *rspans[n_spans];
+      for (size_t j = 0; j < n_spans; j++) // helper index, i does outwards indexing
+        {
+          const size_t i = outwards_index (j, n_spans, true);
+          if (spans[i].resizable >= resizable_level) // considered resizable
+            rspans[n++] = &spans[i];
+        }
+      if (!n)
+        return amount;
+      // expand in equal shares
+      const size_t delta = amount / n;
+      if (delta)
+        for (size_t i = 0; i < n; i++)
+          rspans[i]->length += delta;
+      amount -= delta * n;
+      // spread remainings
+      for (size_t i = 0; i < n && amount; i++, amount--)
+        rspans[i]->length += 1;
+    }
+  else /* amount < 0 */
+    {
+      // sort shrinkable spans by mid-point distance with right-side bias for odd amounts
+      size_t n = 0;
+      Span *rspans[n_spans];
+      for (size_t j = 0; j < n_spans; j++) // helper index, i does outwards indexing
+        {
+          const size_t i = outwards_index (j, n_spans, true);
+          if (spans[i].resizable >= resizable_level &&  // considered resizable
+              spans[i].length > 0)                      // and shrinkable
+            rspans[n++] = &spans[i];
+        }
+      // shrink in equal shares
+      while (n && amount)
+        {
+          // shrink spans within length limits
+          const size_t delta = -amount / n;
+          if (delta == 0)
+            break;                              // delta < 1 per span
+          size_t m = 0;
+          for (size_t i = 0; i < n; i++)
+            {
+              const size_t adjustable = std::min (rspans[i]->length, delta);
+              rspans[i]->length -= adjustable;
+              amount += adjustable;
+              if (rspans[i]->length)
+                rspans[m++] = rspans[i];        // retain shrinkable spans
+            }
+          n = m;                                // discard non-shrinkable spans
+        }
+      // spread remainings
+      for (size_t i = 0; i < n && amount; i++, amount++)
+        rspans[i]->length -= 1;
+    }
+  return amount;
+}
+
 } // Svg
 } // Rapicorn

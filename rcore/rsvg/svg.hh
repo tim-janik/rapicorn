@@ -26,6 +26,13 @@ struct BBox {
   String   to_string ();
 };
 
+/// A simple POD to represent resizable lengths.
+struct Span {
+  size_t length;        ///< Length of this Span
+  size_t resizable;     ///< Resizing flag (count) for this Span
+  static ssize_t distribute (const size_t n_spans, Span *spans, ssize_t amount, size_t resizable_level);
+};
+
 enum class RenderSize {
   STATIC,       ///< Keep the SVG elements native size.
   ZOOM,         ///< Zoom the SVG element according to scale factors.
