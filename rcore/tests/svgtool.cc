@@ -226,6 +226,87 @@ test_convert_svg2png()
 }
 REGISTER_LOGTEST ("SVG/svg2png", test_convert_svg2png);
 
+typedef Svg::Span Span;
+
+template<size_t N> static void
+print_spans (const char *prefix, Span (&spans)[N])
+{
+  printout ("%s", prefix);
+  for (size_t i = 0; i < N; i++)
+    printout (" { %zu, %zu }", spans[i].length, spans[i].resizable);
+  printout ("\n");
+}
+
+template<size_t N, size_t M> static bool
+assert_spans (Span (&spans)[N], Span (&expect)[M])
+{
+  assert (N == M);
+  for (size_t i = 0; i < N; i++)
+    if (spans[i].length != expect[i].length)
+      {
+        printerr ("FAIL: span %zu: { %zu, %zu } != { %zu, %zu }\n", i,
+                  spans[i].length, spans[i].resizable, expect[i].length, expect[i].resizable);
+        assert (spans[i].length == expect[i].length);
+      }
+  return true;
+}
+
+static void
+test_distribute_spans()
+{
+  // resizable: 0=const, 1=shrink, 2=expand, 3=expand+shrink
+  { // simple expansion
+    Span spans[3] = { { 3, 0 }, { 2, 1 }, { 4, 0 }, };
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, 7, 1);
+    Span expct[3] = { { 3, 0 }, { 9, 1 }, { 4, 0 }, };
+    assert (r == 0 && assert_spans (spans, expct));
+  }
+  { // complex expansion
+    Span spans[11] = { { 0, 0 }, { 1, 1 },
+                       { 10, 2 }, { 13, 3 },
+                       { 2, 2 }, { 1, 1 }, { 20, 2 },
+                       { 11, 3 }, { 12, 2 },
+                       { 1, 1 }, { 0, 0 }, };
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, 6 * 3 + 1 + 1, 2);
+    Span expct[11] = { { 0, 0 }, { 1, 1 },
+                       { 10 +3, 2 }, { 13 +3, 3 },
+                       { 2 +3+1, 2 }, { 1, 1 }, { 20 +3+1, 2 },
+                       { 11 +3, 3 }, { 12 +3, 2 },
+                       { 1, 1 }, { 0, 0 }, };
+    assert (r == 0 && assert_spans (spans, expct));
+  }
+  { // simple shrinking
+    Span spans[3] = { { 3, 0 }, { 2, 1 }, { 4, 0 }, };
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, -7, 1);
+    Span expct[3] = { { 3, 0 }, { 0, 1 }, { 4, 0 }, };
+    assert (r == -5 && assert_spans (spans, expct));
+  }
+  { // complex shrinking
+    Span spans[11] = { { 0, 0 }, { 1, 1 },
+                       { 10, 2 }, { 13, 3 },
+                       { 2, 2 }, { 1, 1 }, { 20, 2 },
+                       { 11, 3 }, { 12, 2 },
+                       { 1, 1 }, { 0, 0 }, };
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, 6 * -5, 2);
+    Span expct[11] = { { 0, 0 }, { 1, 1 },
+                       { 10 -5, 2 }, { 13 -5-1, 3 },
+                       { 2 -2, 2 }, { 1, 1 }, { 20 -5-1, 2 },
+                       { 11 -5-1, 3 }, { 12 -5, 2 },
+                       { 1, 1 }, { 0, 0 }, };
+    assert (r == 0 && assert_spans (spans, expct));
+  }
+  { // big shrink amounts
+    Span spans[3] = { { 100, 0 }, { 200, 1 }, { 100, 0 } };
+    assert (-777 == Span::distribute (ARRAY_SIZE (spans), spans, -777, 99));
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, -350, 0);
+    Span expct[3] = { { 0, 0 }, { 50, 1 }, { 0, 0 } };
+    assert (r == 0 && assert_spans (spans, expct));
+    if (0)
+      print_spans ("Result:", spans);
+  }
+}
+REGISTER_TEST ("SVG/Distribute Spans", test_distribute_spans);
+
 #if 0
 static void
 test_convert_png2ascii()
