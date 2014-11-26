@@ -369,7 +369,9 @@ Element::stretch (const size_t image_width, const size_t image_height,
       span_sum += svg_hspans[i].length;
     }
   assert_return (span_sum == bb.width, NULL);
-  const size_t hremain = Span::distribute (n_hspans, image_hspans, image_width - svg_width, 1);
+  ssize_t hremain = Span::distribute (n_hspans, image_hspans, image_width - svg_width, 1);
+  if (hremain < 0)
+    hremain = Span::distribute (n_hspans, image_hspans, hremain, 0); // shrink *any* segment
   critical_unless (hremain == 0);
   span_sum = 0;
   for (size_t i = 0; i < n_vspans; i++)
@@ -378,7 +380,9 @@ Element::stretch (const size_t image_width, const size_t image_height,
       span_sum += svg_vspans[i].length;
     }
   assert_return (span_sum == bb.height, NULL);
-  const size_t vremain = Span::distribute (n_vspans, image_vspans, image_height - svg_height, 1);
+  ssize_t vremain = Span::distribute (n_vspans, image_vspans, image_height - svg_height, 1);
+  if (vremain < 0)
+    vremain = Span::distribute (n_vspans, image_vspans, vremain, 0); // shrink *any* segment
   critical_unless (vremain == 0);
   // render SVG image into svg_surface at original size
   cairo_surface_t *svg_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, svg_width, svg_height);
