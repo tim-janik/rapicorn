@@ -350,5 +350,90 @@ Span::distribute (const size_t n_spans, Span *spans, ssize_t amount, size_t resi
   return amount;
 }
 
+///< Render a stretched image by resizing horizontal/vertical parts (spans).
+cairo_surface_t*
+Element::stretch (const size_t image_width, const size_t image_height,
+                  const size_t n_hspans, const Span *svg_hspans,
+                  const size_t n_vspans, const Span *svg_vspans)
+{
+  assert_return (image_width > 0 && image_height > 0, NULL);
+  // setup SVG element sizes
+  const BBox bb = bbox();
+  const size_t svg_width = bb.width + 0.5, svg_height = bb.height + 0.5;
+  // copy and distribute spans to match image size
+  Span image_hspans[n_hspans], image_vspans[n_vspans];
+  ssize_t span_sum = 0;
+  for (size_t i = 0; i < n_hspans; i++)
+    {
+      image_hspans[i] = svg_hspans[i];
+      span_sum += svg_hspans[i].length;
+    }
+  assert_return (span_sum == bb.width, NULL);
+  const size_t hremain = Span::distribute (n_hspans, image_hspans, image_width - svg_width, 1);
+  critical_unless (hremain == 0);
+  span_sum = 0;
+  for (size_t i = 0; i < n_vspans; i++)
+    {
+      image_vspans[i] = svg_vspans[i];
+      span_sum += svg_vspans[i].length;
+    }
+  assert_return (span_sum == bb.height, NULL);
+  const size_t vremain = Span::distribute (n_vspans, image_vspans, image_height - svg_height, 1);
+  critical_unless (vremain == 0);
+  // render SVG image into svg_surface at original size
+  cairo_surface_t *svg_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, svg_width, svg_height);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (svg_surface), NULL);
+  const bool svg_rendered = render (svg_surface, Svg::RenderSize::STATIC, 1, 1);
+  critical_unless (svg_rendered == true);
+  // render svg_surface at image size by stretching resizable spans
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, image_width, image_height);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface), NULL);
+  cairo_t *cr = cairo_create (surface);
+  critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
+  ssize_t svg_voffset = 0, vspan_offset = 0;
+  for (size_t v = 0; v < n_vspans; v++)
+    {
+      if (image_vspans[v].length <= 0)
+        {
+          svg_voffset += svg_vspans[v].length;
+          continue;
+        }
+      ssize_t svg_hoffset = 0, hspan_offset = 0;
+      for (size_t h = 0; h < n_hspans; h++)
+        {
+          if (image_hspans[h].length <= 0)
+            {
+              svg_hoffset += svg_hspans[h].length;
+              continue;
+            }
+          cairo_set_source_surface (cr, svg_surface, 0, 0); // (ix,iy) are set in the matrix below
+          cairo_matrix_t matrix;
+          cairo_matrix_init_identity (&matrix); // FIXME: init_trans?
+          cairo_matrix_translate (&matrix, svg_hoffset, svg_voffset); // adjust image origin
+          const double xscale = svg_hspans[h].length / double (image_hspans[h].length);
+          const double yscale = svg_vspans[v].length / double (image_vspans[v].length);
+          if (xscale != 1.0 || yscale != 1.0)
+            {
+              cairo_matrix_scale (&matrix, xscale, yscale);
+              cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
+            }
+          cairo_matrix_translate (&matrix, - hspan_offset, - vspan_offset); // shift image fragment into position
+          cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+          cairo_rectangle (cr, hspan_offset, vspan_offset, image_hspans[h].length, image_vspans[v].length);
+          cairo_clip (cr);
+          cairo_paint (cr);
+          cairo_reset_clip (cr);
+          hspan_offset += image_hspans[h].length;
+          svg_hoffset += svg_hspans[h].length;
+        }
+      vspan_offset += image_vspans[v].length;
+      svg_voffset += svg_vspans[v].length;
+    }
+  // cleanup
+  cairo_destroy (cr);
+  cairo_surface_destroy (svg_surface);
+  return surface;
+}
+
 } // Svg
 } // Rapicorn
