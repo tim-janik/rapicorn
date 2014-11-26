@@ -354,7 +354,8 @@ Span::distribute (const size_t n_spans, Span *spans, ssize_t amount, size_t resi
 cairo_surface_t*
 Element::stretch (const size_t image_width, const size_t image_height,
                   const size_t n_hspans, const Span *svg_hspans,
-                  const size_t n_vspans, const Span *svg_vspans)
+                  const size_t n_vspans, const Span *svg_vspans,
+                  cairo_filter_t filter)
 {
   assert_return (image_width > 0 && image_height > 0, NULL);
   // setup SVG element sizes
@@ -419,7 +420,7 @@ Element::stretch (const size_t image_width, const size_t image_height,
           if (xscale != 1.0 || yscale != 1.0)
             {
               cairo_matrix_scale (&matrix, xscale, yscale);
-              cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
+              cairo_pattern_set_filter (cairo_get_source (cr), filter);
             }
           cairo_matrix_translate (&matrix, - hspan_offset, - vspan_offset); // shift image fragment into position
           cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);

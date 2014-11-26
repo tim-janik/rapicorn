@@ -49,7 +49,7 @@ public:
   virtual BBox  containee_bbox  (BBox &_resized) = 0;   ///< Provides the containee size for a given element size. FIXME: scaling
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize = RenderSize::ZOOM, double xscale = 1,
                                  double yscale = 1) = 0;///< Renders a scaled SVG element into a cairo_surface_t.
-  cairo_surface_t* stretch      (size_t, size_t, size_t, const Span*,  size_t, const Span*);
+  cairo_surface_t* stretch      (size_t, size_t, size_t, const Span*,  size_t, const Span*, cairo_filter_t = CAIRO_FILTER_BILINEAR);
   static const ElementP none    ();                     ///< Returns null ElementP, which yields false in boolean tests.
 protected: // Impl details
   ~Element() {}                         ///< Internal destructor, Svg::ElementP automatically manages the Element class lifetime.
