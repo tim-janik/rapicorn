@@ -64,9 +64,8 @@ public:
     cairo_t *cr = mkcontext (rect);
     cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
     cairo_matrix_t matrix;
-    cairo_matrix_init_identity (&matrix);
     const double xscale = pixmap_.width() / image_rect.width, yscale = pixmap_.height() / image_rect.height;
-    cairo_matrix_scale (&matrix, xscale, yscale);
+    cairo_matrix_init_scale (&matrix, xscale, yscale);
     cairo_matrix_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
     cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
     if (xscale != 1.0 || yscale != 1.0)
@@ -134,8 +133,7 @@ public:
     cairo_t *cr = mkcontext (rect);
     cairo_set_source_surface (cr, img, 0, 0); // (ix,iy) are set in the matrix below
     cairo_matrix_t matrix;
-    cairo_matrix_init_identity (&matrix);
-    cairo_matrix_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
+    cairo_matrix_init_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
     cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
     cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
     cairo_clip (cr);
