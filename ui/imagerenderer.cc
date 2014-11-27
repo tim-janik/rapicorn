@@ -104,35 +104,24 @@ public:
   virtual void
   render_image (const std::function<cairo_t* (const Rect&)> &mkcontext, const Rect &render_rect, const Rect &image_rect)
   {
-    // render SVG image into surface
-    const auto bbox = svge_->bbox();
-    const uint svg_width = bbox.width + 0.5, svg_height = bbox.height + 0.5, svg_npixels = svg_width * svg_height;
-    uint8 *svg_pixels = new uint8[svg_npixels * 4];
-    std::fill (svg_pixels, svg_pixels + svg_npixels * 4, 0x00000000);
-    cairo_surface_t *svg_surface = cairo_image_surface_create_for_data (svg_pixels, CAIRO_FORMAT_ARGB32,
-                                                                        svg_width, svg_height, 4 * svg_width);
-    CHECK_CAIRO_STATUS (cairo_surface_status (svg_surface));
-    const bool svg_rendered = svge_->render (svg_surface, Svg::RenderSize::STATIC, 1, 1);
-    critical_unless (svg_rendered == true);
-    // render surface into context
+    // stretch and render SVG image // FIXME: this should be cached
+    const size_t w = image_rect.width + 0.5, h = image_rect.height + 0.5;
+    cairo_surface_t *img = svge_->stretch (w, h, ARRAY_SIZE (hscale_spans_), hscale_spans_, ARRAY_SIZE (vscale_spans_), vscale_spans_);
+    CHECK_CAIRO_STATUS (cairo_surface_status (img));
+    // render context rectangle
     Rect rect = image_rect;
     rect.intersect (render_rect);
     return_unless (rect.width > 0 && rect.height > 0);
     cairo_t *cr = mkcontext (rect);
-    cairo_set_source_surface (cr, svg_surface, 0, 0); // (ix,iy) are set in the matrix below
+    cairo_set_source_surface (cr, img, 0, 0); // (ix,iy) are set in the matrix below
     cairo_matrix_t matrix;
     cairo_matrix_init_identity (&matrix);
-    const double xscale = svg_width / image_rect.width, yscale = svg_height / image_rect.height;
-    if (xscale != 1.0 || yscale != 1.0)
-      {
-        cairo_matrix_scale (&matrix, xscale, yscale);
-        cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
-      }
     cairo_matrix_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
     cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+    cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+    cairo_clip (cr);
     cairo_paint (cr);
-    cairo_surface_destroy (svg_surface);
-    delete[] svg_pixels;
+    cairo_surface_destroy (img);
   }
 };
 
