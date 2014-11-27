@@ -21,8 +21,16 @@ struct Info {
 /// A BBox provides bounding box information for SVG elements.
 struct BBox {
   double x, y, width, height;
-  BBox ();
-  BBox (double, double, double, double);
+  explicit BBox      ();
+  explicit BBox      (double, double, double, double);
+  String   to_string ();
+};
+
+/// A simple POD to represent resizable lengths.
+struct Span {
+  size_t length;        ///< Length of this Span
+  size_t resizable;     ///< Resizing flag (count) for this Span
+  static ssize_t distribute (const size_t n_spans, Span *spans, ssize_t amount, size_t resizable_level);
 };
 
 enum class RenderSize {
@@ -41,6 +49,7 @@ public:
   virtual BBox  containee_bbox  (BBox &_resized) = 0;   ///< Provides the containee size for a given element size. FIXME: scaling
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize = RenderSize::ZOOM, double xscale = 1,
                                  double yscale = 1) = 0;///< Renders a scaled SVG element into a cairo_surface_t.
+  cairo_surface_t* stretch      (size_t, size_t, size_t, const Span*,  size_t, const Span*, cairo_filter_t = CAIRO_FILTER_BILINEAR);
   static const ElementP none    ();                     ///< Returns null ElementP, which yields false in boolean tests.
 protected: // Impl details
   ~Element() {}                         ///< Internal destructor, Svg::ElementP automatically manages the Element class lifetime.
@@ -50,11 +59,11 @@ typedef std::shared_ptr<File> FileP;            ///< Smart pointer to an Svg::Fi
 /// The File class represents a successfully loaded SVG file.
 class File {
 public:
-  virtual void          dump_tree       () = 0;
-  virtual ElementP      lookup          (const String &elementid) = 0;  ///< Lookup an SVG element from an SVG File.
-  static  void          add_search_dir  (const String &absdir);         ///< Adds a directory for relative Svg::File::load() calls.
-  static  FileP         load            (const String &svgfilename);    ///< Load an SVG file, returns non-null on success and sets errno.
-  static  FileP         load            (Blob svg_blob);        ///< Load an SVG file from a binary SVG resource blob.
+  virtual void     dump_tree      () = 0;
+  virtual ElementP lookup         (const String &elementid) = 0;  ///< Lookup an SVG element from an SVG File.
+  static  void     add_search_dir (const String &absdir);         ///< Adds a directory for relative Svg::File::load() calls.
+  static  FileP    load           (const String &svgfilename);    ///< Load an SVG file, returns non-null on success and sets errno.
+  static  FileP    load           (Blob svg_blob);                ///< Load an SVG file from a binary SVG resource blob, sets errno.
 protected: // Impl details
   ~File() {}                            ///< Internal destructor, Svg::FileP automatically manages the File class lifetime.
 };

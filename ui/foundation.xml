@@ -44,9 +44,6 @@
     </Alignment>
   </Rapicorn_Factory:Frame>
 
-  <!-- ImageFrame -->
-  <Rapicorn_Factory:ImageFrame id="ImageFrame"/>
-
   <!-- DotGrid -->
   <Rapicorn_Factory:DotGrid id="DotGrid"/>
 
@@ -63,6 +60,12 @@
   <!-- Label -->
   <Rapicorn_Factory:Label id="Label" />
   <Rapicorn_Factory:TextPango id="Rapicorn_Factory_TextBlock" />
+
+  <!-- LayerPainter -->
+  <Rapicorn_Factory:LayerPainter id="LayerPainter"/>
+
+  <!-- StatePainter -->
+  <Rapicorn_Factory:StatePainter id="StatePainter"/>
 
   <!-- Window -->
   <Rapicorn_Factory:Window id="Window"/>

@@ -102,6 +102,16 @@ private:
   void              client_changed (const String &name);
 };
 
+class LayerPainterImpl : public virtual MultiContainerImpl, public virtual LayerPainterIface {
+public:
+  explicit       LayerPainterImpl ();
+  virtual       ~LayerPainterImpl () override;
+protected:
+  virtual void   size_request            (Requisition &requisition);
+  virtual void   size_allocate           (Allocation area, bool changed);
+  Allocation     local_child_allocation  (WidgetImpl &child, double width, double height);
+};
+
 } // Rapicorn
 
 #endif  /* __RAPICORN_PAINT_CONTAINERS_HH__ */

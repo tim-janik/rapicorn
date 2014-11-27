@@ -1,122 +1,17 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "image.hh"
 #include "stock.hh"
-#include "painter.hh"
 #include "factory.hh"
-#include "../rcore/rsvg/svg.hh"
-#include <errno.h>
-
-/// @TODO: unify CHECK_CAIRO_STATUS() macro implementations
-#define CHECK_CAIRO_STATUS(status)      do {    \
-  cairo_status_t ___s = (status);               \
-  if (___s != CAIRO_STATUS_SUCCESS)             \
-    RAPICORN_CRITICAL ("%s: %s", cairo_status_to_string (___s), #status);   \
-  } while (0)
 
 namespace Rapicorn {
 
+// == ImageImpl ==
 static const uint8* get_broken16_pixdata (void);
-
-struct ImageImpl::ImageBackend {
-  virtual            ~ImageBackend    () {}
-  virtual Requisition image_size      () = 0;
-  virtual void        render_image    (const std::function<cairo_t* (const Rect&)> &mkcontext,
-                                       const Rect &render_rect, const Rect &image_rect) = 0;
-};
-
-struct SvgImage : public virtual ImageImpl::ImageBackend {
-  Svg::FileP    svgf_;
-  Svg::ElementP svge_;
-public:
-  SvgImage (Svg::FileP svgf, Svg::ElementP svge) :
-    svgf_ (svgf), svge_ (svge)
-  {}
-  virtual Requisition
-  image_size ()
-  {
-    const auto bbox = svge_->bbox();
-    return Requisition (bbox.width, bbox.height);
-  }
-  virtual void
-  render_image (const std::function<cairo_t* (const Rect&)> &mkcontext, const Rect &render_rect, const Rect &image_rect)
-  {
-    Rect rect = image_rect;
-    rect.intersect (render_rect);
-    return_unless (rect.width > 0 && rect.height > 0);
-    const uint npixels = rect.width * rect.height;
-    uint8 *pixels = new uint8[int (npixels * 4)]; // FIXME: cast?
-    std::fill (pixels, pixels + npixels * 4, 0);
-    cairo_surface_t *surface = cairo_image_surface_create_for_data (pixels, CAIRO_FORMAT_ARGB32,
-                                                                    rect.width, rect.height, 4 * rect.width);
-    CHECK_CAIRO_STATUS (cairo_surface_status (surface));
-    cairo_surface_set_device_offset (surface, -(rect.x - image_rect.x), -(rect.y - image_rect.y)); // offset into image
-    const auto bbox = svge_->bbox();
-    const bool rendered = svge_->render (surface, Svg::RenderSize::ZOOM, image_rect.width / bbox.width, image_rect.height / bbox.height);
-    if (rendered)
-      { // FIXME: optimize by creating surface from rcontext directly?
-        cairo_t *cr = mkcontext (rect);
-        cairo_set_source_surface (cr, surface, rect.x, rect.y); // shift into allocation area
-        cairo_paint (cr);
-      }
-    else
-      critical ("failed to render SVG file");
-    cairo_surface_destroy (surface);
-    delete[] pixels;
-  }
-};
-
-static cairo_surface_t*
-cairo_surface_from_pixmap (Pixmap pixmap)
-{
-  const int stride = pixmap.width() * 4;
-  uint32 *data = pixmap.row (0);
-  cairo_surface_t *isurface =
-    cairo_image_surface_create_for_data ((unsigned char*) data,
-                                         CAIRO_FORMAT_ARGB32,
-                                         pixmap.width(),
-                                         pixmap.height(),
-                                         stride);
-  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
-  return isurface;
-}
-
-struct PixImage : public virtual ImageImpl::ImageBackend {
-  Pixmap        pixmap_;
-public:
-  PixImage (const Pixmap &pixmap) :
-    pixmap_ (pixmap)
-  {}
-  virtual Requisition
-  image_size ()
-  {
-    return Requisition (pixmap_.width(), pixmap_.height());
-  }
-  virtual void
-  render_image (const std::function<cairo_t* (const Rect&)> &mkcontext, const Rect &render_rect, const Rect &image_rect)
-  {
-    Rect rect = image_rect;
-    rect.intersect (render_rect);
-    return_unless (rect.width > 0 && rect.height > 0);
-    cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
-    cairo_t *cr = mkcontext (rect);
-    cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
-    cairo_matrix_t matrix;
-    cairo_matrix_init_identity (&matrix);
-    const double xscale = pixmap_.width() / image_rect.width, yscale = pixmap_.height() / image_rect.height;
-    cairo_matrix_scale (&matrix, xscale, yscale);
-    cairo_matrix_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
-    cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
-    if (xscale != 1.0 || yscale != 1.0)
-      cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
-    cairo_paint (cr);
-    cairo_surface_destroy (isurface);
-  }
-};
 
 void
 ImageImpl::pixbuf (const Pixbuf &pixbuf)
 {
-  image_backend_ = std::make_shared<PixImage> (Pixmap (pixbuf));
+  image_backend_ = load_pixmap (Pixmap (pixbuf));
   invalidate();
 }
 
@@ -127,55 +22,65 @@ ImageImpl::pixbuf() const
 }
 
 void
-ImageImpl::load_pixmap()
+ImageImpl::source (const String &image_url)
 {
-  image_backend_ = NULL;
-  Blob blob = Blob::load ("");
-  if (!image_url_.empty())
-    blob = Blob::load (image_url_);
-  if (!blob && !stock_id_.empty())
-    blob = Stock::stock_image (stock_id_);
-  if (string_endswith (blob.name(), ".svg"))
-    {
-      auto svgf = Svg::File::load (blob);
-      auto svge = svgf ? svgf->lookup ("") : Svg::Element::none();
-      if (svge)
-        image_backend_ = std::make_shared<SvgImage> (svgf, svge);
-    }
-  else
-    {
-      auto pixmap = Pixmap (blob);
-      if (pixmap.width() && pixmap.height())
-        image_backend_ = std::make_shared<PixImage> (pixmap);
-    }
+  source_ = image_url;
+  image_backend_ = load_source (source_, element_);
   if (!image_backend_)
     {
       auto pixmap = Pixmap();
       pixmap.load_pixstream (get_broken16_pixdata());
       assert_return (pixmap.width() > 0 && pixmap.height() > 0);
-      image_backend_ = std::make_shared<PixImage> (pixmap);
+      image_backend_ = load_pixmap (pixmap);
     }
   invalidate();
-}
-
-void
-ImageImpl::source (const String &image_url)
-{
-  image_url_ = image_url;
-  load_pixmap();
 }
 
 String
 ImageImpl::source() const
 {
-  return image_url_;
+  return source_;
+}
+
+void
+ImageImpl::element (const String &element_id)
+{
+  // FIXME: setting source() + element() loads+parses SVG files twice
+  element_ = element_id;
+  image_backend_ = load_source (source_, element_);
+  if (!image_backend_)
+    {
+      auto pixmap = Pixmap();
+      pixmap.load_pixstream (get_broken16_pixdata());
+      assert_return (pixmap.width() > 0 && pixmap.height() > 0);
+      image_backend_ = load_pixmap (pixmap);
+    }
+  invalidate();
+}
+
+String
+ImageImpl::element() const
+{
+  return element_;
 }
 
 void
 ImageImpl::stock (const String &stock_id)
 {
+  return_unless (stock_id_ != stock_id);
   stock_id_ = stock_id;
-  load_pixmap();
+  Blob blob = Stock::stock_image (stock_id_);
+  auto pixmap = Pixmap (blob);
+  if (pixmap.width() && pixmap.height())
+    image_backend_ = load_pixmap (pixmap);
+  else
+    {
+      auto pixmap = Pixmap();
+      pixmap.load_pixstream (get_broken16_pixdata());
+      assert_return (pixmap.width() > 0 && pixmap.height() > 0);
+      image_backend_ = load_pixmap (pixmap);
+    }
+  invalidate();
 }
 
 String
@@ -187,8 +92,7 @@ ImageImpl::stock() const
 void
 ImageImpl::size_request (Requisition &requisition)
 {
-  return_unless (image_backend_ != NULL);
-  const Requisition irq = image_backend_->image_size();
+  const Requisition irq = get_image_size (image_backend_);
   requisition.width += irq.width;
   requisition.height += irq.height;
 }
@@ -202,20 +106,7 @@ ImageImpl::size_allocate (Allocation area, bool changed)
 void
 ImageImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  return_unless (image_backend_ != NULL);
-  // figure image size
-  const Rect &area = allocation();
-  const Requisition irq = image_backend_->image_size();
-  Rect view;
-  view.width = MIN (irq.width, area.width);
-  view.height = MIN (irq.height, area.height);
-  // position image
-  const PackInfo &pi = pack_info();
-  view.x = area.x + iround (pi.halign * (area.width - view.width));
-  view.y = area.y + iround (pi.valign * (area.height - view.height));
-  // render image into cairo_context
-  const auto mkcontext = [&] (const Rect &crect) { return cairo_context (rcontext, crect); };
-  image_backend_->render_image (mkcontext, rect, view);
+  paint_image (image_backend_, rcontext, rect);
 }
 
 static const WidgetFactory<ImageImpl> image_factory ("Rapicorn_Factory:Image");
@@ -280,5 +171,92 @@ get_broken16_pixdata (void)
     };
   return broken16_pixdata;
 }
+
+
+// == StatePainterImpl ==
+void
+StatePainterImpl::source (const String &resource)
+{
+  return_unless (source_ != resource);
+  source_ = resource;
+  element_image_ = NULL;
+  state_image_ = NULL;
+  state_element_ = "";
+  invalidate();
+  changed ("source");
+}
+
+void
+StatePainterImpl::element (const String &e)
+{
+  return_unless (element_ != e);
+  element_ = e;
+  element_image_ = NULL;
+  state_image_ = NULL;
+  state_element_ = "";
+  invalidate();
+  changed ("element");
+}
+
+String
+StatePainterImpl::current_element ()
+{
+  StateType s = ancestry_impressed() ? STATE_IMPRESSED : state(); // FIXME: priority for insensitive?
+  switch (s)
+    {
+    case STATE_NORMAL:          return normal_element_.empty()      ? element_ : normal_element_;
+    case STATE_INSENSITIVE:     return insensitive_element_.empty() ? element_ : insensitive_element_;
+    case STATE_PRELIGHT:        return prelight_element_.empty()    ? element_ : prelight_element_;
+    case STATE_IMPRESSED:       return impressed_element_.empty()   ? element_ : impressed_element_;
+    case STATE_FOCUS:           return focus_element_.empty()       ? element_ : focus_element_;
+    case STATE_DEFAULT:         return default_element_.empty()     ? element_ : default_element_;
+    default:                    return element_;
+    }
+}
+
+void
+StatePainterImpl::update_element (String &member, const String &value, const char *name)
+{
+  return_unless (member != value);
+  const String previous = current_element();
+  member = value;
+  if (previous != current_element())
+    invalidate (INVALID_CONTENT);
+  changed (name);
+}
+
+void
+StatePainterImpl::size_request (Requisition &requisition)
+{
+  if (!element_image_)
+    element_image_ = load_source (source_, element_);
+  requisition = get_image_size (element_image_);
+}
+
+void
+StatePainterImpl::size_allocate (Allocation area, bool changed)
+{} // default: allocation_ = area;
+
+void
+StatePainterImpl::do_changed (const String &name)
+{
+  ImageRendererImpl::do_changed (name);
+  if (name == "state" && state_element_ != current_element())
+    invalidate (INVALID_CONTENT);
+}
+
+void
+StatePainterImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  const String current = current_element();
+  if (!state_image_ || state_element_ != current)
+    {
+      state_image_ = load_source (source_, current);
+      state_element_ = state_image_ ? current : "";
+    }
+  paint_image (state_image_, rcontext, rect);
+}
+
+static const WidgetFactory<StatePainterImpl> state_painter_factory ("Rapicorn_Factory:StatePainter");
 
 } // Rapicorn

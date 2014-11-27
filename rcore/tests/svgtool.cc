@@ -226,6 +226,176 @@ test_convert_svg2png()
 }
 REGISTER_LOGTEST ("SVG/svg2png", test_convert_svg2png);
 
+typedef Svg::Span Span;
+
+template<size_t N> static void
+print_spans (const char *prefix, Span (&spans)[N])
+{
+  printout ("%s", prefix);
+  for (size_t i = 0; i < N; i++)
+    printout (" { %zu, %zu }", spans[i].length, spans[i].resizable);
+  printout ("\n");
+}
+
+template<size_t N, size_t M> static bool
+assert_spans (Span (&spans)[N], Span (&expect)[M])
+{
+  assert (N == M);
+  for (size_t i = 0; i < N; i++)
+    if (spans[i].length != expect[i].length)
+      {
+        printerr ("FAIL: span %zu: { %zu, %zu } != { %zu, %zu }\n", i,
+                  spans[i].length, spans[i].resizable, expect[i].length, expect[i].resizable);
+        assert (spans[i].length == expect[i].length);
+      }
+  return true;
+}
+
+static void
+test_distribute_spans()
+{
+  // resizable: 0=const, 1=shrink, 2=expand, 3=expand+shrink
+  { // simple expansion
+    Span spans[3] = { { 3, 0 }, { 2, 1 }, { 4, 0 }, };
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, 7, 1);
+    Span expct[3] = { { 3, 0 }, { 9, 1 }, { 4, 0 }, };
+    assert (r == 0 && assert_spans (spans, expct));
+  }
+  { // complex expansion
+    Span spans[11] = { { 0, 0 }, { 1, 1 },
+                       { 10, 2 }, { 13, 3 },
+                       { 2, 2 }, { 1, 1 }, { 20, 2 },
+                       { 11, 3 }, { 12, 2 },
+                       { 1, 1 }, { 0, 0 }, };
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, 6 * 3 + 1 + 1, 2);
+    Span expct[11] = { { 0, 0 }, { 1, 1 },
+                       { 10 +3, 2 }, { 13 +3, 3 },
+                       { 2 +3+1, 2 }, { 1, 1 }, { 20 +3+1, 2 },
+                       { 11 +3, 3 }, { 12 +3, 2 },
+                       { 1, 1 }, { 0, 0 }, };
+    assert (r == 0 && assert_spans (spans, expct));
+  }
+  { // simple shrinking
+    Span spans[3] = { { 3, 0 }, { 2, 1 }, { 4, 0 }, };
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, -7, 1);
+    Span expct[3] = { { 3, 0 }, { 0, 1 }, { 4, 0 }, };
+    assert (r == -5 && assert_spans (spans, expct));
+  }
+  { // complex shrinking
+    Span spans[11] = { { 0, 0 }, { 1, 1 },
+                       { 10, 2 }, { 13, 3 },
+                       { 2, 2 }, { 1, 1 }, { 20, 2 },
+                       { 11, 3 }, { 12, 2 },
+                       { 1, 1 }, { 0, 0 }, };
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, 6 * -5, 2);
+    Span expct[11] = { { 0, 0 }, { 1, 1 },
+                       { 10 -5, 2 }, { 13 -5-1, 3 },
+                       { 2 -2, 2 }, { 1, 1 }, { 20 -5-1, 2 },
+                       { 11 -5-1, 3 }, { 12 -5, 2 },
+                       { 1, 1 }, { 0, 0 }, };
+    assert (r == 0 && assert_spans (spans, expct));
+  }
+  { // big shrink amounts
+    Span spans[3] = { { 100, 0 }, { 200, 1 }, { 100, 0 } };
+    assert (-777 == Span::distribute (ARRAY_SIZE (spans), spans, -777, 99));
+    int64 r = Span::distribute (ARRAY_SIZE (spans), spans, -350, 0);
+    Span expct[3] = { { 0, 0 }, { 50, 1 }, { 0, 0 } };
+    assert (r == 0 && assert_spans (spans, expct));
+    if (0)
+      print_spans ("Result:", spans);
+  }
+}
+REGISTER_TEST ("SVG/Distribute Spans", test_distribute_spans);
+
+static const char *test_svg =
+  "<svg xmlns='http://www.w3.org/2000/svg' width='3' height='3'>\n"
+  "<g id='all'>\n"
+  "<rect width='1' height='1' x='0' y='0' style='fill:#ff0000' id='red'/>\n"
+  "<rect width='1' height='1' x='1' y='0' style='fill:#00ff00' id='green'/>\n"
+  "<rect width='1' height='1' x='2' y='0' style='fill:#0000ff' id='blue'/>\n"
+  "<rect width='1' height='1' x='0' y='1' style='fill:#808080' id='grey'/>\n"
+  "<rect width='1' height='1' x='1' y='1' style='fill:#000000' id='black'/>\n"
+  "<rect width='1' height='1' x='2' y='1' style='fill:#000000;fill-opacity:0.5' id='transparent'/>\n"
+  "<rect width='1' height='1' x='0' y='2' style='fill:#ffff00' id='yellow'/>\n"
+  "<rect width='1' height='1' x='1' y='2' style='fill:#ff00ff' id='magenta'/>\n"
+  "<rect width='1' height='1' x='2' y='2' style='fill:#00ffff' id='cyan'/>\n"
+  "</g>\n"
+  "</svg>\n";
+
+static void
+test_svg_rendering()
+{
+  // create SVG
+  char filename[32] = "/tmp/testsvg.XXXXXX\0";
+  int svgfd = mkstemp (filename);
+  assert (svgfd >= 0);
+  ssize_t l = write (svgfd, test_svg, strlen (test_svg));
+  assert (l == (ssize_t) strlen (test_svg));
+  l = close (svgfd);
+  assert (l == 0);
+  svgfd = -1;
+  // load SVG and find root element
+  Svg::FileP svgfile = Svg::File::load (filename);
+  assert (errno == 0 && svgfile != NULL);
+  l = unlink (filename);
+  assert (l == 0);
+  Svg::ElementP ele = svgfile->lookup ("#all");
+  assert (ele != NULL);
+  // render at original size
+  Svg::Span hspans[3] = { { 1, 0 }, { 1, 1 }, { 1, 0 } };
+  Svg::Span vspans[3] = { { 1, 0 }, { 1, 1 }, { 1, 0 } };
+  cairo_surface_t *s0 = ele->stretch (3, 3, ARRAY_SIZE (hspans), hspans, ARRAY_SIZE (vspans), vspans);
+  assert (s0 && CAIRO_STATUS_SUCCESS == cairo_surface_status (s0));
+  cairo_format_t format = cairo_image_surface_get_format (s0);
+  uint8 *data = cairo_image_surface_get_data (s0);
+  assert (format == CAIRO_FORMAT_ARGB32 && data);
+  int w = cairo_image_surface_get_width (s0);
+  int h = cairo_image_surface_get_height (s0);
+  int stride = cairo_image_surface_get_stride (s0);
+  assert (w == 3 && h == 3 && stride == w * 4);
+  // check pixels at 3x3
+  auto pix = [&] (int x, int y) { return ((const uint32*) data)[x + stride * y / 4]; };
+  assert (pix (0, 0) == 0xffff0000); // red
+  assert (pix (1, 0) == 0xff00ff00); // green
+  assert (pix (2, 0) == 0xff0000ff); // blue
+  assert (pix (0, 1) == 0xff808080); // grey
+  assert (pix (1, 1) == 0xff000000); // black
+  assert (pix (2, 1) == 0x80000000); // transparent
+  assert (pix (0, 2) == 0xffffff00); // yellow
+  assert (pix (1, 2) == 0xffff00ff); // magenta
+  assert (pix (2, 2) == 0xff00ffff); // cyan
+  // render stretched, interpolate NEAREST to allow pixel assertions
+  cairo_surface_t *s1 = ele->stretch (4, 5, ARRAY_SIZE (hspans), hspans, ARRAY_SIZE (vspans), vspans, CAIRO_FILTER_NEAREST);
+  assert (s1 && CAIRO_STATUS_SUCCESS == cairo_surface_status (s1));
+  format = cairo_image_surface_get_format (s1);
+  data = cairo_image_surface_get_data (s1);
+  assert (format == CAIRO_FORMAT_ARGB32 && data);
+  w = cairo_image_surface_get_width (s1);
+  h = cairo_image_surface_get_height (s1);
+  stride = cairo_image_surface_get_stride (s1);
+  assert (w == 4 && h == 5 && stride == w * 4);
+  // check pixels at 5x4
+  assert (pix (0, 0) == 0xffff0000); // red
+  assert (pix (1, 0) == 0xff00ff00); // green
+  assert (pix (2, 0) == 0xff00ff00); // green
+  assert (pix (3, 0) == 0xff0000ff); // blue
+  for (size_t i = 1; i < 4; i++)
+    {
+      assert (pix (0, i) == 0xff808080); // grey
+      assert (pix (1, i) == 0xff000000); // black
+      assert (pix (2, i) == 0xff000000); // black
+      assert (pix (3, i) == 0x80000000); // transparent
+    }
+  assert (pix (0, 4) == 0xffffff00); // yellow
+  assert (pix (1, 4) == 0xffff00ff); // magenta
+  assert (pix (2, 4) == 0xffff00ff); // magenta
+  assert (pix (3, 4) == 0xff00ffff); // cyan
+  // cleanup
+  cairo_surface_destroy (s1);
+  cairo_surface_destroy (s0);
+}
+REGISTER_TEST ("SVG/Rendering Test", test_svg_rendering);
+
 #if 0
 static void
 test_convert_png2ascii()

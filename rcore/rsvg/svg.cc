@@ -17,18 +17,6 @@
  * - ACAD:     X to right, Y upwards.
  */
 
-static double
-affine_x (const double x, const double y, const double affine[6])
-{
-  return affine[0] * x + affine[2] * y + affine[4];
-}
-
-static double
-affine_y (const double x, const double y, const double affine[6])
-{
-  return affine[1] * x + affine[3] * y + affine[5];
-}
-
 namespace Rapicorn {
 
 /// @namespace Rapicorn::Svg The Rapicorn::Svg namespace provides functions for handling and rendering of SVG files and elements.
@@ -41,6 +29,12 @@ BBox::BBox () :
 BBox::BBox (double _x, double _y, double w, double h) :
   x (_x), y (_y), width (w), height (h)
 {}
+
+String
+BBox::to_string ()
+{
+  return string_format ("%.7g,%.7g,%.7g,%.7g", x, y, width, height);
+}
 
 struct ElementImpl : public Element {
   String        id_;
@@ -272,10 +266,178 @@ FileImpl::lookup (const String &elementid)
 static void
 init_svg_lib (const StringVector &args)
 {
-  g_type_init(); // NOP on subsequent invocations
   File::add_search_dir (RAPICORN_SVGDIR);
 }
 static InitHook _init_svg_lib ("core/35 Init SVG Lib", init_svg_lib);
+
+// == Span ==
+/** Distribute @a amount across the @a length fields of all @a spans.
+ * Increase (or decrease in case of a negative @a amount) the @a lentgh
+ * of all @a resizable @a spans to distribute @a amount most equally.
+ * Spans are considered resizable if the @a resizable field is >=
+ * @a resizable_level.
+ * Precedence will be given to spans in the middle of the list.
+ * If @a amount is negative, each span will only be shrunk up to its
+ * existing length, the rest is evenly distributed among the remaining
+ * shrnkable spans. If no spans are left to be resized,
+ * the remaining @a amount is be returned.
+ * @return Reminder of @a amount that could not be distributed.
+ */
+ssize_t
+Span::distribute (const size_t n_spans, Span *spans, ssize_t amount, size_t resizable_level)
+{
+  if (n_spans == 0 || amount == 0)
+    return amount;
+  assert (spans);
+  // distribute amount
+  if (amount > 0)
+    {
+      // sort expandable spans by mid-point distance with right-side bias for odd amounts
+      size_t n = 0;
+      Span *rspans[n_spans];
+      for (size_t j = 0; j < n_spans; j++) // helper index, i does outwards indexing
+        {
+          const size_t i = outwards_index (j, n_spans, true);
+          if (spans[i].resizable >= resizable_level) // considered resizable
+            rspans[n++] = &spans[i];
+        }
+      if (!n)
+        return amount;
+      // expand in equal shares
+      const size_t delta = amount / n;
+      if (delta)
+        for (size_t i = 0; i < n; i++)
+          rspans[i]->length += delta;
+      amount -= delta * n;
+      // spread remainings
+      for (size_t i = 0; i < n && amount; i++, amount--)
+        rspans[i]->length += 1;
+    }
+  else /* amount < 0 */
+    {
+      // sort shrinkable spans by mid-point distance with right-side bias for odd amounts
+      size_t n = 0;
+      Span *rspans[n_spans];
+      for (size_t j = 0; j < n_spans; j++) // helper index, i does outwards indexing
+        {
+          const size_t i = outwards_index (j, n_spans, true);
+          if (spans[i].resizable >= resizable_level &&  // considered resizable
+              spans[i].length > 0)                      // and shrinkable
+            rspans[n++] = &spans[i];
+        }
+      // shrink in equal shares
+      while (n && amount)
+        {
+          // shrink spans within length limits
+          const size_t delta = -amount / n;
+          if (delta == 0)
+            break;                              // delta < 1 per span
+          size_t m = 0;
+          for (size_t i = 0; i < n; i++)
+            {
+              const size_t adjustable = std::min (rspans[i]->length, delta);
+              rspans[i]->length -= adjustable;
+              amount += adjustable;
+              if (rspans[i]->length)
+                rspans[m++] = rspans[i];        // retain shrinkable spans
+            }
+          n = m;                                // discard non-shrinkable spans
+        }
+      // spread remainings
+      for (size_t i = 0; i < n && amount; i++, amount++)
+        rspans[i]->length -= 1;
+    }
+  return amount;
+}
+
+///< Render a stretched image by resizing horizontal/vertical parts (spans).
+cairo_surface_t*
+Element::stretch (const size_t image_width, const size_t image_height,
+                  const size_t n_hspans, const Span *svg_hspans,
+                  const size_t n_vspans, const Span *svg_vspans,
+                  cairo_filter_t filter)
+{
+  assert_return (image_width > 0 && image_height > 0, NULL);
+  // setup SVG element sizes
+  const BBox bb = bbox();
+  const size_t svg_width = bb.width + 0.5, svg_height = bb.height + 0.5;
+  // copy and distribute spans to match image size
+  Span image_hspans[n_hspans], image_vspans[n_vspans];
+  ssize_t span_sum = 0;
+  for (size_t i = 0; i < n_hspans; i++)
+    {
+      image_hspans[i] = svg_hspans[i];
+      span_sum += svg_hspans[i].length;
+    }
+  assert_return (span_sum == bb.width, NULL);
+  ssize_t hremain = Span::distribute (n_hspans, image_hspans, image_width - svg_width, 1);
+  if (hremain < 0)
+    hremain = Span::distribute (n_hspans, image_hspans, hremain, 0); // shrink *any* segment
+  critical_unless (hremain == 0);
+  span_sum = 0;
+  for (size_t i = 0; i < n_vspans; i++)
+    {
+      image_vspans[i] = svg_vspans[i];
+      span_sum += svg_vspans[i].length;
+    }
+  assert_return (span_sum == bb.height, NULL);
+  ssize_t vremain = Span::distribute (n_vspans, image_vspans, image_height - svg_height, 1);
+  if (vremain < 0)
+    vremain = Span::distribute (n_vspans, image_vspans, vremain, 0); // shrink *any* segment
+  critical_unless (vremain == 0);
+  // render SVG image into svg_surface at original size
+  cairo_surface_t *svg_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, svg_width, svg_height);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (svg_surface), NULL);
+  const bool svg_rendered = render (svg_surface, Svg::RenderSize::STATIC, 1, 1);
+  critical_unless (svg_rendered == true);
+  // render svg_surface at image size by stretching resizable spans
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, image_width, image_height);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface), NULL);
+  cairo_t *cr = cairo_create (surface);
+  critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
+  ssize_t svg_voffset = 0, vspan_offset = 0;
+  for (size_t v = 0; v < n_vspans; v++)
+    {
+      if (image_vspans[v].length <= 0)
+        {
+          svg_voffset += svg_vspans[v].length;
+          continue;
+        }
+      ssize_t svg_hoffset = 0, hspan_offset = 0;
+      for (size_t h = 0; h < n_hspans; h++)
+        {
+          if (image_hspans[h].length <= 0)
+            {
+              svg_hoffset += svg_hspans[h].length;
+              continue;
+            }
+          cairo_set_source_surface (cr, svg_surface, 0, 0); // (ix,iy) are set in the matrix below
+          cairo_matrix_t matrix;
+          cairo_matrix_init_translate (&matrix, svg_hoffset, svg_voffset); // adjust image origin
+          const double xscale = svg_hspans[h].length / double (image_hspans[h].length);
+          const double yscale = svg_vspans[v].length / double (image_vspans[v].length);
+          if (xscale != 1.0 || yscale != 1.0)
+            {
+              cairo_matrix_scale (&matrix, xscale, yscale);
+              cairo_pattern_set_filter (cairo_get_source (cr), filter);
+            }
+          cairo_matrix_translate (&matrix, - hspan_offset, - vspan_offset); // shift image fragment into position
+          cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+          cairo_rectangle (cr, hspan_offset, vspan_offset, image_hspans[h].length, image_vspans[v].length);
+          cairo_clip (cr);
+          cairo_paint (cr);
+          cairo_reset_clip (cr);
+          hspan_offset += image_hspans[h].length;
+          svg_hoffset += svg_hspans[h].length;
+        }
+      vspan_offset += image_vspans[v].length;
+      svg_voffset += svg_vspans[v].length;
+    }
+  // cleanup
+  cairo_destroy (cr);
+  cairo_surface_destroy (svg_surface);
+  return surface;
+}
 
 } // Svg
 } // Rapicorn

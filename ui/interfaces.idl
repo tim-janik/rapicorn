@@ -1,5 +1,4 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-//                                                      -*-mode:c++;-*-
 
 /**
  * @file
@@ -522,19 +521,30 @@ interface Drawable : Widget {
   void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
 };
 
+/// The LayerPainter container allows rendering widgets on top of each other.
+/// See also the corresponding implementation class LayerPainterImpl.
+interface LayerPainter : Container {
+};
+
 /// Image widgets are used to display pixel or vector images.
 /// See also the corresponding implementation class ImageImpl.
 interface Image : Widget {
   String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
+  String 	element = String (_("Element"), _("Element ID within SVG files to be rendered."), "rw");
   Pixbuf        pixbuf;
 };
 
-/// Image class prototype for SVG display.
-/// See also the corresponding implementation class ImageFrameImpl.
-/// @EXPERIMENTAL: ImageFrame will be merged into Image.
-interface ImageFrame : Container {
-  String element       = String (_("Element"), _("The SVG element ID to be rendered."), "rw");
-  bool   overlap_child = Bool (_("Overlap Child"), _("Draw child on top of container area."), "rw");
+/// The StatePainter widget displays state dependent SVG image elements.
+/// See also the corresponding implementation class StatePainterImpl.
+interface StatePainter : Widget {
+  String source              = String (_("Source URL"), _("Resource to load an SVG image from."), "rw");
+  String element             = String (_("Element"), _("SVG Element ID to be rendered."), "rw");
+  String normal_element      = String (_("Element"), _("SVG Element ID for STATE_NORMAL."), "rw");
+  String prelight_element    = String (_("Element"), _("SVG Element ID for STATE_PRELIGHT."), "rw");
+  String impressed_element   = String (_("Element"), _("SVG Element ID for STATE_IMPRESSED."), "rw");
+  String insensitive_element = String (_("Element"), _("SVG Element ID for STATE_INSENSITIVE."), "rw");
+  String default_element     = String (_("Element"), _("SVG Element ID for STATE_DEFAULT."), "rw");
+  String focus_element       = String (_("Element"), _("SVG Element ID for STATE_FOCUS."), "rw");
 };
 
 /// A widget for text display.
@@ -662,3 +672,9 @@ interface TestContainer : Container {
 };
 
 } // Rapicorn
+
+/* Emacs settings (#Specifying-File-Variables):
+ * Local Variables:
+ * mode: c++
+ * End:
+ */

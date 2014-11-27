@@ -97,7 +97,19 @@ inline void breakpoint() { __asm__ __volatile__ ("bpt"); }
 inline void breakpoint() { __builtin_trap(); }
 #endif
 
-/* --- timestamp handling --- */
+// == Outwards Indexing ==
+// Generate iteration indexes from a loop's midpoint outwards, alternating sides.
+static inline constexpr size_t
+outwards_index (const size_t pos, const size_t max, const bool right_bias = false)
+{
+  return (right_bias
+          ? (max & 1 || pos + 1 < max // even numbered max needs upper bound guard
+             ? ssize_t (max / 2) - ssize_t (pos + 1) / 2 * ((ssize_t (pos) & 1) * -2 + 1)
+             : 0)
+          :    ssize_t (max / 2) + ssize_t (pos + 1) / 2 * ((ssize_t (pos) & 1) * -2 + 1));
+}
+
+// == Timestamp Handling ==
 uint64  timestamp_startup    ();        // µseconds
 uint64  timestamp_realtime   ();        // µseconds
 uint64  timestamp_benchmark  ();        // nseconds

@@ -329,4 +329,93 @@ test_loop_priorities (void)
 }
 REGISTER_TEST ("Loops/Test Loop Priorities", test_loop_priorities);
 
+static void
+test_outwards_indexing()
+{
+  String r;
+  // outwards_index left-bias
+  r = "";
+  for (size_t max = 0, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, "");
+  r = "";
+  for (size_t max = 1, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 0");
+  r = "";
+  for (size_t max = 2, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 1 0");
+  r = "";
+  for (size_t max = 3, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 1 0 2");
+  r = "";
+  for (size_t max = 4, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 2 1 3 0");
+  r = "";
+  for (size_t max = 5, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 2 1 3 0 4");
+  r = "";
+  for (size_t max = 6, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 3 2 4 1 5 0");
+  r = "";
+  for (size_t max = 7, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 3 2 4 1 5 0 6");
+  r = "";
+  for (size_t max = 8, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 4 3 5 2 6 1 7 0");
+  r = "";
+  for (size_t max = 9, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, false));
+  TCMP (r, ==, " 4 3 5 2 6 1 7 0 8");
+  // outwards_index right-bias
+  r = "";
+  for (size_t max = 0, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, "");
+  r = "";
+  for (size_t max = 1, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 0");
+  r = "";
+  for (size_t max = 2, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 1 0");
+  r = "";
+  for (size_t max = 3, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 1 2 0");
+  r = "";
+  for (size_t max = 4, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 2 3 1 0");
+  r = "";
+  for (size_t max = 5, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 2 3 1 4 0");
+  r = "";
+  for (size_t max = 6, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 3 4 2 5 1 0");
+  r = "";
+  for (size_t max = 7, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 3 4 2 5 1 6 0");
+  r = "";
+  for (size_t max = 8, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 4 5 3 6 2 7 1 0");
+  r = "";
+  for (size_t max = 9, i = 0; i < max; i++)
+    r += string_format (" %u", outwards_index (i, max, true));
+  TCMP (r, ==, " 4 5 3 6 2 7 1 8 0");
+}
+REGISTER_TEST ("Loops/Outwards Indexing", test_outwards_indexing);
+
 } // anon
