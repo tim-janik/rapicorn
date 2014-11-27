@@ -33,6 +33,7 @@ typedef ImageRendererImpl::ImageBackend ImageBackend;
 struct ImageRendererImpl::ImageBackend {
   virtual            ~ImageBackend    () {}
   virtual Requisition image_size      () = 0;
+  virtual Allocation  fill_area       () = 0;
   virtual void        render_image    (const std::function<cairo_t* (const Rect&)> &mkcontext,
                                        const Rect &render_rect, const Rect &image_rect) = 0;
 };
@@ -47,6 +48,11 @@ public:
   image_size ()
   {
     return Requisition (pixmap_.width(), pixmap_.height());
+  }
+  virtual Allocation
+  fill_area ()
+  {
+    return Allocation (0, 0, pixmap_.width(), pixmap_.height());
   }
   virtual void
   render_image (const std::function<cairo_t* (const Rect&)> &mkcontext, const Rect &render_rect, const Rect &image_rect)
@@ -71,35 +77,48 @@ public:
 };
 
 struct SvgBackend : public virtual ImageBackend {
-  Svg::FileP    svgf_;
-  Svg::ElementP svge_;
+  Svg::FileP      svgf_;
+  Svg::ElementP   svge_;
+  const Rect      fill_;
   const Svg::Span hscale_spans_[3], vscale_spans_[3];
 public:
-  SvgBackend (Svg::FileP svgf, Svg::ElementP svge, const Svg::Span (&hscale_spans)[3], const Svg::Span (&vscale_spans)[3]) :
-    svgf_ (svgf), svge_ (svge), hscale_spans_ (hscale_spans), vscale_spans_ (vscale_spans)
+  SvgBackend (Svg::FileP svgf, Svg::ElementP svge, const Svg::Span (&hscale_spans)[3],
+              const Svg::Span (&vscale_spans)[3], const Rect &fill_rect) :
+    svgf_ (svgf), svge_ (svge), fill_ (fill_rect), hscale_spans_ (hscale_spans), vscale_spans_ (vscale_spans)
   {
-    SVGDEBUG ("SvgImage: id=%s hscale_spans={ l=%u r=%u, l=%u r=%u, l=%u r=%u } vscale_spans={ l=%u r=%u, l=%u r=%u, l=%u r=%u }",
+    SVGDEBUG ("SvgImage: id=%s hspans={ l=%u r=%u, l=%u r=%u, l=%u r=%u } vspans={ l=%u r=%u, l=%u r=%u, l=%u r=%u } fill=%s",
               svge_->info().id,
               hscale_spans_[0].length, hscale_spans_[0].resizable,
               hscale_spans_[1].length, hscale_spans_[1].resizable,
               hscale_spans_[2].length, hscale_spans_[2].resizable,
               vscale_spans_[0].length, vscale_spans_[0].resizable,
               vscale_spans_[1].length, vscale_spans_[1].resizable,
-              vscale_spans_[2].length, vscale_spans_[2].resizable);
+              vscale_spans_[2].length, vscale_spans_[2].resizable,
+              fill_.string());
+    const Svg::BBox bb = svge_->bbox();
     size_t hsum = 0;
     for (size_t i = 0; i < ARRAY_SIZE (hscale_spans_); i++)
       hsum += hscale_spans_[i].length;
-    critical_unless (hsum == svge_->bbox().width);
+    critical_unless (hsum == bb.width);
     size_t vsum = 0;
     for (size_t i = 0; i < ARRAY_SIZE (vscale_spans_); i++)
       vsum += vscale_spans_[i].length;
-    critical_unless (vsum == svge_->bbox().height);
+    critical_unless (vsum == bb.height);
+    critical_unless (fill_.x >= 0 && fill_.x < bb.width);
+    critical_unless (fill_.x + fill_.width <= bb.width);
+    critical_unless (fill_.y >= 0 && fill_.y < bb.height);
+    critical_unless (fill_.y + fill_.height <= bb.height);
   }
   virtual Requisition
   image_size ()
   {
     const auto bbox = svge_->bbox();
     return Requisition (bbox.width, bbox.height);
+  }
+  virtual Allocation
+  fill_area ()
+  {
+    return fill_;
   }
   virtual void
   render_image (const std::function<cairo_t* (const Rect&)> &mkcontext, const Rect &render_rect, const Rect &image_rect)
@@ -146,6 +165,7 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
       if (svge)
         {
           const Svg::BBox ibox = svge->bbox();
+          Rect fill { 0, 0, ibox.width, ibox.height };
           Svg::Span hscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
           hscale_spans[1].length = ibox.width;
           hscale_spans[1].resizable = 1;
@@ -184,12 +204,30 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
                 }
               auxe = svgf->lookup (element_id + ".hfill");
               if (auxe)
-                SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                {
+                  const Svg::BBox bbox = auxe->bbox();
+                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                  const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
+                  if (bx1 < bx2)
+                    {
+                      fill.x = bx1 - ix1;
+                      fill.width = bx2 - bx1;
+                    }
+                }
               auxe = svgf->lookup (element_id + ".vfill");
               if (auxe)
-                SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                {
+                  const Svg::BBox bbox = auxe->bbox();
+                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                  const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
+                  if (by1 < by2)
+                    {
+                      fill.y = by1 - iy1;
+                      fill.height = by2 - by1;
+                    }
+                }
             }
-          image_backend = std::make_shared<SvgBackend> (svgf, svge, hscale_spans, vscale_spans);
+          image_backend = std::make_shared<SvgBackend> (svgf, svge, hscale_spans, vscale_spans, fill);
         }
     }
   else
@@ -210,21 +248,16 @@ ImageRendererImpl::load_pixmap (Pixmap pixmap)
   return image_backend;
 }
 
-void
-ImageRendererImpl::get_image_size (const ImageBackendP &image_backend, Requisition &image_size)
+Requisition
+ImageRendererImpl::get_image_size (const ImageBackendP &image_backend)
 {
-  image_size = image_backend ? image_backend->image_size() : Requisition();
+  return image_backend ? image_backend->image_size() : Requisition();
 }
 
-void
-ImageRendererImpl::get_fill_area (const ImageBackendP &image_backend, Allocation &fill_area)
+Allocation
+ImageRendererImpl::get_fill_area (const ImageBackendP &image_backend)
 {
-  Requisition image_size;
-  get_image_size (image_backend, image_size);
-  fill_area.x = 0;
-  fill_area.y = 0;
-  fill_area.width = image_size.width;
-  fill_area.height = image_size.height;
+  return image_backend ? image_backend->fill_area() : Allocation();
 }
 
 void

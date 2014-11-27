@@ -92,8 +92,7 @@ ImageImpl::stock() const
 void
 ImageImpl::size_request (Requisition &requisition)
 {
-  Requisition irq;
-  get_image_size (image_backend_, irq);
+  const Requisition irq = get_image_size (image_backend_);
   requisition.width += irq.width;
   requisition.height += irq.height;
 }
@@ -231,7 +230,7 @@ StatePainterImpl::size_request (Requisition &requisition)
 {
   if (!element_image_)
     element_image_ = load_source (source_, element_);
-  get_image_size (element_image_, requisition);
+  requisition = get_image_size (element_image_);
 }
 
 void
