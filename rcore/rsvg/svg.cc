@@ -413,8 +413,7 @@ Element::stretch (const size_t image_width, const size_t image_height,
             }
           cairo_set_source_surface (cr, svg_surface, 0, 0); // (ix,iy) are set in the matrix below
           cairo_matrix_t matrix;
-          cairo_matrix_init_identity (&matrix); // FIXME: init_trans?
-          cairo_matrix_translate (&matrix, svg_hoffset, svg_voffset); // adjust image origin
+          cairo_matrix_init_translate (&matrix, svg_hoffset, svg_voffset); // adjust image origin
           const double xscale = svg_hspans[h].length / double (image_hspans[h].length);
           const double yscale = svg_vspans[v].length / double (image_vspans[v].length);
           if (xscale != 1.0 || yscale != 1.0)
