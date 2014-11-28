@@ -69,7 +69,7 @@ print_uchar (Config *config,
       printf ("\\\"");
       config->pos += 2;
     }
-  else if (d < 33 || d > 126 || d == '?')
+  else if (d < 32 || d > 126 || d == '?')
     {
       printf ("\\%o", d);
       config->pos += 1 + 1 + (d > 7) + (d > 63);
