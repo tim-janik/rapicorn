@@ -9,9 +9,9 @@ streq = $(and $(findstring $(1),$(2)),$(findstring $(2),$(1)))
 NEW_FILE_LIST = $(filter-out Makefile%, $(wildcard */* *))
 Makefile.res: @INGIT@ $(if $(call streq, $(NEW_FILE_LIST), $(RES_FILE_LIST)),, Makefile.tmp)
 	$(AM_V_GEN)
-	@mv Makefile.tmp $@
+	$(Q) mv Makefile.tmp $@
 Makefile.tmp: # MAKE(1) only remakes+rereads Makefiles with prerequisites (Remaking Makefiles)
-	@echo "RES_FILE_LIST = $(NEW_FILE_LIST)" > $@
+	$(Q) echo "RES_FILE_LIST = $(NEW_FILE_LIST)" > $@
 noinst_DATA = Makefile.res
 
 # == Ship Resource Files ==
