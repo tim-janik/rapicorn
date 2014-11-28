@@ -71,6 +71,7 @@ AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 AM_INIT_AUTOMAKE(tar-pax no-define)
 AC_PROG_MAKE_SET        dnl # support subdirectories.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+mk= ; AC_SUBST([mk]) # workaround for Automake abusing MAKE(1) keywords
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes] turn on debugging, default=yes],,enable_debug=yes)
