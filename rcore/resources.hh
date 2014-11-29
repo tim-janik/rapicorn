@@ -27,6 +27,14 @@ public:
   static Blob  from   (const String &blob_string);      ///< Create a Blob containing @a blob_string.
 };
 
+// == Res ==
+/// Res provides access to resource files at runtime.
+class Res {
+public:
+  static Blob   raw     (const String &res_path);       ///< Retrieve a raw resource file.
+};
+extern const Res &Res;  ///< Res singleton enables simple call syntax: Res.raw().
+
 // == Resource Macros ==
 
 /// Statically declare a ResourceBlob data variable.

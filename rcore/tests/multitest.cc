@@ -618,7 +618,7 @@ static void // Access a previously declared resource from anywhere within a prog
 access_text_resources ()
 {
   // Load a Blob from "tests/text_resource.txt"
-  Blob blob = Blob::load ("res:tests/text_resource.txt");
+  Blob blob = Res.raw ("@res tests/text_resource.txt");
   assert (blob.size() > 0); // Verify lookup success.
 
   // Access the Blob as string (automatically strips trailing 0s).
@@ -626,7 +626,7 @@ access_text_resources ()
   assert (text == "Alpha Beta Gamma"); // Verify its contents.
 
   // Load the other defined "tests/digit_resource.txt" blob.
-  blob = Blob::load ("res:tests/digit_resource.txt");
+  blob = Res.raw ("@res tests/digit_resource.txt");
 
   // Access Blob size and data,
   assert (10 == blob.size() && 0 == strcmp (blob.data(), "0123456789"));

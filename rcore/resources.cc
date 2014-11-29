@@ -11,6 +11,17 @@
 
 namespace Rapicorn {
 
+// == Res ==
+Blob
+Res::raw (const String &res_path)
+{
+  if (string_startswith (res_path, "@res "))
+    return Blob::load ("res:" + String (res_path.c_str() + 5));
+  BDEBUG ("Res.raw(): invalid raw resource path: %s", res_path);
+  errno = ENOENT;
+  return Blob();
+}
+
 // == BlobResource ==
 struct BlobResource {
   virtual String        name            () = 0;
