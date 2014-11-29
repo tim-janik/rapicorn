@@ -23,9 +23,9 @@ static void
 init_stock_lib (const StringVector &args)
 {
   const ScopedLock<Mutex> sl (stock_mutex);
-  StockFile std_stock_file (Blob::load ("res:rapicorn/stock.ini"));
+  StockFile std_stock_file (Res.raw ("@res stock.ini"));
   if (!std_stock_file.ini_file().has_sections())
-    fatal ("failed to load builtin: %s", "res:rapicorn/stock.ini");
+    fatal ("failed to load builtin: %s", "Rapicorn/stock.ini");
   stock_files.push_back (std_stock_file);
 }
 static InitHook _init_stock_lib ("core/50 Init Stock Lib", init_stock_lib);
@@ -38,9 +38,10 @@ Stock::stock_image (const String &stock_id)
     {
       String s = sf.stock_string (stock_id, "image");
       if (!s.empty())
-        return Blob::load (sf.file_path (s));
+        return Res ("@res " + sf.file_path (s));
     }
-  return Blob::load (""); // ENOENT
+  errno = ENOENT;
+  return Blob();
 }
 
 String /// Retrieve the @a key attribute of @a stock_id as a string.

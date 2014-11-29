@@ -897,17 +897,12 @@ initialize_factory_lazily (void)
 {
   do_once
     {
-      uint8 *data;
       const char *domain = "Rapicorn";
       Factory::force_ui_namespace_use (domain);
-      data = zintern_decompress (FOUNDATION_XML_SIZE, FOUNDATION_XML_DATA,
-                                 sizeof (FOUNDATION_XML_DATA) / sizeof (FOUNDATION_XML_DATA[0]));
-      Factory::parse_ui_data_internal (domain, FOUNDATION_XML_NAME, FOUNDATION_XML_SIZE, (const char*) data, "", NULL);
-      zintern_free (data);
-      data = zintern_decompress (STANDARD_XML_SIZE, STANDARD_XML_DATA,
-                                 sizeof (STANDARD_XML_DATA) / sizeof (STANDARD_XML_DATA[0]));
-      Factory::parse_ui_data_internal (domain, STANDARD_XML_NAME, STANDARD_XML_SIZE, (const char*) data, "", NULL);
-      zintern_free (data);
+      Blob blob = Res.raw ("@res Rapicorn/foundation.xml");
+      Factory::parse_ui_data_internal (domain, "Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL);
+      blob = Res.raw ("@res Rapicorn/standard.xml");
+      Factory::parse_ui_data_internal (domain, "Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL);
     }
 }
 
