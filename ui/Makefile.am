@@ -163,13 +163,8 @@ noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_GUI_LIBS) -lm
 
 # === XML Files ===
-XML_FILES   = foundation.xml standard.xml
-EXTRA_DIST += $(XML_FILES)
+XML_FILES = $(top_srcdir)/res/Rapicorn/foundation.xml $(top_srcdir)/res/Rapicorn/standard.xml
 xmllint-check:
-	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
+	$(XMLLINT) --noout $(XML_FILES)
 .PHONY: xmllint-check
-stamp-autochecks: $(XML_FILES)
-	@$(MAKE) xmllint-check
-	@touch $@
-noinst_DATA = stamp-autochecks
-CLEANFILES += stamp-autochecks
+check-local: xmllint-check
