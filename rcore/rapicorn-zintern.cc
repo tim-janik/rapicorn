@@ -147,7 +147,7 @@ gen_zfile (const char *name,
 	}
       dlen += fread (&vdata[dlen], 1, mlen - dlen, f);
     }
-  while (!feof (f));
+  while (!ferror (f) && !feof (f));
 
   if (ferror (f))
     zintern_error ("failed to read from \"%s\": %s", file, strerror (errno));
