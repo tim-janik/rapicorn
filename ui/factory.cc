@@ -892,11 +892,6 @@ parse_ui_data (const String &uinamespace, const String &data_name, size_t data_l
 
 } // Factory
 
-namespace { // Anon
-#include "../res/resources.cc" // various resource files
-#include "gen-zintern.c" // compressed foundation.xml & standard.xml
-} // Anon
-
 static void
 initialize_factory_lazily (void)
 {

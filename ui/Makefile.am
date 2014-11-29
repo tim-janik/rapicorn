@@ -173,11 +173,3 @@ stamp-autochecks: $(XML_FILES)
 	@touch $@
 noinst_DATA = stamp-autochecks
 CLEANFILES += stamp-autochecks
-
-# === ZIntern generation ===
-gen-zintern.c:	../rcore/rapicorn-zintern $(srcdir)/foundation.xml $(srcdir)/standard.xml stamp-autochecks
-	../rcore/rapicorn-zintern -b -z FOUNDATION_XML \
-	  $(srcdir)/foundation.xml STANDARD_XML $(srcdir)/standard.xml > xgen-$(@F)
-	mv xgen-$(@F) $@
-$(srcdir)/factory.cc: gen-zintern.c
-CLEANFILES += xgen-gen-zintern.c gen-zintern.c
