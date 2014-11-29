@@ -29,11 +29,10 @@ export VPATH	# needed by test programs to find builddir relative input files
 # == test resources ==
 ZINTERN     = $(abs_builddir)/../rapicorn-zintern
 RES_FILES   = sample1.svg
-RES_PAIRS   = $(foreach file, $(RES_FILES), test-files/$(notdir $(file)) $(file))
 EXTRA_DIST += $(RES_FILES)
 resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
 	$(AM_V_GEN)
-	$(Q) cd $(srcdir) && $(ZINTERN) -r $(RES_PAIRS) > $(abs_builddir)/xgen-$(@F)
+	$(Q) cd $(srcdir) && $(ZINTERN) -r $(RES_FILES) > $(abs_builddir)/xgen-$(@F)
 	$(Q) mv xgen-$(@F) $@
 EXTRA_DIST  += resources.cc
 CLEANFILES  += resources.cc

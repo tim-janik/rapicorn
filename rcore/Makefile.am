@@ -93,7 +93,7 @@ zintern-installcheck:
 	$(Q) cd . \
 	&& echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a' > xtmp-empty.dat \
 	; eval "$$TSTDIAGNOSE" "'Create zintern sample data'"
-	$(Q) $(bindir)/rapicorn-zintern -z -b xtmp-empty.dat xtmp-empty.dat > xtmp-empty.out \
+	$(Q) $(bindir)/rapicorn-zintern -z -b xtmp-empty.dat > xtmp-empty.out \
 	; eval "$$TSTDIAGNOSE" "'Run    rapicorn-zintern'"
 	$(Q) grep -q '"xtmp-empty.dat"' xtmp-empty.out \
 	; eval "$$TSTDIAGNOSE" "'Verify zintern output file name'"
