@@ -105,20 +105,6 @@ to_cupper (const String &str)
 }
 
 static String
-canonify (const String &string, const String &valid_chars, const String &substitute)
-{
-  const size_t l = string.size();
-  const char *p = string.c_str();
-  String d;
-  for (size_t i = 0; i < l; i++)
-    if (strchr (valid_chars.c_str(), p[i]))
-      d += p[i];
-    else
-      d += substitute;
-  return d;
-}
-
-static String
 base_name (const String &fname)
 {
   const char *name = fname.c_str();
@@ -127,17 +113,36 @@ base_name (const String &fname)
 }
 
 static void
-gen_zfile (const char *name,
-	   const char *file)
+gen_zfile (const String &file)
 {
+  // create nice resource path
+  String fname = use_base_name ? base_name (file) : file;
+  // strip ^[/.]
+  while (fname.size() && strchr ("/.", fname[0]))
+    fname.erase (fname.begin());
+  // create C identifier
+  String ident = fname;
+  // substitute [/.-] with _
+  for (size_t i = 0; i < ident.size(); i++)
+    if (strchr ("./-", ident[i]))
+      ident[i] = '_';
+  // check identifier chars
+  for (size_t i = 0; i < ident.size(); i++)
+    if ((ident[i] >= 'a' && ident[i] <= 'z') ||
+        (ident[i] >= 'A' && ident[i] <= 'Z') ||
+        (i && ident[i] >= '0' && ident[i] <= '9') ||
+        ident[i] == '_')
+      ; // fine
+    else
+      zintern_error ("file name contains non-symbol characters: %s", file.c_str());
+  // file processing
   std::vector<uint8> vdata;
   uint i, dlen = 0, mlen = 0;
   uLongf clen;
-  String fname = use_base_name ? base_name (file) : file;
   Config config;
-  FILE *f = fopen (file, "r");
+  FILE *f = fopen (file.c_str(), "r");
   if (!f)
-    zintern_error ("failed to open \"%s\": %s", file, strerror (errno));
+    zintern_error ("failed to open \"%s\": %s", file.c_str(), strerror (errno));
   do
     {
       if (mlen <= dlen + 1024)
@@ -150,7 +155,7 @@ gen_zfile (const char *name,
   while (!ferror (f) && !feof (f));
 
   if (ferror (f))
-    zintern_error ("failed to read from \"%s\": %s", file, strerror (errno));
+    zintern_error ("failed to read from \"%s\": %s", file.c_str(), strerror (errno));
 
   std::vector<uint8> cdata;
   if (use_compression || as_resource)
@@ -176,7 +181,7 @@ gen_zfile (const char *name,
 	  break;
 	}
       if (err)
-	zintern_error ("while compressing \"%s\": %s", file, err);
+	zintern_error ("while compressing \"%s\": %s", file.c_str(), err);
     }
   else
     {
@@ -184,12 +189,10 @@ gen_zfile (const char *name,
       cdata = vdata;
     }
 
-  printf ("/* rapicorn-zintern file dump of %s */\n", file);
+  printf ("/* rapicorn-zintern file dump of %s */\n", file.c_str());
 
   if (as_resource)
     {
-      if (name[0] == '/')
-        zintern_error ("invalid absolute resource path (must be relative): %s", name);
       /* two things to consider for using the compressed data:
        * 1) for the reader code, pack_size + 1 must be smaller than data_size to identify compressed data.
        * 2) using compressed data requires runtime unpacking overhead and extra dynamic memory allocation,
@@ -198,7 +201,6 @@ gen_zfile (const char *name,
       const bool compress_resource = clen <= 0.75 * dlen && clen + 1 < dlen;
       const size_t rlen = compress_resource ? clen : dlen;
       const uint8 *rdata = rlen == dlen ? &vdata[0] : &cdata[0];
-      String ident = canonify (name, "0123456789abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ", "_");
 
       config = config_init;
       printf ("RAPICORN_STATIC_RESOURCE_DATA (%s) =\n  \"", ident.c_str());
@@ -208,22 +210,22 @@ gen_zfile (const char *name,
 
       config = config_init;
       printf ("RAPICORN_STATIC_RESOURCE_ENTRY (%s, \"", ident.c_str());
-      for (i = 0; i < strlen (name); i++)
-        print_uchar (&config, name[i]);
+      for (i = 0; i < fname.size(); i++)
+        print_uchar (&config, fname[i]);
       printf ("\", %u);\n", dlen);
     }
   else
     {
       config = config_init;
-      printf ("#define %s_NAME \"", to_cupper (name).c_str());
+      printf ("#define %s_NAME \"", to_cupper (ident).c_str());
       for (i = 0; i < fname.size(); i++)
         print_uchar (&config, fname[i]);
       printf ("\"\n");
 
-      printf ("#define %s_SIZE (%u)\n", to_cupper (name).c_str(), dlen);
+      printf ("#define %s_SIZE (%u)\n", to_cupper (ident).c_str(), dlen);
 
       config = config_init;
-      printf ("static const unsigned char %s_DATA[%lu + 1] =\n", to_cupper (name).c_str(), clen);
+      printf ("static const unsigned char %s_DATA[%lu + 1] =\n", to_cupper (ident).c_str(), clen);
       printf ("( \"");
       for (i = 0; i < clen; i++)
         print_uchar (&config, cdata[i]);
@@ -236,7 +238,7 @@ gen_zfile (const char *name,
 static int
 help (int exitcode)
 {
-  printf ("usage: rapicorn-zintern [-h] [-b] [-z] [[name file]...]\n");
+  printf ("usage: rapicorn-zintern [-h] [-b] [-z] [files...]\n");
   if (exitcode != 0)
     exit (exitcode);
   printf ("  -h, --help    Print usage information\n");
@@ -290,14 +292,13 @@ main (int argc, char *argv[])
 	arg_strings.push_back (argv[i]);
     }
 
-  if (arg_strings.size() % 2)
+  if (arg_strings.size() == 0)
     return help (1);
 
-  for (size_t i = 0; i < arg_strings.size(); i += 2)
+  for (size_t i = 0; i < arg_strings.size(); i++)
     {
-      const char *name = arg_strings[i + 0].c_str();
-      const char *file = arg_strings[i + 1].c_str();
-      gen_zfile (name, file);
+      const String file = arg_strings[i + 0];
+      gen_zfile (file);
     }
 
   return 0;
