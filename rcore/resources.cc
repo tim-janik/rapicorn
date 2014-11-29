@@ -301,3 +301,6 @@ Blob::from (const String &blob_string)
  */
 
 } // Rapicorn
+
+// rapicorn/res/ hierarchy
+#include "zres.cc"

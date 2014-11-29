@@ -42,6 +42,7 @@ rapicorn_private_files = $(strip	\
 )
 rapicorn_generated_files = $(strip    	\
 	configbits.cc			\
+	zres.cc				\
 )
 # rapicorn_generated_files are NOT in EXTRA_DIST
 
@@ -64,6 +65,15 @@ EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 # == Special Optimization Targets ==
 OPTIMIZE_SOURCE_FILES = loop.cc randomhash.cc
 AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOURCE_FILES)))
+
+# == Rapicorn Resources ==
+@mk@ include $(top_srcdir)/res/Makefile.res	# define RES_FILE_LIST
+zres.cc: rapicorn-zintern $(top_srcdir)/res/Makefile.res
+	$(AM_V_GEN)
+	$(Q) (cd $(top_srcdir)/res/ && $(abs_builddir)/rapicorn-zintern -r $(RES_FILE_LIST) ) > xgen-$@
+	$(Q) mv xgen-$@ $@
+CLEANFILES += xgen-zres.cc zres.cc
+$(srcdir)/resources.cc: zres.cc
 
 # === API content ===
 api-content:
