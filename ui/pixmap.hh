@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_PIXMAP_HH__
 #define __RAPICORN_PIXMAP_HH__
 
-#include <rcore/blobres.hh>
+#include <rcore/resources.hh>
 
 namespace Rapicorn {
 

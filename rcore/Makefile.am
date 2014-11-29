@@ -10,7 +10,7 @@ GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
 	aida.hh		aidaprops.hh	\
-	bindable.hh	blobres.hh	formatter.hh	inout.hh	inifile.hh \
+	bindable.hh	resources.hh	formatter.hh	inout.hh	inifile.hh \
         platform.hh	debugtools.hh					utilities.hh  \
 					math.hh				unicode.hh   \
 	objects.hh	\
@@ -22,7 +22,7 @@ rapicorn_public_headers = $(strip	\
 )
 rapicorn_cc_sources = $(sort	\
 	aida.cc		aidaprops.cc	\
-	bindable.cc	blobres.cc	formatter.cc	inout.cc	inifile.cc \
+	bindable.cc	resources.cc	formatter.cc	inout.cc	inifile.cc \
         platform.cc	debugtools.cc					utilities.cc  \
 					math.cc				unicode.cc   \
 	objects.cc	\

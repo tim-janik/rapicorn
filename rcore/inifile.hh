@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_INIFILE_HH__
 #define __RAPICORN_INIFILE_HH__
 
-#include <rcore/blobres.hh>
+#include <rcore/resources.hh>
 
 namespace Rapicorn {
 
