@@ -164,7 +164,7 @@ find_library_file (const String &filename)
 FileP
 File::load (const String &svgfilename)
 {
-  Blob blob = Blob::load ("file:///" + find_library_file (svgfilename));
+  Blob blob = Blob::load (find_library_file (svgfilename));
   const int saved_errno = errno;
   if (!blob)
     {

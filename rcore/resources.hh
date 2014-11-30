@@ -25,7 +25,7 @@ public:
   const uint8* bytes  () const;                         ///< Access the data of a Blob.
   String       string () const;                         ///< Access data as string, strips trailing 0s.
   operator     _UBool () const { return _bool(); }      ///< Checks if the blob contains accessible data.
-  static Blob  load   (const String &res_path);         ///< Load Blob at @a res_path, sets errno on error.
+  static Blob  load   (const String &filename);         ///< Create a Blob by loading or mmap-ing @a filename, sets errno on error.
   static Blob  from   (const String &blob_string);      ///< Create a Blob containing @a blob_string.
 };
 

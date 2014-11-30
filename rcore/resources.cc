@@ -211,38 +211,6 @@ Blob::Blob() :
   blob_ (std::shared_ptr<BlobResource> (nullptr))
 {}
 
-#define ISASCIIWHITESPACE(c)    (c == ' ' || c == '\t' || (c >= 11 && c <= 13))    // ' \t\v\f\r'
-#define ISALPHA(c)              ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
-#define ISDIGIT(c)              ((c >= '0' && c <= '9'))
-#define ISALNUM(c)              (ISALPHA (c) || ISDIGIT (c))
-
-static bool
-split_uri_scheme (const String &uri, String *scheme, String *specificpart)
-{ // parse URI scheme, see: http://tools.ietf.org/html/rfc3986
-  size_t i = 0;
-  // skip spaces before URI
-  while (ISASCIIWHITESPACE (uri[i]))
-    i++;
-  const size_t sstart = i;
-  // schemes start with an ALPHA
-  if (ISALPHA (uri[i]))
-    i++;
-  else
-    return false;
-  // schemes contain ALPHA, DIGIT, or "+-."
-  while (ISALNUM (uri[i]) || uri[i] == '+' || uri[i] == '-' || uri[i] == '.')
-    i++;
-  // schemes are always separated by a colon
-  if (uri[i] == ':')
-    i++;
-  else
-    return false;
-  // actual splitting
-  *scheme = string_tolower (uri.substr (sstart, i - sstart));
-  *specificpart = uri.substr (i);
-  return true;
-}
-
 static Blob
 error_result (String url, int fallback_errno = EINVAL, String msg = "failed to load")
 {
@@ -280,74 +248,39 @@ Blob::asres (const String &resource)
 }
 
 Blob
-Blob::load (const String &res_path)
+Blob::load (const String &filename)
 {
-  String scheme, specificpart;
-  if (!split_uri_scheme (res_path, &scheme, &specificpart))
-    { // fallback to file paths
-      scheme = "file:";
-      specificpart = res_path;
-    }
-  // blob from builtin resources
-  const ResourceEntry *entry = scheme == "res:" ? ResourceEntry::find_entry (specificpart) : NULL;
-  struct NoDelete { void operator() (const char*) {} }; // prevent delete on const data
-  if (entry && (entry->dsize == entry->psize ||         // uint8[] array
-                entry->dsize + 1 == entry->psize))      // string initilization with 0-termination
+  // load blob from file
+  errno = 0;
+  const int fd = open (filename.c_str(), O_RDONLY | O_NOCTTY | O_CLOEXEC, 0);
+  struct stat sbuf = { 0, };
+  size_t file_size = 0;
+  if (fd < 0)
+    return error_result (filename, ENOENT);
+  if (fstat (fd, &sbuf) == 0 && sbuf.st_size)
+    file_size = sbuf.st_size;
+  // blob via mmap
+  void *maddr;
+  if (file_size >= 128 * 1024 &&
+      MAP_FAILED != (maddr = mmap (NULL, file_size, PROT_READ, MAP_SHARED | MAP_DENYWRITE | MAP_POPULATE, fd, 0)))
     {
-      if (entry->dsize + 1 == entry->psize)
-        assert (entry->pdata[entry->dsize] == 0);
-      return Blob (std::make_shared<ByteBlob<NoDelete>> (res_path, entry->dsize, entry->pdata, NoDelete()));
+      close (fd); // mmap keeps its own file reference
+      struct MunmapDeleter {
+        const size_t length; MunmapDeleter (size_t l) : length (l) {}
+        void operator() (const char *d) { munmap ((void*) d, length); }
+      };
+      return Blob (std::make_shared<ByteBlob<MunmapDeleter>> (filename, file_size, (const char*) maddr, MunmapDeleter (file_size)));
     }
-  else if (entry && entry->psize && entry->dsize == 0)  // variable length array with automatic size
-    return Blob (std::make_shared<ByteBlob<NoDelete>> (res_path, entry->psize, entry->pdata, NoDelete()));
-  // blob from compressed resources
-  if (entry && entry->psize < entry->dsize)
-    {
-      const uint8 *u8data = zintern_decompress (entry->dsize, reinterpret_cast<const uint8*> (entry->pdata), entry->psize);
-      const char *data = reinterpret_cast<const char*> (u8data);
-      struct ZinternDeleter { void operator() (const char *d) { zintern_free ((uint8*) d); } };
-      return Blob (std::make_shared<ByteBlob<ZinternDeleter>> (res_path, entry->dsize, data, ZinternDeleter()));
-    }
-  // handle resource errors
-  if (scheme == "res:")
-    return error_result (res_path, ENOENT, String (entry ? "invalid" : "unknown") + " resource entry");
-  // blob from file
-  if (scheme == "file:")
-    {
-      errno = 0;
-      const int fd = open (specificpart.c_str(), O_RDONLY | O_NOCTTY | O_CLOEXEC, 0);
-      struct stat sbuf = { 0, };
-      size_t file_size = 0;
-      if (fd < 0)
-        return error_result (res_path, ENOENT);
-      if (fstat (fd, &sbuf) == 0 && sbuf.st_size)
-        file_size = sbuf.st_size;
-      // blob via mmap
-      void *maddr;
-      if (file_size >= 128 * 1024 &&
-          MAP_FAILED != (maddr = mmap (NULL, file_size, PROT_READ, MAP_SHARED | MAP_DENYWRITE | MAP_POPULATE, fd, 0)))
-        {
-          close (fd); // mmap keeps its own file reference
-          struct MunmapDeleter {
-            const size_t length; MunmapDeleter (size_t l) : length (l) {}
-            void operator() (const char *d) { munmap ((void*) d, length); }
-          };
-          return Blob (std::make_shared<ByteBlob<MunmapDeleter>> (res_path, file_size, (const char*) maddr, MunmapDeleter (file_size)));
-        }
-      // blob via read
-      errno = 0;
-      String iodata = string_read (res_path, fd, file_size);
-      const int saved_errno = errno;
-      close (fd);
-      errno = saved_errno;
-      if (!errno)
-        return Blob (std::make_shared<StringBlob> (res_path, iodata));
-      // handle file errors
-      return error_result (res_path, ENOENT);
-    }
-  // handle URI scheme errors
-  errno = EPROTONOSUPPORT;
-  return error_result (res_path, errno, "unknown resource scheme");
+  // blob via read
+  errno = 0;
+  String iodata = string_read (filename, fd, file_size);
+  const int saved_errno = errno;
+  close (fd);
+  errno = saved_errno;
+  if (!errno)
+    return Blob (std::make_shared<StringBlob> (filename, iodata));
+  // handle file errors
+  return error_result (filename, ENOENT);
 }
 
 static constexpr uint64

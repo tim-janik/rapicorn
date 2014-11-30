@@ -309,14 +309,14 @@ IniFile::load_ini (const String &inputname, const String &data)
     }
 }
 
-IniFile::IniFile (const String &res_ini)
+IniFile::IniFile (const String &filename)
 {
   errno = ENOENT;
-  Blob blob = Blob::load (res_ini);
+  Blob blob = Blob::load (filename);
   if (blob)
     load_ini (blob.name(), blob.string());
   if (sections_.empty())
-    RAPICORN_DIAG ("empty INI file %s: %s", CQUOTE (res_ini), strerror (errno));
+    RAPICORN_DIAG ("empty INI file %s: %s", CQUOTE (filename), strerror (errno));
 }
 
 IniFile::IniFile (Blob blob)

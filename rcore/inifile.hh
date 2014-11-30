@@ -15,7 +15,7 @@ class IniFile {
   //bool        value           (const String &dotpath, const String &value);
   const StringVector& section   (const String &name) const;
 public:
-  explicit      IniFile         (const String &res_ini);        ///< Construct IniFile from INI resource blob.
+  explicit      IniFile         (const String &filename);       ///< Load INI file @a filename and construct IniFile.
   explicit      IniFile         (Blob blob);                    ///< Construct IniFile from Blob.
   explicit      IniFile         (const IniFile &source);        ///< Copy constructor.
   IniFile&      operator=       (const IniFile &source);        ///< Assignment operator.

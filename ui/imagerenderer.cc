@@ -153,7 +153,7 @@ ImageRendererImpl::ImageBackendP
 ImageRendererImpl::load_source (const String &resource, const String &element_id)
 {
   ImageBackendP image_backend;
-  Blob blob = Blob::load (resource);
+  Blob blob = Res (resource);
   if (string_endswith (blob.name(), ".svg"))
     {
       auto svgf = Svg::File::load (blob);
