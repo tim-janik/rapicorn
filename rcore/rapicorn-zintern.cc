@@ -203,13 +203,13 @@ gen_zfile (const String &file)
       const uint8 *rdata = rlen == dlen ? &vdata[0] : &cdata[0];
 
       config = config_init;
-      printf ("RAPICORN_STATIC_RESOURCE_DATA (%s) =\n  \"", ident.c_str());
+      printf ("RAPICORN_RES_STATIC_DATA (%s) =\n  \"", ident.c_str());
       for (i = 0; i < rlen; i++)
         print_uchar (&config, rdata[i]);
       printf ("\"; // %zu + 1\n", rlen);
 
       config = config_init;
-      printf ("RAPICORN_STATIC_RESOURCE_ENTRY (%s, \"", ident.c_str());
+      printf ("RAPICORN_RES_STATIC_ENTRY (%s, \"", ident.c_str());
       for (i = 0; i < fname.size(); i++)
         print_uchar (&config, fname[i]);
       printf ("\", %u);\n", dlen);

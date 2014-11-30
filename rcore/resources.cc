@@ -343,7 +343,7 @@ Blob::from (const String &blob_string)
  * Locators for resources should generally adhere to the form: @code
  *      res: [relative_path/] resource_name
  * @endcode
- * See also: RAPICORN_STATIC_RESOURCE_DATA(), RAPICORN_STATIC_RESOURCE_ENTRY().
+ * See also: RAPICORN_RES_STATIC_DATA(), RAPICORN_RES_STATIC_ENTRY().
  * <BR> Example: @snippet rcore/tests/multitest.cc Blob-EXAMPLE
  */
 

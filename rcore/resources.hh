@@ -50,11 +50,11 @@ template<> Blob Res::load<Blob> ();
 // == Resource Macros ==
 
 /// Statically declare a ResourceBlob data variable.
-#define RAPICORN_STATIC_RESOURCE_DATA(IDENT)            \
+#define RAPICORN_RES_STATIC_DATA(IDENT)            \
   static const char __Rapicorn_static_resourceD__##IDENT[] __attribute__ ((__aligned__ (2 * sizeof (size_t))))
 
-/// Statically register a ResourceBlob entry, referring a previously declared RAPICORN_STATIC_RESOURCE_DATA(IDENT) variable.
-#define RAPICORN_STATIC_RESOURCE_ENTRY(IDENT, PATH, ...) \
+/// Statically register a ResourceBlob entry, referring a previously declared RAPICORN_RES_STATIC_DATA(IDENT) variable.
+#define RAPICORN_RES_STATIC_ENTRY(IDENT, PATH, ...) \
   static const Rapicorn::ResourceEntry __Rapicorn_static_resourceE__##IDENT = { PATH, __Rapicorn_static_resourceD__##IDENT, __VA_ARGS__ };
 
 // == Internals ==

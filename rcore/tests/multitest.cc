@@ -607,12 +607,12 @@ REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
 
 /// [Blob-EXAMPLE]
 // Declare text resources for later use in a program.
-RAPICORN_STATIC_RESOURCE_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
-RAPICORN_STATIC_RESOURCE_ENTRY (text_resource, "tests/text_resource.txt");
+RAPICORN_RES_STATIC_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
+RAPICORN_RES_STATIC_ENTRY (text_resource, "tests/text_resource.txt");
 
 // If a resource data length is given, it must match the initializer size (it may omit the trailing zero).
-RAPICORN_STATIC_RESOURCE_DATA  (digit_resource) = "0123456789"; // Provide exactly 10 characters.
-RAPICORN_STATIC_RESOURCE_ENTRY (digit_resource, "tests/digit_resource.txt", 10);
+RAPICORN_RES_STATIC_DATA  (digit_resource) = "0123456789"; // Provide exactly 10 characters.
+RAPICORN_RES_STATIC_ENTRY (digit_resource, "tests/digit_resource.txt", 10);
 
 static void // Access a previously declared resource from anywhere within a program.
 access_text_resources ()
