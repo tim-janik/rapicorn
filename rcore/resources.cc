@@ -53,7 +53,8 @@ Res::resolve () const
   errno = ENOENT;
   if (n > 0)
     {
-      Blob blob = Blob::load ("res:" + String (res_path_.c_str() + n));
+      struct Blob_ : Blob { using Blob::asres; };
+      Blob blob = Blob_::asres (res_path_.c_str() + n);
       if (blob)
         return blob;
     }
@@ -249,6 +250,33 @@ error_result (String url, int fallback_errno = EINVAL, String msg = "failed to l
   DEBUG ("%s %s: %s", msg.c_str(), CQUOTE (url), strerror (saved_errno));
   errno = saved_errno;
   return Blob();
+}
+
+Blob
+Blob::asres (const String &resource)
+{
+  // blob from builtin resources
+  const ResourceEntry *entry = ResourceEntry::find_entry (resource);
+  struct NoDelete { void operator() (const char*) {} }; // prevent delete on const data
+  if (entry && (entry->dsize == entry->psize ||         // uint8[] array
+                entry->dsize + 1 == entry->psize))      // string initilization with 0-termination
+    {
+      if (entry->dsize + 1 == entry->psize)
+        assert (entry->pdata[entry->dsize] == 0);
+      return Blob (std::make_shared<ByteBlob<NoDelete>> (resource, entry->dsize, entry->pdata, NoDelete()));
+    }
+  else if (entry && entry->psize && entry->dsize == 0)  // variable length array with automatic size
+    return Blob (std::make_shared<ByteBlob<NoDelete>> (resource, entry->psize, entry->pdata, NoDelete()));
+  // blob from compressed resources
+  if (entry && entry->psize < entry->dsize)
+    {
+      const uint8 *u8data = zintern_decompress (entry->dsize, reinterpret_cast<const uint8*> (entry->pdata), entry->psize);
+      const char *data = reinterpret_cast<const char*> (u8data);
+      struct ZinternDeleter { void operator() (const char *d) { zintern_free ((uint8*) d); } };
+      return Blob (std::make_shared<ByteBlob<ZinternDeleter>> (resource, entry->dsize, data, ZinternDeleter()));
+    }
+  // handle resource errors
+  return error_result (resource, ENOENT, String (entry ? "invalid" : "unknown") + " resource entry");
 }
 
 Blob

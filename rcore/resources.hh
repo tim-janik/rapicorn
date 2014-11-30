@@ -15,6 +15,8 @@ class Blob {
   static _UBool _ubool1 ()     { return &Blob::size; }  // unspecified-type-boolean true value
   _UBool        _bool () const { return blob_ && size() ? _ubool1() : 0; }
   explicit     Blob   (const std::shared_ptr<BlobResource> &initblob);
+protected:
+  static Blob  asres  (const String &resource);         ///< Create Blob from internal @a resource.
 public:
   explicit     Blob   ();                               ///< Default construct a NULL blob.
   String       name   () const;                         ///< Provide the name of this resource Blob.
