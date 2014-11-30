@@ -2,7 +2,6 @@
 /interfaces.dox
 /clientapi.cc
 /clientapi.hh
-/gen-zintern.c
 /serverapi.cc
 /serverapi.hh
 /sinfex.lgen
