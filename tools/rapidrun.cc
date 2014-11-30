@@ -150,12 +150,38 @@ window_displayed (WindowH &window)
     window.close();
 }
 
+static Blob
+unit_test_res (const String &res_path)
+{
+  const int saved_errno = errno;
+  if (Path::isabs (res_path))
+    return Blob::load (res_path);
+  const char *rres = getenv ("RAPIDRUN_RES");
+  if (rres)
+    {
+      StringVector dirs = string_split_any (rres, ":;");
+      for (auto dir : dirs)
+        {
+          const String path = Path::join (dir, res_path);
+          if (Path::check (path, "e"))
+            return Blob::load (path);
+        }
+    }
+  if (0)
+    printerr ("rapidrun: missing resource: %s\n", res_path);
+  errno = saved_errno;
+  return Blob();
+}
+
 extern "C" int
 main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its backend (X11) */
   ApplicationH app = Rapicorn::init_app ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
+
+  struct TestRes : Res { using Res::utest_hook; };
+  TestRes::utest_hook (unit_test_res);
 
   parse_args (&argc, &argv);
   if (argc != 2)

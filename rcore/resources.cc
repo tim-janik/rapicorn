@@ -46,6 +46,15 @@ Res::type () const
   return n < 0 ? "" : res_path_.substr (1, n - 2);
 }
 
+static std::function<Blob (const String&)> unit_test_hook;
+
+/// Internal function, used for unit tests.
+void
+Res::utest_hook (std::function<Blob (const String&)> hook)
+{
+  unit_test_hook = hook;
+}
+
 Blob
 Res::resolve () const
 {
@@ -61,6 +70,8 @@ Res::resolve () const
   const int saved_errno = errno;
   DEBUG ("no such resource: '%s'", res_path_);
   errno = saved_errno;
+  if (unit_test_hook)
+    return unit_test_hook (res_path_);
   return Blob();
 }
 

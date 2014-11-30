@@ -34,6 +34,7 @@ public:
 class Res {
   const String        res_path_;
 protected:
+  static void         utest_hook (std::function<Blob (const String&)> hook);
   Blob                resolve    () const;                      ///< Resolve resource into a binary object.
 public:
   explicit            Res        (const String &res_path);      /// Construct a resource request.
