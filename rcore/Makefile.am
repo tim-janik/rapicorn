@@ -97,7 +97,7 @@ rapidres-installcheck:
 	; eval "$$TSTDIAGNOSE" "'Run    rapidres'"
 	$(Q) grep -q '"xtmp-empty.dat"' xtmp-empty.out \
 	; eval "$$TSTDIAGNOSE" "'Verify rapidres output file name'"
-	$(Q) test `grep _SIZE xtmp-empty.out | grep -o '[0-9]*'` -gt 16 \
+	$(Q) test `grep _ENTRY xtmp-empty.out | grep -o '[0-9]*'` -gt 16 \
 	; eval "$$TSTDIAGNOSE" "'Verify rapidres output length'"
 	$(Q) test $$[`grep _DATA xtmp-empty.out | grep -o '[0-9 +-]*'`] -lt 50 \
 	; eval "$$TSTDIAGNOSE" "'Verify rapidres output compression'"

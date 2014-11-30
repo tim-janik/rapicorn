@@ -10,7 +10,7 @@
 #include <string>
 using namespace Rapicorn;
 
-/* rapicorn-zintern - small C source compression utility
+/* rapidres - small C source compression utility
  * Implemented without linking against librapicorn, as it may be used during the rapicorn build process.
  */
 
@@ -30,11 +30,6 @@ zintern_error (const char *format, ...)
   fprintf (stderr, "\nERROR: %s\n", buffer);
   _exit (1);
 }
-
-static bool use_compression = false;
-static bool use_base_name = false;
-static bool break_at_newlines = false;
-static bool as_resource = false;
 
 typedef struct {
   uint pos;
@@ -61,8 +56,6 @@ print_uchar (Config *config,
     {
       printf ("\\n");
       config->pos += 2;
-      if (break_at_newlines && config->pos > 3)
-        config->pos |= 1 << 31;
     }
   else if (d == '"')
     {
@@ -90,33 +83,11 @@ print_uchar (Config *config,
   config->pad = false;
 }
 
-#define to_upper(c)     ((c) >='a' && (c) <='z' ? (c) - 'a' + 'A' : (c))
-#define is_alnum(c)     (((c) >='A' && (c) <='Z') || ((c) >='a' && (c) <='z') || ((c) >='0' && (c) <='9'))
-static String
-to_cupper (const String &str)
-{
-  String s (str);
-  for (uint i = 0; i < s.size(); i++)
-    if (is_alnum (s[i]))
-      s[i] = to_upper (s[i]);
-    else
-      s[i] = '_';
-  return s;
-}
-
-static String
-base_name (const String &fname)
-{
-  const char *name = fname.c_str();
-  const char *b = strrchr (name, RAPICORN_DIR_SEPARATOR);
-  return b ? b + 1 : name;
-}
-
 static void
 gen_zfile (const String &file)
 {
   // create nice resource path
-  String fname = use_base_name ? base_name (file) : file;
+  String fname = file;
   // strip ^[/.]
   while (fname.size() && strchr ("/.", fname[0]))
     fname.erase (fname.begin());
@@ -158,79 +129,52 @@ gen_zfile (const String &file)
     zintern_error ("failed to read from \"%s\": %s", file.c_str(), strerror (errno));
 
   std::vector<uint8> cdata;
-  if (use_compression || as_resource)
+
+  int result;
+  const char *err;
+  clen = dlen + dlen / 100 + 64;
+  cdata.resize (clen);
+  result = compress2 (&cdata[0], &clen, &vdata[0], dlen, Z_BEST_COMPRESSION);
+  switch (result)
     {
-      int result;
-      const char *err;
-      clen = dlen + dlen / 100 + 64;
-      cdata.resize (clen);
-      result = compress2 (&cdata[0], &clen, &vdata[0], dlen, Z_BEST_COMPRESSION);
-      switch (result)
-	{
-	case Z_OK:
-	  err = NULL;
-	  break;
-	case Z_MEM_ERROR:
-	  err = "out of memory";
-	  break;
-	case Z_BUF_ERROR:
-	  err = "insufficient buffer size";
-	  break;
-	default:
-	  err = "unknown error";
-	  break;
-	}
-      if (err)
-	zintern_error ("while compressing \"%s\": %s", file.c_str(), err);
+    case Z_OK:
+      err = NULL;
+      break;
+    case Z_MEM_ERROR:
+      err = "out of memory";
+      break;
+    case Z_BUF_ERROR:
+      err = "insufficient buffer size";
+      break;
+    default:
+      err = "unknown error";
+      break;
     }
-  else
-    {
-      clen = dlen;
-      cdata = vdata;
-    }
+  if (err)
+    zintern_error ("while compressing \"%s\": %s", file.c_str(), err);
 
-  printf ("/* rapicorn-zintern file dump of %s */\n", file.c_str());
+  printf ("/* rapidres file dump of %s */\n", file.c_str());
 
-  if (as_resource)
-    {
-      /* two things to consider for using the compressed data:
-       * 1) for the reader code, pack_size + 1 must be smaller than data_size to identify compressed data.
-       * 2) using compressed data requires runtime unpacking overhead and extra dynamic memory allocation,
-       *    so it should provide a *significant* benefit if it's used.
-       */
-      const bool compress_resource = clen <= 0.75 * dlen && clen + 1 < dlen;
-      const size_t rlen = compress_resource ? clen : dlen;
-      const uint8 *rdata = rlen == dlen ? &vdata[0] : &cdata[0];
+  /* two things to consider for using the compressed data:
+   * 1) for the reader code, pack_size + 1 must be smaller than data_size to identify compressed data.
+   * 2) using compressed data requires runtime unpacking overhead and extra dynamic memory allocation,
+   *    so it should provide a *significant* benefit if it's used.
+   */
+  const bool compress_resource = clen <= 0.75 * dlen && clen + 1 < dlen;
+  const size_t rlen = compress_resource ? clen : dlen;
+  const uint8 *rdata = rlen == dlen ? &vdata[0] : &cdata[0];
 
-      config = config_init;
-      printf ("RAPICORN_RES_STATIC_DATA (%s) =\n  \"", ident.c_str());
-      for (i = 0; i < rlen; i++)
-        print_uchar (&config, rdata[i]);
-      printf ("\"; // %zu + 1\n", rlen);
+  config = config_init;
+  printf ("RAPICORN_RES_STATIC_DATA (%s) =\n  \"", ident.c_str());
+  for (i = 0; i < rlen; i++)
+    print_uchar (&config, rdata[i]);
+  printf ("\"; // %zu + 1\n", rlen);
 
-      config = config_init;
-      printf ("RAPICORN_RES_STATIC_ENTRY (%s, \"", ident.c_str());
-      for (i = 0; i < fname.size(); i++)
-        print_uchar (&config, fname[i]);
-      printf ("\", %u);\n", dlen);
-    }
-  else
-    {
-      config = config_init;
-      printf ("#define %s_NAME \"", to_cupper (ident).c_str());
-      for (i = 0; i < fname.size(); i++)
-        print_uchar (&config, fname[i]);
-      printf ("\"\n");
-
-      printf ("#define %s_SIZE (%u)\n", to_cupper (ident).c_str(), dlen);
-
-      config = config_init;
-      printf ("static const unsigned char %s_DATA[%lu + 1] =\n", to_cupper (ident).c_str(), clen);
-      printf ("( \"");
-      for (i = 0; i < clen; i++)
-        print_uchar (&config, cdata[i]);
-      printf ("\");\n");
-    }
+  config = config_init;
+  printf ("RAPICORN_RES_STATIC_ENTRY (%s, \"", ident.c_str());
+  for (i = 0; i < fname.size(); i++)
+    print_uchar (&config, fname[i]);
+  printf ("\", %u);\n", dlen);
 
   fclose (f);
 }
@@ -238,17 +182,12 @@ gen_zfile (const String &file)
 static int
 help (int exitcode)
 {
-  printf ("usage: rapicorn-zintern [-h] [-b] [-z] [files...]\n");
+  printf ("usage: rapidres [-h] [-v] [files...]\n");
   if (exitcode != 0)
     exit (exitcode);
   printf ("  -h, --help    Print usage information\n");
   printf ("  -v, --version Print version and file paths\n");
-  printf ("  -b            Strip directories from file names\n");
-  printf ("  -n            Break output lines after newlines raw data\n");
-  printf ("  -r            Produce Rapicorn resource declarations\n");
-  printf ("  -z            Compress data blocks with libz\n");
-  printf ("Parse (name, file) pairs and generate C source\n");
-  printf ("containing inlined data blocks of the files given.\n");
+  printf ("Generate compressed C source code for each file.\n");
   exit (0);
 }
 
@@ -259,23 +198,7 @@ main (int argc, char *argv[])
 
   for (int i = 1; i < argc; i++)
     {
-      if (strcmp ("-z", argv[i]) == 0)
-	{
-	  use_compression = true;
-	}
-      else if (strcmp ("-r", argv[i]) == 0)
-	{
-	  as_resource = true;
-	}
-      else if (strcmp ("-b", argv[i]) == 0)
-	{
-	  use_base_name = true;
-	}
-      else if (strcmp ("-n", argv[i]) == 0)
-	{
-	  break_at_newlines = true;
-	}
-      else if (strcmp ("-h", argv[i]) == 0 || strcmp ("--help", argv[i]) == 0)
+      if (strcmp ("-h", argv[i]) == 0 || strcmp ("--help", argv[i]) == 0)
 	{
 	  return help (0);
 	}
