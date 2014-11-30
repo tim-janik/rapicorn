@@ -9,7 +9,7 @@ struct StockFile {
   String                   input_;
 public:
   explicit StockFile       (Blob blob) : input_ (blob.name())          { ifile_ = std::make_shared<IniFile> (blob); }
-  String   stock_string    (const String &stock_id, const String &what) { return ifile_->value_as_string (stock_id + "." + what); }
+  String   stock_element    (const String &stock_id, const String &what) { return ifile_->value_as_string (stock_id + "." + what); }
   String   dir_path        ()                                           { return Path::dirname (input_); }
   String   file_path       (const String &file)                         { return Path::join (dir_path(), file); }
   IniFile& ini_file        ()                                           { return *ifile_; }
@@ -30,13 +30,17 @@ init_stock_lib (const StringVector &args)
 }
 static InitHook _init_stock_lib ("core/50 Init Stock Lib", init_stock_lib);
 
+Stock::Stock (const String &stock_id) :
+  stock_id_ (stock_id)
+{}
+
 Blob /// Retrieve and load the binary contents referred to by the "image" attribute of @a stock_id.
-Stock::stock_image (const String &stock_id)
+Stock::image() const
 {
   const ScopedLock<Mutex> sl (stock_mutex);
   for (auto sf : stock_files)
     {
-      String s = sf.stock_string (stock_id, "image");
+      String s = sf.stock_element (stock_id_, "image");
       if (!s.empty())
         return Res ("@res " + sf.file_path (s));
     }
@@ -45,12 +49,12 @@ Stock::stock_image (const String &stock_id)
 }
 
 String /// Retrieve the @a key attribute of @a stock_id as a string.
-Stock::stock_string (const String &stock_id, const String &key)
+Stock::element (const String &key) const
 {
   const ScopedLock<Mutex> sl (stock_mutex);
   for (auto sf : stock_files)
     {
-      String s = sf.stock_string (stock_id, key);
+      String s = sf.stock_element (stock_id_, key);
       if (!s.empty())
         return s;
     }
@@ -58,21 +62,21 @@ Stock::stock_string (const String &stock_id, const String &key)
 }
 
 String /// Retrieve the "label" string attribute of @a stock_id.
-Stock::stock_label (const String &stock_id)
+Stock::label() const
 {
-  return stock_string (stock_id, "label");
+  return element ("label");
 }
 
 String /// Retrieve the "tooltip" string attribute of @a stock_id.
-Stock::stock_tooltip (const String &stock_id)
+Stock::tooltip() const
 {
-  return stock_string (stock_id, "tooltip");
+  return element ("tooltip");
 }
 
 String /// Retrieve the "accelerator" string attribute of @a stock_id.
-Stock::stock_accelerator (const String &stock_id)
+Stock::accelerator() const
 {
-  return stock_string (stock_id, "accelerator");
+  return element ("accelerator");
 }
 
 /**
