@@ -23,7 +23,7 @@ static void
 init_stock_lib (const StringVector &args)
 {
   const ScopedLock<Mutex> sl (stock_mutex);
-  StockFile std_stock_file (Res ("@res stock.ini").as<Blob>());
+  StockFile std_stock_file (Res ("@res Rapicorn/stock.ini").as<Blob>());
   if (!std_stock_file.ini_file().has_sections())
     fatal ("failed to load builtin: %s", "Rapicorn/stock.ini");
   stock_files.push_back (std_stock_file);
