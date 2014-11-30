@@ -899,9 +899,9 @@ initialize_factory_lazily (void)
     {
       const char *domain = "Rapicorn";
       Factory::force_ui_namespace_use (domain);
-      Blob blob = Res.raw ("@res Rapicorn/foundation.xml");
+      Blob blob = Res ("@res Rapicorn/foundation.xml");
       Factory::parse_ui_data_internal (domain, "Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL);
-      blob = Res.raw ("@res Rapicorn/standard.xml");
+      blob = Res ("@res Rapicorn/standard.xml");
       Factory::parse_ui_data_internal (domain, "Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL);
     }
 }

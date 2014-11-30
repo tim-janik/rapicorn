@@ -12,14 +12,61 @@
 namespace Rapicorn {
 
 // == Res ==
-Blob
-Res::raw (const String &res_path)
+Res::Res (const String &res_path) :
+  res_path_ (res_path)
+{}
+
+static ssize_t
+res_path_offset (const String &res_path)
 {
-  if (string_startswith (res_path, "@res "))
-    return Blob::load ("res:" + String (res_path.c_str() + 5));
-  BDEBUG ("Res.raw(): invalid raw resource path: %s", res_path);
+  // validate syntax: '@' [a-zA-Z_0-9]+ ' ' <pathname>
+  const ssize_t size = res_path.size();
+  ssize_t n = 0;
+  if (n >= size || res_path[n] != '@')
+    return -1;
+  n++;                          // '@'
+  while (n < size &&
+         ((res_path[n] >= 'a' && res_path[n] <= 'z') ||
+          (res_path[n] >= 'A' && res_path[n] <= 'Z') ||
+          res_path[n] == '_' ||
+          (n > 1 && res_path[n] >= '0' && res_path[n] <= '9')))
+    n++;                        // [a-zA-Z_0-9]
+  if (n >= size || res_path[n] != ' ')
+    return -1;
+  n++;                          // ' '
+  if (n >= size)                // check for non-empty pathname
+    return -1;
+  return n;
+}
+
+String
+Res::type () const
+{
+  ssize_t n = res_path_offset (res_path_);
+  return n < 0 ? "" : res_path_.substr (1, n - 2);
+}
+
+Blob
+Res::resolve () const
+{
+  ssize_t n = res_path_offset (res_path_);
   errno = ENOENT;
+  if (n > 0)
+    {
+      Blob blob = Blob::load ("res:" + String (res_path_.c_str() + n));
+      if (blob)
+        return blob;
+    }
+  const int saved_errno = errno;
+  BDEBUG ("Res: invalid resource path: %s", res_path_);
+  errno = saved_errno;
   return Blob();
+}
+
+template<> Blob
+Res::load<Blob> ()
+{
+  return resolve();
 }
 
 // == BlobResource ==

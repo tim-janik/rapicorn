@@ -30,10 +30,22 @@ public:
 // == Res ==
 /// Res provides access to resource files at runtime.
 class Res {
+  const String        res_path_;
+protected:
+  Blob                resolve    () const;                      ///< Resolve resource into a binary object.
 public:
-  static Blob   raw     (const String &res_path);       ///< Retrieve a raw resource file.
+  explicit            Res        (const String &res_path);      /// Construct a resource request.
+  String              type       () const;                      ///< Retrieve the resource type tag.
+  /// Resolve resource into a specific type.
+  template<class T> T as         () { return load<T>(); }
+  /// Automatically deduce Type for as<Type>() from lvalue.
+  template<class T>   operator T () { return as<T>(); }
+  /// Resource type converter for custom overloads.
+  template<class Type> Type load () { static_assert (!sizeof (Type), "Unimplemented Resource Type"); }
 };
-extern const Res &Res;  ///< Res singleton enables simple call syntax: Res.raw().
+
+/// Load a Blob resource, e.g.: Blob data = Res ("@res Example/resource.dat");
+template<> Blob Res::load<Blob> ();
 
 // == Resource Macros ==
 
