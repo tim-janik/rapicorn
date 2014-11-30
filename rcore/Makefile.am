@@ -68,9 +68,9 @@ AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOU
 
 # == Rapicorn Resources ==
 @mk@ include $(top_srcdir)/res/Makefile.res	# define RES_FILE_LIST
-zres.cc: rapicorn-zintern $(top_srcdir)/res/Makefile.res
+zres.cc: rapidres $(top_srcdir)/res/Makefile.res
 	$(AM_V_GEN)
-	$(Q) (cd $(top_srcdir)/res/ && $(abs_builddir)/rapicorn-zintern -r $(RES_FILE_LIST) ) > xgen-$@
+	$(Q) (cd $(top_srcdir)/res/ && $(abs_builddir)/rapidres $(RES_FILE_LIST) ) > xgen-$@
 	$(Q) mv xgen-$@ $@
 CLEANFILES += xgen-zres.cc zres.cc
 $(srcdir)/resources.cc: zres.cc
@@ -85,24 +85,24 @@ noinst_PROGRAMS        = $(ALLTESTS)
 progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LIBS) -lm
 
 # == Utilities (for installation) ==
-bin_PROGRAMS      	 = rapicorn-zintern
-rapicorn_zintern_SOURCES = rapicorn-zintern.cc
-rapicorn_zintern_LDADD   = $(LIBZ) # $(progs_ldadd)
+bin_PROGRAMS     = rapidres
+rapidres_SOURCES = rapidres.cc
+rapidres_LDADD   = $(LIBZ) # $(progs_ldadd)
 
-zintern-installcheck:
+rapidres-installcheck:
 	$(Q) cd . \
 	&& echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a' > xtmp-empty.dat \
-	; eval "$$TSTDIAGNOSE" "'Create zintern sample data'"
-	$(Q) $(bindir)/rapicorn-zintern -z -b xtmp-empty.dat > xtmp-empty.out \
-	; eval "$$TSTDIAGNOSE" "'Run    rapicorn-zintern'"
+	; eval "$$TSTDIAGNOSE" "'Create rapidres sample data'"
+	$(Q) $(bindir)/rapidres xtmp-empty.dat > xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Run    rapidres'"
 	$(Q) grep -q '"xtmp-empty.dat"' xtmp-empty.out \
-	; eval "$$TSTDIAGNOSE" "'Verify zintern output file name'"
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output file name'"
 	$(Q) test `grep _SIZE xtmp-empty.out | grep -o '[0-9]*'` -gt 16 \
-	; eval "$$TSTDIAGNOSE" "'Verify zintern output length'"
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output length'"
 	$(Q) test $$[`grep _DATA xtmp-empty.out | grep -o '[0-9 +-]*'`] -lt 50 \
-	; eval "$$TSTDIAGNOSE" "'Verify zintern output compression'"
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output compression'"
 	$(Q) rm -f xtmp-empty.dat xtmp-empty.out
-installcheck-local: zintern-installcheck
+installcheck-local: rapidres-installcheck
 CLEANFILES += xtmp-empty.dat xtmp-empty.out
 
 # === configbits.cc ===

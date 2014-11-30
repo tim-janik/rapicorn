@@ -1,6 +1,5 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
-ZINTERN     = ../rcore/rapicorn-zintern
 noinst_DATA =
 
 # == Rebuild Makefile.res ==

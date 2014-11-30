@@ -27,12 +27,12 @@ EXTRA_DIST        += testrcore2.ref
 export VPATH	# needed by test programs to find builddir relative input files
 
 # == test resources ==
-ZINTERN     = $(abs_builddir)/../rapicorn-zintern
+RAPIDRES    = $(abs_builddir)/../rapidres
 RES_FILES   = sample1.svg
 EXTRA_DIST += $(RES_FILES)
-resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
+resources.cc: $(RES_FILES) $(RAPIDRES) Makefile.am
 	$(AM_V_GEN)
-	$(Q) cd $(srcdir) && $(ZINTERN) -r $(RES_FILES) > $(abs_builddir)/xgen-$(@F)
+	$(Q) cd $(srcdir) && $(RAPIDRES) $(RES_FILES) > $(abs_builddir)/xgen-$(@F)
 	$(Q) mv xgen-$(@F) $@
 EXTRA_DIST  += resources.cc
 CLEANFILES  += resources.cc
