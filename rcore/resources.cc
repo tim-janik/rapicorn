@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#define BDEBUG(...)     RAPICORN_KEY_DEBUG ("Blob", __VA_ARGS__)
+#define DEBUG(...)      RAPICORN_KEY_DEBUG ("Res", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -58,7 +58,7 @@ Res::resolve () const
         return blob;
     }
   const int saved_errno = errno;
-  BDEBUG ("Res: invalid resource path: %s", res_path_);
+  DEBUG ("no such resource: '%s'", res_path_);
   errno = saved_errno;
   return Blob();
 }
@@ -187,7 +187,7 @@ string_read (const String &filename, const int fd, size_t guess)
       while (l < 0 && (errno == EAGAIN || errno == EINTR));
       stored += MAX (0, l);
       if (l < 0)
-        BDEBUG ("%s: read: %s", filename.c_str(), strerror (errno));
+        DEBUG ("%s: read: %s", filename.c_str(), strerror (errno));
       else
         errno = 0;
     }
@@ -246,7 +246,7 @@ static Blob
 error_result (String url, int fallback_errno = EINVAL, String msg = "failed to load")
 {
   const int saved_errno = errno ? errno : fallback_errno;
-  BDEBUG ("%s %s: %s", msg.c_str(), CQUOTE (url), strerror (saved_errno));
+  DEBUG ("%s %s: %s", msg.c_str(), CQUOTE (url), strerror (saved_errno));
   errno = saved_errno;
   return Blob();
 }
@@ -282,7 +282,7 @@ Blob::load (const String &res_path)
     }
   // handle resource errors
   if (scheme == "res:")
-    return error_result (res_path, ENOENT, String (entry ? "invalid" : "unknown") + "resource entry");
+    return error_result (res_path, ENOENT, String (entry ? "invalid" : "unknown") + " resource entry");
   // blob from file
   if (scheme == "file:")
     {
