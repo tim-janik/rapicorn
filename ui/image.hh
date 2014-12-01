@@ -10,6 +10,7 @@ class ImageImpl : public virtual ImageRendererImpl, public virtual ImageIface {
   String                source_, element_, stock_id_;
   ImageBackendP         image_backend_;
 protected:
+  void                  broken_image    ();
   virtual void          size_request    (Requisition &requisition) override;
   virtual void          size_allocate   (Allocation area, bool changed) override;
   virtual void          render          (RenderContext &rcontext, const Rect &rect) override;
