@@ -228,7 +228,7 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
           image_backend = std::make_shared<SvgBackend> (svgf, svge, hscale_spans, vscale_spans, fill);
         }
     }
-  else
+  else if (blob)
     {
       auto pixmap = Pixmap (blob);
       if (pixmap.width() && pixmap.height())
