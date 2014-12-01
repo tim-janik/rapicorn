@@ -290,10 +290,8 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     # --- Rapicorn paths ---
     docdir='${datarootdir}/doc/rapicorn'"$RAPICORN_RELEASE"	# docdir='${datarootdir}/doc/${PACKAGE}'
     rapicorndatadir='${datadir}/rapicorn'"$RAPICORN_RELEASE"	# datadir = ${datarootdir}
-    rapicornsvgdir='${rapicorndatadir}/svg'
     AC_SUBST(docdir)
     AC_SUBST(rapicorndatadir)
-    AC_SUBST(rapicornsvgdir)
 
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
@@ -645,7 +643,6 @@ Autoconfiguration complete.
 	Libraries:			`printexpandvar ${libdir}`
 	Locales:			`printexpandvar ${pkglocaledir}`
 	Includes:			`printexpandvar ${includedir}/rapicorn$RAPICORN_RELEASE`
-	SVG-Library:			`printexpandvar ${rapicornsvgdir}`
 	Data:				`printexpandvar ${datadir}`
 	Documents:			`printexpandvar ${docdir}`
 	PyRapicorn:			`printexpandvar ${pythondir}/$RAPICORN_NAMESPACE_NAME`
