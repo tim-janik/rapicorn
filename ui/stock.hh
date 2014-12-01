@@ -16,7 +16,7 @@ public:
   String        label           () const;
   String        tooltip         () const;
   String        accelerator     () const;
-  Blob          image           () const;
+  Blob          icon            () const;
 };
 
 } // Rapicorn

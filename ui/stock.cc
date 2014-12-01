@@ -34,13 +34,13 @@ Stock::Stock (const String &stock_id) :
   stock_id_ (stock_id)
 {}
 
-Blob /// Retrieve and load the binary contents referred to by the "image" attribute of @a stock_id.
-Stock::image() const
+Blob /// Retrieve and load the binary contents referred to by the "icon" attribute of @a stock_id.
+Stock::icon() const
 {
   const ScopedLock<Mutex> sl (stock_mutex);
   for (auto sf : stock_files)
     {
-      String s = sf.stock_element (stock_id_, "image");
+      String s = sf.stock_element (stock_id_, "icon");
       if (!s.empty())
         return Res ("@res " + sf.file_path (s));
     }
