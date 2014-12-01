@@ -34,7 +34,8 @@ Stock::Stock (const String &stock_id) :
   stock_id_ (stock_id)
 {}
 
-Blob /// Retrieve and load the binary contents referred to by the "icon" attribute of @a stock_id.
+/// Retrieve and load the binary contents referred to by the "icon" attribute of @a stock_id.
+Blob
 Stock::icon() const
 {
   const ScopedLock<Mutex> sl (stock_mutex);
@@ -48,7 +49,8 @@ Stock::icon() const
   return Blob();
 }
 
-String /// Retrieve the @a key attribute of @a stock_id as a string.
+/// Retrieve the @a key attribute of @a stock_id as a string.
+String
 Stock::element (const String &key) const
 {
   const ScopedLock<Mutex> sl (stock_mutex);
@@ -61,19 +63,22 @@ Stock::element (const String &key) const
   return "";
 }
 
-String /// Retrieve the "label" string attribute of @a stock_id.
+/// Retrieve the "label" string attribute of @a stock_id.
+String
 Stock::label() const
 {
   return element ("label");
 }
 
-String /// Retrieve the "tooltip" string attribute of @a stock_id.
+/// Retrieve the "tooltip" string attribute of @a stock_id.
+String
 Stock::tooltip() const
 {
   return element ("tooltip");
 }
 
-String /// Retrieve the "accelerator" string attribute of @a stock_id.
+/// Retrieve the "accelerator" string attribute of @a stock_id.
+String
 Stock::accelerator() const
 {
   return element ("accelerator");
