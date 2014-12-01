@@ -12,11 +12,14 @@ class Stock {
 protected:
   String        element         (const String &key) const;
 public:
+  struct Icon {
+    String resource, element;
+  };
   explicit      Stock           (const String &stock_id);
   String        label           () const;
   String        tooltip         () const;
   String        accelerator     () const;
-  Blob          icon            () const;
+  Icon          icon            () const;
 };
 
 } // Rapicorn

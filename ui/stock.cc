@@ -35,18 +35,24 @@ Stock::Stock (const String &stock_id) :
 {}
 
 /// Retrieve and load the binary contents referred to by the "icon" attribute of @a stock_id.
-Blob
+Stock::Icon
 Stock::icon() const
 {
   const ScopedLock<Mutex> sl (stock_mutex);
   for (auto sf : stock_files)
     {
-      String s = sf.stock_element (stock_id_, "icon");
-      if (!s.empty())
-        return Res ("@res " + sf.file_path (s));
+      String icon_source = sf.stock_element (stock_id_, "icon");
+      String svg_element = sf.stock_element (stock_id_, "element");
+      if (!icon_source.empty())
+        {
+          Icon si;
+          si.resource = "@res " + sf.file_path (icon_source);
+          si.element = svg_element; // maybe empty
+          return si;
+        }
     }
   errno = ENOENT;
-  return Blob();
+  return Icon();
 }
 
 /// Retrieve the @a key attribute of @a stock_id as a string.

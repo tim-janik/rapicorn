@@ -69,11 +69,9 @@ ImageImpl::stock (const String &stock_id)
 {
   return_unless (stock_id_ != stock_id);
   stock_id_ = stock_id;
-  Blob blob = Stock (stock_id_).icon();
-  auto pixmap = Pixmap (blob);
-  if (pixmap.width() && pixmap.height())
-    image_backend_ = load_pixmap (pixmap);
-  else
+  Stock::Icon stock_icon = Stock (stock_id_).icon();
+  image_backend_ = load_source (stock_icon.resource, stock_icon.element);
+  if (!image_backend_)
     {
       auto pixmap = Pixmap();
       pixmap.load_pixstream (get_broken16_pixdata());

@@ -21,10 +21,12 @@ test_stock_resources()
   String s;
   s = Stock ("broken-image").label();
   TASSERT (s.empty() == false);
-  Blob b = Stock ("broken-image").icon();
+  Stock::Icon icon = Stock ("broken-image").icon();
+  TASSERT (icon.resource != "");
+  Blob b = Res (icon.resource);
   TASSERT (b && b.size() > 16);
-  b = Stock (" .no.. +such+ -image- ~hCZ75jv27j").icon();
-  TASSERT (!b && errno != 0);
+  icon = Stock (" .no.. +such+ -image- ~hCZ75jv27j").icon();
+  TASSERT (icon.resource == "");
 }
 REGISTER_UITHREAD_TEST ("Server/Stock Resources", test_stock_resources);
 
