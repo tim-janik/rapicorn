@@ -634,6 +634,18 @@ access_text_resources ()
 /// [Blob-EXAMPLE]
 REGISTER_TEST ("Resource/Test Example", access_text_resources);
 
+static void
+test_builtin_resources()
+{
+  Blob blob;
+  assert (!blob && blob.size() == 0);
+  blob = Res ("@res Rapicorn/stock.ini");
+  assert (blob && blob.size() > 0);
+  blob = Res ("@res Rapicorn/icons/broken-image.svg");
+  assert (blob && blob.size() > 0);
+}
+REGISTER_TEST ("Resource/Builtin Tests", test_builtin_resources);
+
 static String
 open_temporary (int *fdp)
 {
@@ -700,7 +712,7 @@ more_blob_tests ()
   assert (fblob.string() != bblob.string());
   assert (fblob.name() != bblob.name());
 }
-REGISTER_TEST ("Resource/File IO Tests", more_blob_tests);
+REGISTER_TEST ("Blob/File IO Tests", more_blob_tests);
 
 static void // Test Mutextes before GLib's thread initialization
 test_before_thread_init()
