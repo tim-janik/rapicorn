@@ -12,5 +12,6 @@ CLEANFILES += $(man1_MANS)
 noinst_DATA = $(man1_MANS:%=%.html)
 %.1.html: %.1.md
 	$(AM_V_GEN)
-	$(Q) $(PANDOC) -s --toc -t html -S --toc $< -o $@
+	$(Q) $(PANDOC) -s --toc -t html -S --toc -H head_style.css $< -o $@
 CLEANFILES += $(noinst_DATA)
+EXTRA_DIST = head_style.css
