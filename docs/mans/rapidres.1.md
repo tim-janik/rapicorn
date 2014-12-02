@@ -60,4 +60,4 @@ Tim Janik.
 
 # SEE ALSO
 
-**rapidrun(1)**
+**rapidrun**(1), [**Rapicorn Website**](http://rapicorn.org)

@@ -56,6 +56,8 @@ Among other things %Rapicorn has:
 
 @subsection manpages Manual Pages
 - <a href="rapidrun.1.html"><b>rapidrun.1</b></a> <br/>
-  Utility to run and test %Rapicorn dialogs.
+  Utility to run and test %Rapicorn dialogs
+- <a href="rapidres.1.html"><b>rapidres.1</b></a> <br/>
+  %Rapicorn source code generator for resource files
 
 */ // @page intro
