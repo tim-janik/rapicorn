@@ -34,10 +34,10 @@ the definition of the following two macros:
 
 
 # OPTIONS
--h, \--help
+**-h**, **\--help**
 :   Print usage information.
 
--v, \--version
+**-v**, **\--version**
 :   Print version and file paths.
 
 
