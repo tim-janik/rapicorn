@@ -1130,7 +1130,7 @@ DisplayWindowX11::setup_window (const DisplayWindow::Setup &setup)
   // WM Icon
   if (!wm_icon_)
     {
-      Rapicorn::Pixmap iconpixmap ("@res wm-gears.png");
+      Rapicorn::Pixmap iconpixmap ("@res Rapicorn/icons/wm-gears.png");
       wm_icon_ = XCreatePixmap (x11context.display, window_, iconpixmap.width(), iconpixmap.height(), x11context.depth);
       cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, wm_icon_, x11context.visual, iconpixmap.width(), iconpixmap.height());
       CHECK_CAIRO_STATUS (xsurface);
