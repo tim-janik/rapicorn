@@ -2,7 +2,7 @@
 include $(top_srcdir)/Makefile.decl
 
 # Manual pages to build and install
-man1_MANS = 
+man1_MANS = rapidres.1
 %.1: %.1.md
 	$(AM_V_GEN)
 	$(Q) $(PANDOC) -s -t man $< -o $@
