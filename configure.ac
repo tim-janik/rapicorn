@@ -226,6 +226,8 @@ if test x"$enable_devel_mode" = xyes ; then
   # devel mode build tools
   MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
   MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
+  MC_ASSERT_PROG(DOXYGEN, doxygen, [See: http://www.stack.nl/~dimitri/doxygen/])
+  MC_ASSERT_PROG(DOT, dot, [See: http://www.graphviz.org/])
 else
   DEVELMODE="#"; NOTDEVELMODE=""
 fi
