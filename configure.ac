@@ -229,8 +229,13 @@ if test x"$enable_devel_mode" = xyes ; then
   MC_ASSERT_PROG(PANDOC, pandoc, [See: http://johnmacfarlane.net/pandoc/])
   MC_ASSERT_PROG(DOXYGEN, doxygen, [See: http://www.stack.nl/~dimitri/doxygen/])
   MC_ASSERT_PROG(DOT, dot, [See: http://www.graphviz.org/])
-else
+else # provide sane defaults for meaningful makefiles & errors
   DEVELMODE="#"; NOTDEVELMODE=""
+  BISON=bison; AC_SUBST(BISON)
+  FLEX=flex; AC_SUBST(FLEX)
+  PANDOC=pandoc; AC_SUBST(PANDOC)
+  DOXYGEN=doxygen; AC_SUBST(DOXYGEN)
+  DOT=dot; AC_SUBST(DOT)
 fi
 AC_SUBST(DEVELMODE)
 AC_SUBST(NOTDEVELMODE)
