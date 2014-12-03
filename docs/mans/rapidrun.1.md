@@ -1,4 +1,4 @@
-% RAPIDRUN(1) 14.10.0 | Rapicorn Manual
+% RAPIDRUN(1) 14.10.1 | Rapicorn Manual
 %
 % 2014-12-03
 
