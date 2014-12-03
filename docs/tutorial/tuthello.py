@@ -1,7 +1,7 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 # [HelloRapicorn-EXAMPLE]
 # Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
-import Rapicorn1410 as Rapicorn
+from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
 
 # Setup the application object, unsing a unique application name.
 app = Rapicorn.app_init ("Hello Rapicorn")
@@ -32,9 +32,10 @@ def command_handler (command_name, args):
   # When we see the 'CLICK' command, close down the Application
   if command_name == "CLICK":
     app.close_all();
+  return True # handled
 
 # Call the handler when the Window::commands signal is emitted.
-window.sig_commands_connect (command_handler)
+window.sig_commands.connect (command_handler)
 
 # Preparations done, now it's time to show the window on the screen.
 window.show()
