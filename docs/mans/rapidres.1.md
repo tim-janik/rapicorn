@@ -34,6 +34,9 @@ the definition of the following two macros:
 
 
 # OPTIONS
+
+**Rapidres** follows the usual GNU command line syntax, with long options starting with two dashes ('-').
+
 **-h**, **\--help**
 :   Print usage information.
 
@@ -57,6 +60,7 @@ This generates something along the lines of:
 
 # AUTHORS
 Tim Janik.
+
 
 # SEE ALSO
 
