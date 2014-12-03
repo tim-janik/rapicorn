@@ -13,7 +13,7 @@ Makefile.res: @INGIT@ $(if $(call streq, $(NEW_RES_FILES), $(RES_FILE_LIST)),, M
 	$(Q) mv Makefile.tmp $@
 Makefile.tmp: # MAKE(1) only remakes+rereads Makefiles with prerequisites (Remaking Makefiles)
 	$(Q) echo "RES_FILE_LIST = $(NEW_RES_FILES)" > $@
-noinst_DATA = Makefile.res
+noinst_DATA += Makefile.res
 
 # == Ship Resource Files ==
-EXTRA_DIST = $(RES_FILE_LIST)
+EXTRA_DIST += $(RES_FILE_LIST)
