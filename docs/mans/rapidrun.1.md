@@ -12,8 +12,8 @@ rapidrun - Utility to run and test Rapicorn dialogs
 
 # DESCRIPTION
 
-**Rapidrun** is a utility to test Rapicorn UI dialog definitions.
-This tool will read the GUI description file listed on the command line, look for a dialog named 'test-dialog' and show it.
+**Rapidrun** is a utility to display and operate Rapicorn UI dialogs.
+This tool will read the GUI description file listed on the command line, look for a dialog window and show it.
 
 # OPTIONS
 
