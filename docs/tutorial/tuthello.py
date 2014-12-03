@@ -43,3 +43,17 @@ window.show()
 # Pass control to the event loop, to wait and handle user commands.
 app.loop()
 # [HelloRapicorn-EXAMPLE]
+
+# Test code, run this with above app.loop disabled, exits 123 if OK
+import sys
+if '--test-123' in sys.argv:
+  button = window.query_selector_unique ('.Button')
+  assert button
+  ok = window.synthesize_enter()
+  assert ok
+  ok = window.synthesize_click (button, 1)
+  assert ok
+  ok = window.synthesize_leave()
+  assert ok
+  app.loop()
+  sys.exit (123)
