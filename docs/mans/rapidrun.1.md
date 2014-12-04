@@ -1,6 +1,6 @@
-% RAPIDRUN(1) 14.10.1 | Rapicorn Manual
+% RAPIDRUN(1) @RAPICORN_VERSION@ | Rapicorn Manual
 %
-% 2014-12-03
+% @FILE_REVISION@
 
 # NAME
 rapidrun - Utility to run and test Rapicorn dialogs

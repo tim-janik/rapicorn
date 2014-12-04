@@ -1,6 +1,6 @@
-% RAPIDRES(1) 14.10.1 | Rapicorn Manual
+% RAPIDRES(1) @RAPICORN_VERSION@ | Rapicorn Manual
 %
-% 2014-12-02
+% @FILE_REVISION@
 
 
 # NAME
