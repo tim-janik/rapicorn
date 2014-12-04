@@ -30,7 +30,7 @@ public:
 };
 
 // == Res ==
-/// Res provides access to resource files at runtime.
+/// Res provides access to resource files at runtime, see also rapidres(1).
 class Res {
   const String        res_path_;
 protected:

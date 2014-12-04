@@ -606,7 +606,7 @@ binary_lookup_tests()
 REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
 
 /// [Blob-EXAMPLE]
-// Declare text resources for later use in a program.
+// Declare text resources for later use in a program, see also rapidres(1).
 RAPICORN_RES_STATIC_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
 RAPICORN_RES_STATIC_ENTRY (text_resource, "tests/text_resource.txt");
 
