@@ -15,4 +15,4 @@ check-tuthello.py:
 	$(Q) sed '1,/^app\.loop()/s/^\(app\.loop()\)/#\1/' < tuthello.py > xtst-tuthello.py
 	$(Q) $(RPYTHON) xtst-tuthello.py --test-123 ; test $$? -eq 123 ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f xtst-tuthello.py
-check-local: check-tuthello.py
+installcheck-local: check-tuthello.py
