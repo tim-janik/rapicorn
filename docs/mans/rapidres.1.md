@@ -4,12 +4,10 @@
 
 
 # NAME
-
 rapidres - A Rapicorn binary resource file to C++ code converter
 
 
 # SYNOPSIS
-
 **rapidres** [**-h**] [**-v**] [*files*...]
 
 
