@@ -41,6 +41,24 @@ This tool will read the GUI description file listed on the command line, look fo
 :   Display version and exit.
 
 
+# ENVIRONMENT VARIABLES
+
+The behavior of **rapidrun** is affected by the following environment variables.
+
+**RAPICORN_DEBUG**
+:   This environment variable affects debugging behavior for all Rapicorn applications.
+    Some possible values are:
+    *all* to enable all available debugging output,
+    *syslog* to enable logging of general purpose messages through syslog(3),
+    *fatal-warnings* to cast all warning messages into fatal errors,
+    *devel* to enable some debugging features for development versions.
+    Refer to the Rapicorn Manual for a more detailed description.
+
+**RAPIDRUN_RES**
+:   This environment variable contains a search path used by unit tests for test images
+    residing in the file system instead of compiled in resources.
+
+
 # AUTHORS
 Tim Janik.
 
