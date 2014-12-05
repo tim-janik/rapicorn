@@ -154,11 +154,11 @@ static Blob
 unit_test_res (const String &res_path)
 {
   const int saved_errno = errno;
-  if (Path::isabs (res_path))
-    return Blob::load (res_path);
   const char *rres = getenv ("RAPIDRUN_RES");
-  if (rres)
+  if (rres && strlen (rres) > 0)
     {
+      if (Path::isabs (res_path))
+        return Blob::load (res_path);
       StringVector dirs = string_split_any (rres, ":;");
       for (auto dir : dirs)
         {
