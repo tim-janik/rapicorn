@@ -529,8 +529,7 @@ interface LayerPainter : Container {
 /// Image widgets are used to display pixel or vector images.
 /// See also the corresponding implementation class ImageImpl.
 interface Image : Widget {
-  String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
-  String 	element = String (_("Element"), _("Element ID within SVG files to be rendered."), "rw");
+  String        source  = String (_("Image Source"), _("Resource locator for the image (fragment) to be displayed."), "rw");
   String 	stock   = String (_("Stock"), _("Load a stock icon."), "rw");
   Pixbuf        pixbuf;
 };

@@ -16,7 +16,7 @@ protected:
   Requisition   get_image_size    (const ImageBackendP &image_backend);
   Allocation    get_fill_area     (const ImageBackendP &image_backend);
   void          paint_image       (const ImageBackendP &image_backend, RenderContext &rcontext, const Rect &rect);
-  ImageBackendP load_source       (const String &resource, const String &element_id) __attribute__ ((warn_unused_result));
+  ImageBackendP load_source       (const String &resource_identifier) __attribute__ ((warn_unused_result));
   ImageBackendP load_pixmap       (Pixmap pixmap) __attribute__ ((warn_unused_result));
 };
 

@@ -150,16 +150,19 @@ ImageRendererImpl::~ImageRendererImpl()
 {}
 
 ImageRendererImpl::ImageBackendP
-ImageRendererImpl::load_source (const String &resource, const String &element_id)
+ImageRendererImpl::load_source (const String &resource_identifier)
 {
+  const ssize_t hashpos = resource_identifier.find ('#');
+  const String fragment = hashpos < 0 ? "" : resource_identifier.substr (hashpos);
+  const String resource = hashpos < 0 ? resource_identifier : resource_identifier.substr (0, hashpos);
   ImageBackendP image_backend;
   Blob blob = Res (resource);
   if (string_endswith (blob.name(), ".svg"))
     {
       auto svgf = Svg::File::load (blob);
       SVGDEBUG ("loading: %s: %s", resource, strerror (errno));
-      auto svge = svgf ? svgf->lookup (element_id) : Svg::Element::none();
-      SVGDEBUG (" lookup: %s%s: %s", resource, element_id, svge ? svge->bbox().to_string() : "failed");
+      auto svge = svgf ? svgf->lookup (fragment) : Svg::Element::none();
+      SVGDEBUG (" lookup: %s%s: %s", resource, fragment, svge ? svge->bbox().to_string() : "failed");
       if (svge)
         {
           const Svg::BBox ibox = svge->bbox();
@@ -170,11 +173,11 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
           Svg::Span vscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
           vscale_spans[1].length = ibox.height;
           vscale_spans[1].resizable = 1;
-          if (string_endswith (element_id, ".9"))
+          if (string_endswith (fragment, ".9"))
             {
               const double ix1 = ibox.x, ix2 = ibox.x + ibox.width, iy1 = ibox.y, iy2 = ibox.y + ibox.height;
               Svg::ElementP auxe;
-              auxe = svgf->lookup (element_id + ".hscale");
+              auxe = svgf->lookup (fragment + ".hscale");
               if (auxe)
                 {
                   const Svg::BBox bbox = auxe->bbox();
@@ -187,7 +190,7 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
                       hscale_spans[2].resizable = 0, hscale_spans[2].length = ix2 - bx2;
                     }
                 }
-              auxe = svgf->lookup (element_id + ".vscale");
+              auxe = svgf->lookup (fragment + ".vscale");
               if (auxe)
                 {
                   const Svg::BBox bbox = auxe->bbox();
@@ -200,7 +203,7 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
                       vscale_spans[2].resizable = 0, vscale_spans[2].length = iy2 - by2;
                     }
                 }
-              auxe = svgf->lookup (element_id + ".hfill");
+              auxe = svgf->lookup (fragment + ".hfill");
               if (auxe)
                 {
                   const Svg::BBox bbox = auxe->bbox();
@@ -212,7 +215,7 @@ ImageRendererImpl::load_source (const String &resource, const String &element_id
                       fill.width = bx2 - bx1;
                     }
                 }
-              auxe = svgf->lookup (element_id + ".vfill");
+              auxe = svgf->lookup (fragment + ".vfill");
               if (auxe)
                 {
                   const Svg::BBox bbox = auxe->bbox();
