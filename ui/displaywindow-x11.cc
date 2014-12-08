@@ -1074,21 +1074,6 @@ window_type_atom_name (WindowType window_type)
     }
 }
 
-static cairo_surface_t*
-cairo_surface_from_pixmap (Rapicorn::Pixmap pixmap)
-{
-  const int stride = pixmap.width() * 4;
-  uint32 *data = pixmap.row (0);
-  cairo_surface_t *isurface =
-    cairo_image_surface_create_for_data ((unsigned char*) data,
-                                         CAIRO_FORMAT_ARGB32,
-                                         pixmap.width(),
-                                         pixmap.height(),
-                                         stride);
-  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
-  return isurface;
-}
-
 void
 DisplayWindowX11::setup_window (const DisplayWindow::Setup &setup)
 {

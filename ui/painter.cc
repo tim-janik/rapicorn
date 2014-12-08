@@ -3,9 +3,17 @@
 #include "blitfuncs.hh"
 #include <algorithm>
 
+#define SVGDEBUG(...)   RAPICORN_KEY_DEBUG ("SVG", __VA_ARGS__)
+
+#define CHECK_CAIRO_STATUS(status)      do {    \
+  cairo_status_t ___s = (status);               \
+  if (___s != CAIRO_STATUS_SUCCESS)             \
+    SVGDEBUG ("%s: %s", cairo_status_to_string (___s), #status);        \
+  } while (0)
+
 namespace Rapicorn {
 
-/* --- CPainter --- */
+// == CPainter ==
 CPainter::CPainter (cairo_t *_context) :
   cr (_context)
 {}
@@ -142,6 +150,22 @@ CPainter::draw_dir_arrow (double x, double y, double width, double height, Color
     }
   cairo_set_source_rgba (cr, fill.red1(), fill.green1(), fill.blue1(), fill.alpha1());
   cairo_fill (cr);
+}
+
+// == Cairo Utilities ==
+cairo_surface_t*
+cairo_surface_from_pixmap (Pixmap pixmap)
+{
+  const int stride = pixmap.width() * 4;
+  uint32 *data = pixmap.row (0);
+  cairo_surface_t *isurface =
+    cairo_image_surface_create_for_data ((unsigned char*) data,
+                                         CAIRO_FORMAT_ARGB32,
+                                         pixmap.width(),
+                                         pixmap.height(),
+                                         stride);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
+  return isurface;
 }
 
 } // Rapicorn

@@ -6,6 +6,7 @@
 
 namespace Rapicorn {
 
+/// Cairo painting helper class.
 class CPainter {
 protected:
   cairo_t *cr;
@@ -21,6 +22,9 @@ public:
                                          Color inner_lower_right, Color outer_lower_right);
   void          draw_dir_arrow          (double x, double y, double width, double height, Color c, DirType dir);
 };
+
+// == Cairo Utilities ==
+cairo_surface_t*        cairo_surface_from_pixmap       (Pixmap pixmap);
 
 } // Rapicorn
 

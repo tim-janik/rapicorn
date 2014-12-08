@@ -1,6 +1,7 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "imagerenderer.hh"
 #include "factory.hh"
+#include "painter.hh"
 #include "../rcore/rsvg/svg.hh"
 
 #define SVGDEBUG(...)   RAPICORN_KEY_DEBUG ("SVG", __VA_ARGS__)
@@ -12,21 +13,6 @@
   } while (0)
 
 namespace Rapicorn {
-
-static cairo_surface_t*
-cairo_surface_from_pixmap (Pixmap pixmap)
-{
-  const int stride = pixmap.width() * 4;
-  uint32 *data = pixmap.row (0);
-  cairo_surface_t *isurface =
-    cairo_image_surface_create_for_data ((unsigned char*) data,
-                                         CAIRO_FORMAT_ARGB32,
-                                         pixmap.width(),
-                                         pixmap.height(),
-                                         stride);
-  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
-  return isurface;
-}
 
 typedef ImageRendererImpl::ImageBackend ImageBackend;
 
