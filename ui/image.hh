@@ -2,12 +2,12 @@
 #ifndef __RAPICORN_IMAGE_HH__
 #define __RAPICORN_IMAGE_HH__
 
-#include <ui/imagerenderer.hh>
+#include <ui/widget.hh>
 #include <ui/painter.hh>
 
 namespace Rapicorn {
 
-class ImageImpl : public virtual ImageRendererImpl, public virtual ImageIface {
+class ImageImpl : public virtual WidgetImpl, public virtual ImageIface {
   String                source_, stock_id_;
   ImagePainter          image_painter_;
 protected:
@@ -24,10 +24,10 @@ public:
   virtual String        stock           () const override;
 };
 
-class StatePainterImpl : public virtual ImageRendererImpl, public virtual StatePainterIface {
+class StatePainterImpl : public virtual WidgetImpl, public virtual StatePainterIface {
   String         source_, normal_image_, prelight_image_, impressed_image_;
   String         insensitive_image_, default_image_, focus_image_, state_image_;
-  ImageBackendP  source_backend_, state_backend_;
+  ImagePainter   source_painter_, state_painter_;
   String         current_source      ();
   void           update_source      (String &member, const String &value, const char *name);
 protected:
