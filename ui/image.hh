@@ -3,12 +3,13 @@
 #define __RAPICORN_IMAGE_HH__
 
 #include <ui/imagerenderer.hh>
+#include <ui/painter.hh>
 
 namespace Rapicorn {
 
 class ImageImpl : public virtual ImageRendererImpl, public virtual ImageIface {
   String                source_, stock_id_;
-  ImageBackendP         image_backend_;
+  ImagePainter          image_painter_;
 protected:
   void                  broken_image    ();
   virtual void          size_request    (Requisition &requisition) override;

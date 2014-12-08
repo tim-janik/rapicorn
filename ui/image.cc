@@ -9,7 +9,7 @@ namespace Rapicorn {
 void
 ImageImpl::pixbuf (const Pixbuf &pixbuf)
 {
-  image_backend_ = load_pixmap (Pixmap (pixbuf));
+  image_painter_ = ImagePainter (Pixmap (pixbuf));
   invalidate();
 }
 
@@ -23,8 +23,8 @@ void
 ImageImpl::broken_image()
 {
   String icon = Stock ("broken-image").icon();
-  image_backend_ = load_source (icon);
-  if (!image_backend_)
+  image_painter_ = ImagePainter (icon);
+  if (!image_painter_)
     critical ("missing stock: broken-image");
   invalidate();
 }
@@ -33,8 +33,8 @@ void
 ImageImpl::source (const String &image_url)
 {
   source_ = image_url;
-  image_backend_ = load_source (source_);
-  if (!image_backend_)
+  image_painter_ = ImagePainter (source_);
+  if (!image_painter_)
     broken_image();
   invalidate();
 }
@@ -51,8 +51,8 @@ ImageImpl::stock (const String &stock_id)
   return_unless (stock_id_ != stock_id);
   stock_id_ = stock_id;
   String stock_icon = Stock (stock_id_).icon();
-  image_backend_ = load_source (stock_icon);
-  if (!image_backend_)
+  image_painter_ = ImagePainter (stock_icon);
+  if (!image_painter_)
     broken_image();
   invalidate();
 }
@@ -66,7 +66,7 @@ ImageImpl::stock() const
 void
 ImageImpl::size_request (Requisition &requisition)
 {
-  const Requisition irq = get_image_size (image_backend_);
+  const Requisition irq = image_painter_.image_size();
   requisition.width += irq.width;
   requisition.height += irq.height;
 }
@@ -80,7 +80,7 @@ ImageImpl::size_allocate (Allocation area, bool changed)
 void
 ImageImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  paint_image (image_backend_, rcontext, rect);
+  image_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
 }
 
 static const WidgetFactory<ImageImpl> image_factory ("Rapicorn_Factory:Image");
