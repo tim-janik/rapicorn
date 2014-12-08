@@ -170,7 +170,7 @@ cairo_surface_from_pixmap (Pixmap pixmap)
 }
 
 // == ImageBackend ==
-struct ImagePainter::ImageBackend {
+struct ImagePainter::ImageBackend : public std::enable_shared_from_this<ImageBackend> {
   virtual            ~ImageBackend    () {}
   virtual Requisition image_size      () = 0;
   virtual Rect        fill_area       () = 0;
