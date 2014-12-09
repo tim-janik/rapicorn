@@ -11,10 +11,10 @@ namespace Lib { // Namespace for implementation internals
 
 // == StringFormatter ==
 
-/** StringFormatter - printf-like string formatting for C++.
+/** StringFormatter - sprintf() like string formatting for C++.
  *
- * See parse_directive() for supported flags, modifiers and conversions.
- * Finding strings with size modifiers for possible cleanups:
+ * See format() for supported flags, modifiers and conversions.
+ * To find source code strings with size modifiers for possible cleanups, use:
  * egrep "\"([^\"]|\\\")*%[0-9$]*[-+#0 \'I]*[*0-9$]*[.*0-9$]*[hlLqjzt]+[nSspmCcdiouXxFfGgEeAa]"
  */
 class StringFormatter {
@@ -113,14 +113,31 @@ public:
     POSIX_LOCALE,
     CURRENT_LOCALE,
   };
+  /** Format a string according to an sprintf() @a format string with @a arguments.
+   * Refer to sprintf() for the format string details, this function is designed to
+   * serve as an sprintf() replacement and mimick its behaviour as close as possible.
+   * Supported format directive features are:
+   * - Formatting flags (sign conversion, padding, alignment), i.e. the flags: [-#0+ ']
+   * - Field width and precision specifications.
+   * - Positional arguments for field width, precision and value.
+   * - Length modifiers are tolerated: i.e. any of [hlLjztqZ].
+   * - The conversion specifiers [spmcCdiouXxFfGgEeAa].
+   *
+   * Additionally, arguments can be transformed after conversion by passing a std::string
+   * conversion function as @a arg_transform. This may e.g. be used for XML character
+   * escaping of the format argument values. <br/>
+   * @NOTE Format errors, e.g. missing arguments will produce a warning on stderr and
+   * return the @a format string unmodified.
+   * @returns A formatted string.
+   */
   template<LocaleContext LC = POSIX_LOCALE, class ...Args>
   static __attribute__ ((__format__ (printf, 2, 0), noinline)) std::string
-  format (const ArgTransform &arg_transform, const char *format, const Args &...args)
+  format (const ArgTransform &arg_transform, const char *format, const Args &...arguments)
   {
     constexpr size_t N = sizeof... (Args);
     FormatArg mem[N ? N : 1];
     StringFormatter formatter (arg_transform, N, mem, LC);
-    return formatter.intern_format<0> (format, args...);
+    return formatter.intern_format<0> (format, arguments...);
   }
 };
 
