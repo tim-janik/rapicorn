@@ -145,6 +145,37 @@ AlignmentImpl::padding (int c)
 
 static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn_Factory:Alignment");
 
+// == FillAreaContainerImpl ==
+FillAreaContainerImpl::FillAreaContainerImpl ()
+{}
+
+FillAreaContainerImpl::~FillAreaContainerImpl ()
+{}
+
+void
+FillAreaContainerImpl::source (const String &uri)
+{
+}
+
+String
+FillAreaContainerImpl::source () const
+{
+  return source_;
+}
+
+void
+FillAreaContainerImpl::size_request (Requisition &requisition)
+{
+}
+
+void
+FillAreaContainerImpl::size_allocate (Allocation area, bool changed)
+{
+}
+
+static const WidgetFactory<FillAreaContainerImpl> fill_area_container_factory ("Rapicorn_Factory:FillAreaContainer");
+
+
 // == HBoxImpl ==
 HBoxImpl::HBoxImpl()
 {}
