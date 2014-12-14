@@ -4,6 +4,7 @@
 
 #include <ui/container.hh>
 #include <ui/table.hh>
+#include <ui/painter.hh>
 
 namespace Rapicorn {
 
@@ -29,7 +30,8 @@ public:
 };
 
 class FillAreaContainerImpl : public virtual SingleContainerImpl, public virtual FillAreaContainerIface {
-  String source_;
+  String       source_;
+  ImagePainter image_painter_;
 protected:
   virtual        ~FillAreaContainerImpl () override;
   virtual void    size_request          (Requisition &requisition) override;
