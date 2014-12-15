@@ -1477,7 +1477,10 @@ WidgetImpl::debug_dump (const String &flags)
 {
   WidgetImpl *saved_debug_dump_marker = global_debug_dump_marker;
   global_debug_dump_marker = this;
-  String dump = root()->test_dump();
+  WidgetImpl *asroot = root();
+  if (!asroot)
+    asroot = this;
+  String dump = asroot->test_dump();
   global_debug_dump_marker = saved_debug_dump_marker;
   return dump;
 }
