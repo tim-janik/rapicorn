@@ -1138,7 +1138,9 @@ ContainerImpl*
 WidgetImpl::root () const
 {
   ContainerImpl *root = parent_;
-  if (root)
+  if (!root)
+    root = const_cast<WidgetImpl*> (this)->as_container_impl();
+  else
     while (root->parent_)
       root = root->parent_;
   return root;
