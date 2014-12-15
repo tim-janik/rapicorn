@@ -38,6 +38,7 @@ protected:
   virtual void        scroll_to_child   (WidgetImpl &widget);
   virtual void        dump_test_data    (TestStream &tstream);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
+  static Requisition  size_request_child (WidgetImpl &child, bool *hspread, bool *vspread);
 public:
   virtual WidgetImplP*  begin           () const = 0;
   virtual WidgetImplP*  end             () const = 0;
@@ -69,7 +70,6 @@ public:
 class SingleContainerImpl : public virtual ContainerImpl {
   WidgetImplP           child_widget;
 protected:
-  void                  size_request_child      (Requisition &requisition, bool *hspread, bool *vspread);
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
   virtual void          render                  (RenderContext&, const Rect&) {}

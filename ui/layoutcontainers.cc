@@ -173,10 +173,15 @@ FillAreaContainerImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
   if (has_visible_child())
+    requisition = size_request_child (get_child(), &chspread, &cvspread);
+  if (image_painter_)
     {
-      WidgetImpl &child = get_child();
-      Requisition requisition;
-      size_request_child (requisition, &chspread, &cvspread);
+      const Requisition image_size = image_painter_.image_size ();
+      Rect fill = image_painter_.fill_area();
+      assert_return (fill.x + fill.width <= image_size.width);
+      assert_return (fill.y + fill.height <= image_size.height);
+      requisition.width += image_size.width - fill.width;
+      requisition.height += image_size.height - fill.height;
     }
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
