@@ -19,7 +19,7 @@
       <Alignment hexpand="1" vexpand="1" hposition="0" vposition="1"
 		 left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
 	<Frame frame-type="in">
-	  <ListArea model="`model`"/>
+	  <ListArea model="@eval model"/>
 	</Frame>
       </Alignment>
       <VSlider vexpand="0" adjustment-source="ancestry-vertical" vposition="1" hposition="1" />
@@ -40,7 +40,7 @@
 	  </HBox>
 
 	  <VBox spacing="5" homogeneous="0" >
-	    <widget-list hspread="1" vspread="1" model="`list_model`"/>
+	    <widget-list hspread="1" vspread="1" model="@eval list_model"/>
 	    <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Quit"/> </Button>
 	  </VBox>
 

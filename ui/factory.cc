@@ -468,8 +468,8 @@ Builder::parse_call_args (const StringVector &call_names, const StringVector &ca
           const String aname = canonify_dashes (cnode->get_attribute ("id")); // canonify argument id
           local_names.push_back (aname);
           String rvalue = cnode->get_attribute ("default");
-          if (rvalue.find ('`') != String::npos)
-            rvalue = env.parse_eval (rvalue);
+          if (string_startswith (rvalue, "@eval "))
+            rvalue = env.parse_eval (rvalue.substr (6));
           local_values.push_back (rvalue);
         }
     }
@@ -526,9 +526,9 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
       const String cname = canonify_dashes (in_names[i]);
       const String &ivalue = in_values[i];
       String rvalue;
-      if (ivalue.find ('`') != String::npos)
+      if (string_startswith (ivalue, "@eval "))
         {
-          rvalue = env.parse_eval (ivalue);
+          rvalue = env.parse_eval (ivalue.substr (6));
           EDEBUG ("%s: eval %s=\"%s\": %s", String (caller ? node_location (caller).c_str() : "Rapicorn:Factory").c_str(),
                   in_names[i].c_str(), ivalue.c_str(), rvalue.c_str());
         }
@@ -595,11 +595,11 @@ Builder::apply_props (const XmlNode *pnode, WidgetImpl &widget)
         continue;
       const String aname = canonify_dashes (prop_name);
       String value = cnode->xml_string (0, false);
-      if (value.find ('`') != String::npos && string_to_bool (cnode->get_attribute ("evaluate"), true))
+      if (string_startswith (value, "@eval ") && string_to_bool (cnode->get_attribute ("evaluate"), true))
         {
           Evaluator env;
           env.push_map (locals_);
-          value = env.parse_eval (value);
+          value = env.parse_eval (value.substr (6));
           env.push_map (locals_);
         }
       if (pnode->name() == prop_object && aname != "name" && aname != "id" && try_set_property (widget, aname, value))

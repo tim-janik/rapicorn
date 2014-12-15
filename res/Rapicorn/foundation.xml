@@ -22,7 +22,7 @@
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
 	<FocusFrame frame-type="none">
-	  <Alignment id="child-area" vscale="`not 1*center_child`" hscale="`not 1*center_child`" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+	  <Alignment id="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
 	</FocusFrame>
       </Ambience>
     </Frame>
@@ -33,14 +33,14 @@
       <Ambience
 	normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
-	<Alignment id="child-area" vscale="`not 1*center_child`" hscale="`not 1*center_child`" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+	<Alignment id="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
       </Ambience>
     </Frame>
   </Rapicorn_Factory:ButtonArea>
   <Rapicorn_Factory:Frame id="DefaultButton" child-container="child-area" frame-type="in" >
     <Argument id="on-click" />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
-      <Button id="child-area" on-click="`on_click`"/>
+      <Button id="child-area" on-click="@eval on_click"/>
     </Alignment>
   </Rapicorn_Factory:Frame>
 

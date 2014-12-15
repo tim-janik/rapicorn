@@ -3,13 +3,13 @@
 <rapicorn-definitions>
 
   <Window id="main-test">
-    <Argument id="defaultvalue17" default="`10 + 7`"/>
+    <Argument id="defaultvalue17" default="@eval 10 + 7"/>
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
       <VBox spacing="5">
 	<!-- Check evaluation of arguments -->
-	<TestWidget value="`20 - 1`" assert-value="19" />
+	<TestWidget value="@eval 20 - 1" assert-value="19" />
 	<!-- Check evaluation of argument default assignments -->
-	<TestWidget value="`defaultvalue17`" assert-value="17" />
+	<TestWidget value="@eval defaultvalue17" assert-value="17" />
       </VBox>
     </Alignment>
   </Window>

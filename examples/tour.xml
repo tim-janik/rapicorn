@@ -37,7 +37,7 @@
     <Argument id="label-variable" default="Middle Label (sinfex test)"/>
     <Arrangement>
       <Label markup-text="First?"  hanchor="1" hposition="-70" vposition="30"/>
-      <Label markup-text="`label_variable`" />
+      <Label markup-text="@eval label_variable" />
       <Label markup-text="Third Label" hanchor="0" hposition="75" vposition="30" />
     </Arrangement>
   </Frame>

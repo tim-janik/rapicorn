@@ -19,13 +19,13 @@
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> in definitions:" />
 	<property-test />
 	<Label plain-text="Checking &lt;arg:value default='...'/> syntax:" />
-	<TestWidget assert_value="zonking" value="`zonk`" />
+	<TestWidget assert_value="zonking" value="@eval zonk" />
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> evaluation:" />
 	<TestWidget assert_value="zonking">
-	  <TestWidget.value>`zonk`</TestWidget.value>
+	  <TestWidget.value>@eval zonk</TestWidget.value>
 	</TestWidget>
 	<Label plain-text="Checking backtick in attributes:" />
-	<TestWidget assert_value="``"><TestWidget.value evaluate="false">&#x60;</TestWidget.value></TestWidget>
+	<TestWidget assert_value="`"><TestWidget.value evaluate="false">&#x60;</TestWidget.value></TestWidget>
       </VBox>
     </Alignment>
   </Window>
