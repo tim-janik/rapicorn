@@ -88,6 +88,7 @@ is_definition (const XmlNode &xnode)
 static bool
 is_property (const XmlNode &xnode, String *element = NULL, String *attribute = NULL)
 {
+  /// @TODO: check Button.label property names to match enclosing XML node
   // detect <Button.label/> property names
   const String &pname = xnode.name();
   const size_t i = pname.rfind (".");
@@ -340,19 +341,19 @@ class Builder {
   VariableMap      locals_;
   void      eval_args       (const StringVector &in_names, const StringVector &in_values, StringVector &out_names,
                              StringVector &out_values, const XmlNode *caller, String *node_name, String *child_container_name);
-  void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller = NULL);
+  void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, const StringVector &nested_props, String &name, const XmlNode *caller = NULL);
   bool      try_set_property(WidgetImpl &widget, const String &property_name, const String &value);
   void      apply_args      (WidgetImpl &widget, const StringVector &arg_names, const StringVector &arg_values, const XmlNode *caller, bool idignore);
   void      apply_props     (const XmlNode *pnode, WidgetImpl &widget);
   void      call_children   (const XmlNode *pnode, WidgetImpl &widget, vector<WidgetImpl*> *vchildren = NULL, const String &presuppose = "", int64 max_children = -1);
-  WidgetImplP call_widget       (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const XmlNode *caller, const XmlNode *outmost_caller);
-  WidgetImplP call_child      (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const String &name, const XmlNode *caller);
+  WidgetImplP call_widget   (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const StringVector &nested_props, const XmlNode *caller, const XmlNode *outmost_caller);
+  WidgetImplP call_child    (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const String &name, const XmlNode *caller);
   explicit  Builder         (const XmlNode &definition_node);
 public:
   explicit  Builder             (const String &widget_identifier, const XmlNode *context_node);
   static WidgetImplP build_widget   (const String &widget_identifier, const StringVector &call_names, const StringVector &call_values);
   static WidgetImplP inherit_widget (const String &widget_identifier, const StringVector &call_names, const StringVector &call_values,
-                                 const XmlNode *caller, const XmlNode *derived);
+                                     const StringVector &nested_props, const XmlNode *caller, const XmlNode *derived);
   static void build_children    (ContainerImpl &container, vector<WidgetImpl*> *children, const String &presuppose, int64 max_children);
   static bool widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier);
 };
@@ -404,7 +405,7 @@ Builder::build_widget (const String &widget_identifier, const StringVector &call
   initialize_factory_lazily();
   Builder builder (widget_identifier, NULL);
   if (builder.dnode_)
-    return builder.call_widget (builder.dnode_, call_names, call_values, NULL, NULL);
+    return builder.call_widget (builder.dnode_, call_names, call_values, StringVector(), NULL, NULL);
   else
     {
       critical ("%s: unknown type identifier: %s", "Builder::build_widget", widget_identifier.c_str());
@@ -414,14 +415,14 @@ Builder::build_widget (const String &widget_identifier, const StringVector &call
 
 WidgetImplP
 Builder::inherit_widget (const String &widget_identifier, const StringVector &call_names, const StringVector &call_values,
-                         const XmlNode *caller, const XmlNode *derived)
+                         const StringVector &nested_props, const XmlNode *caller, const XmlNode *derived)
 {
   assert_return (derived != NULL, NULL);
   assert_return (caller != NULL, NULL);
   Builder builder (widget_identifier, caller);
   FDEBUG ("lookup %s: dnode=%p itfactory=%p", widget_identifier.c_str(), builder.dnode_, lookup_widget_factory (widget_identifier));
   if (builder.dnode_)
-    return builder.call_widget (builder.dnode_, call_names, call_values, caller, derived);
+    return builder.call_widget (builder.dnode_, call_names, call_values, nested_props, caller, derived);
   else
     {
       const WidgetTypeFactory *itfactory = lookup_widget_factory (widget_identifier);
@@ -453,7 +454,7 @@ canonify_dashes (const String &key) // FIXME: there should be an XmlNode post-pr
 }
 
 void
-Builder::parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, String &name, const XmlNode *caller)
+Builder::parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, const StringVector &nested_props, String &name, const XmlNode *caller)
 {
   StringVector local_names, local_values;
   // setup definition args
@@ -492,6 +493,20 @@ Builder::parse_call_args (const StringVector &call_names, const StringVector &ca
         {
           rest_names.push_back (cname);
           rest_values.push_back (call_values[i]);
+        }
+    }
+  // merge properties from nested nodes
+  for (auto pv : nested_props)
+    {
+      const ssize_t pos = pv.find ('=');
+      const String pname = pv.substr (0, pos), pvalue = pv.substr (pos + 1);
+      vector<String>::const_iterator it = find (local_names.begin(), local_names.end(), pname);
+      if (it != local_names.end())
+        local_values[it - local_names.begin()] = pvalue; // local argument overriden by call argument
+      else
+        {
+          rest_names.push_back (pname);
+          rest_values.push_back (pvalue);
         }
     }
   // prepare variable map for evaluator
@@ -589,27 +604,48 @@ Builder::apply_props (const XmlNode *pnode, WidgetImpl &widget)
         }
       if (pnode->name() == prop_object && aname != "name" && aname != "id" && try_set_property (widget, aname, value))
         {}
-      else
+      else if (cnode->name().find (".") == std::string::npos) // ignore nested properties
         critical ("%s: widget %s: unknown property: %s", node_location (pnode), widget.name(), cnode->name());
     }
+}
+
+static StringVector
+list_nested_properties (const XmlNode *xnode)
+{
+  StringVector nested_props; // list of name=value strings
+  for (const XmlNodeP cnode : xnode->children())
+    {
+      String prop_object, prop_name;
+      if (is_property (*cnode, &prop_object, &prop_name) && xnode->name() == prop_object)
+        {
+          const String pname = canonify_dashes (prop_name);
+          nested_props.push_back (pname + "=" + cnode->xml_string (0, false));
+        }
+    }
+  return nested_props;
 }
 
 WidgetImplP
 Builder::call_widget (const XmlNode *anode,
                       const StringVector &call_names, const StringVector &call_values, // evaluated args
+                      const StringVector &caller_nested_props,
                       const XmlNode *caller, const XmlNode *outmost_caller)
 {
   assert_return (dnode_ != NULL, NULL);
   String name;
   StringVector prop_names, prop_values;
+  // list child nodes with property assignments
+  StringVector nested_props = caller_nested_props;
+  const StringVector anode_nested_props = list_nested_properties (anode);
+  nested_props.insert (nested_props.end(), anode_nested_props.begin(), anode_nested_props.end());
   /// @TODO: Catch error condition: simultaneous use of inheritance from "..." and child-container="..."
-  parse_call_args (call_names, call_values, prop_names, prop_values, name, caller);
+  parse_call_args (call_names, call_values, prop_names, prop_values, nested_props, name, caller);
   // extract factory attributes and eval attributes
   StringVector parent_names, parent_values;
   assert (child_container_name_.empty() == true);
   eval_args (anode->list_attributes(), anode->list_values(), parent_names, parent_values, caller, NULL, &child_container_name_);
   // create widget
-  WidgetImplP widget = Builder::inherit_widget (parent_type_name (*anode), parent_names, parent_values, anode,
+  WidgetImplP widget = Builder::inherit_widget (parent_type_name (*anode), parent_names, parent_values, StringVector(), anode,
                                                 outmost_caller ? outmost_caller : (caller ? caller : anode));
   if (!widget)
     return NULL;
@@ -638,8 +674,10 @@ Builder::call_child (const XmlNode *anode,
                      const String &name, const XmlNode *caller)
 {
   assert_return (dnode_ != NULL, NULL);
+  // list child nodes with property assignments
+  StringVector nested_props = list_nested_properties (anode);
   // create widget
-  WidgetImplP widget = Builder::inherit_widget (anode->name(), call_names, call_values, anode, caller ? caller : anode);
+  WidgetImplP widget = Builder::inherit_widget (anode->name(), call_names, call_values, nested_props, anode, caller ? caller : anode);
   if (!widget)
     return NULL;
   // apply widget arguments
