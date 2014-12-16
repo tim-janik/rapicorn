@@ -31,6 +31,7 @@
   <Rapicorn_Factory id="TextEditor" factory-type="Rapicorn_Factory:TextEditor"/>
   <Rapicorn_Factory id="VBox" factory-type="Rapicorn_Factory:VBox"/>
   <Rapicorn_Factory id="WidgetList" factory-type="Rapicorn_Factory:WidgetList"/>
+  <Rapicorn_Factory id="WidgetListRow" factory-type="Rapicorn_Factory:WidgetListRow"/>
   <Rapicorn_Factory id="Window" factory-type="Rapicorn_Factory:Window"/>
 
   <!-- Buttons -->

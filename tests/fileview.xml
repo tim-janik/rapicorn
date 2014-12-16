@@ -3,14 +3,14 @@
 <interfaces>
 
   <!-- list construction -->
-  <Rapicorn_Factory:WidgetList id="ListArea"/>
-  <Rapicorn_Factory:WidgetListRow id="RapicornWidgetListRow" child-container="ListRowCavity" hexpand="1">
+  <WidgetList id="ListArea"/>
+  <WidgetListRow id="RapicornWidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
       <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
 	<HBox id="ListRowCavity"/>
       </FocusFrame>
     </Ambience>
-  </Rapicorn_Factory:WidgetListRow>
+  </WidgetListRow>
 
   <!-- list area -->
   <Alignment id="widget-list" >
