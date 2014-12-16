@@ -45,7 +45,7 @@ installcheck-local: check-TEST_PYPROGS
 
 # === XML Linting ===
 xmllint-check:
-	cd $(srcdir) && [ -z "$(XML_FILES)" ] || $(XMLLINT) --noout $(XML_FILES)
+	cd $(srcdir) && [ -z "$(XML_FILES)" ] || ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
 .PHONY: xmllint-check
 stamp-autochecks: $(XML_FILES)
 	@$(MAKE) xmllint-check

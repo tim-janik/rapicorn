@@ -37,7 +37,7 @@ XML_FILES	+= tour.xml
 EXTRA_DIST	+= testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
 
 xmllint-check:
-	cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES)
+	cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
 .PHONY: xmllint-check
 stamp-autochecks: $(XML_FILES)
 	@$(MAKE) xmllint-check

@@ -82,7 +82,7 @@ texting-png-test: $(srcdir)/texting.xml
 check: texting-png-test
 
 xmllint-check:
-	$(Q) cd $(srcdir) && $(XMLLINT) --noout $(XML_FILES) ; eval "$$TSTDIAGNOSE" "'linting XML_FILES'"
+	$(Q) cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
 check: xmllint-check
 
 .PHONY: xmllint-check
