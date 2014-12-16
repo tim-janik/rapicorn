@@ -1,21 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>  <!--*-mode: xml;-*-->
 <!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
-<rapicorn-definitions xmlns:Rapicorn_Factory="http://rapicorn.org/xmlns">
+<rapicorn-definitions>
 
-  <!-- Alignment -->
-  <Rapicorn_Factory:Alignment id="Alignment"/>
+  <!-- Factory Types -->
+  <Rapicorn_Factory id="Alignment" factory-type="Rapicorn_Factory:Alignment"/>
+  <Rapicorn_Factory id="Ambience" factory-type="Rapicorn_Factory:Ambience"/>
+  <Rapicorn_Factory id="Arrangement" factory-type="Rapicorn_Factory:Arrangement"/>
+  <Rapicorn_Factory id="Arrow" factory-type="Rapicorn_Factory:Arrow"/>
+  <Rapicorn_Factory id="ButtonArea" factory-type="Rapicorn_Factory:ButtonArea"/>
+  <Rapicorn_Factory id="DotGrid" factory-type="Rapicorn_Factory:DotGrid"/>
+  <Rapicorn_Factory id="Drawable" factory-type="Rapicorn_Factory:Drawable"/>
+  <Rapicorn_Factory id="FillAreaContainer" factory-type="Rapicorn_Factory:FillAreaContainer"/>
+  <Rapicorn_Factory id="FocusFrame" factory-type="Rapicorn_Factory:FocusFrame"/>
+  <Rapicorn_Factory id="Frame" factory-type="Rapicorn_Factory:Frame"/>
+  <Rapicorn_Factory id="HBox" factory-type="Rapicorn_Factory:HBox"/>
+  <Rapicorn_Factory id="IdlTestWidget" factory-type="Rapicorn_Factory:IdlTestWidget"/>
+  <Rapicorn_Factory id="Image" factory-type="Rapicorn_Factory:Image"/>
+  <Rapicorn_Factory id="Label" factory-type="Rapicorn_Factory:Label"/>
+  <Rapicorn_Factory id="LayerPainter" factory-type="Rapicorn_Factory:LayerPainter"/>
+  <Rapicorn_Factory id="Rapicorn_Factory_TextBlock" factory-type="Rapicorn_Factory:TextPango"/>
+  <Rapicorn_Factory id="RapicornScrollArea" factory-type="Rapicorn_Factory:ScrollArea"/>
+  <Rapicorn_Factory id="RapicornScrollPort" factory-type="Rapicorn_Factory:ScrollPort"/>
+  <Rapicorn_Factory id="Rapicorn-slider-skid" factory-type="Rapicorn_Factory:SliderSkid"/>
+  <Rapicorn_Factory id="Rapicorn-slider-trough" factory-type="Rapicorn_Factory:SliderTrough"/>
+  <Rapicorn_Factory id="SliderArea" factory-type="Rapicorn_Factory:SliderArea"/>
+  <Rapicorn_Factory id="StatePainter" factory-type="Rapicorn_Factory:StatePainter"/>
+  <Rapicorn_Factory id="Table" factory-type="Rapicorn_Factory:Table"/>
+  <Rapicorn_Factory id="TestBox" factory-type="Rapicorn_Factory:TestBox"/>
+  <Rapicorn_Factory id="TestContainer" factory-type="Rapicorn_Factory:TestContainer"/>
+  <Rapicorn_Factory id="TextEditor" factory-type="Rapicorn_Factory:TextEditor"/>
+  <Rapicorn_Factory id="VBox" factory-type="Rapicorn_Factory:VBox"/>
+  <Rapicorn_Factory id="WidgetList" factory-type="Rapicorn_Factory:WidgetList"/>
+  <Rapicorn_Factory id="Window" factory-type="Rapicorn_Factory:Window"/>
 
-  <!-- Ambience (background + lighting) -->
-  <Rapicorn_Factory:Ambience id="Ambience"/>
-
-  <!-- Arrangement -->
-  <Rapicorn_Factory:Arrangement id="Arrangement" />
-
-  <!-- Arrow -->
-  <Rapicorn_Factory:Arrow id="Arrow"/>
-
-  <!-- buttons -->
-  <Rapicorn_Factory:ButtonArea id="Button" child-container="child-area" >
+  <!-- Buttons -->
+  <ButtonArea id="Button" child-container="child-area" >
     <Argument id="center-child" default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
@@ -26,8 +45,8 @@
 	</FocusFrame>
       </Ambience>
     </Frame>
-  </Rapicorn_Factory:ButtonArea>
-  <Rapicorn_Factory:ButtonArea id="UnfocusedButton" child-container="child-area" >
+  </ButtonArea>
+  <ButtonArea id="UnfocusedButton" child-container="child-area" >
     <Argument id="center-child" default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
@@ -36,48 +55,16 @@
 	<Alignment id="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
       </Ambience>
     </Frame>
-  </Rapicorn_Factory:ButtonArea>
-  <Rapicorn_Factory:Frame id="DefaultButton" child-container="child-area" frame-type="in" >
+  </ButtonArea>
+  <Frame id="DefaultButton" child-container="child-area" frame-type="in" >
     <Argument id="on-click" />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
       <Button id="child-area" on-click="@eval on_click"/>
     </Alignment>
-  </Rapicorn_Factory:Frame>
+  </Frame>
 
-  <!-- DotGrid -->
-  <Rapicorn_Factory:DotGrid id="DotGrid"/>
-
-  <!-- Drawable -->
-  <Rapicorn_Factory:Drawable id="Drawable"/>
-
-  <!-- FillAreaContainer -->
-  <Rapicorn_Factory:FillAreaContainer id="FillAreaContainer"/>
-
-  <!-- frames -->
-  <Rapicorn_Factory:Frame id="Frame"/>
-  <Rapicorn_Factory:FocusFrame id="FocusFrame"/>
-
-  <!-- Image -->
-  <Rapicorn_Factory:Image id="Image" />
-
-  <!-- Label -->
-  <Rapicorn_Factory:Label id="Label" />
-  <Rapicorn_Factory:TextPango id="Rapicorn_Factory_TextBlock" />
-
-  <!-- LayerPainter -->
-  <Rapicorn_Factory:LayerPainter id="LayerPainter"/>
-
-  <!-- StatePainter -->
-  <Rapicorn_Factory:StatePainter id="StatePainter"/>
-
-  <!-- Window -->
-  <Rapicorn_Factory:Window id="Window"/>
-
-  <!-- slider -->
-  <Rapicorn_Factory:SliderTrough id="Rapicorn-slider-trough"/>
-  <Rapicorn_Factory:SliderSkid id="Rapicorn-slider-skid"/>
   <!-- HSlider -->
-  <Rapicorn_Factory:SliderArea id="HSlider">
+  <SliderArea id="HSlider">
     <Frame normal-frame="in" vexpand="1" hexpand="1" height="18">
       <HBox vexpand="1">
 	<UnfocusedButton on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1" center-child="0" >
@@ -99,9 +86,10 @@
 	</UnfocusedButton>
       </HBox>
     </Frame>
-  </Rapicorn_Factory:SliderArea>
+  </SliderArea>
+
   <!-- VSlider -->
-  <Rapicorn_Factory:SliderArea id="VSlider">
+  <SliderArea id="VSlider">
     <Frame normal-frame="in" vexpand="1" hexpand="1" width="18">
       <VBox hexpand="1">
 	<UnfocusedButton on-click="decrement" on-click2="page-increment" click-type="fast-repeat" hexpand="1" center-child="0" >
@@ -123,11 +111,9 @@
 	</UnfocusedButton>
       </VBox>
     </Frame>
-  </Rapicorn_Factory:SliderArea>
+  </SliderArea>
 
   <!-- ScrollArea -->
-  <Rapicorn_Factory:ScrollPort id="RapicornScrollPort"/>
-  <Rapicorn_Factory:ScrollArea id="RapicornScrollArea"/>
   <Alignment id="ScrollArea" child-container="scroll-container">
     <RapicornScrollArea>
       <Table>
@@ -145,25 +131,7 @@
     </RapicornScrollArea>
   </Alignment>
 
-  <!-- Table -->
-  <Rapicorn_Factory:Table id="Table" >
-  </Rapicorn_Factory:Table>
-  <Rapicorn_Factory:HBox id="HBox" />
-  <Rapicorn_Factory:VBox id="VBox" />
-
-  <!-- IdlTestWidget -->
-  <Rapicorn_Factory:IdlTestWidget id="IdlTestWidget"/>
-
-  <!-- TestBox -->
-  <Rapicorn_Factory:TestBox id="TestBox"/>
-
-  <!-- TestContainer -->
-  <Rapicorn_Factory:TestContainer id="TestContainer"/>
-
   <!-- TestWidget -->
   <TestContainer id="TestWidget" paint-allocation="1" width="10" height="10"/>
-
-  <!-- TextEditor -->
-  <Rapicorn_Factory:TextEditor id="TextEditor"/>
 
 </rapicorn-definitions>
