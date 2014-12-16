@@ -45,17 +45,14 @@ class NodeData {
   setup (XmlNode &xnode)
   {
     const StringVector &attributes_names = xnode.list_attributes(); // &attributes_values = xnode.list_values();
-    for (size_t i = 0; i < attributes_names.size(); i++)
-      if (attributes_names[i] == "tmpl:presuppose")
-        tmpl_presuppose = true;
   }
   static struct NodeDataKey : public DataKey<NodeData*> {
     virtual void destroy (NodeData *data) { delete data; }
   } node_data_key;
 public:
-  bool gadget_definition, tmpl_presuppose;
+  bool gadget_definition;
   String domain;
-  NodeData (XmlNode &xnode) : gadget_definition (false), tmpl_presuppose (false) { setup (xnode); }
+  NodeData (XmlNode &xnode) : gadget_definition (false) { setup (xnode); }
   static NodeData&
   from_xml_node (XmlNode &xnode)
   {
