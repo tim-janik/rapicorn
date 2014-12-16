@@ -314,7 +314,6 @@ class Builder {
   WidgetImplP build_scope   (const StringVector &caller_arg_names, const StringVector &caller_arg_values, const String &caller_location,
                              const XmlNode *factory_context_node);
   WidgetImplP build_widget  (const XmlNode *node, const XmlNode *factory_context_node, Flags bflags);
-  explicit  Builder         (const XmlNode &definition_node);
   static String canonify_dashes (const String &key);
 public:
   explicit  Builder             (const String &widget_identifier, const XmlNode *context_node);
@@ -331,12 +330,6 @@ Builder::Builder (const String &widget_identifier, const XmlNode *context_node) 
 {
   if (!dnode_)
     return;
-}
-
-Builder::Builder (const XmlNode &definition_node) :
-  dnode_ (&definition_node), child_container_ (NULL)
-{
-  assert_return (is_definition (*dnode_));
 }
 
 String
