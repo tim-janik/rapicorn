@@ -309,7 +309,7 @@ class Builder {
   ContainerImpl   *child_container_;           // captured child_container_ widget during build phase
   VariableMap      locals_;
   void      eval_args       (const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
-                             StringVector &out_names, StringVector &out_values, String *node_name, String *child_container_name);
+                             StringVector &out_names, StringVector &out_values, String *child_container_name);
   bool      try_set_property(WidgetImpl &widget, const String &property_name, const String &value);
   WidgetImplP build_scope   (const StringVector &caller_arg_names, const StringVector &caller_arg_values, const String &caller_location,
                              const XmlNode *factory_context_node);
@@ -439,7 +439,7 @@ Builder::build_from_definition (const String &widget_identifier,
 
 void
 Builder::eval_args (const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
-                    StringVector &out_names, StringVector &out_values, String *node_name, String *child_container_name)
+                    StringVector &out_names, StringVector &out_values, String *child_container_name)
 {
   Evaluator env;
   env.push_map (locals_);
@@ -460,8 +460,6 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
         rvalue = ivalue;
       if (child_container_name && cname == "child_container")
         *child_container_name = rvalue;
-      else if (node_name && (cname == "name" || cname == "id"))
-        *node_name = rvalue;
       else
         {
           out_names.push_back (cname);
@@ -588,7 +586,7 @@ Builder::build_widget (const XmlNode *const wnode, const XmlNode *const factory_
   assert_return (ski == wnode->children().size(), NULL);
   // evaluate property values
   StringVector eprop_names, eprop_values;
-  eval_args (prop_names, prop_values, wnode, eprop_names, eprop_values, NULL, filter_child_container ? &child_container_name_ : NULL);
+  eval_args (prop_names, prop_values, wnode, eprop_names, eprop_values, filter_child_container ? &child_container_name_ : NULL);
   // create widget and assign properties from attributes and property element syntax
   WidgetImplP widget = build_from_definition (wnode->name(), eprop_names, eprop_values, node_location (wnode), factory_context_node);
   if (!widget)
