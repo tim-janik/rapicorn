@@ -1498,7 +1498,7 @@ WidgetImpl::test_dump ()
 void
 WidgetImpl::make_test_dump (TestStream &tstream)
 {
-  tstream.push_node (name());
+  tstream.push_node (Factory::factory_context_impl_type (factory_context()));
   if (this == global_debug_dump_marker)
     tstream.dump ("debug_dump", String ("1"));
   const PropertyList &plist = __aida_properties__();
@@ -1531,6 +1531,10 @@ WidgetImpl::dump_private_data (TestStream &tstream)
   tstream.dump ("allocation", allocation().string());
   const Allocation *carea = clip_area();
   tstream.dump ("clip_area", carea ? carea->string() : "");
+  tstream.dump ("factory_context", string_format ("{ name=%s, type=%s, impl=%s }",
+                                                  Factory::factory_context_name (factory_context()),
+                                                  Factory::factory_context_type (factory_context()),
+                                                  Factory::factory_context_impl_type (factory_context())));
 }
 
 void
