@@ -11,7 +11,89 @@
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Factory-Eval", __VA_ARGS__)
 
 namespace Rapicorn {
+namespace Factory {
 
+// == Utilities ==
+static String
+node_location (const XmlNode *xnode)
+{
+  return string_format ("%s:%d", xnode->parsed_file().c_str(), xnode->parsed_line());
+}
+
+static String
+node_location (const XmlNodeP xnode)
+{
+  return node_location (xnode.get());
+}
+
+
+// == InterfaceFile ==
+struct InterfaceFile : public virtual std::enable_shared_from_this<InterfaceFile> {
+  const String   file_name;
+  const XmlNodeP root; // <interfaces/>
+  explicit InterfaceFile (const String &f, const XmlNodeP r) : file_name (f), root (r) {}
+};
+typedef std::shared_ptr<InterfaceFile> InterfaceFileP;
+
+static std::vector<InterfaceFileP> interface_file_list;
+
+static DataKey<String> xmlnode_id_key; // used to cache id="" attribute on imediate children of <interfaces/>
+
+static String
+register_interface_file (String file_name, const XmlNodeP root)
+{
+  assert_return (file_name.empty() == false, "missing file");
+  assert_return (root->name() == "interfaces", "invalid file");
+  InterfaceFileP ifile = std::make_shared<InterfaceFile> (file_name, root);
+  for (auto dnode : root->children())
+    if (dnode->istext() == false)
+      {
+        const StringVector &attributes_names = dnode->list_attributes(), &attributes_values = dnode->list_values();
+        String id;
+        for (size_t i = 0; i < attributes_names.size(); i++)
+          if (attributes_names[i] == "id")
+            {
+              id = attributes_values[i];
+              break;
+            }
+        if (id.empty())
+          return string_format ("%s: interface definition without id", node_location (dnode));
+        dnode->set_data (&xmlnode_id_key, id);
+      }
+  interface_file_list.insert (interface_file_list.begin(), ifile);
+  FDEBUG ("%s: registering %d interfaces\n", file_name, root->children().size());
+  return "";
+}
+
+static const XmlNode*
+lookup_interface_node (const String &identifier, const XmlNode *context_node)
+{
+  for (auto ifile : interface_file_list)
+    for (auto node : ifile->root->children())
+      {
+        const String id = node->get_data (&xmlnode_id_key);
+        if (id == identifier)
+          return node.get();
+      }
+  return NULL;
+}
+
+static bool
+check_interface_node (const XmlNode &xnode)
+{
+#if 1
+  const XmlNode *parent = xnode.parent();
+  return parent && !parent->parent() && parent->name() == "interfaces";
+#else // FIXME: benchmark both cases
+  const String id = xnode.get_data (&xmlnode_id_key);
+  return id.empty() == false;
+#endif
+}
+
+} // Factory
+
+
+// == FactoryContext ==
 struct FactoryContext {
   const XmlNode *xnode;
   StringSeq     *type_tags;
@@ -68,20 +150,6 @@ public:
 
 NodeData::NodeDataKey NodeData::node_data_key;
 
-static const NodeData&
-xml_node_data (const XmlNode &xnode)
-{
-  return NodeData::from_xml_node (*const_cast<XmlNode*> (&xnode));
-}
-
-static bool
-is_definition (const XmlNode &xnode)
-{
-  const NodeData &ndata = xml_node_data (xnode);
-  const bool isdef = ndata.gadget_definition;
-  return isdef;
-}
-
 static std::list<const WidgetTypeFactory*>&
 widget_type_list()
 {
@@ -123,48 +191,6 @@ static GadgetDefinitionMap gadget_definition_map;
 static vector<String>      local_namespace_list;
 static vector<String>      gadget_namespace_list;
 
-static const XmlNode*
-gadget_definition_lookup (const String &widget_identifier, const XmlNode *context_node)
-{
-  GadgetDefinitionMap::iterator it = gadget_definition_map.find (widget_identifier);
-  if (it != gadget_definition_map.end())
-    return &*it->second; // non-namespace lookup succeeded
-  if (context_node)
-    {
-      const NodeData &ndata = xml_node_data (*context_node);
-      if (!ndata.domain.empty())
-        it = gadget_definition_map.find (ndata.domain + ":" + widget_identifier);
-      if (it != gadget_definition_map.end())
-        return &*it->second; // lookup in context namespace succeeded
-    }
-  for (ssize_t i = local_namespace_list.size() - 1; i >= 0; i--)
-    {
-      it = gadget_definition_map.find (local_namespace_list[i] + ":" + widget_identifier);
-      if (it != gadget_definition_map.end())
-        return &*it->second; // namespace searchpath lookup succeeded
-    }
-  for (ssize_t i = gadget_namespace_list.size() - 1; i >= 0; i--)
-    {
-      it = gadget_definition_map.find (gadget_namespace_list[i] + ":" + widget_identifier);
-      if (it != gadget_definition_map.end())
-        return &*it->second; // namespace searchpath lookup succeeded
-    }
-#if 0
-  printerr ("%s: FAIL, no '%s' in namespaces:", __func__, widget_identifier.c_str());
-  if (context_node)
-    {
-      String context_domain = context_node->get_data (&xml_node_domain_key);
-      printerr (" %s", context_domain.c_str());
-    }
-  for (size_t i = 0; i < local_namespace_list.size(); i++)
-    printerr (" %s", local_namespace_list[i].c_str());
-  for (size_t i = 0; i < gadget_namespace_list.size(); i++)
-    printerr (" %s", gadget_namespace_list[i].c_str());
-  printerr ("\n");
-#endif
-  return NULL; // unmatched
-}
-
 void
 use_ui_namespace (const String &uinamespace)
 {
@@ -203,7 +229,7 @@ factory_context_name (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
   const XmlNode &xnode = *fc->xnode;
-  if (is_definition (xnode))
+  if (check_interface_node (xnode))
     return definition_name (xnode);
   else
     return xnode.name();
@@ -214,12 +240,12 @@ factory_context_type (FactoryContext *fc)
 {
   assert_return (fc != NULL, "");
   const XmlNode *xnode = fc->xnode;
-  if (!is_definition (*xnode)) // lookup definition node from child node
+  if (!check_interface_node (*xnode)) // lookup definition node from child node
     {
-      xnode = gadget_definition_lookup (xnode->name(), xnode);
+      xnode = lookup_interface_node (xnode->name(), xnode);
       assert_return (xnode != NULL, "");
     }
-  assert_return (is_definition (*xnode), "");
+  assert_return (check_interface_node (*xnode), "");
   return definition_name (*xnode);
 }
 
@@ -228,12 +254,12 @@ factory_context_source (FactoryContext *fc)
 {
   assert_return (fc != NULL, UserSource (""));
   const XmlNode *xnode = fc->xnode;
-  if (!is_definition (*xnode)) // lookup definition node from child node
+  if (!check_interface_node (*xnode)) // lookup definition node from child node
     {
-      xnode = gadget_definition_lookup (xnode->name(), xnode);
+      xnode = lookup_interface_node (xnode->name(), xnode);
       assert_return (xnode != NULL, UserSource (""));
     }
-  assert_return (is_definition (*xnode), UserSource (""));
+  assert_return (check_interface_node (*xnode), UserSource (""));
   return UserSource ("WidgetFactory", xnode->parsed_file(), xnode->parsed_line());
 }
 
@@ -241,19 +267,19 @@ static void
 factory_context_list_types (StringVector &types, const XmlNode *xnode, const bool need_ids, const bool need_variants)
 {
   assert_return (xnode != NULL);
-  if (!is_definition (*xnode)) // lookup definition node from child node
+  if (!check_interface_node (*xnode)) // lookup definition node from child node
     {
-      xnode = gadget_definition_lookup (xnode->name(), xnode);
+      xnode = lookup_interface_node (xnode->name(), xnode);
       assert_return (xnode != NULL);
     }
   while (xnode)
     {
-      assert_return (is_definition (*xnode));
+      assert_return (check_interface_node (*xnode));
       if (need_ids)
         types.push_back (definition_name (*xnode));
       const String parent_name = parent_type_name (*xnode);
       const XmlNode *last = xnode;
-      xnode = gadget_definition_lookup (parent_name, xnode);
+      xnode = lookup_interface_node (parent_name, xnode);
       if (!xnode && last->name() == "Rapicorn_Factory")
         {
           const StringVector &attributes_names = last->list_attributes(), &attributes_values = last->list_values();
@@ -331,7 +357,7 @@ public:
 };
 
 Builder::Builder (const String &widget_identifier, const XmlNode *context_node) :
-  dnode_ (gadget_definition_lookup (widget_identifier, context_node)), child_container_ (NULL)
+  dnode_ (lookup_interface_node (widget_identifier, context_node)), child_container_ (NULL)
 {
   if (!dnode_)
     return;
@@ -345,18 +371,6 @@ Builder::canonify_dashes (const String &key)
     if (key[i] == '-')
       s[i] = '_'; // unshares string
   return s;
-}
-
-static String
-node_location (const XmlNode *xnode)
-{
-  return string_format ("%s:%d", xnode->parsed_file().c_str(), xnode->parsed_line());
-}
-
-static String
-node_location (const XmlNodeP xnode)
-{
-  return node_location (xnode.get());
 }
 
 static bool
@@ -655,21 +669,21 @@ bool
 Builder::widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier)
 {
   initialize_factory_lazily();
-  const XmlNode *const ancestor_node = gadget_definition_lookup (ancestor_identifier, NULL); // maybe NULL
+  const XmlNode *const ancestor_node = lookup_interface_node (ancestor_identifier, NULL); // maybe NULL
   const WidgetTypeFactory *const ancestor_itfactory = ancestor_node ? NULL : lookup_widget_factory (ancestor_identifier);
   if (widget_identifier == ancestor_identifier && (ancestor_node || ancestor_itfactory))
     return true; // potential fast path
   if (!ancestor_node && !ancestor_itfactory)
     return false; // ancestor_identifier is non-existent
   String identifier = widget_identifier;
-  const XmlNode *node = gadget_definition_lookup (identifier, NULL), *last = node;
+  const XmlNode *node = lookup_interface_node (identifier, NULL), *last = node;
   while (node)
     {
       if (node == ancestor_node)
         return true; // widget ancestor matches
       identifier = parent_type_name (*node);
       last = node;
-      node = gadget_definition_lookup (identifier, node);
+      node = lookup_interface_node (identifier, node);
     }
   if (ancestor_node)
     return false; // no node match possible
@@ -802,7 +816,10 @@ parse_ui_data_internal (const String &domain, const String &data_name, size_t da
   if (perror.code)
     errstr = string_format ("%s:%d:%d: %s", data_name.c_str(), perror.line_number, perror.char_number, perror.message.c_str());
   else
-    errstr = register_rapicorn_definitions (domain, &*xnode, definitions);
+    {
+      errstr = register_rapicorn_definitions (domain, &*xnode, definitions);
+      errstr = register_interface_file (data_name, xnode);
+    }
   return errstr;
 }
 
