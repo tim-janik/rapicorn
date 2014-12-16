@@ -23,10 +23,6 @@ WidgetImplP create_ui_widget    (const String           &widget_identifier,
 WidgetImplP create_ui_child     (ContainerImpl &container, const String &widget_identifier,
                                  const ArgumentList &arguments, bool autoadd = true);
 
-void        create_ui_children  (ContainerImpl          &container,
-                                 vector<WidgetImpl*>      *children,
-                                 const String           &presuppose,
-                                 int64                   max_children = -1);
 bool        check_ui_window     (const String           &widget_identifier);
 void        use_ui_namespace    (const String           &uinamespace);
 

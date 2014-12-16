@@ -85,22 +85,6 @@ is_definition (const XmlNode &xnode)
   return isdef;
 }
 
-static bool
-is_property (const XmlNode &xnode, String *element = NULL, String *attribute = NULL)
-{
-  /// @TODO: check Button.label property names to match enclosing XML node
-  // detect <Button.label/> property names
-  const String &pname = xnode.name();
-  const size_t i = pname.rfind (".");
-  if (i == String::npos || i + 1 >= pname.size())
-    return false;                                       // no match
-  if (element)
-    *element = pname.substr (0, i);
-  if (attribute)
-    *attribute = pname.substr (i + 1);
-  return true;                                          // matched element.attribute
-}
-
 static std::list<const WidgetTypeFactory*>&
 widget_type_list()
 {
@@ -216,6 +200,7 @@ WidgetTypeFactory::sanity_check_identifier (const char *namespaced_ident)
     fatal ("WidgetTypeFactory: identifier lacks factory qualification: %s", namespaced_ident);
 }
 
+// == Public factory_context API ==
 String
 factory_context_name (FactoryContext *fc)
 {
@@ -316,48 +301,21 @@ factory_context_impl_type (FactoryContext *fc)
   return fc->type;
 }
 
-#if 0
-static void
-dump_args (const String &what, const StringVector &anames, const StringVector &avalues)
-{
-  printerr ("%s:", what.c_str());
-  for (size_t i = 0; i < anames.size(); i++)
-    printerr (" %s=%s", anames[i].c_str(), avalues[i].c_str());
-  printerr ("\n");
-}
-#endif
-
-static String
-node_location (const XmlNode *xnode)
-{
-  return string_format ("%s:%d", xnode->parsed_file().c_str(), xnode->parsed_line());
-}
-static String node_location (const XmlNodeP xnode) { return node_location (xnode.get()); }
-
-enum BuilderFlags {
-  SCOPE_CHILD = 0,
-  SCOPE_WIDGET = 1,
-};
-
+// == Builder ==
 class Builder {
-  enum Flags { NONE = 0, INHERITED = 1, CHILD = 2 };
+  enum Flags { SCOPE_CHILD = 0, SCOPE_WIDGET = 1 };
   const XmlNode   *const dnode_;               // definition of gadget to be created
   String           child_container_name_;
   ContainerImpl   *child_container_;           // captured child_container_ widget during build phase
   VariableMap      locals_;
   void      eval_args       (const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
                              StringVector &out_names, StringVector &out_values, String *node_name, String *child_container_name);
-  void      parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, const StringVector &nested_props, String &name, const XmlNode *caller = NULL);
   bool      try_set_property(WidgetImpl &widget, const String &property_name, const String &value);
-  void      apply_args      (WidgetImpl &widget, const StringVector &arg_names, const StringVector &arg_values, const XmlNode *caller, bool idignore);
-  void      apply_props     (const XmlNode *pnode, WidgetImpl &widget);
-  void      call_children   (const XmlNode *pnode, WidgetImpl &widget, vector<WidgetImpl*> *vchildren = NULL, const String &presuppose = "", int64 max_children = -1);
   WidgetImplP build_scope   (const StringVector &caller_arg_names, const StringVector &caller_arg_values, const String &caller_location,
                              const XmlNode *factory_context_node);
-  WidgetImplP build_widget  (const XmlNode *node, const XmlNode *factory_context_node, BuilderFlags bflags);
-  WidgetImplP call_widget   (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const StringVector &nested_props, const XmlNode *caller, const XmlNode *outmost_caller);
-  WidgetImplP call_child    (const XmlNode *anode, const StringVector &call_names, const StringVector &call_values, const String &name, const XmlNode *caller);
+  WidgetImplP build_widget  (const XmlNode *node, const XmlNode *factory_context_node, Flags bflags);
   explicit  Builder         (const XmlNode &definition_node);
+  static String canonify_dashes (const String &key);
 public:
   explicit  Builder             (const String &widget_identifier, const XmlNode *context_node);
   static WidgetImplP eval_and_build        (const String &widget_identifier,
@@ -365,9 +323,6 @@ public:
   static WidgetImplP build_from_definition (const String &widget_identifier,
                                             const StringVector &call_names, const StringVector &call_values, const String &call_location,
                                             const XmlNode *factory_context_node);
-  static WidgetImplP inherit_widget (const String &widget_identifier, const StringVector &call_names, const StringVector &call_values,
-                                     const StringVector &nested_props, const XmlNode *caller, const XmlNode *derived);
-  static void build_children    (ContainerImpl &container, vector<WidgetImpl*> *children, const String &presuppose, int64 max_children);
   static bool widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier);
 };
 
@@ -384,32 +339,41 @@ Builder::Builder (const XmlNode &definition_node) :
   assert_return (is_definition (*dnode_));
 }
 
-void
-Builder::build_children (ContainerImpl &container, vector<WidgetImpl*> *children, const String &presuppose, int64 max_children)
+String
+Builder::canonify_dashes (const String &key)
 {
-  assert_return (presuppose != "");
-  const XmlNode *dnode, *pnode = container.factory_context()->xnode;
-  if (!pnode)
-    return;
-  while (pnode)
-    {
-      if (is_definition (*pnode))
-        dnode = pnode;
-      else // lookup definition node from child node
-        {
-          dnode = gadget_definition_lookup (pnode->name(), pnode);
-          assert_return (dnode != NULL);
-          assert_return (is_definition (*dnode));
-        }
-      Builder builder (*dnode);
-      builder.call_children (pnode, container, children, presuppose, max_children);
-      if (children && max_children >= 0 && children->size() >= size_t (max_children))
-        return;
-      if (pnode == dnode)
-        pnode = gadget_definition_lookup (parent_type_name (*dnode), dnode);
-      else
-        pnode = dnode;
-    }
+  String s = key;
+  for (uint i = 0; i < s.size(); i++)
+    if (key[i] == '-')
+      s[i] = '_'; // unshares string
+  return s;
+}
+
+static String
+node_location (const XmlNode *xnode)
+{
+  return string_format ("%s:%d", xnode->parsed_file().c_str(), xnode->parsed_line());
+}
+
+static String
+node_location (const XmlNodeP xnode)
+{
+  return node_location (xnode.get());
+}
+
+static bool
+is_property (const XmlNode &xnode, String *element = NULL, String *attribute = NULL)
+{
+  // parse property element syntax, e.g. <Button.label>...</Button.label>
+  const String &pname = xnode.name();
+  const size_t i = pname.rfind (".");
+  if (i == String::npos || i + 1 >= pname.size())
+    return false;                                       // no match
+  if (element)
+    *element = pname.substr (0, i);
+  if (attribute)
+    *attribute = pname.substr (i + 1);
+  return true;                                          // matched element.attribute
 }
 
 WidgetImplP
@@ -473,106 +437,6 @@ Builder::build_from_definition (const String &widget_identifier,
   return widget;
 }
 
-WidgetImplP
-Builder::inherit_widget (const String &widget_identifier, const StringVector &call_names, const StringVector &call_values,
-                         const StringVector &nested_props, const XmlNode *caller, const XmlNode *derived)
-{
-  assert_return (derived != NULL, NULL);
-  assert_return (caller != NULL, NULL);
-  Builder builder (widget_identifier, caller);
-  FDEBUG ("lookup %s: dnode=%p itfactory=%p", widget_identifier.c_str(), builder.dnode_, lookup_widget_factory (widget_identifier));
-  if (builder.dnode_)
-    return builder.call_widget (builder.dnode_, call_names, call_values, nested_props, caller, derived);
-  else
-    {
-      const WidgetTypeFactory *itfactory = lookup_widget_factory (widget_identifier);
-      if (!itfactory)
-        {
-          critical ("%s: unknown widget type: %s", node_location (caller).c_str(), widget_identifier.c_str());
-          return NULL;
-        }
-      FactoryContext *fc = factory_context_map[derived];
-      if (!fc)
-        {
-          fc = new FactoryContext (derived);
-          factory_context_map[derived] = fc;
-        }
-      WidgetImplP widget = itfactory->create_widget (fc);
-      builder.apply_args (*widget, call_names, call_values, caller, true);
-      return widget;
-    }
-}
-
-static String
-canonify_dashes (const String &key) // FIXME: there should be an XmlNode post-processing phase that does this
-{
-  String s = key;
-  for (uint i = 0; i < s.size(); i++)
-    if (key[i] == '-')
-      s[i] = '_'; // unshares string
-  return s;
-}
-
-void
-Builder::parse_call_args (const StringVector &call_names, const StringVector &call_values, StringVector &rest_names, StringVector &rest_values, const StringVector &nested_props, String &name, const XmlNode *caller)
-{
-  StringVector local_names, local_values;
-  // setup definition args
-  Evaluator env;
-  XmlNode::ConstNodes &children = dnode_->children();
-  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
-    {
-      const XmlNode *cnode = &**it;
-      if (cnode->name() == "Argument")
-        {
-          const String aname = canonify_dashes (cnode->get_attribute ("id")); // canonify argument id
-          local_names.push_back (aname);
-          String rvalue = cnode->get_attribute ("default");
-          if (string_startswith (rvalue, "@eval "))
-            rvalue = env.parse_eval (rvalue.substr (6));
-          local_values.push_back (rvalue);
-        }
-    }
-  // seperate definition from call args
-  rest_names.reserve (call_names.size());
-  rest_values.reserve (call_values.size());
-  for (size_t i = 0; i < call_names.size(); i++)
-    {
-      const String cname = canonify_dashes (call_names[i]);
-      if (cname == "name" || cname == "id")
-        {
-          name = call_values[i];
-          continue;
-        }
-      vector<String>::const_iterator it = find (local_names.begin(), local_names.end(), cname);
-      if (it != local_names.end())
-        local_values[it - local_names.begin()] = call_values[i]; // local argument overriden by call argument
-      else if (cname == "name" || cname == "id")
-        ; // dname = arg_values[i];
-      else
-        {
-          rest_names.push_back (cname);
-          rest_values.push_back (call_values[i]);
-        }
-    }
-  // merge properties from nested nodes
-  for (auto pv : nested_props)
-    {
-      const ssize_t pos = pv.find ('=');
-      const String pname = pv.substr (0, pos), pvalue = pv.substr (pos + 1);
-      vector<String>::const_iterator it = find (local_names.begin(), local_names.end(), pname);
-      if (it != local_names.end())
-        local_values[it - local_names.begin()] = pvalue; // local argument overriden by call argument
-      else
-        {
-          rest_names.push_back (pname);
-          rest_values.push_back (pvalue);
-        }
-    }
-  // prepare variable map for evaluator
-  Evaluator::populate_map (locals_, local_names, local_values);
-}
-
 void
 Builder::eval_args (const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
                     StringVector &out_names, StringVector &out_values, String *node_name, String *child_container_name)
@@ -619,70 +483,6 @@ Builder::try_set_property (WidgetImpl &widget, const String &property_name, cons
         }
     }
   return widget.try_set_property (property_name, value);
-}
-
-void
-Builder::apply_args (WidgetImpl &widget,
-                     const StringVector &prop_names, const StringVector &prop_values, // evaluated args
-                     const XmlNode *caller, bool idignore)
-{
-  for (size_t i = 0; i < prop_names.size(); i++)
-    {
-      const String aname = canonify_dashes (prop_names[i]);
-      if (aname == "name" || aname == "id")
-        {
-          if (!idignore)
-            critical ("%s: internal-error, property should have been filtered: %s", node_location (caller).c_str(), prop_names[i].c_str());
-        }
-      else if (prop_names[i].find (':') != String::npos)
-        ; // ignore namespaced attributes
-      else if (try_set_property (widget, aname, prop_values[i]))
-        {}
-      else
-        critical ("%s: widget %s: unknown property: %s", node_location (caller).c_str(), widget.name().c_str(), prop_names[i].c_str());
-    }
-}
-
-void
-Builder::apply_props (const XmlNode *pnode, WidgetImpl &widget)
-{
-  XmlNode::ConstNodes &children = pnode->children();
-  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
-    {
-      const XmlNode *cnode = &**it;
-      String prop_object, prop_name;
-      if (cnode->istext() || !is_property (*cnode, &prop_object, &prop_name))
-        continue;
-      const String aname = canonify_dashes (prop_name);
-      String value = cnode->xml_string (0, false);
-      if (string_startswith (value, "@eval ") && string_to_bool (cnode->get_attribute ("evaluate"), true))
-        {
-          Evaluator env;
-          env.push_map (locals_);
-          value = env.parse_eval (value.substr (6));
-          env.push_map (locals_);
-        }
-      if (pnode->name() == prop_object && aname != "name" && aname != "id" && try_set_property (widget, aname, value))
-        {}
-      else if (cnode->name().find (".") == std::string::npos) // ignore nested properties
-        critical ("%s: widget %s: unknown property: %s", node_location (pnode), widget.name(), cnode->name());
-    }
-}
-
-static StringVector
-list_nested_properties (const XmlNode *xnode)
-{
-  StringVector nested_props; // list of name=value strings
-  for (const XmlNodeP cnode : xnode->children())
-    {
-      String prop_object, prop_name;
-      if (is_property (*cnode, &prop_object, &prop_name) && xnode->name() == prop_object)
-        {
-          const String pname = canonify_dashes (prop_name);
-          nested_props.push_back (pname + "=" + cnode->xml_string (0, false));
-        }
-    }
-  return nested_props;
 }
 
 WidgetImplP
@@ -761,7 +561,7 @@ Builder::build_scope (const StringVector &caller_arg_names, const StringVector &
 }
 
 WidgetImplP
-Builder::build_widget (const XmlNode *const wnode, const XmlNode *const factory_context_node, const BuilderFlags bflags)
+Builder::build_widget (const XmlNode *const wnode, const XmlNode *const factory_context_node, const Flags bflags)
 {
   const bool skip_argument_child = bflags & SCOPE_WIDGET;
   const bool filter_child_container = bflags & SCOPE_WIDGET;
@@ -838,144 +638,6 @@ Builder::build_widget (const XmlNode *const wnode, const XmlNode *const factory_
   return widget;
 }
 
-WidgetImplP
-Builder::call_widget (const XmlNode *anode,
-                      const StringVector &call_names, const StringVector &call_values, // evaluated args
-                      const StringVector &caller_nested_props,
-                      const XmlNode *caller, const XmlNode *outmost_caller)
-{
-  assert_return (dnode_ != NULL, NULL);
-  String name;
-  StringVector prop_names, prop_values;
-  // list child nodes with property assignments
-  StringVector nested_props = caller_nested_props;
-  const StringVector anode_nested_props = list_nested_properties (anode);
-  nested_props.insert (nested_props.end(), anode_nested_props.begin(), anode_nested_props.end());
-  /// @TODO: Catch error condition: simultaneous use of inheritance from "..." and child-container="..."
-  parse_call_args (call_names, call_values, prop_names, prop_values, nested_props, name, caller);
-  // extract factory attributes and eval attributes
-  StringVector parent_names, parent_values;
-  assert (child_container_name_.empty() == true);
-  eval_args (anode->list_attributes(), anode->list_values(), caller, parent_names, parent_values, NULL, &child_container_name_);
-  // create widget
-  WidgetImplP widget = Builder::inherit_widget (parent_type_name (*anode), parent_names, parent_values, StringVector(), anode,
-                                                outmost_caller ? outmost_caller : (caller ? caller : anode));
-  if (!widget)
-    return NULL;
-  // apply widget arguments
-  if (!name.empty())
-    widget->name (name);
-  apply_args (*widget, prop_names, prop_values, anode, false);
-  FDEBUG ("new-widget: %s (%d children) id=%s", anode->name().c_str(), anode->children().size(), widget->name().c_str());
-  // apply properties and create children
-  if (!anode->children().empty())
-    {
-      apply_props (anode, *widget);
-      call_children (anode, *widget);
-    }
-  // assign child container
-  if (child_container_)
-    widget->as_container_impl()->child_container (child_container_);
-  else if (!child_container_name_.empty())
-    critical ("%s: failed to find child container: %s", node_location (dnode_).c_str(), child_container_name_.c_str());
-  return widget;
-}
-
-WidgetImplP
-Builder::call_child (const XmlNode *anode,
-                     const StringVector &call_names, const StringVector &call_values, // evaluated args
-                     const String &name, const XmlNode *caller)
-{
-  assert_return (dnode_ != NULL, NULL);
-  // list child nodes with property assignments
-  StringVector nested_props = list_nested_properties (anode);
-  // create widget
-  WidgetImplP widget = Builder::inherit_widget (anode->name(), call_names, call_values, nested_props, anode, caller ? caller : anode);
-  if (!widget)
-    return NULL;
-  // apply widget arguments
-  if (!name.empty())
-    widget->name (name);
-  FDEBUG ("new-widget: %s (%d children) id=%s", anode->name().c_str(), anode->children().size(), widget->name().c_str());
-  // apply properties and create children
-  if (!anode->children().empty())
-    {
-      apply_props (anode, *widget);
-      call_children (anode, *widget);
-    }
-  // find child container
-  if (!child_container_name_.empty() && child_container_name_ == widget->name())
-    {
-      ContainerImpl *cc = widget->as_container_impl();
-      if (cc)
-        {
-          if (child_container_)
-            critical ("%s: duplicate child containers: %s", node_location (dnode_).c_str(), node_location (anode).c_str());
-          child_container_ = cc;
-          FDEBUG ("assign child-container for %s: %s", dnode_->name().c_str(), child_container_name_.c_str());
-          // FIXME: mismatches occour, because child caller args are not passed as call_names/values
-        }
-    }
-  return widget;
-}
-
-void
-Builder::call_children (const XmlNode *pnode, WidgetImpl &widget, vector<WidgetImpl*> *vchildren, const String &presuppose, int64 max_children)
-{
-  // add children
-  XmlNode::ConstNodes &children = pnode->children();
-  ContainerImpl *container = NULL;
-  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
-    {
-      const XmlNode *cnode = &**it;
-      if (cnode->istext() || is_property (*cnode))
-        continue;
-      else if (cnode->name() == "Argument")
-        {
-          if (!is_definition (*pnode))
-            critical ("%s: arguments must be declared inside definitions", node_location (cnode).c_str());
-          continue;
-        }
-      // check extended node data
-      const NodeData &cdata = xml_node_data (*cnode);
-      if ((cdata.tmpl_presuppose ^ !presuppose.empty()) ||
-          (cdata.tmpl_presuppose && presuppose != cnode->get_attribute ("tmpl:presuppose")))
-        continue;
-      if (!container)
-        {
-          container = widget.as_container_impl();
-          if (!container)
-            critical ("%s: parent type is not a container: %s:%s", node_location (cnode).c_str(),
-                      node_location (pnode).c_str(), pnode->name().c_str());
-          return_unless (container != NULL);
-        }
-      // create child
-      StringVector call_names, call_values, arg_names, arg_values;
-      String child_name;
-      eval_args (cnode->list_attributes(), cnode->list_values(), pnode, call_names, call_values, &child_name, NULL);
-      WidgetImplP child = call_child (cnode, call_names, call_values, child_name, cnode);
-      if (!child)
-        {
-          critical ("%s: failed to create widget: %s", node_location (cnode).c_str(), cnode->name().c_str());
-          continue;
-        }
-      else if (vchildren)
-        vchildren->push_back (&*child);
-      // add to parent
-      try {
-        container->add (*child);
-      } catch (std::exception &exc) {
-        critical ("%s: adding %s to parent failed: %s", node_location (cnode).c_str(), cnode->name().c_str(), exc.what());
-        throw; /// @TODO: Eliminate exception use
-      } catch (...) {
-        throw; // FIXME: eliminate exception use
-      }
-      // limit amount of children
-      if (vchildren && max_children >= 0 && vchildren->size() >= size_t (max_children))
-        return;
-    }
-}
-
 bool
 Builder::widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier)
 {
@@ -1001,6 +663,7 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
   return ancestor_itfactory && widget_itfactory == ancestor_itfactory;
 }
 
+// == UI Creation API ==
 bool
 check_ui_window (const String &widget_identifier)
 {
@@ -1045,23 +708,7 @@ create_ui_child (ContainerImpl &container, const String &widget_identifier, cons
   return widget;
 }
 
-void
-create_ui_children (ContainerImpl     &container,
-                    vector<WidgetImpl*> *children,
-                    const String      &presuppose,
-                    int64              max_children)
-{
-  // figure XML context
-  FactoryContext *fc = container.factory_context();
-  assert_return (fc != NULL);
-  const XmlNode *xnode = fc->xnode;
-  const NodeData &ndata = NodeData::from_xml_node (const_cast<XmlNode&> (*xnode));
-  // create children within parent namespace
-  local_namespace_list.push_back (ndata.domain);
-  Builder::build_children (container, children, presuppose, max_children);
-  local_namespace_list.pop_back();
-}
-
+// == XML Parsing and Registration ==
 static void
 assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
 {
