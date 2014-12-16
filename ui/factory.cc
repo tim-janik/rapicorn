@@ -775,7 +775,7 @@ static String
 register_rapicorn_definitions (const String &domain, XmlNode *xnode, vector<String> *definitions)
 {
   // enforce sane toplevel node
-  if (xnode->name() != "rapicorn-definitions")
+  if (xnode->name() != "interfaces")
     return string_format ("%s: invalid root: %s", node_location (xnode).c_str(), xnode->name().c_str());
   // register template children
   XmlNode::ConstNodes children = xnode->children();
@@ -795,10 +795,10 @@ static String
 parse_ui_data_internal (const String &domain, const String &data_name, size_t data_length,
                         const char *data, const String &i18n_domain, vector<String> *definitions)
 {
-  String pseudoroot; // automatically wrap definitions into root tag <rapicorn-definitions/>
+  String pseudoroot; // automatically wrap definitions into root tag <interfaces/>
   const size_t estart = MarkupParser::seek_to_element (data, data_length);
-  if (estart + 21 < data_length && strncmp (data + estart, "<rapicorn-definitions", 21) != 0 && data[estart + 1] != '?')
-    pseudoroot = "rapicorn-definitions";
+  if (estart + 11 < data_length && strncmp (data + estart, "<interfaces", 11) != 0 && data[estart + 1] != '?')
+    pseudoroot = "interfaces";
   MarkupParser::Error perror;
   XmlNodeP xnode = XmlNode::parse_xml (data_name, data, data_length, &perror, pseudoroot);
   String errstr;

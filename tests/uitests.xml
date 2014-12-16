@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions>
+<interfaces>
 
   <!-- property test -->
   <TestWidget id="property-test" assert_value="foobar">
@@ -30,4 +30,4 @@
     </Alignment>
   </Window>
 
-</rapicorn-definitions>
+</interfaces>

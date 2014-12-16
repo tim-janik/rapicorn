@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>  <!--*-mode: xml;-*-->
 <!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
-<rapicorn-definitions>
+<interfaces>
 
   <!-- Factory Types -->
   <Rapicorn_Factory id="Alignment" factory-type="Rapicorn_Factory:Alignment"/>
@@ -134,4 +134,4 @@
   <!-- TestWidget -->
   <TestContainer id="TestWidget" paint-allocation="1" width="10" height="10"/>
 
-</rapicorn-definitions>
+</interfaces>

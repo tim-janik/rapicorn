@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions>
+<interfaces>
 
   <!-- test dialog -->
   <Window id="test-dialog">
@@ -10,4 +10,4 @@
     </TestBox>
   </Window>
 
-</rapicorn-definitions>
+</interfaces>

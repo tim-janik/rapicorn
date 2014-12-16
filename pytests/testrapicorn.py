@@ -10,7 +10,7 @@ print "  " + __file__,
 
 # Define main window Widget Tree
 my_window_xml = """
-<rapicorn-definitions>
+<interfaces>
   <Window id="my-window">
     <VBox>
       <Button hexpand="1" on-click="Window::close()">
@@ -19,7 +19,7 @@ my_window_xml = """
       <WidgetList id="CheckWidgetList"/>
     </VBox>
   </Window>
-</rapicorn-definitions>
+</interfaces>
 """
 
 # setup application

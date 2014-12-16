@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions>
+<interfaces>
 
   <Window id="main-test">
     <Argument id="defaultvalue17" default="@eval 10 + 7"/>
@@ -14,4 +14,4 @@
     </Alignment>
   </Window>
 
-</rapicorn-definitions>
+</interfaces>

@@ -574,7 +574,7 @@ REGISTER_UITHREAD_TEST ("Selector/Selector Matching", test_selector_matching);
 
 static const char test_dialog_xml[] =
   "<?xml version='1.0' encoding='UTF-8'?>\n"
-  "<rapicorn-definitions xmlns:arg='http://rapicorn.org/xmlns' xmlns:def='http://rapicorn.org/xmlns' xmlns:prop='http://rapicorn.org/xmlns'>\n"
+  "<interfaces>\n"
   // test-dialog
   "<Window id='test-dialog'>\n"
   "  <Ambience normal-lighting='upper-left'>\n"
@@ -611,7 +611,7 @@ static const char test_dialog_xml[] =
   "  </Ambience>\n"
   "</Window>\n"
   ""
-  "</rapicorn-definitions>\n"
+  "</interfaces>\n"
   "";
 
 static void
