@@ -140,6 +140,12 @@ Evaluator::populate_map (VariableMap        &vmap,
 }
 
 void
+Evaluator::populate_map (VariableMap &vmap, const String &variable_name, const String &variable_value)
+{
+  vmap[variable_name] = variable_value;
+}
+
+void
 Evaluator::populate_map (VariableMap        &vmap,
                          const ArgumentList &variable_names,
                          const ArgumentList &variable_values)

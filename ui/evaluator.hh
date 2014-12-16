@@ -18,6 +18,7 @@ struct Evaluator {
                                      String             &value);
   static void       populate_map    (VariableMap        &vmap,
                                      const ArgumentList &args);
+  static void       populate_map    (VariableMap &vmap, const String &variable_name, const String &variable_value);
   static void       populate_map    (VariableMap        &vmap,
                                      const ArgumentList &variable_names,
                                      const ArgumentList &variable_values);
