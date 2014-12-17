@@ -26,7 +26,6 @@ node_location (const XmlNodeP xnode)
   return node_location (xnode.get());
 }
 
-
 // == InterfaceFile ==
 struct InterfaceFile : public virtual std::enable_shared_from_this<InterfaceFile> {
   const String   file_name;
@@ -40,25 +39,25 @@ static std::vector<InterfaceFileP> interface_file_list;
 static DataKey<String> xmlnode_id_key; // used to cache id="" attribute on imediate children of <interfaces/>
 
 static String
-register_interface_file (String file_name, const XmlNodeP root)
+register_interface_file (String file_name, const XmlNodeP root, vector<String> *definitions)
 {
   assert_return (file_name.empty() == false, "missing file");
   assert_return (root->name() == "interfaces", "invalid file");
   InterfaceFileP ifile = std::make_shared<InterfaceFile> (file_name, root);
+  const size_t reset_size = definitions ? definitions->size() : 0;
   for (auto dnode : root->children())
     if (dnode->istext() == false)
       {
-        const StringVector &attributes_names = dnode->list_attributes(), &attributes_values = dnode->list_values();
-        String id;
-        for (size_t i = 0; i < attributes_names.size(); i++)
-          if (attributes_names[i] == "id")
-            {
-              id = attributes_values[i];
-              break;
-            }
+        const String id = dnode->get_attribute ("id");
         if (id.empty())
-          return string_format ("%s: interface definition without id", node_location (dnode));
+          {
+            if (definitions)
+              definitions->resize (reset_size);
+            return string_format ("%s: interface definition without id", node_location (dnode));
+          }
         dnode->set_data (&xmlnode_id_key, id);
+        if (definitions)
+          definitions->push_back (id);
       }
   interface_file_list.insert (interface_file_list.begin(), ifile);
   FDEBUG ("%s: registering %d interfaces\n", file_name, root->children().size());
@@ -106,50 +105,7 @@ static void initialize_factory_lazily (void);
 
 namespace Factory {
 
-static const String
-definition_name (const XmlNode &xnode)
-{
-  const StringVector &attributes_names = xnode.list_attributes(), &attributes_values = xnode.list_values();
-  for (size_t i = 0; i < attributes_names.size(); i++)
-    if (attributes_names[i] == "id")
-      return attributes_values[i];
-  return "";
-}
-
-static const String
-parent_type_name (const XmlNode &xnode)
-{
-  return xnode.name();
-}
-
-class NodeData {
-  void
-  setup (XmlNode &xnode)
-  {
-    const StringVector &attributes_names = xnode.list_attributes(); // &attributes_values = xnode.list_values();
-  }
-  static struct NodeDataKey : public DataKey<NodeData*> {
-    virtual void destroy (NodeData *data) { delete data; }
-  } node_data_key;
-public:
-  bool gadget_definition;
-  String domain;
-  NodeData (XmlNode &xnode) : gadget_definition (false) { setup (xnode); }
-  static NodeData&
-  from_xml_node (XmlNode &xnode)
-  {
-    NodeData *ndata = xnode.get_data (&node_data_key);
-    if (!ndata)
-      {
-        ndata = new NodeData (xnode);
-        xnode.set_data (&node_data_key, ndata);
-      }
-    return *ndata;
-  }
-};
-
-NodeData::NodeDataKey NodeData::node_data_key;
-
+// == WidgetTypeFactory ==
 static std::list<const WidgetTypeFactory*>&
 widget_type_list()
 {
@@ -186,29 +142,6 @@ WidgetTypeFactory::register_widget_factory (const WidgetTypeFactory &itfactory)
   widget_type_factories.push_back (&itfactory);
 }
 
-typedef map<String, const XmlNodeP> GadgetDefinitionMap;
-static GadgetDefinitionMap gadget_definition_map;
-static vector<String>      local_namespace_list;
-static vector<String>      gadget_namespace_list;
-
-void
-use_ui_namespace (const String &uinamespace)
-{
-  initialize_factory_lazily();
-  vector<String>::iterator it = find (gadget_namespace_list.begin(), gadget_namespace_list.end(), uinamespace);
-  if (it != gadget_namespace_list.end())
-    gadget_namespace_list.erase (it);
-  gadget_namespace_list.push_back (uinamespace);
-}
-
-static void
-force_ui_namespace_use (const String &uinamespace)
-{
-  vector<String>::const_iterator it = find (gadget_namespace_list.begin(), gadget_namespace_list.end(), uinamespace);
-  if (it == gadget_namespace_list.end())
-    gadget_namespace_list.push_back (uinamespace);
-}
-
 WidgetTypeFactory::WidgetTypeFactory (const char *namespaced_ident) :
   qualified_type (namespaced_ident)
 {}
@@ -230,7 +163,7 @@ factory_context_name (FactoryContext *fc)
   assert_return (fc != NULL, "");
   const XmlNode &xnode = *fc->xnode;
   if (check_interface_node (xnode))
-    return definition_name (xnode);
+    return xnode.get_attribute ("id");
   else
     return xnode.name();
 }
@@ -246,7 +179,7 @@ factory_context_type (FactoryContext *fc)
       assert_return (xnode != NULL, "");
     }
   assert_return (check_interface_node (*xnode), "");
-  return definition_name (*xnode);
+  return xnode->get_attribute ("id");
 }
 
 UserSource
@@ -276,8 +209,8 @@ factory_context_list_types (StringVector &types, const XmlNode *xnode, const boo
     {
       assert_return (check_interface_node (*xnode));
       if (need_ids)
-        types.push_back (definition_name (*xnode));
-      const String parent_name = parent_type_name (*xnode);
+        types.push_back (xnode->get_attribute ("id"));
+      const String parent_name = xnode->name();
       const XmlNode *last = xnode;
       xnode = lookup_interface_node (parent_name, xnode);
       if (!xnode && last->name() == "Rapicorn_Factory")
@@ -681,7 +614,7 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
     {
       if (node == ancestor_node)
         return true; // widget ancestor matches
-      identifier = parent_type_name (*node);
+      identifier = node->name();
       last = node;
       node = lookup_interface_node (identifier, node);
     }
@@ -735,12 +668,10 @@ create_ui_child (ContainerImpl &container, const String &widget_identifier, cons
   // figure XML context
   FactoryContext *fc = container.factory_context();
   assert_return (fc != NULL, NULL);
-  const XmlNode *xnode = fc->xnode;
-  const NodeData &ndata = NodeData::from_xml_node (const_cast<XmlNode&> (*xnode));
   // create child within parent namespace
-  local_namespace_list.push_back (ndata.domain);
+  //local_namespace_list.push_back (namespace_domain);
   WidgetImplP widget = create_ui_widget (widget_identifier, arguments);
-  local_namespace_list.pop_back();
+  //local_namespace_list.pop_back();
   // add to parent
   if (autoadd)
     container.add (*widget);
@@ -748,62 +679,8 @@ create_ui_child (ContainerImpl &container, const String &widget_identifier, cons
 }
 
 // == XML Parsing and Registration ==
-static void
-assign_xml_node_data_recursive (XmlNode *xnode, const String &domain)
-{
-  NodeData &ndata = NodeData::from_xml_node (*xnode);
-  ndata.domain = domain;
-  XmlNode::ConstNodes &children = xnode->children();
-  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
-    {
-      const XmlNode *cnode = &**it;
-      if (cnode->istext() || is_property (*cnode) || cnode->name() == "Argument")
-        continue;
-      assign_xml_node_data_recursive (const_cast<XmlNode*> (cnode), domain);
-    }
-}
-
 static String
-register_ui_node (const String &domain, XmlNodeP xnode, vector<String> *definitions)
-{
-  const String &nname = definition_name (*xnode);
-  String ident = domain.empty () ? nname : domain + ":" + nname;
-  GadgetDefinitionMap::iterator it = gadget_definition_map.find (ident);
-  if (it != gadget_definition_map.end())
-    return string_format ("%s: redefinition of: %s (previously at %s)",
-                          node_location (&*xnode).c_str(), ident.c_str(), node_location (&*it->second).c_str());
-  assign_xml_node_data_recursive (&*xnode, domain);
-  NodeData &ndata = NodeData::from_xml_node (*xnode);
-  ndata.gadget_definition = true;
-  gadget_definition_map.insert (std::make_pair (ident, xnode));
-  if (definitions)
-    definitions->push_back (ident);
-  FDEBUG ("register: %s", ident.c_str());
-  return ""; // success;
-}
-
-static String
-register_rapicorn_definitions (const String &domain, XmlNode *xnode, vector<String> *definitions)
-{
-  // enforce sane toplevel node
-  if (xnode->name() != "interfaces")
-    return string_format ("%s: invalid root: %s", node_location (xnode).c_str(), xnode->name().c_str());
-  // register template children
-  XmlNode::ConstNodes children = xnode->children();
-  for (XmlNode::ConstNodes::const_iterator it = children.begin(); it != children.end(); it++)
-    {
-      const XmlNodeP cnode = *it;
-      if (cnode->istext())
-        continue; // ignore top level text
-      const String cerr = register_ui_node (domain, cnode, definitions);
-      if (!cerr.empty())
-        return cerr;
-    }
-  return ""; // success;
-}
-
-static String
-parse_ui_data_internal (const String &domain, const String &data_name, size_t data_length,
+parse_ui_data_internal (const String &data_name, size_t data_length,
                         const char *data, const String &i18n_domain, vector<String> *definitions)
 {
   String pseudoroot; // automatically wrap definitions into root tag <interfaces/>
@@ -817,18 +694,17 @@ parse_ui_data_internal (const String &domain, const String &data_name, size_t da
     errstr = string_format ("%s:%d:%d: %s", data_name.c_str(), perror.line_number, perror.char_number, perror.message.c_str());
   else
     {
-      errstr = register_rapicorn_definitions (domain, &*xnode, definitions);
-      errstr = register_interface_file (data_name, xnode);
+      errstr = register_interface_file (data_name, xnode, definitions);
     }
   return errstr;
 }
 
 String
-parse_ui_data (const String &uinamespace, const String &data_name, size_t data_length,
+parse_ui_data (const String &data_name, size_t data_length,
                const char *data, const String &i18n_domain, vector<String> *definitions)
 {
   initialize_factory_lazily();
-  return parse_ui_data_internal (uinamespace, data_name, data_length, data, "", definitions);
+  return parse_ui_data_internal (data_name, data_length, data, "", definitions);
 }
 
 } // Factory
@@ -838,12 +714,10 @@ initialize_factory_lazily (void)
 {
   do_once
     {
-      const char *domain = "Rapicorn";
-      Factory::force_ui_namespace_use (domain);
       Blob blob = Res ("@res Rapicorn/foundation.xml");
-      Factory::parse_ui_data_internal (domain, "Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL);
+      Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL);
       blob = Res ("@res Rapicorn/standard.xml");
-      Factory::parse_ui_data_internal (domain, "Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL);
+      Factory::parse_ui_data_internal ("Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL);
     }
 }
 
