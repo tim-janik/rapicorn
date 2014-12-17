@@ -36,8 +36,6 @@ typedef std::shared_ptr<InterfaceFile> InterfaceFileP;
 
 static std::vector<InterfaceFileP> interface_file_list;
 
-static DataKey<String> xmlnode_id_key; // used to cache id="" attribute on imediate children of <interfaces/>
-
 static String
 register_interface_file (String file_name, const XmlNodeP root, vector<String> *definitions)
 {
@@ -55,7 +53,6 @@ register_interface_file (String file_name, const XmlNodeP root, vector<String> *
               definitions->resize (reset_size);
             return string_format ("%s: interface definition without id", node_location (dnode));
           }
-        dnode->set_data (&xmlnode_id_key, id);
         if (definitions)
           definitions->push_back (id);
       }
@@ -70,7 +67,7 @@ lookup_interface_node (const String &identifier, const XmlNode *context_node)
   for (auto ifile : interface_file_list)
     for (auto node : ifile->root->children())
       {
-        const String id = node->get_data (&xmlnode_id_key);
+        const String id = node->get_attribute ("id");
         if (id == identifier)
           return node.get();
       }
@@ -80,13 +77,8 @@ lookup_interface_node (const String &identifier, const XmlNode *context_node)
 static bool
 check_interface_node (const XmlNode &xnode)
 {
-#if 1
   const XmlNode *parent = xnode.parent();
   return parent && !parent->parent() && parent->name() == "interfaces";
-#else // FIXME: benchmark both cases
-  const String id = xnode.get_data (&xmlnode_id_key);
-  return id.empty() == false;
-#endif
 }
 
 } // Factory
