@@ -37,7 +37,7 @@ typedef std::shared_ptr<InterfaceFile> InterfaceFileP;
 static std::vector<InterfaceFileP> interface_file_list;
 
 static String
-register_interface_file (String file_name, const XmlNodeP root, vector<String> *definitions)
+register_interface_file (String file_name, const XmlNodeP root, StringVector *definitions)
 {
   assert_return (file_name.empty() == false, "missing file");
   assert_return (root->name() == "interfaces", "invalid file");
@@ -466,7 +466,7 @@ Builder::build_scope (const StringVector &caller_arg_names, const StringVector &
         }
       else if (cname.find (':') != String::npos)
         continue; // ignore namespaced attributes
-      vector<String>::const_iterator it = find (argument_names.begin(), argument_names.end(), cname);
+      StringVector::const_iterator it = find (argument_names.begin(), argument_names.end(), cname);
       if (it != argument_names.end())
         argument_values[it - argument_names.begin()] = cvalue;
       else
@@ -673,7 +673,7 @@ create_ui_child (ContainerImpl &container, const String &widget_identifier, cons
 // == XML Parsing and Registration ==
 static String
 parse_ui_data_internal (const String &data_name, size_t data_length,
-                        const char *data, const String &i18n_domain, vector<String> *definitions)
+                        const char *data, const String &i18n_domain, StringVector *definitions)
 {
   String pseudoroot; // automatically wrap definitions into root tag <interfaces/>
   const size_t estart = MarkupParser::seek_to_element (data, data_length);
@@ -693,7 +693,7 @@ parse_ui_data_internal (const String &data_name, size_t data_length,
 
 String
 parse_ui_data (const String &data_name, size_t data_length,
-               const char *data, const String &i18n_domain, vector<String> *definitions)
+               const char *data, const String &i18n_domain, StringVector *definitions)
 {
   initialize_factory_lazily();
   return parse_ui_data_internal (data_name, data_length, data, "", definitions);
