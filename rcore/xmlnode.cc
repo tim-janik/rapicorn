@@ -379,8 +379,11 @@ XmlNode::xml_escape (const String &input)
 }
 
 static String
-node_xml_string (const XmlNode &node, uint64 indent, bool include_outer, uint64 recursion_depth)
+node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t recursion_depth,
+                 const XmlNode::XmlStringWrapper &wrapper, bool wrap_outer)
 {
+  if (wrap_outer && wrapper)
+    return wrapper (node, indent, include_outer, recursion_depth);
   if (recursion_depth == 0)
     return "";
   if (node.istext())
@@ -395,7 +398,7 @@ node_xml_string (const XmlNode &node, uint64 indent, bool include_outer, uint64 
         s += " " + node.xml_escape (keys[i]) + "=\"" + escape_xml<ALL-SQ> (values[i]) + "\"";
     }
   XmlNode::ConstNodes &cl = node.children();
-  if (cl.size())
+  if (!cl.empty())
     {
       if (include_outer)
         s += ">";
@@ -404,7 +407,10 @@ node_xml_string (const XmlNode &node, uint64 indent, bool include_outer, uint64 
         {
           if (need_break)
             s += "\n" + istr + "  ";
-          s += cl[i]->xml_string (indent + 2, true, recursion_depth - 1);
+          if (wrapper)
+            s += wrapper (*cl[i], indent + 2, true, recursion_depth - 1);
+          else
+            s += cl[i]->xml_string (indent + 2, true, recursion_depth - 1, wrapper, true);
           need_break = cl[i]->break_after();
         }
       if (include_outer && node.break_within())
@@ -418,9 +424,10 @@ node_xml_string (const XmlNode &node, uint64 indent, bool include_outer, uint64 
 }
 
 String
-XmlNode::xml_string (uint64 indent, bool include_outer, uint64 recursion_depth) const
+XmlNode::xml_string (size_t indent, bool include_outer, size_t recursion_depth,
+                     const XmlStringWrapper &wrapper, bool wrap_outer) const
 {
-  return node_xml_string (*this, indent, include_outer, recursion_depth);
+  return node_xml_string (*this, indent, include_outer, recursion_depth, wrapper, wrap_outer);
 }
 
 } // Rapicorn
