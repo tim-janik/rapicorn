@@ -264,12 +264,12 @@ class Builder {
   String           child_container_name_;
   ContainerImpl   *child_container_;           // captured child_container_ widget during build phase
   VariableMap      locals_;
-  void      eval_args       (const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
+  void      eval_args       (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
                              StringVector &out_names, StringVector &out_values, String *child_container_name);
   bool      try_set_property(WidgetImpl &widget, const String &property_name, const String &value);
   WidgetImplP build_scope   (const StringVector &caller_arg_names, const StringVector &caller_arg_values, const String &caller_location,
                              const XmlNode *factory_context_node);
-  WidgetImplP build_widget  (const XmlNode *node, const XmlNode *factory_context_node, Flags bflags);
+  WidgetImplP build_widget  (const XmlNode *node, Evaluator &env, const XmlNode *factory_context_node, Flags bflags);
   static String canonify_dashes (const String &key);
 public:
   explicit  Builder             (const String &widget_identifier, const XmlNode *context_node);
@@ -383,11 +383,9 @@ Builder::build_from_factory (const XmlNode *factory_node,
 }
 
 void
-Builder::eval_args (const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
+Builder::eval_args (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
                     StringVector &out_names, StringVector &out_values, String *child_container_name)
 {
-  Evaluator env;
-  env.push_map (locals_);
   out_names.reserve (in_names.size());
   out_values.reserve (in_values.size());
   for (size_t i = 0; i < in_names.size(); i++)
@@ -411,7 +409,6 @@ Builder::eval_args (const StringVector &in_names, const StringVector &in_values,
           out_values.push_back (rvalue);
         }
     }
-  env.pop_map (locals_);
 }
 
 bool
@@ -479,7 +476,9 @@ Builder::build_scope (const StringVector &caller_arg_names, const StringVector &
   Evaluator::populate_map (locals_, argument_names, argument_values);
   argument_names.clear(), argument_values.clear();
   // build main definition widget
-  WidgetImplP widget = build_widget (dnode_, factory_context_node, SCOPE_WIDGET);
+  env.push_map (locals_);
+  WidgetImplP widget = build_widget (dnode_, env, factory_context_node, SCOPE_WIDGET);
+  env.pop_map (locals_);
   if (!widget)
     return NULL;
   // assign caller properties
@@ -506,7 +505,7 @@ Builder::build_scope (const StringVector &caller_arg_names, const StringVector &
 }
 
 WidgetImplP
-Builder::build_widget (const XmlNode *const wnode, const XmlNode *const factory_context_node, const Flags bflags)
+Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode *const factory_context_node, const Flags bflags)
 {
   const bool skip_argument_child = bflags & SCOPE_WIDGET;
   const bool filter_child_container = bflags & SCOPE_WIDGET;
@@ -520,9 +519,24 @@ Builder::build_widget (const XmlNode *const wnode, const XmlNode *const factory_
       String prop_object, pname;
       if (is_property (*cnode, &prop_object, &pname) && wnode->name() == prop_object)
         {
+          String eval_element = cnode->get_attribute ("eval-element");
+          if (eval_element.empty())
+            eval_element = cnode->get_attribute ("eval_element");
+          std::function<String (const XmlNode&, size_t, bool, size_t)> node_wrapper =
+            [&] (const XmlNode &node, size_t indent, bool include_outer, size_t recursion_depth) -> String {
+            if (node.name() == eval_element)
+              {
+                String node_text = node.xml_string (0, false);
+                if (string_startswith (node_text, "@eval "))
+                  node_text = env.parse_eval (node_text.substr (6));
+                return node_text;
+              }
+            return node.xml_string (indent, include_outer, recursion_depth, node_wrapper, false);
+          };
+          const String xml2string = cnode->xml_string (0, false, -1, eval_element.empty() ? NULL : node_wrapper, true);
           pname = canonify_dashes (pname);
           prop_names.push_back (pname);
-          prop_values.push_back (cnode->xml_string (0, false));
+          prop_values.push_back (xml2string);
           skip_child[ski++] = true;
         }
       else if (cnode->istext() || (skip_argument_child && cnode->name() == "Argument"))
@@ -533,7 +547,7 @@ Builder::build_widget (const XmlNode *const wnode, const XmlNode *const factory_
   assert_return (ski == wnode->children().size(), NULL);
   // evaluate property values
   StringVector eprop_names, eprop_values;
-  eval_args (prop_names, prop_values, wnode, eprop_names, eprop_values, filter_child_container ? &child_container_name_ : NULL);
+  eval_args (env, prop_names, prop_values, wnode, eprop_names, eprop_values, filter_child_container ? &child_container_name_ : NULL);
   // create widget and assign properties from attributes and property element syntax
   WidgetImplP widget;
   {
@@ -577,7 +591,7 @@ Builder::build_widget (const XmlNode *const wnode, const XmlNode *const factory_
             critical ("%s: invalid container type: %s", node_location (wnode), wnode->name());
             break;
           }
-        WidgetImplP child = build_widget (&*cnode, &*cnode, SCOPE_CHILD);
+        WidgetImplP child = build_widget (&*cnode, env, &*cnode, SCOPE_CHILD);
         if (child)
           try {
             // be verbose...
