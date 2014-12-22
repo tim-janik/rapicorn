@@ -10,8 +10,8 @@ class ScreenDriver;
 class ScreenCommand;
 
 /// Interface class for managing window contents on screens and display devices.
-class ScreenWindow : public virtual std::enable_shared_from_this<ScreenWindow> {
-  RAPICORN_CLASS_NON_COPYABLE (ScreenWindow);
+class DisplayWindow : public virtual std::enable_shared_from_this<DisplayWindow> {
+  RAPICORN_CLASS_NON_COPYABLE (DisplayWindow);
 public:
   /// Flags used to request and reflect certain window operations and states.
   enum Flags {
@@ -91,8 +91,8 @@ public:
   void          set_event_wakeup        (const std::function<void()> &wakeup);  ///< Callback used to notify new event arrival.
   bool          peek_events             (const std::function<bool (Event*)> &pred);     ///< Peek/find events via callback.
 protected:
-  explicit              ScreenWindow            ();
-  virtual              ~ScreenWindow            ();
+  explicit              DisplayWindow           ();
+  virtual              ~DisplayWindow           ();
   virtual ScreenDriver& screen_driver_async     () const = 0;                   ///< Acces ScreenDriver, called from any thread.
   void                  enqueue_event           (Event *event);                 ///< Add an event to the back of the event queue.
   bool                  update_state            (const State &state);           ///< Updates the state returned from get_state().
@@ -104,17 +104,16 @@ private:
   std::list<Event*>     async_event_queue_;
   std::function<void()> async_wakeup_;
 };
-typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
-struct ScreenCommand    /// Structure for internal asynchronous communication between ScreenWindow and ScreenDriver.
+struct ScreenCommand    /// Structure for internal asynchronous communication between DisplayWindow and ScreenDriver.
 {
   enum Type { ERROR, OK, CREATE, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, OWNER, PROVIDE, DESTROY, SHUTDOWN, };
   const Type            type;
-  ScreenWindow         *const screen_window;
+  DisplayWindow        *const screen_window;
   String                string;
   StringVector          string_list;
-  ScreenWindow::Config *config;
-  ScreenWindow::Setup  *setup;
+  DisplayWindow::Config *config;
+  DisplayWindow::Setup  *setup;
   cairo_surface_t      *surface;
   Rapicorn::Region     *region;
   union { uint64        nonce, u64; };
@@ -122,11 +121,11 @@ struct ScreenCommand    /// Structure for internal asynchronous communication be
   ContentSourceType     source;
   bool                  need_resize;
   /*ctor*/             ~ScreenCommand ();
-  explicit              ScreenCommand (Type type, ScreenWindow *window);
+  explicit              ScreenCommand (Type type, DisplayWindow *window);
   static bool           reply_type    (Type type);
 };
 
-/// Management class for ScreenWindow driver implementations.
+/// Management class for DisplayWindow driver implementations.
 class ScreenDriver {
   AsyncNotifyingQueue<ScreenCommand*> command_queue_;
   AsyncBlockingQueue<ScreenCommand*>  reply_queue_;
@@ -144,15 +143,15 @@ protected:
   bool                  open_L                  ();
   void                  close_L                 ();
 public:
-  /// Create a new ScreenWindow from an opened driver.
-  ScreenWindow*         create_screen_window    (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
+  /// Create a new DisplayWindow from an opened driver.
+  DisplayWindow*        create_screen_window    (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config);
   /// Open a specific named driver, "auto" will try to find the best match.
   static ScreenDriver*  retrieve_screen_driver  (const String &backend_name);
   /// Comparator for "auto" scoring.
   static bool           driver_priority_lesser  (const ScreenDriver *d1, const ScreenDriver *d2);
   static void           forcefully_close_all    ();
   ///@cond
-  class Friends { friend class ScreenWindow; static void queue_command (ScreenDriver &d, ScreenCommand *c) { d.queue_command (c); } };
+  class Friends { friend class DisplayWindow; static void queue_command (ScreenDriver &d, ScreenCommand *c) { d.queue_command (c); } };
   ///@endcond
 };
 
@@ -190,22 +189,22 @@ struct ScreenDriverFactory : public ScreenDriver {
 };
 
 // == Implementations ==
-ScreenWindow::Setup::Setup() :
-  window_type (WindowType (0)), request_flags (ScreenWindow::Flags (0))
+DisplayWindow::Setup::Setup() :
+  window_type (WindowType (0)), request_flags (DisplayWindow::Flags (0))
 {}
 
-ScreenWindow::Config::Config() :
+DisplayWindow::Config::Config() :
   root_x (INT_MIN), root_y (INT_MIN), request_width (0), request_height (0), width_inc (0), height_inc (0)
 {}
 
-ScreenWindow::State::State() :
-  window_flags (ScreenWindow::Flags (0)),
+DisplayWindow::State::State() :
+  window_flags (DisplayWindow::Flags (0)),
   width (0), height (0), root_x (INT_MIN), root_y (INT_MIN), deco_x (INT_MIN), deco_y (INT_MIN),
   visible (0), active (0)
 {}
 
 bool
-ScreenWindow::State::operator== (const State &o) const
+DisplayWindow::State::operator== (const State &o) const
 {
   return window_type == o.window_type && window_flags == o.window_flags && width == o.width && height == o.height &&
     root_x == o.root_x && root_y == o.root_y && deco_x == o.deco_x && deco_y == o.deco_y &&

@@ -279,7 +279,7 @@ WidgetImpl::notify_key_error ()
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         screen_window->beep();
     }
@@ -298,7 +298,7 @@ WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const Stri
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
           screen_window->request_content (csource, nonce, data_type);
@@ -320,7 +320,7 @@ WidgetImpl::own_content (ContentSourceType content_source, uint64 nonce, const S
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
           screen_window->set_content_owner (content_source, nonce, data_types);
@@ -339,7 +339,7 @@ WidgetImpl::disown_content (ContentSourceType content_source, uint64 nonce)
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
           screen_window->set_content_owner (content_source, nonce, StringVector());
@@ -360,7 +360,7 @@ WidgetImpl::provide_content (const String &data_type, const String &data, uint64
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      ScreenWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
+      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
       if (screen_window)
         {
           screen_window->provide_content (data_type, data, request_id);

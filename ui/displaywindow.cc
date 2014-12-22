@@ -7,12 +7,12 @@
 
 namespace Rapicorn {
 
-// == ScreenWindow ==
-ScreenWindow::ScreenWindow () :
+// == DisplayWindow ==
+DisplayWindow::DisplayWindow () :
   async_state_accessed_ (0)
 {}
 
-ScreenWindow::~ScreenWindow ()
+DisplayWindow::~DisplayWindow ()
 {
   std::list<Event*> events;
   {
@@ -29,7 +29,7 @@ ScreenWindow::~ScreenWindow ()
 }
 
 void
-ScreenWindow::enqueue_event (Event *event)
+DisplayWindow::enqueue_event (Event *event)
 {
   critical_unless (event);
   ScopedLock<Spinlock> sl (async_spin_);
@@ -40,7 +40,7 @@ ScreenWindow::enqueue_event (Event *event)
 }
 
 void
-ScreenWindow::push_event (Event *event)
+DisplayWindow::push_event (Event *event)
 {
   critical_unless (event);
   ScopedLock<Spinlock> sl (async_spin_);
@@ -51,7 +51,7 @@ ScreenWindow::push_event (Event *event)
 }
 
 Event*
-ScreenWindow::pop_event ()
+DisplayWindow::pop_event ()
 {
   ScopedLock<Spinlock> sl (async_spin_);
   if (async_event_queue_.empty())
@@ -62,14 +62,14 @@ ScreenWindow::pop_event ()
 }
 
 bool
-ScreenWindow::has_event ()
+DisplayWindow::has_event ()
 {
   ScopedLock<Spinlock> sl (async_spin_);
   return !async_event_queue_.empty();
 }
 
 bool
-ScreenWindow::peek_events (const std::function<bool (Event*)> &pred)
+DisplayWindow::peek_events (const std::function<bool (Event*)> &pred)
 {
   ScopedLock<Spinlock> sl (async_spin_);
   for (auto ep : async_event_queue_)
@@ -79,14 +79,14 @@ ScreenWindow::peek_events (const std::function<bool (Event*)> &pred)
 }
 
 void
-ScreenWindow::set_event_wakeup (const std::function<void()> &wakeup)
+DisplayWindow::set_event_wakeup (const std::function<void()> &wakeup)
 {
   ScopedLock<Spinlock> sl (async_spin_);
   async_wakeup_ = wakeup;
 }
 
 bool
-ScreenWindow::update_state (const State &state)
+DisplayWindow::update_state (const State &state)
 {
   ScopedLock<Spinlock> sl (async_spin_);
   const bool accessed = async_state_accessed_;
@@ -95,15 +95,15 @@ ScreenWindow::update_state (const State &state)
   return accessed;
 }
 
-ScreenWindow::State
-ScreenWindow::get_state ()
+DisplayWindow::State
+DisplayWindow::get_state ()
 {
   ScopedLock<Spinlock> sl (async_spin_);
   return async_state_;
 }
 
 bool
-ScreenWindow::viewable ()
+DisplayWindow::viewable ()
 {
   ScopedLock<Spinlock> sl (async_spin_);
   bool viewable = async_state_.visible;
@@ -112,28 +112,28 @@ ScreenWindow::viewable ()
 }
 
 void
-ScreenWindow::configure (const Config &config, bool sizeevent)
+DisplayWindow::configure (const Config &config, bool sizeevent)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CONFIGURE, this);
-  cmd->config = new ScreenWindow::Config (config);
+  cmd->config = new DisplayWindow::Config (config);
   cmd->need_resize = sizeevent;
   queue_command (cmd);
 }
 
 void
-ScreenWindow::beep ()
+DisplayWindow::beep ()
 {
   queue_command (new ScreenCommand (ScreenCommand::BEEP, this));
 }
 
 void
-ScreenWindow::show ()
+DisplayWindow::show ()
 {
   queue_command (new ScreenCommand (ScreenCommand::SHOW, this));
 }
 
 void
-ScreenWindow::present (bool user_activation)
+DisplayWindow::present (bool user_activation)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::PRESENT, this);
   cmd->u64 = user_activation;
@@ -141,7 +141,7 @@ ScreenWindow::present (bool user_activation)
 }
 
 void
-ScreenWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &region)
+DisplayWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::BLIT, this);
   cmd->surface = cairo_surface_reference (surface);
@@ -150,7 +150,7 @@ ScreenWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &re
 }
 
 void
-ScreenWindow::start_user_move (uint button, double root_x, double root_y)
+DisplayWindow::start_user_move (uint button, double root_x, double root_y)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::UMOVE, this);
   cmd->button = button;
@@ -160,7 +160,7 @@ ScreenWindow::start_user_move (uint button, double root_x, double root_y)
 }
 
 void
-ScreenWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
+DisplayWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::URESIZE, this);
   cmd->button = button;
@@ -170,7 +170,7 @@ ScreenWindow::start_user_resize (uint button, double root_x, double root_y, Anch
 }
 
 void
-ScreenWindow::set_content_owner (ContentSourceType source, uint64 nonce, const StringVector &data_types)
+DisplayWindow::set_content_owner (ContentSourceType source, uint64 nonce, const StringVector &data_types)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::OWNER, this);
   cmd->source = source;
@@ -180,7 +180,7 @@ ScreenWindow::set_content_owner (ContentSourceType source, uint64 nonce, const S
 }
 
 void
-ScreenWindow::provide_content (const String &data_type, const String &data, uint64 request_id)
+DisplayWindow::provide_content (const String &data_type, const String &data, uint64 request_id)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::PROVIDE, this);
   cmd->nonce = request_id;
@@ -190,7 +190,7 @@ ScreenWindow::provide_content (const String &data_type, const String &data, uint
 }
 
 void
-ScreenWindow::request_content (ContentSourceType source, uint64 nonce, const String &data_type)
+DisplayWindow::request_content (ContentSourceType source, uint64 nonce, const String &data_type)
 {
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CONTENT, this);
   cmd->source = source;
@@ -200,13 +200,13 @@ ScreenWindow::request_content (ContentSourceType source, uint64 nonce, const Str
 }
 
 void
-ScreenWindow::destroy ()
+DisplayWindow::destroy ()
 {
   queue_command (new ScreenCommand (ScreenCommand::DESTROY, this));
 }
 
 void
-ScreenWindow::queue_command (ScreenCommand *command)
+DisplayWindow::queue_command (ScreenCommand *command)
 {
   ScreenDriver::Friends::queue_command (screen_driver_async(), command);
 }
@@ -214,37 +214,37 @@ ScreenWindow::queue_command (ScreenCommand *command)
 static const char*
 flag_name (uint64 flag)
 {
-  switch (ScreenWindow::Flags (flag))
+  switch (DisplayWindow::Flags (flag))
     {
-    case ScreenWindow::MODAL:		return "MODAL";
-    case ScreenWindow::STICKY:	        return "STICKY";
-    case ScreenWindow::VMAXIMIZED:	return "VMAXIMIZED";
-    case ScreenWindow::HMAXIMIZED:	return "HMAXIMIZED";
-    case ScreenWindow::SHADED:	        return "SHADED";
-    case ScreenWindow::SKIP_TASKBAR:	return "SKIP_TASKBAR";
-    case ScreenWindow::SKIP_PAGER:	return "SKIP_PAGER";
-    case ScreenWindow::HIDDEN:	        return "HIDDEN";
-    case ScreenWindow::FULLSCREEN:	return "FULLSCREEN";
-    case ScreenWindow::ABOVE_ALL:	return "ABOVE_ALL";
-    case ScreenWindow::BELOW_ALL:	return "BELOW_ALL";
-    case ScreenWindow::ATTENTION:	return "ATTENTION";
-    case ScreenWindow::FOCUS_DECO:	return "FOCUS_DECO";
-    case ScreenWindow::DECORATED:	return "DECORATED";
-    case ScreenWindow::MINIMIZABLE:	return "MINIMIZABLE";
-    case ScreenWindow::MAXIMIZABLE:	return "MAXIMIZABLE";
-    case ScreenWindow::DELETABLE:	return "DELETABLE";
-    case ScreenWindow::ACCEPT_FOCUS:	return "ACCEPT_FOCUS";
-    case ScreenWindow::UNFOCUSED:	return "UNFOCUSED";
-    case ScreenWindow::ICONIFY:	        return "ICONIFY";
-    case ScreenWindow::_WM_STATE_MASK:
-    case ScreenWindow::_DECO_MASK:
+    case DisplayWindow::MODAL:		return "MODAL";
+    case DisplayWindow::STICKY:	        return "STICKY";
+    case DisplayWindow::VMAXIMIZED:	return "VMAXIMIZED";
+    case DisplayWindow::HMAXIMIZED:	return "HMAXIMIZED";
+    case DisplayWindow::SHADED:	        return "SHADED";
+    case DisplayWindow::SKIP_TASKBAR:	return "SKIP_TASKBAR";
+    case DisplayWindow::SKIP_PAGER:	return "SKIP_PAGER";
+    case DisplayWindow::HIDDEN:	        return "HIDDEN";
+    case DisplayWindow::FULLSCREEN:	return "FULLSCREEN";
+    case DisplayWindow::ABOVE_ALL:	return "ABOVE_ALL";
+    case DisplayWindow::BELOW_ALL:	return "BELOW_ALL";
+    case DisplayWindow::ATTENTION:	return "ATTENTION";
+    case DisplayWindow::FOCUS_DECO:	return "FOCUS_DECO";
+    case DisplayWindow::DECORATED:	return "DECORATED";
+    case DisplayWindow::MINIMIZABLE:	return "MINIMIZABLE";
+    case DisplayWindow::MAXIMIZABLE:	return "MAXIMIZABLE";
+    case DisplayWindow::DELETABLE:	return "DELETABLE";
+    case DisplayWindow::ACCEPT_FOCUS:	return "ACCEPT_FOCUS";
+    case DisplayWindow::UNFOCUSED:	return "UNFOCUSED";
+    case DisplayWindow::ICONIFY:	return "ICONIFY";
+    case DisplayWindow::_WM_STATE_MASK:
+    case DisplayWindow::_DECO_MASK:
       ; // pass
     }
  return "UNKNOWN";
 }
 
 String
-ScreenWindow::flags_name (uint64 flags, String combo)
+DisplayWindow::flags_name (uint64 flags, String combo)
 {
   const uint64 I = 1;
   String result;
@@ -255,7 +255,7 @@ ScreenWindow::flags_name (uint64 flags, String combo)
 }
 
 // == ScreenCommand ==
-ScreenCommand::ScreenCommand (Type ctype, ScreenWindow *window) :
+ScreenCommand::ScreenCommand (Type ctype, DisplayWindow *window) :
   type (ctype), screen_window (window), config (NULL), setup (NULL), surface (NULL), region (NULL),
   nonce (0), root_x (-1), root_y (-1), button (-1), source (ContentSourceType (0)), need_resize (false)
 {}
@@ -394,19 +394,19 @@ ScreenDriver::queue_command (ScreenCommand *screen_command)
   command_queue_.push (screen_command);
 }
 
-ScreenWindow*
-ScreenDriver::create_screen_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
+DisplayWindow*
+ScreenDriver::create_screen_window (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config)
 {
   assert_return (thread_handle_.joinable(), NULL);
   assert_return (reply_queue_.pending() == false, NULL);
 
   ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CREATE, NULL);
-  cmd->setup = new ScreenWindow::Setup (setup);
-  cmd->config = new ScreenWindow::Config (config);
+  cmd->setup = new DisplayWindow::Setup (setup);
+  cmd->config = new DisplayWindow::Config (config);
   command_queue_.push (cmd);
   ScreenCommand *reply = reply_queue_.pop();
   assert (reply->type == ScreenCommand::OK && reply->screen_window);
-  ScreenWindow *screen_window = reply->screen_window;
+  DisplayWindow *screen_window = reply->screen_window;
   delete reply;
   return screen_window;
 }

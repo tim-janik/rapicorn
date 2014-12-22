@@ -14,12 +14,12 @@ typedef std::weak_ptr<WindowImpl>   WindowImplW;
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   const EventLoopP      loop_;
-  ScreenWindow*         screen_window_;
+  DisplayWindow*        screen_window_;
   EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;
   String                     last_command_;
   vector<WidgetImplP>   last_entered_children_;
-  ScreenWindow::Config  config_;
+  DisplayWindow::Config config_;
   uint                  notify_displayed_id_;
   uint                  auto_focus_ : 1;
   uint                  entered_ : 1;
@@ -141,9 +141,9 @@ private:
 public: // tailored member access for WidgetImpl
   /// @cond INTERNAL
   class Internal {
-    friend               class WidgetImpl; // only friends can access private class members
-    static ScreenWindow* screen_window (WindowImpl &window)                     { return window.screen_window_; }
-    static void          set_focus     (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
+    friend                class WidgetImpl; // only friends can access private class members
+    static DisplayWindow* screen_window (WindowImpl &window)                     { return window.screen_window_; }
+    static void           set_focus     (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
   };
   /// @endcond
 };

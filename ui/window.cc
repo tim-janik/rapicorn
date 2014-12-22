@@ -285,7 +285,7 @@ WindowImpl::resize_window (const Allocation *new_area)
   const uint64 start = timestamp_realtime();
   assert_return (requisitions_tunable() == false);
   Requisition rsize;
-  ScreenWindow::State state;
+  DisplayWindow::State state;
   bool allocated = false;
 
   // negotiate sizes (new_area==NULL) and ensures window is allocated
@@ -1032,11 +1032,11 @@ WindowImpl::create_screen_window ()
           ScreenDriver *sdriver = ScreenDriver::retrieve_screen_driver ("auto");
           if (sdriver)
             {
-              ScreenWindow::Setup setup;
+              DisplayWindow::Setup setup;
               setup.window_type = WINDOW_TYPE_NORMAL;
-              uint64 flags = ScreenWindow::ACCEPT_FOCUS | ScreenWindow::DELETABLE |
-                             ScreenWindow::DECORATED | ScreenWindow::MINIMIZABLE | ScreenWindow::MAXIMIZABLE;
-              setup.request_flags = ScreenWindow::Flags (flags);
+              uint64 flags = DisplayWindow::ACCEPT_FOCUS | DisplayWindow::DELETABLE |
+                             DisplayWindow::DECORATED | DisplayWindow::MINIMIZABLE | DisplayWindow::MAXIMIZABLE;
+              setup.request_flags = DisplayWindow::Flags (flags);
               String prg = program_ident();
               if (prg.empty())
                 prg = program_file();
