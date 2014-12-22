@@ -92,7 +92,7 @@ class X11Context {
   EventStake*           find_event_stake        (Window window, bool create);
   void                  continue_incr           (Window window, Atom property);
 public:
-  ScreenDriver         &screen_driver;
+  DisplayDriver         &display_driver;
   Display              *display;
   Visual               *visual;
   size_t                max_request_bytes;
@@ -117,7 +117,7 @@ public:
   String                target_atom_to_mime             (const Atom target_atom);
   Atom                  mime_to_target_atom             (const String &mime, Atom last_failed = None);
   void                  mime_list_target_atoms          (const String &mime, vector<Atom> &atoms);
-  explicit              X11Context (ScreenDriver &driver, AsyncNotifyingQueue<DisplayCommand*> &command_queue, AsyncBlockingQueue<DisplayCommand*> &reply_queue);
+  explicit              X11Context (DisplayDriver &driver, AsyncNotifyingQueue<DisplayCommand*> &command_queue, AsyncBlockingQueue<DisplayCommand*> &reply_queue);
   virtual              ~X11Context ();
 };
 
@@ -131,7 +131,7 @@ time_cmp (Time t1, Time t2)
   return 0;
 }
 
-static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
+static DisplayDriverFactory<X11Context> display_driver_x11 ("X11Window", -1);
 
 // == ContentOffer ==
 struct ContentOffer {           // offers_
@@ -213,7 +213,7 @@ struct DisplayWindowX11 : public virtual DisplayWindow, public virtual X11Widget
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
   void                  force_update            (Window window);
-  virtual ScreenDriver& screen_driver_async     () const { return x11context.screen_driver; } // executed from arbitrary threads
+  virtual DisplayDriver& display_driver_async     () const { return x11context.display_driver; } // executed from arbitrary threads
 };
 
 DisplayWindowX11::DisplayWindowX11 (X11Context &_x11context) :
@@ -1445,10 +1445,10 @@ DisplayWindowX11::handle_command (DisplayCommand *command)
 }
 
 // == X11Context ==
-X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<DisplayCommand*> &command_queue,
+X11Context::X11Context (DisplayDriver &driver, AsyncNotifyingQueue<DisplayCommand*> &command_queue,
                         AsyncBlockingQueue<DisplayCommand*> &reply_queue) :
   loop_ (NULL), command_queue_ (command_queue), reply_queue_ (reply_queue),
-  shared_mem_ (-1), screen_driver (driver), display (NULL), visual (NULL),
+  shared_mem_ (-1), display_driver (driver), display (NULL), visual (NULL),
   max_request_bytes (0), max_property_bytes (0), screen (0), depth (0),
   root_window (0), input_method (NULL)
 {

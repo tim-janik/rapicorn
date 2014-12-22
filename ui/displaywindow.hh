@@ -6,7 +6,7 @@
 #include <ui/region.hh>
 
 namespace Rapicorn {
-class ScreenDriver;
+class DisplayDriver;
 class DisplayCommand;
 
 /// Interface class for managing window contents on screens and display devices.
@@ -91,12 +91,12 @@ public:
   void          set_event_wakeup        (const std::function<void()> &wakeup);  ///< Callback used to notify new event arrival.
   bool          peek_events             (const std::function<bool (Event*)> &pred);     ///< Peek/find events via callback.
 protected:
-  explicit              DisplayWindow           ();
-  virtual              ~DisplayWindow           ();
-  virtual ScreenDriver& screen_driver_async     () const = 0;                   ///< Acces ScreenDriver, called from any thread.
-  void                  enqueue_event           (Event *event);                 ///< Add an event to the back of the event queue.
-  bool                  update_state            (const State &state);           ///< Updates the state returned from get_state().
-  void                  queue_command           (DisplayCommand *command);      ///< Helper to queue commands on ScreenDriver.
+  explicit               DisplayWindow          ();
+  virtual               ~DisplayWindow          ();
+  virtual DisplayDriver& display_driver_async   () const = 0;                   ///< Acces DisplayDriver, called from any thread.
+  void                   enqueue_event          (Event *event);                 ///< Add an event to the back of the event queue.
+  bool                   update_state           (const State &state);           ///< Updates the state returned from get_state().
+  void                   queue_command          (DisplayCommand *command);      ///< Helper to queue commands on DisplayDriver.
 private:
   State                 async_state_;
   bool                  async_state_accessed_;
@@ -105,7 +105,7 @@ private:
   std::function<void()> async_wakeup_;
 };
 
-struct DisplayCommand   /// Structure for internal asynchronous communication between DisplayWindow and ScreenDriver.
+struct DisplayCommand   /// Structure for internal asynchronous communication between DisplayWindow and DisplayDriver.
 {
   enum Type { ERROR, OK, CREATE, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, OWNER, PROVIDE, DESTROY, SHUTDOWN, };
   const Type            type;
@@ -126,20 +126,20 @@ struct DisplayCommand   /// Structure for internal asynchronous communication be
 };
 
 /// Management class for DisplayWindow driver implementations.
-class ScreenDriver {
+class DisplayDriver {
   AsyncNotifyingQueue<DisplayCommand*> command_queue_;
   AsyncBlockingQueue<DisplayCommand*>  reply_queue_;
   std::thread                          thread_handle_;
-  RAPICORN_CLASS_NON_COPYABLE (ScreenDriver);
+  RAPICORN_CLASS_NON_COPYABLE (DisplayDriver);
 protected:
-  ScreenDriver         *sibling_;
+  DisplayDriver        *sibling_;
   String                name_;
   int                   priority_;
   virtual void          run (AsyncNotifyingQueue<DisplayCommand*> &command_queue,
                              AsyncBlockingQueue<DisplayCommand*>  &reply_queue) = 0;
   /// Construct with backend @a name, a lower @a priority will score better for "auto" selection.
-  explicit              ScreenDriver            (const String &name, int priority = 0);
-  virtual              ~ScreenDriver            ();
+  explicit              DisplayDriver           (const String &name, int priority = 0);
+  virtual              ~DisplayDriver           ();
   void                  queue_command           (DisplayCommand *display_command);
   bool                  open_L                  ();
   void                  close_L                 ();
@@ -147,24 +147,24 @@ public:
   /// Create a new DisplayWindow from an opened driver.
   DisplayWindow*        create_display_window   (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config);
   /// Open a specific named driver, "auto" will try to find the best match.
-  static ScreenDriver*  retrieve_screen_driver  (const String &backend_name);
+  static DisplayDriver* retrieve_display_driver (const String &backend_name);
   /// Comparator for "auto" scoring.
-  static bool           driver_priority_lesser  (const ScreenDriver *d1, const ScreenDriver *d2);
+  static bool           driver_priority_lesser  (const DisplayDriver *d1, const DisplayDriver *d2);
   static void           forcefully_close_all    ();
   ///@cond
   class Friends {
     friend class DisplayWindow;
-    static void queue_command (ScreenDriver &d, DisplayCommand *c) { d.queue_command (c); }
+    static void queue_command (DisplayDriver &d, DisplayCommand *c) { d.queue_command (c); }
   };
   ///@endcond
 };
 
-/// Template for factory registration of ScreenDriver implementations.
+/// Template for factory registration of DisplayDriver implementations.
 template<class DriverImpl>
-struct ScreenDriverFactory : public ScreenDriver {
+struct DisplayDriverFactory : public DisplayDriver {
   Atomic<int> running;
-  ScreenDriverFactory (const String &name, int priority = 0) :
-    ScreenDriver (name, priority), running (false)
+  DisplayDriverFactory (const String &name, int priority = 0) :
+    DisplayDriver (name, priority), running (false)
   {}
   virtual void
   run (AsyncNotifyingQueue<DisplayCommand*> &command_queue, AsyncBlockingQueue<DisplayCommand*> &reply_queue)
@@ -186,7 +186,7 @@ struct ScreenDriverFactory : public ScreenDriver {
     running = false;
   }
   virtual
-  ~ScreenDriverFactory()
+  ~DisplayDriverFactory()
   {
     assert (running == false);
   }

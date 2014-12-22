@@ -1029,7 +1029,7 @@ WindowImpl::create_display_window ()
       if (!display_window_)
         {
           resize_window(); // ensure initial size requisition
-          ScreenDriver *sdriver = ScreenDriver::retrieve_screen_driver ("auto");
+          DisplayDriver *sdriver = DisplayDriver::retrieve_display_driver ("auto");
           if (sdriver)
             {
               DisplayWindow::Setup setup;
@@ -1059,7 +1059,7 @@ WindowImpl::create_display_window ()
               display_window_->set_event_wakeup ([this] () { loop_->wakeup(); /* thread safe */ });
             }
           else
-            fatal ("failed to find and open any screen driver");
+            fatal ("failed to find and open any display driver");
         }
       RAPICORN_ASSERT (display_window_ != NULL);
       loop_->flag_primary (true); // FIXME: depends on WM-managable

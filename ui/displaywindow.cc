@@ -3,7 +3,7 @@
 #include <list>
 #include <algorithm>
 
-#define SDEBUG(...)     RAPICORN_KEY_DEBUG ("ScreenDriver", __VA_ARGS__)
+#define SDEBUG(...)     RAPICORN_KEY_DEBUG ("DisplayDriver", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -208,7 +208,7 @@ DisplayWindow::destroy ()
 void
 DisplayWindow::queue_command (DisplayCommand *command)
 {
-  ScreenDriver::Friends::queue_command (screen_driver_async(), command);
+  DisplayDriver::Friends::queue_command (display_driver_async(), command);
 }
 
 static const char*
@@ -290,19 +290,19 @@ DisplayCommand::reply_type (Type type)
   return false; // silence compiler
 }
 
-// == ScreenDriver ==
-static Mutex                    screen_driver_mutex;
-static ScreenDriver            *screen_driver_chain = NULL;
+// == DisplayDriver ==
+static Mutex                    display_driver_mutex;
+static DisplayDriver           *display_driver_chain = NULL;
 
-ScreenDriver::ScreenDriver (const String &name, int priority) :
+DisplayDriver::DisplayDriver (const String &name, int priority) :
   sibling_ (NULL), name_ (name), priority_ (priority)
 {
-  ScopedLock<Mutex> locker (screen_driver_mutex);
-  sibling_ = screen_driver_chain;
-  screen_driver_chain = this;
+  ScopedLock<Mutex> locker (display_driver_mutex);
+  sibling_ = display_driver_chain;
+  display_driver_chain = this;
 }
 
-ScreenDriver::~ScreenDriver ()
+DisplayDriver::~DisplayDriver ()
 {
   assert_return (command_queue_.pending() == false);
   assert_return (reply_queue_.pending() == false);
@@ -310,12 +310,12 @@ ScreenDriver::~ScreenDriver ()
 }
 
 bool
-ScreenDriver::open_L ()
+DisplayDriver::open_L ()
 {
-  assert_return (screen_driver_mutex.debug_locked(), false);
+  assert_return (display_driver_mutex.debug_locked(), false);
   assert_return (thread_handle_.get_id() == std::thread::id(), false);
   assert_return (reply_queue_.pending() == false, false);
-  thread_handle_ = std::thread (&ScreenDriver::run, this, std::ref (command_queue_), std::ref (reply_queue_));
+  thread_handle_ = std::thread (&DisplayDriver::run, this, std::ref (command_queue_), std::ref (reply_queue_));
   DisplayCommand *reply = reply_queue_.pop();
   if (reply->type == DisplayCommand::OK)
     {
@@ -333,9 +333,9 @@ ScreenDriver::open_L ()
 }
 
 void
-ScreenDriver::close_L ()
+DisplayDriver::close_L ()
 {
-  assert_return (screen_driver_mutex.debug_locked());
+  assert_return (display_driver_mutex.debug_locked());
   assert_return (thread_handle_.joinable());
   assert_return (reply_queue_.pending() == false);
   command_queue_.push (new DisplayCommand (DisplayCommand::SHUTDOWN, NULL));
@@ -345,16 +345,16 @@ ScreenDriver::close_L ()
   thread_handle_.join();
 }
 
-ScreenDriver*
-ScreenDriver::retrieve_screen_driver (const String &backend_name)
+DisplayDriver*
+DisplayDriver::retrieve_display_driver (const String &backend_name)
 {
-  ScopedLock<Mutex> locker (screen_driver_mutex);
-  vector<ScreenDriver*> screen_driver_array;
-  for (ScreenDriver *it = screen_driver_chain; it; it = it->sibling_)
-    screen_driver_array.push_back (it);
-  SDEBUG ("trying to open 1/%d screen drivers...", screen_driver_array.size());
-  sort (screen_driver_array.begin(), screen_driver_array.end(), driver_priority_lesser);
-  for (auto it : screen_driver_array)
+  ScopedLock<Mutex> locker (display_driver_mutex);
+  vector<DisplayDriver*> display_driver_array;
+  for (DisplayDriver *it = display_driver_chain; it; it = it->sibling_)
+    display_driver_array.push_back (it);
+  SDEBUG ("trying to open 1/%d display drivers...", display_driver_array.size());
+  sort (display_driver_array.begin(), display_driver_array.end(), driver_priority_lesser);
+  for (auto it : display_driver_array)
     {
       const char *r;
       if (it->name_ != backend_name && backend_name != "auto")
@@ -363,7 +363,7 @@ ScreenDriver::retrieve_screen_driver (const String &backend_name)
         r = NULL;
       else
         r = "failed to open";
-      SDEBUG ("screen driver %s: %s", CQUOTE (it->name_), r ? r : "success");
+      SDEBUG ("display driver %s: %s", CQUOTE (it->name_), r ? r : "success");
       if (r == NULL)
         return it;
     }
@@ -371,22 +371,22 @@ ScreenDriver::retrieve_screen_driver (const String &backend_name)
 }
 
 void
-ScreenDriver::forcefully_close_all ()
+DisplayDriver::forcefully_close_all ()
 {
-  ScopedLock<Mutex> locker (screen_driver_mutex);
-  for (ScreenDriver *screen_driver = screen_driver_chain; screen_driver; screen_driver = screen_driver->sibling_)
-    if (screen_driver->thread_handle_.joinable())
-      screen_driver->close_L();
+  ScopedLock<Mutex> locker (display_driver_mutex);
+  for (DisplayDriver *display_driver = display_driver_chain; display_driver; display_driver = display_driver->sibling_)
+    if (display_driver->thread_handle_.joinable())
+      display_driver->close_L();
 }
 
 bool
-ScreenDriver::driver_priority_lesser (const ScreenDriver *d1, const ScreenDriver *d2)
+DisplayDriver::driver_priority_lesser (const DisplayDriver *d1, const DisplayDriver *d2)
 {
   return d1->priority_ < d2->priority_;
 }
 
 void
-ScreenDriver::queue_command (DisplayCommand *display_command)
+DisplayDriver::queue_command (DisplayCommand *display_command)
 {
   assert_return (thread_handle_.joinable());
   assert_return (display_command->display_window != NULL);
@@ -395,7 +395,7 @@ ScreenDriver::queue_command (DisplayCommand *display_command)
 }
 
 DisplayWindow*
-ScreenDriver::create_display_window (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config)
+DisplayDriver::create_display_window (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config)
 {
   assert_return (thread_handle_.joinable(), NULL);
   assert_return (reply_queue_.pending() == false, NULL);
