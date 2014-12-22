@@ -48,7 +48,7 @@ Every programming or toolkit library comes with the obligatory "Hello World" exa
   <!--- paragraph break -->
   <ol>
     <li>
-Every program using Rapicorn needs to first initialize the core library and also initialize a particular screen_window backend. Both can be accomplished by this call: <code>App.init_with_x11 (&amp;argc, &amp;argv, "Program Name");</code>
+Every program using Rapicorn needs to first initialize the core library and also initialize a particular display backend. Both can be accomplished by this call: <code>App.init_with_x11 (&amp;argc, &amp;argv, "Program Name");</code>
     </li>
     <li>
 Programs that display graphical user interfaces with Rapicorn generally need to load user interface description files, which can be accomplished by:
@@ -91,7 +91,7 @@ Putting it all together: <a href="http://testbit.eu/gitdata?p=rapicorn.git;a=blo
   <!--- paragraph break -->
   <p align="left">
 Apart from the program, a user interface definition file needs to be provided that defines <code>main-window</code>.
-All main windows need to derive from the <code>Root</code> widget, which provides basic functionality like on screen display (depending on the screen_window backend being used) and event handling:
+All main windows need to derive from the <code>Root</code> widget, which provides basic functionality like on screen display (depending on the display backend being used) and event handling:
   </p>
   <pre>    &lt;def:main-window inherit="Root"/>
 </pre>
