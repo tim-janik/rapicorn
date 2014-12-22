@@ -2,7 +2,7 @@
 #include "application.hh"
 #include "window.hh"
 #include "factory.hh"
-#include "screenwindow.hh"
+#include "displaywindow.hh"
 #include "image.hh"
 #include "uithread.hh"
 #include "internal.hh"

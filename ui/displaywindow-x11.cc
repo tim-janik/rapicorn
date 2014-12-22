@@ -1,5 +1,5 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-#include "screenwindow.hh"
+#include "displaywindow.hh"
 #include "uithread.hh"
 #include <cairo/cairo-xlib.h>
 #include <algorithm>
@@ -11,7 +11,7 @@ static auto dbe_x11sync = RAPICORN_DEBUG_OPTION ("x11sync", "Synchronize X11 ope
 
 typedef ::Pixmap XPixmap; // avoid conflicts with Rapicorn::Pixmap
 
-#include "screenwindow-xaux.cc" // helpers, need dbe_x11sync
+#include "displaywindow-xaux.cc" // helpers, need dbe_x11sync
 
 template<class T> cairo_status_t cairo_status_from_any (T t);
 template<> cairo_status_t cairo_status_from_any (cairo_status_t c)          { return c; }

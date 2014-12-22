@@ -1,6 +1,6 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-#ifndef __RAPICORN_SCREEN_WINDOW_HH__
-#define __RAPICORN_SCREEN_WINDOW_HH__
+#ifndef __RAPICORN_DISPLAY_WINDOW_HH__
+#define __RAPICORN_DISPLAY_WINDOW_HH__
 
 #include <ui/events.hh>
 #include <ui/region.hh>
@@ -214,4 +214,4 @@ ScreenWindow::State::operator== (const State &o) const
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_SCREEN_WINDOW_HH__ */
+#endif  /* __RAPICORN_DISPLAY_WINDOW_HH__ */
