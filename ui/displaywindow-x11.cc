@@ -77,8 +77,8 @@ class X11Context {
   MainLoopP                            loop_;
   vector<size_t>                       queued_updates_; // XIDs
   map<size_t, X11Widget*>              x11ids_;
-  AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
-  AsyncBlockingQueue<ScreenCommand*>  &reply_queue_;
+  AsyncNotifyingQueue<DisplayCommand*> &command_queue_;
+  AsyncBlockingQueue<DisplayCommand*>  &reply_queue_;
   vector<EventStake>                   event_stakes_;
   vector<IncrTransfer>                 incr_transfers_;
   int8                                 shared_mem_;
@@ -117,7 +117,7 @@ public:
   String                target_atom_to_mime             (const Atom target_atom);
   Atom                  mime_to_target_atom             (const String &mime, Atom last_failed = None);
   void                  mime_list_target_atoms          (const String &mime, vector<Atom> &atoms);
-  explicit              X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue);
+  explicit              X11Context (ScreenDriver &driver, AsyncNotifyingQueue<DisplayCommand*> &command_queue, AsyncBlockingQueue<DisplayCommand*> &reply_queue);
   virtual              ~X11Context ();
 };
 
@@ -199,7 +199,7 @@ struct DisplayWindowX11 : public virtual DisplayWindow, public virtual X11Widget
   virtual              ~DisplayWindowX11        ();
   virtual bool          timer                   (const EventLoop::State &state, int64 *timeout_usecs_p);
   void                  destroy_x11_resources   ();
-  void                  handle_command          (ScreenCommand *command);
+  void                  handle_command          (DisplayCommand *command);
   void                  setup_window            (const DisplayWindow::Setup &setup);
   void                  create_window           (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config);
   void                  configure_window        (const Config &config, bool sizeevent);
@@ -1339,23 +1339,23 @@ DisplayWindowX11::request_selection (ContentSourceType content_source, Atom sour
 }
 
 void
-DisplayWindowX11::handle_command (ScreenCommand *command)
+DisplayWindowX11::handle_command (DisplayCommand *command)
 {
   switch (command->type)
     {
       bool found;
-    case ScreenCommand::CREATE: case ScreenCommand::OK: case ScreenCommand::ERROR: case ScreenCommand::SHUTDOWN:
+    case DisplayCommand::CREATE: case DisplayCommand::OK: case DisplayCommand::ERROR: case DisplayCommand::SHUTDOWN:
       assert_unreached();
-    case ScreenCommand::CONFIGURE:
+    case DisplayCommand::CONFIGURE:
       configure_window (*command->config, command->need_resize);
       break;
-    case ScreenCommand::BEEP:
+    case DisplayCommand::BEEP:
       XBell (x11context.display, 0);
       break;
-    case ScreenCommand::SHOW:
+    case DisplayCommand::SHOW:
       XMapRaised (x11context.display, window_);
       break;
-    case ScreenCommand::PRESENT:
+    case DisplayCommand::PRESENT:
       {
         const bool user_activation = command->u64;
         XEvent xevent = { ClientMessage, }; // rest is zeroed
@@ -1369,10 +1369,10 @@ DisplayWindowX11::handle_command (ScreenCommand *command)
         XSendEvent (x11context.display, x11context.root_window, False, SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
       }
       break;
-    case ScreenCommand::BLIT:
+    case DisplayCommand::BLIT:
       blit (command->surface, *command->region);
       break;
-    case ScreenCommand::OWNER: {
+    case DisplayCommand::OWNER: {
       const StringVector &data_types = command->string_list;
       const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
                              command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
@@ -1408,7 +1408,7 @@ DisplayWindowX11::handle_command (ScreenCommand *command)
           offer = NULL;
         }
       break; }
-    case ScreenCommand::CONTENT: {
+    case DisplayCommand::CONTENT: {
       const StringVector &data_types = command->string_list;
       assert_return (data_types.size() == 1);
       const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
@@ -1416,7 +1416,7 @@ DisplayWindowX11::handle_command (ScreenCommand *command)
                              None;
       request_selection (command->source, selection, command->nonce, data_types[0]);
       break; }
-    case ScreenCommand::PROVIDE: {
+    case DisplayCommand::PROVIDE: {
       const StringVector &data_types = command->string_list;
       assert_return (data_types.size() == 2);
       found = false;
@@ -1434,9 +1434,9 @@ DisplayWindowX11::handle_command (ScreenCommand *command)
         RAPICORN_CRITICAL ("content provided for unknown request_id: %u (data_type=%s data_length=%u)",
                            command->nonce, data_types[0], data_types[1].size());
       break; }
-    case ScreenCommand::UMOVE:     break;  // FIXME
-    case ScreenCommand::URESIZE:   break;  // FIXME
-    case ScreenCommand::DESTROY:
+    case DisplayCommand::UMOVE:     break;  // FIXME
+    case DisplayCommand::URESIZE:   break;  // FIXME
+    case DisplayCommand::DESTROY:
       destroy_x11_resources();
       delete this;
       break;
@@ -1445,8 +1445,8 @@ DisplayWindowX11::handle_command (ScreenCommand *command)
 }
 
 // == X11Context ==
-X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue,
-                        AsyncBlockingQueue<ScreenCommand*> &reply_queue) :
+X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<DisplayCommand*> &command_queue,
+                        AsyncBlockingQueue<DisplayCommand*> &reply_queue) :
   loop_ (NULL), command_queue_ (command_queue), reply_queue_ (reply_queue),
   shared_mem_ (-1), screen_driver (driver), display (NULL), visual (NULL),
   max_request_bytes (0), max_property_bytes (0), screen (0), depth (0),
@@ -1501,20 +1501,20 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
     return command_queue_.pending();
   else if (state.phase == state.DISPATCH)
     {
-      for (ScreenCommand *cmd = command_queue_.pop(); cmd; cmd = command_queue_.pop())
+      for (DisplayCommand *cmd = command_queue_.pop(); cmd; cmd = command_queue_.pop())
         switch (cmd->type)
           {
             DisplayWindowX11 *display_window;
-          case ScreenCommand::CREATE:
+          case DisplayCommand::CREATE:
             display_window = new DisplayWindowX11 (*this);
             display_window->create_window (*cmd->setup, *cmd->config);
             delete cmd;
-            reply_queue_.push (new ScreenCommand (ScreenCommand::OK, display_window));
+            reply_queue_.push (new DisplayCommand (DisplayCommand::OK, display_window));
             break;
-          case ScreenCommand::SHUTDOWN:
+          case DisplayCommand::SHUTDOWN:
             loop_->quit();
             delete cmd;
-            reply_queue_.push (new ScreenCommand (ScreenCommand::OK, NULL));
+            reply_queue_.push (new DisplayCommand (DisplayCommand::OK, NULL));
             assert_return (x11ids_.empty(), true);
             break;
           default:
@@ -1523,7 +1523,7 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
               display_window->handle_command (cmd);
             else
               {
-                critical ("ScreenCommand without DisplayWindowX11: %p (type=%d)", cmd, cmd->type);
+                critical ("DisplayCommand without DisplayWindowX11: %p (type=%d)", cmd, cmd->type);
                 delete cmd;
               }
             break;

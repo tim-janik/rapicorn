@@ -7,7 +7,7 @@
 
 namespace Rapicorn {
 class ScreenDriver;
-class ScreenCommand;
+class DisplayCommand;
 
 /// Interface class for managing window contents on screens and display devices.
 class DisplayWindow : public virtual std::enable_shared_from_this<DisplayWindow> {
@@ -96,7 +96,7 @@ protected:
   virtual ScreenDriver& screen_driver_async     () const = 0;                   ///< Acces ScreenDriver, called from any thread.
   void                  enqueue_event           (Event *event);                 ///< Add an event to the back of the event queue.
   bool                  update_state            (const State &state);           ///< Updates the state returned from get_state().
-  void                  queue_command           (ScreenCommand *command);       ///< Helper to queue commands on ScreenDriver.
+  void                  queue_command           (DisplayCommand *command);      ///< Helper to queue commands on ScreenDriver.
 private:
   State                 async_state_;
   bool                  async_state_accessed_;
@@ -105,7 +105,7 @@ private:
   std::function<void()> async_wakeup_;
 };
 
-struct ScreenCommand    /// Structure for internal asynchronous communication between DisplayWindow and ScreenDriver.
+struct DisplayCommand   /// Structure for internal asynchronous communication between DisplayWindow and ScreenDriver.
 {
   enum Type { ERROR, OK, CREATE, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, OWNER, PROVIDE, DESTROY, SHUTDOWN, };
   const Type            type;
@@ -120,26 +120,27 @@ struct ScreenCommand    /// Structure for internal asynchronous communication be
   int                   root_x, root_y, button;
   ContentSourceType     source;
   bool                  need_resize;
-  /*ctor*/             ~ScreenCommand ();
-  explicit              ScreenCommand (Type type, DisplayWindow *window);
-  static bool           reply_type    (Type type);
+  /*ctor*/             ~DisplayCommand ();
+  explicit              DisplayCommand (Type type, DisplayWindow *window);
+  static bool           reply_type     (Type type);
 };
 
 /// Management class for DisplayWindow driver implementations.
 class ScreenDriver {
-  AsyncNotifyingQueue<ScreenCommand*> command_queue_;
-  AsyncBlockingQueue<ScreenCommand*>  reply_queue_;
-  std::thread                         thread_handle_;
+  AsyncNotifyingQueue<DisplayCommand*> command_queue_;
+  AsyncBlockingQueue<DisplayCommand*>  reply_queue_;
+  std::thread                          thread_handle_;
   RAPICORN_CLASS_NON_COPYABLE (ScreenDriver);
 protected:
   ScreenDriver         *sibling_;
   String                name_;
   int                   priority_;
-  virtual void          run (AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue) = 0;
+  virtual void          run (AsyncNotifyingQueue<DisplayCommand*> &command_queue,
+                             AsyncBlockingQueue<DisplayCommand*>  &reply_queue) = 0;
   /// Construct with backend @a name, a lower @a priority will score better for "auto" selection.
   explicit              ScreenDriver            (const String &name, int priority = 0);
   virtual              ~ScreenDriver            ();
-  void                  queue_command           (ScreenCommand *screen_command);
+  void                  queue_command           (DisplayCommand *display_command);
   bool                  open_L                  ();
   void                  close_L                 ();
 public:
@@ -151,7 +152,10 @@ public:
   static bool           driver_priority_lesser  (const ScreenDriver *d1, const ScreenDriver *d2);
   static void           forcefully_close_all    ();
   ///@cond
-  class Friends { friend class DisplayWindow; static void queue_command (ScreenDriver &d, ScreenCommand *c) { d.queue_command (c); } };
+  class Friends {
+    friend class DisplayWindow;
+    static void queue_command (ScreenDriver &d, DisplayCommand *c) { d.queue_command (c); }
+  };
   ///@endcond
 };
 
@@ -163,19 +167,19 @@ struct ScreenDriverFactory : public ScreenDriver {
     ScreenDriver (name, priority), running (false)
   {}
   virtual void
-  run (AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue)
+  run (AsyncNotifyingQueue<DisplayCommand*> &command_queue, AsyncBlockingQueue<DisplayCommand*> &reply_queue)
   {
     running = true;
     DriverImpl driver (*this, command_queue, reply_queue);
     if (driver.connect())
       {
-        ScreenCommand *cmd = new ScreenCommand (ScreenCommand::OK, NULL);
+        DisplayCommand *cmd = new DisplayCommand (DisplayCommand::OK, NULL);
         reply_queue.push (cmd);
         driver.run();
       }
     else
       {
-        ScreenCommand *cmd = new ScreenCommand (ScreenCommand::ERROR, NULL);
+        DisplayCommand *cmd = new DisplayCommand (DisplayCommand::ERROR, NULL);
         cmd->string = "Driver connection failed";
         reply_queue.push (cmd);
       }

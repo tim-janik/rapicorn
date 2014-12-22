@@ -114,7 +114,7 @@ DisplayWindow::viewable ()
 void
 DisplayWindow::configure (const Config &config, bool sizeevent)
 {
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CONFIGURE, this);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::CONFIGURE, this);
   cmd->config = new DisplayWindow::Config (config);
   cmd->need_resize = sizeevent;
   queue_command (cmd);
@@ -123,19 +123,19 @@ DisplayWindow::configure (const Config &config, bool sizeevent)
 void
 DisplayWindow::beep ()
 {
-  queue_command (new ScreenCommand (ScreenCommand::BEEP, this));
+  queue_command (new DisplayCommand (DisplayCommand::BEEP, this));
 }
 
 void
 DisplayWindow::show ()
 {
-  queue_command (new ScreenCommand (ScreenCommand::SHOW, this));
+  queue_command (new DisplayCommand (DisplayCommand::SHOW, this));
 }
 
 void
 DisplayWindow::present (bool user_activation)
 {
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::PRESENT, this);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::PRESENT, this);
   cmd->u64 = user_activation;
   queue_command (cmd);
 }
@@ -143,7 +143,7 @@ DisplayWindow::present (bool user_activation)
 void
 DisplayWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::BLIT, this);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::BLIT, this);
   cmd->surface = cairo_surface_reference (surface);
   cmd->region = new Rapicorn::Region (region);
   queue_command (cmd);
@@ -152,7 +152,7 @@ DisplayWindow::blit_surface (cairo_surface_t *surface, const Rapicorn::Region &r
 void
 DisplayWindow::start_user_move (uint button, double root_x, double root_y)
 {
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::UMOVE, this);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::UMOVE, this);
   cmd->button = button;
   cmd->root_x = root_x;
   cmd->root_y = root_y;
@@ -162,7 +162,7 @@ DisplayWindow::start_user_move (uint button, double root_x, double root_y)
 void
 DisplayWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
 {
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::URESIZE, this);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::URESIZE, this);
   cmd->button = button;
   cmd->root_x = root_x;
   cmd->root_y = root_y;
@@ -172,7 +172,7 @@ DisplayWindow::start_user_resize (uint button, double root_x, double root_y, Anc
 void
 DisplayWindow::set_content_owner (ContentSourceType source, uint64 nonce, const StringVector &data_types)
 {
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::OWNER, this);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::OWNER, this);
   cmd->source = source;
   cmd->nonce = nonce;
   cmd->string_list = data_types;
@@ -182,7 +182,7 @@ DisplayWindow::set_content_owner (ContentSourceType source, uint64 nonce, const 
 void
 DisplayWindow::provide_content (const String &data_type, const String &data, uint64 request_id)
 {
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::PROVIDE, this);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::PROVIDE, this);
   cmd->nonce = request_id;
   cmd->string_list.push_back (data_type);
   cmd->string_list.push_back (data);
@@ -192,7 +192,7 @@ DisplayWindow::provide_content (const String &data_type, const String &data, uin
 void
 DisplayWindow::request_content (ContentSourceType source, uint64 nonce, const String &data_type)
 {
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CONTENT, this);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::CONTENT, this);
   cmd->source = source;
   cmd->nonce = nonce;
   cmd->string_list.push_back (data_type);
@@ -202,11 +202,11 @@ DisplayWindow::request_content (ContentSourceType source, uint64 nonce, const St
 void
 DisplayWindow::destroy ()
 {
-  queue_command (new ScreenCommand (ScreenCommand::DESTROY, this));
+  queue_command (new DisplayCommand (DisplayCommand::DESTROY, this));
 }
 
 void
-DisplayWindow::queue_command (ScreenCommand *command)
+DisplayWindow::queue_command (DisplayCommand *command)
 {
   ScreenDriver::Friends::queue_command (screen_driver_async(), command);
 }
@@ -254,13 +254,13 @@ DisplayWindow::flags_name (uint64 flags, String combo)
   return result;
 }
 
-// == ScreenCommand ==
-ScreenCommand::ScreenCommand (Type ctype, DisplayWindow *window) :
+// == DisplayCommand ==
+DisplayCommand::DisplayCommand (Type ctype, DisplayWindow *window) :
   type (ctype), display_window (window), config (NULL), setup (NULL), surface (NULL), region (NULL),
   nonce (0), root_x (-1), root_y (-1), button (-1), source (ContentSourceType (0)), need_resize (false)
 {}
 
-ScreenCommand::~ScreenCommand()
+DisplayCommand::~DisplayCommand()
 {
   if (surface)
     cairo_surface_destroy (surface);
@@ -273,7 +273,7 @@ ScreenCommand::~ScreenCommand()
 }
 
 bool
-ScreenCommand::reply_type (Type type)
+DisplayCommand::reply_type (Type type)
 {
   switch (type)
     {
@@ -316,13 +316,13 @@ ScreenDriver::open_L ()
   assert_return (thread_handle_.get_id() == std::thread::id(), false);
   assert_return (reply_queue_.pending() == false, false);
   thread_handle_ = std::thread (&ScreenDriver::run, this, std::ref (command_queue_), std::ref (reply_queue_));
-  ScreenCommand *reply = reply_queue_.pop();
-  if (reply->type == ScreenCommand::OK)
+  DisplayCommand *reply = reply_queue_.pop();
+  if (reply->type == DisplayCommand::OK)
     {
       delete reply;
       return true;
     }
-  else if (reply->type == ScreenCommand::ERROR)
+  else if (reply->type == DisplayCommand::ERROR)
     {
       delete reply;
       thread_handle_.join();
@@ -338,9 +338,9 @@ ScreenDriver::close_L ()
   assert_return (screen_driver_mutex.debug_locked());
   assert_return (thread_handle_.joinable());
   assert_return (reply_queue_.pending() == false);
-  command_queue_.push (new ScreenCommand (ScreenCommand::SHUTDOWN, NULL));
-  ScreenCommand *reply = reply_queue_.pop();
-  assert (reply->type == ScreenCommand::OK);
+  command_queue_.push (new DisplayCommand (DisplayCommand::SHUTDOWN, NULL));
+  DisplayCommand *reply = reply_queue_.pop();
+  assert (reply->type == DisplayCommand::OK);
   delete reply;
   thread_handle_.join();
 }
@@ -386,12 +386,12 @@ ScreenDriver::driver_priority_lesser (const ScreenDriver *d1, const ScreenDriver
 }
 
 void
-ScreenDriver::queue_command (ScreenCommand *screen_command)
+ScreenDriver::queue_command (DisplayCommand *display_command)
 {
   assert_return (thread_handle_.joinable());
-  assert_return (screen_command->display_window != NULL);
-  assert_return (ScreenCommand::reply_type (screen_command->type) == false);
-  command_queue_.push (screen_command);
+  assert_return (display_command->display_window != NULL);
+  assert_return (DisplayCommand::reply_type (display_command->type) == false);
+  command_queue_.push (display_command);
 }
 
 DisplayWindow*
@@ -400,12 +400,12 @@ ScreenDriver::create_display_window (const DisplayWindow::Setup &setup, const Di
   assert_return (thread_handle_.joinable(), NULL);
   assert_return (reply_queue_.pending() == false, NULL);
 
-  ScreenCommand *cmd = new ScreenCommand (ScreenCommand::CREATE, NULL);
+  DisplayCommand *cmd = new DisplayCommand (DisplayCommand::CREATE, NULL);
   cmd->setup = new DisplayWindow::Setup (setup);
   cmd->config = new DisplayWindow::Config (config);
   command_queue_.push (cmd);
-  ScreenCommand *reply = reply_queue_.pop();
-  assert (reply->type == ScreenCommand::OK && reply->display_window);
+  DisplayCommand *reply = reply_queue_.pop();
+  assert (reply->type == DisplayCommand::OK && reply->display_window);
   DisplayWindow *display_window = reply->display_window;
   delete reply;
   return display_window;
