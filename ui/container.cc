@@ -611,11 +611,11 @@ ContainerImpl::point_children (Point p, std::vector<WidgetImplP> &stack)
     }
 }
 
-// screen_window coordinates relative
+// display_window coordinates relative
 void
-ContainerImpl::screen_window_point_children (Point p, std::vector<WidgetImplP> &stack)
+ContainerImpl::display_window_point_children (Point p, std::vector<WidgetImplP> &stack)
 {
-  point_children (point_from_screen_window (p), stack);
+  point_children (point_from_display_window (p), stack);
 }
 
 void

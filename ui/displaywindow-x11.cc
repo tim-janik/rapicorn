@@ -1504,12 +1504,12 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
       for (ScreenCommand *cmd = command_queue_.pop(); cmd; cmd = command_queue_.pop())
         switch (cmd->type)
           {
-            DisplayWindowX11 *screen_window;
+            DisplayWindowX11 *display_window;
           case ScreenCommand::CREATE:
-            screen_window = new DisplayWindowX11 (*this);
-            screen_window->create_window (*cmd->setup, *cmd->config);
+            display_window = new DisplayWindowX11 (*this);
+            display_window->create_window (*cmd->setup, *cmd->config);
             delete cmd;
-            reply_queue_.push (new ScreenCommand (ScreenCommand::OK, screen_window));
+            reply_queue_.push (new ScreenCommand (ScreenCommand::OK, display_window));
             break;
           case ScreenCommand::SHUTDOWN:
             loop_->quit();
@@ -1518,9 +1518,9 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
             assert_return (x11ids_.empty(), true);
             break;
           default:
-            screen_window = dynamic_cast<DisplayWindowX11*> (cmd->screen_window);
-            if (cmd->screen_window && screen_window)
-              screen_window->handle_command (cmd);
+            display_window = dynamic_cast<DisplayWindowX11*> (cmd->display_window);
+            if (cmd->display_window && display_window)
+              display_window->handle_command (cmd);
             else
               {
                 critical ("ScreenCommand without DisplayWindowX11: %p (type=%d)", cmd, cmd->type);

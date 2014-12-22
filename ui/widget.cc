@@ -279,9 +279,9 @@ WidgetImpl::notify_key_error ()
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
-      if (screen_window)
-        screen_window->beep();
+      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      if (display_window)
+        display_window->beep();
     }
 }
 
@@ -298,10 +298,10 @@ WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const Stri
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
-      if (screen_window)
+      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      if (display_window)
         {
-          screen_window->request_content (csource, nonce, data_type);
+          display_window->request_content (csource, nonce, data_type);
           return true;
         }
     }
@@ -320,10 +320,10 @@ WidgetImpl::own_content (ContentSourceType content_source, uint64 nonce, const S
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
-      if (screen_window)
+      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      if (display_window)
         {
-          screen_window->set_content_owner (content_source, nonce, data_types);
+          display_window->set_content_owner (content_source, nonce, data_types);
           return true;
         }
     }
@@ -339,10 +339,10 @@ WidgetImpl::disown_content (ContentSourceType content_source, uint64 nonce)
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
-      if (screen_window)
+      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      if (display_window)
         {
-          screen_window->set_content_owner (content_source, nonce, StringVector());
+          display_window->set_content_owner (content_source, nonce, StringVector());
           return true;
         }
     }
@@ -360,10 +360,10 @@ WidgetImpl::provide_content (const String &data_type, const String &data, uint64
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *screen_window = WindowImpl::Internal::screen_window (*rwidget);
-      if (screen_window)
+      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      if (display_window)
         {
-          screen_window->provide_content (data_type, data, request_id);
+          display_window->provide_content (data_type, data, request_id);
           return true;
         }
     }
@@ -961,21 +961,21 @@ WidgetImpl::translate_to (const uint    n_rects,
 }
 
 Point
-WidgetImpl::point_from_screen_window (Point window_point) /* window coordinates relative */
+WidgetImpl::point_from_display_window (Point window_point) /* window coordinates relative */
 {
   Point p = window_point;
   ContainerImpl *pc = parent();
   if (pc)
     {
       const Affine &caffine = pc->child_affine (*this);
-      p = pc->point_from_screen_window (p);  // to screen_window coords
+      p = pc->point_from_display_window (p);  // to display_window coords
       p = caffine * p;
     }
   return p;
 }
 
 Point
-WidgetImpl::point_to_screen_window (Point widget_point) /* widget coordinates relative */
+WidgetImpl::point_to_display_window (Point widget_point) /* widget coordinates relative */
 {
   Point p = widget_point;
   ContainerImpl *pc = parent();
@@ -983,19 +983,19 @@ WidgetImpl::point_to_screen_window (Point widget_point) /* widget coordinates re
     {
       const Affine &caffine = pc->child_affine (*this);
       p = caffine.ipoint (p);           // to parent coords
-      p = pc->point_to_screen_window (p);
+      p = pc->point_to_display_window (p);
     }
   return p;
 }
 
 Affine
-WidgetImpl::affine_from_screen_window () /* screen_window => widget affine */
+WidgetImpl::affine_from_display_window () /* display_window => widget affine */
 {
   Affine iaffine;
   ContainerImpl *pc = parent();
   if (pc)
     {
-      const Affine &paffine = pc->affine_from_screen_window();
+      const Affine &paffine = pc->affine_from_display_window();
       const Affine &caffine = pc->child_affine (*this);
       if (paffine.is_identity())
         iaffine = caffine;
@@ -1008,9 +1008,9 @@ WidgetImpl::affine_from_screen_window () /* screen_window => widget affine */
 }
 
 Affine
-WidgetImpl::affine_to_screen_window () /* widget => screen_window affine */
+WidgetImpl::affine_to_display_window () /* widget => display_window affine */
 {
-  Affine iaffine = affine_from_screen_window();
+  Affine iaffine = affine_from_display_window();
   if (!iaffine.is_identity())
     iaffine = iaffine.invert();
   return iaffine;
@@ -1027,13 +1027,13 @@ WidgetImpl::process_event (const Event &event) /* widget coordinates relative */
 }
 
 bool
-WidgetImpl::process_screen_window_event (const Event &event) /* screen_window coordinates relative */
+WidgetImpl::process_display_window_event (const Event &event) /* display_window coordinates relative */
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     {
-      const Affine &affine = affine_from_screen_window();
+      const Affine &affine = affine_from_display_window();
       if (affine.is_identity ())
         handled = controller->sig_event.emit (event);
       else
@@ -1047,9 +1047,9 @@ WidgetImpl::process_screen_window_event (const Event &event) /* screen_window co
 }
 
 bool
-WidgetImpl::screen_window_point (Point p) /* window coordinates relative */
+WidgetImpl::display_window_point (Point p) /* window coordinates relative */
 {
-  return point (point_from_screen_window (p));
+  return point (point_from_display_window (p));
 }
 
 bool

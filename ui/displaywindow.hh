@@ -77,7 +77,7 @@ public:
   void          show                    ();                     ///< Show window on screen.
   void          present                 (bool user_activation); ///< Make window the active window, user activation might enforce this.
   bool          viewable                ();                     ///< Check if the window is viewable, i.e. not iconified/shaded/etc.
-  void          destroy                 ();                     ///< Destroy onscreen window and reset event wakeup.
+  void          destroy                 ();                     ///< Destroy onscreen windows and reset event wakeup.
   void          configure               (const Config &config, bool sizeevent); ///< Change window configuration, requesting size event.
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);   ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                  ///< Trigger window movement.
@@ -109,7 +109,7 @@ struct ScreenCommand    /// Structure for internal asynchronous communication be
 {
   enum Type { ERROR, OK, CREATE, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, OWNER, PROVIDE, DESTROY, SHUTDOWN, };
   const Type            type;
-  DisplayWindow        *const screen_window;
+  DisplayWindow        *const display_window;
   String                string;
   StringVector          string_list;
   DisplayWindow::Config *config;
@@ -144,7 +144,7 @@ protected:
   void                  close_L                 ();
 public:
   /// Create a new DisplayWindow from an opened driver.
-  DisplayWindow*        create_screen_window    (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config);
+  DisplayWindow*        create_display_window   (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config);
   /// Open a specific named driver, "auto" will try to find the best match.
   static ScreenDriver*  retrieve_screen_driver  (const String &backend_name);
   /// Comparator for "auto" scoring.

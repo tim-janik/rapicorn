@@ -14,7 +14,7 @@ typedef std::weak_ptr<WindowImpl>   WindowImplW;
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   const EventLoopP      loop_;
-  DisplayWindow*        screen_window_;
+  DisplayWindow*        display_window_;
   EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;
   String                     last_command_;
@@ -83,10 +83,10 @@ private:
   /* rendering */
   virtual void          draw_now                                ();
   virtual void          render                                  (RenderContext &rcontext, const Rect &rect);
-  /* screen_window ops */
-  virtual void          create_screen_window                    ();
-  virtual bool          has_screen_window                       ();
-  virtual void          destroy_screen_window                   ();
+  /* display_window ops */
+  virtual void          create_display_window                    ();
+  virtual bool          has_display_window                       ();
+  virtual void          destroy_display_window                   ();
   void                  idle_show                               ();
   /* main loop */
   virtual bool          event_dispatcher                        (const EventLoop::State &state);
@@ -142,7 +142,7 @@ public: // tailored member access for WidgetImpl
   /// @cond INTERNAL
   class Internal {
     friend                class WidgetImpl; // only friends can access private class members
-    static DisplayWindow* screen_window (WindowImpl &window)                     { return window.screen_window_; }
+    static DisplayWindow* display_window (WindowImpl &window)                     { return window.display_window_; }
     static void           set_focus     (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
   };
   /// @endcond

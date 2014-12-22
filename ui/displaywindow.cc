@@ -256,7 +256,7 @@ DisplayWindow::flags_name (uint64 flags, String combo)
 
 // == ScreenCommand ==
 ScreenCommand::ScreenCommand (Type ctype, DisplayWindow *window) :
-  type (ctype), screen_window (window), config (NULL), setup (NULL), surface (NULL), region (NULL),
+  type (ctype), display_window (window), config (NULL), setup (NULL), surface (NULL), region (NULL),
   nonce (0), root_x (-1), root_y (-1), button (-1), source (ContentSourceType (0)), need_resize (false)
 {}
 
@@ -389,13 +389,13 @@ void
 ScreenDriver::queue_command (ScreenCommand *screen_command)
 {
   assert_return (thread_handle_.joinable());
-  assert_return (screen_command->screen_window != NULL);
+  assert_return (screen_command->display_window != NULL);
   assert_return (ScreenCommand::reply_type (screen_command->type) == false);
   command_queue_.push (screen_command);
 }
 
 DisplayWindow*
-ScreenDriver::create_screen_window (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config)
+ScreenDriver::create_display_window (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config)
 {
   assert_return (thread_handle_.joinable(), NULL);
   assert_return (reply_queue_.pending() == false, NULL);
@@ -405,10 +405,10 @@ ScreenDriver::create_screen_window (const DisplayWindow::Setup &setup, const Dis
   cmd->config = new DisplayWindow::Config (config);
   command_queue_.push (cmd);
   ScreenCommand *reply = reply_queue_.pop();
-  assert (reply->type == ScreenCommand::OK && reply->screen_window);
-  DisplayWindow *screen_window = reply->screen_window;
+  assert (reply->type == ScreenCommand::OK && reply->display_window);
+  DisplayWindow *display_window = reply->display_window;
   delete reply;
-  return screen_window;
+  return display_window;
 }
 
 } // Rapicorn
