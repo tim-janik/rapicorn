@@ -4,7 +4,8 @@
 DOXYGEN_PROJECT_NUMBER	= ${VERSION}
 DOXYGEN_DOCU_GLOBS	= *.dox *.py *.idl *.h *.H *.hh
 DOXYGEN_CONTENT_GLOBS	= *.c *.C *.cc
-DOXYGEN			= doxygen
+DOXYGEN			?= doxygen
+DOT			?= dot
 DOXYGEN_V		= @printf '  %-9s%s\n'
 DOXYGEN_Q		= $(if $(findstring 1, $(V)) ,, @)
 Q_DEVNUL		= $(if $(findstring 1, $(V)) ,, >/dev/null 2>&1)
@@ -32,8 +33,8 @@ doxygen-full:
 
 # == doxygen-check =
 # Check for doxygen, tools and versions
-CHECK_DOXYGEN = { command -v doxygen >/dev/null && { echo "1.7.6.1" ; doxygen --version ; } | sort -VC ; }
-CHECK_DOT     = { command -v dot >/dev/null && { echo "2.26.0" ; dot -V 2>&1 | sed 's/[^0-9]*//' ; } | sort -VC ; }
+CHECK_DOXYGEN = { command -v $(DOXYGEN) >/dev/null && { echo "1.7.6.1" ; $(DOXYGEN) --version ; } | sort -VC ; }
+CHECK_DOT     = { command -v $(DOT) >/dev/null && { echo "2.26.0" ; $(DOT) -V 2>&1 | sed 's/[^0-9]*//' ; } | sort -VC ; }
 doxygen-check:
 	$(DOXYGEN_Q) ${CHECK_DOXYGEN} || { echo "$@: failed to detect recent version: doxygen"; exit 1; }
 	$(DOXYGEN_Q) ${CHECK_DOT}     || { echo "$@: failed to detect recent version: dot"; exit 1; }

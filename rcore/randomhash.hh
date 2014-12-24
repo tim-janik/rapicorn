@@ -8,7 +8,7 @@
 namespace Rapicorn {
 
 /** SHA3_224 - 224 Bit digest generation.
- * This class implements the SHA3 hash funtion to create 224 Bit digests, see FIPS 202 @cite Fips202.
+ * This class implements the SHA3 hash funtion to create 224 Bit digests, see FIPS 202 @cite Fips202 .
  */
 struct SHA3_224 {
   /*dtor*/ ~SHA3_224    ();
@@ -23,7 +23,7 @@ private: State *state_;
 void    sha3_224_hash   (const void *data, size_t data_length, uint8_t hashvalue[28]);
 
 /** SHA3_256 - 256 Bit digest generation.
- * This class implements the SHA3 hash funtion to create 256 Bit digests, see FIPS 202 @cite Fips202.
+ * This class implements the SHA3 hash funtion to create 256 Bit digests, see FIPS 202 @cite Fips202 .
  */
 struct SHA3_256 {
   /*dtor*/ ~SHA3_256    ();
@@ -38,7 +38,7 @@ private: State *state_;
 void    sha3_256_hash   (const void *data, size_t data_length, uint8_t hashvalue[32]);
 
 /** SHA3_384 - 384 Bit digest generation.
- * This class implements the SHA3 hash funtion to create 384 Bit digests, see FIPS 202 @cite Fips202.
+ * This class implements the SHA3 hash funtion to create 384 Bit digests, see FIPS 202 @cite Fips202 .
  */
 struct SHA3_384 {
   /*dtor*/ ~SHA3_384    ();
@@ -53,7 +53,7 @@ private: State *state_;
 void    sha3_384_hash   (const void *data, size_t data_length, uint8_t hashvalue[48]);
 
 /** SHA3_512 - 512 Bit digest generation.
- * This class implements the SHA3 hash funtion to create 512 Bit digests, see FIPS 202 @cite Fips202.
+ * This class implements the SHA3 hash funtion to create 512 Bit digests, see FIPS 202 @cite Fips202 .
  */
 struct SHA3_512 {
   /*dtor*/ ~SHA3_512    ();
@@ -68,7 +68,7 @@ private: State *state_;
 void    sha3_512_hash   (const void *data, size_t data_length, uint8_t hashvalue[64]);
 
 /** SHAKE128 - 128 Bit extendable output digest generation.
- * This class implements the SHA3 extendable output hash funtion with 128 bit security strength, see FIPS 202 @cite Fips202.
+ * This class implements the SHA3 extendable output hash funtion with 128 bit security strength, see FIPS 202 @cite Fips202 .
  */
 struct SHAKE128 {
   /*dtor*/ ~SHAKE128        ();
@@ -83,7 +83,7 @@ private: State *state_;
 void    shake128_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
 
 /** SHAKE256 - 256 Bit extendable output digest generation.
- * This class implements the SHA3 extendable output hash funtion with 256 bit security strength, see FIPS 202 @cite Fips202.
+ * This class implements the SHA3 extendable output hash funtion with 256 bit security strength, see FIPS 202 @cite Fips202 .
  */
 struct SHAKE256 {
   /*dtor*/ ~SHAKE256        ();
@@ -99,7 +99,7 @@ void    shake256_hash   (const void *data, size_t data_length, uint8_t *hashvalu
 
 namespace Lib { // Namespace for implementation internals
 
-/// The Keccak-f[1600] Permutation, see the Keccak specification @cite Keccak11.
+/// The Keccak-f[1600] Permutation, see the Keccak specification @cite Keccak11 .
 class KeccakF1600 {
   union {
     uint64_t            A[25];
@@ -126,7 +126,7 @@ public:
 } // Lib
 
 /** KeccakPRNG - A KeccakF1600 based cryptographically secure pseudo-random number generator.
- * The permutation steps are derived from the Keccak specification @cite Keccak11.
+ * The permutation steps are derived from the Keccak specification @cite Keccak11 .
  * For further details about this implementation, see also: http://testbit.org/keccak
  */
 class KeccakPRNG {

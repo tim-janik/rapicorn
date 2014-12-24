@@ -226,8 +226,16 @@ if test x"$enable_devel_mode" = xyes ; then
   # devel mode build tools
   MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
   MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
-else
+  MC_ASSERT_PROG(PANDOC, pandoc, [See: http://johnmacfarlane.net/pandoc/])
+  MC_ASSERT_PROG(DOXYGEN, doxygen, [See: http://www.stack.nl/~dimitri/doxygen/])
+  MC_ASSERT_PROG(DOT, dot, [See: http://www.graphviz.org/])
+else # provide sane defaults for meaningful makefiles & errors
   DEVELMODE="#"; NOTDEVELMODE=""
+  BISON=bison; AC_SUBST(BISON)
+  FLEX=flex; AC_SUBST(FLEX)
+  PANDOC=pandoc; AC_SUBST(PANDOC)
+  DOXYGEN=doxygen; AC_SUBST(DOXYGEN)
+  DOT=dot; AC_SUBST(DOT)
 fi
 AC_SUBST(DEVELMODE)
 AC_SUBST(NOTDEVELMODE)
@@ -609,6 +617,7 @@ tests/Makefile
 pytests/Makefile
 examples/Makefile
 docs/Makefile
+docs/mans/Makefile
 docs/examples/Makefile
 docs/imports/Makefile
 docs/tutorial/Makefile

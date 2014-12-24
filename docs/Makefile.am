@@ -1,7 +1,7 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = examples imports tutorial
+SUBDIRS = mans examples imports tutorial
 
 QPRINT = @printf '  %-9s%s\n'
 
@@ -30,14 +30,14 @@ uninstall-local:
 # == html/ build rules ==
 include Makefile.doxygen
 git_index_file = $(shell test ! -x $(top_srcdir)/.git/ || echo $(top_srcdir)/.git/index)
-html/doc-version: @INGIT@ $(git_index_file)	# conditionally rebuild, depending on HEAD changes
+html/doc-version: @INGIT@ $(if $(NODOC),, $(git_index_file)) # conditionally rebuild, depending on HEAD changes
 	$(AM_V_GEN)
 	$(Q) test -e $@ && test "`cat $@`" = "$(DOC_VERSION)" \
 	|| $(MAKE) $(AM_MAKEFLAGS) --no-print-directory html-docs
 	$(Q) test -e $@ # created by 'html-docs'
 
 # == Doxygen Build Rules ==
-HTMLMAN_FILES     	= imports/rapidrun.1.html
+HTMLMAN_FILES     	= mans/rapidrun.1.html mans/rapidres.1.html
 DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox docs/apps.dox docs/contribute.dox docs/configuration.dox
 DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
 DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh ui/sinfeximpl.hh ui/regionimpl.c \
