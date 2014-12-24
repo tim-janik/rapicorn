@@ -4,6 +4,7 @@
 
 #include <ui/container.hh>
 #include <ui/table.hh>
+#include <ui/painter.hh>
 
 namespace Rapicorn {
 
@@ -26,6 +27,19 @@ public:
   virtual int   top_padding     () const override;
   virtual void  top_padding     (int c) override;
   virtual void  padding         (int c) override;
+};
+
+class FillAreaContainerImpl : public virtual SingleContainerImpl, public virtual FillAreaContainerIface {
+  String       source_;
+  ImagePainter image_painter_;
+protected:
+  virtual        ~FillAreaContainerImpl () override;
+  virtual void    size_request          (Requisition &requisition) override;
+  virtual void    size_allocate         (Allocation area, bool changed) override;
+public:
+  explicit        FillAreaContainerImpl ();
+  virtual void    source                (const String &uri) override;
+  virtual String  source                () const override;
 };
 
 class HBoxImpl : public virtual TableLayoutImpl, public virtual HBoxIface {

@@ -50,6 +50,9 @@
   <!-- Drawable -->
   <Rapicorn_Factory:Drawable id="Drawable"/>
 
+  <!-- FillAreaContainer -->
+  <Rapicorn_Factory:FillAreaContainer id="FillAreaContainer"/>
+
   <!-- frames -->
   <Rapicorn_Factory:Frame id="Frame"/>
   <Rapicorn_Factory:FocusFrame id="FocusFrame"/>

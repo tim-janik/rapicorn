@@ -1,6 +1,7 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "layoutcontainers.hh"
 #include "factory.hh"
+#include "../rcore/rsvg/svg.hh" // Svg::Span
 
 namespace Rapicorn {
 
@@ -144,6 +145,90 @@ AlignmentImpl::padding (int c)
 }
 
 static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn_Factory:Alignment");
+
+// == FillAreaContainerImpl ==
+FillAreaContainerImpl::FillAreaContainerImpl ()
+{}
+
+FillAreaContainerImpl::~FillAreaContainerImpl ()
+{}
+
+void
+FillAreaContainerImpl::source (const String &uri)
+{
+  source_ = uri;
+  image_painter_ = ImagePainter (source_);
+  invalidate();
+  changed ("source");
+}
+
+String
+FillAreaContainerImpl::source () const
+{
+  return source_;
+}
+
+void
+FillAreaContainerImpl::size_request (Requisition &requisition)
+{
+  bool chspread = false, cvspread = false;
+  if (has_visible_child())
+    requisition = size_request_child (get_child(), &chspread, &cvspread);
+  if (image_painter_)
+    {
+      const Requisition image_size = image_painter_.image_size ();
+      Rect fill = image_painter_.fill_area();
+      assert_return (fill.x + fill.width <= image_size.width);
+      assert_return (fill.y + fill.height <= image_size.height);
+      requisition.width += image_size.width - fill.width;
+      requisition.height += image_size.height - fill.height;
+    }
+  set_flag (HSPREAD_CONTAINER, chspread);
+  set_flag (VSPREAD_CONTAINER, cvspread);
+}
+
+void
+FillAreaContainerImpl::size_allocate (Allocation area, bool changed)
+{
+  if (has_visible_child())
+    {
+      WidgetImpl &child = get_child();
+      Allocation child_area;
+      if (image_painter_)
+        {
+          const Requisition image_size = image_painter_.image_size ();
+          Rect fill = image_painter_.fill_area();
+          assert_return (fill.x + fill.width <= image_size.width);
+          assert_return (fill.y + fill.height <= image_size.height);
+          Svg::Span spans[3] = { { 0, 0 }, { 0, 1 }, { 0, 0 } };
+          // horizontal distribution & allocation
+          spans[0].length = fill.x;
+          spans[1].length = fill.width;
+          spans[2].length = image_size.width - fill.x - fill.width;
+          ssize_t dremain = Svg::Span::distribute (ARRAY_SIZE (spans), spans, area.width - image_size.width, 1);
+          if (dremain < 0)
+            Svg::Span::distribute (ARRAY_SIZE (spans), spans, dremain, 0); // shrink *any* segment
+          child_area.x = area.x + spans[0].length;
+          child_area.width = spans[1].length;
+          // vertical distribution & allocation
+          spans[0].length = fill.y;
+          spans[1].length = fill.height;
+          spans[2].length = image_size.height - fill.y - fill.height;
+          dremain = Svg::Span::distribute (ARRAY_SIZE (spans), spans, area.height - image_size.height, 1);
+          if (dremain < 0)
+            Svg::Span::distribute (ARRAY_SIZE (spans), spans, dremain, 0); // shrink *any* segment
+          child_area.y = area.y + spans[0].length;
+          child_area.height = spans[1].length;
+        }
+      else
+        child_area = area;
+      child_area = layout_child (child, child_area);
+      child.set_allocation (child_area);
+    }
+}
+
+static const WidgetFactory<FillAreaContainerImpl> fill_area_container_factory ("Rapicorn_Factory:FillAreaContainer");
+
 
 // == HBoxImpl ==
 HBoxImpl::HBoxImpl()

@@ -385,6 +385,11 @@ interface Alignment : Container {
   int32 padding        = Range (_("Padding"),        _("Amount of padding to add at the child's sides"),       "wo", 0, 65535, 3);
 };
 
+/// The FillAreaContainer is used to position a child within an image fill area.
+interface FillAreaContainer : Container {
+  String        source = String (_("Image Source"), _("Resource locator for an image (fragment) with fill area specification."), "rw");
+};
+
 /// The Frame container decorates its single child with a state dependant frame drawing.
 /// See also the corresponding implementation class FrameImpl.
 interface Frame : Container {

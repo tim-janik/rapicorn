@@ -680,6 +680,50 @@ ContainerImpl::remove_widget (WidgetIface &child) // ContainerIface method
     remove (widget);
 }
 
+Requisition
+ContainerImpl::size_request_child (WidgetImpl &child, bool *hspread, bool *vspread)
+{
+  bool chspread = false, cvspread = false;
+  Requisition cr = child.requisition ();
+  const PackInfo &pi = child.pack_info();
+  cr.width += pi.left_spacing + pi.right_spacing;
+  cr.height += pi.bottom_spacing + pi.top_spacing;
+  chspread = child.hspread();
+  cvspread = child.vspread();
+  if (hspread)
+    *hspread = chspread;
+  if (vspread)
+    *vspread = cvspread;
+  return cr;
+}
+
+Allocation
+ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
+{
+  Requisition rq = child.requisition();
+  const PackInfo &pi = child.pack_info();
+  Allocation area = carea;
+  /* pad allocation */
+  area.x += pi.left_spacing;
+  area.width -= pi.left_spacing + pi.right_spacing;
+  area.y += pi.bottom_spacing;
+  area.height -= pi.bottom_spacing + pi.top_spacing;
+  /* expand/scale child */
+  if (area.width > rq.width && !child.hexpand())
+    {
+      int width = iround (rq.width + pi.hscale * (area.width - rq.width));
+      area.x += iround (pi.halign * (area.width - width));
+      area.width = width;
+    }
+  if (area.height > rq.height && !child.vexpand())
+    {
+      int height = iround (rq.height + pi.vscale * (area.height - rq.height));
+      area.y += iround (pi.valign * (area.height - height));
+      area.height = height;
+    }
+  return area;
+}
+
 SingleContainerImpl::SingleContainerImpl () :
   child_widget (NULL)
 {}
@@ -719,61 +763,13 @@ SingleContainerImpl::remove_child (WidgetImpl &widget)
 }
 
 void
-SingleContainerImpl::size_request_child (Requisition &requisition, bool *hspread, bool *vspread)
-{
-  bool chspread = false, cvspread = false;
-  if (has_visible_child())
-    {
-      WidgetImpl &child = get_child();
-      Requisition cr = child.requisition ();
-      const PackInfo &pi = child.pack_info();
-      requisition.width = pi.left_spacing + cr.width + pi.right_spacing;
-      requisition.height = pi.bottom_spacing + cr.height + pi.top_spacing;
-      chspread = child.hspread();
-      cvspread = child.vspread();
-    }
-  if (hspread)
-    *hspread = chspread;
-  else
-    set_flag (HSPREAD_CONTAINER, chspread);
-  if (vspread)
-    *vspread = cvspread;
-  else
-    set_flag (VSPREAD_CONTAINER, cvspread);
-}
-
-void
 SingleContainerImpl::size_request (Requisition &requisition)
 {
-  size_request_child (requisition, NULL, NULL);
-}
-
-Allocation
-ContainerImpl::layout_child (WidgetImpl         &child,
-                             const Allocation &carea)
-{
-  Requisition rq = child.requisition();
-  const PackInfo &pi = child.pack_info();
-  Allocation area = carea;
-  /* pad allocation */
-  area.x += pi.left_spacing;
-  area.width -= pi.left_spacing + pi.right_spacing;
-  area.y += pi.bottom_spacing;
-  area.height -= pi.bottom_spacing + pi.top_spacing;
-  /* expand/scale child */
-  if (area.width > rq.width && !child.hexpand())
-    {
-      int width = iround (rq.width + pi.hscale * (area.width - rq.width));
-      area.x += iround (pi.halign * (area.width - width));
-      area.width = width;
-    }
-  if (area.height > rq.height && !child.vexpand())
-    {
-      int height = iround (rq.height + pi.vscale * (area.height - rq.height));
-      area.y += iround (pi.valign * (area.height - height));
-      area.height = height;
-    }
-  return area;
+  bool hspread = false, vspread = false;
+  if (has_visible_child())
+    requisition = size_request_child (get_child(), &hspread, &vspread);
+  set_flag (HSPREAD_CONTAINER, hspread);
+  set_flag (VSPREAD_CONTAINER, vspread);
 }
 
 void
