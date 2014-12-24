@@ -165,6 +165,6 @@ progs_ldadd            = librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_GUI_LIBS) -
 # === XML Files ===
 XML_FILES = $(top_srcdir)/res/Rapicorn/foundation.xml $(top_srcdir)/res/Rapicorn/standard.xml
 xmllint-check:
-	$(XMLLINT) --noout $(XML_FILES)
+	! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
 .PHONY: xmllint-check
 check-local: xmllint-check

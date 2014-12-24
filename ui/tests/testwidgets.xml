@@ -2,7 +2,7 @@
 <!-- Rapicorn Examples
  ! This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
  !-->
-<rapicorn-definitions>
+<interfaces>
 
   <!-- alignment test -->
   <Window id="alignment-test">
@@ -58,4 +58,4 @@
     </Ambience>
   </Window>
 
-</rapicorn-definitions>
+</interfaces>

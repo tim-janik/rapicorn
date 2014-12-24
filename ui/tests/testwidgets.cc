@@ -30,11 +30,13 @@ test_factory ()
                  program_file());                       // binary to determine file search path
   TOK();
   WidgetImpl *widget;
-  WindowIface &testwin = *app.create_window ("test-TestWidgetL2");
-  testwin.show();
+  WindowIfaceP testwin = app.create_window ("test-TestWidgetL2");
+  TASSERT (testwin);
+  TASSERT (dynamic_cast<WindowImpl*> (testwin.get()));
+  testwin->show();
   run_main_loop_recursive (false);
   TOK();
-  WindowImpl *window = &testwin.impl();
+  WindowImpl *window = &testwin->impl();
   widget = window->interface<WidgetImpl*> ("TestWidgetL2");
   TASSERT (widget != NULL);
   TestContainerImpl *twidget = dynamic_cast<TestContainerImpl*> (widget);
@@ -57,7 +59,7 @@ test_factory ()
   TASSERT (widget->name().empty() == false); // back to factory default
   TASSERT (widget->name() == factory_default);
   TOK();
-  testwin.close();
+  testwin->close();
   TOK();
 }
 REGISTER_UITHREAD_TEST ("Factory/Test Widget Factory", test_factory);

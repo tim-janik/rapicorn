@@ -61,7 +61,16 @@ public:
   bool                  break_after     () const;
   void                  break_within    (bool            newlines_around_chidlren);
   bool                  break_within    () const;
-  String                xml_string      (uint64          indent = 0, bool include_outer = true, uint64 recursion_depth = -1) const;
+  typedef std::function<String (const XmlNode &node,
+                                size_t         indent,
+                                bool           include_outer,
+                                size_t         recursion_depth)
+                        > XmlStringWrapper;
+  String                xml_string      (size_t                  indent = 0,
+                                         bool                    include_outer = true,
+                                         size_t                  recursion_depth = -1,
+                                         const XmlStringWrapper &wrapper = NULL,
+                                         bool                    wrap_outer = true) const;
   /* nodes */
   static XmlNodeP       create_text     (const String   &utf8text,
                                          uint            line,

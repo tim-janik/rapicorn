@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
-<rapicorn-definitions>
+<interfaces>
 
   <!-- main dialog -->
   <Window id="main-shell" child-container="scroll-box" width="800" height="600" >
@@ -19,8 +19,8 @@
   <Button id="test-button" on-click="dummy">
     <Argument id="test-button-text" default="ClickMe" />
     <Label>
-      <Label.markup-text>
-	<font family='Serif'><larger><larger><larger><larger>[ `test_button_text` ]</larger></larger></larger></larger></font>
+      <Label.markup-text eval-element="Expr">
+	<font family='Serif'><larger><larger><larger><larger>[ <Expr>@eval test_button_text</Expr> ]</larger></larger></larger></larger></font>
       </Label.markup-text>
     </Label>
   </Button>
@@ -29,4 +29,4 @@
   <HBox id="button-row" spacing="5" >
   </HBox>
 
-</rapicorn-definitions>
+</interfaces>

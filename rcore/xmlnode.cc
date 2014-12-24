@@ -378,43 +378,56 @@ XmlNode::xml_escape (const String &input)
   return escape_xml<ALL> (input);
 }
 
-String
-XmlNode::xml_string (uint64 indent, bool include_outer, uint64 recursion_depth) const
+static String
+node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t recursion_depth,
+                 const XmlNode::XmlStringWrapper &wrapper, bool wrap_outer)
 {
+  if (wrap_outer && wrapper)
+    return wrapper (node, indent, include_outer, recursion_depth);
   if (recursion_depth == 0)
     return "";
-  if (istext())
-    return xml_escape (text());
+  if (node.istext())
+    return node.xml_escape (node.text());
   const String istr = string_multiply (" ", indent);
   String s;
   if (include_outer)
     {
-      s += "<" + xml_escape (name());
-      const StringVector keys = list_attributes();
-      for (uint i = 0; i < keys.size(); i++)
-        s += " " + xml_escape (keys[i]) + "=\"" + escape_xml<ALL-SQ> (get_attribute (keys[i])) + "\"";
+      s += "<" + node.xml_escape (node.name());
+      const StringVector &keys = node.list_attributes(), &values = node.list_values();
+      for (size_t i = 0; i < keys.size(); i++)
+        s += " " + node.xml_escape (keys[i]) + "=\"" + escape_xml<ALL-SQ> (values[i]) + "\"";
     }
-  ConstNodes &cl = children();
-  if (cl.size())
+  XmlNode::ConstNodes &cl = node.children();
+  if (!cl.empty())
     {
       if (include_outer)
         s += ">";
-      bool need_break = include_outer && break_within();
+      bool need_break = include_outer && node.break_within();
       for (size_t i = 0; i < cl.size(); i++)
         {
           if (need_break)
             s += "\n" + istr + "  ";
-          s += cl[i]->xml_string (indent + 2, true, recursion_depth - 1);
+          if (wrapper)
+            s += wrapper (*cl[i], indent + 2, true, recursion_depth - 1);
+          else
+            s += cl[i]->xml_string (indent + 2, true, recursion_depth - 1, wrapper, true);
           need_break = cl[i]->break_after();
         }
-      if (include_outer && break_within())
+      if (include_outer && node.break_within())
         s += "\n" + istr;
       if (include_outer)
-        s += "</" + xml_escape (name()) + ">";
+        s += "</" + node.xml_escape (node.name()) + ">";
     }
   else if (include_outer)
     s += "/>";
   return s;
+}
+
+String
+XmlNode::xml_string (size_t indent, bool include_outer, size_t recursion_depth,
+                     const XmlStringWrapper &wrapper, bool wrap_outer) const
+{
+  return node_xml_string (*this, indent, include_outer, recursion_depth, wrapper, wrap_outer);
 }
 
 } // Rapicorn

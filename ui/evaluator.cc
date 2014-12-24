@@ -140,6 +140,12 @@ Evaluator::populate_map (VariableMap        &vmap,
 }
 
 void
+Evaluator::populate_map (VariableMap &vmap, const String &variable_name, const String &variable_value)
+{
+  vmap[variable_name] = variable_value;
+}
+
+void
 Evaluator::populate_map (VariableMap        &vmap,
                          const ArgumentList &variable_names,
                          const ArgumentList &variable_values)
@@ -149,70 +155,13 @@ Evaluator::populate_map (VariableMap        &vmap,
     vmap[variable_names[i]] = variable_values[i];
 }
 
-static String
-expand_eval_expressions (const char           *warning_entity,
-                         VariableMapListScope &scope,
-                         const String         &expression)
-{
-  String result;
-  std::list<String> strl;
-  String::size_type i = 0;
-  while (i < expression.size())
-    {
-      String::size_type d = expression.find ('`', i);
-      if (d != String::npos) // found backtick
-        {
-          result += expression.substr (0, d);
-          /* scan until next backtick */
-          String::size_type e = d + 1;
-          bool terminated = false, escape1 = false, squotes = false, dquotes = false;
-          while (e < expression.size())
-            {
-              bool escapenext = false;
-              if (expression.at (e) == '`' && !squotes && !dquotes)
-                {
-                  terminated = true;
-                  break;
-                }
-              else if (expression.at (e) == '"' && !squotes && !escape1)
-                dquotes = !dquotes;
-              else if (expression.at (e) == '\'' && !dquotes && !escape1)
-                squotes = !squotes;
-              else if (expression.at (e) == '\\' && !escape1 && (squotes || dquotes))
-                escapenext = true;
-              escape1 = escapenext;
-              e++;
-            }
-          if (!terminated)
-            {
-              critical ("%s: unterminated expression in: %s", warning_entity, expression.c_str());
-              return result;
-            }
-          if (d + 1 >= e)
-            result += '`';
-          else
-            {
-              const String expr = expression.substr (d + 1, e - d - 1);
-              SinfexP sinfex = Sinfex::parse_string (expr);
-              Sinfex::Value value = sinfex->eval (scope);
-              result += value.string();
-            }
-          i = e + 1;
-        }
-      else
-        {
-          result += expression.substr (i);
-          break;
-        }
-    }
-  return result;
-}
-
 String
 Evaluator::parse_eval (const String &expression)
 {
   VariableMapListScope scope (env_maps);
-  return expand_eval_expressions (STRFUNC, scope, expression);
+  SinfexP sinfex = Sinfex::parse_string (expression);
+  Sinfex::Value value = sinfex->eval (scope);
+  return value.string();
 }
 
 } // Rapicorn

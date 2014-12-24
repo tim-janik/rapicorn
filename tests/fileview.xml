@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions xmlns:Rapicorn_Factory="http://rapicorn.org/xmlns">
+<interfaces>
 
   <!-- list construction -->
-  <Rapicorn_Factory:WidgetList id="ListArea"/>
-  <Rapicorn_Factory:WidgetListRow id="RapicornWidgetListRow" child-container="ListRowCavity" hexpand="1">
+  <WidgetList id="ListArea"/>
+  <WidgetListRow id="RapicornWidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
       <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
 	<HBox id="ListRowCavity"/>
       </FocusFrame>
     </Ambience>
-  </Rapicorn_Factory:WidgetListRow>
+  </WidgetListRow>
 
   <!-- list area -->
   <Alignment id="widget-list" >
@@ -19,7 +19,7 @@
       <Alignment hexpand="1" vexpand="1" hposition="0" vposition="1"
 		 left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
 	<Frame frame-type="in">
-	  <ListArea model="`model`"/>
+	  <ListArea model="@eval model"/>
 	</Frame>
       </Alignment>
       <VSlider vexpand="0" adjustment-source="ancestry-vertical" vposition="1" hposition="1" />
@@ -40,7 +40,7 @@
 	  </HBox>
 
 	  <VBox spacing="5" homogeneous="0" >
-	    <widget-list hspread="1" vspread="1" model="`list_model`"/>
+	    <widget-list hspread="1" vspread="1" model="@eval list_model"/>
 	    <Button hexpand="1" on-click="Window::close()" > <Label markup-text="Quit"/> </Button>
 	  </VBox>
 
@@ -49,4 +49,4 @@
     </Ambience>
   </Window>
 
-</rapicorn-definitions>
+</interfaces>

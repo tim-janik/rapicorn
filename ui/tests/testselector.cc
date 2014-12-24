@@ -574,7 +574,7 @@ REGISTER_UITHREAD_TEST ("Selector/Selector Matching", test_selector_matching);
 
 static const char test_dialog_xml[] =
   "<?xml version='1.0' encoding='UTF-8'?>\n"
-  "<rapicorn-definitions xmlns:arg='http://rapicorn.org/xmlns' xmlns:def='http://rapicorn.org/xmlns' xmlns:prop='http://rapicorn.org/xmlns'>\n"
+  "<interfaces>\n"
   // test-dialog
   "<Window id='test-dialog'>\n"
   "  <Ambience normal-lighting='upper-left'>\n"
@@ -611,7 +611,7 @@ static const char test_dialog_xml[] =
   "  </Ambience>\n"
   "</Window>\n"
   ""
-  "</rapicorn-definitions>\n"
+  "</interfaces>\n"
   "";
 
 static void
@@ -619,7 +619,7 @@ load_ui_defs()
 {
   do_once
     {
-      String errs = Factory::parse_ui_data ("", RAPICORN_STRLOC(), sizeof (test_dialog_xml)-1, test_dialog_xml);
+      String errs = Factory::parse_ui_data (RAPICORN_STRLOC(), sizeof (test_dialog_xml)-1, test_dialog_xml);
       if (!errs.empty())
         fatal ("%s:%d: failed to parse internal XML string: %s", __FILE__, __LINE__, errs.c_str());
     }

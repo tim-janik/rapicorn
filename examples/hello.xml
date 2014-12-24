@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
-<rapicorn-definitions>
+<interfaces>
 
   <!-- main window -->
   <Window id="main-window" title="Rapicorn Hello World Example">
@@ -16,4 +16,4 @@
     </OuterShell>
   </Window>
 
-</rapicorn-definitions>
+</interfaces>

@@ -10,17 +10,16 @@ print "  " + __file__,
 
 # Define main window Widget Tree
 my_window_xml = """
-<rapicorn-definitions>
-  <Rapicorn_Factory:WidgetList id="FixmeWidgetList"/>
+<interfaces>
   <Window id="my-window">
     <VBox>
       <Button hexpand="1" on-click="Window::close()">
         <Label markup-text="Quit"/>
       </Button>
-    <FixmeWidgetList />
+      <WidgetList id="CheckWidgetList"/>
     </VBox>
   </Window>
-</rapicorn-definitions>
+</interfaces>
 """
 
 # setup application
@@ -37,7 +36,7 @@ window.title = "bar"    ; assert window.title == "bar"
 for i in (9999, 22, 778, 0, 1, 2, 3, 123):
   window.width = i ; assert window.width == i
 # enum testing
-wlist = window.query_selector ("#FixmeWidgetList")
+wlist = window.query_selector ("#CheckWidgetList")
 wlist.selection_mode = Rapicorn.SELECTION_NONE          ; assert wlist.selection_mode == Rapicorn.SELECTION_NONE
 wlist.selection_mode = Rapicorn.SELECTION_SINGLE        ; assert wlist.selection_mode == Rapicorn.SELECTION_SINGLE
 wlist.selection_mode = Rapicorn.SELECTION_BROWSE        ; assert wlist.selection_mode == Rapicorn.SELECTION_BROWSE
