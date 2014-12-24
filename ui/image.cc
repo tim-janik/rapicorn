@@ -22,8 +22,8 @@ ImageImpl::pixbuf() const
 void
 ImageImpl::broken_image()
 {
-  Stock::Icon icon = Stock ("broken-image").icon();
-  image_backend_ = load_source (icon.resource, icon.element);
+  String icon = Stock ("broken-image").icon();
+  image_backend_ = load_source (icon);
   if (!image_backend_)
     critical ("missing stock: broken-image");
   invalidate();
@@ -33,7 +33,7 @@ void
 ImageImpl::source (const String &image_url)
 {
   source_ = image_url;
-  image_backend_ = load_source (source_, element_);
+  image_backend_ = load_source (source_);
   if (!image_backend_)
     broken_image();
   invalidate();
@@ -46,29 +46,12 @@ ImageImpl::source() const
 }
 
 void
-ImageImpl::element (const String &element_id)
-{
-  // FIXME: setting source() + element() loads+parses SVG files twice
-  element_ = element_id;
-  image_backend_ = load_source (source_, element_);
-  if (!image_backend_)
-    broken_image();
-  invalidate();
-}
-
-String
-ImageImpl::element() const
-{
-  return element_;
-}
-
-void
 ImageImpl::stock (const String &stock_id)
 {
   return_unless (stock_id_ != stock_id);
   stock_id_ = stock_id;
-  Stock::Icon stock_icon = Stock (stock_id_).icon();
-  image_backend_ = load_source (stock_icon.resource, stock_icon.element);
+  String stock_icon = Stock (stock_id_).icon();
+  image_backend_ = load_source (stock_icon);
   if (!image_backend_)
     broken_image();
   invalidate();
@@ -108,48 +91,46 @@ StatePainterImpl::source (const String &resource)
 {
   return_unless (source_ != resource);
   source_ = resource;
-  element_image_ = NULL;
-  state_image_ = NULL;
-  state_element_ = "";
+  source_backend_ = NULL;
+  state_backend_ = NULL;
+  state_image_ = "";
   invalidate();
   changed ("source");
 }
 
-void
-StatePainterImpl::element (const String &e)
-{
-  return_unless (element_ != e);
-  element_ = e;
-  element_image_ = NULL;
-  state_image_ = NULL;
-  state_element_ = "";
-  invalidate();
-  changed ("element");
-}
-
 String
-StatePainterImpl::current_element ()
+StatePainterImpl::current_source ()
 {
   StateType s = ancestry_impressed() ? STATE_IMPRESSED : state(); // FIXME: priority for insensitive?
-  switch (s)
+  const String current = [&]() {
+    switch (s)
+      {
+      case STATE_NORMAL:          return normal_image_.empty()      ? source_ : normal_image_;
+      case STATE_INSENSITIVE:     return insensitive_image_.empty() ? source_ : insensitive_image_;
+      case STATE_PRELIGHT:        return prelight_image_.empty()    ? source_ : prelight_image_;
+      case STATE_IMPRESSED:       return impressed_image_.empty()   ? source_ : impressed_image_;
+      case STATE_FOCUS:           return focus_image_.empty()       ? source_ : focus_image_;
+      case STATE_DEFAULT:         return default_image_.empty()     ? source_ : default_image_;
+      default:                    return source_;
+      }
+  } ();
+  if (string_startswith (current, "#"))
     {
-    case STATE_NORMAL:          return normal_element_.empty()      ? element_ : normal_element_;
-    case STATE_INSENSITIVE:     return insensitive_element_.empty() ? element_ : insensitive_element_;
-    case STATE_PRELIGHT:        return prelight_element_.empty()    ? element_ : prelight_element_;
-    case STATE_IMPRESSED:       return impressed_element_.empty()   ? element_ : impressed_element_;
-    case STATE_FOCUS:           return focus_element_.empty()       ? element_ : focus_element_;
-    case STATE_DEFAULT:         return default_element_.empty()     ? element_ : default_element_;
-    default:                    return element_;
+      const ssize_t hashpos = source_.find ('#');
+      const String resource = hashpos < 0 ? source_ : source_.substr (0, hashpos);
+      return resource + current;
     }
+  else
+    return current;
 }
 
 void
-StatePainterImpl::update_element (String &member, const String &value, const char *name)
+StatePainterImpl::update_source (String &member, const String &value, const char *name)
 {
   return_unless (member != value);
-  const String previous = current_element();
+  const String previous = current_source();
   member = value;
-  if (previous != current_element())
+  if (previous != current_source())
     invalidate (INVALID_CONTENT);
   changed (name);
 }
@@ -157,9 +138,9 @@ StatePainterImpl::update_element (String &member, const String &value, const cha
 void
 StatePainterImpl::size_request (Requisition &requisition)
 {
-  if (!element_image_)
-    element_image_ = load_source (source_, element_);
-  requisition = get_image_size (element_image_);
+  if (!source_backend_)
+    source_backend_ = load_source (source_);
+  requisition = get_image_size (source_backend_);
 }
 
 void
@@ -170,20 +151,20 @@ void
 StatePainterImpl::do_changed (const String &name)
 {
   ImageRendererImpl::do_changed (name);
-  if (name == "state" && state_element_ != current_element())
+  if (name == "state" && state_image_ != current_source())
     invalidate (INVALID_CONTENT);
 }
 
 void
 StatePainterImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  const String current = current_element();
-  if (!state_image_ || state_element_ != current)
+  const String current = current_source();
+  if (!state_backend_ || state_image_ != current)
     {
-      state_image_ = load_source (source_, current);
-      state_element_ = state_image_ ? current : "";
+      state_backend_ = load_source (current);
+      state_image_ = state_backend_ ? current : "";
     }
-  paint_image (state_image_, rcontext, rect);
+  paint_image (state_backend_, rcontext, rect);
 }
 
 static const WidgetFactory<StatePainterImpl> state_painter_factory ("Rapicorn_Factory:StatePainter");

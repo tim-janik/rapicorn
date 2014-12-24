@@ -7,7 +7,7 @@
 namespace Rapicorn {
 
 class ImageImpl : public virtual ImageRendererImpl, public virtual ImageIface {
-  String                source_, element_, stock_id_;
+  String                source_, stock_id_;
   ImageBackendP         image_backend_;
 protected:
   void                  broken_image    ();
@@ -19,18 +19,16 @@ public:
   virtual Pixbuf        pixbuf          () const override;
   virtual void          source          (const String &uri) override;
   virtual String        source          () const override;
-  virtual String        element         () const override;
-  virtual void          element         (const String &id) override;
   virtual void          stock           (const String &stock_id) override;
   virtual String        stock           () const override;
 };
 
 class StatePainterImpl : public virtual ImageRendererImpl, public virtual StatePainterIface {
-  String         source_, element_, normal_element_, prelight_element_, impressed_element_;
-  String         insensitive_element_, default_element_, focus_element_, state_element_;
-  ImageBackendP  element_image_, state_image_;
-  String         current_element     ();
-  void           update_element      (String &member, const String &value, const char *name);
+  String         source_, normal_image_, prelight_image_, impressed_image_;
+  String         insensitive_image_, default_image_, focus_image_, state_image_;
+  ImageBackendP  source_backend_, state_backend_;
+  String         current_source      ();
+  void           update_source      (String &member, const String &value, const char *name);
 protected:
   virtual void   do_changed          (const String &name) override;
   virtual void   size_request        (Requisition &requisition) override;
@@ -39,20 +37,18 @@ protected:
 public:
   virtual String source              () const override          { return source_; }
   virtual void   source              (const String &resource) override;
-  virtual String element             () const override          { return element_; }
-  virtual void   element             (const String &e) override;
-  virtual String normal_element      () const override          { return normal_element_; }
-  virtual void   normal_element      (const String &e) override { update_element (normal_element_, e, "normal_element"); }
-  virtual String prelight_element    () const override          { return prelight_element_; }
-  virtual void   prelight_element    (const String &e) override { update_element (prelight_element_, e, "prelight_element"); }
-  virtual String impressed_element   () const override          { return impressed_element_; }
-  virtual void   impressed_element   (const String &e) override { update_element (impressed_element_, e, "impressed_element"); }
-  virtual String insensitive_element () const override          { return insensitive_element_; }
-  virtual void   insensitive_element (const String &e) override { update_element (insensitive_element_, e, "insensitive_element"); }
-  virtual String default_element     () const override          { return default_element_; }
-  virtual void   default_element     (const String &e) override { update_element (default_element_, e, "default_element"); }
-  virtual String focus_element       () const override          { return focus_element_; }
-  virtual void   focus_element       (const String &e) override { update_element (focus_element_, e, "focus_element"); }
+  virtual String normal_image        () const override          { return normal_image_; }
+  virtual void   normal_image        (const String &e) override { update_source (normal_image_, e, "normal_image"); }
+  virtual String prelight_image      () const override          { return prelight_image_; }
+  virtual void   prelight_image      (const String &e) override { update_source (prelight_image_, e, "prelight_image"); }
+  virtual String impressed_image     () const override          { return impressed_image_; }
+  virtual void   impressed_image     (const String &e) override { update_source (impressed_image_, e, "impressed_image"); }
+  virtual String insensitive_image   () const override          { return insensitive_image_; }
+  virtual void   insensitive_image   (const String &e) override { update_source (insensitive_image_, e, "insensitive_image"); }
+  virtual String default_image       () const override          { return default_image_; }
+  virtual void   default_image       (const String &e) override { update_source (default_image_, e, "default_image"); }
+  virtual String focus_image         () const override          { return focus_image_; }
+  virtual void   focus_image         (const String &e) override { update_source (focus_image_, e, "focus_image"); }
 };
 
 } // Rapicorn
