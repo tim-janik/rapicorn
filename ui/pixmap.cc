@@ -55,7 +55,7 @@ PixmapT<Pixbuf>::PixmapT (const String &res_png) :
   pixbuf_ (new Pixbuf())
 {
   errno = ENOENT;
-  Blob blob = Blob::load (res_png);
+  Blob blob = Res (res_png);
   if (blob.size() && load_png (blob.size(), blob.data()))
     errno = 0;
   if (errno)

@@ -916,8 +916,7 @@ url_show (const char *url)
  * allocated block of size @a decompressed_size which is returned.
  * The returned block needs to be freed with g_free().
  * This function is intended to decompress data which has been compressed
- * with the rapicorn-zintern utility, so no errors should occour during
- * decompression.
+ * with the rapidres utility, so no errors should occour during decompression.
  * Consequently, if any error occours during decompression or if the resulting
  * data block is of a size other than @a decompressed_size, the program will
  * abort with an appropriate error message.

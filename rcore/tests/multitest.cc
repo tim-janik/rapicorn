@@ -607,18 +607,18 @@ REGISTER_TEST ("General/Binary Lookups", binary_lookup_tests);
 
 /// [Blob-EXAMPLE]
 // Declare text resources for later use in a program.
-RAPICORN_STATIC_RESOURCE_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
-RAPICORN_STATIC_RESOURCE_ENTRY (text_resource, "tests/text_resource.txt");
+RAPICORN_RES_STATIC_DATA  (text_resource) = "Alpha Beta Gamma"; // Compiler adds trailing 0
+RAPICORN_RES_STATIC_ENTRY (text_resource, "tests/text_resource.txt");
 
 // If a resource data length is given, it must match the initializer size (it may omit the trailing zero).
-RAPICORN_STATIC_RESOURCE_DATA  (digit_resource) = "0123456789"; // Provide exactly 10 characters.
-RAPICORN_STATIC_RESOURCE_ENTRY (digit_resource, "tests/digit_resource.txt", 10);
+RAPICORN_RES_STATIC_DATA  (digit_resource) = "0123456789"; // Provide exactly 10 characters.
+RAPICORN_RES_STATIC_ENTRY (digit_resource, "tests/digit_resource.txt", 10);
 
 static void // Access a previously declared resource from anywhere within a program.
 access_text_resources ()
 {
   // Load a Blob from "tests/text_resource.txt"
-  Blob blob = Blob::load ("res:tests/text_resource.txt");
+  Blob blob = Res ("@res tests/text_resource.txt");
   assert (blob.size() > 0); // Verify lookup success.
 
   // Access the Blob as string (automatically strips trailing 0s).
@@ -626,13 +626,25 @@ access_text_resources ()
   assert (text == "Alpha Beta Gamma"); // Verify its contents.
 
   // Load the other defined "tests/digit_resource.txt" blob.
-  blob = Blob::load ("res:tests/digit_resource.txt");
+  blob = Res ("@res tests/digit_resource.txt");
 
   // Access Blob size and data,
   assert (10 == blob.size() && 0 == strcmp (blob.data(), "0123456789"));
 }
 /// [Blob-EXAMPLE]
 REGISTER_TEST ("Resource/Test Example", access_text_resources);
+
+static void
+test_builtin_resources()
+{
+  Blob blob;
+  assert (!blob && blob.size() == 0);
+  blob = Res ("@res Rapicorn/stock.ini");
+  assert (blob && blob.size() > 0);
+  blob = Res ("@res Rapicorn/icons/broken-image.svg");
+  assert (blob && blob.size() > 0);
+}
+REGISTER_TEST ("Resource/Builtin Tests", test_builtin_resources);
 
 static String
 open_temporary (int *fdp)
@@ -663,7 +675,7 @@ static void
 more_blob_tests ()
 {
   // load this source file and check for a random string
-  Blob fblob = Blob::load ("file:" + Path::vpath_find (__FILE__));
+  Blob fblob = Blob::load (Path::vpath_find (__FILE__));
   assert (!!fblob);
   assert (fblob.string().find ("F2GlZ1s5FrRzsA") != String::npos);
   // create a big example file aceeding internal mmap thresholds
@@ -680,13 +692,13 @@ more_blob_tests ()
   result = close (temporary_fd);
   assert (result == 0);
   // load big example file to excercise mmap() code path
-  fblob = Blob::load ("file:" + temporary_filename);
+  fblob = Blob::load (temporary_filename);
   assert (fblob && fblob.size());
   assert (fblob.data()[fblob.size() - 1] == 0); // ensure 0-termination for strstr
   assert (strstr (fblob.data(), "blubblubLONGshotCOOLCOOL") != NULL); // accessing data() avoids string copy
   unlink (temporary_filename.c_str()); // cleanup example file
   // load a file with unknown size
-  fblob = Blob::load ("file:///proc/cpuinfo");
+  fblob = Blob::load ("/proc/cpuinfo");
   assert (fblob || errno == ENOENT);
   if (fblob)
     assert (fblob.string().find ("cpu") != String::npos);
@@ -700,7 +712,7 @@ more_blob_tests ()
   assert (fblob.string() != bblob.string());
   assert (fblob.name() != bblob.name());
 }
-REGISTER_TEST ("Resource/File IO Tests", more_blob_tests);
+REGISTER_TEST ("Blob/File IO Tests", more_blob_tests);
 
 static void // Test Mutextes before GLib's thread initialization
 test_before_thread_init()

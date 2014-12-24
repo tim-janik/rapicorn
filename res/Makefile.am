@@ -1,36 +1,20 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
-ZINTERN     = ../rcore/rapicorn-zintern
 noinst_DATA =
 
-# == Resource Files ==
-ROOT_FILES = $(strip		\
-	stock.ini		\
-)
-BITMAP_FILES = $(strip 		\
-	wm-gears.png		\
-)
-IMAGE_FILES = $(strip 		\
-	image-broken.svg	\
-	rapicorn.svg		\
-)
-
-# == Resource Pairs (Name, File) ==
-RES_FILES    =
-ROOT_PAIRS   = $(foreach file, $(ROOT_FILES), rapicorn/$(notdir $(file)) $(srcdir)/$(file))
-RES_FILES   += $(ROOT_FILES)
-BITMAP_PAIRS = $(foreach file, $(BITMAP_FILES), icons/$(notdir $(file)) $(srcdir)/$(file))
-RES_FILES   += $(BITMAP_FILES)
-IMAGE_PAIRS  = $(foreach file, $(IMAGE_FILES), rapicorn/images/$(notdir $(file)) $(srcdir)/$(file))
-RES_FILES   += $(IMAGE_FILES)
-EXTRA_DIST  += $(RES_FILES)
-
-# == Rules ==
-noinst_DATA += resources.cc
-CLEANFILES  += resources.cc
-resources.cc: $(RES_FILES) $(ZINTERN) Makefile.am
+# == Rebuild Makefile.res ==
+-include Makefile.res	# define RES_FILE_LIST
+streq = $(and $(findstring $(1),$(2)),$(findstring $(2),$(1)))
+NEW_RES_PATHS := $(filter-out Makefile%, $(wildcard * */* */*/*))
+NEW_RES_DIRS  := $(patsubst %/., %, $(wildcard $(addsuffix /., $(NEW_RES_PATHS))))
+NEW_RES_FILES := $(filter-out $(NEW_RES_DIRS), $(NEW_RES_PATHS))
+Makefile.res: @INGIT@ $(if $(call streq, $(NEW_RES_FILES), $(RES_FILE_LIST)),, Makefile.tmp) $(NEW_RES_FILES)
 	$(AM_V_GEN)
-	$(Q) $(ZINTERN) -r $(ROOT_PAIRS)	 > xgen-$(@F)
-	$(Q) $(ZINTERN) -r $(BITMAP_PAIRS)	>> xgen-$(@F)
-	$(Q) $(ZINTERN) -r $(IMAGE_PAIRS)	>> xgen-$(@F)
-	$(Q) mv xgen-$(@F) $@
+	$(Q) echo "RES_FILE_LIST = $(NEW_RES_FILES)" > Makefile.tmp
+	$(Q) mv Makefile.tmp $@
+Makefile.tmp: # MAKE(1) only remakes+rereads Makefiles with prerequisites, see (Remaking Makefiles)
+	$(Q) touch $@
+noinst_DATA += Makefile.res
+
+# == Ship Resource Files ==
+EXTRA_DIST += $(RES_FILE_LIST)

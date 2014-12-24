@@ -15,6 +15,8 @@ class Blob {
   static _UBool _ubool1 ()     { return &Blob::size; }  // unspecified-type-boolean true value
   _UBool        _bool () const { return blob_ && size() ? _ubool1() : 0; }
   explicit     Blob   (const std::shared_ptr<BlobResource> &initblob);
+protected:
+  static Blob  asres  (const String &resource);         ///< Create Blob from internal @a resource.
 public:
   explicit     Blob   ();                               ///< Default construct a NULL blob.
   String       name   () const;                         ///< Provide the name of this resource Blob.
@@ -23,18 +25,39 @@ public:
   const uint8* bytes  () const;                         ///< Access the data of a Blob.
   String       string () const;                         ///< Access data as string, strips trailing 0s.
   operator     _UBool () const { return _bool(); }      ///< Checks if the blob contains accessible data.
-  static Blob  load   (const String &res_path);         ///< Load Blob at @a res_path, sets errno on error.
+  static Blob  load   (const String &filename);         ///< Create a Blob by loading or mmap-ing @a filename, sets errno on error.
   static Blob  from   (const String &blob_string);      ///< Create a Blob containing @a blob_string.
 };
+
+// == Res ==
+/// Res provides access to resource files at runtime.
+class Res {
+  const String        res_path_;
+protected:
+  static void         utest_hook (std::function<Blob (const String&)> hook);
+  Blob                resolve    () const;                      ///< Resolve resource into a binary object.
+public:
+  explicit            Res        (const String &res_path);      /// Construct a resource request.
+  String              type       () const;                      ///< Retrieve the resource type tag.
+  /// Resolve resource into a specific type.
+  template<class T> T as         () { return load<T>(); }
+  /// Automatically deduce Type for as<Type>() from lvalue.
+  template<class T>   operator T () { return as<T>(); }
+  /// Resource type converter for custom overloads.
+  template<class Type> Type load () { static_assert (!sizeof (Type), "Unimplemented Resource Type"); }
+};
+
+/// Load a Blob resource, e.g.: Blob data = Res ("@res Example/resource.dat");
+template<> Blob Res::load<Blob> ();
 
 // == Resource Macros ==
 
 /// Statically declare a ResourceBlob data variable.
-#define RAPICORN_STATIC_RESOURCE_DATA(IDENT)            \
+#define RAPICORN_RES_STATIC_DATA(IDENT)            \
   static const char __Rapicorn_static_resourceD__##IDENT[] __attribute__ ((__aligned__ (2 * sizeof (size_t))))
 
-/// Statically register a ResourceBlob entry, referring a previously declared RAPICORN_STATIC_RESOURCE_DATA(IDENT) variable.
-#define RAPICORN_STATIC_RESOURCE_ENTRY(IDENT, PATH, ...) \
+/// Statically register a ResourceBlob entry, referring a previously declared RAPICORN_RES_STATIC_DATA(IDENT) variable.
+#define RAPICORN_RES_STATIC_ENTRY(IDENT, PATH, ...) \
   static const Rapicorn::ResourceEntry __Rapicorn_static_resourceE__##IDENT = { PATH, __Rapicorn_static_resourceD__##IDENT, __VA_ARGS__ };
 
 // == Internals ==

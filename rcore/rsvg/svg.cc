@@ -1,7 +1,6 @@
 /* This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 */
 #include "svg.hh"
 #include "../strings.hh"
-#include "../blobres.hh"
 #include "rsvg.h"
 #include "rsvg-cairo.h"
 #include "rsvg-private.h"
@@ -130,6 +129,7 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
   return rendered;
 }
 
+// == FileImpl ==
 struct FileImpl : public File {
   RsvgHandle           *handle_;
   explicit              FileImpl        (RsvgHandle *hh) : handle_ (hh) {}
@@ -138,34 +138,11 @@ struct FileImpl : public File {
   virtual ElementP      lookup          (const String &elementid);
 };
 
-static vector<String>      library_search_dirs;
-
-// Add a directory to search for SVG files with relative pathnames.
-void
-File::add_search_dir (const String &absdir)
-{
-  assert_return (Path::isabs (absdir));
-  library_search_dirs.push_back (absdir);
-}
-
-static String
-find_library_file (const String &filename)
-{
-  if (Path::isabs (filename))
-    return filename;
-  for (size_t i = 0; i < library_search_dirs.size(); i++)
-    {
-      String fpath = Path::join (library_search_dirs[i], filename);
-      if (Path::check (fpath, "e"))
-        return fpath;
-    }
-  return Path::abspath (filename); // uses CWD
-}
-
+// == File ==
 FileP
 File::load (const String &svgfilename)
 {
-  Blob blob = Blob::load ("file:///" + find_library_file (svgfilename));
+  Blob blob = Blob::load (svgfilename);
   const int saved_errno = errno;
   if (!blob)
     {
@@ -262,13 +239,6 @@ FileImpl::lookup (const String &elementid)
     }
   return Element::none();
 }
-
-static void
-init_svg_lib (const StringVector &args)
-{
-  File::add_search_dir (RAPICORN_SVGDIR);
-}
-static InitHook _init_svg_lib ("core/35 Init SVG Lib", init_svg_lib);
 
 // == Span ==
 /** Distribute @a amount across the @a length fields of all @a spans.

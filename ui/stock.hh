@@ -8,12 +8,18 @@ namespace Rapicorn {
 
 // == Stock ==
 class Stock {
+  const String  stock_id_;
+protected:
+  String        element         (const String &key) const;
 public:
-  static String       stock_string      (const String &stock_id, const String &key);
-  static String       stock_label       (const String &stock_id);
-  static String       stock_tooltip     (const String &stock_id);
-  static String       stock_accelerator (const String &stock_id);
-  static Blob         stock_image       (const String &stock_id);
+  struct Icon {
+    String resource, element;
+  };
+  explicit      Stock           (const String &stock_id);
+  String        label           () const;
+  String        tooltip         () const;
+  String        accelerator     () const;
+  Icon          icon            () const;
 };
 
 } // Rapicorn

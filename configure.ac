@@ -71,6 +71,7 @@ AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 AM_INIT_AUTOMAKE(tar-pax no-define)
 AC_PROG_MAKE_SET        dnl # support subdirectories.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+mk= ; AC_SUBST([mk]) # workaround for Automake abusing MAKE(1) keywords
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes] turn on debugging, default=yes],,enable_debug=yes)
@@ -289,10 +290,8 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     # --- Rapicorn paths ---
     docdir='${datarootdir}/doc/rapicorn'"$RAPICORN_RELEASE"	# docdir='${datarootdir}/doc/${PACKAGE}'
     rapicorndatadir='${datadir}/rapicorn'"$RAPICORN_RELEASE"	# datadir = ${datarootdir}
-    rapicornsvgdir='${rapicorndatadir}/svg'
     AC_SUBST(docdir)
     AC_SUBST(rapicorndatadir)
-    AC_SUBST(rapicornsvgdir)
 
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
@@ -644,7 +643,6 @@ Autoconfiguration complete.
 	Libraries:			`printexpandvar ${libdir}`
 	Locales:			`printexpandvar ${pkglocaledir}`
 	Includes:			`printexpandvar ${includedir}/rapicorn$RAPICORN_RELEASE`
-	SVG-Library:			`printexpandvar ${rapicornsvgdir}`
 	Data:				`printexpandvar ${datadir}`
 	Documents:			`printexpandvar ${docdir}`
 	PyRapicorn:			`printexpandvar ${pythondir}/$RAPICORN_NAMESPACE_NAME`

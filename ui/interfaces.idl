@@ -531,6 +531,7 @@ interface LayerPainter : Container {
 interface Image : Widget {
   String        source  = String (_("Source URL"), _("Resource or file URL to load the image from."), "rw");
   String 	element = String (_("Element"), _("Element ID within SVG files to be rendered."), "rw");
+  String 	stock   = String (_("Stock"), _("Load a stock icon."), "rw");
   Pixbuf        pixbuf;
 };
 

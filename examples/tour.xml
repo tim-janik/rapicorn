@@ -66,6 +66,10 @@
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="3" hexpand="1">
+	  <HBox>
+	    <Image stock="rapicorn-logo" />
+	    <Label><Label.markup-text> <bold> <pre>  -  </pre> Rapicorn Tour </bold> </Label.markup-text></Label>
+	  </HBox>
 	  <VBox hexpand="1">
 	    <button-test hexpand="1" />
 	  </VBox>

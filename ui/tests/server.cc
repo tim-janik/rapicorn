@@ -19,14 +19,14 @@ static void
 test_stock_resources()
 {
   String s;
-  s = Stock::stock_label ("broken-image");
+  s = Stock ("broken-image").label();
   TASSERT (s.empty() == false);
-  s = Stock::stock_string ("broken-image", "image");
-  TASSERT (s.empty() == false);
-  Blob b = Stock::stock_image ("broken-image");
+  Stock::Icon icon = Stock ("broken-image").icon();
+  TASSERT (icon.resource != "");
+  Blob b = Res (icon.resource);
   TASSERT (b && b.size() > 16);
-  b = Stock::stock_image (" .no.. +such+ -image- ~hCZ75jv27j");
-  TASSERT (!b && errno != 0);
+  icon = Stock (" .no.. +such+ -image- ~hCZ75jv27j").icon();
+  TASSERT (icon.resource == "");
 }
 REGISTER_UITHREAD_TEST ("Server/Stock Resources", test_stock_resources);
 

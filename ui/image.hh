@@ -10,8 +10,7 @@ class ImageImpl : public virtual ImageRendererImpl, public virtual ImageIface {
   String                source_, element_, stock_id_;
   ImageBackendP         image_backend_;
 protected:
-  void                  stock           (const String &stock_id);
-  String                stock           () const;
+  void                  broken_image    ();
   virtual void          size_request    (Requisition &requisition) override;
   virtual void          size_allocate   (Allocation area, bool changed) override;
   virtual void          render          (RenderContext &rcontext, const Rect &rect) override;
@@ -22,6 +21,8 @@ public:
   virtual String        source          () const override;
   virtual String        element         () const override;
   virtual void          element         (const String &id) override;
+  virtual void          stock           (const String &stock_id) override;
+  virtual String        stock           () const override;
 };
 
 class StatePainterImpl : public virtual ImageRendererImpl, public virtual StatePainterIface {
