@@ -3,7 +3,7 @@
 #define __RAPICORN_VIEWPORT_HH__
 
 #include <ui/container.hh>
-#include <ui/screenwindow.hh>
+#include <ui/displaywindow.hh>
 
 namespace Rapicorn {
 

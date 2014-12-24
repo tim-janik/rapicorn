@@ -45,8 +45,8 @@ WindowImpl::title (const String &window_title)
   if (config_.title != window_title)
     {
       config_.title = window_title;
-      if (screen_window_)
-        screen_window_->configure (config_, false);
+      if (display_window_)
+        display_window_->configure (config_, false);
     }
 }
 
@@ -217,7 +217,7 @@ WindowImpl::forcefully_close_all ()
 
 WindowImpl::WindowImpl() :
   loop_ (uithread_main_loop()->create_slave()),
-  screen_window_ (NULL), commands_emission_ (NULL), notify_displayed_id_ (0),
+  display_window_ (NULL), commands_emission_ (NULL), notify_displayed_id_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
@@ -263,10 +263,10 @@ WindowImpl::~WindowImpl()
       loop_->try_remove (notify_displayed_id_);
       notify_displayed_id_ = 0;
     }
-  if (screen_window_)
+  if (display_window_)
     {
-      screen_window_->destroy();
-      screen_window_ = NULL;
+      display_window_->destroy();
+      display_window_ = NULL;
     }
   /* make sure all children are removed while this is still of type WindowImpl.
    * necessary because C++ alters the object type during constructors and destructors
@@ -285,7 +285,7 @@ WindowImpl::resize_window (const Allocation *new_area)
   const uint64 start = timestamp_realtime();
   assert_return (requisitions_tunable() == false);
   Requisition rsize;
-  ScreenWindow::State state;
+  DisplayWindow::State state;
   bool allocated = false;
 
   // negotiate sizes (new_area==NULL) and ensures window is allocated
@@ -295,20 +295,20 @@ WindowImpl::resize_window (const Allocation *new_area)
     goto done;  // only called for reallocating
   rsize = requisition();
 
-  // grow screen window if needed
-  if (!screen_window_)
+  // grow display window if needed
+  if (!display_window_)
     goto done;
-  state = screen_window_->get_state();
+  state = display_window_->get_state();
   if (state.width <= 0 || state.height <= 0 || rsize.width > state.width || rsize.height > state.height)
     {
       config_.request_width = rsize.width;
       config_.request_height = rsize.height;
       pending_win_size_ = true;
       discard_expose_region(); // we request a new WIN_SIZE event in configure
-      screen_window_->configure (config_, true);
+      display_window_->configure (config_, true);
       goto done;
     }
-  // screen window size is good, allocate it
+  // display window size is good, allocate it
   if (rsize.width != state.width || rsize.height != state.height)
     {
       Allocation area = Allocation (0, 0, state.width, state.height);
@@ -335,8 +335,8 @@ WindowImpl::do_invalidate ()
 void
 WindowImpl::beep()
 {
-  if (screen_window_)
-    screen_window_->beep();
+  if (display_window_)
+    display_window_->beep();
 }
 
 vector<WidgetImplP>
@@ -363,19 +363,19 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
   WidgetImpl* grab_widget = get_grab (&unconfined);
   if (grab_widget)
     {
-      if (unconfined or grab_widget->screen_window_point (Point (event.x, event.y)))
+      if (unconfined or grab_widget->display_window_point (Point (event.x, event.y)))
         {
           pierced.push_back (shared_ptr_cast<WidgetImpl> (grab_widget));        // grab-widget receives all mouse events
           ContainerImpl *container = grab_widget->interface<ContainerImpl*>();
           if (container)                              /* deliver to hovered grab-widget children as well */
-            container->screen_window_point_children (Point (event.x, event.y), pierced);
+            container->display_window_point_children (Point (event.x, event.y), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all mouse events
       if (entered_)
-        screen_window_point_children (Point (event.x, event.y), pierced);
+        display_window_point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
   vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
@@ -412,7 +412,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all events
-      screen_window_point_children (Point (event.x, event.y), pierced);
+      display_window_point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
   bool handled = false;
@@ -607,7 +607,7 @@ WindowImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_screen_window_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_display_window_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
@@ -645,7 +645,7 @@ WindowImpl::dispatch_data_event (const Event &event)
 {
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_screen_window_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_display_window_event (event))
     return true;
   else if (event.type == CONTENT_REQUEST)
     {
@@ -725,7 +725,7 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
 bool
 WindowImpl::dispatch_win_destroy ()
 {
-  destroy_screen_window();
+  destroy_display_window();
   dispose();
   return true;
 }
@@ -749,7 +749,7 @@ WindowImpl::draw_child (WidgetImpl &child)
 void
 WindowImpl::draw_now ()
 {
-  if (screen_window_)
+  if (display_window_)
     {
       const uint64 start = timestamp_realtime();
       Rect area = allocation();
@@ -767,7 +767,7 @@ WindowImpl::draw_now ()
       cairo_t *cr = cairo_create (surface);
       critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
       render_into (cr, region);
-      screen_window_->blit_surface (surface, region);
+      display_window_->blit_surface (surface, region);
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
       if (!notify_displayed_id_)
@@ -889,14 +889,14 @@ WindowImpl::dispose_widget (WidgetImpl &widget)
 bool
 WindowImpl::has_queued_win_size ()
 {
-  return screen_window_ && screen_window_->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
+  return display_window_ && display_window_->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
 }
 
 bool
 WindowImpl::dispatch_event (const Event &event)
 {
-  if (!screen_window_)
-    return false;       // we can only handle events on a screen_window
+  if (!display_window_)
+    return false;       // we can only handle events on a display_window
   EDEBUG ("%s: w=%p", string_from_event_type (event.type), this);
   switch (event.type)
     {
@@ -904,7 +904,7 @@ WindowImpl::dispatch_event (const Event &event)
     case EVENT_NONE:          return false;
     case MOUSE_ENTER:         return dispatch_enter_event (event);
     case MOUSE_MOVE:
-      if (screen_window_->peek_events ([] (Event *e) { return e->type == MOUSE_MOVE; }))
+      if (display_window_->peek_events ([] (Event *e) { return e->type == MOUSE_MOVE; }))
         return true; // coalesce multiple motion events
       else
         return dispatch_move_event (event);
@@ -941,11 +941,11 @@ bool
 WindowImpl::event_dispatcher (const EventLoop::State &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return screen_window_ && screen_window_->has_event();
+    return display_window_ && display_window_->has_event();
   else if (state.phase == state.DISPATCH)
     {
       const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-      Event *event = screen_window_ ? screen_window_->pop_event() : NULL;
+      Event *event = display_window_ ? display_window_->pop_event() : NULL;
       if (event)
         {
           dispatch_event (*event);
@@ -954,14 +954,14 @@ WindowImpl::event_dispatcher (const EventLoop::State &state)
       return true;
     }
   else if (state.phase == state.DESTROY)
-    destroy_screen_window();
+    destroy_display_window();
   return false;
 }
 
 bool
 WindowImpl::resizing_dispatcher (const EventLoop::State &state)
 {
-  const bool can_resize = !pending_win_size_ && screen_window_;
+  const bool can_resize = !pending_win_size_ && display_window_;
   const bool need_resize = can_resize && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return need_resize;
@@ -999,7 +999,7 @@ WindowImpl::get_loop ()
 bool
 WindowImpl::screen_viewable ()
 {
-  return visible() && screen_window_ && screen_window_->viewable();
+  return visible() && display_window_ && display_window_->viewable();
 }
 
 static bool startup_window = true;
@@ -1007,36 +1007,36 @@ static bool startup_window = true;
 void
 WindowImpl::idle_show()
 {
-  if (screen_window_)
+  if (display_window_)
     {
       // try to ensure initial focus
       if (auto_focus_ && !get_focus())
         move_focus (FOCUS_NEXT);
       // size request & show up
-      screen_window_->show();
+      display_window_->show();
       // figure if this is the first window triggered by the user startig an app
       const bool user_action = startup_window;
       startup_window = false;
-      screen_window_->present (user_action);
+      display_window_->present (user_action);
     }
 }
 
 void
-WindowImpl::create_screen_window ()
+WindowImpl::create_display_window ()
 {
   if (!finalizing())
     {
-      if (!screen_window_)
+      if (!display_window_)
         {
           resize_window(); // ensure initial size requisition
-          ScreenDriver *sdriver = ScreenDriver::retrieve_screen_driver ("auto");
+          DisplayDriver *sdriver = DisplayDriver::retrieve_display_driver ("auto");
           if (sdriver)
             {
-              ScreenWindow::Setup setup;
+              DisplayWindow::Setup setup;
               setup.window_type = WINDOW_TYPE_NORMAL;
-              uint64 flags = ScreenWindow::ACCEPT_FOCUS | ScreenWindow::DELETABLE |
-                             ScreenWindow::DECORATED | ScreenWindow::MINIMIZABLE | ScreenWindow::MAXIMIZABLE;
-              setup.request_flags = ScreenWindow::Flags (flags);
+              uint64 flags = DisplayWindow::ACCEPT_FOCUS | DisplayWindow::DELETABLE |
+                             DisplayWindow::DECORATED | DisplayWindow::MINIMIZABLE | DisplayWindow::MAXIMIZABLE;
+              setup.request_flags = DisplayWindow::Flags (flags);
               String prg = program_ident();
               if (prg.empty())
                 prg = program_file();
@@ -1055,13 +1055,13 @@ WindowImpl::create_screen_window ()
               if (config_.alias.empty())
                 config_.alias = program_alias();
               pending_win_size_ = true;
-              screen_window_ = sdriver->create_screen_window (setup, config_);
-              screen_window_->set_event_wakeup ([this] () { loop_->wakeup(); /* thread safe */ });
+              display_window_ = sdriver->create_display_window (setup, config_);
+              display_window_->set_event_wakeup ([this] () { loop_->wakeup(); /* thread safe */ });
             }
           else
-            fatal ("failed to find and open any screen driver");
+            fatal ("failed to find and open any display driver");
         }
-      RAPICORN_ASSERT (screen_window_ != NULL);
+      RAPICORN_ASSERT (display_window_ != NULL);
       loop_->flag_primary (true); // FIXME: depends on WM-managable
       EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::idle_show);
       loop_->exec_now (sl);
@@ -1069,19 +1069,19 @@ WindowImpl::create_screen_window ()
 }
 
 bool
-WindowImpl::has_screen_window ()
+WindowImpl::has_display_window ()
 {
-  return !!screen_window_;
+  return !!display_window_;
 }
 
 void
-WindowImpl::destroy_screen_window ()
+WindowImpl::destroy_display_window ()
 {
   const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
-  if (!screen_window_)
+  if (!display_window_)
     return; // during destruction, ref_count == 0
-  screen_window_->destroy();
-  screen_window_ = NULL;
+  display_window_->destroy();
+  display_window_ = NULL;
   loop_->flag_primary (false);
   // reset widget state where needed
   cancel_widget_events (NULL);
@@ -1090,19 +1090,19 @@ WindowImpl::destroy_screen_window ()
 void
 WindowImpl::show ()
 {
-  create_screen_window();
+  create_display_window();
 }
 
 bool
 WindowImpl::closed ()
 {
-  return !has_screen_window();
+  return !has_display_window();
 }
 
 void
 WindowImpl::close ()
 {
-  destroy_screen_window();
+  destroy_display_window();
 }
 
 bool
@@ -1120,26 +1120,26 @@ bool
 WindowImpl::synthesize_enter (double xalign,
                               double yalign)
 {
-  if (!has_screen_window())
+  if (!has_display_window())
     return false;
   const Allocation &area = allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = point_to_screen_window (p);
+  p = point_to_display_window (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  screen_window_->push_event (create_event_mouse (MOUSE_ENTER, ec));
+  display_window_->push_event (create_event_mouse (MOUSE_ENTER, ec));
   return true;
 }
 
 bool
 WindowImpl::synthesize_leave ()
 {
-  if (!has_screen_window())
+  if (!has_display_window())
     return false;
   EventContext ec;
-  screen_window_->push_event (create_event_mouse (MOUSE_LEAVE, ec));
+  display_window_->push_event (create_event_mouse (MOUSE_LEAVE, ec));
   return true;
 }
 
@@ -1150,27 +1150,27 @@ WindowImpl::synthesize_click (WidgetIface &widgeti,
                               double     yalign)
 {
   WidgetImpl &widget = *dynamic_cast<WidgetImpl*> (&widgeti);
-  if (!has_screen_window() || !&widget)
+  if (!has_display_window() || !&widget)
     return false;
   const Allocation &area = widget.allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = widget.point_to_screen_window (p);
+  p = widget.point_to_display_window (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  screen_window_->push_event (create_event_button (BUTTON_RELEASE, ec, button));
-  screen_window_->push_event (create_event_button (BUTTON_PRESS, ec, button));
+  display_window_->push_event (create_event_button (BUTTON_RELEASE, ec, button));
+  display_window_->push_event (create_event_button (BUTTON_PRESS, ec, button));
   return true;
 }
 
 bool
 WindowImpl::synthesize_delete ()
 {
-  if (!has_screen_window())
+  if (!has_display_window())
     return false;
   EventContext ec;
-  screen_window_->push_event (create_event_win_delete (ec));
+  display_window_->push_event (create_event_win_delete (ec));
   return true;
 }
 

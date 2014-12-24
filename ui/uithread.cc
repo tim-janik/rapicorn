@@ -179,7 +179,7 @@ public:
     assert_return (idata_ == NULL);
     main_loop_->run();
     WindowImpl::forcefully_close_all();
-    ScreenDriver::forcefully_close_all();
+    DisplayDriver::forcefully_close_all();
     while (!main_loop_->finishable())
       if (!main_loop_->iterate (false))
         break;  // handle primary idle handlers like exec_now

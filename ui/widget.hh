@@ -244,12 +244,12 @@ public:
   Signal<void ()>                   sig_invalidate;
   Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
   /* event handling */
-  bool                       process_event               (const Event &event);  // widget coordinates relative
-  bool                       process_screen_window_event (const Event &event);  // screen_window coordinates relative
+  bool                       process_event                (const Event &event);  // widget coordinates relative
+  bool                       process_display_window_event (const Event &event);  // display_window coordinates relative
   /* coordinate handling */
 protected:
-  Affine                     affine_to_screen_window   ();                    // widget => screen_window affine
-  Affine                     affine_from_screen_window ();                    // screen_window => widget affine
+  Affine                     affine_to_display_window   ();                    // widget => display_window affine
+  Affine                     affine_from_display_window ();                    // display_window => widget affine
   // rendering
   class RenderContext;
   virtual void               render_widget             (RenderContext    &rcontext);
@@ -261,8 +261,8 @@ protected:
 public:
   void                       render_into               (cairo_t *cr, const Region &region);
   virtual bool               point                     (Point        p);            // widget coordinates relative
-  Point                      point_to_screen_window    (Point        widget_point);   // widget coordinates relative
-  Point                      point_from_screen_window  (Point        window_point); // screen_window coordinates relative
+  Point                      point_to_display_window   (Point        widget_point);   // widget coordinates relative
+  Point                      point_from_display_window (Point        window_point); // display_window coordinates relative
   virtual bool               translate_from         (const WidgetImpl   &src_widget,
                                                      const uint    n_points,
                                                      Point        *points) const;
@@ -275,7 +275,7 @@ public:
   bool                       translate_to           (const uint    n_rects,
                                                      Rect         *rects,
                                                      const WidgetImpl   &target_widget) const;
-  bool                       screen_window_point    (Point        p);           // screen_window coordinates relative
+  bool                       display_window_point   (Point        p);           // display_window coordinates relative
   /* public size accessors */
   virtual Requisition        requisition        ();                              // effective size requisition
   void                       set_allocation     (const Allocation &area,

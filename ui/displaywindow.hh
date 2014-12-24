@@ -1,17 +1,17 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-#ifndef __RAPICORN_SCREEN_WINDOW_HH__
-#define __RAPICORN_SCREEN_WINDOW_HH__
+#ifndef __RAPICORN_DISPLAY_WINDOW_HH__
+#define __RAPICORN_DISPLAY_WINDOW_HH__
 
 #include <ui/events.hh>
 #include <ui/region.hh>
 
 namespace Rapicorn {
-class ScreenDriver;
-class ScreenCommand;
+class DisplayDriver;
+class DisplayCommand;
 
 /// Interface class for managing window contents on screens and display devices.
-class ScreenWindow : public virtual std::enable_shared_from_this<ScreenWindow> {
-  RAPICORN_CLASS_NON_COPYABLE (ScreenWindow);
+class DisplayWindow : public virtual std::enable_shared_from_this<DisplayWindow> {
+  RAPICORN_CLASS_NON_COPYABLE (DisplayWindow);
 public:
   /// Flags used to request and reflect certain window operations and states.
   enum Flags {
@@ -77,7 +77,7 @@ public:
   void          show                    ();                     ///< Show window on screen.
   void          present                 (bool user_activation); ///< Make window the active window, user activation might enforce this.
   bool          viewable                ();                     ///< Check if the window is viewable, i.e. not iconified/shaded/etc.
-  void          destroy                 ();                     ///< Destroy onscreen window and reset event wakeup.
+  void          destroy                 ();                     ///< Destroy onscreen windows and reset event wakeup.
   void          configure               (const Config &config, bool sizeevent); ///< Change window configuration, requesting size event.
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);   ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                  ///< Trigger window movement.
@@ -91,12 +91,12 @@ public:
   void          set_event_wakeup        (const std::function<void()> &wakeup);  ///< Callback used to notify new event arrival.
   bool          peek_events             (const std::function<bool (Event*)> &pred);     ///< Peek/find events via callback.
 protected:
-  explicit              ScreenWindow            ();
-  virtual              ~ScreenWindow            ();
-  virtual ScreenDriver& screen_driver_async     () const = 0;                   ///< Acces ScreenDriver, called from any thread.
-  void                  enqueue_event           (Event *event);                 ///< Add an event to the back of the event queue.
-  bool                  update_state            (const State &state);           ///< Updates the state returned from get_state().
-  void                  queue_command           (ScreenCommand *command);       ///< Helper to queue commands on ScreenDriver.
+  explicit               DisplayWindow          ();
+  virtual               ~DisplayWindow          ();
+  virtual DisplayDriver& display_driver_async   () const = 0;                   ///< Acces DisplayDriver, called from any thread.
+  void                   enqueue_event          (Event *event);                 ///< Add an event to the back of the event queue.
+  bool                   update_state           (const State &state);           ///< Updates the state returned from get_state().
+  void                   queue_command          (DisplayCommand *command);      ///< Helper to queue commands on DisplayDriver.
 private:
   State                 async_state_;
   bool                  async_state_accessed_;
@@ -104,108 +104,111 @@ private:
   std::list<Event*>     async_event_queue_;
   std::function<void()> async_wakeup_;
 };
-typedef std::shared_ptr<ScreenWindow> ScreenWindowP;
 
-struct ScreenCommand    /// Structure for internal asynchronous communication between ScreenWindow and ScreenDriver.
+struct DisplayCommand   /// Structure for internal asynchronous communication between DisplayWindow and DisplayDriver.
 {
   enum Type { ERROR, OK, CREATE, CONFIGURE, BEEP, SHOW, PRESENT, BLIT, UMOVE, URESIZE, CONTENT, OWNER, PROVIDE, DESTROY, SHUTDOWN, };
   const Type            type;
-  ScreenWindow         *const screen_window;
+  DisplayWindow        *const display_window;
   String                string;
   StringVector          string_list;
-  ScreenWindow::Config *config;
-  ScreenWindow::Setup  *setup;
+  DisplayWindow::Config *config;
+  DisplayWindow::Setup  *setup;
   cairo_surface_t      *surface;
   Rapicorn::Region     *region;
   union { uint64        nonce, u64; };
   int                   root_x, root_y, button;
   ContentSourceType     source;
   bool                  need_resize;
-  /*ctor*/             ~ScreenCommand ();
-  explicit              ScreenCommand (Type type, ScreenWindow *window);
-  static bool           reply_type    (Type type);
+  /*ctor*/             ~DisplayCommand ();
+  explicit              DisplayCommand (Type type, DisplayWindow *window);
+  static bool           reply_type     (Type type);
 };
 
-/// Management class for ScreenWindow driver implementations.
-class ScreenDriver {
-  AsyncNotifyingQueue<ScreenCommand*> command_queue_;
-  AsyncBlockingQueue<ScreenCommand*>  reply_queue_;
-  std::thread                         thread_handle_;
-  RAPICORN_CLASS_NON_COPYABLE (ScreenDriver);
+/// Management class for DisplayWindow driver implementations.
+class DisplayDriver {
+  AsyncNotifyingQueue<DisplayCommand*> command_queue_;
+  AsyncBlockingQueue<DisplayCommand*>  reply_queue_;
+  std::thread                          thread_handle_;
+  RAPICORN_CLASS_NON_COPYABLE (DisplayDriver);
 protected:
-  ScreenDriver         *sibling_;
+  DisplayDriver        *sibling_;
   String                name_;
   int                   priority_;
-  virtual void          run (AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue) = 0;
+  virtual void          run (AsyncNotifyingQueue<DisplayCommand*> &command_queue,
+                             AsyncBlockingQueue<DisplayCommand*>  &reply_queue) = 0;
   /// Construct with backend @a name, a lower @a priority will score better for "auto" selection.
-  explicit              ScreenDriver            (const String &name, int priority = 0);
-  virtual              ~ScreenDriver            ();
-  void                  queue_command           (ScreenCommand *screen_command);
+  explicit              DisplayDriver           (const String &name, int priority = 0);
+  virtual              ~DisplayDriver           ();
+  void                  queue_command           (DisplayCommand *display_command);
   bool                  open_L                  ();
   void                  close_L                 ();
 public:
-  /// Create a new ScreenWindow from an opened driver.
-  ScreenWindow*         create_screen_window    (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
+  /// Create a new DisplayWindow from an opened driver.
+  DisplayWindow*        create_display_window   (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config);
   /// Open a specific named driver, "auto" will try to find the best match.
-  static ScreenDriver*  retrieve_screen_driver  (const String &backend_name);
+  static DisplayDriver* retrieve_display_driver (const String &backend_name);
   /// Comparator for "auto" scoring.
-  static bool           driver_priority_lesser  (const ScreenDriver *d1, const ScreenDriver *d2);
+  static bool           driver_priority_lesser  (const DisplayDriver *d1, const DisplayDriver *d2);
   static void           forcefully_close_all    ();
   ///@cond
-  class Friends { friend class ScreenWindow; static void queue_command (ScreenDriver &d, ScreenCommand *c) { d.queue_command (c); } };
+  class Friends {
+    friend class DisplayWindow;
+    static void queue_command (DisplayDriver &d, DisplayCommand *c) { d.queue_command (c); }
+  };
   ///@endcond
 };
 
-/// Template for factory registration of ScreenDriver implementations.
+/// Template for factory registration of DisplayDriver implementations.
 template<class DriverImpl>
-struct ScreenDriverFactory : public ScreenDriver {
+struct DisplayDriverFactory : public DisplayDriver {
   Atomic<int> running;
-  ScreenDriverFactory (const String &name, int priority = 0) :
-    ScreenDriver (name, priority), running (false)
+  DisplayDriverFactory (const String &name, int priority = 0) :
+    DisplayDriver (name, priority), running (false)
   {}
   virtual void
-  run (AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue)
+  run (AsyncNotifyingQueue<DisplayCommand*> &command_queue, AsyncBlockingQueue<DisplayCommand*> &reply_queue)
   {
     running = true;
     DriverImpl driver (*this, command_queue, reply_queue);
     if (driver.connect())
       {
-        ScreenCommand *cmd = new ScreenCommand (ScreenCommand::OK, NULL);
+        DisplayCommand *cmd = new DisplayCommand (DisplayCommand::OK, NULL);
         reply_queue.push (cmd);
         driver.run();
       }
     else
       {
-        ScreenCommand *cmd = new ScreenCommand (ScreenCommand::ERROR, NULL);
+        DisplayCommand *cmd = new DisplayCommand (DisplayCommand::ERROR, NULL);
         cmd->string = "Driver connection failed";
         reply_queue.push (cmd);
       }
     running = false;
   }
   virtual
-  ~ScreenDriverFactory()
+  ~DisplayDriverFactory()
   {
     assert (running == false);
   }
 };
 
 // == Implementations ==
-ScreenWindow::Setup::Setup() :
-  window_type (WindowType (0)), request_flags (ScreenWindow::Flags (0))
+DisplayWindow::Setup::Setup() :
+  window_type (WindowType (0)), request_flags (DisplayWindow::Flags (0))
 {}
 
-ScreenWindow::Config::Config() :
+DisplayWindow::Config::Config() :
   root_x (INT_MIN), root_y (INT_MIN), request_width (0), request_height (0), width_inc (0), height_inc (0)
 {}
 
-ScreenWindow::State::State() :
-  window_flags (ScreenWindow::Flags (0)),
+DisplayWindow::State::State() :
+  window_flags (DisplayWindow::Flags (0)),
   width (0), height (0), root_x (INT_MIN), root_y (INT_MIN), deco_x (INT_MIN), deco_y (INT_MIN),
   visible (0), active (0)
 {}
 
 bool
-ScreenWindow::State::operator== (const State &o) const
+DisplayWindow::State::operator== (const State &o) const
 {
   return window_type == o.window_type && window_flags == o.window_flags && width == o.width && height == o.height &&
     root_x == o.root_x && root_y == o.root_y && deco_x == o.deco_x && deco_y == o.deco_y &&
@@ -214,4 +217,4 @@ ScreenWindow::State::operator== (const State &o) const
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_SCREEN_WINDOW_HH__ */
+#endif  /* __RAPICORN_DISPLAY_WINDOW_HH__ */

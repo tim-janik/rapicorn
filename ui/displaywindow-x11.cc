@@ -1,5 +1,5 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-#include "screenwindow.hh"
+#include "displaywindow.hh"
 #include "uithread.hh"
 #include <cairo/cairo-xlib.h>
 #include <algorithm>
@@ -11,7 +11,7 @@ static auto dbe_x11sync = RAPICORN_DEBUG_OPTION ("x11sync", "Synchronize X11 ope
 
 typedef ::Pixmap XPixmap; // avoid conflicts with Rapicorn::Pixmap
 
-#include "screenwindow-xaux.cc" // helpers, need dbe_x11sync
+#include "displaywindow-xaux.cc" // helpers, need dbe_x11sync
 
 template<class T> cairo_status_t cairo_status_from_any (T t);
 template<> cairo_status_t cairo_status_from_any (cairo_status_t c)          { return c; }
@@ -77,8 +77,8 @@ class X11Context {
   MainLoopP                            loop_;
   vector<size_t>                       queued_updates_; // XIDs
   map<size_t, X11Widget*>              x11ids_;
-  AsyncNotifyingQueue<ScreenCommand*> &command_queue_;
-  AsyncBlockingQueue<ScreenCommand*>  &reply_queue_;
+  AsyncNotifyingQueue<DisplayCommand*> &command_queue_;
+  AsyncBlockingQueue<DisplayCommand*>  &reply_queue_;
   vector<EventStake>                   event_stakes_;
   vector<IncrTransfer>                 incr_transfers_;
   int8                                 shared_mem_;
@@ -92,7 +92,7 @@ class X11Context {
   EventStake*           find_event_stake        (Window window, bool create);
   void                  continue_incr           (Window window, Atom property);
 public:
-  ScreenDriver         &screen_driver;
+  DisplayDriver         &display_driver;
   Display              *display;
   Visual               *visual;
   size_t                max_request_bytes;
@@ -117,7 +117,7 @@ public:
   String                target_atom_to_mime             (const Atom target_atom);
   Atom                  mime_to_target_atom             (const String &mime, Atom last_failed = None);
   void                  mime_list_target_atoms          (const String &mime, vector<Atom> &atoms);
-  explicit              X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue, AsyncBlockingQueue<ScreenCommand*> &reply_queue);
+  explicit              X11Context (DisplayDriver &driver, AsyncNotifyingQueue<DisplayCommand*> &command_queue, AsyncBlockingQueue<DisplayCommand*> &reply_queue);
   virtual              ~X11Context ();
 };
 
@@ -131,7 +131,7 @@ time_cmp (Time t1, Time t2)
   return 0;
 }
 
-static ScreenDriverFactory<X11Context> screen_driver_x11 ("X11Window", -1);
+static DisplayDriverFactory<X11Context> display_driver_x11 ("X11Window", -1);
 
 // == ContentOffer ==
 struct ContentOffer {           // offers_
@@ -178,8 +178,8 @@ struct SelectionInput {                 // isel_
 };
 #define SELECTION_INPUT_TIMEOUT   (15 * 1000 * 1000)
 
-// == ScreenWindowX11 ==
-struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
+// == DisplayWindowX11 ==
+struct DisplayWindowX11 : public virtual DisplayWindow, public virtual X11Widget {
   X11Context           &x11context;
   Config                config_;
   State                 state_;
@@ -195,13 +195,13 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   SelectionInput       *isel_;
   vector<ContentOffer>  offers_;
   vector<ContentRequest> content_requests_;
-  explicit              ScreenWindowX11         (X11Context &_x11context);
-  virtual              ~ScreenWindowX11         ();
+  explicit              DisplayWindowX11        (X11Context &_x11context);
+  virtual              ~DisplayWindowX11        ();
   virtual bool          timer                   (const EventLoop::State &state, int64 *timeout_usecs_p);
   void                  destroy_x11_resources   ();
-  void                  handle_command          (ScreenCommand *command);
-  void                  setup_window            (const ScreenWindow::Setup &setup);
-  void                  create_window           (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config);
+  void                  handle_command          (DisplayCommand *command);
+  void                  setup_window            (const DisplayWindow::Setup &setup);
+  void                  create_window           (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config);
   void                  configure_window        (const Config &config, bool sizeevent);
   void                  blit                    (cairo_surface_t *surface, const Rapicorn::Region &region);
   void                  filtered_event          (const XEvent &xevent);
@@ -213,17 +213,17 @@ struct ScreenWindowX11 : public virtual ScreenWindow, public virtual X11Widget {
   void                  client_message          (const XClientMessageEvent &xevent);
   void                  blit_expose_region      ();
   void                  force_update            (Window window);
-  virtual ScreenDriver& screen_driver_async     () const { return x11context.screen_driver; } // executed from arbitrary threads
+  virtual DisplayDriver& display_driver_async     () const { return x11context.display_driver; } // executed from arbitrary threads
 };
 
-ScreenWindowX11::ScreenWindowX11 (X11Context &_x11context) :
+DisplayWindowX11::DisplayWindowX11 (X11Context &_x11context) :
   x11context (_x11context),
   window_ (None), input_context_ (NULL), wm_icon_ (None), expose_surface_ (NULL),
   last_motion_time_ (0), pending_configures_ (0), pending_exposes_ (0),
   override_redirect_ (false), crossing_focus_ (false), isel_ (NULL)
 {}
 
-ScreenWindowX11::~ScreenWindowX11()
+DisplayWindowX11::~DisplayWindowX11()
 {
   if (expose_surface_ || wm_icon_ || input_context_ || window_)
     {
@@ -235,7 +235,7 @@ ScreenWindowX11::~ScreenWindowX11()
 }
 
 void
-ScreenWindowX11::destroy_x11_resources()
+DisplayWindowX11::destroy_x11_resources()
 {
   if (expose_surface_)
     {
@@ -263,7 +263,7 @@ ScreenWindowX11::destroy_x11_resources()
 }
 
 bool
-ScreenWindowX11::timer (const EventLoop::State &state, int64 *timeout_usecs_p)
+DisplayWindowX11::timer (const EventLoop::State &state, int64 *timeout_usecs_p)
 {
   const uint64 now = state.current_time_usecs;
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
@@ -290,7 +290,7 @@ ScreenWindowX11::timer (const EventLoop::State &state, int64 *timeout_usecs_p)
 }
 
 void
-ScreenWindowX11::create_window (const ScreenWindow::Setup &setup, const ScreenWindow::Config &config)
+DisplayWindowX11::create_window (const DisplayWindow::Setup &setup, const DisplayWindow::Config &config)
 {
   assert_return (!window_ && !expose_surface_);
   state_.window_type = setup.window_type;
@@ -383,7 +383,7 @@ check_pending (Display *display, Drawable window, int *pending_configures, int *
 }
 
 void
-ScreenWindowX11::filtered_event (const XEvent &xevent)
+DisplayWindowX11::filtered_event (const XEvent &xevent)
 {
   const bool sent = xevent.xany.send_event != 0;
   const char ff = event_context_.synthesized ? 'F' : 'f';
@@ -405,7 +405,7 @@ ScreenWindowX11::filtered_event (const XEvent &xevent)
 }
 
 bool
-ScreenWindowX11::process_event (const XEvent &xevent)
+DisplayWindowX11::process_event (const XEvent &xevent)
 {
   event_context_.synthesized = xevent.xany.send_event;
   const char ss = event_context_.synthesized ? 'S' : 's';
@@ -755,7 +755,7 @@ ScreenWindowX11::process_event (const XEvent &xevent)
 }
 
 void
-ScreenWindowX11::receive_selection (const XEvent &xevent)
+DisplayWindowX11::receive_selection (const XEvent &xevent)
 {
   return_unless (isel_ != NULL);
   // SelectionNotify (after XConvertSelection)
@@ -830,7 +830,7 @@ ScreenWindowX11::receive_selection (const XEvent &xevent)
 }
 
 void
-ScreenWindowX11::client_message (const XClientMessageEvent &xev)
+DisplayWindowX11::client_message (const XClientMessageEvent &xev)
 {
   const Atom mtype = xev.message_type == x11context.atom ("WM_PROTOCOLS") ? xev.data.l[0] : xev.message_type;
   if      (mtype == x11context.atom ("WM_DELETE_WINDOW"))
@@ -858,7 +858,7 @@ ScreenWindowX11::client_message (const XClientMessageEvent &xev)
 }
 
 void
-ScreenWindowX11::force_update (Window window)
+DisplayWindowX11::force_update (Window window)
 {
   const State old_state = state_;
   std::stable_sort (queued_updates_.begin(), queued_updates_.end());
@@ -941,7 +941,7 @@ cairo_image_surface_coverage (cairo_surface_t *surface)
 }
 
 void
-ScreenWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
+DisplayWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
   CHECK_CAIRO_STATUS (surface);
   if (!window_)
@@ -978,7 +978,7 @@ ScreenWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
 }
 
 void
-ScreenWindowX11::blit_expose_region()
+DisplayWindowX11::blit_expose_region()
 {
   if (!expose_surface_ || !state_.visible)
     {
@@ -1090,7 +1090,7 @@ cairo_surface_from_pixmap (Rapicorn::Pixmap pixmap)
 }
 
 void
-ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
+DisplayWindowX11::setup_window (const DisplayWindow::Setup &setup)
 {
   assert_return (state_.visible == false);
   assert_return (wm_icon_ == 0);
@@ -1176,7 +1176,7 @@ ScreenWindowX11::setup_window (const ScreenWindow::Setup &setup)
 }
 
 void
-ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
+DisplayWindowX11::configure_window (const Config &config, bool sizeevent)
 {
   // WM_NORMAL_HINTS, size & gravity
   XSizeHints szhint = { PWinGravity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0 }, { 0, 0 }, 0, 0, StaticGravity };
@@ -1203,7 +1203,7 @@ ScreenWindowX11::configure_window (const Config &config, bool sizeevent)
 }
 
 bool
-ScreenWindowX11::send_selection_notify (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time)
+DisplayWindowX11::send_selection_notify (Window req_window, Atom selection, Atom target, Atom req_property, Time req_time)
 {
   XEvent xevent = { 0, };
   XSelectionEvent &notify = xevent.xselection;
@@ -1227,7 +1227,7 @@ ScreenWindowX11::send_selection_notify (Window req_window, Atom selection, Atom 
 }
 
 void
-ScreenWindowX11::handle_content_request (const size_t nth, ContentOffer *const offer)
+DisplayWindowX11::handle_content_request (const size_t nth, ContentOffer *const offer)
 {
   assert_return (nth < content_requests_.size());
   ContentRequest &cr = content_requests_[nth];
@@ -1292,7 +1292,7 @@ ScreenWindowX11::handle_content_request (const size_t nth, ContentOffer *const o
 }
 
 void
-ScreenWindowX11::request_selection (ContentSourceType content_source, Atom source, uint64 nonce, String data_type, Atom last_failed)
+DisplayWindowX11::request_selection (ContentSourceType content_source, Atom source, uint64 nonce, String data_type, Atom last_failed)
 {
   if (!isel_)
     {
@@ -1339,23 +1339,23 @@ ScreenWindowX11::request_selection (ContentSourceType content_source, Atom sourc
 }
 
 void
-ScreenWindowX11::handle_command (ScreenCommand *command)
+DisplayWindowX11::handle_command (DisplayCommand *command)
 {
   switch (command->type)
     {
       bool found;
-    case ScreenCommand::CREATE: case ScreenCommand::OK: case ScreenCommand::ERROR: case ScreenCommand::SHUTDOWN:
+    case DisplayCommand::CREATE: case DisplayCommand::OK: case DisplayCommand::ERROR: case DisplayCommand::SHUTDOWN:
       assert_unreached();
-    case ScreenCommand::CONFIGURE:
+    case DisplayCommand::CONFIGURE:
       configure_window (*command->config, command->need_resize);
       break;
-    case ScreenCommand::BEEP:
+    case DisplayCommand::BEEP:
       XBell (x11context.display, 0);
       break;
-    case ScreenCommand::SHOW:
+    case DisplayCommand::SHOW:
       XMapRaised (x11context.display, window_);
       break;
-    case ScreenCommand::PRESENT:
+    case DisplayCommand::PRESENT:
       {
         const bool user_activation = command->u64;
         XEvent xevent = { ClientMessage, }; // rest is zeroed
@@ -1369,10 +1369,10 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         XSendEvent (x11context.display, x11context.root_window, False, SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
       }
       break;
-    case ScreenCommand::BLIT:
+    case DisplayCommand::BLIT:
       blit (command->surface, *command->region);
       break;
-    case ScreenCommand::OWNER: {
+    case DisplayCommand::OWNER: {
       const StringVector &data_types = command->string_list;
       const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
                              command->source == CONTENT_SOURCE_CLIPBOARD ? x11context.atom ("CLIPBOARD") :
@@ -1408,7 +1408,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
           offer = NULL;
         }
       break; }
-    case ScreenCommand::CONTENT: {
+    case DisplayCommand::CONTENT: {
       const StringVector &data_types = command->string_list;
       assert_return (data_types.size() == 1);
       const Atom selection = command->source == CONTENT_SOURCE_SELECTION ? XA_PRIMARY :
@@ -1416,7 +1416,7 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
                              None;
       request_selection (command->source, selection, command->nonce, data_types[0]);
       break; }
-    case ScreenCommand::PROVIDE: {
+    case DisplayCommand::PROVIDE: {
       const StringVector &data_types = command->string_list;
       assert_return (data_types.size() == 2);
       found = false;
@@ -1434,9 +1434,9 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
         RAPICORN_CRITICAL ("content provided for unknown request_id: %u (data_type=%s data_length=%u)",
                            command->nonce, data_types[0], data_types[1].size());
       break; }
-    case ScreenCommand::UMOVE:     break;  // FIXME
-    case ScreenCommand::URESIZE:   break;  // FIXME
-    case ScreenCommand::DESTROY:
+    case DisplayCommand::UMOVE:     break;  // FIXME
+    case DisplayCommand::URESIZE:   break;  // FIXME
+    case DisplayCommand::DESTROY:
       destroy_x11_resources();
       delete this;
       break;
@@ -1445,10 +1445,10 @@ ScreenWindowX11::handle_command (ScreenCommand *command)
 }
 
 // == X11Context ==
-X11Context::X11Context (ScreenDriver &driver, AsyncNotifyingQueue<ScreenCommand*> &command_queue,
-                        AsyncBlockingQueue<ScreenCommand*> &reply_queue) :
+X11Context::X11Context (DisplayDriver &driver, AsyncNotifyingQueue<DisplayCommand*> &command_queue,
+                        AsyncBlockingQueue<DisplayCommand*> &reply_queue) :
   loop_ (NULL), command_queue_ (command_queue), reply_queue_ (reply_queue),
-  shared_mem_ (-1), screen_driver (driver), display (NULL), visual (NULL),
+  shared_mem_ (-1), display_driver (driver), display (NULL), visual (NULL),
   max_request_bytes (0), max_property_bytes (0), screen (0), depth (0),
   root_window (0), input_method (NULL)
 {
@@ -1501,29 +1501,29 @@ X11Context::cmd_dispatcher (const EventLoop::State &state)
     return command_queue_.pending();
   else if (state.phase == state.DISPATCH)
     {
-      for (ScreenCommand *cmd = command_queue_.pop(); cmd; cmd = command_queue_.pop())
+      for (DisplayCommand *cmd = command_queue_.pop(); cmd; cmd = command_queue_.pop())
         switch (cmd->type)
           {
-            ScreenWindowX11 *screen_window;
-          case ScreenCommand::CREATE:
-            screen_window = new ScreenWindowX11 (*this);
-            screen_window->create_window (*cmd->setup, *cmd->config);
+            DisplayWindowX11 *display_window;
+          case DisplayCommand::CREATE:
+            display_window = new DisplayWindowX11 (*this);
+            display_window->create_window (*cmd->setup, *cmd->config);
             delete cmd;
-            reply_queue_.push (new ScreenCommand (ScreenCommand::OK, screen_window));
+            reply_queue_.push (new DisplayCommand (DisplayCommand::OK, display_window));
             break;
-          case ScreenCommand::SHUTDOWN:
+          case DisplayCommand::SHUTDOWN:
             loop_->quit();
             delete cmd;
-            reply_queue_.push (new ScreenCommand (ScreenCommand::OK, NULL));
+            reply_queue_.push (new DisplayCommand (DisplayCommand::OK, NULL));
             assert_return (x11ids_.empty(), true);
             break;
           default:
-            screen_window = dynamic_cast<ScreenWindowX11*> (cmd->screen_window);
-            if (cmd->screen_window && screen_window)
-              screen_window->handle_command (cmd);
+            display_window = dynamic_cast<DisplayWindowX11*> (cmd->display_window);
+            if (cmd->display_window && display_window)
+              display_window->handle_command (cmd);
             else
               {
-                critical ("ScreenCommand without ScreenWindowX11: %p (type=%d)", cmd, cmd->type);
+                critical ("DisplayCommand without DisplayWindowX11: %p (type=%d)", cmd, cmd->type);
                 delete cmd;
               }
             break;
@@ -1554,7 +1554,7 @@ X11Context::run()
   // prevent wakeups on stale objects
   command_queue_.notifier (NULL);
   // close down
-  if (!x11ids_.empty()) // ScreenWindowX11s unconditionally reference X11Context
+  if (!x11ids_.empty()) // DisplayWindowX11 unconditionally references X11Context
     fatal ("%s: stopped handling X11Context with %d active windows", STRFUNC, x11ids_.size());
   if (input_method)
     {
@@ -1660,13 +1660,13 @@ X11Context::process_x11()
       // allow event handling hooks, e.g. needed by XIM
       bool consumed = XFilterEvent (&evcopy, None);
       consumed = consumed || filter_event (evcopy);
-      // deliver to owning ScreenWindow
+      // deliver to owning DisplayWindow
       X11Widget *xwidget = x11id_get (xevent.xany.window);
-      ScreenWindowX11 *scw = !xwidget ? NULL : dynamic_cast<ScreenWindowX11*> (xwidget);
+      DisplayWindowX11 *scw = !xwidget ? NULL : dynamic_cast<DisplayWindowX11*> (xwidget);
       if (scw && consumed)
-        scw->filtered_event (xevent);           // preserve bookkeeping of ScreenWindows
+        scw->filtered_event (xevent);           // preserve bookkeeping of DisplayWindow classes
       else if (scw)
-        consumed = scw->process_event (xevent); // ScreenWindow event handling
+        consumed = scw->process_event (xevent); // DisplayWindow event handling
       if (!consumed)
         {
           const char ss = xevent.xany.send_event ? 'S' : 's';
@@ -1686,7 +1686,7 @@ X11Context::process_updates ()
   for (auto id : xids)
     {
       X11Widget *xwidget = x11id_get (id);
-      ScreenWindowX11 *scw = dynamic_cast<ScreenWindowX11*> (xwidget);
+      DisplayWindowX11 *scw = dynamic_cast<DisplayWindowX11*> (xwidget);
       if (scw)
         scw->force_update (id);
     }

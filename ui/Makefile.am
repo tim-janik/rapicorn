@@ -22,7 +22,7 @@ rapicorn_public_headers = $(strip	\
 	stock.hh	\
 	table.hh	testwidgets.hh	text-editor.hh	text-pango.hh	\
 	uithread.hh	utilities.hh	viewport.hh	window.hh	\
-	screenwindow.hh	\
+	displaywindow.hh	\
 	$(rapicorn_impl_headers)	internal.hh	pixmap.hh	\
 )
 rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
@@ -40,7 +40,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	stock.cc	\
 	table.cc	testwidgets.cc	text-editor.cc	text-pango.cc	\
 	uithread.cc	utilities.cc	viewport.cc	window.cc	\
-	screenwindow-x11.cc	screenwindow.cc	\
+	displaywindow-x11.cc	displaywindow.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	sinfeximpl.hh			\
@@ -54,7 +54,7 @@ rapicorn_private_files = $(strip 	\
 	regionimpl.h			\
 	key2ucs4.cc			\
 	clientapi.cc			\
-	screenwindow-xaux.cc		\
+	displaywindow-xaux.cc		\
 	serverapi.cc			\
 	pixmap.cc			\
 )
