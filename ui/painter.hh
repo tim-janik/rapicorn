@@ -6,6 +6,7 @@
 
 namespace Rapicorn {
 
+/// Cairo painting helper class.
 class CPainter {
 protected:
   cairo_t *cr;
@@ -20,6 +21,28 @@ public:
                                          Color outer_upper_left, Color inner_upper_left,
                                          Color inner_lower_right, Color outer_lower_right);
   void          draw_dir_arrow          (double x, double y, double width, double height, Color c, DirType dir);
+};
+
+// == Cairo Utilities ==
+cairo_surface_t*        cairo_surface_from_pixmap       (Pixmap pixmap);
+
+/// Image painting and transformation.
+class ImagePainter {
+public:  struct ImageBackend;
+private:
+  typedef std::shared_ptr<ImageBackend> ImageBackendP;
+  ImageBackendP image_backend_;
+public:
+  explicit      ImagePainter    ();
+  explicit      ImagePainter    (Pixmap pixmap);                     ///< Construct from pixmap object.
+  explicit      ImagePainter    (const String &resource_identifier); ///< Construct from image resource path.
+  virtual      ~ImagePainter    ();     ///< Delete an ImagePainter.
+  Requisition   image_size      ();     ///< Retrieve original width and height of the image.
+  Rect          fill_area       ();     ///< Retrieve fill area of the image, equals width and height if unknown.
+  /// Render image into cairo context transformed into @a image_rect, clipped by @a render_rect.
+  void          draw_image      (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect);
+  ImagePainter& operator=       (const ImagePainter &ip);       ///< Assign an ImagePainter.
+  explicit      operator bool   () const; ///< Returns wether image_size() yields 0 for either dimension.
 };
 
 } // Rapicorn

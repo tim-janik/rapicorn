@@ -1,11 +1,20 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "painter.hh"
 #include "blitfuncs.hh"
+#include "../rcore/rsvg/svg.hh"
 #include <algorithm>
+
+#define SVGDEBUG(...)   RAPICORN_KEY_DEBUG ("SVG", __VA_ARGS__)
+
+#define CHECK_CAIRO_STATUS(status)      do {    \
+  cairo_status_t ___s = (status);               \
+  if (___s != CAIRO_STATUS_SUCCESS)             \
+    SVGDEBUG ("%s: %s", cairo_status_to_string (___s), #status);        \
+  } while (0)
 
 namespace Rapicorn {
 
-/* --- CPainter --- */
+// == CPainter ==
 CPainter::CPainter (cairo_t *_context) :
   cr (_context)
 {}
@@ -142,6 +151,272 @@ CPainter::draw_dir_arrow (double x, double y, double width, double height, Color
     }
   cairo_set_source_rgba (cr, fill.red1(), fill.green1(), fill.blue1(), fill.alpha1());
   cairo_fill (cr);
+}
+
+// == Cairo Utilities ==
+cairo_surface_t*
+cairo_surface_from_pixmap (Pixmap pixmap)
+{
+  const int stride = pixmap.width() * 4;
+  uint32 *data = pixmap.row (0);
+  cairo_surface_t *isurface =
+    cairo_image_surface_create_for_data ((unsigned char*) data,
+                                         CAIRO_FORMAT_ARGB32,
+                                         pixmap.width(),
+                                         pixmap.height(),
+                                         stride);
+  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
+  return isurface;
+}
+
+// == ImageBackend ==
+struct ImagePainter::ImageBackend : public std::enable_shared_from_this<ImageBackend> {
+  virtual            ~ImageBackend    () {}
+  virtual Requisition image_size      () = 0;
+  virtual Rect        fill_area       () = 0;
+  virtual void        draw_image      (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect) = 0;
+};
+
+// == SvgImageBackend ==
+struct SvgImageBackend : public virtual ImagePainter::ImageBackend {
+  Svg::FileP      svgf_;
+  Svg::ElementP   svge_;
+  const Rect      fill_;
+  const Svg::Span hscale_spans_[3], vscale_spans_[3];
+public:
+  SvgImageBackend (Svg::FileP svgf, Svg::ElementP svge, const Svg::Span (&hscale_spans)[3],
+              const Svg::Span (&vscale_spans)[3], const Rect &fill_rect) :
+    svgf_ (svgf), svge_ (svge), fill_ (fill_rect), hscale_spans_ (hscale_spans), vscale_spans_ (vscale_spans)
+  {
+    SVGDEBUG ("SvgImage: id=%s hspans={ l=%u r=%u, l=%u r=%u, l=%u r=%u } vspans={ l=%u r=%u, l=%u r=%u, l=%u r=%u } fill=%s",
+              svge_->info().id,
+              hscale_spans_[0].length, hscale_spans_[0].resizable,
+              hscale_spans_[1].length, hscale_spans_[1].resizable,
+              hscale_spans_[2].length, hscale_spans_[2].resizable,
+              vscale_spans_[0].length, vscale_spans_[0].resizable,
+              vscale_spans_[1].length, vscale_spans_[1].resizable,
+              vscale_spans_[2].length, vscale_spans_[2].resizable,
+              fill_.string());
+    const Svg::BBox bb = svge_->bbox();
+    size_t hsum = 0;
+    for (size_t i = 0; i < ARRAY_SIZE (hscale_spans_); i++)
+      hsum += hscale_spans_[i].length;
+    critical_unless (hsum == bb.width);
+    size_t vsum = 0;
+    for (size_t i = 0; i < ARRAY_SIZE (vscale_spans_); i++)
+      vsum += vscale_spans_[i].length;
+    critical_unless (vsum == bb.height);
+    critical_unless (fill_.x >= 0 && fill_.x < bb.width);
+    critical_unless (fill_.x + fill_.width <= bb.width);
+    critical_unless (fill_.y >= 0 && fill_.y < bb.height);
+    critical_unless (fill_.y + fill_.height <= bb.height);
+  }
+  virtual Requisition
+  image_size ()
+  {
+    const auto bbox = svge_->bbox();
+    return Requisition (bbox.width, bbox.height);
+  }
+  virtual Rect
+  fill_area ()
+  {
+    return fill_;
+  }
+  virtual void
+  draw_image (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect)
+  {
+    // stretch and render SVG image // FIXME: this should be cached
+    const size_t w = image_rect.width + 0.5, h = image_rect.height + 0.5;
+    cairo_surface_t *img = svge_->stretch (w, h, ARRAY_SIZE (hscale_spans_), hscale_spans_, ARRAY_SIZE (vscale_spans_), vscale_spans_);
+    CHECK_CAIRO_STATUS (cairo_surface_status (img));
+    // render context rectangle
+    Rect rect = image_rect;
+    rect.intersect (render_rect);
+    return_unless (rect.width > 0 && rect.height > 0);
+    cairo_save (cairo_context); cairo_t *cr = cairo_context;
+    cairo_set_source_surface (cr, img, 0, 0); // (ix,iy) are set in the matrix below
+    cairo_matrix_t matrix;
+    cairo_matrix_init_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
+    cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+    cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+    cairo_clip (cr);
+    cairo_paint (cr);
+    cairo_surface_destroy (img);
+    cairo_restore (cairo_context); cr = NULL;
+  }
+};
+
+// == PixmapImageBackend ==
+struct PixmapImageBackend : public virtual ImagePainter::ImageBackend {
+  Pixmap pixmap_;
+public:
+  PixmapImageBackend (const Pixmap &pixmap) :
+    pixmap_ (pixmap)
+  {}
+  virtual Requisition
+  image_size ()
+  {
+    return Requisition (pixmap_.width(), pixmap_.height());
+  }
+  virtual Rect
+  fill_area ()
+  {
+    return Rect (0, 0, pixmap_.width(), pixmap_.height());
+  }
+  virtual void
+  draw_image (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect)
+  {
+    Rect rect = image_rect;
+    rect.intersect (render_rect);
+    return_unless (rect.width > 0 && rect.height > 0);
+    cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
+    cairo_save (cairo_context); cairo_t *cr = cairo_context;
+    cairo_set_source_surface (cr, isurface, 0, 0); // (ix,iy) are set in the matrix below
+    cairo_matrix_t matrix;
+    const double xscale = pixmap_.width() / image_rect.width, yscale = pixmap_.height() / image_rect.height;
+    cairo_matrix_init_scale (&matrix, xscale, yscale);
+    cairo_matrix_translate (&matrix, -image_rect.x, -image_rect.y); // adjust image origin
+    cairo_pattern_set_matrix (cairo_get_source (cr), &matrix);
+    if (xscale != 1.0 || yscale != 1.0)
+      cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
+    cairo_paint (cr);
+    cairo_surface_destroy (isurface);
+    cairo_restore (cairo_context); cr = NULL;
+  }
+};
+
+// == ImagePainter ==
+ImagePainter::ImagePainter()
+{}
+
+ImagePainter::ImagePainter (Pixmap pixmap)
+{
+  ImageBackendP image_backend;
+  if (pixmap.width() && pixmap.height())
+    image_backend_ = std::make_shared<PixmapImageBackend> (pixmap);
+}
+
+ImagePainter::ImagePainter (const String &resource_identifier)
+{
+  const ssize_t hashpos = resource_identifier.find ('#');
+  const String fragment = hashpos < 0 ? "" : resource_identifier.substr (hashpos);
+  const String resource = hashpos < 0 ? resource_identifier : resource_identifier.substr (0, hashpos);
+  Blob blob = Res (resource);
+  if (string_endswith (blob.name(), ".svg"))
+    {
+      auto svgf = Svg::File::load (blob);
+      SVGDEBUG ("loading: %s: %s", resource, strerror (errno));
+      auto svge = svgf ? svgf->lookup (fragment) : Svg::Element::none();
+      SVGDEBUG (" lookup: %s%s: %s", resource, fragment, svge ? svge->bbox().to_string() : "failed");
+      const Svg::BBox ibox = svge ? svge->bbox() : Svg::BBox();
+      if (svge && ibox.width > 0 && ibox.height > 0)
+        {
+          Rect fill { 0, 0, ibox.width, ibox.height };
+          Svg::Span hscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
+          hscale_spans[1].length = ibox.width;
+          hscale_spans[1].resizable = 1;
+          Svg::Span vscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
+          vscale_spans[1].length = ibox.height;
+          vscale_spans[1].resizable = 1;
+          if (string_endswith (fragment, ".9"))
+            {
+              const double ix1 = ibox.x, ix2 = ibox.x + ibox.width, iy1 = ibox.y, iy2 = ibox.y + ibox.height;
+              Svg::ElementP auxe;
+              auxe = svgf->lookup (fragment + ".hscale");
+              if (auxe)
+                {
+                  const Svg::BBox bbox = auxe->bbox();
+                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                  const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
+                  if (bx1 < bx2)
+                    {
+                      hscale_spans[0].resizable = 0, hscale_spans[0].length = bx1 - ix1;
+                      hscale_spans[1].resizable = 1, hscale_spans[1].length = bx2 - bx1;
+                      hscale_spans[2].resizable = 0, hscale_spans[2].length = ix2 - bx2;
+                    }
+                }
+              auxe = svgf->lookup (fragment + ".vscale");
+              if (auxe)
+                {
+                  const Svg::BBox bbox = auxe->bbox();
+                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                  const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
+                  if (by1 < by2)
+                    {
+                      vscale_spans[0].resizable = 0, vscale_spans[0].length = by1 - iy1;
+                      vscale_spans[1].resizable = 1, vscale_spans[1].length = by2 - by1;
+                      vscale_spans[2].resizable = 0, vscale_spans[2].length = iy2 - by2;
+                    }
+                }
+              auxe = svgf->lookup (fragment + ".hfill");
+              if (auxe)
+                {
+                  const Svg::BBox bbox = auxe->bbox();
+                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                  const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
+                  if (bx1 < bx2)
+                    {
+                      fill.x = bx1 - ix1;
+                      fill.width = bx2 - bx1;
+                    }
+                }
+              auxe = svgf->lookup (fragment + ".vfill");
+              if (auxe)
+                {
+                  const Svg::BBox bbox = auxe->bbox();
+                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
+                  const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
+                  if (by1 < by2)
+                    {
+                      fill.y = by1 - iy1;
+                      fill.height = by2 - by1;
+                    }
+                }
+            }
+          image_backend_ = std::make_shared<SvgImageBackend> (svgf, svge, hscale_spans, vscale_spans, fill);
+        }
+    }
+  else if (blob)
+    {
+      auto pixmap = Pixmap (blob);
+      if (pixmap.width() && pixmap.height())
+        image_backend_ = std::make_shared<PixmapImageBackend> (pixmap);
+    }
+}
+
+ImagePainter::~ImagePainter ()
+{}
+
+Requisition
+ImagePainter::image_size ()
+{
+  return image_backend_ ? image_backend_->image_size() : Requisition();
+}
+
+Rect
+ImagePainter::fill_area ()
+{
+  return image_backend_ ? image_backend_->fill_area() : Rect();
+}
+
+/// Render image into cairo context transformed into @a image_rect, clipped by @a render_rect.
+void
+ImagePainter::draw_image (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect)
+{
+  if (image_backend_)
+    image_backend_->draw_image (cairo_context, render_rect, image_rect);
+}
+
+ImagePainter&
+ImagePainter::operator= (const ImagePainter &ip)
+{
+  image_backend_ = ip.image_backend_;
+  return *this;
+}
+
+ImagePainter::operator bool () const
+{
+  return image_backend_ != NULL;
 }
 
 } // Rapicorn

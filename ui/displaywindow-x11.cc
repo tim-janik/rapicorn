@@ -1074,21 +1074,6 @@ window_type_atom_name (WindowType window_type)
     }
 }
 
-static cairo_surface_t*
-cairo_surface_from_pixmap (Rapicorn::Pixmap pixmap)
-{
-  const int stride = pixmap.width() * 4;
-  uint32 *data = pixmap.row (0);
-  cairo_surface_t *isurface =
-    cairo_image_surface_create_for_data ((unsigned char*) data,
-                                         CAIRO_FORMAT_ARGB32,
-                                         pixmap.width(),
-                                         pixmap.height(),
-                                         stride);
-  assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (isurface), NULL);
-  return isurface;
-}
-
 void
 DisplayWindowX11::setup_window (const DisplayWindow::Setup &setup)
 {
@@ -1152,7 +1137,8 @@ DisplayWindowX11::setup_window (const DisplayWindow::Setup &setup)
   if (f & (HIDDEN | ICONIFY))
     wmhints.initial_state = IconicState;
   const char *cmdv[2] = { program_file().c_str(), NULL };
-  XClassHint class_hint = { const_cast<char*> (program_alias().c_str()), const_cast<char*> (program_ident().c_str()) };
+  const String prgalias = program_alias(), prgident = program_ident(); // keep strings alive until after Xutf8SetWMProperties
+  XClassHint class_hint = { const_cast<char*> (prgalias.c_str()), const_cast<char*> (prgident.c_str()) };
   Xutf8SetWMProperties (x11context.display, window_, NULL, NULL, const_cast<char**> (cmdv), ARRAY_SIZE (cmdv) - 1,
                         NULL, &wmhints, &class_hint);
   // _MOTIF_WM_HINTS

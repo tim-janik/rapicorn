@@ -9,7 +9,7 @@ namespace Rapicorn {
 void
 ImageImpl::pixbuf (const Pixbuf &pixbuf)
 {
-  image_backend_ = load_pixmap (Pixmap (pixbuf));
+  image_painter_ = ImagePainter (Pixmap (pixbuf));
   invalidate();
 }
 
@@ -23,8 +23,8 @@ void
 ImageImpl::broken_image()
 {
   String icon = Stock ("broken-image").icon();
-  image_backend_ = load_source (icon);
-  if (!image_backend_)
+  image_painter_ = ImagePainter (icon);
+  if (!image_painter_)
     critical ("missing stock: broken-image");
   invalidate();
 }
@@ -33,8 +33,8 @@ void
 ImageImpl::source (const String &image_url)
 {
   source_ = image_url;
-  image_backend_ = load_source (source_);
-  if (!image_backend_)
+  image_painter_ = ImagePainter (source_);
+  if (!image_painter_)
     broken_image();
   invalidate();
 }
@@ -51,8 +51,8 @@ ImageImpl::stock (const String &stock_id)
   return_unless (stock_id_ != stock_id);
   stock_id_ = stock_id;
   String stock_icon = Stock (stock_id_).icon();
-  image_backend_ = load_source (stock_icon);
-  if (!image_backend_)
+  image_painter_ = ImagePainter (stock_icon);
+  if (!image_painter_)
     broken_image();
   invalidate();
 }
@@ -66,7 +66,7 @@ ImageImpl::stock() const
 void
 ImageImpl::size_request (Requisition &requisition)
 {
-  const Requisition irq = get_image_size (image_backend_);
+  const Requisition irq = image_painter_.image_size();
   requisition.width += irq.width;
   requisition.height += irq.height;
 }
@@ -80,7 +80,7 @@ ImageImpl::size_allocate (Allocation area, bool changed)
 void
 ImageImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  paint_image (image_backend_, rcontext, rect);
+  image_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
 }
 
 static const WidgetFactory<ImageImpl> image_factory ("Rapicorn_Factory:Image");
@@ -91,8 +91,8 @@ StatePainterImpl::source (const String &resource)
 {
   return_unless (source_ != resource);
   source_ = resource;
-  source_backend_ = NULL;
-  state_backend_ = NULL;
+  source_painter_ = ImagePainter();
+  state_painter_ = ImagePainter();
   state_image_ = "";
   invalidate();
   changed ("source");
@@ -138,9 +138,9 @@ StatePainterImpl::update_source (String &member, const String &value, const char
 void
 StatePainterImpl::size_request (Requisition &requisition)
 {
-  if (!source_backend_)
-    source_backend_ = load_source (source_);
-  requisition = get_image_size (source_backend_);
+  if (!source_painter_)
+    source_painter_ = ImagePainter (source_);
+  requisition = source_painter_.image_size();
 }
 
 void
@@ -150,7 +150,7 @@ StatePainterImpl::size_allocate (Allocation area, bool changed)
 void
 StatePainterImpl::do_changed (const String &name)
 {
-  ImageRendererImpl::do_changed (name);
+  WidgetImpl::do_changed (name);
   if (name == "state" && state_image_ != current_source())
     invalidate (INVALID_CONTENT);
 }
@@ -159,12 +159,12 @@ void
 StatePainterImpl::render (RenderContext &rcontext, const Rect &rect)
 {
   const String current = current_source();
-  if (!state_backend_ || state_image_ != current)
+  if (!state_painter_ || state_image_ != current)
     {
-      state_backend_ = load_source (current);
-      state_image_ = state_backend_ ? current : "";
+      state_painter_ = ImagePainter (current);
+      state_image_ = state_painter_ ? current : "";
     }
-  paint_image (state_backend_, rcontext, rect);
+  state_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
 }
 
 static const WidgetFactory<StatePainterImpl> state_painter_factory ("Rapicorn_Factory:StatePainter");
