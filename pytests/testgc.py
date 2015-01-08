@@ -34,7 +34,7 @@ hello_window = """
   <Window id="testgc-py">
     <Table id="container"/>
   </Window>
-  <IdlTestWidget id="testwidget"/>
+  <RapicornIdlTestWidget id="testwidget"/>
 </interfaces>
 """
 

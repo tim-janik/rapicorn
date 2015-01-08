@@ -7,9 +7,9 @@
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
       <VBox spacing="5">
 	<!-- Check evaluation of arguments -->
-	<TestWidget value="@eval 20 - 1" assert-value="19" />
+	<RapicornTestWidget value="@eval 20 - 1" assert-value="19" />
 	<!-- Check evaluation of argument default assignments -->
-	<TestWidget value="@eval defaultvalue17" assert-value="17" />
+	<RapicornTestWidget value="@eval defaultvalue17" assert-value="17" />
       </VBox>
     </Alignment>
   </Window>

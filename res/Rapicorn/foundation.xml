@@ -3,39 +3,42 @@
 <interfaces>
 
   <!-- Factory Types -->
-  <Rapicorn_Factory id="Alignment" factory-type="Rapicorn::Alignment"/>
-  <Rapicorn_Factory id="Ambience" factory-type="Rapicorn::Ambience"/>
-  <Rapicorn_Factory id="Arrangement" factory-type="Rapicorn::Arrangement"/>
-  <Rapicorn_Factory id="Arrow" factory-type="Rapicorn::Arrow"/>
-  <Rapicorn_Factory id="ButtonArea" factory-type="Rapicorn::ButtonArea"/>
-  <Rapicorn_Factory id="DotGrid" factory-type="Rapicorn::DotGrid"/>
-  <Rapicorn_Factory id="Drawable" factory-type="Rapicorn::Drawable"/>
-  <Rapicorn_Factory id="FillAreaContainer" factory-type="Rapicorn::FillAreaContainer"/>
-  <Rapicorn_Factory id="FocusFrame" factory-type="Rapicorn::FocusFrame"/>
-  <Rapicorn_Factory id="Frame" factory-type="Rapicorn::Frame"/>
-  <Rapicorn_Factory id="HBox" factory-type="Rapicorn::HBox"/>
-  <Rapicorn_Factory id="IdlTestWidget" factory-type="Rapicorn::IdlTestWidget"/>
-  <Rapicorn_Factory id="Image" factory-type="Rapicorn::Image"/>
-  <Rapicorn_Factory id="Label" factory-type="Rapicorn::Label"/>
-  <Rapicorn_Factory id="LayerPainter" factory-type="Rapicorn::LayerPainter"/>
-  <Rapicorn_Factory id="Rapicorn_Factory_TextBlock" factory-type="Rapicorn::TextPango"/>
-  <Rapicorn_Factory id="RapicornScrollArea" factory-type="Rapicorn::ScrollArea"/>
-  <Rapicorn_Factory id="RapicornScrollPort" factory-type="Rapicorn::ScrollPort"/>
-  <Rapicorn_Factory id="Rapicorn-slider-skid" factory-type="Rapicorn::SliderSkid"/>
-  <Rapicorn_Factory id="Rapicorn-slider-trough" factory-type="Rapicorn::SliderTrough"/>
-  <Rapicorn_Factory id="SliderArea" factory-type="Rapicorn::SliderArea"/>
-  <Rapicorn_Factory id="StatePainter" factory-type="Rapicorn::StatePainter"/>
-  <Rapicorn_Factory id="Table" factory-type="Rapicorn::Table"/>
-  <Rapicorn_Factory id="TestBox" factory-type="Rapicorn::TestBox"/>
-  <Rapicorn_Factory id="TestContainer" factory-type="Rapicorn::TestContainer"/>
-  <Rapicorn_Factory id="TextEditor" factory-type="Rapicorn::TextEditor"/>
-  <Rapicorn_Factory id="VBox" factory-type="Rapicorn::VBox"/>
-  <Rapicorn_Factory id="WidgetList" factory-type="Rapicorn::WidgetList"/>
-  <Rapicorn_Factory id="WidgetListRow" factory-type="Rapicorn::WidgetListRow"/>
-  <Rapicorn_Factory id="Window" factory-type="Rapicorn::Window"/>
+  <Rapicorn_Factory id="RapicornAlignment" factory-type="Rapicorn::Alignment"/>
+  <Rapicorn_Factory id="RapicornAmbience" factory-type="Rapicorn::Ambience"/>
+  <Rapicorn_Factory id="RapicornArrangement" factory-type="Rapicorn::Arrangement"/>
+  <Rapicorn_Factory id="RapicornArrow" factory-type="Rapicorn::Arrow"/>
+  <Rapicorn_Factory id="RapicornButtonArea" factory-type="Rapicorn::ButtonArea"/>
+  <Rapicorn_Factory id="RapicornDotGrid" factory-type="Rapicorn::DotGrid"/>
+  <Rapicorn_Factory id="RapicornDrawable" factory-type="Rapicorn::Drawable"/>
+  <Rapicorn_Factory id="RapicornFillAreaContainer" factory-type="Rapicorn::FillAreaContainer"/>
+  <Rapicorn_Factory id="RapicornFocusFrame" factory-type="Rapicorn::FocusFrame"/>
+  <Rapicorn_Factory id="RapicornFrame" factory-type="Rapicorn::Frame"/>
+  <Rapicorn_Factory id="RapicornHBox" factory-type="Rapicorn::HBox"/>
+  <Rapicorn_Factory id="RapicornImage" factory-type="Rapicorn::Image"/>
+  <Rapicorn_Factory id="RapicornLabel" factory-type="Rapicorn::Label"/>
+  <Rapicorn_Factory id="RapicornLayerPainter" factory-type="Rapicorn::LayerPainter"/>
+  <Rapicorn_Factory id="RapicornSliderArea" factory-type="Rapicorn::SliderArea"/>
+  <Rapicorn_Factory id="RapicornStatePainter" factory-type="Rapicorn::StatePainter"/>
+  <Rapicorn_Factory id="RapicornTable" factory-type="Rapicorn::Table"/>
+  <Rapicorn_Factory id="RapicornTextEditor" factory-type="Rapicorn::TextEditor"/>
+  <Rapicorn_Factory id="RapicornVBox" factory-type="Rapicorn::VBox"/>
+  <Rapicorn_Factory id="RapicornWidgetList" factory-type="Rapicorn::WidgetList"/>
+  <Rapicorn_Factory id="RapicornWidgetListRow" factory-type="Rapicorn::WidgetListRow"/>
+  <Rapicorn_Factory id="RapicornWindow" factory-type="Rapicorn::Window"/>
+
+  <!-- Internal Types -->
+  <Rapicorn_Factory id="Rapicorn_ScrollArea" factory-type="Rapicorn::ScrollArea"/>
+  <Rapicorn_Factory id="Rapicorn_ScrollPort" factory-type="Rapicorn::ScrollPort"/>
+  <Rapicorn_Factory id="Rapicorn_SliderSkid" factory-type="Rapicorn::SliderSkid"/>
+  <Rapicorn_Factory id="Rapicorn_SliderTrough" factory-type="Rapicorn::SliderTrough"/>
+  <Rapicorn_Factory id="Rapicorn_TextBlock" factory-type="Rapicorn::TextPango"/>
+  <Rapicorn_Factory id="RapicornIdlTestWidget" factory-type="Rapicorn::IdlTestWidget"/>
+  <Rapicorn_Factory id="RapicornTestBox" factory-type="Rapicorn::TestBox"/>
+  <Rapicorn_Factory id="RapicornTestContainer" factory-type="Rapicorn::TestContainer"/>
+  <RapicornTestContainer id="RapicornTestWidget" paint-allocation="1" width="10" height="10"/>
 
   <!-- Buttons -->
-  <ButtonArea id="Button" child-container="child-area" >
+  <ButtonArea id="RapicornButton" child-container="child-area" >
     <Argument id="center-child" default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
@@ -47,7 +50,7 @@
       </Ambience>
     </Frame>
   </ButtonArea>
-  <ButtonArea id="UnfocusedButton" child-container="child-area" >
+  <ButtonArea id="RapicornUnfocusedButton" child-container="child-area" >
     <Argument id="center-child" default="1" />
     <Frame normal-frame="out" impressed-frame="in" >
       <Ambience
@@ -57,7 +60,7 @@
       </Ambience>
     </Frame>
   </ButtonArea>
-  <Frame id="DefaultButton" child-container="child-area" frame-type="in" >
+  <Frame id="RapicornDefaultButton" child-container="child-area" frame-type="in" >
     <Argument id="on-click" />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
       <Button id="child-area" on-click="@eval on_click"/>
@@ -65,14 +68,14 @@
   </Frame>
 
   <!-- HSlider -->
-  <SliderArea id="HSlider">
+  <SliderArea id="RapicornHSlider">
     <Frame normal-frame="in" vexpand="1" hexpand="1" height="18">
       <HBox vexpand="1">
 	<UnfocusedButton on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1" center-child="0" >
 	  <Arrow arrow-dir="left" size-policy="width-from-height"/>
 	</UnfocusedButton>
-	<Rapicorn-slider-trough hexpand="1" vexpand="1">
-	  <Rapicorn-slider-skid vspread="1" hexpand="1" vertical-skid="0">
+	<Rapicorn_SliderTrough hexpand="1" vexpand="1">
+	  <Rapicorn_SliderSkid vspread="1" hexpand="1" vertical-skid="0">
 	    <Ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
@@ -80,8 +83,8 @@
 		<DotGrid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
 	      </Frame>
 	    </Ambience>
-	  </Rapicorn-slider-skid>
-	</Rapicorn-slider-trough>
+	  </Rapicorn_SliderSkid>
+	</Rapicorn_SliderTrough>
 	<UnfocusedButton on-click="increment" on-click2="page-increment" click-type="fast-repeat" vexpand="1" center-child="0" >
 	  <Arrow arrow-dir="right" size-policy="width-from-height"/>
 	</UnfocusedButton>
@@ -90,14 +93,14 @@
   </SliderArea>
 
   <!-- VSlider -->
-  <SliderArea id="VSlider">
+  <SliderArea id="RapicornVSlider">
     <Frame normal-frame="in" vexpand="1" hexpand="1" width="18">
       <VBox hexpand="1">
 	<UnfocusedButton on-click="decrement" on-click2="page-increment" click-type="fast-repeat" hexpand="1" center-child="0" >
 	  <Arrow arrow-dir="up" size-policy="height-from-width"/>
 	</UnfocusedButton>
-	<Rapicorn-slider-trough vexpand="1" hexpand="1">
-	  <Rapicorn-slider-skid hspread="1" vexpand="1" vertical-skid="1">
+	<Rapicorn_SliderTrough vexpand="1" hexpand="1">
+	  <Rapicorn_SliderSkid hspread="1" vexpand="1" vertical-skid="1">
 	    <Ambience
 	      normal-lighting="upper-left" impressed-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
 	      normal-shade="none" impressed-shade="none" prelight-shade="diffuse" insensitive-shade="none">
@@ -105,8 +108,8 @@
 		<DotGrid n-hdots="2" n-vdots="6" left-padding-dots="0" right-padding-dots="0" top-padding-dots="2" bottom-padding-dots="2" />
 	      </Frame>
 	    </Ambience>
-	  </Rapicorn-slider-skid>
-	</Rapicorn-slider-trough>
+	  </Rapicorn_SliderSkid>
+	</Rapicorn_SliderTrough>
 	<UnfocusedButton on-click="increment" on-click2="page-decrement" click-type="fast-repeat" hexpand="1" center-child="0" >
 	  <Arrow arrow-dir="down" size-policy="height-from-width"/>
 	</UnfocusedButton>
@@ -115,24 +118,57 @@
   </SliderArea>
 
   <!-- ScrollArea -->
-  <Alignment id="ScrollArea" child-container="scroll-container">
-    <RapicornScrollArea>
+  <Alignment id="RapicornScrollArea" child-container="scroll-container">
+    <Rapicorn_ScrollArea>
       <Table>
 	<Alignment hexpand="1" vexpand="1" hposition="0" hspan="1" vposition="0" vspan="1" width="0" height="0"
 	  left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
 	  <Frame frame-type="in" hscale="0" vscale="0">
-	    <RapicornScrollPort id="scroll-container">
+	    <Rapicorn_ScrollPort id="scroll-container">
 	      <!-- <Ambience id="scroll-container" normal-lighting="upper-left"/> -->
-	    </RapicornScrollPort>
+	    </Rapicorn_ScrollPort>
 	  </Frame>
 	</Alignment>
 	<VSlider vexpand="0" adjustment-source="ancestry-vertical"   vposition="0" hposition="1" />
 	<HSlider hexpand="0" adjustment-source="ancestry-horizontal" vposition="1" />
       </Table>
-    </RapicornScrollArea>
+    </Rapicorn_ScrollArea>
   </Alignment>
 
-  <!-- TestWidget -->
-  <TestContainer id="TestWidget" paint-allocation="1" width="10" height="10"/>
+  <!-- Default Theme -->
+  <RapicornAlignment id="Alignment"/>
+  <RapicornAmbience id="Ambience"/>
+  <RapicornArrangement id="Arrangement"/>
+  <RapicornArrow id="Arrow"/>
+  <RapicornButton id="Button" center-child="@eval center_child">
+    <Argument id="center-child" default="1" />
+  </RapicornButton>
+  <RapicornButtonArea id="ButtonArea"/>
+  <RapicornDefaultButton id="DefaultButton" on-click="@eval on_click">
+    <Argument id="on-click" />
+  </RapicornDefaultButton>
+  <RapicornDotGrid id="DotGrid"/>
+  <RapicornDrawable id="Drawable"/>
+  <RapicornFillAreaContainer id="FillAreaContainer"/>
+  <RapicornFocusFrame id="FocusFrame"/>
+  <RapicornFrame id="Frame"/>
+  <RapicornHBox id="HBox"/>
+  <RapicornHSlider id="HSlider"/>
+  <RapicornImage id="Image"/>
+  <RapicornLabel id="Label"/>
+  <RapicornLayerPainter id="LayerPainter"/>
+  <RapicornScrollArea id="ScrollArea"/>
+  <RapicornSliderArea id="SliderArea"/>
+  <RapicornStatePainter id="StatePainter"/>
+  <RapicornTable id="Table"/>
+  <RapicornTextEditor id="TextEditor"/>
+  <RapicornUnfocusedButton id="UnfocusedButton" center-child="@eval center_child">
+    <Argument id="center-child" default="1" />
+  </RapicornUnfocusedButton>
+  <RapicornVBox id="VBox"/>
+  <RapicornVSlider id="VSlider"/>
+  <RapicornWidgetList id="WidgetList"/>
+  <RapicornWidgetListRow id="WidgetListRow"/>
+  <RapicornWindow id="Window"/>
 
 </interfaces>

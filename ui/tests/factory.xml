@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- Multi-Level TestWidget creation -->
-  <TestWidget id="TestWidgetL0" accu="L0"/>
+  <RapicornTestWidget id="TestWidgetL0" accu="L0"/>
   <TestWidgetL0 id="TestWidgetL1" accu="L1"/>
   <TestWidgetL1 id="TestWidgetL2" accu="L2"/>
 

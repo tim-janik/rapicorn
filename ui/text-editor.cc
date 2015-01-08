@@ -88,7 +88,7 @@ void
 TextControllerImpl::constructed()
 {
   SingleContainerImpl::constructed();
-  WidgetImplP label = Factory::create_ui_widget ("Rapicorn_Factory_TextBlock");
+  WidgetImplP label = Factory::create_ui_widget ("Rapicorn_TextBlock");
   add (*label);
   update_text_block();
 }
