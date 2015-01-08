@@ -140,13 +140,9 @@
   <RapicornAmbience id="Ambience"/>
   <RapicornArrangement id="Arrangement"/>
   <RapicornArrow id="Arrow"/>
-  <RapicornButton id="Button" center-child="@eval center_child">
-    <Argument id="center-child" default="1" />
-  </RapicornButton>
+  <RapicornButton id="Button"/>
   <RapicornButtonArea id="ButtonArea"/>
-  <RapicornDefaultButton id="DefaultButton" on-click="@eval on_click">
-    <Argument id="on-click" />
-  </RapicornDefaultButton>
+  <RapicornDefaultButton id="DefaultButton"/>
   <RapicornDotGrid id="DotGrid"/>
   <RapicornDrawable id="Drawable"/>
   <RapicornFillAreaContainer id="FillAreaContainer"/>
@@ -162,9 +158,7 @@
   <RapicornStatePainter id="StatePainter"/>
   <RapicornTable id="Table"/>
   <RapicornTextEditor id="TextEditor"/>
-  <RapicornUnfocusedButton id="UnfocusedButton" center-child="@eval center_child">
-    <Argument id="center-child" default="1" />
-  </RapicornUnfocusedButton>
+  <RapicornUnfocusedButton id="UnfocusedButton"/>
   <RapicornVBox id="VBox"/>
   <RapicornVSlider id="VSlider"/>
   <RapicornWidgetList id="WidgetList"/>

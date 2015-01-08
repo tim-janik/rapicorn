@@ -265,6 +265,7 @@ class Builder {
   String           child_container_name_;
   ContainerImpl   *child_container_;           // captured child_container_ widget during build phase
   StringVector     scope_names_, scope_values_;
+  vector<bool>     scope_consumed_;
   VariableMap      locals_;
   void          eval_args        (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
                                   StringVector &out_names, StringVector &out_values, String *child_container_name);
@@ -339,6 +340,7 @@ Builder::eval_and_build (const String &widget_identifier,
       builder.scope_names_.push_back (cname);
       builder.scope_values_.push_back (cvalue);
     }
+  builder.scope_consumed_.resize (builder.scope_names_.size());
   // build widget
   WidgetImplP widget = builder.build_scope (call_location, builder.dnode_);
   FDEBUG ("%s: built widget '%s': %s", node_location (builder.dnode_), widget_identifier, widget ? widget->name() : "<null>");
@@ -450,27 +452,45 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
             argument_values.push_back (avalue);
           }
       }
-  // assign Argument values from caller args, collect caller properties
-  StringVector caller_property_names, caller_property_values;
+  // assign Argument values from caller args, remaining values are properties (or 'inherited' arguments)
   for (size_t i = 0; i < scope_names_.size(); i++)
     {
+      if (scope_consumed_.at (i))
+        continue;
       const String cname = canonify_dashes (scope_names_[i]), &cvalue = scope_values_.at (i);
       if (cname == "name" || cname == "id")
         {
           name_argument = cvalue;
+          scope_consumed_[i] = true;
           continue;
         }
       else if (cname.find (':') != String::npos)
-        continue; // ignore namespaced attributes
+        {
+          scope_consumed_[i] = true;
+          continue; // ignore namespaced attributes
+        }
       StringVector::const_iterator it = find (argument_names.begin(), argument_names.end(), cname);
       if (it != argument_names.end())
-        argument_values[it - argument_names.begin()] = cvalue;
-      else
         {
-          caller_property_names.push_back (cname);
-          caller_property_values.push_back (cvalue);
+          const size_t index = it - argument_names.begin();
+          argument_values[index] = cvalue;
+          scope_consumed_[i] = true;
         }
     }
+  // allow outer scopes to override Argument values
+  for (Builder *outer = this->outer_; outer; outer = outer->outer_)
+    for (size_t i = 0; i < outer->scope_names_.size(); i++)
+      if (!outer->scope_consumed_.at (i) && outer->scope_names_[i] != "id" && outer->scope_names_[i] != "name" &&
+          outer->scope_names_[i].find (':') == String::npos) // ignore namespaced attributes
+        {
+          const String outer_cname = canonify_dashes (outer->scope_names_[i]);
+          StringVector::const_iterator it = find (argument_names.begin(), argument_names.end(), outer_cname);
+          if (it != argument_names.end())
+            { // outer Argument values override previous/inner values
+              argument_values[it - argument_names.begin()] = outer->scope_values_.at (i);
+              outer->scope_consumed_[i] = true;
+            }
+        }
   // use Argument values to prepare variable map for evaluator
   Evaluator::populate_map (locals_, argument_names, argument_values);
   argument_names.clear(), argument_values.clear();
@@ -480,15 +500,18 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
   env.pop_map (locals_);
   if (!widget)
     return NULL;
-  // assign caller properties
+  // assign caller properties ('consumed' values have been used as Argument values)
   if (!name_argument.empty())
     widget->name (name_argument);
-  for (size_t i = 0; i < caller_property_names.size(); i++)
-    {
-      const String &cname = caller_property_names[i], &cvalue = caller_property_values[i];
-      if (!try_set_property (*widget, cname, cvalue))
-        critical ("%s: widget %s: unknown property: %s", caller_location, widget->name(), cname);
-    }
+  for (size_t i = 0; i < scope_names_.size(); i++)
+    if (!scope_consumed_.at (i))
+      {
+        const String &cname = scope_names_[i], &cvalue = scope_values_.at (i);
+        if (try_set_property (*widget, cname, cvalue))
+          scope_consumed_[i] = true;
+        else
+          critical ("%s: widget %s: unknown property: %s", caller_location, widget->name(), cname);
+      }
   // assign child container
   if (child_container_)
     {
@@ -555,6 +578,7 @@ Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode
       {
         inner_builder.scope_names_ = std::move (eprop_names);
         inner_builder.scope_values_ = std::move (eprop_values);
+        inner_builder.scope_consumed_.resize (inner_builder.scope_names_.size());
         widget = inner_builder.build_scope (node_location (wnode), factory_context_node);
       }
     else
