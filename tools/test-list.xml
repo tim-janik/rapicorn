@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- list construction -->
-  <Rapicorn_Factory:WidgetList id="ListArea"/>
+  <Rapicorn::WidgetList id="ListArea"/>
   <Table id="ListAreaTable" />
   <Ambience id="ListRow" child-container="ListRowCavity" hexpand="1"
 	       normal-background="background" lighting="none" shade="none">

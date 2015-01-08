@@ -127,7 +127,7 @@ WidgetTypeFactory::register_widget_factory (const WidgetTypeFactory &itfactory)
   std::list<const WidgetTypeFactory*> &widget_type_factories = widget_type_list();
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
-  if (!base || strncmp (ident, "Rapicorn_Factory", base - ident) != 0)
+  if (!base || base != ident + 10 - 1 || strncmp (ident, "Rapicorn::", 10) != 0)
     fatal ("WidgetTypeFactory registration with invalid/missing domain name: %s", ident);
   String domain_name;
   domain_name.assign (ident, base - ident - 1);
@@ -144,7 +144,7 @@ WidgetTypeFactory::~WidgetTypeFactory ()
 void
 WidgetTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 {
-  if (strncmp (namespaced_ident, "Rapicorn_Factory:", 17) != 0)
+  if (strncmp (namespaced_ident, "Rapicorn::", 10) != 0)
     fatal ("WidgetTypeFactory: identifier lacks factory qualification: %s", namespaced_ident);
 }
 
@@ -645,7 +645,7 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
 bool
 check_ui_window (const String &widget_identifier)
 {
-  return Builder::widget_has_ancestor (widget_identifier, "Rapicorn_Factory:Window");
+  return Builder::widget_has_ancestor (widget_identifier, "Rapicorn::Window");
 }
 
 WidgetImplP

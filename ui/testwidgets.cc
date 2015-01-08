@@ -288,7 +288,7 @@ TestContainerImpl::pseudo_selector (Selector::Selob &selob, const String &ident,
     return NULL;
 }
 
-static const WidgetFactory<TestContainerImpl> test_container_factory ("Rapicorn_Factory:TestContainer");
+static const WidgetFactory<TestContainerImpl> test_container_factory ("Rapicorn::TestContainer");
 
 // == TestBoxImpl ==
 TestBoxImpl::TestBoxImpl() :
@@ -352,7 +352,7 @@ TestBoxImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const WidgetFactory<TestBoxImpl> test_box_factory ("Rapicorn_Factory:TestBox");
+static const WidgetFactory<TestBoxImpl> test_box_factory ("Rapicorn::TestBox");
 
 // == IdlTestWidgetImpl ==
 bool
@@ -473,6 +473,6 @@ void
 IdlTestWidgetImpl::render (RenderContext &rcontext, const Rect &rect)
 {}
 
-static const WidgetFactory<IdlTestWidgetImpl> test_widget_factory ("Rapicorn_Factory:IdlTestWidget");
+static const WidgetFactory<IdlTestWidgetImpl> test_widget_factory ("Rapicorn::IdlTestWidget");
 
 } // Rapicorn

@@ -316,7 +316,7 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
     render_shade (cr, x, y, width, height, normal_shade());
 }
 
-static const WidgetFactory<AmbienceImpl> ambience_factory ("Rapicorn_Factory:Ambience");
+static const WidgetFactory<AmbienceImpl> ambience_factory ("Rapicorn::Ambience");
 
 // == FrameImpl ==
 FrameImpl::FrameImpl() :
@@ -529,7 +529,7 @@ FrameImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn_Factory:Frame");
+static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn::Frame");
 
 // == FocusFrameImpl ==
 FocusFrameImpl::FocusFrameImpl() :
@@ -622,7 +622,7 @@ FocusFrameImpl::tight_focus (bool tf)
     }
 }
 
-static const WidgetFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn_Factory:FocusFrame");
+static const WidgetFactory<FocusFrameImpl> focus_frame_factory ("Rapicorn::FocusFrame");
 
 
 // == LayerPainterImpl ==
@@ -668,6 +668,6 @@ LayerPainterImpl::size_allocate (Allocation area, bool changed)
     }
 }
 
-static const WidgetFactory<LayerPainterImpl> layer_painter_factory ("Rapicorn_Factory:LayerPainter");
+static const WidgetFactory<LayerPainterImpl> layer_painter_factory ("Rapicorn::LayerPainter");
 
 } // Rapicorn

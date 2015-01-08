@@ -83,7 +83,7 @@ ArrowImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn_Factory:Arrow");
+static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn::Arrow");
 
 // == DotGrid ==
 DotGridImpl::DotGridImpl() :
@@ -298,7 +298,7 @@ DotGridImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const WidgetFactory<DotGridImpl> dot_grid_factory ("Rapicorn_Factory:DotGrid");
+static const WidgetFactory<DotGridImpl> dot_grid_factory ("Rapicorn::DotGrid");
 
 // == DrawableImpl ==
 DrawableImpl::DrawableImpl() :
@@ -390,6 +390,6 @@ DrawableImpl::render (RenderContext &rcontext, const Rect &rect)
     }
 }
 
-static const WidgetFactory<DrawableImpl> drawable_factory ("Rapicorn_Factory:Drawable");
+static const WidgetFactory<DrawableImpl> drawable_factory ("Rapicorn::Drawable");
 
 } // Rapicorn

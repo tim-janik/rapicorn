@@ -1329,7 +1329,7 @@ protected:
   }
 };
 
-static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn_Factory:TextPango");
+static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn::TextPango");
 
 } // Rapicorn
 
