@@ -260,19 +260,20 @@ factory_context_impl_type (FactoryContext *fc)
 // == Builder ==
 class Builder {
   enum Flags { SCOPE_CHILD = 0, SCOPE_WIDGET = 1 };
+  Builder         *const outer_;
   const XmlNode   *const dnode_;               // definition of gadget to be created
   String           child_container_name_;
   ContainerImpl   *child_container_;           // captured child_container_ widget during build phase
   StringVector     scope_names_, scope_values_;
   VariableMap      locals_;
-  void      eval_args       (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
-                             StringVector &out_names, StringVector &out_values, String *child_container_name);
-  bool      try_set_property(WidgetImpl &widget, const String &property_name, const String &value);
-  WidgetImplP build_scope   (const String &caller_location, const XmlNode *factory_context_node);
-  WidgetImplP build_widget  (const XmlNode *node, Evaluator &env, const XmlNode *factory_context_node, Flags bflags);
-  static String canonify_dashes (const String &key);
+  void          eval_args        (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
+                                  StringVector &out_names, StringVector &out_values, String *child_container_name);
+  bool          try_set_property (WidgetImpl &widget, const String &property_name, const String &value);
+  WidgetImplP   build_scope      (const String &caller_location, const XmlNode *factory_context_node);
+  WidgetImplP   build_widget     (const XmlNode *node, Evaluator &env, const XmlNode *factory_context_node, Flags bflags);
+  static String canonify_dashes  (const String &key);
 public:
-  explicit  Builder             (const String &widget_identifier, const XmlNode *context_node);
+  explicit           Builder            (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node);
   static WidgetImplP eval_and_build     (const String &widget_identifier,
                                          const StringVector &call_names, const StringVector &call_values, const String &call_location);
   static WidgetImplP build_from_factory (const XmlNode *factory_node,
@@ -281,8 +282,8 @@ public:
   static bool widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier);
 };
 
-Builder::Builder (const String &widget_identifier, const XmlNode *context_node) :
-  dnode_ (lookup_interface_node (widget_identifier, context_node)), child_container_ (NULL)
+Builder::Builder (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node) :
+  outer_ (outer_builder), dnode_ (lookup_interface_node (widget_identifier, context_node)), child_container_ (NULL)
 {
   if (!dnode_)
     return;
@@ -320,7 +321,7 @@ Builder::eval_and_build (const String &widget_identifier,
   assert_return (call_names.size() == call_values.size(), NULL);
   // initialize and check builder
   initialize_factory_lazily();
-  Builder builder (widget_identifier, NULL);
+  Builder builder (NULL, widget_identifier, NULL);
   if (!builder.dnode_)
     {
       critical ("%s: unknown type identifier: %s", call_location, widget_identifier);
@@ -549,7 +550,7 @@ Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode
   // create widget and assign properties from attributes and property element syntax
   WidgetImplP widget;
   {
-    Builder inner_builder (wnode->name(), NULL);
+    Builder inner_builder (this, wnode->name(), NULL);
     if (inner_builder.dnode_)
       {
         inner_builder.scope_names_ = std::move (eprop_names);
