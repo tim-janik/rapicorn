@@ -340,7 +340,7 @@ Builder::eval_and_build (const String &widget_identifier,
       ecall_values.push_back (cvalue);
     }
   // build widget
-  WidgetImplP widget = builder.build_scope (call_names, call_values, call_location, builder.dnode_);
+  WidgetImplP widget = builder.build_scope (ecall_names, ecall_values, call_location, builder.dnode_);
   FDEBUG ("%s: built widget '%s': %s", node_location (builder.dnode_), widget_identifier, widget ? widget->name() : "<null>");
   return widget;
 }
