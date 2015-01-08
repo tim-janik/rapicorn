@@ -263,12 +263,12 @@ class Builder {
   const XmlNode   *const dnode_;               // definition of gadget to be created
   String           child_container_name_;
   ContainerImpl   *child_container_;           // captured child_container_ widget during build phase
+  StringVector     scope_names_, scope_values_;
   VariableMap      locals_;
   void      eval_args       (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
                              StringVector &out_names, StringVector &out_values, String *child_container_name);
   bool      try_set_property(WidgetImpl &widget, const String &property_name, const String &value);
-  WidgetImplP build_scope   (const StringVector &caller_arg_names, const StringVector &caller_arg_values, const String &caller_location,
-                             const XmlNode *factory_context_node);
+  WidgetImplP build_scope   (const String &caller_location, const XmlNode *factory_context_node);
   WidgetImplP build_widget  (const XmlNode *node, Evaluator &env, const XmlNode *factory_context_node, Flags bflags);
   static String canonify_dashes (const String &key);
 public:
@@ -328,7 +328,6 @@ Builder::eval_and_build (const String &widget_identifier,
     }
   // evaluate call arguments
   Evaluator env;
-  StringVector ecall_names, ecall_values;
   for (size_t i = 0; i < call_names.size(); i++)
     {
       const String &cname = call_names[i];
@@ -336,11 +335,11 @@ Builder::eval_and_build (const String &widget_identifier,
       if (cname.find (':') == String::npos && // never eval namespaced attributes
           string_startswith (cvalue, "@eval "))
         cvalue = env.parse_eval (cvalue.substr (6));
-      ecall_names.push_back (cname);
-      ecall_values.push_back (cvalue);
+      builder.scope_names_.push_back (cname);
+      builder.scope_values_.push_back (cvalue);
     }
   // build widget
-  WidgetImplP widget = builder.build_scope (ecall_names, ecall_values, call_location, builder.dnode_);
+  WidgetImplP widget = builder.build_scope (call_location, builder.dnode_);
   FDEBUG ("%s: built widget '%s': %s", node_location (builder.dnode_), widget_identifier, widget ? widget->name() : "<null>");
   return widget;
 }
@@ -426,8 +425,7 @@ Builder::try_set_property (WidgetImpl &widget, const String &property_name, cons
 }
 
 WidgetImplP
-Builder::build_scope (const StringVector &caller_arg_names, const StringVector &caller_arg_values, const String &caller_location,
-                      const XmlNode *factory_context_node)
+Builder::build_scope (const String &caller_location, const XmlNode *factory_context_node)
 {
   assert_return (dnode_ != NULL, NULL);
   assert_return (factory_context_node != NULL, NULL);
@@ -453,9 +451,9 @@ Builder::build_scope (const StringVector &caller_arg_names, const StringVector &
       }
   // assign Argument values from caller args, collect caller properties
   StringVector caller_property_names, caller_property_values;
-  for (size_t i = 0; i < caller_arg_names.size(); i++)
+  for (size_t i = 0; i < scope_names_.size(); i++)
     {
-      const String cname = canonify_dashes (caller_arg_names[i]), &cvalue = caller_arg_values.at (i);
+      const String cname = canonify_dashes (scope_names_[i]), &cvalue = scope_values_.at (i);
       if (cname == "name" || cname == "id")
         {
           name_argument = cvalue;
@@ -553,7 +551,11 @@ Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode
   {
     Builder inner_builder (wnode->name(), NULL);
     if (inner_builder.dnode_)
-      widget = inner_builder.build_scope (eprop_names, eprop_values, node_location (wnode), factory_context_node);
+      {
+        inner_builder.scope_names_ = std::move (eprop_names);
+        inner_builder.scope_values_ = std::move (eprop_values);
+        widget = inner_builder.build_scope (node_location (wnode), factory_context_node);
+      }
     else
       widget = build_from_factory (wnode, eprop_names, eprop_values, factory_context_node);
   }
