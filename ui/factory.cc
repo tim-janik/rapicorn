@@ -753,6 +753,16 @@ initialize_factory_lazily (void)
       Factory::parse_ui_data_internal ("Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL);
       blob = Res ("@res themes/Default.xml");
       Factory::parse_ui_data_internal ("themes/Default.xml", blob.size(), blob.data(), "", NULL);
+      const char *utheme = getenv ("RAPICORN_THEME");
+      if (utheme && utheme[0] && String (utheme) != "Default")
+        {
+          const String user_theme = String ("themes/") + utheme;
+          blob = Res ("@res " + user_theme);
+          if (blob.size())
+            Factory::parse_ui_data_internal (user_theme, blob.size(), blob.data(), "", NULL);
+          else
+            user_warning (UserSource ("RAPICORN_THEME"), "failed to locate theme: \"%s\"", utheme);
+        }
     }
 }
 
