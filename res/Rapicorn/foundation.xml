@@ -135,34 +135,4 @@
     </Rapicorn_ScrollArea>
   </Alignment>
 
-  <!-- Default Theme -->
-  <RapicornAlignment id="Alignment"/>
-  <RapicornAmbience id="Ambience"/>
-  <RapicornArrangement id="Arrangement"/>
-  <RapicornArrow id="Arrow"/>
-  <RapicornButton id="Button"/>
-  <RapicornButtonArea id="ButtonArea"/>
-  <RapicornDefaultButton id="DefaultButton"/>
-  <RapicornDotGrid id="DotGrid"/>
-  <RapicornDrawable id="Drawable"/>
-  <RapicornFillAreaContainer id="FillAreaContainer"/>
-  <RapicornFocusFrame id="FocusFrame"/>
-  <RapicornFrame id="Frame"/>
-  <RapicornHBox id="HBox"/>
-  <RapicornHSlider id="HSlider"/>
-  <RapicornImage id="Image"/>
-  <RapicornLabel id="Label"/>
-  <RapicornLayerPainter id="LayerPainter"/>
-  <RapicornScrollArea id="ScrollArea"/>
-  <RapicornSliderArea id="SliderArea"/>
-  <RapicornStatePainter id="StatePainter"/>
-  <RapicornTable id="Table"/>
-  <RapicornTextEditor id="TextEditor"/>
-  <RapicornUnfocusedButton id="UnfocusedButton"/>
-  <RapicornVBox id="VBox"/>
-  <RapicornVSlider id="VSlider"/>
-  <RapicornWidgetList id="WidgetList"/>
-  <RapicornWidgetListRow id="WidgetListRow"/>
-  <RapicornWindow id="Window"/>
-
 </interfaces>

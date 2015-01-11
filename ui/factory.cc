@@ -751,6 +751,8 @@ initialize_factory_lazily (void)
       Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL);
       blob = Res ("@res Rapicorn/standard.xml");
       Factory::parse_ui_data_internal ("Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL);
+      blob = Res ("@res themes/Default.xml");
+      Factory::parse_ui_data_internal ("themes/Default.xml", blob.size(), blob.data(), "", NULL);
     }
 }
 
