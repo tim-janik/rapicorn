@@ -11,6 +11,7 @@ Using these variables will affect all programs that make use of %Rapicorn.
 The environment variables supported are as follows:
 - #$RAPICORN_FLIPPER - Used for feature toggles.
 - #$RAPICORN_DEBUG - Used to gather extra information and debug the runtime.
+- #$RAPICORN_THEME - Used to to override theme selection.
 - #$RAPICORN_TEST - Used to configure the testing framework.
 
 @section buildsettings Build Settings
@@ -55,6 +56,13 @@ $RAPICORN_TEST = "";
  * A list of supported options extracted from the Rapicorn sources follows:
  */
 $RAPICORN_DEBUG = "";
+
+/** Environment variable to override the theme selection.
+ * The active Rapicorn theme maybe selected through $RAPICORN_THEME as a last resort.
+ * This is for instance useful for test programs that require a particular theme,
+ * regardless of user settings or other configuration defaults.
+ */
+$RAPICORN_THEME = "Default";
 
 /** Build system macro definition of compiler CWD.
  * To improve source file location information in debugging and error messages,
