@@ -70,21 +70,21 @@ test_cxx_server_gui ()
   ApplicationImpl &app = ApplicationImpl::the(); // FIXME: use Application_RemoteHandle once C++ bindings are ready
   WindowIface &window = *app.create_window ("Window");
   TOK();
-  WidgetImplP twidget = Factory::create_ui_widget ("TestWidget");
+  WidgetImplP twidget = Factory::create_ui_widget ("RapicornTestWidget");
   TOK();
   window.impl().add (*twidget);
   TOK();
   /* close window (and exit main loop) after first expose */
   window.impl().sig_displayed() += [&window]() { window.close(); };
   TOK();
-  /* verify and assert at least one TestWidget rendering */
+  /* verify and assert at least one RapicornTestWidget rendering */
   uint old_seen_test = TestContainerImpl::seen_test_widgets();
   TOK();
   /* show onscreen and handle events like expose */
   window.show();
   run_main_loop_recursive();
   TOK();
-  /* assert TestWidget rendering */
+  /* assert RapicornTestWidget rendering */
   uint seen_test = TestContainerImpl::seen_test_widgets();
   TASSERT (seen_test > old_seen_test); // may fail due to missing exposes (locked screens) needs PNG etc. backends
 }
@@ -118,7 +118,7 @@ test_test_widget ()
   run_main_loop_recursive (false);
   /* close window (and exit main loop) after first expose */
   window.impl().sig_displayed() += [&window]() { window.close(); };
-  /* verify and assert at least one TestWidget rendering */
+  /* verify and assert at least one RapicornTestWidget rendering */
   uint old_seen_test = TestContainerImpl::seen_test_widgets();
   window.show();
   run_main_loop_recursive();

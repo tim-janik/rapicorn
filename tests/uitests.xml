@@ -3,9 +3,9 @@
 <interfaces>
 
   <!-- property test -->
-  <TestWidget id="property-test" assert_value="foobar">
-    <TestWidget.value>foobar</TestWidget.value>
-  </TestWidget>
+  <RapicornTestWidget id="property-test" assert_value="foobar">
+    <RapicornTestWidget.value>foobar</RapicornTestWidget.value>
+  </RapicornTestWidget>
 
   <!-- test dialog -->
   <Window id="test-dialog">
@@ -13,19 +13,21 @@
     <Alignment padding="10">
       <VBox>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> syntax:" />
-	<TestWidget assert_value="frobnicate">
-	  <TestWidget.value>frobnicate</TestWidget.value>
-	</TestWidget>
+	<RapicornTestWidget assert_value="frobnicate">
+	  <RapicornTestWidget.value>frobnicate</RapicornTestWidget.value>
+	</RapicornTestWidget>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> in definitions:" />
 	<property-test />
 	<Label plain-text="Checking &lt;arg:value default='...'/> syntax:" />
-	<TestWidget assert_value="zonking" value="@eval zonk" />
+	<RapicornTestWidget assert_value="zonking" value="@eval zonk" />
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> evaluation:" />
-	<TestWidget assert_value="zonking">
-	  <TestWidget.value>@eval zonk</TestWidget.value>
-	</TestWidget>
+	<RapicornTestWidget assert_value="zonking">
+	  <RapicornTestWidget.value>@eval zonk</RapicornTestWidget.value>
+	</RapicornTestWidget>
 	<Label plain-text="Checking backtick in attributes:" />
-	<TestWidget assert_value="`"><TestWidget.value evaluate="false">&#x60;</TestWidget.value></TestWidget>
+	<RapicornTestWidget assert_value="`">
+	  <RapicornTestWidget.value evaluate="false">&#x60;</RapicornTestWidget.value>
+        </RapicornTestWidget>
       </VBox>
     </Alignment>
   </Window>

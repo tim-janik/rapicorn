@@ -144,7 +144,7 @@ AlignmentImpl::padding (int c)
   invalidate();
 }
 
-static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn_Factory:Alignment");
+static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn::Alignment");
 
 // == FillAreaContainerImpl ==
 FillAreaContainerImpl::FillAreaContainerImpl ()
@@ -227,7 +227,7 @@ FillAreaContainerImpl::size_allocate (Allocation area, bool changed)
     }
 }
 
-static const WidgetFactory<FillAreaContainerImpl> fill_area_container_factory ("Rapicorn_Factory:FillAreaContainer");
+static const WidgetFactory<FillAreaContainerImpl> fill_area_container_factory ("Rapicorn::FillAreaContainer");
 
 
 // == HBoxImpl ==
@@ -278,7 +278,7 @@ HBoxImpl::spacing (int vspacing)
     }
 }
 
-static const WidgetFactory<HBoxImpl> hbox_factory ("Rapicorn_Factory:HBox");
+static const WidgetFactory<HBoxImpl> hbox_factory ("Rapicorn::HBox");
 
 // == VBoxImpl ==
 VBoxImpl::VBoxImpl()
@@ -328,6 +328,6 @@ VBoxImpl::spacing (int vspacing)
     }
 }
 
-static const WidgetFactory<VBoxImpl> vbox_factory ("Rapicorn_Factory:VBox");
+static const WidgetFactory<VBoxImpl> vbox_factory ("Rapicorn::VBox");
 
 } // Rapicorn

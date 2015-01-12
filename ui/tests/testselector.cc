@@ -548,19 +548,19 @@ test_selector_matching ()
   test_query (__LINE__, w, "HBox#testbox > *:last-child", 1, "Button#ChildE");
   // custom pseudo selectors
   test_query (__LINE__, w, "#test-widget:test-pass", 0);
-  test_query (__LINE__, w, "#test-widget:test-pass(1)", 1, "TestWidget");
+  test_query (__LINE__, w, "#test-widget:test-pass(1)", 1, "RapicornTestWidget");
   test_query (__LINE__, w, "#test-widget:test-pass(0)", 0);
-  test_query (__LINE__, w, "#test-widget:test-pass(2)", 1, "TestWidget");
-  test_query (__LINE__, w, "#test-widget:test-pass(yes)", 1, "TestWidget");
-  test_query (__LINE__, w, "#test-widget:Test-PASS(true)", 1, "TestWidget");
+  test_query (__LINE__, w, "#test-widget:test-pass(2)", 1, "RapicornTestWidget");
+  test_query (__LINE__, w, "#test-widget:test-pass(yes)", 1, "RapicornTestWidget");
+  test_query (__LINE__, w, "#test-widget:Test-PASS(true)", 1, "RapicornTestWidget");
   test_query (__LINE__, w, "#test-widget:Test-PASS(false)", 0);
-  test_query (__LINE__, w, "HBox! > TestWidget#test-widget", 1, "HBox"); // TestWidget parent is HBox
-  test_query (__LINE__, w, "TestWidget#test-widget::test-parent", 1, "HBox"); // access parent through pseudo element
-  test_query (__LINE__, w, "TestWidget#test-widget::test-parent:empty", 0); // classified pseudo element
-  test_query (__LINE__, w, "TestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // classified matching pseudo element
-  test_query (__LINE__, w, "TestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // pseudo element with subject indicator
-  test_query (__LINE__, w, "*.Window TestWidget#test-widget::test-parent:not(:empty)", 1, "HBox"); // pseudo element and combinator
-  test_query (__LINE__, w, "*.Window TestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // like above with subject indicator
+  test_query (__LINE__, w, "HBox! > RapicornTestWidget#test-widget", 1, "HBox"); // RapicornTestWidget parent is HBox
+  test_query (__LINE__, w, "RapicornTestWidget#test-widget::test-parent", 1, "HBox"); // access parent through pseudo element
+  test_query (__LINE__, w, "RapicornTestWidget#test-widget::test-parent:empty", 0); // classified pseudo element
+  test_query (__LINE__, w, "RapicornTestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // classified matching pseudo element
+  test_query (__LINE__, w, "RapicornTestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // pseudo element with subject indicator
+  test_query (__LINE__, w, "*.Window RapicornTestWidget#test-widget::test-parent:not(:empty)", 1, "HBox"); // pseudo element and combinator
+  test_query (__LINE__, w, "*.Window RapicornTestWidget#test-widget::test-parent:not(:empty)!", 1, "HBox"); // like above with subject indicator
 
   WidgetIfaceP i1 = w->query_selector ("#special-arrow");
   TASSERT (i1);
@@ -591,7 +591,7 @@ static const char test_dialog_xml[] =
   "                <Button on-click='Widget::print(\"Normal Button\")'>\n"
   "                  <Label id='label123' markup-text='one-two-three' />\n"
   "                </Button>\n"
-  "                <TestWidget id='test-widget'/>\n"
+  "                <RapicornTestWidget id='test-widget'/>\n"
   "              </HBox>\n"
   "            </VBox>\n"
   "          </Frame>\n"

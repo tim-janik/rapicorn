@@ -1,3 +1,5 @@
+* Added $RAPICORN_THEME environment variable to override theme selection.
+
 Rapicorn 14.10.0:	(2014-10-09)
 
 * Project is re-license under MPLv2.

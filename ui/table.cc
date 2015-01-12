@@ -843,6 +843,6 @@ TableLayoutImpl::size_allocate_pass2 ()
     }
 }
 
-static const WidgetFactory<TableImpl> table_factory ("Rapicorn_Factory:Table");
+static const WidgetFactory<TableImpl> table_factory ("Rapicorn::Table");
 
 } // Rapicorn

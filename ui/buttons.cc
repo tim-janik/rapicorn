@@ -236,6 +236,6 @@ ButtonAreaImpl::handle_event (const Event &event)
   return handled;
 }
 
-static const WidgetFactory<ButtonAreaImpl> button_area_factory ("Rapicorn_Factory:ButtonArea");
+static const WidgetFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::ButtonArea");
 
 } // Rapicorn

@@ -21,11 +21,11 @@
       <Label markup-text="Square Arrow:"/>
       <HBox>
 	<Alignment hexpand="1"/> <!-- space eater -->
-	<TestContainer assert-width="200" assert-height="200">
+	<RapicornTestContainer assert-width="200" assert-height="200">
 	  <arrow-frame center-child="0" vspread="1" height="200">
 	    <Arrow arrow-dir="left" size-policy="width-from-height" height="33"/>
 	  </arrow-frame>
-	</TestContainer>
+	</RapicornTestContainer>
       </HBox>
     </VBox>
   </Window>

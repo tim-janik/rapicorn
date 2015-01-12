@@ -8,7 +8,7 @@ app = Rapicorn.app_init ("Test Rapicorn Bindings")
 # Define the elements of the dialog window to be displayed.
 hello_window = """
   <Window id="testbind-py">
-    <IdlTestWidget id="test-widget" string-prop="@bind somestring"/>
+    <RapicornIdlTestWidget id="test-widget" string-prop="@bind somestring"/>
   </Window>
 """
 

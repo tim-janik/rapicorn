@@ -83,7 +83,7 @@ ImageImpl::render (RenderContext &rcontext, const Rect &rect)
   image_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
 }
 
-static const WidgetFactory<ImageImpl> image_factory ("Rapicorn_Factory:Image");
+static const WidgetFactory<ImageImpl> image_factory ("Rapicorn::Image");
 
 // == StatePainterImpl ==
 void
@@ -167,6 +167,6 @@ StatePainterImpl::render (RenderContext &rcontext, const Rect &rect)
   state_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
 }
 
-static const WidgetFactory<StatePainterImpl> state_painter_factory ("Rapicorn_Factory:StatePainter");
+static const WidgetFactory<StatePainterImpl> state_painter_factory ("Rapicorn::StatePainter");
 
 } // Rapicorn
