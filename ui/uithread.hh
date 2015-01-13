@@ -30,6 +30,7 @@
 #include <ui/sinfex.hh>
 #include <ui/sizegroup.hh>
 #include <ui/stock.hh>
+#include <ui/style.hh>
 #include <ui/table.hh>
 #include <ui/text-editor.hh>
 // conditional: #include <ui/text-pango.hh>
