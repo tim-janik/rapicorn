@@ -47,6 +47,7 @@ WindowImpl::title (const String &window_title)
       config_.title = window_title;
       if (display_window_)
         display_window_->configure (config_, false);
+      changed ("title");
     }
 }
 
