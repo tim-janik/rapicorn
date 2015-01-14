@@ -793,7 +793,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   Any row = model_->row (nthrow);
   ListRow *lr = new ListRow();
   IFDEBUG (dbg_created++);
-  WidgetImplP widget = Factory::create_ui_child (*this, "RapicornWidgetListRow", Factory::ArgumentList(), false);
+  WidgetImplP widget = Factory::create_ui_child (*this, "WidgetListRow", Factory::ArgumentList(), false);
   assert (widget != NULL);
   lr->lrow = shared_ptr_cast<WidgetListRowImpl> (widget);
   assert (lr->lrow != NULL);
