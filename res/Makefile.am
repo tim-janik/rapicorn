@@ -10,7 +10,8 @@ NEW_RES_DIRS  := $(patsubst %/., %, $(wildcard $(addsuffix /., $(NEW_RES_PATHS))
 NEW_RES_FILES := $(filter-out $(NEW_RES_DIRS), $(NEW_RES_PATHS))
 Makefile.res: @INGIT@ $(if $(call streq, $(NEW_RES_FILES), $(RES_FILE_LIST)),, Makefile.tmp) $(NEW_RES_FILES)
 	$(AM_V_GEN)
-	$(Q) echo "RES_FILE_LIST = $(NEW_RES_FILES)" > Makefile.tmp
+	$(Q) echo "RES_FILE_LIST = $(NEW_RES_FILES)" | \
+	  sed 's/\(.\{61\}[^ ]\+\) /\1 \\\n\t/g' > Makefile.tmp
 	$(Q) mv Makefile.tmp $@
 Makefile.tmp: # MAKE(1) only remakes+rereads Makefiles with prerequisites, see (Remaking Makefiles)
 	$(Q) touch $@
