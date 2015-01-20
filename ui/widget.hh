@@ -282,9 +282,8 @@ public:
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
-  /* heritage / appearance */
-  StateType             state                   () const;
-  HeritageP             heritage                () const { return heritage_; }
+  /* theming & appearance */
+  ThemeInfo&            theme_info              () const;
   // colors
   Color                 normal_bg               () { return state_color (STATE_NORMAL, 0); }
   Color                 normal_fg               () { return state_color (STATE_NORMAL, 1); }
@@ -295,6 +294,10 @@ public:
   // Color                 focus_color             () { return state_color (FOCUS_COLOR); }
   Color                 state_color             (StateType state, bool foreground, const String &detail = "");
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
+  // state colors
+  StateType             state                   () const;
+  Color                 foreground              ();
+  Color                 background              ();
   // Color              black                   () { return theme_color (  0,   0,   0); }
   // Color              white                   () { return theme_color (  0,   0, 100); }
   // Color              red                     () { return theme_color (  0, 100, 100); }
@@ -304,8 +307,7 @@ public:
   // Color              blue                    () { return theme_color (240, 100, 100); }
   // Color              magenta                 () { return theme_color (300, 100, 100); }
   // old colors
-  Color                 foreground              () { return heritage()->foreground (state()); }
-  Color                 background              () { return heritage()->background (state()); }
+  HeritageP             heritage                () const { return heritage_; }
   Color                 dark_color              () { return heritage()->dark_color (state()); }
   Color                 dark_shadow             () { return heritage()->dark_shadow (state()); }
   Color                 dark_glint              () { return heritage()->dark_glint (state()); }

@@ -1777,6 +1777,24 @@ WidgetImpl::color_scheme (ColorSchemeType cst)
     }
 }
 
+ThemeInfo&
+WidgetImpl::theme_info () const
+{
+  return *ThemeInfo::fallback_theme();
+}
+
+Color
+WidgetImpl::foreground ()
+{
+  return heritage()->foreground (state());
+}
+
+Color
+WidgetImpl::background ()
+{
+  return heritage()->background (state());
+}
+
 class ClipAreaDataKey : public DataKey<Allocation*> {
   virtual void destroy (Allocation *clip) override
   {
