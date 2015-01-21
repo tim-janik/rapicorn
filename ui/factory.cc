@@ -759,6 +759,8 @@ initialize_factory_lazily (void)
         {
           const String user_theme = String ("themes/") + utheme;
           blob = Res ("@res " + user_theme);
+          if (!blob.size())
+            blob = Res ("@res " + user_theme  + ".xml");
           if (blob.size())
             Factory::parse_ui_data_internal (user_theme, blob.size(), blob.data(), "", NULL);
           else
