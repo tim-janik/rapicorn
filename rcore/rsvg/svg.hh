@@ -61,6 +61,7 @@ class File {
 public:
   virtual void     dump_tree      () = 0;
   virtual ElementP lookup         (const String &elementid) = 0;  ///< Lookup an SVG element from an SVG File.
+  virtual String   name           () const = 0;                   ///< Provide the name of this file.
   static  FileP    load           (const String &svgfilename);    ///< Load an SVG file, returns non-null on success and sets errno.
   static  FileP    load           (Blob svg_blob);                ///< Load an SVG file from a binary SVG resource blob, sets errno.
 protected: // Impl details

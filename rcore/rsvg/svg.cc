@@ -132,10 +132,12 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
 // == FileImpl ==
 struct FileImpl : public File {
   RsvgHandle           *handle_;
-  explicit              FileImpl        (RsvgHandle *hh) : handle_ (hh) {}
+  String                name_;
+  explicit              FileImpl        (RsvgHandle *hh, const String &name) : handle_ (hh), name_ (name) {}
   /*dtor*/             ~FileImpl        () { if (handle_) g_object_unref (handle_); }
-  virtual void          dump_tree       ();
-  virtual ElementP      lookup          (const String &elementid);
+  virtual String        name            () const override { return name_; }
+  virtual void          dump_tree       () override;
+  virtual ElementP      lookup          (const String &elementid) override;
 };
 
 // == File ==
@@ -167,7 +169,7 @@ File::load (Blob svg_blob)
       errno = ENODATA;
       return fp;
     }
-  FileP fp (new FileImpl (handle));
+  FileP fp (new FileImpl (handle, svg_blob.name()));
   errno = 0;
   return fp;
 }
