@@ -225,7 +225,7 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
   // incorporate test flags from RAPICORN_TEST
   if (testing_mode)
     {
-      auto test_flipper_check = [] (const char *key) { return envkey_flipper_check ("RAPICORN_TEST", key, false); };
+      auto test_flipper_check = [] (const char *key) { return envkey_feature_check ("RAPICORN_TEST", key, false, NULL, false); };
       vsettings.test_codes() |= test_flipper_check ("test-verbose") ? Test::MODE_VERBOSE : 0;
       vsettings.test_codes() |= test_flipper_check ("test-readout") ? Test::MODE_READOUT : 0;
       vsettings.test_codes() |= test_flipper_check ("test-slow") ? Test::MODE_SLOW : 0;

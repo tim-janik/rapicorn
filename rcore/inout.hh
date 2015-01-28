@@ -29,7 +29,8 @@ struct UserSource       ///< Helper structure to capture the origin of a user me
 };
 
 // == Environment variable key functions ==
-bool envkey_flipper_check (const char*, const char*, bool with_all_toggle = true, volatile bool* = NULL);
+bool envkey_feature_check (const char*, const char*, bool vdefault = false, volatile bool* = NULL, bool include_all = true);
+bool envkey_flipper_check (const char*, const char*, bool vdefault = false, volatile bool* = NULL);
 bool envkey_debug_check   (const char*, const char*, volatile bool* = NULL);
 void envkey_debug_message (const char*, const char*, const char*, int, const String&, volatile bool* = NULL);
 
