@@ -504,9 +504,9 @@ bool rapicorn_debug_check   (const char *key);
 
 #ifndef DOXYGEN
 bool
-FlipperOption::flipper_check (const char *key)
+FlipperOption::flipper_check (const char *key, bool vdefault)
 {
-  return envkey_flipper_check ("RAPICORN_FLIPPER", key);
+  return envkey_flipper_check ("RAPICORN_FLIPPER", key, vdefault);
 }
 #endif // !DOXYGEN
 

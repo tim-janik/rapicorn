@@ -43,7 +43,7 @@ bool   debug_config_bool (const String &key, bool default_value = 0);
 bool   debug_devel_check ();
 
 // == Debugging Macros ==
-#define RAPICORN_FLIPPER(key, blurb)      Rapicorn::FlipperOption (key)
+#define RAPICORN_FLIPPER(key, blurb,...)  Rapicorn::FlipperOption (key, bool (__VA_ARGS__))
 #define RAPICORN_DEBUG_OPTION(key, blurb) Rapicorn::DebugOption (key)
 #define RAPICORN_KEY_DEBUG(key,...)       do { if (RAPICORN_UNLIKELY (Rapicorn::_rapicorn_debug_check_cache)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
 #define RAPICORN_FATAL(...)               do { Rapicorn::debug_fmessage (RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
@@ -107,10 +107,11 @@ struct DebugOption {
 
 struct FlipperOption {
   const char *const key;
-  constexpr FlipperOption (const char *_key) : key (_key) {}
-  operator  bool          () { return flipper_check (key); }
+  const bool  default_value;
+  constexpr FlipperOption (const char *_key, bool vdefault) : key (_key), default_value (vdefault) {}
+  operator  bool          () { return flipper_check (key, default_value); }
 private:
-  static bool flipper_check (const char *key);
+  static bool flipper_check (const char *key, bool vdefault);
 };
 
 #define RAPICORN_STARTUP_ASSERT_decl(e, _N)     namespace { static struct _N { inline _N() { RAPICORN_ASSERT (e); } } _N; }
