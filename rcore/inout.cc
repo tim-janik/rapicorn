@@ -282,7 +282,7 @@ cstring_option_sense (const char *option_string, const char *option, char *value
 }
 
 static bool
-fast_envkey_check (const char *option_string, const char *key)
+fast_envkey_check (const char *option_string, const char *key, bool include_all)
 {
   const int l = max (size_t (64), strlen (option_string) + 1);
   char kvalue[l];
@@ -290,7 +290,7 @@ fast_envkey_check (const char *option_string, const char *key)
   const int keypos = !key ? -1 : cstring_option_sense (option_string, key, kvalue);
   char avalue[l];
   strcpy (avalue, "0");
-  const int allpos = cstring_option_sense (option_string, "all", avalue);
+  const int allpos = !include_all ? -1 : cstring_option_sense (option_string, "all", avalue);
   if (keypos > allpos)
     return cstring_to_bool (kvalue, false);
   else if (allpos > keypos)
@@ -299,15 +299,11 @@ fast_envkey_check (const char *option_string, const char *key)
     return false;       // neither key nor "all" found
 }
 
-/** Check whether a flipper (feature toggle) is enabled.
- * This function first checks the environment variable @a env_var for @a key, if it is present or if
- * @a with_all_toggle is true and 'all' is present, the function returns @a true, otherwise @a false.
- * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
- * empty (i.e. no features can be enabled), so the caching variable can be used to prevent
- * unneccessary future envkey_flipper_check() calls.
+/** Check whether a feature is enabled, use envkey_flipper_check() instead.
+ * Variant of envkey_flipper_check() that ignores 'all' as a feature toggle.
  */
 bool
-envkey_flipper_check (const char *env_var, const char *key, bool with_all_toggle, volatile bool *cachep)
+envkey_feature_check (const char *env_var, const char *key, bool vdefault, volatile bool *cachep, bool include_all)
 {
   if (env_var)          // require explicit activation
     {
@@ -317,10 +313,23 @@ envkey_flipper_check (const char *env_var, const char *key, bool with_all_toggle
           if (cachep)
             *cachep = 0;
         }
-      else if (key && fast_envkey_check (val, key))
-        return true;
+      else if (key)
+        return fast_envkey_check (val, key, include_all);
     }
-  return false;
+  return vdefault;
+}
+
+/** Check whether a flipper (feature toggle) is enabled.
+ * This function first checks the environment variable @a env_var for @a key, if it is present or if
+ * 'all' is present, the function returns @a true, otherwise @a vdefault (usually @a false).
+ * The @a cachep argument may point to a caching variable which is reset to 0 if @a env_var is
+ * empty (i.e. no features can be enabled), so the caching variable can be used to prevent
+ * unneccessary future envkey_flipper_check() calls.
+ */
+bool
+envkey_flipper_check (const char *env_var, const char *key, bool vdefault, volatile bool *cachep)
+{
+  return envkey_feature_check (env_var, key, vdefault, cachep, true);
 }
 
 /** Check whether to print debugging message.
@@ -336,7 +345,7 @@ envkey_debug_check (const char *env_var, const char *key, volatile bool *cachep)
 {
   if (!env_var)
     return true;        // unconditional debugging
-  return envkey_flipper_check (env_var, key ? key : "debug", true, cachep);
+  return envkey_flipper_check (env_var, key ? key : "debug", false, cachep);
 }
 
 /** Conditionally print debugging message.
@@ -495,9 +504,9 @@ bool rapicorn_debug_check   (const char *key);
 
 #ifndef DOXYGEN
 bool
-FlipperOption::flipper_check (const char *key)
+FlipperOption::flipper_check (const char *key, bool vdefault)
 {
-  return envkey_flipper_check ("RAPICORN_FLIPPER", key);
+  return envkey_flipper_check ("RAPICORN_FLIPPER", key, vdefault);
 }
 #endif // !DOXYGEN
 

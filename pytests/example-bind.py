@@ -12,9 +12,9 @@ hello_window = """
       <VBox spacing="30">
         <HBox>
           <Label markup-text="Editable Text: "/>
-          <!-- [EXAMPLE-Label-bind-title] -->
-          <TextEditor> <Label markup-text="@bind title"/> </TextEditor>
-          <!-- [EXAMPLE-Label-bind-title] -->
+          <!-- [EXAMPLE-bind-title] -->
+          <TextEditor markup-text="@bind title"/>
+          <!-- [EXAMPLE-bind-title] -->
         </HBox>
         <HBox homogeneous="true" spacing="15">
           <Button on-click="show" hexpand="1">    <Label markup-text="Show Model"/> </Button>
