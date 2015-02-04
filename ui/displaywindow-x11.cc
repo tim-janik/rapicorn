@@ -829,6 +829,10 @@ DisplayWindowX11::receive_selection (const XEvent &xevent)
     }
 }
 
+static bool prevent_startup_focus = RAPICORN_FLIPPER ("prevent-startup-focus",
+                                                      "Avoid grabbing the X11 input focus immediately after application"
+                                                      "startup.");
+
 void
 DisplayWindowX11::client_message (const XClientMessageEvent &xev)
 {
@@ -844,13 +848,16 @@ DisplayWindowX11::client_message (const XClientMessageEvent &xev)
     {
       XErrorEvent dummy = { 0, };
       x11_trap_errors (&dummy); // guard against being unmapped
-      XSetInputFocus (x11context.display, window_, RevertToPointerRoot, xev.data.l[1]);
+      if (prevent_startup_focus && timestamp_realtime() - timestamp_startup() < 1000000)
+        ; // focus stealing prevention within 1 second after startup
+      else
+        XSetInputFocus (x11context.display, window_, RevertToPointerRoot, xev.data.l[1]);
       XSync (x11context.display, False);
       x11_untrap_errors();
     }
   else if (mtype == x11context.atom ("_NET_WM_PING"))
     {
-      XEvent xevent = *(XEvent*) &xev;
+      XEvent xevent = *(const XEvent*) &xev;
       xevent.xclient.data.l[3] = xevent.xclient.data.l[4] = 0; // [0]=_PING, [1]=time, [2]=window_
       xevent.xclient.window = x11context.root_window;
       XSendEvent (x11context.display, xevent.xclient.window, False, SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
