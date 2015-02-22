@@ -101,15 +101,15 @@ StatePainterImpl::source (const String &resource)
 String
 StatePainterImpl::current_source ()
 {
-  StateType s = ancestry_impressed() ? STATE_IMPRESSED : state(); // FIXME: priority for insensitive?
+  StateType s = ancestry_impressed() ? STATE_ACTIVE : state(); // FIXME: priority for insensitive?
   const String current = [&]() {
     switch (s)
       {
       case STATE_NORMAL:          return normal_image_.empty()      ? source_ : normal_image_;
       case STATE_INSENSITIVE:     return insensitive_image_.empty() ? source_ : insensitive_image_;
-      case STATE_PRELIGHT:        return prelight_image_.empty()    ? source_ : prelight_image_;
-      case STATE_IMPRESSED:       return impressed_image_.empty()   ? source_ : impressed_image_;
-      case STATE_FOCUS:           return focus_image_.empty()       ? source_ : focus_image_;
+      case STATE_HOVER:           return prelight_image_.empty()    ? source_ : prelight_image_;
+      case STATE_ACTIVE:          return impressed_image_.empty()   ? source_ : impressed_image_;
+      case STATE_FOCUSED:         return focus_image_.empty()       ? source_ : focus_image_;
       case STATE_DEFAULT:         return default_image_.empty()     ? source_ : default_image_;
       default:                    return source_;
       }

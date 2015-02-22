@@ -153,14 +153,21 @@ enum SizePolicyType {
   SIZE_POLICY_HEIGHT_FROM_WIDTH,
 };
 
-///< Enum type for Widget states.
+///< Enum flags type to indicate Widget states.
 flags enum StateType {
   STATE_NORMAL          = 0,
-  STATE_INSENSITIVE     = 1 << 0,
-  STATE_PRELIGHT        = 1 << 1,
-  STATE_IMPRESSED       = 1 << 2,
-  STATE_FOCUS           = 1 << 3,
-  STATE_DEFAULT         = 1 << 4,
+  STATE_HOVER           = 1 <<  0, // A pointing device (e.g. mouse) is above widget.
+  STATE_ACCELERATABLE   = 1 <<  1, // Widget participates in mnemonic activation.
+  STATE_INSENSITIVE     = 1 <<  2, // Widget cannot process input events.
+  STATE_PANEL           = 1 <<  3, // Widget is rendered as part of a panel section.
+  STATE_DEFAULT         = 1 <<  4, // Widget receives the default activation.
+  STATE_SELECTED        = 1 <<  5, // Widget is currently selected.
+  STATE_FOCUSED         = 1 <<  6, // Widget has the focus.
+  STATE_ACTIVE          = 1 <<  7, // Widget and its children are active or pressed.
+  STATE_RETAINED        = 1 <<  8, // Widget activation state is held back.
+  STATE_RESERVED1       = 1 <<  9,
+  STATE_RESERVED2       = 1 << 10,
+  STATE_RESERVED3       = 1 << 11,
 };
 
 ///< Enum type to discriminate various toplevel Window types.

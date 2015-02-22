@@ -185,12 +185,17 @@ WidgetImpl::grab_default () const
 StateType
 WidgetImpl::state () const
 {
-  StateType st = StateType (0);
-  st |= insensitive() ? STATE_INSENSITIVE : StateType (0);
-  st |= prelight()    ? STATE_PRELIGHT : StateType (0);
-  st |= impressed()   ? STATE_IMPRESSED : StateType (0);
-  st |= has_focus()   ? STATE_FOCUS : StateType (0);
-  st |= has_default() ? STATE_DEFAULT : StateType (0);
+  constexpr StateType z0 = StateType (0); // STATE_NORMAL
+  StateType st = z0;
+  st |= prelight()    ? STATE_HOVER : z0;
+  // STATE_ACCELERATABLE
+  st |= insensitive() ? STATE_INSENSITIVE : z0;
+  // STATE_PANEL
+  st |= has_default() ? STATE_DEFAULT : z0;
+  // STATE_SELECTED
+  st |= has_focus()   ? STATE_FOCUSED : z0;
+  st |= impressed()   ? STATE_ACTIVE : z0;
+  // STATE_RETAINED
   return st;
 }
 

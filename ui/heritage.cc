@@ -39,11 +39,11 @@ state_color (Color     color,
     default: ;
     }
   Color c = color;
-  if (state & STATE_IMPRESSED && background_color)
+  if (state & STATE_ACTIVE && background_color)
     c = adjust_color (c, 1.0, 0.8);
   if (state & STATE_INSENSITIVE)
     c = adjust_color (c, 0.8, 1.075);
-  if (state & STATE_PRELIGHT && background_color &&
+  if (state & STATE_HOVER && background_color &&
       !(state & STATE_INSENSITIVE))     /* ignore prelight if insensitive */
     c = adjust_color (c, 1.2, 1.0);
   return c;
