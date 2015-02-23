@@ -1175,13 +1175,10 @@ WidgetImpl::get_resize_container () const
   const AnchorInfo *ainfo = anchor_info();
   if (ainfo)
     return ainfo->resize_container;
-  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget; widget = widget->parent_)
-    {
-      ResizeContainerImpl *c = dynamic_cast<ResizeContainerImpl*> (widget);
-      if (c)
-        return c;
-    }
-  return NULL;
+  ResizeContainerImpl *rc = NULL;
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !rc; widget = widget->parent_)
+    rc = dynamic_cast<ResizeContainerImpl*> (widget);
+  return rc;
 }
 
 const AnchorInfo*
@@ -1190,15 +1187,9 @@ WidgetImpl::force_anchor_info () const
   if (ainfo_)
     return ainfo_;
   // find resize container
-  WidgetImpl *parent = const_cast<WidgetImpl*> (this);
   ResizeContainerImpl *rc = NULL;
-  while (parent)
-    {
-      rc = dynamic_cast<ResizeContainerImpl*> (parent);
-      if (rc)
-        break;
-      parent = parent->parent();
-    }
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !rc; widget = widget->parent_)
+    rc = dynamic_cast<ResizeContainerImpl*> (widget);
   static const AnchorInfo orphan_anchor_info;
   const AnchorInfo *ainfo = rc ? rc->container_anchor_info() : &orphan_anchor_info;
   const_cast<WidgetImpl*> (this)->ainfo_ = ainfo;
