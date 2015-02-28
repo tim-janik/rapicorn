@@ -57,7 +57,7 @@ register_interface_file (String file_name, const XmlNodeP root, StringVector *de
           definitions->push_back (id);
       }
   interface_file_list.insert (interface_file_list.begin(), ifile);
-  FDEBUG ("%s: registering %d interfaces\n", file_name, root->children().size());
+  FDEBUG ("%s: registering %d interfaces", file_name, root->children().size());
   return "";
 }
 
