@@ -14,9 +14,10 @@ class ThemeInfo : public std::enable_shared_from_this<ThemeInfo> {
 protected:
   virtual          ~ThemeInfo      ();
 public:
-  static ThemeInfoP load_theme     (const String &theme_resource);
+  static ThemeInfoP load_theme     (const String &theme_identifier, bool from_env = false);
   static ThemeInfoP theme_info     (const String &theme_name);
   static ThemeInfoP fallback_theme ();
+  virtual String    name           () = 0;
   // colors
   virtual Color     state_color    (StateType state, bool foreground, const String &detail = "") = 0;
   virtual Color     theme_color    (double hue360, double saturation100, double brightness100, const String &detail = "") = 0;

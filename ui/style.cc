@@ -1,8 +1,11 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "style.hh"
 #include "painter.hh"
+#include "factory.hh"
 #include <unordered_map>
 #include "../rcore/rsvg/svg.hh"
+
+#define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Theme", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -10,8 +13,9 @@ namespace Rapicorn {
 class FallbackTheme : public ThemeInfo {
   friend class FriendAllocator<FallbackTheme>; // allows make_shared() access to ctor/dtor
 public:
-  virtual Color state_color (StateType state, bool foreground, const String &detail) override;
-  virtual Color theme_color (double hue360, double saturation100, double brightness100, const String &detail) override;
+  virtual String name        () override        { return "<none>"; }
+  virtual Color  state_color (StateType state, bool foreground, const String &detail) override;
+  virtual Color  theme_color (double hue360, double saturation100, double brightness100, const String &detail) override;
 };
 
 Color
@@ -31,8 +35,10 @@ FallbackTheme::theme_color (double hue360, double saturation100, double brightne
 // == FileTheme ==
 class FileTheme : public ThemeInfo {
   friend class FriendAllocator<FileTheme>; // allows make_shared() access to ctor/dtor
+  const String theme_name_;
 public:
-  explicit      FileTheme   (const Blob &blob, bool local_files);
+  explicit      FileTheme   (const String &theme_name, const Blob &blob, bool local_files);
+  virtual String name       () override         { return theme_name_; }
   virtual Color state_color (StateType state, bool foreground, const String &detail) override;
   virtual Color theme_color (double hue360, double saturation100, double brightness100, const String &detail) override;
 };
@@ -66,20 +72,34 @@ cairo_image_surface_peek_argb (cairo_surface_t *surface, uint x, uint y)
   return 0x00000000;
 }
 
-FileTheme::FileTheme (const Blob &blob, bool local_files)
+FileTheme::FileTheme (const String &theme_name, const Blob &iniblob, bool local_files) :
+  theme_name_ (theme_name)
 {
-  printerr ("Theme Blob: %s\n", blob.name());
-  IniFile ini (blob);
-  printerr ("theme.xml_file: %s\n", ini.value_as_string ("theme.xml_file"));
-  String sf = ini.value_as_string ("theme.svg_file");
-  printerr ("theme.svg_file: %s\n", sf);
-  Blob svgblob = Res ("@res " + sf); // FIXME: load SVG relative to blob.name + local_files flag
-  printerr ("svgblob: %zd: %s\n", svgblob.size(), strerror (errno));
-  auto svgf = Svg::File::load (svgblob);
-  printerr ("loading: %s: %s\n", sf, strerror (errno));
+  TDEBUG ("%s: initialize from blob='%s' size=%d", theme_name, iniblob.name(), iniblob.size());
+  IniFile ini (iniblob);
+  const String xf = ini.value_as_string ("theme.xml_file");
+  if (!xf.empty())
+    {
+      const String res = "@res themes/" + xf; // FIXME: load file relative to blob.name + local_files flag
+      Blob xmlblob = Res (res);
+      TDEBUG ("%s: load '%s': blob='%s' size=%d", theme_name, res, xmlblob.name(), xmlblob.size());
+      const String err = Factory::parse_theme (xmlblob, "");
+      if (!err.empty())
+        TDEBUG ("%s: loading '%s': %s", theme_name, res, err);
+    }
+  const String sf = ini.value_as_string ("theme.svg_file");
+  Svg::FileP svgf;
+  if (!sf.empty())
+    {
+      const String res = "@res themes/" + sf; // FIXME: load file relative to blob.name + local_files flag
+      Blob svgblob = Res (res);
+      svgf = Svg::File::load (svgblob);
+      const int errno_ = errno;
+      TDEBUG ("%s: load '%s': blob='%s' size=%d: %s", theme_name, res, svgblob.name(), svgblob.size(), strerror (errno_));
+    }
   if (svgf)
     {
-      const char *fragment = "#normal-bg";
+      const char *fragment = "#bg:normal";
       ImagePainter painter (svgf, fragment);
       Requisition size = painter.image_size ();
       if (size.width >= 1 && size.height >= 1)
@@ -91,7 +111,7 @@ FileTheme::FileTheme (const Blob &blob, bool local_files)
           const uint argb = cairo_image_surface_peek_argb (surface, size.width / 2, size.height / 2);
           cairo_surface_destroy (surface);
           cairo_destroy (cr);
-          printerr ("  Sample: %s -> 0x%08x\n", fragment, argb);
+          TDEBUG ("%s: sample: %s -> 0x%08x", theme_name, fragment, argb);
         }
     }
 }
@@ -124,10 +144,11 @@ strip_name (const String &input)
 }
 
 ThemeInfoP
-ThemeInfo::load_theme (const String &theme_resource)
+ThemeInfo::load_theme (const String &theme_identifier, bool from_env)
 {
-  assert_return (theme_resource.empty() == false, NULL);
-  String theme_name = theme_resource;
+  assert_return (theme_identifier.empty() == false, NULL);
+  assert_return (from_env == (theme_identifier[0] == '$'), NULL);
+  String theme_name = theme_identifier;
   if (theme_name[0] == '$')
     {
       const char *evtheme = getenv (theme_name.c_str() + 1);
@@ -141,10 +162,10 @@ ThemeInfo::load_theme (const String &theme_resource)
             return theme;
           Blob data = Blob::load (evtheme);
           if (!data.size())
-            user_warning (UserSource (theme_resource), "failed to load theme \"%s\": %s", evtheme, strerror (errno));
+            user_warning (UserSource (theme_identifier), "failed to load theme \"%s\": %s", evtheme, strerror (errno));
           else
             {
-              theme = FriendAllocator<FileTheme>::make_shared (data, true); // allow local file includes
+              theme = FriendAllocator<FileTheme>::make_shared (theme_name, data, true); // allow local file includes
               if (theme)
                 theme_info_map[theme_name] = theme;
             }
@@ -159,10 +180,10 @@ ThemeInfo::load_theme (const String &theme_resource)
   const String resource = "themes/" + theme_name + ".ini";
   Blob blob = Res ("@res " + resource);
   if (!blob.size())
-    user_warning (UserSource (theme_resource), "failed to load theme \"%s\": %s", resource, strerror (errno));
+    user_warning (UserSource (theme_identifier), "failed to load theme \"%s\": %s", resource, strerror (errno));
   else
     {
-      theme = FriendAllocator<FileTheme>::make_shared (blob, false); // disallow local file
+      theme = FriendAllocator<FileTheme>::make_shared (theme_name, blob, false); // disallow local file
       if (theme)
         theme_info_map[theme_name] = theme;
     }
