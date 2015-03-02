@@ -13,6 +13,9 @@
 namespace Rapicorn {
 namespace Factory {
 
+// == Factory State ==
+static ThemeInfoP factory_current_theme;
+
 // == Utilities ==
 static String
 node_location (const XmlNode *xnode)
@@ -671,6 +674,19 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
 }
 
 // == UI Creation API ==
+String
+factory_theme ()
+{
+  return factory_current_theme->name();
+}
+
+void
+factory_theme (const String &name)
+{
+  ThemeInfoP theme = ThemeInfo::load_theme (name);
+  factory_current_theme = theme ? theme : ThemeInfo::fallback_theme();
+}
+
 bool
 check_ui_window (const String &widget_identifier)
 {
@@ -754,24 +770,16 @@ initialize_factory_lazily (void)
 {
   do_once
     {
+      assert (Factory::factory_current_theme == NULL);
       Blob blob = Res ("@res Rapicorn/foundation.xml");
       Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL);
       blob = Res ("@res Rapicorn/standard.xml");
       Factory::parse_ui_data_internal ("Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL);
       blob = Res ("@res themes/Default.xml");
-      Factory::parse_ui_data_internal ("themes/Default.xml", blob.size(), blob.data(), "", NULL);
-      const char *utheme = getenv ("RAPICORN_THEME");
-      if (utheme && utheme[0] && String (utheme) != "Default")
-        {
-          const String user_theme = String ("themes/") + utheme;
-          blob = Res ("@res " + user_theme);
-          if (!blob.size())
-            blob = Res ("@res " + user_theme  + ".xml");
-          if (blob.size())
-            Factory::parse_ui_data_internal (user_theme, blob.size(), blob.data(), "", NULL);
-          else
-            user_warning (UserSource ("RAPICORN_THEME"), "failed to locate theme: \"%s\"", utheme);
-        }
+      ThemeInfoP default_theme = ThemeInfo::load_theme ("Default");
+      assert (default_theme != NULL);
+      ThemeInfoP theme = ThemeInfo::load_theme ("$RAPICORN_THEME", true);
+      Factory::factory_current_theme = theme ? theme : default_theme;
     }
 }
 
