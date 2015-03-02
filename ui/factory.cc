@@ -738,7 +738,13 @@ parse_ui_data (const String &data_name, size_t data_length,
                const char *data, const String &i18n_domain, StringVector *definitions)
 {
   initialize_factory_lazily();
-  return parse_ui_data_internal (data_name, data_length, data, "", definitions);
+  return parse_ui_data_internal (data_name, data_length, data, i18n_domain, definitions);
+}
+
+String
+parse_theme (const Blob &blob, const String &i18n_domain)
+{
+  return parse_ui_data_internal (blob.name(), blob.size(), blob.data(), i18n_domain, NULL);
 }
 
 } // Factory
