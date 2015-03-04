@@ -353,6 +353,7 @@ interface Container : Widget {
 interface Window : Container {
   String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
   bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
+  String        theme_name = String (_("Theme Name"), _("Name of the theme for this window"), "ro");
   bool          screen_viewable         () = 0;
   void          show                    () = 0;
   bool          closed                  () = 0;

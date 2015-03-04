@@ -18,7 +18,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   DisplayWindow*        display_window_;
   EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;
-  String                     last_command_;
+  String                     last_command_, theme_name_;
   vector<WidgetImplP>   last_entered_children_;
   DisplayWindow::Config config_;
   uint                  notify_displayed_id_;
@@ -41,10 +41,12 @@ public:
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
   static  void          forcefully_close_all    ();
   // properties
-  virtual String        title                   () const;
-  virtual void          title                   (const String &window_title);
-  virtual bool          auto_focus              () const;
-  virtual void          auto_focus              (bool afocus);
+  virtual String        title                   () const override;
+  virtual void          title                   (const String &window_title) override;
+  virtual bool          auto_focus              () const override;
+  virtual void          auto_focus              (bool afocus) override;
+  virtual String        theme_name              () const override;
+  virtual void          theme_name              (const String &filename) override       { RAPICORN_ASSERT_UNREACHED(); }
   // grab handling
   virtual void          add_grab                                (WidgetImpl &child, bool unconfined = false);
   void                  add_grab                                (WidgetImpl *child, bool unconfined = false);
