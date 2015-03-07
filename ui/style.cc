@@ -13,7 +13,7 @@ namespace Rapicorn {
 class FallbackTheme : public ThemeInfo {
   friend class FriendAllocator<FallbackTheme>; // allows make_shared() access to ctor/dtor
 public:
-  virtual String name        () override        { return "<none>"; }
+  virtual String name        () override        { return "Rapicorn::FallbackTheme"; }
   virtual Color  state_color (StateType state, bool foreground, const String &detail) override;
   virtual Color  theme_color (double hue360, double saturation100, double brightness100, const String &detail) override;
 };

@@ -1,6 +1,7 @@
 <Rapicorn::Window
   title="RAPICORN:Rapidrun:main-test"
   auto_focus="1"
+  theme_name="Rapicorn::FallbackTheme"
   name="main-test"
   visible="1"
   sensitive="1"
