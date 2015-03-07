@@ -225,22 +225,22 @@ WindowImpl::WindowImpl() :
   display_window_ (NULL), commands_emission_ (NULL), notify_displayed_id_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
+  theme_info_ = ThemeInfo::fallback_theme();    // ensure valid theme_info_
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
-  WindowTrail::wenter (this);
+  change_flags_silently (ANCHORED, true);       // window is always anchored
+  set_flag (PARENT_SENSITIVE, true);
+  set_flag (PARENT_UNVIEWABLE, false);
   struct Heritage : Rapicorn::Heritage {
     using Rapicorn::Heritage::create_heritage;
   };
   heritage (Heritage::create_heritage (*this, *this, color_scheme()));
-  set_flag (PARENT_SENSITIVE, true);
-  set_flag (PARENT_UNVIEWABLE, false);
-  /* create event loop (auto-starts) */
+  WindowTrail::wenter (this);
+  // create event loop (auto-starts)
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
   loop_->flag_primary (false);
-  change_flags_silently (ANCHORED, true);       // window is always anchored
-  theme_info_ = ThemeInfo::theme_info ("");     // default initialize theme_info_
 }
 
 void
