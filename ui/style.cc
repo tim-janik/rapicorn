@@ -9,23 +9,64 @@
 
 namespace Rapicorn {
 
+// == Colors ==
+static Color
+adjust_color (Color color, double saturation_factor, double value_factor)
+{
+  double hue, saturation, value;
+  color.get_hsv (&hue, &saturation, &value);
+  saturation *= saturation_factor;
+  value *= value_factor;
+  color.set_hsv (hue, MIN (1, saturation), MIN (1, value));
+  return color;
+}
+// static Color lighten   (Color color) { return adjust_color (color, 1.0, 1.1); }
+// static Color darken    (Color color) { return adjust_color (color, 1.0, 0.9); }
+// static Color alternate (Color color) { return adjust_color (color, 1.0, 0.98); } // tainting for even-odd alterations
+
+// == StyleImpl ==
+Color
+StyleImpl::theme_color (double hue360, double saturation100, double brightness100, const String &detail)
+{
+  return theme_info_->theme_color (hue360, saturation100, brightness100);
+}
+
+Color
+StyleImpl::state_color (StateType state, ColorType color_type, const String &detail)
+{
+  switch (color_type)
+    {
+    case FOREGROUND:    return theme_info_->fragment_color ("#fg", state);
+    case BACKGROUND:    return theme_info_->fragment_color ("#bg", state);
+    case DARK:          return 0xff9f9c98;
+    case DARK_SHADOW:   return adjust_color (state_color (state, DARK, detail), 1, 0.9); // 0xff8f8c88
+    case DARK_GLINT:    return adjust_color (state_color (state, DARK, detail), 1, 1.1); // 0xffafaca8
+    case LIGHT:         return 0xffdfdcd8;
+    case LIGHT_SHADOW:  return adjust_color (state_color (state, LIGHT, detail), 1, 0.93); // 0xffcfccc8
+    case LIGHT_GLINT:   return adjust_color (state_color (state, LIGHT, detail), 1, 1.07); // 0xffefece8
+    case FOCUS_FG:      return 0xff000060;
+    case FOCUS_BG:      return 0xff000060;
+    default:            return 0x00000000; // silence warnings
+    }
+}
+
 // == FallbackTheme ==
 class FallbackTheme : public ThemeInfo {
   friend class FriendAllocator<FallbackTheme>; // allows make_shared() access to ctor/dtor
 public:
-  virtual String name        () override        { return "Rapicorn::FallbackTheme"; }
-  virtual Color  state_color (StateType state, bool foreground, const String &detail) override;
-  virtual Color  theme_color (double hue360, double saturation100, double brightness100, const String &detail) override;
+  virtual String name           () override        { return "Rapicorn::FallbackTheme"; }
+  virtual Color  fragment_color (const String &fragment, StateType state) override;
+  virtual Color  theme_color    (double hue360, double saturation100, double brightness100) override;
 };
 
 Color
-FallbackTheme::state_color (StateType state, bool foreground, const String &detail)
+FallbackTheme::fragment_color (const String &fragment, StateType state)
 {
-  return foreground ? 0xff000000 : 0xff808080;
+  return fragment == "#fg" ? 0xff000000 : 0xffdfdcd8;
 }
 
 Color
-FallbackTheme::theme_color (double hue360, double saturation100, double brightness100, const String &detail)
+FallbackTheme::theme_color (double hue360, double saturation100, double brightness100)
 {
   Color c;
   c.set_hsv (hue360, saturation100 * 0.01, brightness100 * 0.01);
@@ -37,22 +78,22 @@ class FileTheme : public ThemeInfo {
   friend class FriendAllocator<FileTheme>; // allows make_shared() access to ctor/dtor
   const String theme_name_;
 public:
-  explicit      FileTheme   (const String &theme_name, const Blob &blob, bool local_files);
-  virtual String name       () override         { return theme_name_; }
-  virtual Color state_color (StateType state, bool foreground, const String &detail) override;
-  virtual Color theme_color (double hue360, double saturation100, double brightness100, const String &detail) override;
+  explicit       FileTheme      (const String &theme_name, const Blob &blob, bool local_files);
+  virtual String name           () override         { return theme_name_; }
+  virtual Color  fragment_color (const String &fragment, StateType state) override;
+  virtual Color  theme_color    (double hue360, double saturation100, double brightness100) override;
 };
 
 Color
-FileTheme::state_color (StateType state, bool foreground, const String &detail)
+FileTheme::fragment_color (const String &fragment, StateType state)
 {
-  return fallback_theme()->state_color (state, foreground, detail);
+  return fallback_theme()->fragment_color (fragment, state);
 }
 
 Color
-FileTheme::theme_color (double hue360, double saturation100, double brightness100, const String &detail)
+FileTheme::theme_color (double hue360, double saturation100, double brightness100)
 {
-  return fallback_theme()->theme_color (hue360, saturation100, brightness100, detail);
+  return fallback_theme()->theme_color (hue360, saturation100, brightness100);
 }
 
 static inline uint32
