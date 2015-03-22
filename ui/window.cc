@@ -59,7 +59,11 @@ WindowImpl::auto_focus () const
 void
 WindowImpl::auto_focus (bool afocus)
 {
-  auto_focus_ = afocus;
+  if (afocus != auto_focus_)
+    {
+      auto_focus_ = afocus;
+      changed ("auto_focus");
+    }
 }
 
 void
