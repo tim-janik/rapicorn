@@ -3,5 +3,23 @@
 
 namespace Rapicorn {
 
+ThemeInfoP
+ThemeInfo::create (const String &filename)
+{
+  return FriendAllocator<ThemeInfo>::make_shared (filename);
+}
+
+ThemeInfo::ThemeInfo (const String &filename) :
+  theme_file_ (filename)
+{}
+
+ThemeInfo::~ThemeInfo ()
+{}
+
+String
+ThemeInfo::theme_file () const
+{
+  return theme_file_;
+}
 
 } // Rapicorn
