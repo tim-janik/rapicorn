@@ -239,7 +239,8 @@ WindowImpl::WindowImpl() :
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
   loop_->flag_primary (false);
-  change_flags_silently (ANCHORED, true);       /* window is always anchored */
+  change_flags_silently (ANCHORED, true);       // window is always anchored
+  theme_info_ = ThemeInfo::theme_info ("");     // default initialize theme_info_
 }
 
 void
