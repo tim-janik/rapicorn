@@ -10,13 +10,13 @@ class ThemeInfo;
 typedef std::shared_ptr<ThemeInfo> ThemeInfoP;
 
 class ThemeInfo : public std::enable_shared_from_this<ThemeInfo> {
-  const String  theme_file_;
-  friend        class FriendAllocator<ThemeInfo>; // allows make_shared() access to ctor/dtor
-  explicit      ThemeInfo       (const String &filename);
-  virtual      ~ThemeInfo       ();
+  static ThemeInfoP find_theme     (const String &theme_name);
+protected:
+  virtual          ~ThemeInfo      ();
 public:
-  static ThemeInfoP create      (const String &filename);
-  String        theme_file      () const;
+  static ThemeInfoP load_theme     (const String &theme_resource);
+  static ThemeInfoP theme_info     (const String &theme_name);
+  static ThemeInfoP fallback_theme ();
 };
 
 } // Rapicorn

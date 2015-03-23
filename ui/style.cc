@@ -1,15 +1,22 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "style.hh"
 #include "painter.hh"
+#include <unordered_map>
 #include "../rcore/rsvg/svg.hh"
 
 namespace Rapicorn {
 
-ThemeInfoP
-ThemeInfo::create (const String &filename)
-{
-  return FriendAllocator<ThemeInfo>::make_shared (filename);
-}
+// == FallbackTheme ==
+class FallbackTheme : public ThemeInfo {
+  friend class FriendAllocator<FallbackTheme>; // allows make_shared() access to ctor/dtor
+};
+
+// == FileTheme ==
+class FileTheme : public ThemeInfo {
+  friend class FriendAllocator<FileTheme>; // allows make_shared() access to ctor/dtor
+public:
+  explicit      FileTheme   (const Blob &blob, bool local_files);
+};
 
 static inline uint32
 cairo_image_surface_peek_argb (cairo_surface_t *surface, uint x, uint y)
@@ -28,15 +35,14 @@ cairo_image_surface_peek_argb (cairo_surface_t *surface, uint x, uint y)
   return 0x00000000;
 }
 
-ThemeInfo::ThemeInfo (const String &theme_file) :
-  theme_file_ (theme_file)
+FileTheme::FileTheme (const Blob &blob, bool local_files)
 {
-  Blob data = Res (theme_file_);
-  printerr ("IniFile: %s\n", theme_file_);
-  IniFile ini (data);
+  printerr ("Theme Blob: %s\n", blob.name());
+  IniFile ini (blob);
+  printerr ("theme.xml_file: %s\n", ini.value_as_string ("theme.xml_file"));
   String sf = ini.value_as_string ("theme.svg_file");
   printerr ("theme.svg_file: %s\n", sf);
-  Blob svgblob = Res ("@res " + sf);
+  Blob svgblob = Res ("@res " + sf); // FIXME: load SVG relative to blob.name + local_files flag
   printerr ("svgblob: %zd: %s\n", svgblob.size(), strerror (errno));
   auto svgf = Svg::File::load (svgblob);
   printerr ("loading: %s: %s\n", sf, strerror (errno));
@@ -59,13 +65,91 @@ ThemeInfo::ThemeInfo (const String &theme_file) :
     }
 }
 
+// == ThemeInfo ==
+static std::unordered_map<String, ThemeInfoP> theme_info_map;
+
 ThemeInfo::~ThemeInfo ()
 {}
 
-String
-ThemeInfo::theme_file () const
+ThemeInfoP
+ThemeInfo::find_theme (const String &theme_name)
 {
-  return theme_file_;
+  auto it = theme_info_map.find (theme_name);
+  return it != theme_info_map.end() ? it->second : NULL;
+}
+
+static String
+strip_name (const String &input)
+{
+  ssize_t slash = input.rfind ('/');
+  if (slash < 0)
+    slash = 0;
+  else
+    slash += 1; // skip slash
+  ssize_t dot = input.rfind ('.');
+  if (dot < 0 || dot < slash)
+    dot = input.size();
+  return input.substr (slash, dot - slash);
+}
+
+ThemeInfoP
+ThemeInfo::load_theme (const String &theme_resource)
+{
+  assert_return (theme_resource.empty() == false, NULL);
+  String theme_name = theme_resource;
+  if (theme_name[0] == '$')
+    {
+      const char *evtheme = getenv (theme_name.c_str() + 1);
+      if (!evtheme || !evtheme[0])
+        return NULL;
+      if (Path::isabs (evtheme))
+        {
+          theme_name = strip_name (evtheme);
+          ThemeInfoP theme = find_theme (theme_name);
+          if (theme)
+            return theme;
+          Blob data = Blob::load (evtheme);
+          if (!data.size())
+            user_warning (UserSource (theme_resource), "failed to load theme \"%s\": %s", evtheme, strerror (errno));
+          else
+            {
+              theme = FriendAllocator<FileTheme>::make_shared (data, true); // allow local file includes
+              if (theme)
+                theme_info_map[theme_name] = theme;
+            }
+          return theme;
+        }
+      // else
+      theme_name = evtheme;
+    }
+  ThemeInfoP theme = find_theme (theme_name);
+  if (theme)
+    return theme;
+  const String resource = "themes/" + theme_name + ".ini";
+  Blob blob = Res ("@res " + resource);
+  if (!blob.size())
+    user_warning (UserSource (theme_resource), "failed to load theme \"%s\": %s", resource, strerror (errno));
+  else
+    {
+      theme = FriendAllocator<FileTheme>::make_shared (blob, false); // disallow local file
+      if (theme)
+        theme_info_map[theme_name] = theme;
+    }
+  return theme;
+}
+
+ThemeInfoP
+ThemeInfo::theme_info (const String &theme_name)
+{
+  return find_theme (theme_name);
+}
+
+// Returns fallback ThemeInfo object that is guaranteed to stay alive (singleton).
+ThemeInfoP
+ThemeInfo::fallback_theme ()
+{
+  static ThemeInfoP fallback_theme_info = FriendAllocator<FallbackTheme>::make_shared ();
+  return fallback_theme_info;
 }
 
 } // Rapicorn
