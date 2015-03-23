@@ -9,14 +9,45 @@ namespace Rapicorn {
 // == FallbackTheme ==
 class FallbackTheme : public ThemeInfo {
   friend class FriendAllocator<FallbackTheme>; // allows make_shared() access to ctor/dtor
+public:
+  virtual Color state_color (StateType state, bool foreground, const String &detail) override;
+  virtual Color theme_color (double hue360, double saturation100, double brightness100, const String &detail) override;
 };
+
+Color
+FallbackTheme::state_color (StateType state, bool foreground, const String &detail)
+{
+  return foreground ? 0xff000000 : 0xff808080;
+}
+
+Color
+FallbackTheme::theme_color (double hue360, double saturation100, double brightness100, const String &detail)
+{
+  Color c;
+  c.set_hsv (hue360, saturation100 * 0.01, brightness100 * 0.01);
+  return c.argb();
+}
 
 // == FileTheme ==
 class FileTheme : public ThemeInfo {
   friend class FriendAllocator<FileTheme>; // allows make_shared() access to ctor/dtor
 public:
   explicit      FileTheme   (const Blob &blob, bool local_files);
+  virtual Color state_color (StateType state, bool foreground, const String &detail) override;
+  virtual Color theme_color (double hue360, double saturation100, double brightness100, const String &detail) override;
 };
+
+Color
+FileTheme::state_color (StateType state, bool foreground, const String &detail)
+{
+  return fallback_theme()->state_color (state, foreground, detail);
+}
+
+Color
+FileTheme::theme_color (double hue360, double saturation100, double brightness100, const String &detail)
+{
+  return fallback_theme()->theme_color (hue360, saturation100, brightness100, detail);
+}
 
 static inline uint32
 cairo_image_surface_peek_argb (cairo_surface_t *surface, uint x, uint y)

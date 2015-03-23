@@ -17,6 +17,9 @@ public:
   static ThemeInfoP load_theme     (const String &theme_resource);
   static ThemeInfoP theme_info     (const String &theme_name);
   static ThemeInfoP fallback_theme ();
+  // colors
+  virtual Color     state_color    (StateType state, bool foreground, const String &detail = "") = 0;
+  virtual Color     theme_color    (double hue360, double saturation100, double brightness100, const String &detail = "") = 0;
 };
 
 } // Rapicorn
