@@ -44,7 +44,7 @@ WidgetIface::impl () const
 }
 
 WidgetImpl::WidgetImpl () :
-  flags_ (VISIBLE | SENSITIVE),
+  flags_ (VISIBLE),
   parent_ (NULL), ainfo_ (NULL), heritage_ (NULL),
   factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
@@ -137,7 +137,7 @@ WidgetImpl::propagate_state (bool notify_changed)
   ContainerImpl *container = as_container_impl();
   const bool self_is_window_impl = UNLIKELY (parent_ == NULL) && container && as_window_impl();
   const bool was_viewable = viewable();
-  change_flags_silently (PARENT_SENSITIVE, self_is_window_impl || (parent() && parent()->sensitive()));
+  change_flags_silently (PARENT_INSENSITIVE, parent() && parent()->insensitive());
   change_flags_silently (PARENT_UNVIEWABLE, !self_is_window_impl && (!parent() || !parent()->viewable()));
   if (was_viewable != viewable())
     invalidate();       // changing viewable forces invalidation, regardless of notify_changed
@@ -152,9 +152,9 @@ void
 WidgetImpl::set_flag (uint64 flag, bool on)
 {
   assert ((flag & (flag - 1)) == 0); // single bit check
-  const uint64 propagate_flag_mask = VISIBLE | SENSITIVE | UNVIEWABLE |
-                                     PARENT_SENSITIVE | PARENT_UNVIEWABLE |
-                                     PRELIGHT | IMPRESSED | HAS_DEFAULT;
+  const uint64 propagate_flag_mask = VISIBLE | STATE_INSENSITIVE | UNVIEWABLE |
+                                     PARENT_INSENSITIVE | PARENT_UNVIEWABLE |
+                                     STATE_HOVER | STATE_ACTIVE | HAS_DEFAULT;
   const uint64 repack_flag_mask = HSHRINK | VSHRINK | HEXPAND | VEXPAND |
                                   HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER |
                                   VISIBLE | UNVIEWABLE | PARENT_UNVIEWABLE;
@@ -202,7 +202,7 @@ WidgetImpl::state () const
 bool
 WidgetImpl::has_focus () const
 {
-  if (test_any_flag (FOCUS_CHAIN))
+  if (test_any_flag (STATE_FOCUSED))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -220,7 +220,7 @@ WidgetImpl::can_focus () const
 void
 WidgetImpl::unset_focus ()
 {
-  if (test_any_flag (FOCUS_CHAIN))
+  if (test_any_flag (STATE_FOCUSED))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -1085,7 +1085,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       old_parent->unparent_child (*this);
       parent_ = NULL;
       ainfo_ = NULL;
-      propagate_state (false); // propagate PARENT_VISIBLE, PARENT_SENSITIVE
+      propagate_state (false); // propagate PARENT_VISIBLE, PARENT_INSENSITIVE
       if (anchored() and rtoplevel)
         sig_hierarchy_changed.emit (rtoplevel);
     }

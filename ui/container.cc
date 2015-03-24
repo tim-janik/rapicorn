@@ -499,7 +499,7 @@ ContainerImpl::move_focus (FocusDirType fdir)
   if (!visible() || !sensitive())
     return false;
   // focus self
-  if (!has_focus() && can_focus() && !test_any_flag (FOCUS_CHAIN))
+  if (!has_focus() && can_focus() && !test_any_flag (STATE_FOCUSED))
     return grab_focus();
   // allow last focus descendant to handle movement
   WidgetImpl *last_child = get_data (&focus_child_key);

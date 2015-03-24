@@ -145,7 +145,7 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
       WidgetImpl *widget = &fwidget;
       while (widget)
         {
-          ClassDoctor::widget_unset_flag (*widget, FOCUS_CHAIN);
+          ClassDoctor::widget_unset_flag (*widget, STATE_FOCUSED);
           ContainerImpl *fc = widget->parent();
           if (fc)
             fc->focus_lost();
@@ -174,7 +174,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
   set_data (&focus_widget_key, cfocus);
   while (widget)
     {
-      ClassDoctor::widget_set_flag (*widget, FOCUS_CHAIN);
+      ClassDoctor::widget_set_flag (*widget, STATE_FOCUSED);
       ContainerImpl *fc = widget->parent();
       if (fc)
         fc->set_focus_child (widget);
@@ -228,7 +228,7 @@ WindowImpl::WindowImpl() :
   theme_info_ = ThemeInfo::fallback_theme();    // ensure valid theme_info_
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
   change_flags_silently (ANCHORED, true);       // window is always anchored
-  set_flag (PARENT_SENSITIVE, true);
+  set_flag (PARENT_INSENSITIVE, false);
   set_flag (PARENT_UNVIEWABLE, false);
   struct Heritage : Rapicorn::Heritage {
     using Rapicorn::Heritage::create_heritage;
