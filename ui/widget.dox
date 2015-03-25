@@ -7,10 +7,26 @@ A <a href="http://en.wikipedia.org/wiki/GUI_widget">GUI Widget</a> is the main e
 made with Rapicorn are composed of.
 
 @par Widget States
-- <b>ANCHORED</b><br/> The toplevel parent (root) of an anchored widget is a Rapicorn.Window. The Rapicorn.WidgetImpl.hierarchy_changed() method is called whenever the ANCHORED state of a widget changes.
-- <b>VISIBLE</b><br/> A widget is visible if its VISIBLE flag is set.<br/> Use: A widget must be visible to actively participate in size requisition and size allocation. In order to grab focus and process key events, the widget and all its parents must be visible, see Rapicorn.WidgetImpl.key_sensitive().
-- <b>VIEWABLE</b><br/> A widget is viewable if it's visible, its UNVIEWABLE flag is unset and its parent is viewable.<br/> Use: Children may be temporarily taken offscreen in which case they are flagged UNVIEWABLE. Examples are offscreen children of a list, inactive notebook pages or an inactive popup.
-- <b>DRAWABLE</b><br/> A widget is drawable if it's viewable and its clipped_allocation has non-zero size. A widget must be drawable to participate in pointer event handling and rendering, see Rapicorn.WidgetImpl.pointer_sensitive().
+The following is a list of states a widget can be in, a combination of multiple states may apply to a widget at any given time.
+- <b>Rapicorn::STATE_NORMAL - "normal"</b><br/> Ordinary widget state to start with, not activated, insensitive or otherwise special.
+- <b>Rapicorn::STATE_HOVER - "hover"</b><br/> Widget flag indicating that the mouse is over the widget.
+- <b>Rapicorn::STATE_ACCELERATABLE - "acceleratable"</b><br/> Widget flag indicating the available of accelerators or mnemonic shortcuts.
+- <b>Rapicorn::STATE_INSENSITIVE - "insensitive"</b><br/> Widget flag that disables input event processing, see pointer_sensitive()
+- <b>Rapicorn::STATE_PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
+- <b>Rapicorn::STATE_DEFAULT - "default"</b><br/> Widget flag that enables widgets to receive the default activation.
+- <b>Rapicorn::STATE_SELECTED - "selected"</b><br/> Widget flag indicating that the widget is currently selected.
+- <b>Rapicorn::STATE_FOCUSED - "focused"</b><br/> Widget flag indicating that the widget is part of the focus chain, i.e. the widget or one of its descendants has the input focus.
+- <b>Rapicorn::STATE_ACTIVE - "active"</b><br/> Widget flag used by widgets that can be activated or toggled.
+- <b>Rapicorn::STATE_RETAINED - "retained"</b><br/> Widget flag indicating that its activation state is held back, hidden or inconsistent.
+<!-- - <b>Rapicorn::STATE_RESERVED1 - "reserved1"</b><br/> Unspecified. -->
+<!-- - <b>Rapicorn::STATE_RESERVED2 - "reserved2"</b><br/> Unspecified. -->
+<!-- - <b>Rapicorn::STATE_RESERVED3 - "reserved3"</b><br/> Unspecified. -->
+
+@par Widget Flags
+- <b>Rapicorn::WidgetImpl::anchored()</b><br/> The toplevel parent (root) of an anchored widget is a Rapicorn::Window. The Rapicorn::WidgetImpl::hierarchy_changed() method is called whenever the Rapicorn::WidgetImpl::ANCHORED state of a widget changes.
+- <b>Rapicorn::WidgetImpl::visible()</b><br/> A widget is visible if its Rapicorn::WidgetImpl::VISIBLE flag is set.<br/> Use: A widget must be visible to actively participate in size requisition and size allocation. In order to grab focus and process key events, the widget and all its parents must be visible, see Rapicorn::WidgetImpl::key_sensitive().
+- <b>Rapicorn::WidgetImpl::viewable()</b><br/> A widget is viewable if it's visible, its Rapicorn::WidgetImpl::UNVIEWABLE flag is unset and its parent is viewable.<br/> Use: Children may be temporarily taken offscreen in which case they are flagged Rapicorn::WidgetImpl::UNVIEWABLE. Examples are offscreen children of a list, inactive notebook pages or an inactive popup.
+- <b>Rapicorn::WidgetImpl::drawable()</b><br/> A widget is drawable if it's viewable and its clipped_allocation has non-zero size. A widget must be drawable to participate in pointer event handling and rendering, see Rapicorn::WidgetImpl::pointer_sensitive().
 
 @par Focus Handling
 A Rapicorn.Window allows a specific widget to receive keyboard events at any given time, this is the "focus widget".
