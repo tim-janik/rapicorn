@@ -552,7 +552,7 @@ interface StatePainter : Widget {
   String source            = String (_("Image Source"), _("Fallback resource for the images to be displayed."), "rw");
   String normal_image      = String (_("Normal Image"), _("Image resource for STATE_NORMAL."), "rw");
   String prelight_image    = String (_("Prelight Image"), _("Image resource for STATE_PRELIGHT."), "rw");
-  String impressed_image   = String (_("Impressed Image"), _("Image resource for STATE_IMPRESSED."), "rw");
+  String active_image      = String (_("Active Image"), _("Image resource for STATE_ACTIVE."), "rw");
   String insensitive_image = String (_("Insensitive Image"), _("Image resource for STATE_INSENSITIVE."), "rw");
   String default_image     = String (_("Default Image"), _("Image resource for STATE_DEFAULT."), "rw");
   String focus_image       = String (_("Focus Image"), _("Image resource for STATE_FOCUS."), "rw");

@@ -25,7 +25,7 @@ public:
 };
 
 class StatePainterImpl : public virtual WidgetImpl, public virtual StatePainterIface {
-  String         source_, normal_image_, prelight_image_, impressed_image_;
+  String         source_, normal_image_, prelight_image_, active_image_;
   String         insensitive_image_, default_image_, focus_image_, state_image_;
   ImagePainter   source_painter_, state_painter_;
   String         current_source      ();
@@ -42,8 +42,8 @@ public:
   virtual void   normal_image        (const String &e) override { update_source (normal_image_, e, "normal_image"); }
   virtual String prelight_image      () const override          { return prelight_image_; }
   virtual void   prelight_image      (const String &e) override { update_source (prelight_image_, e, "prelight_image"); }
-  virtual String impressed_image     () const override          { return impressed_image_; }
-  virtual void   impressed_image     (const String &e) override { update_source (impressed_image_, e, "impressed_image"); }
+  virtual String active_image        () const override          { return active_image_; }
+  virtual void   active_image        (const String &e) override { update_source (active_image_, e, "active_image"); }
   virtual String insensitive_image   () const override          { return insensitive_image_; }
   virtual void   insensitive_image   (const String &e) override { update_source (insensitive_image_, e, "insensitive_image"); }
   virtual String default_image       () const override          { return default_image_; }
