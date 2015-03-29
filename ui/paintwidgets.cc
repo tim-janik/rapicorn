@@ -113,7 +113,7 @@ DotGridImpl::dot_type (FrameType ft)
 FrameType
 DotGridImpl::current_dot ()
 {
-  return ancestry_impressed() ? impressed_dot() : normal_dot();
+  return ancestry_active() ? impressed_dot() : normal_dot();
 }
 
 static inline int

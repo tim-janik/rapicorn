@@ -101,7 +101,7 @@ StatePainterImpl::source (const String &resource)
 String
 StatePainterImpl::current_source ()
 {
-  StateType s = ancestry_impressed() ? STATE_ACTIVE : state(); // FIXME: priority for insensitive?
+  StateType s = ancestry_active() ? STATE_ACTIVE : state(); // FIXME: priority for insensitive?
   const String current = [&]() {
     switch (s)
       {

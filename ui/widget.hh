@@ -81,7 +81,7 @@ protected:
   static_assert (STATE_DEFAULT       == 1 <<  4, "");
   static_assert (STATE_SELECTED      == 1 <<  5, "");
   static_assert (STATE_FOCUSED       == 1 <<  6, ""); // Focus chain flag, indicates if widget is (in ancestry of) the focus widget, see grab_focus()
-  static_assert (STATE_ACTIVE        == 1 <<  7, ""); // Flag indicating state of an active widget, see also impressed()
+  static_assert (STATE_ACTIVE        == 1 <<  7, ""); // Flag indicating state of an active widget, see also active()
   static_assert (STATE_RETAINED      == 1 <<  8, "");
   static_assert (STATE_RESERVED1     == 1 <<  9, "");
   static_assert (STATE_RESERVED2     == 1 << 10, "");
@@ -172,9 +172,9 @@ public:
   bool                        prelight          () const { return test_any_flag (STATE_HOVER); } ///< Get widget "hover" state, see StateType::STATE_HOVER
   virtual void                prelight          (bool b) { set_flag (STATE_HOVER, b); } ///< Toggled with "hover" state of a widget
   bool                        ancestry_prelight () const; ///< Check if ancestry contains prelight().
-  bool                        impressed         () const { return test_any_flag (STATE_ACTIVE); } ///< Get widget StateType::STATE_ACTIVE state
-  virtual void                impressed         (bool b) { set_flag (STATE_ACTIVE, b); } ///< Toggled for impressed widgets (e.g. buttons)
-  bool                        ancestry_impressed() const; ///< Check if ancestry contains impressed().
+  bool                        active            () const { return test_any_flag (STATE_ACTIVE); } ///< Get the widget's StateType::STATE_ACTIVE.
+  virtual void                active            (bool b) { set_flag (STATE_ACTIVE, b); } ///< Toggled for active widgets (e.g. buttons).
+  bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
   virtual bool                can_focus         () const; ///< Returns true if @a this widget can receive focus.

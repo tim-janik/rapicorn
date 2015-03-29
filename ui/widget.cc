@@ -85,12 +85,12 @@ WidgetImpl::ancestry_prelight () const
 }
 
 bool
-WidgetImpl::ancestry_impressed () const
+WidgetImpl::ancestry_active () const
 {
   const WidgetImpl *widget = this;
   do
     {
-      if (widget->impressed())
+      if (widget->active())
         return true;
       widget = widget->parent();
     }
@@ -194,7 +194,7 @@ WidgetImpl::state () const
   st |= has_default() ? STATE_DEFAULT : z0;
   // STATE_SELECTED
   st |= has_focus()   ? STATE_FOCUSED : z0;
-  st |= impressed()   ? STATE_ACTIVE : z0;
+  st |= active()      ? STATE_ACTIVE : z0;
   // STATE_RETAINED
   return st;
 }

@@ -280,7 +280,7 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
 {
   IRect ia = allocation();
   const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-  bool bimpressed = ancestry_impressed(), bprelight = ancestry_prelight();
+  bool bimpressed = ancestry_active(), bprelight = ancestry_prelight();
   /* render background */
   String background_color;
   if (bimpressed)
@@ -422,7 +422,7 @@ FrameImpl::overlap_child (bool ovc)
 FrameType
 FrameImpl::current_frame ()
 {
-  return ancestry_impressed() ? impressed_frame() : normal_frame();
+  return ancestry_active() ? impressed_frame() : normal_frame();
 }
 
 void
@@ -603,7 +603,7 @@ FocusFrameImpl::current_frame ()
   in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
   if (in_focus)
     return focus_frame();
-  return ancestry_impressed() ? impressed_frame() : normal_frame();
+  return ancestry_active() ? impressed_frame() : normal_frame();
 }
 
 bool
