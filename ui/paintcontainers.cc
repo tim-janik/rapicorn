@@ -9,15 +9,15 @@ namespace Rapicorn {
 // == AmbienceImpl ==
 AmbienceImpl::AmbienceImpl() :
   normal_background_ ("none"),
-  prelight_background_ ("none"),
+  hover_background_ ("none"),
   active_background_ ("none"),
   insensitive_background_ ("none"),
   normal_lighting_ (LIGHTING_UPPER_LEFT),
-  prelight_lighting_ (LIGHTING_UPPER_LEFT),
+  hover_lighting_ (LIGHTING_UPPER_LEFT),
   active_lighting_ (LIGHTING_LOWER_RIGHT),
   insensitive_lighting_ (LIGHTING_CENTER),
   normal_shade_ (LIGHTING_UPPER_LEFT),
-  prelight_shade_ (LIGHTING_UPPER_LEFT),
+  hover_shade_ (LIGHTING_UPPER_LEFT),
   active_shade_ (LIGHTING_LOWER_RIGHT),
   insensitive_shade_ (LIGHTING_CENTER)
 {}
@@ -29,7 +29,7 @@ void
 AmbienceImpl::background (const String &color)
 {
   insensitive_background (color);
-  prelight_background (color);
+  hover_background (color);
   active_background (color);
   normal_background (color);
 }
@@ -38,7 +38,7 @@ void
 AmbienceImpl::lighting (LightingType sh)
 {
   insensitive_lighting (sh);
-  prelight_lighting (sh);
+  hover_lighting (sh);
   active_lighting (sh);
   normal_lighting (sh);
 }
@@ -47,7 +47,7 @@ void
 AmbienceImpl::shade (LightingType sh)
 {
   insensitive_shade (LIGHTING_NONE);
-  prelight_shade (LIGHTING_NONE);
+  hover_shade (LIGHTING_NONE);
   active_shade (LIGHTING_NONE);
   normal_shade (sh);
 }
@@ -85,17 +85,17 @@ AmbienceImpl::insensitive_background () const
 }
 
 void
-AmbienceImpl::prelight_background (const String &color)
+AmbienceImpl::hover_background (const String &color)
 {
-  prelight_background_ = color;
+  hover_background_ = color;
   expose();
-  changed ("prelight_background");
+  changed ("hover_background");
 }
 
 String
-AmbienceImpl::prelight_background () const
+AmbienceImpl::hover_background () const
 {
-  return prelight_background_;
+  return hover_background_;
 }
 
 void
@@ -141,17 +141,17 @@ AmbienceImpl::insensitive_lighting () const
 }
 
 void
-AmbienceImpl::prelight_lighting (LightingType sh)
+AmbienceImpl::hover_lighting (LightingType sh)
 {
-  prelight_lighting_ = sh;
+  hover_lighting_ = sh;
   expose();
-  changed ("prelight_lighting");
+  changed ("hover_lighting");
 }
 
 LightingType
-AmbienceImpl::prelight_lighting () const
+AmbienceImpl::hover_lighting () const
 {
-  return prelight_lighting_;
+  return hover_lighting_;
 }
 
 void
@@ -197,17 +197,17 @@ AmbienceImpl::insensitive_shade () const
 }
 
 void
-AmbienceImpl::prelight_shade (LightingType sh)
+AmbienceImpl::hover_shade (LightingType sh)
 {
-  prelight_shade_ = sh;
+  hover_shade_ = sh;
   expose();
-  changed ("prelight_shade");
+  changed ("hover_shade");
 }
 
 LightingType
-AmbienceImpl::prelight_shade () const
+AmbienceImpl::hover_shade () const
 {
-  return prelight_shade_;
+  return hover_shade_;
 }
 
 void
@@ -288,7 +288,7 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
   else if (insensitive())
     background_color = insensitive_background();
   else if (ahover)
-    background_color = prelight_background();
+    background_color = hover_background();
   else
     background_color = normal_background();
   Color background = heritage()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
@@ -301,8 +301,8 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
     render_shade (cr, x, y, width, height, active_lighting());
   else if (insensitive() && insensitive_lighting())
     render_shade (cr, x, y, width, height, insensitive_lighting());
-  else if (ahover && prelight_lighting())
-    render_shade (cr, x, y, width, height, prelight_lighting());
+  else if (ahover && hover_lighting())
+    render_shade (cr, x, y, width, height, hover_lighting());
   else if (normal_lighting() && !aactive && !insensitive() && !ahover)
     render_shade (cr, x, y, width, height, normal_lighting());
   /* render shade (combinatoric) */
@@ -310,8 +310,8 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
     render_shade (cr, x, y, width, height, active_shade());
   if (insensitive() && insensitive_shade())
     render_shade (cr, x, y, width, height, insensitive_shade());
-  if (ahover && prelight_shade())
-    render_shade (cr, x, y, width, height, prelight_shade());
+  if (ahover && hover_shade())
+    render_shade (cr, x, y, width, height, hover_shade());
   if (!aactive && !insensitive() && !ahover && normal_shade())
     render_shade (cr, x, y, width, height, normal_shade());
 }

@@ -7,9 +7,9 @@
 namespace Rapicorn {
 
 class AmbienceImpl : public virtual SingleContainerImpl, public virtual AmbienceIface {
-  String normal_background_, prelight_background_, active_background_, insensitive_background_;
-  LightingType normal_lighting_, prelight_lighting_, active_lighting_, insensitive_lighting_;
-  LightingType normal_shade_, prelight_shade_, active_shade_, insensitive_shade_;
+  String normal_background_, hover_background_, active_background_, insensitive_background_;
+  LightingType normal_lighting_, hover_lighting_, active_lighting_, insensitive_lighting_;
+  LightingType normal_shade_, hover_shade_, active_shade_, insensitive_shade_;
 protected:
   void                 render_shade            (cairo_t *cairo, int x, int y, int width, int height, LightingType st);
   virtual void         render                  (RenderContext &rcontext, const Rect &rect) override;
@@ -18,24 +18,24 @@ public:
   virtual             ~AmbienceImpl            () override;
   virtual void         insensitive_background  (const String &color) override;
   virtual String       insensitive_background  () const override;
-  virtual void         prelight_background     (const String &color) override;
-  virtual String       prelight_background     () const override;
+  virtual void         hover_background        (const String &color) override;
+  virtual String       hover_background        () const override;
   virtual void         active_background       (const String &color) override;
   virtual String       active_background       () const override;
   virtual void         normal_background       (const String &color) override;
   virtual String       normal_background       () const override;
   virtual void         insensitive_lighting    (LightingType sh) override;
   virtual LightingType insensitive_lighting    () const override;
-  virtual void         prelight_lighting       (LightingType sh) override;
-  virtual LightingType prelight_lighting       () const override;
+  virtual void         hover_lighting          (LightingType sh) override;
+  virtual LightingType hover_lighting          () const override;
   virtual void         active_lighting         (LightingType sh) override;
   virtual LightingType active_lighting         () const override;
   virtual void         normal_lighting         (LightingType sh) override;
   virtual LightingType normal_lighting         () const override;
   virtual void         insensitive_shade       (LightingType sh) override;
   virtual LightingType insensitive_shade       () const override;
-  virtual void         prelight_shade          (LightingType sh) override;
-  virtual LightingType prelight_shade          () const override;
+  virtual void         hover_shade             (LightingType sh) override;
+  virtual LightingType hover_shade             () const override;
   virtual void         active_shade            (LightingType sh) override;
   virtual LightingType active_shade            () const override;
   virtual void         normal_shade            (LightingType sh) override;

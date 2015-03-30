@@ -42,8 +42,8 @@
     <Argument id="center-child" default="1" />
     <Frame normal-frame="out" active-frame="in" >
       <Ambience
-	normal-lighting="upper-left" active-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	normal-shade="none" active-shade="none" prelight-shade="diffuse" insensitive-shade="none">
+	normal-lighting="upper-left" active-lighting="lower-right" hover-lighting="upper-left" insensitive-lighting="none"
+	normal-shade="none" active-shade="none" hover-shade="diffuse" insensitive-shade="none">
 	<FocusFrame frame-type="none">
 	  <Alignment id="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
 	</FocusFrame>
@@ -54,8 +54,8 @@
     <Argument id="center-child" default="1" />
     <Frame normal-frame="out" active-frame="in" >
       <Ambience
-	normal-lighting="upper-left" active-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	normal-shade="none" active-shade="none" prelight-shade="diffuse" insensitive-shade="none">
+	normal-lighting="upper-left" active-lighting="lower-right" hover-lighting="upper-left" insensitive-lighting="none"
+	normal-shade="none" active-shade="none" hover-shade="diffuse" insensitive-shade="none">
 	<Alignment id="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
       </Ambience>
     </Frame>
@@ -77,8 +77,8 @@
 	<Rapicorn_SliderTrough hexpand="1" vexpand="1">
 	  <Rapicorn_SliderSkid vspread="1" hexpand="1" vertical-skid="0">
 	    <Ambience
-	      normal-lighting="upper-left" active-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	      normal-shade="none" active-shade="none" prelight-shade="diffuse" insensitive-shade="none">
+	      normal-lighting="upper-left" active-lighting="lower-right" hover-lighting="upper-left" insensitive-lighting="none"
+	      normal-shade="none" active-shade="none" hover-shade="diffuse" insensitive-shade="none">
 	      <Frame normal-frame="out" vexpand="1">
 		<DotGrid n-hdots="6" n-vdots="2" left-padding-dots="2" right-padding-dots="2" top-padding-dots="0" bottom-padding-dots="0" />
 	      </Frame>
@@ -102,8 +102,8 @@
 	<Rapicorn_SliderTrough vexpand="1" hexpand="1">
 	  <Rapicorn_SliderSkid hspread="1" vexpand="1" vertical-skid="1">
 	    <Ambience
-	      normal-lighting="upper-left" active-lighting="lower-right" prelight-lighting="upper-left" insensitive-lighting="none"
-	      normal-shade="none" active-shade="none" prelight-shade="diffuse" insensitive-shade="none">
+	      normal-lighting="upper-left" active-lighting="lower-right" hover-lighting="upper-left" insensitive-lighting="none"
+	      normal-shade="none" active-shade="none" hover-shade="diffuse" insensitive-shade="none">
 	      <Frame normal-frame="out" hexpand="1">
 		<DotGrid n-hdots="2" n-vdots="6" left-padding-dots="0" right-padding-dots="0" top-padding-dots="2" bottom-padding-dots="2" />
 	      </Frame>

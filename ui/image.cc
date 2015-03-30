@@ -107,7 +107,7 @@ StatePainterImpl::current_source ()
       {
       case STATE_NORMAL:          return normal_image_.empty()      ? source_ : normal_image_;
       case STATE_INSENSITIVE:     return insensitive_image_.empty() ? source_ : insensitive_image_;
-      case STATE_HOVER:           return prelight_image_.empty()    ? source_ : prelight_image_;
+      case STATE_HOVER:           return hover_image_.empty()       ? source_ : hover_image_;
       case STATE_ACTIVE:          return active_image_.empty()      ? source_ : active_image_;
       case STATE_FOCUSED:         return focus_image_.empty()       ? source_ : focus_image_;
       case STATE_DEFAULT:         return default_image_.empty()     ? source_ : default_image_;
