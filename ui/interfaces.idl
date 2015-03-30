@@ -401,7 +401,7 @@ interface FillAreaContainer : Container {
 /// See also the corresponding implementation class FrameImpl.
 interface Frame : Container {
   FrameType normal_frame    = Enum (_("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw");
-  FrameType impressed_frame = Enum (_("Impresed Frame"), _("The kind of frame to draw in impressed state"), "rw");
+  FrameType active_frame    = Enum (_("Active Frame"), _("The kind of frame to draw in active state"), "rw");
   FrameType frame_type      = Enum (_("Frame Type"),     _("The kind of frame to draw in all states"), "wo");
   bool      overlap_child   = Bool (_("Overlap Child"),  _("Draw frame into child allocation"), "rw");
   FrameType current_frame () = 0; ///< Retrieve the kind of frame that is currently being displayed.
@@ -419,15 +419,15 @@ interface FocusFrame : Frame {
 interface Ambience : Container {
   String normal_background          = String (_("Normal Background"), _("The kind of background painted when normal"), "rw");
   String prelight_background        = String (_("Prelight Background"), _("The kind of background painted when prelight"), "rw");
-  String impressed_background       = String (_("Impressed Background"), _("The kind of background painted when impressed"), "rw");
+  String active_background          = String (_("Active Background"), _("The kind of background painted in active state"), "rw");
   String insensitive_background     = String (_("Insensitive Background"), _("The kind of background painted when insensitive"), "rw");
   LightingType normal_lighting      = Enum (_("Normal Lighting"), _("The kind of lighting painted when normal"), "rw");
   LightingType prelight_lighting    = Enum (_("Prelight Lighting"), _("The kind of lighting painted when prelight"), "rw");
-  LightingType impressed_lighting   = Enum (_("Impressed Lighting"), _("The kind of lighting painted when impressed"), "rw");
+  LightingType active_lighting      = Enum (_("Active Lighting"), _("The kind of lighting painted in active state"), "rw");
   LightingType insensitive_lighting = Enum (_("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw");
   LightingType normal_shade         = Enum (_("Normal Shade"), _("The kind of shade painted when normal"), "rw");
   LightingType prelight_shade       = Enum (_("Prelight Shade"), _("The kind of shade painted when prelight"), "rw");
-  LightingType impressed_shade      = Enum (_("Impressed Shade"), _("The kind of shade painted when impressed"), "rw");
+  LightingType active_shade         = Enum (_("Active Shade"), _("The kind of shade painted in active state"), "rw");
   LightingType insensitive_shade    = Enum (_("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw");
   String       background           = String (_("Background"), _("The kind of background painted for all modes"), "wo");
   LightingType lighting             = Enum (_("Lighting"), _("The kind of lighting painted for all modes"), "wo");
@@ -512,7 +512,7 @@ interface Arrow : Widget {
 /// See also the corresponding implementation class DotGridImpl.
 interface DotGrid : Widget {
   FrameType normal_dot      = Enum (_("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw");
-  FrameType impressed_dot   = Enum (_("Impresed Dot"), _("The kind of dot-frame to draw in impressed state"), "rw");
+  FrameType active_dot      = Enum (_("Active Dot"), _("The kind of dot-frame to draw in active state"), "rw");
   FrameType dot_type        = Enum (_("Dot Type"), _("The kind of dot-frame to draw in all states"), "wo");
   int32 n_hdots             = Range (_("H-Dot #"), _("The number of horizontal dots to be drawn"), "rw", 0, 99999, 3);
   int32 n_vdots             = Range (_("V-Dot #"), _("The number of vertical dots to be drawn"), "rw", 0, 99999, 3);

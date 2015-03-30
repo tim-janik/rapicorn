@@ -10,15 +10,15 @@ namespace Rapicorn {
 AmbienceImpl::AmbienceImpl() :
   normal_background_ ("none"),
   prelight_background_ ("none"),
-  impressed_background_ ("none"),
+  active_background_ ("none"),
   insensitive_background_ ("none"),
   normal_lighting_ (LIGHTING_UPPER_LEFT),
   prelight_lighting_ (LIGHTING_UPPER_LEFT),
-  impressed_lighting_ (LIGHTING_LOWER_RIGHT),
+  active_lighting_ (LIGHTING_LOWER_RIGHT),
   insensitive_lighting_ (LIGHTING_CENTER),
   normal_shade_ (LIGHTING_UPPER_LEFT),
   prelight_shade_ (LIGHTING_UPPER_LEFT),
-  impressed_shade_ (LIGHTING_LOWER_RIGHT),
+  active_shade_ (LIGHTING_LOWER_RIGHT),
   insensitive_shade_ (LIGHTING_CENTER)
 {}
 
@@ -30,7 +30,7 @@ AmbienceImpl::background (const String &color)
 {
   insensitive_background (color);
   prelight_background (color);
-  impressed_background (color);
+  active_background (color);
   normal_background (color);
 }
 
@@ -39,7 +39,7 @@ AmbienceImpl::lighting (LightingType sh)
 {
   insensitive_lighting (sh);
   prelight_lighting (sh);
-  impressed_lighting (sh);
+  active_lighting (sh);
   normal_lighting (sh);
 }
 
@@ -48,7 +48,7 @@ AmbienceImpl::shade (LightingType sh)
 {
   insensitive_shade (LIGHTING_NONE);
   prelight_shade (LIGHTING_NONE);
-  impressed_shade (LIGHTING_NONE);
+  active_shade (LIGHTING_NONE);
   normal_shade (sh);
 }
 
@@ -99,17 +99,17 @@ AmbienceImpl::prelight_background () const
 }
 
 void
-AmbienceImpl::impressed_background (const String &color)
+AmbienceImpl::active_background (const String &color)
 {
-  impressed_background_ = color;
+  active_background_ = color;
   expose();
-  changed ("impressed_background");
+  changed ("active_background");
 }
 
 String
-AmbienceImpl::impressed_background () const
+AmbienceImpl::active_background () const
 {
-  return impressed_background_;
+  return active_background_;
 }
 
 void
@@ -155,17 +155,17 @@ AmbienceImpl::prelight_lighting () const
 }
 
 void
-AmbienceImpl::impressed_lighting (LightingType sh)
+AmbienceImpl::active_lighting (LightingType sh)
 {
-  impressed_lighting_ = sh;
+  active_lighting_ = sh;
   expose();
-  changed ("impressed_lighting");
+  changed ("active_lighting");
 }
 
 LightingType
-AmbienceImpl::impressed_lighting () const
+AmbienceImpl::active_lighting () const
 {
-  return impressed_lighting_;
+  return active_lighting_;
 }
 
 void
@@ -211,17 +211,17 @@ AmbienceImpl::prelight_shade () const
 }
 
 void
-AmbienceImpl::impressed_shade (LightingType sh)
+AmbienceImpl::active_shade (LightingType sh)
 {
-  impressed_shade_ = sh;
+  active_shade_ = sh;
   expose();
-  changed ("impressed_shade");
+  changed ("active_shade");
 }
 
 LightingType
-AmbienceImpl::impressed_shade () const
+AmbienceImpl::active_shade () const
 {
-  return impressed_shade_;
+  return active_shade_;
 }
 
 void
@@ -280,11 +280,11 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
 {
   IRect ia = allocation();
   const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-  bool bimpressed = ancestry_active(), bprelight = ancestry_prelight();
+  const bool aactive = ancestry_active(), bprelight = ancestry_prelight();
   /* render background */
   String background_color;
-  if (bimpressed)
-    background_color = impressed_background();
+  if (aactive)
+    background_color = active_background();
   else if (insensitive())
     background_color = insensitive_background();
   else if (bprelight)
@@ -297,22 +297,22 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
   if (background)
     painter.draw_filled_rect (x, y, width, height, background);
   /* render lighting (mutually exclusive) */
-  if (bimpressed && impressed_lighting())
-    render_shade (cr, x, y, width, height, impressed_lighting());
+  if (aactive && active_lighting())
+    render_shade (cr, x, y, width, height, active_lighting());
   else if (insensitive() && insensitive_lighting())
     render_shade (cr, x, y, width, height, insensitive_lighting());
   else if (bprelight && prelight_lighting())
     render_shade (cr, x, y, width, height, prelight_lighting());
-  else if (normal_lighting() && !bimpressed && !insensitive() && !bprelight)
+  else if (normal_lighting() && !aactive && !insensitive() && !bprelight)
     render_shade (cr, x, y, width, height, normal_lighting());
   /* render shade (combinatoric) */
-  if (bimpressed && impressed_shade())
-    render_shade (cr, x, y, width, height, impressed_shade());
+  if (aactive && active_shade())
+    render_shade (cr, x, y, width, height, active_shade());
   if (insensitive() && insensitive_shade())
     render_shade (cr, x, y, width, height, insensitive_shade());
   if (bprelight && prelight_shade())
     render_shade (cr, x, y, width, height, prelight_shade());
-  if (!bimpressed && !insensitive() && !bprelight && normal_shade())
+  if (!aactive && !insensitive() && !bprelight && normal_shade())
     render_shade (cr, x, y, width, height, normal_shade());
 }
 
@@ -321,7 +321,7 @@ static const WidgetFactory<AmbienceImpl> ambience_factory ("Rapicorn::Ambience")
 // == FrameImpl ==
 FrameImpl::FrameImpl() :
   normal_frame_ (FRAME_ETCHED_IN),
-  impressed_frame_ (FRAME_ETCHED_IN),
+  active_frame_ (FRAME_ETCHED_IN),
   overlap_child_ (false), tight_focus_ (false)
 {}
 
@@ -344,7 +344,7 @@ bool
 FrameImpl::is_tight_focus() const
 {
   return tight_focus_ && ((normal_frame_ == FRAME_FOCUS || normal_frame_ == FRAME_NONE) &&
-                          (impressed_frame_ == FRAME_FOCUS || impressed_frame_ == FRAME_NONE));
+                          (active_frame_ == FRAME_FOCUS || active_frame_ == FRAME_NONE));
 }
 
 void
@@ -375,19 +375,19 @@ FrameImpl::normal_frame (FrameType ft)
 }
 
 FrameType
-FrameImpl::impressed_frame () const
+FrameImpl::active_frame () const
 {
-  return impressed_frame_;
+  return active_frame_;
 }
 
 void
-FrameImpl::impressed_frame (FrameType ft)
+FrameImpl::active_frame (FrameType ft)
 {
-  if (impressed_frame_ != ft)
+  if (active_frame_ != ft)
     {
-      impressed_frame_ = ft;
+      active_frame_ = ft;
       expose_enclosure();
-      changed ("impressed_frame");
+      changed ("active_frame");
     }
 }
 
@@ -402,7 +402,7 @@ void
 FrameImpl::frame_type (FrameType ft)
 {
   normal_frame (ft);
-  impressed_frame (ft);
+  active_frame (ft);
 }
 
 bool
@@ -422,7 +422,7 @@ FrameImpl::overlap_child (bool ovc)
 FrameType
 FrameImpl::current_frame ()
 {
-  return ancestry_active() ? impressed_frame() : normal_frame();
+  return ancestry_active() ? active_frame() : normal_frame();
 }
 
 void
@@ -603,7 +603,7 @@ FocusFrameImpl::current_frame ()
   in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
   if (in_focus)
     return focus_frame();
-  return ancestry_active() ? impressed_frame() : normal_frame();
+  return ancestry_active() ? active_frame() : normal_frame();
 }
 
 bool

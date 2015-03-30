@@ -7,9 +7,9 @@
 namespace Rapicorn {
 
 class AmbienceImpl : public virtual SingleContainerImpl, public virtual AmbienceIface {
-  String normal_background_, prelight_background_, impressed_background_, insensitive_background_;
-  LightingType normal_lighting_, prelight_lighting_, impressed_lighting_, insensitive_lighting_;
-  LightingType normal_shade_, prelight_shade_, impressed_shade_, insensitive_shade_;
+  String normal_background_, prelight_background_, active_background_, insensitive_background_;
+  LightingType normal_lighting_, prelight_lighting_, active_lighting_, insensitive_lighting_;
+  LightingType normal_shade_, prelight_shade_, active_shade_, insensitive_shade_;
 protected:
   void                 render_shade            (cairo_t *cairo, int x, int y, int width, int height, LightingType st);
   virtual void         render                  (RenderContext &rcontext, const Rect &rect) override;
@@ -20,24 +20,24 @@ public:
   virtual String       insensitive_background  () const override;
   virtual void         prelight_background     (const String &color) override;
   virtual String       prelight_background     () const override;
-  virtual void         impressed_background    (const String &color) override;
-  virtual String       impressed_background    () const override;
+  virtual void         active_background       (const String &color) override;
+  virtual String       active_background       () const override;
   virtual void         normal_background       (const String &color) override;
   virtual String       normal_background       () const override;
   virtual void         insensitive_lighting    (LightingType sh) override;
   virtual LightingType insensitive_lighting    () const override;
   virtual void         prelight_lighting       (LightingType sh) override;
   virtual LightingType prelight_lighting       () const override;
-  virtual void         impressed_lighting      (LightingType sh) override;
-  virtual LightingType impressed_lighting      () const override;
+  virtual void         active_lighting         (LightingType sh) override;
+  virtual LightingType active_lighting         () const override;
   virtual void         normal_lighting         (LightingType sh) override;
   virtual LightingType normal_lighting         () const override;
   virtual void         insensitive_shade       (LightingType sh) override;
   virtual LightingType insensitive_shade       () const override;
   virtual void         prelight_shade          (LightingType sh) override;
   virtual LightingType prelight_shade          () const override;
-  virtual void         impressed_shade         (LightingType sh) override;
-  virtual LightingType impressed_shade         () const override;
+  virtual void         active_shade            (LightingType sh) override;
+  virtual LightingType active_shade            () const override;
   virtual void         normal_shade            (LightingType sh) override;
   virtual LightingType normal_shade            () const override;
   // group setters
@@ -51,7 +51,7 @@ private:
 };
 
 class FrameImpl : public virtual SingleContainerImpl, public virtual FrameIface {
-  FrameType         normal_frame_, impressed_frame_;
+  FrameType         normal_frame_, active_frame_;
   bool              overlap_child_, tight_focus_;
   bool              is_tight_focus    () const;
 protected:
@@ -66,8 +66,8 @@ public: // FrameIface
   virtual FrameType current_frame   () override;
   virtual FrameType normal_frame    () const override;
   virtual void      normal_frame    (FrameType) override;
-  virtual FrameType impressed_frame () const override;
-  virtual void      impressed_frame (FrameType) override;
+  virtual FrameType active_frame    () const override;
+  virtual void      active_frame    (FrameType) override;
   virtual FrameType frame_type      () const override;
   virtual void      frame_type      (FrameType) override;
   virtual bool      overlap_child   () const override;
