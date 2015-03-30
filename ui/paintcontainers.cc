@@ -280,14 +280,14 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
 {
   IRect ia = allocation();
   const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
-  const bool aactive = ancestry_active(), bprelight = ancestry_prelight();
+  const bool aactive = ancestry_active(), ahover = ancestry_hover();
   /* render background */
   String background_color;
   if (aactive)
     background_color = active_background();
   else if (insensitive())
     background_color = insensitive_background();
-  else if (bprelight)
+  else if (ahover)
     background_color = prelight_background();
   else
     background_color = normal_background();
@@ -301,18 +301,18 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
     render_shade (cr, x, y, width, height, active_lighting());
   else if (insensitive() && insensitive_lighting())
     render_shade (cr, x, y, width, height, insensitive_lighting());
-  else if (bprelight && prelight_lighting())
+  else if (ahover && prelight_lighting())
     render_shade (cr, x, y, width, height, prelight_lighting());
-  else if (normal_lighting() && !aactive && !insensitive() && !bprelight)
+  else if (normal_lighting() && !aactive && !insensitive() && !ahover)
     render_shade (cr, x, y, width, height, normal_lighting());
   /* render shade (combinatoric) */
   if (aactive && active_shade())
     render_shade (cr, x, y, width, height, active_shade());
   if (insensitive() && insensitive_shade())
     render_shade (cr, x, y, width, height, insensitive_shade());
-  if (bprelight && prelight_shade())
+  if (ahover && prelight_shade())
     render_shade (cr, x, y, width, height, prelight_shade());
-  if (!aactive && !insensitive() && !bprelight && normal_shade())
+  if (!aactive && !insensitive() && !ahover && normal_shade())
     render_shade (cr, x, y, width, height, normal_shade());
 }
 

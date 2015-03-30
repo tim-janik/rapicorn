@@ -74,7 +74,7 @@ protected:
   bool                        change_flags_silently (uint64 mask, bool on);
   // State flags and widget flags
   static_assert (STATE_NORMAL        == 0, "");
-  static_assert (STATE_HOVER         == 1 <<  0, ""); // Flag indicating "hover" state of a widget, see prelight()
+  static_assert (STATE_HOVER         == 1 <<  0, ""); // Flag indicating "hover" state of a widget, see hover()
   static_assert (STATE_ACCELERATABLE == 1 <<  1, "");
   static_assert (STATE_INSENSITIVE   == 1 <<  2, ""); // Widget flag that disables input event processing, see pointer_sensitive()
   static_assert (STATE_PANEL         == 1 <<  3, "");
@@ -169,9 +169,9 @@ public:
   void                        insensitive       (bool b) { sensitive (!b); }                    ///< Negation of sensitive(bool)
   bool                        key_sensitive     () const;
   bool                        pointer_sensitive () const;
-  bool                        prelight          () const { return test_any_flag (STATE_HOVER); } ///< Get widget "hover" state, see StateType::STATE_HOVER
-  virtual void                prelight          (bool b) { set_flag (STATE_HOVER, b); } ///< Toggled with "hover" state of a widget
-  bool                        ancestry_prelight () const; ///< Check if ancestry contains prelight().
+  bool                        hover             () const { return test_any_flag (STATE_HOVER); } ///< Get widget "hover" state, see StateType::STATE_HOVER
+  virtual void                hover             (bool b) { set_flag (STATE_HOVER, b); } ///< Toggled with "hover" state of a widget
+  bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
   bool                        active            () const { return test_any_flag (STATE_ACTIVE); } ///< Get the widget's StateType::STATE_ACTIVE.
   virtual void                active            (bool b) { set_flag (STATE_ACTIVE, b); } ///< Toggled for active widgets (e.g. buttons).
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().

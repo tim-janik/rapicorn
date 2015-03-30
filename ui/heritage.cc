@@ -44,7 +44,7 @@ state_color (Color     color,
   if (state & STATE_INSENSITIVE)
     c = adjust_color (c, 0.8, 1.075);
   if (state & STATE_HOVER && background_color &&
-      !(state & STATE_INSENSITIVE))     /* ignore prelight if insensitive */
+      !(state & STATE_INSENSITIVE))     // ignore hover if insensitive
     c = adjust_color (c, 1.2, 1.0);
   return c;
 }

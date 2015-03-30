@@ -71,12 +71,12 @@ WidgetImpl::ancestry_visible () const
 }
 
 bool
-WidgetImpl::ancestry_prelight () const
+WidgetImpl::ancestry_hover () const
 {
   const WidgetImpl *widget = this;
   do
     {
-      if (widget->prelight())
+      if (widget->hover())
         return true;
       widget = widget->parent();
     }
@@ -187,7 +187,7 @@ WidgetImpl::state () const
 {
   constexpr StateType z0 = StateType (0); // STATE_NORMAL
   StateType st = z0;
-  st |= prelight()    ? STATE_HOVER : z0;
+  st |= hover()       ? STATE_HOVER : z0;
   // STATE_ACCELERATABLE
   st |= insensitive() ? STATE_INSENSITIVE : z0;
   // STATE_PANEL

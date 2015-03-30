@@ -185,10 +185,10 @@ ButtonAreaImpl::handle_event (const Event &event)
       const EventButton *bevent;
     case MOUSE_ENTER:
       view.active (button_ != 0);
-      view.prelight (true);
+      view.hover (true);
       break;
     case MOUSE_LEAVE:
-      view.prelight (false);
+      view.hover (false);
       view.active (button_ != 0);
       break;
     case BUTTON_PRESS:
@@ -198,7 +198,7 @@ ButtonAreaImpl::handle_event (const Event &event)
       if (!button_ and bevent->button >= 1 and bevent->button <= 3 and
           on_click_[bevent->button - 1] != "")
         {
-          bool inbutton = view.prelight();
+          bool inbutton = view.hover();
           button_ = bevent->button;
           view.active (true);
           if (inbutton && can_focus())
@@ -216,7 +216,7 @@ ButtonAreaImpl::handle_event (const Event &event)
       bevent = dynamic_cast<const EventButton*> (&event);
       if (button_ == bevent->button)
         {
-          bool inbutton = view.prelight();
+          bool inbutton = view.hover();
           view.get_window()->remove_grab (*this);
           button_ = 0;
           // activation may recurse here
