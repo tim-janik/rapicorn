@@ -45,7 +45,7 @@ WidgetIface::impl () const
 
 WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE),
-  parent_ (NULL), ainfo_ (NULL), heritage_ (NULL),
+  parent_ (NULL), ainfo_ (NULL), style_ (StyleImpl::create (ThemeInfo::fallback_theme())), heritage_ (NULL),
   factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
@@ -577,6 +577,7 @@ WidgetImpl::~WidgetImpl()
       remove_exec (timer_id);
       set_data (&visual_update_key, uint (0));
     }
+  style_ = NULL;
 }
 
 Command*

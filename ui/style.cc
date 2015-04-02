@@ -25,6 +25,27 @@ adjust_color (Color color, double saturation_factor, double value_factor)
 // static Color alternate (Color color) { return adjust_color (color, 1.0, 0.98); } // tainting for even-odd alterations
 
 // == StyleImpl ==
+StyleImpl::StyleImpl (ThemeInfoP theme_info) :
+  theme_info_ (theme_info)
+{
+  assert_return (theme_info != NULL);
+}
+
+static std::map<ThemeInfoP, StyleImplP> style_impl_cache; /// FIXME: threadsafe?
+
+StyleImplP
+StyleImpl::create (ThemeInfoP theme_info)
+{
+  assert_return (theme_info != NULL, NULL);
+  StyleImplP style = style_impl_cache[theme_info];
+  if (!style)
+    {
+      style = FriendAllocator<StyleImpl>::make_shared (theme_info);
+      style_impl_cache[theme_info] = style;
+    }
+  return style;
+}
+
 Color
 StyleImpl::theme_color (double hue360, double saturation100, double brightness100, const String &detail)
 {

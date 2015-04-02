@@ -15,6 +15,8 @@ typedef std::shared_ptr<ThemeInfo> ThemeInfoP;
 // == StyleImpl ==
 class StyleImpl : public std::enable_shared_from_this<StyleImpl> {
   ThemeInfoP    theme_info_;
+  explicit      StyleImpl       (ThemeInfoP theme_info);
+  friend        class FriendAllocator<StyleImpl>; // allows make_shared() access to ctor/dtor
 public:
   enum ColorType { FOREGROUND = 1, BACKGROUND, DARK, DARK_SHADOW, DARK_GLINT, LIGHT, LIGHT_SHADOW, LIGHT_GLINT, FOCUS_FG, FOCUS_BG };
   Color         theme_color     (double hue360, double saturation100, double brightness100, const String &detail = "");
@@ -28,6 +30,7 @@ public:
   Color         light_shadow    (StateType state) { return state_color (state, LIGHT_SHADOW); }
   Color         light_glint     (StateType state) { return state_color (state, LIGHT_GLINT); }
   Color         focus_color     (StateType state) { return state_color (state, FOCUS_FG); }
+  static StyleImplP  create     (ThemeInfoP theme_info);
 };
 
 // == ThemeInfo ==

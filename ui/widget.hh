@@ -55,6 +55,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AnchorInfo           *ainfo_;
+  StyleImplP                  style_;
   HeritageP                   heritage_;
   FactoryContext             &factory_context_;
   Allocation                  allocation_;
