@@ -13,11 +13,11 @@ class AlignmentImpl : public virtual SingleContainerImpl, public virtual Alignme
   uint16 bottom_padding_, top_padding_;
   virtual int   padding         () const;
 protected:
-  virtual      ~AlignmentImpl   () override;
   virtual void  size_request    (Requisition &requisition) override;
   virtual void  size_allocate   (Allocation area, bool changed) override;
 public:
   explicit      AlignmentImpl   ();
+  virtual      ~AlignmentImpl   () override;
   virtual int   left_padding    () const override;
   virtual void  left_padding    (int c) override;
   virtual int   right_padding   () const override;
@@ -33,21 +33,21 @@ class FillAreaContainerImpl : public virtual SingleContainerImpl, public virtual
   String       source_;
   ImagePainter image_painter_;
 protected:
-  virtual        ~FillAreaContainerImpl () override;
   virtual void    size_request          (Requisition &requisition) override;
   virtual void    size_allocate         (Allocation area, bool changed) override;
 public:
   explicit        FillAreaContainerImpl ();
+  virtual        ~FillAreaContainerImpl () override;
   virtual void    source                (const String &uri) override;
   virtual String  source                () const override;
 };
 
 class HBoxImpl : public virtual TableLayoutImpl, public virtual HBoxIface {
 protected:
-  virtual      ~HBoxImpl        () override;
   virtual void  add_child       (WidgetImpl &widget) override;
 public:
   explicit      HBoxImpl        ();
+  virtual      ~HBoxImpl        () override;
   virtual bool  homogeneous     () const override;
   virtual void  homogeneous     (bool homogeneous_widgets) override;
   virtual int   spacing         () const override;
@@ -56,10 +56,10 @@ public:
 
 class VBoxImpl : public virtual TableLayoutImpl, public virtual VBoxIface {
 protected:
-  virtual      ~VBoxImpl        () override;
   virtual void  add_child       (WidgetImpl &widget) override;
 public:
   explicit      VBoxImpl        ();
+  virtual      ~VBoxImpl        () override;
   virtual bool  homogeneous     () const override;
   virtual void  homogeneous     (bool homogeneous_widgets) override;
   virtual int   spacing         () const override;

@@ -45,13 +45,9 @@ WidgetIface::impl () const
 
 WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE | SENSITIVE),
-  parent_ (NULL), ainfo_ (NULL), heritage_ (NULL), factory_context_ (NULL),
-  sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
+  parent_ (NULL), ainfo_ (NULL), heritage_ (NULL),
+  factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
-{}
-
-void
-WidgetImpl::constructed()
 {}
 
 void
@@ -1756,22 +1752,6 @@ WidgetImpl::name (const String &str)
   else
     set_data (&widget_name_key, str);
   changed ("name");
-}
-
-FactoryContext*
-WidgetImpl::factory_context () const
-{
-  return factory_context_;
-}
-
-void
-WidgetImpl::factory_context (FactoryContext *fc)
-{
-  if (fc)
-    assert_return (factory_context_ == NULL);
-  factory_context_ = fc;
-  if (factory_context_)
-    constructed();
 }
 
 UserSource

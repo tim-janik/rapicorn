@@ -97,24 +97,24 @@ static void initialize_factory_lazily (void);
 
 namespace Factory {
 
-// == WidgetTypeFactory ==
-static std::list<const WidgetTypeFactory*>&
+// == ObjectTypeFactory ==
+static std::list<const ObjectTypeFactory*>&
 widget_type_list()
 {
-  static std::list<const WidgetTypeFactory*> *widget_type_factories_p = NULL;
+  static std::list<const ObjectTypeFactory*> *widget_type_factories_p = NULL;
   do_once
     {
-      widget_type_factories_p = new std::list<const WidgetTypeFactory*>();
+      widget_type_factories_p = new std::list<const ObjectTypeFactory*>();
     }
   return *widget_type_factories_p;
 }
 
-static const WidgetTypeFactory*
+static const ObjectTypeFactory*
 lookup_widget_factory (String namespaced_ident)
 {
-  std::list<const WidgetTypeFactory*> &widget_type_factories = widget_type_list();
+  std::list<const ObjectTypeFactory*> &widget_type_factories = widget_type_list();
   namespaced_ident = namespaced_ident;
-  std::list<const WidgetTypeFactory*>::iterator it;
+  std::list<const ObjectTypeFactory*>::iterator it;
   for (it = widget_type_factories.begin(); it != widget_type_factories.end(); it++)
     if ((*it)->qualified_type == namespaced_ident)
       return *it;
@@ -122,38 +122,37 @@ lookup_widget_factory (String namespaced_ident)
 }
 
 void
-WidgetTypeFactory::register_widget_factory (const WidgetTypeFactory &itfactory)
+ObjectTypeFactory::register_object_factory (const ObjectTypeFactory &itfactory)
 {
-  std::list<const WidgetTypeFactory*> &widget_type_factories = widget_type_list();
+  std::list<const ObjectTypeFactory*> &widget_type_factories = widget_type_list();
   const char *ident = itfactory.qualified_type.c_str();
   const char *base = strrchr (ident, ':');
   if (!base || base != ident + 10 - 1 || strncmp (ident, "Rapicorn::", 10) != 0)
-    fatal ("WidgetTypeFactory registration with invalid/missing domain name: %s", ident);
+    fatal ("ObjectTypeFactory registration with invalid/missing domain name: %s", ident);
   String domain_name;
   domain_name.assign (ident, base - ident - 1);
   widget_type_factories.push_back (&itfactory);
 }
 
-WidgetTypeFactory::WidgetTypeFactory (const char *namespaced_ident) :
+ObjectTypeFactory::ObjectTypeFactory (const char *namespaced_ident) :
   qualified_type (namespaced_ident)
 {}
 
-WidgetTypeFactory::~WidgetTypeFactory ()
+ObjectTypeFactory::~ObjectTypeFactory ()
 {}
 
 void
-WidgetTypeFactory::sanity_check_identifier (const char *namespaced_ident)
+ObjectTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 {
   if (strncmp (namespaced_ident, "Rapicorn::", 10) != 0)
-    fatal ("WidgetTypeFactory: identifier lacks factory qualification: %s", namespaced_ident);
+    fatal ("ObjectTypeFactory: identifier lacks factory qualification: %s", namespaced_ident);
 }
 
 // == Public factory_context API ==
 String
-factory_context_name (FactoryContext *fc)
+factory_context_name (FactoryContext &fc)
 {
-  assert_return (fc != NULL, "");
-  const XmlNode &xnode = *fc->xnode;
+  const XmlNode &xnode = *fc.xnode;
   if (check_interface_node (xnode))
     return xnode.get_attribute ("id");
   else
@@ -161,10 +160,9 @@ factory_context_name (FactoryContext *fc)
 }
 
 String
-factory_context_type (FactoryContext *fc)
+factory_context_type (FactoryContext &fc)
 {
-  assert_return (fc != NULL, "");
-  const XmlNode *xnode = fc->xnode;
+  const XmlNode *xnode = fc.xnode;
   if (!check_interface_node (*xnode)) // lookup definition node from child node
     {
       xnode = lookup_interface_node (xnode->name(), xnode);
@@ -175,10 +173,9 @@ factory_context_type (FactoryContext *fc)
 }
 
 UserSource
-factory_context_source (FactoryContext *fc)
+factory_context_source (FactoryContext &fc)
 {
-  assert_return (fc != NULL, UserSource (""));
-  const XmlNode *xnode = fc->xnode;
+  const XmlNode *xnode = fc.xnode;
   if (!check_interface_node (*xnode)) // lookup definition node from child node
     {
       xnode = lookup_interface_node (xnode->name(), xnode);
@@ -208,7 +205,7 @@ factory_context_list_types (StringVector &types, const XmlNode *xnode, const boo
       if (!xnode && last->name() == "Rapicorn_Factory")
         {
           const StringVector &attributes_names = last->list_attributes(), &attributes_values = last->list_values();
-          const WidgetTypeFactory *widget_factory = NULL;
+          const ObjectTypeFactory *widget_factory = NULL;
           for (size_t i = 0; i < attributes_names.size(); i++)
             if (attributes_names[i] == "factory-type" || attributes_names[i] == "factory_type")
               {
@@ -227,34 +224,32 @@ factory_context_list_types (StringVector &types, const XmlNode *xnode, const boo
 }
 
 static void
-factory_context_update_cache (FactoryContext *fc)
+factory_context_update_cache (FactoryContext &fc)
 {
-  if (UNLIKELY (!fc->type_tags))
+  if (UNLIKELY (!fc.type_tags))
     {
-      const XmlNode *xnode = fc->xnode;
-      fc->type_tags = new StringSeq;
-      StringVector &types = *fc->type_tags;
+      const XmlNode *xnode = fc.xnode;
+      fc.type_tags = new StringSeq;
+      StringVector &types = *fc.type_tags;
       factory_context_list_types (types, xnode, false, false);
-      fc->type = types.size() ? types[types.size() - 1] : "";
+      fc.type = types.size() ? types[types.size() - 1] : "";
       types.clear();
       factory_context_list_types (types, xnode, true, true);
     }
 }
 
 const StringSeq&
-factory_context_tags (FactoryContext *fc)
+factory_context_tags (FactoryContext &fc)
 {
-  assert_return (fc != NULL, *(StringSeq*) NULL);
   factory_context_update_cache (fc);
-  return *fc->type_tags;
+  return *fc.type_tags;
 }
 
 String
-factory_context_impl_type (FactoryContext *fc)
+factory_context_impl_type (FactoryContext &fc)
 {
-  assert_return (fc != NULL, "");
   factory_context_update_cache (fc);
-  return fc->type;
+  return fc.type;
 }
 
 // == Builder ==
@@ -361,7 +356,7 @@ Builder::build_from_factory (const XmlNode *factory_node,
     else if (attr_names[i] == "factory_type")
       factory_type = attr_values[i];
   // lookup widget factory
-  const WidgetTypeFactory *widget_factory = lookup_widget_factory (factory_type);
+  const ObjectTypeFactory *widget_factory = lookup_widget_factory (factory_type);
   // sanity check factory node
   if (factory_node->name() != "Rapicorn_Factory" || !widget_factory ||
       attr_names.size() != 2 || factory_node->list_attributes().size() != 2 ||
@@ -378,9 +373,16 @@ Builder::build_from_factory (const XmlNode *factory_node,
       fc = new FactoryContext (factory_context_node);
       factory_context_map[factory_context_node] = fc;
     }
-  WidgetImplP widget = widget_factory->create_widget (fc);
-  if (widget)
-    widget->name (factory_id);
+  ObjectImplP object = widget_factory->create_object (*fc);
+  WidgetImplP widget;
+  if (object)
+    {
+      widget = shared_ptr_cast<WidgetImpl> (object);
+      if (widget)
+        widget->name (factory_id);
+      else
+        critical ("%s: %s yields non-widget: %s", node_location (factory_node), factory_node->name(), object->typeid_name());
+    }
   return widget;
 }
 
@@ -636,7 +638,7 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
 {
   initialize_factory_lazily();
   const XmlNode *const ancestor_node = lookup_interface_node (ancestor_identifier, NULL); // maybe NULL
-  const WidgetTypeFactory *const ancestor_itfactory = ancestor_node ? NULL : lookup_widget_factory (ancestor_identifier);
+  const ObjectTypeFactory *const ancestor_itfactory = ancestor_node ? NULL : lookup_widget_factory (ancestor_identifier);
   if (widget_identifier == ancestor_identifier && (ancestor_node || ancestor_itfactory))
     return true; // potential fast path
   if (!ancestor_node && !ancestor_itfactory)
@@ -656,7 +658,7 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
   if (last && last->name() == "Rapicorn_Factory")
     {
       const StringVector &attributes_names = last->list_attributes(), &attributes_values = last->list_values();
-      const WidgetTypeFactory *widget_factory = NULL;
+      const ObjectTypeFactory *widget_factory = NULL;
       for (size_t i = 0; i < attributes_names.size(); i++)
         if (attributes_names[i] == "factory-type" || attributes_names[i] == "factory_type")
           {
@@ -699,8 +701,7 @@ WidgetImplP
 create_ui_child (ContainerImpl &container, const String &widget_identifier, const ArgumentList &arguments, bool autoadd)
 {
   // figure XML context
-  FactoryContext *fc = container.factory_context();
-  assert_return (fc != NULL, NULL);
+  FactoryContext &fc = container.factory_context();
   // create child within parent namespace
   //local_namespace_list.push_back (namespace_domain);
   WidgetImplP widget = create_ui_widget (widget_identifier, arguments);

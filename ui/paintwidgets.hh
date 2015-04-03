@@ -9,12 +9,12 @@ namespace Rapicorn {
 class ArrowImpl : public virtual WidgetImpl, public virtual ArrowIface {
   DirType dir_;
 protected:
-  virtual               ~ArrowImpl      () override;
   virtual void           size_request   (Requisition &requisition) override;
   virtual void           size_allocate (Allocation area, bool changed) override;
   virtual void           render (RenderContext &rcontext, const Rect &rect) override;
 public:
   explicit               ArrowImpl      ();
+  virtual               ~ArrowImpl      () override;
   virtual void           arrow_dir      (DirType dir) override;
   virtual DirType        arrow_dir      () const override;
   virtual void           size_policy    (SizePolicyType spol) override;
@@ -27,12 +27,12 @@ class DotGridImpl : public virtual WidgetImpl, public virtual DotGridIface {
   uint16                right_padding_dots_, top_padding_dots_, left_padding_dots_, bottom_padding_dots_;
   virtual FrameType     dot_type            () const override;
 protected:
-  virtual              ~DotGridImpl         () override;
   virtual void          size_request        (Requisition &requisition) override;
   virtual void          size_allocate       (Allocation area, bool changed) override;
   virtual void          render              (RenderContext &rcontext, const Rect &rect) override;
 public:
   explicit              DotGridImpl         ();
+  virtual              ~DotGridImpl         () override;
   virtual void          dot_type            (FrameType ft) override;
   virtual void          normal_dot          (FrameType ft) override;
   virtual FrameType     normal_dot          () const override;
