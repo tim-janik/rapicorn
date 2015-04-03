@@ -34,17 +34,17 @@ const StringSeq& factory_context_tags      (FactoryContext *fc);
 UserSource       factory_context_source    (FactoryContext *fc);
 String           factory_context_impl_type (FactoryContext *fc);
 
-/* --- widget type registration --- */
-struct WidgetTypeFactory {
+// == Object Type Registration ==
+struct ObjectTypeFactory {
   const String  qualified_type;
-  RAPICORN_CLASS_NON_COPYABLE (WidgetTypeFactory);
+  RAPICORN_CLASS_NON_COPYABLE (ObjectTypeFactory);
 protected:
-  static void   register_widget_factory (const WidgetTypeFactory    &itfactory);
+  static void   register_object_factory (const ObjectTypeFactory    &itfactory);
   static void   sanity_check_identifier (const char                 *namespaced_ident);
-  virtual              ~WidgetTypeFactory ();
+  virtual              ~ObjectTypeFactory ();
 public:
-  explicit              WidgetTypeFactory (const char               *namespaced_ident);
-  virtual WidgetImplP   create_widget     (FactoryContext           *fc) const = 0;
+  explicit              ObjectTypeFactory (const char               *namespaced_ident);
+  virtual ObjectImplP   create_object     (FactoryContext           *fc) const = 0;
   virtual void          type_name_list    (std::vector<const char*> &names) const = 0;
   inline String         type_name         () const                          { return qualified_type; }
 };
@@ -56,15 +56,17 @@ public:
 /* --- widget factory template --- */
 void temp_window_factory_workaround (ObjectIfaceP o);
 template<class Type>
-class WidgetFactory : Factory::WidgetTypeFactory {
-  virtual WidgetImplP
-  create_widget (FactoryContext *fc) const override
+class WidgetFactory : Factory::ObjectTypeFactory {
+  virtual ObjectImplP
+  create_object (FactoryContext *fc) const override
   {
     ObjectIfaceP object = (new Type())->temp_factory_workaround();
     temp_window_factory_workaround (object);
-    WidgetImplP widget = shared_ptr_cast<WidgetImpl> (object);
-    widget->factory_context (fc);
-    return widget;
+    ObjectImplP objimpl = shared_ptr_cast<ObjectImpl> (object);
+    WidgetImplP widget = shared_ptr_cast<WidgetImpl> (objimpl);
+    if (widget)
+      widget->factory_context (fc);
+    return objimpl;
   }
   virtual void
   type_name_list (std::vector<const char*> &names) const override
@@ -79,10 +81,10 @@ class WidgetFactory : Factory::WidgetTypeFactory {
   }
 public:
   explicit WidgetFactory (const char *namespaced_ident) :
-    WidgetTypeFactory (namespaced_ident)
+    ObjectTypeFactory (namespaced_ident)
   {
     sanity_check_identifier (namespaced_ident);
-    register_widget_factory (*this);
+    register_object_factory (*this);
   }
 };
 
