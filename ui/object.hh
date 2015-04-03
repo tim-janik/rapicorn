@@ -7,25 +7,36 @@
 namespace Rapicorn {
 
 // == Forward Declarations ==
+class FactoryContext;
 class ObjectImpl;
 typedef std::shared_ptr<ObjectIface> ObjectIfaceP;
 typedef std::shared_ptr<ObjectImpl>  ObjectImplP;
 
 /// ObjectImpl is the base type for all server side objects in Rapicorn and implements the IDL base type ObjectIface.
 class ObjectImpl : public virtual ObjectIface, public virtual DataListContainer {
-  static void shared_ptr_deleter (ObjectImpl *object) { delete object; }
+  static void                       ctor_factory_context (FactoryContext *fc);
 protected:
   virtual /*dtor*/                 ~ObjectImpl    () override;
+  virtual void                      constructed   ();
   virtual void                      dispose       ();
   virtual void                      do_changed    (const String &name);
   class                    InterfaceMatcher;
   template<class C>  class InterfaceMatch;
+  FactoryContext&                   ctor_factory_context ();
 public:
   explicit                          ObjectImpl    ();
   Signal<void (const String &name)> sig_changed;
   virtual void                      changed       (const String &name);
   String                            typeid_name   ();
-  ObjectImplP             temp_factory_workaround ()    { return std::shared_ptr<ObjectImpl> (this, shared_ptr_deleter); }
+  template<class InstanceType> static
+  std::shared_ptr<InstanceType>     make_instance (FactoryContext &fc)
+  {
+    ctor_factory_context (&fc);
+    std::shared_ptr<InstanceType> sptr = std::make_shared<InstanceType>();
+    ctor_factory_context (NULL);
+    static_cast<ObjectImpl*> (&*sptr)->constructed();
+    return sptr;
+  }
 };
 inline bool operator== (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 == &object2; }
 inline bool operator!= (const ObjectImpl &object1, const ObjectImpl &object2) { return &object1 != &object2; }

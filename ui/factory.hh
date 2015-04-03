@@ -28,11 +28,11 @@ bool        check_ui_window     (const String           &widget_identifier);
 
 typedef map<String,String>       VariableMap;
 
-String           factory_context_name      (FactoryContext *fc);
-String           factory_context_type      (FactoryContext *fc);
-const StringSeq& factory_context_tags      (FactoryContext *fc);
-UserSource       factory_context_source    (FactoryContext *fc);
-String           factory_context_impl_type (FactoryContext *fc);
+String           factory_context_name      (FactoryContext &fc);
+String           factory_context_type      (FactoryContext &fc);
+const StringSeq& factory_context_tags      (FactoryContext &fc);
+UserSource       factory_context_source    (FactoryContext &fc);
+String           factory_context_impl_type (FactoryContext &fc);
 
 // == Object Type Registration ==
 struct ObjectTypeFactory {
@@ -44,7 +44,7 @@ protected:
   virtual              ~ObjectTypeFactory ();
 public:
   explicit              ObjectTypeFactory (const char               *namespaced_ident);
-  virtual ObjectImplP   create_object     (FactoryContext           *fc) const = 0;
+  virtual ObjectImplP   create_object     (FactoryContext           &fc) const = 0;
   virtual void          type_name_list    (std::vector<const char*> &names) const = 0;
   inline String         type_name         () const                          { return qualified_type; }
 };
@@ -58,15 +58,11 @@ void temp_window_factory_workaround (ObjectIfaceP o);
 template<class Type>
 class WidgetFactory : Factory::ObjectTypeFactory {
   virtual ObjectImplP
-  create_object (FactoryContext *fc) const override
+  create_object (FactoryContext &fc) const override
   {
-    ObjectIfaceP object = (new Type())->temp_factory_workaround();
+    std::shared_ptr<Type> object = ObjectImpl::make_instance<Type> (fc);
     temp_window_factory_workaround (object);
-    ObjectImplP objimpl = shared_ptr_cast<ObjectImpl> (object);
-    WidgetImplP widget = shared_ptr_cast<WidgetImpl> (objimpl);
-    if (widget)
-      widget->factory_context (fc);
-    return objimpl;
+    return object;
   }
   virtual void
   type_name_list (std::vector<const char*> &names) const override

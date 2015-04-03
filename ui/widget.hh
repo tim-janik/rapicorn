@@ -55,7 +55,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   ContainerImpl              *parent_; // inlined for fast access
   const AnchorInfo           *ainfo_;
   HeritageP                   heritage_;
-  FactoryContext             *factory_context_;
+  FactoryContext             &factory_context_;
   Allocation                  allocation_;
   Requisition                 requisition_;
   Requisition                 inner_size_request (); // ungrouped size requisition
@@ -68,7 +68,6 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   void                        data_context_changed ();
 protected:
   const AnchorInfo*           force_anchor_info  () const;
-  virtual void                constructed        ();
   virtual void                foreach_recursive  (const std::function<void (WidgetImpl&)> &f);
   /* flag handling */
   bool                        change_flags_silently (uint64 mask, bool on);
@@ -189,8 +188,7 @@ public:
   virtual void                vsize_group       (const String &group_list);
   virtual String              name              () const;            ///< Get Widget name or "id"
   virtual void                name              (const String &str); ///< Set Widget name and "id"
-  FactoryContext*             factory_context   () const;
-  void                        factory_context   (FactoryContext *fc);
+  FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
   ColorSchemeType             color_scheme      () const;
   void                        color_scheme      (ColorSchemeType cst);
