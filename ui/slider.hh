@@ -15,13 +15,13 @@ class SliderAreaImpl : public virtual TableLayoutImpl, public virtual SliderArea
   void                         unset_adjustment  ();
   bool                         move              (MoveType);
 protected:
-  virtual                     ~SliderAreaImpl    () override;
   virtual void                 hierarchy_changed (WidgetImpl *old_toplevel) override;
   virtual const CommandList&   list_commands     () override;
   virtual void                 slider_changed    ();
   typedef Aida::Signal<void ()> SignalSliderChanged;
 public:
   explicit                     SliderAreaImpl    ();
+  virtual                     ~SliderAreaImpl    () override;
   Adjustment*                  adjustment        () const;
   void                         adjustment        (Adjustment &adjustment);
   virtual AdjustmentSourceType adjustment_source () const override;
@@ -42,9 +42,9 @@ protected:
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   virtual bool          handle_event            (const Event &event) override;
   virtual void          reset                   (ResetMode mode = RESET_ALL) override;
-  virtual              ~SliderTroughImpl        () override;
 public:
   explicit              SliderTroughImpl        ();
+  virtual              ~SliderTroughImpl        () override;
   bool                  flipped                 () const;
   Adjustment*           adjustment              () const;
 };

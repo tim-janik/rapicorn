@@ -13,9 +13,9 @@ class AmbienceImpl : public virtual SingleContainerImpl, public virtual Ambience
 protected:
   void                 render_shade            (cairo_t *cairo, int x, int y, int width, int height, LightingType st);
   virtual void         render                  (RenderContext &rcontext, const Rect &rect) override;
-  virtual             ~AmbienceImpl            () override;
 public:
   explicit             AmbienceImpl            ();
+  virtual             ~AmbienceImpl            () override;
   virtual void         insensitive_background  (const String &color) override;
   virtual String       insensitive_background  () const override;
   virtual void         prelight_background     (const String &color) override;
@@ -56,13 +56,13 @@ class FrameImpl : public virtual SingleContainerImpl, public virtual FrameIface 
   bool              is_tight_focus    () const;
 protected:
   bool              tap_tight_focus (int onoffx);
-  virtual          ~FrameImpl       () override;
   virtual void      do_changed      (const String &name) override;
   virtual void      size_request    (Requisition &requisition) override;
   virtual void      size_allocate   (Allocation area, bool changed) override;
   virtual void      render          (RenderContext &rcontext, const Rect &rect) override;
 public: // FrameIface
   explicit          FrameImpl       ();
+  virtual          ~FrameImpl       () override;
   virtual FrameType current_frame   () override;
   virtual FrameType normal_frame    () const override;
   virtual void      normal_frame    (FrameType) override;
@@ -76,11 +76,11 @@ public: // FrameIface
 
 class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrameIface {
 protected:
-  virtual          ~FocusFrameImpl    () override;
   virtual void      set_focus_child   (WidgetImpl *widget) override;
   virtual void      hierarchy_changed (WidgetImpl *old_toplevel) override;
 public:
   explicit          FocusFrameImpl    ();
+  virtual          ~FocusFrameImpl    () override;
   /** FocusFrame registers itself with ancestors that implement the FocusFrameImpl::Client interface.
    * This is useful for ancestors to be notified about a FocusFrameImpl descendant to implement
    * .can_focus() efficiently and for a FocusFrame to reflect its ancestor's .has_focus() state.
