@@ -238,15 +238,9 @@ WindowImpl::WindowImpl() :
 }
 
 void
-temp_window_factory_workaround (ObjectIfaceP o)
+WindowImpl::constructed ()
 {
-  ObjectIface *oi = o.get();
-  if (oi)
-    {
-      WindowImpl *w = dynamic_cast<WindowImpl*> (oi);
-      if (w)
-        ApplicationImpl::the().add_window (*w);
-    }
+  ApplicationImpl::the().add_window (*this);
 }
 
 void

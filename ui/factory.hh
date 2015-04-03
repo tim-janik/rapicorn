@@ -53,16 +53,13 @@ public:
 
 // namespace Rapicorn
 
-/* --- widget factory template --- */
-void temp_window_factory_workaround (ObjectIfaceP o);
+// == WidgetFactory ==
 template<class Type>
 class WidgetFactory : Factory::ObjectTypeFactory {
   virtual ObjectImplP
   create_object (FactoryContext &fc) const override
   {
-    std::shared_ptr<Type> object = ObjectImpl::make_instance<Type> (fc);
-    temp_window_factory_workaround (object);
-    return object;
+    return ObjectImpl::make_instance<Type> (fc);
   }
   virtual void
   type_name_list (std::vector<const char*> &names) const override

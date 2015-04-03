@@ -25,11 +25,12 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   uint                  entered_ : 1;
   uint                  pending_win_size_ : 1;
   uint                  pending_expose_ : 1;
-  void                  uncross_focus           (WidgetImpl        &fwidget);
+  void                  uncross_focus           (WidgetImpl &fwidget);
 protected:
-  void          set_focus               (WidgetImpl         *widget);
-  virtual void  set_parent              (ContainerImpl    *parent);
-  virtual void  dispose                 ();
+  void                  set_focus               (WidgetImpl *widget);
+  virtual void          set_parent              (ContainerImpl *parent);
+  virtual void          constructed             () override;
+  virtual void          dispose                 () override;
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
