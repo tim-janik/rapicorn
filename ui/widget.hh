@@ -75,13 +75,13 @@ protected:
   bool                        change_flags_silently (uint64 mask, bool on);
   // State flags and widget flags
   static_assert (STATE_NORMAL        == 0, "");
-  static_assert (STATE_HOVER         == 1 <<  0, ""); // Flag indicating "hover" state of a widget, see hover()
-  static_assert (STATE_ACCELERATABLE == 1 <<  1, "");
-  static_assert (STATE_INSENSITIVE   == 1 <<  2, ""); // Widget flag that disables input event processing, see pointer_sensitive()
-  static_assert (STATE_PANEL         == 1 <<  3, "");
-  static_assert (STATE_DEFAULT       == 1 <<  4, "");
-  static_assert (STATE_SELECTED      == 1 <<  5, "");
-  static_assert (STATE_FOCUSED       == 1 <<  6, ""); // Focus chain flag, indicates if widget is (in ancestry of) the focus widget, see grab_focus()
+  static_assert (STATE_PANEL         == 1 <<  0, "");
+  static_assert (STATE_HOVER         == 1 <<  1, ""); // Flag indicating "hover" state of a widget, see hover()
+  static_assert (STATE_ACCELERATABLE == 1 <<  2, "");
+  static_assert (STATE_DEFAULT       == 1 <<  3, "");
+  static_assert (STATE_SELECTED      == 1 <<  4, "");
+  static_assert (STATE_FOCUSED       == 1 <<  5, ""); // Focus chain flag, indicates if widget is (in ancestry of) the focus widget, see grab_focus()
+  static_assert (STATE_INSENSITIVE   == 1 <<  6, ""); // Widget flag that disables input event processing, see pointer_sensitive()
   static_assert (STATE_ACTIVE        == 1 <<  7, ""); // Flag indicating state of an active widget, see also active()
   static_assert (STATE_RETAINED      == 1 <<  8, "");
   static_assert (STATE_RESERVED1     == 1 <<  9, "");

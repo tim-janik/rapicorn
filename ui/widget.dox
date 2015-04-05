@@ -9,13 +9,13 @@ made with Rapicorn are composed of.
 @par Widget States
 The following is a list of states a widget can be in, a combination of multiple states may apply to a widget at any given time.
 - <b>Rapicorn::STATE_NORMAL - "normal"</b><br/> Ordinary widget state to start with, not activated, insensitive or otherwise special.
+- <b>Rapicorn::STATE_PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
 - <b>Rapicorn::STATE_HOVER - "hover"</b><br/> Widget flag indicating that the mouse is over the widget.
 - <b>Rapicorn::STATE_ACCELERATABLE - "acceleratable"</b><br/> Widget flag indicating the available of accelerators or mnemonic shortcuts.
-- <b>Rapicorn::STATE_INSENSITIVE - "insensitive"</b><br/> Widget flag that disables input event processing, see pointer_sensitive()
-- <b>Rapicorn::STATE_PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
 - <b>Rapicorn::STATE_DEFAULT - "default"</b><br/> Widget flag that enables widgets to receive the default activation.
 - <b>Rapicorn::STATE_SELECTED - "selected"</b><br/> Widget flag indicating that the widget is currently selected.
 - <b>Rapicorn::STATE_FOCUSED - "focused"</b><br/> Widget flag indicating that the widget is part of the focus chain, i.e. the widget or one of its descendants has the input focus.
+- <b>Rapicorn::STATE_INSENSITIVE - "insensitive"</b><br/> Widget flag that disables input event processing, see pointer_sensitive()
 - <b>Rapicorn::STATE_ACTIVE - "active"</b><br/> Widget flag used by widgets that can be activated or toggled.
 - <b>Rapicorn::STATE_RETAINED - "retained"</b><br/> Widget flag indicating that its activation state is held back, hidden or inconsistent.
 <!-- - <b>Rapicorn::STATE_RESERVED1 - "reserved1"</b><br/> Unspecified. -->
