@@ -31,12 +31,20 @@ node_location (const XmlNodeP xnode)
 
 // == InterfaceFile ==
 struct InterfaceFile : public virtual std::enable_shared_from_this<InterfaceFile> {
-  const String       file_name;
-  const XmlNodeP     root; // <interfaces/>
-  const ArgumentList parser_args;
-  explicit InterfaceFile (const String &f, const XmlNodeP r, const ArgumentList *arguments) :
-    file_name (f), root (r), parser_args (arguments ? *arguments : ArgumentList())
+  const String           file_name;
+  const XmlNodeP         root; // <interfaces/>
+  Evaluator::VariableMap parser_args; // arguments provided when parsing XML
+  explicit               InterfaceFile (const String &f, const XmlNodeP r, const ArgumentList *arguments) :
+    file_name (f), root (r), parser_args (variable_map_from_args (arguments))
   {}
+  static Evaluator::VariableMap
+  variable_map_from_args (const ArgumentList *arguments)
+  {
+    Evaluator::VariableMap vmap;
+    if (arguments)
+      Evaluator::populate_map (vmap, *arguments);
+    return vmap;
+  }
 };
 typedef std::shared_ptr<InterfaceFile> InterfaceFileP;
 
@@ -68,14 +76,18 @@ register_interface_file (String file_name, const XmlNodeP root, const ArgumentLi
 }
 
 static const XmlNode*
-lookup_interface_node (const String &identifier, const XmlNode *context_node)
+lookup_interface_node (const String &identifier, InterfaceFileP *ifacepp, const XmlNode *context_node)
 {
   for (auto ifile : interface_file_list)
     for (auto node : ifile->root->children())
       {
         const String id = node->get_attribute ("id");
         if (id == identifier)
-          return node.get();
+          {
+            if (ifacepp)
+              *ifacepp = ifile;
+            return node.get();
+          }
       }
   return NULL;
 }
@@ -171,7 +183,7 @@ factory_context_type (FactoryContext &fc)
   const XmlNode *xnode = fc.xnode;
   if (!check_interface_node (*xnode)) // lookup definition node from child node
     {
-      xnode = lookup_interface_node (xnode->name(), xnode);
+      xnode = lookup_interface_node (xnode->name(), NULL, xnode);
       assert_return (xnode != NULL, "");
     }
   assert_return (check_interface_node (*xnode), "");
@@ -184,7 +196,7 @@ factory_context_source (FactoryContext &fc)
   const XmlNode *xnode = fc.xnode;
   if (!check_interface_node (*xnode)) // lookup definition node from child node
     {
-      xnode = lookup_interface_node (xnode->name(), xnode);
+      xnode = lookup_interface_node (xnode->name(), NULL, xnode);
       assert_return (xnode != NULL, UserSource (""));
     }
   assert_return (check_interface_node (*xnode), UserSource (""));
@@ -197,7 +209,7 @@ factory_context_list_types (StringVector &types, const XmlNode *xnode, const boo
   assert_return (xnode != NULL);
   if (!check_interface_node (*xnode)) // lookup definition node from child node
     {
-      xnode = lookup_interface_node (xnode->name(), xnode);
+      xnode = lookup_interface_node (xnode->name(), NULL, xnode);
       assert_return (xnode != NULL);
     }
   while (xnode)
@@ -207,7 +219,7 @@ factory_context_list_types (StringVector &types, const XmlNode *xnode, const boo
         types.push_back (xnode->get_attribute ("id"));
       const String parent_name = xnode->name();
       const XmlNode *last = xnode;
-      xnode = lookup_interface_node (parent_name, xnode);
+      xnode = lookup_interface_node (parent_name, NULL, xnode);
       if (!xnode && last->name() == "Rapicorn_Factory")
         {
           const StringVector &attributes_names = last->list_attributes(), &attributes_values = last->list_values();
@@ -261,10 +273,11 @@ factory_context_impl_type (FactoryContext &fc)
 // == Builder ==
 class Builder {
   enum Flags { SCOPE_CHILD = 0, SCOPE_WIDGET = 1 };
+  InterfaceFileP   interface_file_;             // InterfaceFile for dnode_
+  const XmlNode   *const dnode_;                // definition of gadget to be created
   Builder         *const outer_;
-  const XmlNode   *const dnode_;               // definition of gadget to be created
   String           child_container_name_;
-  ContainerImpl   *child_container_;           // captured child_container_ widget during build phase
+  ContainerImpl   *child_container_;            // captured child_container_ widget during build phase
   StringVector     scope_names_, scope_values_;
   vector<bool>     scope_consumed_;
   VariableMap      locals_;
@@ -285,7 +298,8 @@ public:
 };
 
 Builder::Builder (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node) :
-  outer_ (outer_builder), dnode_ (lookup_interface_node (widget_identifier, context_node)), child_container_ (NULL)
+  interface_file_ (NULL), dnode_ (lookup_interface_node (widget_identifier, &interface_file_, context_node)),
+  outer_ (outer_builder), child_container_ (NULL)
 {
   if (!dnode_)
     return;
@@ -443,7 +457,7 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
   // create environment for @eval
   Evaluator env;
   String name_argument; // target name for this scope widget
-  // extract Argument defaults from definition
+  // extract <Argument/> defaults from definition
   StringVector argument_names, argument_values;
   for (const XmlNodeP cnode : dnode_->children())
     if (cnode->name() == "Argument")
@@ -503,9 +517,11 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
   Evaluator::populate_map (locals_, argument_names, argument_values);
   argument_names.clear(), argument_values.clear();
   // build main definition widget
+  env.push_map (interface_file_->parser_args);
   env.push_map (locals_);
   WidgetImplP widget = build_widget (dnode_, env, factory_context_node, SCOPE_WIDGET);
   env.pop_map (locals_);
+  env.pop_map (interface_file_->parser_args);
   if (!widget)
     return NULL;
   // assign caller properties ('consumed' values have been used as Argument values)
@@ -643,21 +659,21 @@ bool
 Builder::widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier)
 {
   initialize_factory_lazily();
-  const XmlNode *const ancestor_node = lookup_interface_node (ancestor_identifier, NULL); // maybe NULL
+  const XmlNode *const ancestor_node = lookup_interface_node (ancestor_identifier, NULL, NULL); // may yield NULL
   const ObjectTypeFactory *const ancestor_itfactory = ancestor_node ? NULL : lookup_widget_factory (ancestor_identifier);
   if (widget_identifier == ancestor_identifier && (ancestor_node || ancestor_itfactory))
     return true; // potential fast path
   if (!ancestor_node && !ancestor_itfactory)
     return false; // ancestor_identifier is non-existent
   String identifier = widget_identifier;
-  const XmlNode *node = lookup_interface_node (identifier, NULL), *last = node;
+  const XmlNode *node = lookup_interface_node (identifier, NULL, NULL), *last = node;
   while (node)
     {
       if (node == ancestor_node)
         return true; // widget ancestor matches
       identifier = node->name();
       last = node;
-      node = lookup_interface_node (identifier, node);
+      node = lookup_interface_node (identifier, NULL, node);
     }
   if (ancestor_node)
     return false; // no node match possible
