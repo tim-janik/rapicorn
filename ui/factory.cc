@@ -760,19 +760,15 @@ parse_ui_data (const String &data_name, size_t data_length, const char *data, co
   return parse_ui_data_internal (data_name, data_length, data, i18n_domain, arguments, definitions);
 }
 
-String
-parse_theme (const Blob &blob, const String &i18n_domain)
-{
-  return parse_ui_data_internal (blob.name(), blob.size(), blob.data(), i18n_domain, NULL, NULL);
-}
-
 } // Factory
 
 static void
 initialize_factory_lazily (void)
 {
-  do_once
+  static bool initialized = false;
+  if (!initialized)
     {
+      initialized++;
       assert (Factory::factory_current_theme == NULL);
       Blob blob = Res ("@res Rapicorn/foundation.xml");
       Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL, NULL);

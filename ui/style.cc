@@ -145,7 +145,7 @@ FileTheme::FileTheme (const String &theme_name, const Blob &iniblob, bool local_
       const String res = "@res themes/" + xf; // FIXME: load file relative to blob.name + local_files flag
       Blob xmlblob = Res (res);
       TDEBUG ("%s: load '%s': blob='%s' size=%d", theme_name, res, xmlblob.name(), xmlblob.size());
-      const String err = Factory::parse_theme (xmlblob, "");
+      const String err = Factory::parse_ui_data (xmlblob.name(), xmlblob.size(), xmlblob.data(), "", NULL, NULL);
       if (!err.empty())
         TDEBUG ("%s: loading '%s': %s", theme_name, res, err);
     }

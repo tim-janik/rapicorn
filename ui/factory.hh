@@ -18,7 +18,6 @@ String      parse_ui_data       (const String           &data_name,
                                  const String           &i18n_domain,
                                  const ArgumentList     *arguments,
                                  StringVector           *definitions);
-String      parse_theme         (const Blob             &blob, const String &i18n_domain);
 WidgetImplP create_ui_widget    (const String           &widget_identifier,
                                  const ArgumentList     &arguments = ArgumentList());
 WidgetImplP create_ui_child     (ContainerImpl &container, const String &widget_identifier,
