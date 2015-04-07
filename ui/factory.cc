@@ -31,20 +31,23 @@ node_location (const XmlNodeP xnode)
 
 // == InterfaceFile ==
 struct InterfaceFile : public virtual std::enable_shared_from_this<InterfaceFile> {
-  const String   file_name;
-  const XmlNodeP root; // <interfaces/>
-  explicit InterfaceFile (const String &f, const XmlNodeP r) : file_name (f), root (r) {}
+  const String       file_name;
+  const XmlNodeP     root; // <interfaces/>
+  const ArgumentList parser_args;
+  explicit InterfaceFile (const String &f, const XmlNodeP r, const ArgumentList *arguments) :
+    file_name (f), root (r), parser_args (arguments ? *arguments : ArgumentList())
+  {}
 };
 typedef std::shared_ptr<InterfaceFile> InterfaceFileP;
 
 static std::vector<InterfaceFileP> interface_file_list;
 
 static String
-register_interface_file (String file_name, const XmlNodeP root, StringVector *definitions)
+register_interface_file (String file_name, const XmlNodeP root, const ArgumentList *arguments, StringVector *definitions)
 {
   assert_return (file_name.empty() == false, "missing file");
   assert_return (root->name() == "interfaces", "invalid file");
-  InterfaceFileP ifile = std::make_shared<InterfaceFile> (file_name, root);
+  InterfaceFileP ifile = std::make_shared<InterfaceFile> (file_name, root, arguments);
   const size_t reset_size = definitions ? definitions->size() : 0;
   for (auto dnode : root->children())
     if (dnode->istext() == false)
@@ -730,8 +733,8 @@ create_ui_child (ContainerImpl &container, const String &widget_identifier, cons
 
 // == XML Parsing and Registration ==
 static String
-parse_ui_data_internal (const String &data_name, size_t data_length,
-                        const char *data, const String &i18n_domain, StringVector *definitions)
+parse_ui_data_internal (const String &data_name, size_t data_length, const char *data, const String &i18n_domain,
+                        const ArgumentList *arguments, StringVector *definitions)
 {
   String pseudoroot; // automatically wrap definitions into root tag <interfaces/>
   const size_t estart = MarkupParser::seek_to_element (data, data_length);
@@ -744,23 +747,23 @@ parse_ui_data_internal (const String &data_name, size_t data_length,
     errstr = string_format ("%s:%d:%d: %s", data_name.c_str(), perror.line_number, perror.char_number, perror.message.c_str());
   else
     {
-      errstr = register_interface_file (data_name, xnode, definitions);
+      errstr = register_interface_file (data_name, xnode, arguments, definitions);
     }
   return errstr;
 }
 
 String
-parse_ui_data (const String &data_name, size_t data_length,
-               const char *data, const String &i18n_domain, StringVector *definitions)
+parse_ui_data (const String &data_name, size_t data_length, const char *data, const String &i18n_domain,
+               const ArgumentList *arguments, StringVector *definitions)
 {
   initialize_factory_lazily();
-  return parse_ui_data_internal (data_name, data_length, data, i18n_domain, definitions);
+  return parse_ui_data_internal (data_name, data_length, data, i18n_domain, arguments, definitions);
 }
 
 String
 parse_theme (const Blob &blob, const String &i18n_domain)
 {
-  return parse_ui_data_internal (blob.name(), blob.size(), blob.data(), i18n_domain, NULL);
+  return parse_ui_data_internal (blob.name(), blob.size(), blob.data(), i18n_domain, NULL, NULL);
 }
 
 } // Factory
@@ -772,9 +775,9 @@ initialize_factory_lazily (void)
     {
       assert (Factory::factory_current_theme == NULL);
       Blob blob = Res ("@res Rapicorn/foundation.xml");
-      Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL);
+      Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL, NULL);
       blob = Res ("@res Rapicorn/standard.xml");
-      Factory::parse_ui_data_internal ("Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL);
+      Factory::parse_ui_data_internal ("Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL, NULL);
       blob = Res ("@res themes/Default.xml");
       ThemeInfoP default_theme = ThemeInfo::load_theme ("Default");
       assert (default_theme != NULL);
