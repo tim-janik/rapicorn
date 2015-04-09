@@ -7,6 +7,9 @@
 
 namespace Rapicorn {
 
+/** Simple infix expression parser and evaluator.
+ * For a sample read-eval-print loop, see: <tt>ui/tests/servertests --shell</tt>.
+ */
 struct Evaluator {
   typedef std::vector<String>           ArgumentList; /* elements: key=utf8string */
   typedef std::map<String,String>       VariableMap;
