@@ -138,17 +138,8 @@ FileTheme::FileTheme (const String &theme_name, const Blob &iniblob, bool local_
   theme_name_ (theme_name)
 {
   TDEBUG ("%s: initialize from blob='%s' size=%d", theme_name, iniblob.name(), iniblob.size());
+  StringVector theme_args;
   IniFile ini (iniblob);
-  const String xf = ini.value_as_string ("theme.xml_file");
-  if (!xf.empty())
-    {
-      const String res = "@res themes/" + xf; // FIXME: load file relative to blob.name + local_files flag
-      Blob xmlblob = Res (res);
-      TDEBUG ("%s: load '%s': blob='%s' size=%d", theme_name, res, xmlblob.name(), xmlblob.size());
-      const String err = Factory::parse_ui_data (xmlblob.name(), xmlblob.size(), xmlblob.data(), "", NULL, NULL);
-      if (!err.empty())
-        TDEBUG ("%s: loading '%s': %s", theme_name, res, err);
-    }
   const String sf = ini.value_as_string ("theme.svg_file");
   Svg::FileP svgf;
   if (!sf.empty())
@@ -158,6 +149,8 @@ FileTheme::FileTheme (const String &theme_name, const Blob &iniblob, bool local_
       svgf = Svg::File::load (svgblob);
       const int errno_ = errno;
       TDEBUG ("%s: load '%s': blob='%s' size=%d: %s", theme_name, res, svgblob.name(), svgblob.size(), strerror (errno_));
+      if (!errno)
+        theme_args.push_back ("theme_svg_file=" + res);
     }
   if (svgf)
     {
@@ -175,6 +168,16 @@ FileTheme::FileTheme (const String &theme_name, const Blob &iniblob, bool local_
           cairo_destroy (cr);
           TDEBUG ("%s: sample: %s -> 0x%08x", theme_name, fragment, argb);
         }
+    }
+  const String xf = ini.value_as_string ("theme.xml_file");
+  if (!xf.empty())
+    {
+      const String res = "@res themes/" + xf; // FIXME: load file relative to blob.name + local_files flag
+      Blob xmlblob = Res (res);
+      TDEBUG ("%s: load '%s': blob='%s' size=%d", theme_name, res, xmlblob.name(), xmlblob.size());
+      const String err = Factory::parse_ui_data (xmlblob.name(), xmlblob.size(), xmlblob.data(), "", &theme_args, NULL);
+      if (!err.empty())
+        TDEBUG ("%s: loading '%s': %s", theme_name, res, err);
     }
 }
 
