@@ -11,7 +11,7 @@ The following is a list of states a widget can be in, a combination of multiple 
 - <b>Rapicorn::STATE_NORMAL - "normal"</b><br/> Ordinary widget state to start with, not activated, insensitive or otherwise special.
 - <b>Rapicorn::STATE_PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
 - <b>Rapicorn::STATE_HOVER - "hover"</b><br/> Widget flag indicating that the mouse is over the widget.
-- <b>(Unimplemented) - "focusable"</b>: Flag to toggle a widget's ability to accept focus.
+- <b>(No state flag) - "focusable"</b>: A widget's ability to accept the input focus.
 - <b>Rapicorn::STATE_ACCELERATABLE - "acceleratable"</b><br/> Widget flag indicating the available of accelerators or mnemonic shortcuts.
 - <b>Rapicorn::STATE_DEFAULT - "default"</b><br/> Widget flag that enables widgets to receive the default activation.
 - <b>Rapicorn::STATE_SELECTED - "selected"</b><br/> Widget flag indicating that the widget is currently selected.
