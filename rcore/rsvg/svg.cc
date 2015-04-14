@@ -138,6 +138,7 @@ struct FileImpl : public File {
   virtual String        name            () const override { return name_; }
   virtual void          dump_tree       () override;
   virtual ElementP      lookup          (const String &elementid) override;
+  virtual StringVector  list            (const String &prefix) override;
 };
 
 // == File ==
@@ -240,6 +241,29 @@ FileImpl::lookup (const String &elementid)
         }
     }
   return Element::none();
+}
+
+/**
+ * @fn File::list
+ * List all element IDs in an SVG file that start with @a prefix.
+ */
+StringVector
+FileImpl::list (const String &prefix)
+{
+  StringVector stv;
+  return_unless (handle_, stv);
+  GSList *ids = rsvg_handle_list (handle_);
+  while (ids)
+    {
+      GSList *const node = ids;
+      ids = node->next;
+      gchar *id = (gchar*) node->data;
+      g_slist_free_1 (node);
+      if (strncmp (id, prefix.c_str(), prefix.size()) == 0)
+        stv.push_back (id);
+      g_free (id);
+    }
+  return stv;
 }
 
 // == Span ==
