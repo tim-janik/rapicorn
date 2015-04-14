@@ -171,10 +171,11 @@ cairo_surface_from_pixmap (Pixmap pixmap)
 
 // == ImageBackend ==
 struct ImagePainter::ImageBackend : public std::enable_shared_from_this<ImageBackend> {
-  virtual            ~ImageBackend    () {}
-  virtual Requisition image_size      () = 0;
-  virtual Rect        fill_area       () = 0;
-  virtual void        draw_image      (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect) = 0;
+  virtual             ~ImageBackend     () {}
+  virtual Requisition  image_size       () = 0;
+  virtual Rect         fill_area        () = 0;
+  virtual void         draw_image       (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect) = 0;
+  virtual StringVector list             (const String &prefix) = 0;
 };
 
 // == SvgImageBackend ==
@@ -210,6 +211,11 @@ public:
     critical_unless (fill_.x + fill_.width <= bb.width);
     critical_unless (fill_.y >= 0 && fill_.y < bb.height);
     critical_unless (fill_.y + fill_.height <= bb.height);
+  }
+  virtual StringVector
+  list (const String &prefix)
+  {
+    return svgf_->list (prefix);
   }
   virtual Requisition
   image_size ()
@@ -253,6 +259,11 @@ public:
   PixmapImageBackend (const Pixmap &pixmap) :
     pixmap_ (pixmap)
   {}
+  virtual StringVector
+  list (const String &prefix)
+  {
+    return StringVector();
+  }
   virtual Requisition
   image_size ()
   {
@@ -403,6 +414,12 @@ Requisition
 ImagePainter::image_size ()
 {
   return image_backend_ ? image_backend_->image_size() : Requisition();
+}
+
+StringVector
+ImagePainter::list (const String &prefix)
+{
+  return image_backend_ ? image_backend_->list (prefix) : StringVector();
 }
 
 Rect
