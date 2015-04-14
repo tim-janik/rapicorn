@@ -52,5 +52,7 @@ void	     rsvg_defs_register_name	(RsvgDefs * defs, const char *name, RsvgNode *
 G_GNUC_INTERNAL
 void	     rsvg_defs_register_memory  (RsvgDefs * defs, RsvgNode * val);
 
+G_GNUC_INTERNAL GSList* rsvg_defs_list (const RsvgDefs *defs);
+
 G_END_DECLS
 #endif
