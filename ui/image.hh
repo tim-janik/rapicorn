@@ -25,31 +25,22 @@ public:
 };
 
 class StatePainterImpl : public virtual WidgetImpl, public virtual StatePainterIface {
-  String         source_, normal_image_, hover_image_, active_image_;
-  String         insensitive_image_, default_image_, focus_image_, state_image_;
-  ImagePainter   source_painter_, state_painter_;
-  String         current_source      ();
-  void           update_source      (String &member, const String &value, const char *name);
+  String svg_source_, svg_fragment_;
+  ImagePainter size_painter_, state_painter_;
+  String cached_painter_;
+  String         current_element     ();
+  String         state_element       (StateType state);
 protected:
   virtual void   do_changed          (const String &name) override;
   virtual void   size_request        (Requisition &requisition) override;
   virtual void   size_allocate       (Allocation area, bool changed) override;
   virtual void   render              (RenderContext &rcontext, const Rect &rect) override;
 public:
-  virtual String source              () const override          { return source_; }
-  virtual void   source              (const String &resource) override;
-  virtual String normal_image        () const override          { return normal_image_; }
-  virtual void   normal_image        (const String &e) override { update_source (normal_image_, e, "normal_image"); }
-  virtual String hover_image         () const override          { return hover_image_; }
-  virtual void   hover_image         (const String &e) override { update_source (hover_image_, e, "hover_image"); }
-  virtual String active_image        () const override          { return active_image_; }
-  virtual void   active_image        (const String &e) override { update_source (active_image_, e, "active_image"); }
-  virtual String insensitive_image   () const override          { return insensitive_image_; }
-  virtual void   insensitive_image   (const String &e) override { update_source (insensitive_image_, e, "insensitive_image"); }
-  virtual String default_image       () const override          { return default_image_; }
-  virtual void   default_image       (const String &e) override { update_source (default_image_, e, "default_image"); }
-  virtual String focus_image         () const override          { return focus_image_; }
-  virtual void   focus_image         (const String &e) override { update_source (focus_image_, e, "focus_image"); }
+  explicit       StatePainterImpl     ();
+  virtual String svg_source           () const override                 { return svg_source_; }
+  virtual void   svg_source           (const String &source) override;
+  virtual String svg_element          () const override                 { return svg_fragment_; }
+  virtual void   svg_element          (const String &element) override;
 };
 
 } // Rapicorn

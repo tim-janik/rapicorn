@@ -86,61 +86,115 @@ ImageImpl::render (RenderContext &rcontext, const Rect &rect)
 static const WidgetFactory<ImageImpl> image_factory ("Rapicorn::Image");
 
 // == StatePainterImpl ==
+StatePainterImpl::StatePainterImpl() :
+  cached_painter_ ("")
+{}
+
 void
-StatePainterImpl::source (const String &resource)
+StatePainterImpl::svg_source (const String &resource)
 {
-  return_unless (source_ != resource);
-  source_ = resource;
-  source_painter_ = ImagePainter();
-  state_painter_ = ImagePainter();
-  state_image_ = "";
+  return_unless (svg_source_ != resource);
+  svg_source_ = resource;
+  if (size_painter_)
+    size_painter_ = ImagePainter();
+  if (state_painter_)
+    state_painter_ = ImagePainter();
+  cached_painter_ = "";
   invalidate();
-  changed ("source");
+  changed ("svg_source");
+}
+
+void
+StatePainterImpl::svg_element (const String &fragment)
+{
+  return_unless (svg_fragment_ != fragment);
+  svg_fragment_ = fragment;
+  if (size_painter_)
+    size_painter_ = ImagePainter();
+  if (state_painter_)
+    state_painter_ = ImagePainter();
+  cached_painter_ = "";
+  invalidate();
+  changed ("svg_source");
+}
+
+static constexpr uint64
+consthash_fnv64a (const char *string, uint64 hash = 0xcbf29ce484222325)
+{
+  return string[0] == 0 ? hash : consthash_fnv64a (string + 1, 0x100000001b3 * (hash ^ string[0]));
+}
+
+static const uint64 BROKEN = 0x80000000;
+
+static uint64
+single_state_score (const String &state_string)
+{
+  switch (consthash_fnv64a (state_string.c_str()))
+    {
+    case consthash_fnv64a ("normal"):           return STATE_NORMAL;
+    case consthash_fnv64a ("panel"):            return STATE_PANEL;
+    case consthash_fnv64a ("hover"):            return STATE_HOVER;
+    case consthash_fnv64a ("acceleratable"):    return STATE_ACCELERATABLE;
+    case consthash_fnv64a ("default"):          return STATE_DEFAULT;
+    case consthash_fnv64a ("selected"):         return STATE_SELECTED;
+    case consthash_fnv64a ("focused"):          return STATE_FOCUSED;
+    case consthash_fnv64a ("insensitive"):      return STATE_INSENSITIVE;
+    case consthash_fnv64a ("active"):           return STATE_ACTIVE;
+    case consthash_fnv64a ("retained"):         return STATE_RETAINED;
+    default:                                    return BROKEN;
+    }
+}
+
+static uint64
+state_score (const String &state_string)
+{
+  StringVector sv = string_split (state_string, "+");
+  uint64 r = 0;
+  for (const String &s : sv)
+    r |= single_state_score (s);
+  return r >= BROKEN ? 0 : r;
 }
 
 String
-StatePainterImpl::current_source ()
+StatePainterImpl::state_element (StateType state)
 {
-  StateType s = ancestry_active() ? STATE_ACTIVE : state(); // FIXME: priority for insensitive?
-  const String current = [&]() {
-    switch (s)
+  if (!size_painter_)
+    size_painter_ = ImagePainter (svg_source_);
+  return_unless (size_painter_ && svg_fragment_.size() && svg_fragment_[0] == '#', "");
+  // match an SVG element to state, ID syntax: <element id="elementname:active+insensitive"/>
+  const String element = svg_fragment_.substr (1); // fragment without initial hash symbol
+  const size_t colon = element.size();
+  String fallback, match;
+  size_t score = 0;
+  for (auto id : size_painter_.list (element))
+    if (id == element)                                  // element without state specification
+      fallback = id;
+    else if (id.size() > colon + 1 && id[colon] == ':') // element with state
       {
-      case STATE_NORMAL:          return normal_image_.empty()      ? source_ : normal_image_;
-      case STATE_HOVER:           return hover_image_.empty()       ? source_ : hover_image_;
-      case STATE_DEFAULT:         return default_image_.empty()     ? source_ : default_image_;
-      case STATE_FOCUSED:         return focus_image_.empty()       ? source_ : focus_image_;
-      case STATE_INSENSITIVE:     return insensitive_image_.empty() ? source_ : insensitive_image_;
-      case STATE_ACTIVE:          return active_image_.empty()      ? source_ : active_image_;
-      default:                    return source_;
+        const size_t s = state_score (id.substr (colon + 1));
+        if ((s & state) == s && s > score)
+          {
+            match = id;
+            score = s;
+          }
       }
-  } ();
-  if (string_startswith (current, "#"))
-    {
-      const ssize_t hashpos = source_.find ('#');
-      const String resource = hashpos < 0 ? source_ : source_.substr (0, hashpos);
-      return resource + current;
-    }
-  else
-    return current;
+  match = match.empty() ? fallback : match;
+  return svg_source_ + "#" + match;
 }
 
-void
-StatePainterImpl::update_source (String &member, const String &value, const char *name)
+String
+StatePainterImpl::current_element ()
 {
-  return_unless (member != value);
-  const String previous = current_source();
-  member = value;
-  if (previous != current_source())
-    invalidate (INVALID_CONTENT);
-  changed (name);
+  const StateType mystate = ancestry_active() ? STATE_ACTIVE : state();
+  return state_element (mystate);
 }
 
 void
 StatePainterImpl::size_request (Requisition &requisition)
 {
-  if (!source_painter_)
-    source_painter_ = ImagePainter (source_);
-  requisition = source_painter_.image_size();
+  if (!size_painter_)
+    size_painter_ = ImagePainter (state_element (STATE_NORMAL));
+  requisition = size_painter_.image_size();
 }
 
 void
@@ -151,18 +205,18 @@ void
 StatePainterImpl::do_changed (const String &name)
 {
   WidgetImpl::do_changed (name);
-  if (name == "state" && state_image_ != current_source())
+  if (name == "state" && (cached_painter_ != current_element()))
     invalidate (INVALID_CONTENT);
 }
 
 void
 StatePainterImpl::render (RenderContext &rcontext, const Rect &rect)
 {
-  const String current = current_source();
-  if (!state_painter_ || state_image_ != current)
+  const String painter_src = current_element();
+  if (!state_painter_ || cached_painter_ != painter_src)
     {
-      state_painter_ = ImagePainter (current);
-      state_image_ = state_painter_ ? current : "";
+      state_painter_ = ImagePainter (painter_src);
+      cached_painter_ = painter_src;
     }
   state_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
 }
