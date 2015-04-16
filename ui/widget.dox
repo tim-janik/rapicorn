@@ -30,7 +30,7 @@ Rationales for the widget state ordering and matching precedence:
 - <b>"default" / "acceleratable" / "focusable"</b>: Ordering occours according to higher specificity and use frequency.
 - <b>"insensitive" / "acceleratable"</b>: Insensitivity takes precedence because it disables navigation or activation abilities.
 - <b>"insensitive" / "selected"</b>: Insensitive widgets may be part of selection groups, but stay insensitive.
-- <b>"focused" / "selected"</b>: Focus chain indicaiton needs to take precedence to allow focus navigation inside selections.
+- <b>"focused" / "selected"</b>: Focus chain indication needs to take precedence to allow focus navigation inside selections.
 - <b>"insensitive" / "focused"</b>: Insensitive widgets cannot form part of the focus chain.
 - <b>"active" / "focused"</b>: Focus handling cannot toggle activation state, so activation takes precedence.
 - <b>"retained" / "active"</b>: The retained state possibly invalidates or ambiguates the activation state, so it takes precedence.
