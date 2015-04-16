@@ -348,11 +348,15 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment)
       Svg::Span vscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
       vscale_spans[1].length = ibox.height;
       vscale_spans[1].resizable = 1;
-      if (string_endswith (fragment, ".9"))
+      // match stretchable SVG element IDs, syntax: "#" "widgetname" [ ".9" [ ".hvfillscale" ] ] [ ":" "state" [ "+" "state" ]... ]
+      const size_t colon = std::min (fragment.find (':'), fragment.size());
+      const String fragment_base = fragment.substr (0, colon); // contains everything before ":"
+      const String fragment_state = fragment.substr (colon);   // contains ":" and everything after
+      if (string_endswith (fragment_base, ".9"))
         {
           const double ix1 = ibox.x, ix2 = ibox.x + ibox.width, iy1 = ibox.y, iy2 = ibox.y + ibox.height;
           Svg::ElementP auxe;
-          auxe = svgfile->lookup (fragment + ".hscale");
+          auxe = svgfile->lookup (fragment_base + ".hscale" + fragment_state);
           if (auxe)
             {
               const Svg::BBox bbox = auxe->bbox();
@@ -365,7 +369,7 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment)
                   hscale_spans[2].resizable = 0, hscale_spans[2].length = ix2 - bx2;
                 }
             }
-          auxe = svgfile->lookup (fragment + ".vscale");
+          auxe = svgfile->lookup (fragment_base + ".vscale" + fragment_state);
           if (auxe)
             {
               const Svg::BBox bbox = auxe->bbox();
@@ -378,7 +382,7 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment)
                   vscale_spans[2].resizable = 0, vscale_spans[2].length = iy2 - by2;
                 }
             }
-          auxe = svgfile->lookup (fragment + ".hfill");
+          auxe = svgfile->lookup (fragment_base + ".hfill" + fragment_state);
           if (auxe)
             {
               const Svg::BBox bbox = auxe->bbox();
@@ -390,7 +394,7 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment)
                   fill.width = bx2 - bx1;
                 }
             }
-          auxe = svgfile->lookup (fragment + ".vfill");
+          auxe = svgfile->lookup (fragment_base + ".vfill" + fragment_state);
           if (auxe)
             {
               const Svg::BBox bbox = auxe->bbox();
