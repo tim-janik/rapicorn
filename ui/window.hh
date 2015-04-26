@@ -18,7 +18,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   DisplayWindow*        display_window_;
   EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;
-  String                     last_command_, theme_name_;
+  String                     last_command_;
   vector<WidgetImplP>   last_entered_children_;
   DisplayWindow::Config config_;
   uint                  notify_displayed_id_;
@@ -45,8 +45,6 @@ public:
   virtual void          title                   (const String &window_title) override;
   virtual bool          auto_focus              () const override;
   virtual void          auto_focus              (bool afocus) override;
-  virtual String        theme_name              () const override;
-  virtual void          theme_name              (const String &filename) override       { RAPICORN_ASSERT_UNREACHED(); }
   // grab handling
   virtual void          add_grab                                (WidgetImpl &child, bool unconfined = false);
   void                  add_grab                                (WidgetImpl *child, bool unconfined = false);

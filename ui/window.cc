@@ -51,12 +51,6 @@ WindowImpl::title (const String &window_title)
     }
 }
 
-String
-WindowImpl::theme_name () const
-{
-  return theme_info_->name();
-}
-
 bool
 WindowImpl::auto_focus () const
 {
