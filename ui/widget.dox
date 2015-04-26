@@ -23,7 +23,7 @@ The following is a list of states a widget can be in, a combination of multiple 
 <!-- - <b>Rapicorn::STATE_RESERVED2 - "reserved2"</b><br/> Unspecified. -->
 <!-- - <b>Rapicorn::STATE_RESERVED3 - "reserved3"</b><br/> Unspecified. -->
 
-Rationales for the widget state ordering and matching precedence:
+Rationales for widget state ordering and matching precedence for rendering purposes:
 - In general, functional flags take precedence over style flags.
 - <b>"panel" / "hover"</b>: Panel rendering takes precedence, as hovering can be implemented via additional effects.
 - <b>"focusable" / "panel"</b>: Navigation information takes precedence over panel section styling.
