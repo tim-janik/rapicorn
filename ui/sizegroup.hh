@@ -41,7 +41,7 @@ class SizeGroup : public virtual WidgetGroup {
   friend              class WidgetImpl;
   friend class        FriendAllocator<SizeGroup>;
   Requisition         req_;
-  uint                active_ : 1;
+  uint                enabled_ : 1;
   uint                all_dirty_ : 1;        // need resize
   const Requisition&  group_requisition         ();
   void                invalidate_sizes          ();
@@ -51,8 +51,8 @@ protected:
   virtual void        widget_transit            (WidgetImpl &widget);
   virtual void        widget_invalidated        (WidgetImpl &widget);
 public:
-  virtual bool        active                    () const        { return active_; }
-  virtual void        active                    (bool isactive) { active_ = isactive; all_dirty_ = false; invalidate_sizes(); }
+  virtual bool        enabled                   () const         { return enabled_; }
+  virtual void        enabled                   (bool isenabled) { enabled_ = isenabled; all_dirty_ = false; invalidate_sizes(); }
 };
 
 } // Rapicorn

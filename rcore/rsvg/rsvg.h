@@ -150,6 +150,8 @@ gboolean rsvg_handle_get_position_sub (RsvgHandle * handle, RsvgPositionData * p
 
 gboolean rsvg_handle_has_sub (RsvgHandle * handle, const char *id);
 
+GSList* rsvg_handle_list (RsvgHandle *handle);
+
 /* GIO APIs */
 
 /**

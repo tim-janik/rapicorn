@@ -171,10 +171,11 @@ cairo_surface_from_pixmap (Pixmap pixmap)
 
 // == ImageBackend ==
 struct ImagePainter::ImageBackend : public std::enable_shared_from_this<ImageBackend> {
-  virtual            ~ImageBackend    () {}
-  virtual Requisition image_size      () = 0;
-  virtual Rect        fill_area       () = 0;
-  virtual void        draw_image      (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect) = 0;
+  virtual             ~ImageBackend     () {}
+  virtual Requisition  image_size       () = 0;
+  virtual Rect         fill_area        () = 0;
+  virtual void         draw_image       (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect) = 0;
+  virtual StringVector list             (const String &prefix) = 0;
 };
 
 // == SvgImageBackend ==
@@ -210,6 +211,11 @@ public:
     critical_unless (fill_.x + fill_.width <= bb.width);
     critical_unless (fill_.y >= 0 && fill_.y < bb.height);
     critical_unless (fill_.y + fill_.height <= bb.height);
+  }
+  virtual StringVector
+  list (const String &prefix)
+  {
+    return svgf_->list (prefix);
   }
   virtual Requisition
   image_size ()
@@ -253,6 +259,11 @@ public:
   PixmapImageBackend (const Pixmap &pixmap) :
     pixmap_ (pixmap)
   {}
+  virtual StringVector
+  list (const String &prefix)
+  {
+    return StringVector();
+  }
   virtual Requisition
   image_size ()
   {
@@ -306,81 +317,97 @@ ImagePainter::ImagePainter (const String &resource_identifier)
     {
       auto svgf = Svg::File::load (blob);
       SVGDEBUG ("loading: %s: %s", resource, strerror (errno));
-      auto svge = svgf ? svgf->lookup (fragment) : Svg::Element::none();
-      SVGDEBUG (" lookup: %s%s: %s", resource, fragment, svge ? svge->bbox().to_string() : "failed");
-      const Svg::BBox ibox = svge ? svge->bbox() : Svg::BBox();
-      if (svge && ibox.width > 0 && ibox.height > 0)
-        {
-          Rect fill { 0, 0, ibox.width, ibox.height };
-          Svg::Span hscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
-          hscale_spans[1].length = ibox.width;
-          hscale_spans[1].resizable = 1;
-          Svg::Span vscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
-          vscale_spans[1].length = ibox.height;
-          vscale_spans[1].resizable = 1;
-          if (string_endswith (fragment, ".9"))
-            {
-              const double ix1 = ibox.x, ix2 = ibox.x + ibox.width, iy1 = ibox.y, iy2 = ibox.y + ibox.height;
-              Svg::ElementP auxe;
-              auxe = svgf->lookup (fragment + ".hscale");
-              if (auxe)
-                {
-                  const Svg::BBox bbox = auxe->bbox();
-                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
-                  const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
-                  if (bx1 < bx2)
-                    {
-                      hscale_spans[0].resizable = 0, hscale_spans[0].length = bx1 - ix1;
-                      hscale_spans[1].resizable = 1, hscale_spans[1].length = bx2 - bx1;
-                      hscale_spans[2].resizable = 0, hscale_spans[2].length = ix2 - bx2;
-                    }
-                }
-              auxe = svgf->lookup (fragment + ".vscale");
-              if (auxe)
-                {
-                  const Svg::BBox bbox = auxe->bbox();
-                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
-                  const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
-                  if (by1 < by2)
-                    {
-                      vscale_spans[0].resizable = 0, vscale_spans[0].length = by1 - iy1;
-                      vscale_spans[1].resizable = 1, vscale_spans[1].length = by2 - by1;
-                      vscale_spans[2].resizable = 0, vscale_spans[2].length = iy2 - by2;
-                    }
-                }
-              auxe = svgf->lookup (fragment + ".hfill");
-              if (auxe)
-                {
-                  const Svg::BBox bbox = auxe->bbox();
-                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
-                  const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
-                  if (bx1 < bx2)
-                    {
-                      fill.x = bx1 - ix1;
-                      fill.width = bx2 - bx1;
-                    }
-                }
-              auxe = svgf->lookup (fragment + ".vfill");
-              if (auxe)
-                {
-                  const Svg::BBox bbox = auxe->bbox();
-                  SVGDEBUG ("    aux: %s%s: %s", resource, auxe->info().id, auxe->bbox().to_string());
-                  const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
-                  if (by1 < by2)
-                    {
-                      fill.y = by1 - iy1;
-                      fill.height = by2 - by1;
-                    }
-                }
-            }
-          image_backend_ = std::make_shared<SvgImageBackend> (svgf, svge, hscale_spans, vscale_spans, fill);
-        }
+      if (svgf)
+        svg_file_setup (svgf, fragment);
     }
   else if (blob)
     {
       auto pixmap = Pixmap (blob);
       if (pixmap.width() && pixmap.height())
         image_backend_ = std::make_shared<PixmapImageBackend> (pixmap);
+    }
+}
+
+ImagePainter::ImagePainter (Svg::FileP svgfile, const String &fragment)
+{
+  svg_file_setup (svgfile, fragment);
+}
+
+void
+ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment)
+{
+  auto svge = svgfile ? svgfile->lookup (fragment) : Svg::Element::none();
+  SVGDEBUG (" lookup: %s%s: %s", svgfile->name(), fragment, svge ? svge->bbox().to_string() : "failed");
+  const Svg::BBox ibox = svge ? svge->bbox() : Svg::BBox();
+  if (svge && ibox.width > 0 && ibox.height > 0)
+    {
+      Rect fill { 0, 0, ibox.width, ibox.height };
+      Svg::Span hscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
+      hscale_spans[1].length = ibox.width;
+      hscale_spans[1].resizable = 1;
+      Svg::Span vscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
+      vscale_spans[1].length = ibox.height;
+      vscale_spans[1].resizable = 1;
+      // match stretchable SVG element IDs, syntax: "#" "widgetname" [ ".9" [ ".hvfillscale" ] ] [ ":" "state" [ "+" "state" ]... ]
+      const size_t colon = std::min (fragment.find (':'), fragment.size());
+      const String fragment_base = fragment.substr (0, colon); // contains everything before ":"
+      const String fragment_state = fragment.substr (colon);   // contains ":" and everything after
+      if (string_endswith (fragment_base, ".9"))
+        {
+          const double ix1 = ibox.x, ix2 = ibox.x + ibox.width, iy1 = ibox.y, iy2 = ibox.y + ibox.height;
+          Svg::ElementP auxe;
+          auxe = svgfile->lookup (fragment_base + ".hscale" + fragment_state);
+          if (auxe)
+            {
+              const Svg::BBox bbox = auxe->bbox();
+              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->bbox().to_string());
+              const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
+              if (bx1 < bx2)
+                {
+                  hscale_spans[0].resizable = 0, hscale_spans[0].length = bx1 - ix1;
+                  hscale_spans[1].resizable = 1, hscale_spans[1].length = bx2 - bx1;
+                  hscale_spans[2].resizable = 0, hscale_spans[2].length = ix2 - bx2;
+                }
+            }
+          auxe = svgfile->lookup (fragment_base + ".vscale" + fragment_state);
+          if (auxe)
+            {
+              const Svg::BBox bbox = auxe->bbox();
+              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->bbox().to_string());
+              const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
+              if (by1 < by2)
+                {
+                  vscale_spans[0].resizable = 0, vscale_spans[0].length = by1 - iy1;
+                  vscale_spans[1].resizable = 1, vscale_spans[1].length = by2 - by1;
+                  vscale_spans[2].resizable = 0, vscale_spans[2].length = iy2 - by2;
+                }
+            }
+          auxe = svgfile->lookup (fragment_base + ".hfill" + fragment_state);
+          if (auxe)
+            {
+              const Svg::BBox bbox = auxe->bbox();
+              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->bbox().to_string());
+              const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
+              if (bx1 < bx2)
+                {
+                  fill.x = bx1 - ix1;
+                  fill.width = bx2 - bx1;
+                }
+            }
+          auxe = svgfile->lookup (fragment_base + ".vfill" + fragment_state);
+          if (auxe)
+            {
+              const Svg::BBox bbox = auxe->bbox();
+              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->bbox().to_string());
+              const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
+              if (by1 < by2)
+                {
+                  fill.y = by1 - iy1;
+                  fill.height = by2 - by1;
+                }
+            }
+        }
+      image_backend_ = std::make_shared<SvgImageBackend> (svgfile, svge, hscale_spans, vscale_spans, fill);
     }
 }
 
@@ -391,6 +418,12 @@ Requisition
 ImagePainter::image_size ()
 {
   return image_backend_ ? image_backend_->image_size() : Requisition();
+}
+
+StringVector
+ImagePainter::list (const String &prefix)
+{
+  return image_backend_ ? image_backend_->list (prefix) : StringVector();
 }
 
 Rect

@@ -4,13 +4,13 @@
 
   <!-- list construction -->
   <WidgetList id="ListArea"/>
-  <WidgetListRow id="RapicornWidgetListRow" child-container="ListRowCavity" hexpand="1">
+  <RapicornWidgetListRow id="WidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
       <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
 	<HBox id="ListRowCavity"/>
       </FocusFrame>
     </Ambience>
-  </WidgetListRow>
+  </RapicornWidgetListRow>
 
   <!-- list area -->
   <Alignment id="widget-list" >

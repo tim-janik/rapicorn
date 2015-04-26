@@ -84,12 +84,12 @@ ButtonAreaImpl::activate_widget ()
   bool handled = false;
   if (loop)
     {
-      view.impressed (true);
+      view.active (true);
       window->draw_child (view);
       handled = activate_button_command (1);
       if (!unpress_)
         unpress_ = loop->exec_timer (50, 0, [this, &view] () {
-            view.impressed (false);
+            view.active (false);
             remove_exec (unpress_);
             unpress_ = 0;
             return false;
@@ -167,7 +167,7 @@ void
 ButtonAreaImpl::reset (ResetMode mode)
 {
   ButtonAreaImpl &view = *this;
-  view.impressed (false);
+  view.active (false);
   remove_exec (unpress_);
   unpress_ = 0;
   remove_exec (repeater_);
@@ -184,12 +184,12 @@ ButtonAreaImpl::handle_event (const Event &event)
     {
       const EventButton *bevent;
     case MOUSE_ENTER:
-      view.impressed (button_ != 0);
-      view.prelight (true);
+      view.active (button_ != 0);
+      view.hover (true);
       break;
     case MOUSE_LEAVE:
-      view.prelight (false);
-      view.impressed (button_ != 0);
+      view.hover (false);
+      view.active (button_ != 0);
       break;
     case BUTTON_PRESS:
     case BUTTON_2PRESS:
@@ -198,9 +198,9 @@ ButtonAreaImpl::handle_event (const Event &event)
       if (!button_ and bevent->button >= 1 and bevent->button <= 3 and
           on_click_[bevent->button - 1] != "")
         {
-          bool inbutton = view.prelight();
+          bool inbutton = view.hover();
           button_ = bevent->button;
-          view.impressed (true);
+          view.active (true);
           if (inbutton && can_focus())
             grab_focus();
           view.get_window()->add_grab (*this);
@@ -216,12 +216,12 @@ ButtonAreaImpl::handle_event (const Event &event)
       bevent = dynamic_cast<const EventButton*> (&event);
       if (button_ == bevent->button)
         {
-          bool inbutton = view.prelight();
+          bool inbutton = view.hover();
           view.get_window()->remove_grab (*this);
           button_ = 0;
           // activation may recurse here
           activate_click (bevent->button, inbutton && proper_release ? BUTTON_RELEASE : BUTTON_CANCELED);
-          view.impressed (false);
+          view.active (false);
           handled = true;
         }
       break;

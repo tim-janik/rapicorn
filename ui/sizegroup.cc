@@ -91,7 +91,7 @@ WidgetGroup::delete_widget (WidgetImpl &widget)
 void
 WidgetGroup::invalidate_widget (WidgetImpl &widget)
 {
-  // invalidate all active groups
+  // invalidate all enabled groups
   GroupVector wgl = list_groups (widget);
   for (size_t i = 0; i < wgl.size(); i++)
     wgl[i]->widget_invalidated (widget);
@@ -100,7 +100,7 @@ WidgetGroup::invalidate_widget (WidgetImpl &widget)
 // == SizeGroup ==
 SizeGroup::SizeGroup (const String &name, WidgetGroupType type) :
   WidgetGroup (name, type),
-  active_ (true), all_dirty_ (false)
+  enabled_ (true), all_dirty_ (false)
 {}
 
 void
@@ -113,14 +113,14 @@ void
 SizeGroup::widget_transit (WidgetImpl &widget)
 {
   invalidate_sizes();
-  if (active())
+  if (enabled())
     widget.invalidate_size();
 }
 
 void
 SizeGroup::invalidate_sizes()
 {
-  if (active())
+  if (enabled())
     {
       if (all_dirty_)
         return;
@@ -155,7 +155,7 @@ SizeGroup::group_requisition ()
 Requisition
 SizeGroup::widget_requisition (WidgetImpl &widget)
 {
-  // size request all active groups
+  // size request all enabled groups
   Requisition zreq; // 0,0
   if (widget.visible())
     {
@@ -164,7 +164,7 @@ SizeGroup::widget_requisition (WidgetImpl &widget)
         if (wgl[i]->type() == WIDGET_GROUP_HSIZE || wgl[i]->type() == WIDGET_GROUP_VSIZE)
           {
             SizeGroupP sg = shared_ptr_cast<SizeGroup> (wgl[i]);
-            if (!sg->active())
+            if (!sg->enabled())
               continue;
             Requisition gr = sg->group_requisition();
             if (sg->type() == WIDGET_GROUP_HSIZE)

@@ -6,6 +6,7 @@
 #include <ui/events.hh>
 #include <ui/region.hh>
 #include <ui/commands.hh>
+#include <ui/style.hh>
 #include <ui/heritage.hh>
 
 namespace Rapicorn {
@@ -54,6 +55,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AnchorInfo           *ainfo_;
+  StyleImplP                  style_;
   HeritageP                   heritage_;
   FactoryContext             &factory_context_;
   Allocation                  allocation_;
@@ -69,31 +71,43 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                foreach_recursive  (const std::function<void (WidgetImpl&)> &f);
-  /* flag handling */
+  // flag handling
   bool                        change_flags_silently (uint64 mask, bool on);
+  // State flags and widget flags
+  static_assert (STATE_NORMAL        == 0, "");
+  static_assert (STATE_HOVER         == 1 <<  0, ""); // Flag indicating "hover" state of a widget, see hover()
+  static_assert (STATE_PANEL         == 1 <<  1, "");
+  static_assert (STATE_ACCELERATABLE == 1 <<  2, "");
+  static_assert (STATE_DEFAULT       == 1 <<  3, "");
+  static_assert (STATE_SELECTED      == 1 <<  4, "");
+  static_assert (STATE_FOCUSED       == 1 <<  5, ""); // Focus chain flag, indicates if widget is (in ancestry of) the focus widget, see grab_focus()
+  static_assert (STATE_INSENSITIVE   == 1 <<  6, ""); // Widget flag that disables input event processing, see pointer_sensitive()
+  static_assert (STATE_ACTIVE        == 1 <<  7, ""); // Flag indicating state of an active widget, see also active()
+  static_assert (STATE_RETAINED      == 1 <<  8, "");
+  static_assert (STATE_RESERVED1     == 1 <<  9, "");
+  static_assert (STATE_RESERVED2     == 1 << 10, "");
+  static_assert (STATE_RESERVED3     == 1 << 11, "");
   enum {
-    ANCHORED                  = 1 <<  0, ///< Flag set on widgets while its ancestry contains a Window, see hierarchy_changed()
-    VISIBLE                   = 1 <<  1, ///< Flag set on widgets to be visible on screen, see visible()
-    SENSITIVE                 = 1 <<  2, ///< Flag set on widgets to receive ancd process input events, see pointer_sensitive()
-    UNVIEWABLE                = 1 <<  3, ///< Flag set for container children for offscreen handling, see viewable()
-    PARENT_SENSITIVE          = 1 <<  4, ///< Cached state used to propagate sensitivity on branches, see key_sensitive()
-    PARENT_UNVIEWABLE         = 1 <<  5, ///< Cached state used to propagate viewability on branches, see also drawable()
-    PRELIGHT                  = 1 <<  6, ///< Flag indicating "hover" state of a widget, see prelight()
-    IMPRESSED                 = 1 <<  7, ///< Flag indicating state of a pressed button, see impressed()
-    HAS_DEFAULT               = 1 <<  8, ///< Flag indicating widget to receive default activation, see has_default()
-    FOCUS_CHAIN               = 1 <<  9, ///< Flag indicating wether widget is (in ancestry of) the focus widget, see grab_focus()
-    HSHRINK                   = 1 << 10, ///< Flag set on widgets that handle horizontal shrinking well, see hshrink()
-    VSHRINK                   = 1 << 11, ///< Flag set on widgets that handle vertical shrinking well, see vshrink()
-    HEXPAND                   = 1 << 12, ///< Flag set on widgets that are useful to expand horizontally, see hexpand()
-    VEXPAND                   = 1 << 13, ///< Flag set on widgets that are useful to expand vertically, see vexpand()
-    HSPREAD                   = 1 << 14, ///< Flag set on widgets that should expand horizontally with window growth, see hspread()
-    VSPREAD                   = 1 << 15, ///< Flag set on widgets that should expand vertically with window growth, see vspread()
-    HSPREAD_CONTAINER         = 1 << 16, ///< Flag set on containers that contain hspread() widgets
-    VSPREAD_CONTAINER         = 1 << 17, ///< Flag set on containers that contain vspread() widgets
-    INVALID_REQUISITION       = 1 << 18, ///< Flag indicates the need update widget's size requisition, see requisition()
-    INVALID_ALLOCATION        = 1 << 19, ///< Flag indicates the need update widget's allocation, see set_allocation()
-    INVALID_CONTENT           = 1 << 20, ///< Flag indicates that the widget's entire contents need to be repainted, see expose()
-    FINALIZING                = 1 << 21, ///< Flag used internally to short-cut destructor phase.
+    PARENT_INSENSITIVE        = 1 << 12, ///< Cached state used to propagate sensitivity on branches, see key_sensitive()
+    PARENT_ACTIVE             = 1 << 13, ///< Flag set on children of an active container.
+    PARENT_RESERVED           = 1 << 14,
+    PARENT_UNVIEWABLE         = 1 << 15, ///< Cached state used to propagate viewability on branches, see also drawable()
+    VISIBLE                   = 1 << 16, ///< Flag set on widgets to be visible on screen, see visible()
+    ANCHORED                  = 1 << 17, ///< Flag set on widgets while its ancestry contains a Window, see hierarchy_changed()
+    HSHRINK                   = 1 << 18, ///< Flag set on widgets that handle horizontal shrinking well, see hshrink()
+    VSHRINK                   = 1 << 19, ///< Flag set on widgets that handle vertical shrinking well, see vshrink()
+    HEXPAND                   = 1 << 20, ///< Flag set on widgets that are useful to expand horizontally, see hexpand()
+    VEXPAND                   = 1 << 21, ///< Flag set on widgets that are useful to expand vertically, see vexpand()
+    HSPREAD                   = 1 << 22, ///< Flag set on widgets that should expand horizontally with window growth, see hspread()
+    VSPREAD                   = 1 << 23, ///< Flag set on widgets that should expand vertically with window growth, see vspread()
+    HSPREAD_CONTAINER         = 1 << 24, ///< Flag set on containers that contain hspread() widgets
+    VSPREAD_CONTAINER         = 1 << 25, ///< Flag set on containers that contain vspread() widgets
+    HAS_DEFAULT               = 1 << 26, ///< Flag indicating widget to receive default activation, see has_default()
+    UNVIEWABLE                = 1 << 27, ///< Flag set for container children for offscreen handling, see viewable()
+    INVALID_CONTENT           = 1 << 28, ///< Flag indicates that the widget's entire contents need to be repainted, see expose()
+    INVALID_ALLOCATION        = 1 << 29, ///< Flag indicates the need update widget's allocation, see set_allocation()
+    INVALID_REQUISITION       = 1 << 30, ///< Flag indicates the need update widget's size requisition, see requisition()
+    FINALIZING             = 1ULL << 31, ///< Flag used internally to short-cut destructor phase.
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
@@ -150,18 +164,18 @@ public:
   bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
   virtual bool                viewable          () const; // visible() && !UNVIEWABLE && !PARENT_UNVIEWABLE
   bool                        drawable          () const; // viewable() && clipped_allocation > 0
-  virtual bool                sensitive         () const { return test_all_flags (SENSITIVE | PARENT_SENSITIVE); } ///< Negation of insensitive()
-  virtual void                sensitive         (bool b) { set_flag (SENSITIVE, b); } ///< Toggle widget ability to process input events
-  bool                        insensitive       () const { return !sensitive(); } ///< Indicates if widget cannot process input events
-  void                        insensitive       (bool b) { sensitive (!b); } ///< Negation of sensitive(bool)
+  virtual bool                sensitive         () const { return !test_any_flag (STATE_INSENSITIVE | PARENT_INSENSITIVE); } ///< Indicates if widget can process input events
+  virtual void                sensitive         (bool b) { set_flag (STATE_INSENSITIVE, !b); }  ///< Toggle widget ability to process input events
+  bool                        insensitive       () const { return !sensitive(); }               ///< Negation of sensitive()
+  void                        insensitive       (bool b) { sensitive (!b); }                    ///< Negation of sensitive(bool)
   bool                        key_sensitive     () const;
   bool                        pointer_sensitive () const;
-  bool                        prelight          () const { return test_any_flag (PRELIGHT); } ///< Get widget "hover" state, see #PRELIGHT
-  virtual void                prelight          (bool b) { set_flag (PRELIGHT, b); } ///< Toggled with "hover" state of a widget
-  bool                        ancestry_prelight () const; ///< Check if ancestry contains prelight().
-  bool                        impressed         () const { return test_any_flag (IMPRESSED); } ///< Get widget #IMPRESSED state
-  virtual void                impressed         (bool b) { set_flag (IMPRESSED, b); } ///< Toggled for impressed widgets (e.g. buttons)
-  bool                        ancestry_impressed() const; ///< Check if ancestry contains impressed().
+  bool                        hover             () const { return test_any_flag (STATE_HOVER); } ///< Get widget "hover" state, see StateType::STATE_HOVER
+  virtual void                hover             (bool b) { set_flag (STATE_HOVER, b); } ///< Toggled with "hover" state of a widget
+  bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
+  bool                        active            () const { return test_any_flag (STATE_ACTIVE); } ///< Get the widget's StateType::STATE_ACTIVE.
+  virtual void                active            (bool b) { set_flag (STATE_ACTIVE, b); } ///< Toggled for active widgets (e.g. buttons).
+  bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
   virtual bool                can_focus         () const; ///< Returns true if @a this widget can receive focus.
@@ -281,11 +295,32 @@ public:
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
-  /* heritage / appearance */
+  /* theming & appearance */
+  ThemeInfo&            theme_info              () const;
+  // colors
+  Color                 normal_bg               () { return state_color (STATE_NORMAL, 0); }
+  Color                 normal_fg               () { return state_color (STATE_NORMAL, 1); }
+  Color                 active_bg               () { return state_color (STATE_ACTIVE, 0); }
+  Color                 active_fg               () { return state_color (STATE_ACTIVE, 1); }
+  Color                 selected_bg             () { return state_color (STATE_SELECTED, 0); }
+  Color                 selected_fg             () { return state_color (STATE_SELECTED, 1); }
+  // Color                 focus_color             () { return state_color (FOCUS_COLOR); }
+  Color                 state_color             (StateType state, bool foreground, const String &detail = "");
+  Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
+  // state colors
   StateType             state                   () const;
+  Color                 foreground              ();
+  Color                 background              ();
+  // Color              black                   () { return theme_color (  0,   0,   0); }
+  // Color              white                   () { return theme_color (  0,   0, 100); }
+  // Color              red                     () { return theme_color (  0, 100, 100); }
+  // Color              yellow                  () { return theme_color ( 60, 100, 100); }
+  // Color              green                   () { return theme_color (120, 100, 100); }
+  // Color              cyan                    () { return theme_color (180, 100, 100); }
+  // Color              blue                    () { return theme_color (240, 100, 100); }
+  // Color              magenta                 () { return theme_color (300, 100, 100); }
+  // old colors
   HeritageP             heritage                () const { return heritage_; }
-  Color                 foreground              () { return heritage()->foreground (state()); }
-  Color                 background              () { return heritage()->background (state()); }
   Color                 dark_color              () { return heritage()->dark_color (state()); }
   Color                 dark_shadow             () { return heritage()->dark_shadow (state()); }
   Color                 dark_glint              () { return heritage()->dark_glint (state()); }

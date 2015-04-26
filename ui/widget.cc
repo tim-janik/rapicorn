@@ -44,8 +44,8 @@ WidgetIface::impl () const
 }
 
 WidgetImpl::WidgetImpl () :
-  flags_ (VISIBLE | SENSITIVE),
-  parent_ (NULL), ainfo_ (NULL), heritage_ (NULL),
+  flags_ (VISIBLE),
+  parent_ (NULL), ainfo_ (NULL), style_ (StyleImpl::create (ThemeInfo::fallback_theme())), heritage_ (NULL),
   factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
@@ -71,12 +71,12 @@ WidgetImpl::ancestry_visible () const
 }
 
 bool
-WidgetImpl::ancestry_prelight () const
+WidgetImpl::ancestry_hover () const
 {
   const WidgetImpl *widget = this;
   do
     {
-      if (widget->prelight())
+      if (widget->hover())
         return true;
       widget = widget->parent();
     }
@@ -85,12 +85,12 @@ WidgetImpl::ancestry_prelight () const
 }
 
 bool
-WidgetImpl::ancestry_impressed () const
+WidgetImpl::ancestry_active () const
 {
   const WidgetImpl *widget = this;
   do
     {
-      if (widget->impressed())
+      if (widget->active())
         return true;
       widget = widget->parent();
     }
@@ -137,7 +137,7 @@ WidgetImpl::propagate_state (bool notify_changed)
   ContainerImpl *container = as_container_impl();
   const bool self_is_window_impl = UNLIKELY (parent_ == NULL) && container && as_window_impl();
   const bool was_viewable = viewable();
-  change_flags_silently (PARENT_SENSITIVE, self_is_window_impl || (parent() && parent()->sensitive()));
+  change_flags_silently (PARENT_INSENSITIVE, parent() && parent()->insensitive());
   change_flags_silently (PARENT_UNVIEWABLE, !self_is_window_impl && (!parent() || !parent()->viewable()));
   if (was_viewable != viewable())
     invalidate();       // changing viewable forces invalidation, regardless of notify_changed
@@ -152,9 +152,9 @@ void
 WidgetImpl::set_flag (uint64 flag, bool on)
 {
   assert ((flag & (flag - 1)) == 0); // single bit check
-  const uint64 propagate_flag_mask = VISIBLE | SENSITIVE | UNVIEWABLE |
-                                     PARENT_SENSITIVE | PARENT_UNVIEWABLE |
-                                     PRELIGHT | IMPRESSED | HAS_DEFAULT;
+  const uint64 propagate_flag_mask = VISIBLE | STATE_INSENSITIVE | UNVIEWABLE |
+                                     PARENT_INSENSITIVE | PARENT_UNVIEWABLE |
+                                     STATE_HOVER | STATE_ACTIVE | HAS_DEFAULT;
   const uint64 repack_flag_mask = HSHRINK | VSHRINK | HEXPAND | VEXPAND |
                                   HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER |
                                   VISIBLE | UNVIEWABLE | PARENT_UNVIEWABLE;
@@ -185,19 +185,24 @@ WidgetImpl::grab_default () const
 StateType
 WidgetImpl::state () const
 {
-  StateType st = StateType (0);
-  st |= insensitive() ? STATE_INSENSITIVE : StateType (0);
-  st |= prelight()    ? STATE_PRELIGHT : StateType (0);
-  st |= impressed()   ? STATE_IMPRESSED : StateType (0);
-  st |= has_focus()   ? STATE_FOCUS : StateType (0);
-  st |= has_default() ? STATE_DEFAULT : StateType (0);
+  constexpr StateType z0 = StateType (0); // STATE_NORMAL
+  StateType st = z0;
+  st |= hover()       ? STATE_HOVER : z0;
+  // STATE_PANEL
+  // STATE_ACCELERATABLE
+  st |= has_default() ? STATE_DEFAULT : z0;
+  st |= insensitive() ? STATE_INSENSITIVE : z0;
+  // STATE_SELECTED
+  st |= has_focus()   ? STATE_FOCUSED : z0;
+  st |= active()      ? STATE_ACTIVE : z0;
+  // STATE_RETAINED
   return st;
 }
 
 bool
 WidgetImpl::has_focus () const
 {
-  if (test_any_flag (FOCUS_CHAIN))
+  if (test_any_flag (STATE_FOCUSED))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -215,7 +220,7 @@ WidgetImpl::can_focus () const
 void
 WidgetImpl::unset_focus ()
 {
-  if (test_any_flag (FOCUS_CHAIN))
+  if (test_any_flag (STATE_FOCUSED))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -572,6 +577,7 @@ WidgetImpl::~WidgetImpl()
       remove_exec (timer_id);
       set_data (&visual_update_key, uint (0));
     }
+  style_ = NULL;
 }
 
 Command*
@@ -1080,7 +1086,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       old_parent->unparent_child (*this);
       parent_ = NULL;
       ainfo_ = NULL;
-      propagate_state (false); // propagate PARENT_VISIBLE, PARENT_SENSITIVE
+      propagate_state (false); // propagate PARENT_VISIBLE, PARENT_INSENSITIVE
       if (anchored() and rtoplevel)
         sig_hierarchy_changed.emit (rtoplevel);
     }
@@ -1175,13 +1181,10 @@ WidgetImpl::get_resize_container () const
   const AnchorInfo *ainfo = anchor_info();
   if (ainfo)
     return ainfo->resize_container;
-  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget; widget = widget->parent_)
-    {
-      ResizeContainerImpl *c = dynamic_cast<ResizeContainerImpl*> (widget);
-      if (c)
-        return c;
-    }
-  return NULL;
+  ResizeContainerImpl *rc = NULL;
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !rc; widget = widget->parent_)
+    rc = dynamic_cast<ResizeContainerImpl*> (widget);
+  return rc;
 }
 
 const AnchorInfo*
@@ -1190,15 +1193,9 @@ WidgetImpl::force_anchor_info () const
   if (ainfo_)
     return ainfo_;
   // find resize container
-  WidgetImpl *parent = const_cast<WidgetImpl*> (this);
   ResizeContainerImpl *rc = NULL;
-  while (parent)
-    {
-      rc = dynamic_cast<ResizeContainerImpl*> (parent);
-      if (rc)
-        break;
-      parent = parent->parent();
-    }
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !rc; widget = widget->parent_)
+    rc = dynamic_cast<ResizeContainerImpl*> (widget);
   static const AnchorInfo orphan_anchor_info;
   const AnchorInfo *ainfo = rc ? rc->container_anchor_info() : &orphan_anchor_info;
   const_cast<WidgetImpl*> (this)->ainfo_ = ainfo;
@@ -1779,6 +1776,24 @@ WidgetImpl::color_scheme (ColorSchemeType cst)
         set_data (&widget_color_scheme_key, cst);
       heritage (heritage()); // forces recalculation/adaption
     }
+}
+
+ThemeInfo&
+WidgetImpl::theme_info () const
+{
+  return *ThemeInfo::fallback_theme();
+}
+
+Color
+WidgetImpl::foreground ()
+{
+  return heritage()->foreground (state());
+}
+
+Color
+WidgetImpl::background ()
+{
+  return heritage()->background (state());
 }
 
 class ClipAreaDataKey : public DataKey<Allocation*> {

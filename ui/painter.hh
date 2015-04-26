@@ -6,6 +6,13 @@
 
 namespace Rapicorn {
 
+// == Prototypes ==
+namespace Svg {
+class File;
+typedef std::shared_ptr<File> FileP;
+} // Svg
+
+
 /// Cairo painting helper class.
 class CPainter {
 protected:
@@ -32,11 +39,14 @@ public:  struct ImageBackend;
 private:
   typedef std::shared_ptr<ImageBackend> ImageBackendP;
   ImageBackendP image_backend_;
+  void          svg_file_setup  (Svg::FileP svgfile, const String &fragment);
 public:
   explicit      ImagePainter    ();
-  explicit      ImagePainter    (Pixmap pixmap);                     ///< Construct from pixmap object.
-  explicit      ImagePainter    (const String &resource_identifier); ///< Construct from image resource path.
+  explicit      ImagePainter    (Pixmap pixmap);                              ///< Construct from pixmap object.
+  explicit      ImagePainter    (const String &resource_identifier);          ///< Construct from image resource path.
+  explicit      ImagePainter    (Svg::FileP svgfile, const String &fragment); ///< Construct from SVG image fragment.
   virtual      ~ImagePainter    ();     ///< Delete an ImagePainter.
+  virtual StringVector list     (const String &prefix = "");                  ///< List the element IDs in an SVG File.
   Requisition   image_size      ();     ///< Retrieve original width and height of the image.
   Rect          fill_area       ();     ///< Retrieve fill area of the image, equals width and height if unknown.
   /// Render image into cairo context transformed into @a image_rect, clipped by @a render_rect.

@@ -47,6 +47,7 @@ WindowImpl::title (const String &window_title)
       config_.title = window_title;
       if (display_window_)
         display_window_->configure (config_, false);
+      changed ("title");
     }
 }
 
@@ -59,7 +60,11 @@ WindowImpl::auto_focus () const
 void
 WindowImpl::auto_focus (bool afocus)
 {
-  auto_focus_ = afocus;
+  if (afocus != auto_focus_)
+    {
+      auto_focus_ = afocus;
+      changed ("auto_focus");
+    }
 }
 
 void
@@ -140,7 +145,7 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
       WidgetImpl *widget = &fwidget;
       while (widget)
         {
-          ClassDoctor::widget_unset_flag (*widget, FOCUS_CHAIN);
+          ClassDoctor::widget_unset_flag (*widget, STATE_FOCUSED);
           ContainerImpl *fc = widget->parent();
           if (fc)
             fc->focus_lost();
@@ -169,7 +174,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
   set_data (&focus_widget_key, cfocus);
   while (widget)
     {
-      ClassDoctor::widget_set_flag (*widget, FOCUS_CHAIN);
+      ClassDoctor::widget_set_flag (*widget, STATE_FOCUSED);
       ContainerImpl *fc = widget->parent();
       if (fc)
         fc->set_focus_child (widget);
@@ -220,21 +225,22 @@ WindowImpl::WindowImpl() :
   display_window_ (NULL), commands_emission_ (NULL), notify_displayed_id_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
+  theme_info_ = ThemeInfo::fallback_theme();    // ensure valid theme_info_
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
-  WindowTrail::wenter (this);
+  change_flags_silently (ANCHORED, true);       // window is always anchored
+  set_flag (PARENT_INSENSITIVE, false);
+  set_flag (PARENT_UNVIEWABLE, false);
   struct Heritage : Rapicorn::Heritage {
     using Rapicorn::Heritage::create_heritage;
   };
   heritage (Heritage::create_heritage (*this, *this, color_scheme()));
-  set_flag (PARENT_SENSITIVE, true);
-  set_flag (PARENT_UNVIEWABLE, false);
-  /* create event loop (auto-starts) */
+  WindowTrail::wenter (this);
+  // create event loop (auto-starts)
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
   loop_->flag_primary (false);
-  change_flags_silently (ANCHORED, true);       /* window is always anchored */
 }
 
 void

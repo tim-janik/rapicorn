@@ -131,6 +131,21 @@ rsvg_defs_lookup (const RsvgDefs * defs, const char *name)
     }
 }
 
+static void
+rsvg_defs_list_func (gpointer key, gpointer value, gpointer user_data)
+{
+    GSList **idsp = user_data;
+    *idsp = g_slist_prepend (*idsp, g_strdup (key));
+}
+
+GSList*
+rsvg_defs_list (const RsvgDefs * defs)
+{
+    GSList *ids = NULL;
+    g_hash_table_foreach (defs->hash, rsvg_defs_list_func, &ids);
+    return ids;
+}
+
 void
 rsvg_defs_set (RsvgDefs * defs, const char *name, RsvgNode * val)
 {

@@ -1543,6 +1543,13 @@ rsvg_handle_has_sub (RsvgHandle * handle,
     return rsvg_defs_lookup (handle->priv->defs, id) != NULL;
 }
 
+GSList*
+rsvg_handle_list (RsvgHandle *handle)
+{
+    g_return_val_if_fail (handle, NULL);
+    return rsvg_defs_list (handle->priv->defs);
+}
+
 /** 
  * rsvg_set_default_dpi:
  * @dpi: Dots Per Inch (aka Pixels Per Inch)

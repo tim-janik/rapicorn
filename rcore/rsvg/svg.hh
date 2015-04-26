@@ -59,10 +59,12 @@ typedef std::shared_ptr<File> FileP;            ///< Smart pointer to an Svg::Fi
 /// The File class represents a successfully loaded SVG file.
 class File {
 public:
-  virtual void     dump_tree      () = 0;
-  virtual ElementP lookup         (const String &elementid) = 0;  ///< Lookup an SVG element from an SVG File.
-  static  FileP    load           (const String &svgfilename);    ///< Load an SVG file, returns non-null on success and sets errno.
-  static  FileP    load           (Blob svg_blob);                ///< Load an SVG file from a binary SVG resource blob, sets errno.
+  virtual void      dump_tree () = 0;
+  virtual ElementP     lookup (const String &elementid) = 0;   ///< Lookup an SVG element from an SVG File.
+  virtual StringVector list   (const String &prefix = "") = 0; ///< List the element IDs in an SVG File.
+  virtual String       name   () const = 0;                    ///< Provide the name of this file.
+  static  FileP        load   (const String &svgfilename);     ///< Load an SVG file, returns non-null on success and sets errno.
+  static  FileP        load   (Blob svg_blob);                 ///< Load an SVG file from a binary SVG resource blob, sets errno.
 protected: // Impl details
   ~File() {}                            ///< Internal destructor, Svg::FileP automatically manages the File class lifetime.
 };

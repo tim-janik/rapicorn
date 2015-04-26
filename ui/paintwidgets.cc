@@ -88,7 +88,7 @@ static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn::Arrow");
 // == DotGrid ==
 DotGridImpl::DotGridImpl() :
   normal_dot_ (FRAME_IN),
-  impressed_dot_ (FRAME_IN),
+  active_dot_ (FRAME_IN),
   n_hdots_ (1), n_vdots_ (1),
   right_padding_dots_ (0), top_padding_dots_ (0),
   left_padding_dots_ (0), bottom_padding_dots_ (0)
@@ -107,13 +107,13 @@ void
 DotGridImpl::dot_type (FrameType ft)
 {
   normal_dot (ft);
-  impressed_dot (ft);
+  active_dot (ft);
 }
 
 FrameType
 DotGridImpl::current_dot ()
 {
-  return ancestry_impressed() ? impressed_dot() : normal_dot();
+  return ancestry_active() ? active_dot() : normal_dot();
 }
 
 static inline int
@@ -123,17 +123,17 @@ u31 (int v)
 }
 
 void
-DotGridImpl::impressed_dot (FrameType ft)
+DotGridImpl::active_dot (FrameType ft)
 {
-  impressed_dot_ = ft;
+  active_dot_ = ft;
   expose();
-  changed ("impressed_dot");
+  changed ("active_dot");
 }
 
 FrameType
-DotGridImpl::impressed_dot () const
+DotGridImpl::active_dot () const
 {
-  return impressed_dot_;
+  return active_dot_;
 }
 
 void

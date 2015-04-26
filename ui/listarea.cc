@@ -556,7 +556,7 @@ WidgetListImpl::move_focus (FocusDirType fdir)
   if (last_child && last_child->move_focus (fdir))      // refocus or row internal move_focus
     return true;
   // pick row for initial focus
-  if (!test_any_flag (FOCUS_CHAIN))
+  if (!test_any_flag (STATE_FOCUSED))
     {
       const int last_focus = focus_row();               // -1 initially
       return grab_row_focus (MAX (0, last_focus));      // list focus-in
@@ -793,7 +793,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   Any row = model_->row (nthrow);
   ListRow *lr = new ListRow();
   IFDEBUG (dbg_created++);
-  WidgetImplP widget = Factory::create_ui_child (*this, "RapicornWidgetListRow", Factory::ArgumentList(), false);
+  WidgetImplP widget = Factory::create_ui_child (*this, "WidgetListRow", Factory::ArgumentList(), false);
   assert (widget != NULL);
   lr->lrow = shared_ptr_cast<WidgetListRowImpl> (widget);
   assert (lr->lrow != NULL);

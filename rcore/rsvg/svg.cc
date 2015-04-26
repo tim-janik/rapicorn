@@ -132,10 +132,13 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
 // == FileImpl ==
 struct FileImpl : public File {
   RsvgHandle           *handle_;
-  explicit              FileImpl        (RsvgHandle *hh) : handle_ (hh) {}
+  String                name_;
+  explicit              FileImpl        (RsvgHandle *hh, const String &name) : handle_ (hh), name_ (name) {}
   /*dtor*/             ~FileImpl        () { if (handle_) g_object_unref (handle_); }
-  virtual void          dump_tree       ();
-  virtual ElementP      lookup          (const String &elementid);
+  virtual String        name            () const override { return name_; }
+  virtual void          dump_tree       () override;
+  virtual ElementP      lookup          (const String &elementid) override;
+  virtual StringVector  list            (const String &prefix) override;
 };
 
 // == File ==
@@ -167,7 +170,7 @@ File::load (Blob svg_blob)
       errno = ENODATA;
       return fp;
     }
-  FileP fp (new FileImpl (handle));
+  FileP fp (new FileImpl (handle, svg_blob.name()));
   errno = 0;
   return fp;
 }
@@ -238,6 +241,29 @@ FileImpl::lookup (const String &elementid)
         }
     }
   return Element::none();
+}
+
+/**
+ * @fn File::list
+ * List all element IDs in an SVG file that start with @a prefix.
+ */
+StringVector
+FileImpl::list (const String &prefix)
+{
+  StringVector stv;
+  return_unless (handle_, stv);
+  GSList *ids = rsvg_handle_list (handle_);
+  while (ids)
+    {
+      GSList *const node = ids;
+      ids = node->next;
+      gchar *id = (gchar*) node->data;
+      g_slist_free_1 (node);
+      if (strncmp (id, prefix.c_str(), prefix.size()) == 0)
+        stv.push_back (id);
+      g_free (id);
+    }
+  return stv;
 }
 
 // == Span ==

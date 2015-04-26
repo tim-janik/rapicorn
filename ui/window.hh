@@ -14,6 +14,7 @@ typedef std::weak_ptr<WindowImpl>   WindowImplW;
 /* --- Window --- */
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   const EventLoopP      loop_;
+  ThemeInfoP            theme_info_;
   DisplayWindow*        display_window_;
   EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;
@@ -40,10 +41,10 @@ public:
   cairo_surface_t*      create_snapshot         (const Rect  &subarea);
   static  void          forcefully_close_all    ();
   // properties
-  virtual String        title                   () const;
-  virtual void          title                   (const String &window_title);
-  virtual bool          auto_focus              () const;
-  virtual void          auto_focus              (bool afocus);
+  virtual String        title                   () const override;
+  virtual void          title                   (const String &window_title) override;
+  virtual bool          auto_focus              () const override;
+  virtual void          auto_focus              (bool afocus) override;
   // grab handling
   virtual void          add_grab                                (WidgetImpl &child, bool unconfined = false);
   void                  add_grab                                (WidgetImpl *child, bool unconfined = false);

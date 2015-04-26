@@ -19,7 +19,7 @@ rapicorn_public_headers = $(strip	\
 	region.hh	\
 	scrollwidgets.hh	selector.hh	selob.hh	\
 	sinfex.hh	sizegroup.hh	slider.hh	\
-	stock.hh	\
+	stock.hh	style.hh	\
 	table.hh	testwidgets.hh	text-editor.hh	text-pango.hh	\
 	uithread.hh	utilities.hh	viewport.hh	window.hh	\
 	displaywindow.hh	\
@@ -37,7 +37,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	region.cc	regionimpl.c	\
 	scrollwidgets.cc	selector.cc	selob.cc	\
 	sinfex.cc	sizegroup.cc	slider.cc	\
-	stock.cc	\
+	stock.cc	style.cc	\
 	table.cc	testwidgets.cc	text-editor.cc	text-pango.cc	\
 	uithread.cc	utilities.cc	viewport.cc	window.cc	\
 	displaywindow-x11.cc	displaywindow.cc	\
@@ -102,7 +102,7 @@ $(rapicorn_cc_sources): interfaces.dox
 interfaces.dox: $(EXTRACTDOCS_PY) $(srcdir)/interfaces.idl
 	${AIDACC} -x ExtractDocs $(srcdir)/interfaces.idl -o xgen-$(@F)
 	mv xgen-$(@F) $@
-MAINTAINERCLEANFILES += interfaces.dox
+CLEANFILES += interfaces.dox
 # build serverapi.{hh|cc} and clientapi.{hh|cc} from interfaces.idl
 $(rapicorn_cc_sources): serverapi.hh clientapi.hh
 serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh

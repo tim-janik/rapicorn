@@ -338,10 +338,10 @@ SliderSkidImpl::handle_event (const Event &event)
     {
       const EventButton *bevent;
     case MOUSE_ENTER:
-      this->prelight (true);
+      this->hover (true);
       break;
     case MOUSE_LEAVE:
-      this->prelight (false);
+      this->hover (false);
       break;
     case BUTTON_PRESS:
     case BUTTON_2PRESS:

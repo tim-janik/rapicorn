@@ -68,9 +68,9 @@ test_idl_enums()
   const Aida::EnumValue *svalues = Aida::enum_value_list<StateType>();
   ev = enum_value_find (svalues, STATE_INSENSITIVE); assert (ev && ev->ident == String ("STATE_INSENSITIVE"));
   // assert (svalues.enum_combinable() == true);
-  //uint64 smask = st.enum_parse ("STATE_INSENSITIVE|STATE_PRELIGHT|STATE_IMPRESSED");
-  //assert (smask == (STATE_INSENSITIVE | STATE_PRELIGHT | STATE_IMPRESSED));
-  //assert (st.enum_string (STATE_INSENSITIVE|STATE_IMPRESSED) == "STATE_IMPRESSED|STATE_INSENSITIVE");
+  //uint64 smask = st.enum_parse ("STATE_INSENSITIVE|STATE_HOVER|STATE_ACTIVE");
+  //assert (smask == (STATE_INSENSITIVE | STATE_HOVER | STATE_ACTIVE));
+  //assert (st.enum_string (STATE_INSENSITIVE|STATE_ACTIVE) == "STATE_ACTIVE|STATE_INSENSITIVE");
 }
 REGISTER_UITHREAD_TEST ("Server/IDL Enums", test_idl_enums);
 

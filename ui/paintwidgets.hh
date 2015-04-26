@@ -22,7 +22,7 @@ public:
 };
 
 class DotGridImpl : public virtual WidgetImpl, public virtual DotGridIface {
-  FrameType             normal_dot_, impressed_dot_;
+  FrameType             normal_dot_, active_dot_;
   uint                  n_hdots_, n_vdots_;
   uint16                right_padding_dots_, top_padding_dots_, left_padding_dots_, bottom_padding_dots_;
   virtual FrameType     dot_type            () const override;
@@ -36,8 +36,8 @@ public:
   virtual void          dot_type            (FrameType ft) override;
   virtual void          normal_dot          (FrameType ft) override;
   virtual FrameType     normal_dot          () const override;
-  virtual void          impressed_dot       (FrameType ft) override;
-  virtual FrameType     impressed_dot       () const override;
+  virtual void          active_dot          (FrameType ft) override;
+  virtual FrameType     active_dot          () const override;
   virtual void          n_hdots             (int   num) override;
   virtual int           n_hdots             () const override;
   virtual void          n_vdots             (int   num) override;
