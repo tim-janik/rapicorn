@@ -25,9 +25,6 @@ WidgetImplP create_ui_child     (ContainerImpl &container, const String &widget_
 
 bool        check_ui_window     (const String           &widget_identifier);
 
-String      factory_theme       ();
-void        factory_theme       (const String &name);
-
 // == Factory Contexts ==
 
 typedef map<String,String>       VariableMap;

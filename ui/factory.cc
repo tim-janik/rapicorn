@@ -13,9 +13,6 @@
 namespace Rapicorn {
 namespace Factory {
 
-// == Factory State ==
-static ThemeInfoP factory_current_theme;
-
 // == Utilities ==
 static String
 node_location (const XmlNode *xnode)
@@ -693,19 +690,6 @@ Builder::widget_has_ancestor (const String &widget_identifier, const String &anc
 }
 
 // == UI Creation API ==
-String
-factory_theme ()
-{
-  return factory_current_theme->name();
-}
-
-void
-factory_theme (const String &name)
-{
-  ThemeInfoP theme = ThemeInfo::load_theme (name);
-  factory_current_theme = theme ? theme : ThemeInfo::fallback_theme();
-}
-
 bool
 check_ui_window (const String &widget_identifier)
 {
@@ -785,7 +769,6 @@ initialize_factory_lazily (void)
   if (!initialized)
     {
       initialized++;
-      assert (Factory::factory_current_theme == NULL);
       Blob blob = Res ("@res Rapicorn/foundation.xml");
       Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL, NULL);
       blob = Res ("@res Rapicorn/standard.xml");
@@ -794,7 +777,6 @@ initialize_factory_lazily (void)
       ThemeInfoP default_theme = ThemeInfo::load_theme ("Default");
       assert (default_theme != NULL);
       ThemeInfoP theme = ThemeInfo::load_theme ("$RAPICORN_THEME", true);
-      Factory::factory_current_theme = theme ? theme : default_theme;
     }
 }
 
