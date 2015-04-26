@@ -75,8 +75,8 @@ protected:
   bool                        change_flags_silently (uint64 mask, bool on);
   // State flags and widget flags
   static_assert (STATE_NORMAL        == 0, "");
-  static_assert (STATE_PANEL         == 1 <<  0, "");
-  static_assert (STATE_HOVER         == 1 <<  1, ""); // Flag indicating "hover" state of a widget, see hover()
+  static_assert (STATE_HOVER         == 1 <<  0, ""); // Flag indicating "hover" state of a widget, see hover()
+  static_assert (STATE_PANEL         == 1 <<  1, "");
   static_assert (STATE_ACCELERATABLE == 1 <<  2, "");
   static_assert (STATE_DEFAULT       == 1 <<  3, "");
   static_assert (STATE_SELECTED      == 1 <<  4, "");

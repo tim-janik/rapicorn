@@ -9,8 +9,8 @@ made with Rapicorn are composed of.
 @par Widget States
 The following is a list of states a widget can be in, a combination of multiple states may apply to a widget at any given time.
 - <b>Rapicorn::STATE_NORMAL - "normal"</b><br/> Ordinary widget state to start with, not activated, insensitive or otherwise special.
-- <b>Rapicorn::STATE_PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
 - <b>Rapicorn::STATE_HOVER - "hover"</b><br/> Widget flag indicating that the mouse is over the widget.
+- <b>Rapicorn::STATE_PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
 - <b>(No state flag) - "focusable"</b>: A widget's ability to accept the input focus.
 - <b>Rapicorn::STATE_ACCELERATABLE - "acceleratable"</b><br/> Widget flag indicating the available of accelerators or mnemonic shortcuts.
 - <b>Rapicorn::STATE_DEFAULT - "default"</b><br/> Widget flag that enables widgets to receive the default activation.
@@ -25,7 +25,7 @@ The following is a list of states a widget can be in, a combination of multiple 
 
 Rationales for the widget state ordering and matching precedence:
 - In general, functional flags take precedence over style flags.
-- <b>"hover" / "panel"</b>: Hovering takes precedence to allow highlighting of widgets within panel sections.
+- <b>"panel" / "hover"</b>: Panel rendering takes precedence, as hovering can be implemented via additional effects.
 - <b>"focusable" / "panel"</b>: Navigation information takes precedence over panel section styling.
 - <b>"default" / "acceleratable" / "focusable"</b>: Ordering occours according to higher specificity and use frequency.
 - <b>"insensitive" / "acceleratable"</b>: Insensitivity takes precedence because it disables navigation or activation abilities.

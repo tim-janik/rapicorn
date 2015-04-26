@@ -187,8 +187,8 @@ WidgetImpl::state () const
 {
   constexpr StateType z0 = StateType (0); // STATE_NORMAL
   StateType st = z0;
-  // STATE_PANEL
   st |= hover()       ? STATE_HOVER : z0;
+  // STATE_PANEL
   // STATE_ACCELERATABLE
   st |= has_default() ? STATE_DEFAULT : z0;
   st |= insensitive() ? STATE_INSENSITIVE : z0;

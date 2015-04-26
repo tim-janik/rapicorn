@@ -156,8 +156,8 @@ enum SizePolicyType {
 /// Enum flags type to indicate Widget states.
 flags enum StateType {
   STATE_NORMAL          = 0,       ///< Widget factory / initial state.
-  STATE_PANEL           = 1 <<  0, ///< Widget is rendered as part of a panel section.
-  STATE_HOVER           = 1 <<  1, ///< A pointing device (e.g. mouse) is above the Widget.
+  STATE_HOVER           = 1 <<  0, ///< A pointing device (e.g. mouse) is above the Widget.
+  STATE_PANEL           = 1 <<  1, ///< Widget is rendered as part of a panel section.
   STATE_ACCELERATABLE   = 1 <<  2, ///< Widget participates in mnemonic activation.
   STATE_DEFAULT         = 1 <<  3, ///< Widget receives the default activation.
   STATE_SELECTED        = 1 <<  4, ///< Widget is currently selected.

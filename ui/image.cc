@@ -132,8 +132,8 @@ single_state_score (const String &state_string)
   switch (consthash_fnv64a (state_string.c_str()))
     {
     case consthash_fnv64a ("normal"):           return STATE_NORMAL;
-    case consthash_fnv64a ("panel"):            return STATE_PANEL;
     case consthash_fnv64a ("hover"):            return STATE_HOVER;
+    case consthash_fnv64a ("panel"):            return STATE_PANEL;
     case consthash_fnv64a ("acceleratable"):    return STATE_ACCELERATABLE;
     case consthash_fnv64a ("default"):          return STATE_DEFAULT;
     case consthash_fnv64a ("selected"):         return STATE_SELECTED;
