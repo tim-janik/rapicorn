@@ -39,7 +39,7 @@
 
   <!-- Buttons -->
   <ButtonArea id="RapicornButton" child-container="child-area" >
-    <Argument id="center-child" default="1" />
+    <Argument name="center-child" default="1" />
     <Frame normal-frame="out" active-frame="in" >
       <Ambience
 	normal-lighting="upper-left" active-lighting="lower-right" hover-lighting="upper-left" insensitive-lighting="none"
@@ -51,7 +51,7 @@
     </Frame>
   </ButtonArea>
   <ButtonArea id="RapicornUnfocusedButton" child-container="child-area" >
-    <Argument id="center-child" default="1" />
+    <Argument name="center-child" default="1" />
     <Frame normal-frame="out" active-frame="in" >
       <Ambience
 	normal-lighting="upper-left" active-lighting="lower-right" hover-lighting="upper-left" insensitive-lighting="none"
@@ -61,7 +61,7 @@
     </Frame>
   </ButtonArea>
   <Frame id="RapicornDefaultButton" child-container="child-area" frame-type="in" >
-    <Argument id="on-click" />
+    <Argument name="on-click" />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
       <Button name="child-area" on-click="@eval on_click"/>
     </Alignment>

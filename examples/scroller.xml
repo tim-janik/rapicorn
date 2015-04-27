@@ -4,8 +4,8 @@
 
   <!-- main dialog -->
   <Window id="main-shell" child-container="scroll-box" width="800" height="600" >
-    <Argument id="test-value1" default="2"/>
-    <Argument id="test-value2"/>
+    <Argument name="test-value1" default="2"/>
+    <Argument name="test-value2"/>
     <Ambience normal-lighting="upper-left">
       <VBox>
 	<ScrollArea hspread="1" vspread="1">
@@ -17,7 +17,7 @@
 
   <!-- Button definition -->
   <Button id="test-button" on-click="dummy">
-    <Argument id="test-button-text" default="ClickMe" />
+    <Argument name="test-button-text" default="ClickMe" />
     <Label>
       <Label.markup-text eval-element="Expr">
 	<font family='Serif'><larger><larger><larger><larger>[ <Expr>@eval test_button_text</Expr> ]</larger></larger></larger></larger></font>

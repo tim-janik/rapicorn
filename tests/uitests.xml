@@ -9,7 +9,7 @@
 
   <!-- test dialog -->
   <Window id="test-dialog">
-    <Argument id="zonk" default="zonking"/>
+    <Argument name="zonk" default="zonking"/>
     <Alignment padding="10">
       <VBox>
 	<Label plain-text="Checking &lt;prop:value>xxx&lt;/> syntax:" />
