@@ -49,6 +49,7 @@ class_scope:Application:
   static void                     quit           (int quit_code = 0);
   static void                     shutdown       ();
   static int                      run_and_exit   () RAPICORN_NORETURN;
+  static bool                     iterate        (bool block);
   static ApplicationHandle        the            ();
 protected:
   static MainLoopP                main_loop     ();
