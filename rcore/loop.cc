@@ -436,6 +436,15 @@ MainLoop::iterate_pending()
   while (iterate_loops_Lm (state, false, true));
 }
 
+bool
+MainLoop::pending()
+{
+  ScopedLock<Mutex> locker (mutex_);
+  State state;
+  EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
+  return iterate_loops_Lm (state, false, false);
+}
+
 void
 EventLoop::unpoll_sources_U() // must be unlocked!
 {

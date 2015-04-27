@@ -144,9 +144,10 @@ public:
   virtual   ~MainLoop        ();
   int        run             (); ///< Run loop iterations until a call to quit() or finishable becomes true.
   bool       running         (); ///< Indicates if quit() has been called already.
-  void       quit            (int quit_code = 0); ///< Cause run() to return with @a quit_code.
   bool       finishable      (); ///< Indicates wether this loop has no primary sources left to process.
-  bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.
+  void       quit            (int quit_code = 0);    ///< Cause run() to return with @a quit_code.
+  bool       pending         ();                     ///< Check if iterate() needs to be called for dispatching.
+  bool       iterate         (bool block);           ///< Perform one loop iteration and return whether more iterations are needed.
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
   EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
   static MainLoopP  create   ();
