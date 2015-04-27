@@ -8,7 +8,7 @@
   <Ambience id="ListRow" child-container="ListRowCavity" hexpand="1"
 	       normal-background="background" lighting="none" shade="none">
     <Frame hexpand="1" frame-type="none" tight-focus="true">
-      <HBox id="ListRowCavity"/>
+      <HBox name="ListRowCavity"/>
     </Frame>
   </Ambience>
 

@@ -7,7 +7,7 @@
   <RapicornWidgetListRow id="WidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
       <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
-	<HBox id="ListRowCavity"/>
+	<HBox name="ListRowCavity"/>
       </FocusFrame>
     </Ambience>
   </RapicornWidgetListRow>

@@ -16,7 +16,7 @@ my_window_xml = """
       <Button hexpand="1" on-click="Window::close()">
         <Label markup-text="Quit"/>
       </Button>
-      <WidgetList id="CheckWidgetList"/>
+      <WidgetList name="CheckWidgetList"/>
     </VBox>
   </Window>
 </interfaces>
