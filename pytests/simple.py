@@ -58,28 +58,19 @@ if not max (opt in sys.argv for opt in ('-i','--interactive')):
   # enter window to allow input events
   b = window.synthesize_enter()
   assert b
-  # process pending events
-  while app.iterate (False, True): pass
   # find button
   button = window.query_selector_unique ('.Button')
   assert button
   # click button
   assert seen_click_command == False
-  window.synthesize_click (button, 1)
+  window.synthesize_click (button, 1)   # fake "CLICK" command
   window.synthesize_leave()
-  while app.iterate (False, True): pass
-  if 1:
-    import time
-    time.sleep (0.1) # FIXME: hack to ensure click is processed remotely
-    while app.iterate (False, True): pass
-  assert seen_click_command == True
+  while app.iterate (False, True): pass # process events and signals
+  assert seen_click_command == True     # command_handler should be executed by now
   # delete window
   assert window.closed() == False
   window.synthesize_delete()
-  while app.iterate (False, True): pass
-  ## assert window.closed() == True
-  # FIXME: window.closed() can't be asserted here, because remote
-  # object references (from python) are not yet implemented
+  assert window.closed() == True
   print " " * max (0, 75 - len (testname)), "OK"
 
 # event loop to process window events (exits when all windows are gone)
