@@ -36,6 +36,13 @@ tour_LDADD	 = $(LDADDS)
 XML_FILES	+= tour.xml
 EXTRA_DIST	+= testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
 
+# tests
+tour-test: tour
+	$(Q) $(X11TEST_SERVER) && ./tour --test-automation > $(TSTOUT) \
+	&& fgrep -q "Rapicorn Tour" $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f $(TSTOUT)
+check: tour-test
+
 xmllint-check:
 	cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
 .PHONY: xmllint-check

@@ -44,6 +44,26 @@ main (int   argc,
 
   // display window and enter main event loop
   window.show();
+
+  // automated unit testing
+  if (argc > 1 && argv[1] == String ("--test-automation"))
+    {
+      bool b;
+      printout ("# %s %s\n", argv[0], argv[1]);
+      b = window.synthesize_enter();    // enter window to allow input events
+      assert (b);
+      WidgetH button;
+      button = window.query_selector_unique ("#TDumpButton");
+      assert (button);                  // ensure we have the test dump button
+      window.synthesize_click (button, 1);
+      while (app.iterate (false));      // process pending events and signals (calls into custom_commands)
+      button = window.query_selector_unique ("#CloseButton");
+      assert (button);                  // ensure we have the close button
+      window.synthesize_click (button, 1);
+      assert (window.closed() == true);
+      window.synthesize_leave();        // click and leave
+    }
+
   return app.run_and_exit();
 }
 
