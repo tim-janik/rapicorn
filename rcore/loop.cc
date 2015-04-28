@@ -172,9 +172,13 @@ EventLoop::flag_primary (bool on)
   return was_primary;
 }
 
+static const int16 UNDEFINED_PRIORITY = -32768;
+
 uint
 EventLoop::add (SourceP source, int priority)
 {
+  static_assert (UNDEFINED_PRIORITY < 1, "");
+  assert_return (priority >= 1 && priority <= 999, 0);
   ScopedLock<Mutex> locker (main_loop_->mutex());
   assert_return (source->loop_ == NULL, 0);
   source->loop_ = this;
@@ -452,8 +456,6 @@ EventLoop::unpoll_sources_U() // must be unlocked!
   poll_sources_.resize (0);
 }
 
-static const int64 supraint_priobase = 2147483648LL; // INT32_MAX + 1, above all possible int32 values
-
 void
 EventLoop::collect_sources_Lm (State &state)
 {
@@ -471,7 +473,7 @@ EventLoop::collect_sources_Lm (State &state)
   SourceP* arraymem[7]; // using a vector+malloc here shows up in the profiles
   QuickSourcePArray poll_candidates (ARRAY_SIZE (arraymem), arraymem);
   // determine dispatch priority & collect sources for preparing
-  dispatch_priority_ = supraint_priobase; // dispatch priority, cover full int32 range initially
+  dispatch_priority_ = UNDEFINED_PRIORITY; // dispatch priority, cover full range initially
   for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
     {
       Source &source = **lit;
@@ -480,10 +482,10 @@ EventLoop::collect_sources_Lm (State &state)
       if (source.loop_ != this ||                               // consider undestroyed
           (source.dispatching_ && !source.may_recurse_))        // avoid unallowed recursion
         continue;
-      if (source.priority_ < dispatch_priority_ &&
+      if (source.priority_ > dispatch_priority_ &&
           source.loop_state_ == NEEDS_DISPATCH)                 // dispatch priority needs adjusting
         dispatch_priority_ = source.priority_;                  // upgrade dispatch priority
-      if (source.priority_ < dispatch_priority_ ||              // prepare preempting sources
+      if (source.priority_ > dispatch_priority_ ||              // prepare preempting sources
           (source.priority_ == dispatch_priority_ &&
            source.loop_state_ == NEEDS_DISPATCH))               // re-poll sources that need dispatching
         poll_candidates.push (&*lit);                           // collect only, adding ref() next
@@ -491,7 +493,7 @@ EventLoop::collect_sources_Lm (State &state)
   // ensure ref counts on all prepare sources
   assert (poll_sources_.empty());
   for (size_t i = 0; i < poll_candidates.size(); i++)
-    if ((*poll_candidates[i])->priority_ < dispatch_priority_ || // throw away lower priority sources
+    if ((*poll_candidates[i])->priority_ > dispatch_priority_ || // throw away lower priority sources
         ((*poll_candidates[i])->priority_ == dispatch_priority_ &&
          (*poll_candidates[i])->loop_state_ == NEEDS_DISPATCH)) // re-poll sources that need dispatching
       poll_sources_.push_back (*poll_candidates[i]);
@@ -517,7 +519,7 @@ EventLoop::prepare_sources_Lm (State          &state,
         continue; // ignore newly destroyed sources
       if (need_dispatch)
         {
-          dispatch_priority_ = MIN (dispatch_priority_, source.priority_); // upgrade dispatch priority
+          dispatch_priority_ = MAX (dispatch_priority_, source.priority_); // upgrade dispatch priority
           source.loop_state_ = NEEDS_DISPATCH;
           continue;
         }
@@ -536,7 +538,7 @@ EventLoop::prepare_sources_Lm (State          &state,
         else
           source.pfds_[i].idx = UINT_MAX;
     }
-  return dispatch_priority_ < supraint_priobase;
+  return dispatch_priority_ > UNDEFINED_PRIORITY;
 }
 
 bool
@@ -568,13 +570,13 @@ EventLoop::check_sources_Lm (State               &state,
         continue; // ignore newly destroyed sources
       if (need_dispatch)
         {
-          dispatch_priority_ = MIN (dispatch_priority_, source.priority_); // upgrade dispatch priority
+          dispatch_priority_ = MAX (dispatch_priority_, source.priority_); // upgrade dispatch priority
           source.loop_state_ = NEEDS_DISPATCH;
         }
       else
         source.loop_state_ = WAITING;
     }
-  return dispatch_priority_ < supraint_priobase;
+  return dispatch_priority_ > UNDEFINED_PRIORITY;
 }
 
 void
@@ -594,7 +596,7 @@ EventLoop::dispatch_source_Lm (State &state)
           break;
         }
     }
-  dispatch_priority_ = supraint_priobase;
+  dispatch_priority_ = UNDEFINED_PRIORITY;
   // dispatch single source
   if (dispatch_source)
     {
@@ -618,7 +620,6 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   assert_return (state.phase == state.NONE, false);
   Mutex &main_mutex = main_loop_->mutex();
   int64 timeout_usecs = INT64_MAX;
-  bool any_dispatchable = false;
   PollFD reserved_pfd_mem[7];   // store PollFD array in stack memory, to reduce malloc overhead
   QuickPfdArray pfda (ARRAY_SIZE (reserved_pfd_mem), reserved_pfd_mem); // pfda.size() == 0
   // allow poll wakeups
@@ -636,6 +637,8 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
   for (size_t i = 0; i < nloops; i++)
     loops[i]->collect_sources_Lm (state);
   // prepare
+  bool any_dispatchable = false;
+  bool priority_ascension = false;      // flag for priority elevation between loops
   state.phase = state.PREPARE;
   state.current_time_usecs = timestamp_realtime();
   bool dispatchable[nloops];
@@ -643,6 +646,8 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     {
       dispatchable[i] = loops[i]->prepare_sources_Lm (state, &timeout_usecs, pfda);
       any_dispatchable |= dispatchable[i];
+      if (UNLIKELY (loops[i]->dispatch_priority_ >= PRIORITY_ASCENT) && dispatchable[i])
+        priority_ascension = true;
     }
   // poll file descriptors
   int64 timeout_msecs = timeout_usecs / 1000;
@@ -667,6 +672,8 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     {
       dispatchable[i] |= loops[i]->check_sources_Lm (state, pfda);
       any_dispatchable |= dispatchable[i];
+      if (UNLIKELY (loops[i]->dispatch_priority_ >= PRIORITY_ASCENT) && dispatchable[i])
+        priority_ascension = true;
     }
   // dispatch
   if (may_dispatch && any_dispatchable)
@@ -674,7 +681,8 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
       size_t index, i = nloops;
       do        // find next dispatchable loop in round-robin fashion
         index = rr_index_++ % nloops;
-      while (!dispatchable[index] && i--);
+      while ((!dispatchable[index] ||
+              (priority_ascension && loops[index]->dispatch_priority_ < PRIORITY_ASCENT)) && i--);
       state.phase = state.DISPATCH;
       loops[index]->dispatch_source_Lm (state); // passes on shared_ptr to keep alive wihle locked
     }
@@ -720,7 +728,7 @@ EventLoop::Source::Source () :
   loop_ (NULL),
   pfds_ (NULL),
   id_ (0),
-  priority_ (INT_MAX),
+  priority_ (UNDEFINED_PRIORITY),
   loop_state_ (0),
   may_recurse_ (0),
   dispatching_ (0),
@@ -1048,7 +1056,7 @@ EventLoop::PollFDSource::~PollFDSource ()
   on several independently running loops within the same thread, usually used to associate one event loop with one window.
 
   Traits of the Rapicorn::EventLoop class:
-  @li The main loop and its slave loops are handled in round-robin fahsion, priorities only apply internally to a loop.
+  @li The main loop and its slave loops are handled in round-robin fahsion, priorities below Rapicorn::EventLoop::PRIORITY_ASCENT only apply internally to a loop.
   @li Loops are thread safe, so any thready may add or remove sources to a loop at any time, regardless of which thread
   is currently running the loop.
   @li Sources added to a loop may be flagged as "primary" (see Rapicorn::EventLoop::Source::primary()),
