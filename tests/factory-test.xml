@@ -3,7 +3,7 @@
 <interfaces>
 
   <Window id="main-test">
-    <Argument id="defaultvalue17" default="@eval 10 + 7"/>
+    <Argument name="defaultvalue17" default="@eval 10 + 7"/>
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
       <VBox spacing="5">
 	<!-- Check evaluation of arguments -->

@@ -7,14 +7,14 @@
   <RapicornWidgetListRow id="WidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
       <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
-	<HBox id="ListRowCavity"/>
+	<HBox name="ListRowCavity"/>
       </FocusFrame>
     </Ambience>
   </RapicornWidgetListRow>
 
   <!-- list area -->
   <Alignment id="widget-list" >
-    <Argument id="model"/>
+    <Argument name="model"/>
     <Table>
       <Alignment hexpand="1" vexpand="1" hposition="0" vposition="1"
 		 left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
@@ -29,7 +29,7 @@
 
   <!-- main dialog -->
   <Window id="main-dialog">
-    <Argument id="list_model"/>
+    <Argument name="list_model"/>
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" >

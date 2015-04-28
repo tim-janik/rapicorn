@@ -62,7 +62,7 @@ register_interface_file (String file_name, const XmlNodeP root, const ArgumentLi
           {
             if (definitions)
               definitions->resize (reset_size);
-            return string_format ("%s: interface definition without id", node_location (dnode));
+            return string_format ("%s: interface definition without id: <%s/>", node_location (dnode), dnode->name());
           }
         if (definitions)
           definitions->push_back (id);
@@ -269,7 +269,7 @@ factory_context_impl_type (FactoryContext &fc)
 
 // == Builder ==
 class Builder {
-  enum Flags { SCOPE_CHILD = 0, SCOPE_WIDGET = 1 };
+  enum Flags { SCOPE_WIDGET = 1, SCOPE_CHILD = 2 };
   InterfaceFileP   interface_file_;             // InterfaceFile for dnode_
   const XmlNode   *const dnode_;                // definition of gadget to be created
   Builder         *const outer_;
@@ -279,7 +279,7 @@ class Builder {
   vector<bool>     scope_consumed_;
   VariableMap      locals_;
   void          eval_args        (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
-                                  StringVector &out_names, StringVector &out_values, String *child_container_name);
+                                  StringVector &out_names, StringVector &out_values, String *child_container_name, const Flags bflags);
   bool          try_set_property (WidgetImpl &widget, const String &property_name, const String &value);
   WidgetImplP   build_scope      (const String &caller_location, const XmlNode *factory_context_node);
   WidgetImplP   build_widget     (const XmlNode *node, Evaluator &env, const XmlNode *factory_context_node, Flags bflags);
@@ -405,8 +405,9 @@ Builder::build_from_factory (const XmlNode *factory_node,
 
 void
 Builder::eval_args (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
-                    StringVector &out_names, StringVector &out_values, String *child_container_name)
+                    StringVector &out_names, StringVector &out_values, String *child_container_name, const Flags bflags)
 {
+  const bool dissallow_id = bflags & SCOPE_CHILD;
   out_names.reserve (in_names.size());
   out_values.reserve (in_values.size());
   for (size_t i = 0; i < in_names.size(); i++)
@@ -424,6 +425,8 @@ Builder::eval_args (Evaluator &env, const StringVector &in_names, const StringVe
         rvalue = ivalue;
       if (child_container_name && cname == "child_container")
         *child_container_name = rvalue;
+      else if (dissallow_id && cname == "id" && errnode)
+        critical ("%s: invalid 'id' attribute for inner node: <%s/>", node_location (errnode), errnode->name());
       else
         {
           out_names.push_back (cname);
@@ -459,9 +462,9 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
   for (const XmlNodeP cnode : dnode_->children())
     if (cnode->name() == "Argument")
       {
-        const String aname = canonify_dashes (cnode->get_attribute ("id")); // canonify argument id
+        const String aname = canonify_dashes (cnode->get_attribute ("name")); // canonify argument name
         if (aname.empty() || aname == "id" || aname == "name")
-          critical ("%s: invalid argument id: ", node_location (cnode), aname.empty() ? "<missing>" : aname);
+          critical ("%s: invalid argument name: \"%s\"", node_location (cnode), aname);
         else
           {
             argument_names.push_back (aname);
@@ -476,18 +479,19 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
     {
       if (scope_consumed_.at (i))
         continue;
-      const String cname = canonify_dashes (scope_names_[i]), &cvalue = scope_values_.at (i);
-      if (cname == "name" || cname == "id")
+      const String &rawname = scope_names_[i], &cvalue = scope_values_.at (i);
+      if (rawname == "name" || rawname == "id")
         {
           name_argument = cvalue;
           scope_consumed_[i] = true;
           continue;
         }
-      else if (cname.find (':') != String::npos)
+      else if (rawname.find (':') != String::npos)
         {
           scope_consumed_[i] = true;
           continue; // ignore namespaced attributes
         }
+      const String cname = canonify_dashes (rawname);
       StringVector::const_iterator it = find (argument_names.begin(), argument_names.end(), cname);
       if (it != argument_names.end())
         {
@@ -590,7 +594,7 @@ Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode
   assert_return (ski == wnode->children().size(), NULL);
   // evaluate property values
   StringVector eprop_names, eprop_values;
-  eval_args (env, prop_names, prop_values, wnode, eprop_names, eprop_values, filter_child_container ? &child_container_name_ : NULL);
+  eval_args (env, prop_names, prop_values, wnode, eprop_names, eprop_values, filter_child_container ? &child_container_name_ : NULL, bflags);
   // create widget and assign properties from attributes and property element syntax
   WidgetImplP widget;
   {
