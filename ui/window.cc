@@ -222,7 +222,7 @@ WindowImpl::forcefully_close_all ()
 
 WindowImpl::WindowImpl() :
   loop_ (uithread_main_loop()->create_slave()),
-  display_window_ (NULL), commands_emission_ (NULL), notify_displayed_id_ (0),
+  display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
   theme_info_ = ThemeInfo::fallback_theme();    // ensure valid theme_info_
@@ -258,13 +258,9 @@ WindowImpl::dispose ()
 WindowImpl::~WindowImpl()
 {
   WindowTrail::wleave (this);
-  if (notify_displayed_id_)
-    {
-      loop_->try_remove (notify_displayed_id_);
-      notify_displayed_id_ = 0;
-    }
   if (display_window_)
     {
+      clear_immediate_event();
       display_window_->destroy();
       display_window_ = NULL;
     }
@@ -731,13 +727,6 @@ WindowImpl::dispatch_win_destroy ()
 }
 
 void
-WindowImpl::notify_displayed()
-{
-  // emit updates at exec_update() priority, so other high priority handlers run first (exec_now)
-  sig_displayed.emit();
-}
-
-void
 WindowImpl::draw_child (WidgetImpl &child)
 {
   // FIXME: this should be optimized to just redraw the child in question
@@ -770,8 +759,8 @@ WindowImpl::draw_now ()
       display_window_->blit_surface (surface, region);
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
-      if (!notify_displayed_id_)
-        notify_displayed_id_ = loop_->exec_update (Aida::slot (*this, &WindowImpl::notify_displayed));
+      // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
+      loop_->exec_update ([this] () { if (display_window_) sig_displayed.emit(); });
       const uint64 stop = timestamp_realtime();
       EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
               x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
@@ -948,6 +937,8 @@ WindowImpl::event_dispatcher (const EventLoop::State &state)
       Event *event = display_window_ ? display_window_->pop_event() : NULL;
       if (event)
         {
+          if (immediate_event_hash_ == size_t (event))
+            clear_immediate_event();
           dispatch_event (*event);
           delete event;
         }
@@ -956,6 +947,46 @@ WindowImpl::event_dispatcher (const EventLoop::State &state)
   else if (state.phase == state.DESTROY)
     destroy_display_window();
   return false;
+}
+
+bool
+WindowImpl::immediate_event_dispatcher (const EventLoop::State &state)
+{
+  switch (state.phase)
+    {
+    case state.PREPARE:
+    case state.CHECK:
+      return true;
+    case state.DISPATCH:
+      {
+        const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
+        event_dispatcher (state);
+        return immediate_event_hash_ != 0; // destroy if there are no more immediate events
+      }
+    default:
+      return false;
+    }
+}
+
+void
+WindowImpl::push_immediate_event (Event *event)
+{
+  assert_return (display_window_ != NULL);
+  assert_return (event != NULL);
+  display_window_->push_event (event);
+  if (immediate_event_hash_ == 0)
+    {
+      // force immediate (synthesized) event processing before further uithread main loop RPC handling
+      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::immediate_event_dispatcher), EventLoop::PRIORITY_NOW);
+      immediate_event_hash_ = size_t (event);
+    }
+}
+
+void
+WindowImpl::clear_immediate_event ()
+{
+  return_unless (immediate_event_hash_ != 0);
+  immediate_event_hash_ = 0;
 }
 
 bool
@@ -1005,7 +1036,7 @@ WindowImpl::screen_viewable ()
 static bool startup_window = true;
 
 void
-WindowImpl::idle_show()
+WindowImpl::async_show()
 {
   if (display_window_)
     {
@@ -1063,8 +1094,8 @@ WindowImpl::create_display_window ()
         }
       RAPICORN_ASSERT (display_window_ != NULL);
       loop_->flag_primary (true); // FIXME: depends on WM-managable
-      EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::idle_show);
-      loop_->exec_now (sl);
+      EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::async_show);
+      loop_->exec_normal (sl);
     }
 }
 
@@ -1080,6 +1111,7 @@ WindowImpl::destroy_display_window ()
   const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
   if (!display_window_)
     return; // during destruction, ref_count == 0
+  clear_immediate_event();
   display_window_->destroy();
   display_window_ = NULL;
   loop_->flag_primary (false);
@@ -1129,7 +1161,7 @@ WindowImpl::synthesize_enter (double xalign,
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  display_window_->push_event (create_event_mouse (MOUSE_ENTER, ec));
+  push_immediate_event (create_event_mouse (MOUSE_ENTER, ec));
   return true;
 }
 
@@ -1139,7 +1171,7 @@ WindowImpl::synthesize_leave ()
   if (!has_display_window())
     return false;
   EventContext ec;
-  display_window_->push_event (create_event_mouse (MOUSE_LEAVE, ec));
+  push_immediate_event (create_event_mouse (MOUSE_LEAVE, ec));
   return true;
 }
 
@@ -1159,8 +1191,8 @@ WindowImpl::synthesize_click (WidgetIface &widgeti,
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
-  display_window_->push_event (create_event_button (BUTTON_RELEASE, ec, button));
-  display_window_->push_event (create_event_button (BUTTON_PRESS, ec, button));
+  push_immediate_event (create_event_button (BUTTON_RELEASE, ec, button));
+  push_immediate_event (create_event_button (BUTTON_PRESS, ec, button));
   return true;
 }
 
@@ -1170,7 +1202,7 @@ WindowImpl::synthesize_delete ()
   if (!has_display_window())
     return false;
   EventContext ec;
-  display_window_->push_event (create_event_win_delete (ec));
+  push_immediate_event (create_event_win_delete (ec));
   return true;
 }
 

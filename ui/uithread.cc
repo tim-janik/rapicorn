@@ -182,7 +182,7 @@ public:
     DisplayDriver::forcefully_close_all();
     while (!main_loop_->finishable())
       if (!main_loop_->iterate (false))
-        break;  // handle primary idle handlers like exec_now
+        break;  // handle pending idle handlers like exec_*()
     main_loop_->destroy_loop();
 
     assert (running_ == true);

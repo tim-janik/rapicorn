@@ -21,7 +21,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   String                     last_command_;
   vector<WidgetImplP>   last_entered_children_;
   DisplayWindow::Config config_;
-  uint                  notify_displayed_id_;
+  size_t                immediate_event_hash_;
   uint                  auto_focus_ : 1;
   uint                  entered_ : 1;
   uint                  pending_win_size_ : 1;
@@ -71,7 +71,6 @@ public:
   virtual bool          synthesize_delete                       ();
   void                  draw_child                              (WidgetImpl &child);
 private:
-  void                  notify_displayed                        (void);
   virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();
   virtual void          dispose_widget                          (WidgetImpl               &widget);
@@ -89,8 +88,11 @@ private:
   virtual void          create_display_window                    ();
   virtual bool          has_display_window                       ();
   virtual void          destroy_display_window                   ();
-  void                  idle_show                               ();
+  void                  async_show                               ();
   /* main loop */
+  void                  push_immediate_event                    (Event *event);
+  void                  clear_immediate_event                   ();
+  bool                  immediate_event_dispatcher              (const EventLoop::State &state);
   virtual bool          event_dispatcher                        (const EventLoop::State &state);
   virtual bool          resizing_dispatcher                     (const EventLoop::State &state);
   virtual bool          drawing_dispatcher                      (const EventLoop::State &state);
