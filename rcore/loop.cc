@@ -473,22 +473,22 @@ EventLoop::collect_sources_Lm (State &state)
   SourceP* arraymem[7]; // using a vector+malloc here shows up in the profiles
   QuickSourcePArray poll_candidates (ARRAY_SIZE (arraymem), arraymem);
   // determine dispatch priority & collect sources for preparing
-  dispatch_priority_ = UNDEFINED_PRIORITY; // dispatch priority, cover full range initially
+  dispatch_priority_ = UNDEFINED_PRIORITY; // initially, consider sources at *all* priorities
   for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
     {
       Source &source = **lit;
       if (UNLIKELY (!state.seen_primary && source.primary_))
         state.seen_primary = true;
-      if (source.loop_ != this ||                               // consider undestroyed
+      if (source.loop_ != this ||                               // ignore destroyed and
           (source.dispatching_ && !source.may_recurse_))        // avoid unallowed recursion
         continue;
-      if (source.priority_ > dispatch_priority_ &&
-          source.loop_state_ == NEEDS_DISPATCH)                 // dispatch priority needs adjusting
-        dispatch_priority_ = source.priority_;                  // upgrade dispatch priority
-      if (source.priority_ > dispatch_priority_ ||              // prepare preempting sources
-          (source.priority_ == dispatch_priority_ &&
-           source.loop_state_ == NEEDS_DISPATCH))               // re-poll sources that need dispatching
-        poll_candidates.push (&*lit);                           // collect only, adding ref() next
+      if (source.priority_ > dispatch_priority_ &&              // ignore lower priority sources
+          source.loop_state_ == NEEDS_DISPATCH)                 // if NEEDS_DISPATCH sources remain
+        dispatch_priority_ = source.priority_;                  // so raise dispatch_priority_
+      if (source.priority_ > dispatch_priority_ ||              // add source if it is an eligible
+          (source.priority_ == dispatch_priority_ &&            // candidate, baring future raises
+           source.loop_state_ == NEEDS_DISPATCH))               // of dispatch_priority_...
+        poll_candidates.push (&*lit);                           // collect only, adding ref() later
     }
   // ensure ref counts on all prepare sources
   assert (poll_sources_.empty());
@@ -497,6 +497,10 @@ EventLoop::collect_sources_Lm (State &state)
         ((*poll_candidates[i])->priority_ == dispatch_priority_ &&
          (*poll_candidates[i])->loop_state_ == NEEDS_DISPATCH)) // re-poll sources that need dispatching
       poll_sources_.push_back (*poll_candidates[i]);
+  /* here, poll_sources_ contains either all sources, or only the highest priority
+   * NEEDS_DISPATCH sources plus higher priority sources. giving precedence to the
+   * remaining NEEDS_DISPATCH sources ensures round-robin processing.
+   */
 }
 
 bool
