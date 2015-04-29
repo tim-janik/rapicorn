@@ -192,6 +192,15 @@ using   std::vector;
 typedef std::string String;             ///< Convenience alias for std::string.
 typedef vector<String> StringVector;    ///< Convenience alias for a std::vector<std::string>.
 
+#if DOXYGEN
+/// Template to map all type arguments to void, useful for SFINAE.
+/// See also: http://open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3911.pdf
+template<class...> using void_t = void;
+#else // work-around for g++ <= 4.9
+template<class...> struct void_t__voider { using type = void; };
+template<class... T0toN > using void_t = typename void_t__voider<T0toN...>::type;
+#endif
+
 // == File Path Handling ==
 #ifdef  _WIN32
 #define RAPICORN_DIR_SEPARATOR		  '\\'
@@ -309,16 +318,11 @@ shared_ptr_cast (const std::shared_ptr<Source> &sptr)
 }
 
 // == C++ Traits ==
-/** Check if a type is comparable for equality.
+/** IsComparable - Check if a type is comparable for equality.
  * If @a T is a type that can be compared with operator==, provide the member constant @a value equal true, otherwise false.
  */
-template<class T>
-class IsComparable {
-  template<typename U> static char (&check (int))[1 + sizeof (decltype ( std::declval<U>() == std::declval<U>() ))];
-  template<typename>   static char (&check (...))[1];
-public:
-  static constexpr const bool value = sizeof (check<T> (0)) != 1; ///< True iff @a T supports operator==.
-};
+template<class, class = void> struct IsComparable : std::false_type {}; // IsComparable false case, picked if operator== is missing.
+template<class T> struct IsComparable<T, void_t< decltype (std::declval<T>() == std::declval<T>()) >> : std::true_type {};
 
 /// Check if a type @a T is a std::shared_ptr<T>.
 template<class T> struct IsSharedPtr                      : std::false_type {};
