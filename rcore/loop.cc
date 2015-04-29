@@ -647,7 +647,7 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
     presult = poll ((struct pollfd*) &pfda[0], pfda.size(), MIN (timeout_msecs, INT_MAX));
   while (presult < 0 && errno == EAGAIN); // EINTR may indicate a signal
   main_mutex.lock();
-  if (presult < 0)
+  if (presult < 0 && errno != EINTR)
     critical ("MainLoop: poll() failed: %s", strerror());
   else if (pfda[wakeup_idx].revents)
     eventfd_.flush(); // restart queueing wakeups, possibly triggered by dispatching
