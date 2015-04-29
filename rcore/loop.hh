@@ -70,7 +70,7 @@ protected:
   void          collect_sources_Lm  (State&);
   bool          prepare_sources_Lm  (State&, int64*, QuickPfdArray&);
   bool          check_sources_Lm    (State&, const QuickPfdArray&);
-  SourceP       dispatch_source_Lm  (State&);
+  void          dispatch_source_Lm  (State&);
 public:
   typedef std::function<void (void)>         VoidSlot;
   typedef std::function<bool (void)>         BoolSlot;

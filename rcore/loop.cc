@@ -568,7 +568,7 @@ EventLoop::check_sources_Lm (State               &state,
   return dispatch_priority_ < supraint_priobase;
 }
 
-EventLoop::SourceP
+void
 EventLoop::dispatch_source_Lm (State &state)
 {
   Mutex &main_mutex = main_loop_->mutex();
@@ -601,7 +601,6 @@ EventLoop::dispatch_source_Lm (State &state)
       if (dispatch_source->loop_ == this && !keep_alive)
         remove_source_Lm (dispatch_source);
     }
-  return dispatch_source;       // keep alive when passing to caller
 }
 
 bool
@@ -661,7 +660,6 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
       any_dispatchable |= dispatchable[i];
     }
   // dispatch
-  SourceP dispatched_source = NULL;
   if (may_dispatch && any_dispatchable)
     {
       size_t index, i = nloops;
@@ -669,12 +667,11 @@ MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
         index = rr_index_++ % nloops;
       while (!dispatchable[index] && i--);
       state.phase = state.DISPATCH;
-      dispatched_source = loops[index]->dispatch_source_Lm (state); // passes on shared_ptr to keep alive wihle locked
+      loops[index]->dispatch_source_Lm (state); // passes on shared_ptr to keep alive wihle locked
     }
   // cleanup
   state.phase = state.NONE;
   main_mutex.unlock();
-  dispatched_source = NULL; // release after mutex unlocked
   for (size_t i = 0; i < nloops; i++)
     {
       loops[i]->unpoll_sources_U(); // unlocked
