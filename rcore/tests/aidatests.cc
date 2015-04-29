@@ -223,6 +223,9 @@ test_dynamics()
 }
 REGISTER_TEST ("Aida/Any Dynamics", test_dynamics);
 
+template<class, class = void> struct has_complex_member : std::false_type {};      // false case, picked on SFINAE
+template<class T> struct has_complex_member<T, void_t<typename T::complex_member>> : std::true_type {}; // !SFINAE
+
 static void
 test_cxxaux()
 {
@@ -235,9 +238,12 @@ test_cxxaux()
   class ComplexType {
     ComplexType (int, double, void*) {}        // Private ctor.
     friend class FriendAllocator<ComplexType>; // Allow access to ctor/dtor of ComplexType.
+  public: typedef int complex_member;
   };
   std::shared_ptr<ComplexType> complex = FriendAllocator<ComplexType>::make_shared (77, -0.5, (void*) 0);
 
+  static_assert (has_complex_member<SimpleType>::value == false, "testing void_t");
+  static_assert (has_complex_member<ComplexType>::value == true, "testing void_t");
   static_assert (IsSharedPtr<SimpleType>::value == false, "testing IsSharedPtr");
   static_assert (IsWeakPtr<std::shared_ptr<SimpleType> >::value == false, "testing IsWeakPtr");
   static_assert (IsSharedPtr<std::shared_ptr<SimpleType> >::value == true, "testing IsSharedPtr");
