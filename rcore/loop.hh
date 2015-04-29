@@ -56,8 +56,8 @@ protected:
   typedef std::vector<SourceP>    SourceList;
   MainLoop     *main_loop_;
   SourceList    sources_;
-  int64         dispatch_priority_;
   vector<SourceP> poll_sources_;
+  int16         dispatch_priority_;
   bool          primary_;
   explicit      EventLoop        (MainLoop&);
   virtual      ~EventLoop        ();
@@ -70,22 +70,22 @@ protected:
   void          collect_sources_Lm  (State&);
   bool          prepare_sources_Lm  (State&, int64*, QuickPfdArray&);
   bool          check_sources_Lm    (State&, const QuickPfdArray&);
-  SourceP       dispatch_source_Lm  (State&);
+  void          dispatch_source_Lm  (State&);
 public:
   typedef std::function<void (void)>         VoidSlot;
   typedef std::function<bool (void)>         BoolSlot;
   typedef std::function<void (PollFD&)>      VPfdSlot;
   typedef std::function<bool (PollFD&)>      BPfdSlot;
   typedef std::function<bool (const State&)> DispatcherSlot;
-  static const int PRIORITY_NOW        = -1073741824;   ///< Most important, used for immediate async execution (MAXINT/2)
-  static const int PRIORITY_HIGH       = -100 - 10;     ///< Very important, used for e.g. io handlers (G*HIGH)
-  static const int PRIORITY_NEXT       = -100 - 5;      ///< Still very important, used for need-to-be-async operations (G*HIGH)
-  static const int PRIORITY_NOTIFY     =    0 - 1;      ///< Important, delivers async callbacks (G*DEFAULT)
-  static const int PRIORITY_NORMAL     =    0;          ///< Normal importantance, interfaces to all layers (G*DEFAULT)
-  static const int PRIORITY_UPDATE     = +100 + 5;      ///< Mildly important, used for GUI updates or user information (G*HIGH_IDLE)
-  static const int PRIORITY_IDLE       = +200;          ///< Mildly important, used for GUI updates or user information (G*DEFAULT_IDLE)
-  static const int PRIORITY_BACKGROUND = +300 + 500;    ///< Unimportant, used when everything else done (G*LOW)
-  void wakeup   ();                                     ///< Wakeup loop from polling.
+  static const int16 PRIORITY_NOW     = 900; ///< Most important, used for immediate async execution.
+  static const int16 PRIORITY_ASCENT  = 800; ///< Threshold for priorization across different loops.
+  static const int16 PRIORITY_HIGH    = 700; ///< Very important, used for e.g. io handlers.
+  static const int16 PRIORITY_NEXT    = 600; ///< Important, used for async operations and callbacks.
+  static const int16 PRIORITY_NORMAL  = 500; ///< Normal importantance, GUI event processing, RPC.
+  static const int16 PRIORITY_UPDATE  = 400; ///< Mildly important, used for GUI updates or user information.
+  static const int16 PRIORITY_IDLE    = 200; ///< Mildly important, used for background tasks.
+  static const int16 PRIORITY_LOW     = 100; ///< Unimportant, used when everything else done.
+  void wakeup   ();                          ///< Wakeup loop from polling.
   // source handling
   uint add             (SourceP loop_source, int priority
                         = PRIORITY_NORMAL);     ///< Adds a new source to the loop with custom priority.
@@ -99,16 +99,17 @@ public:
   template<class BoolVoidFunctor>
   uint exec_next       (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "next" (very important), returning true repeats callback.
   template<class BoolVoidFunctor>
-  uint exec_notify     (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "notify" (important, for async callbacks), returning true repeats callback.
+  uint exec_callback   (BoolVoidFunctor &&bvf, int priority
+                        = PRIORITY_NORMAL);     ///< Execute a callback at user defined priority returning true repeats callback.
   template<class BoolVoidFunctor>
   uint exec_normal     (BoolVoidFunctor &&bvf); ///< Execute a callback with normal priority (round-robin for all events and requests), returning true repeats callback.
   template<class BoolVoidFunctor>
   uint exec_update     (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "update" (important idle), returning true repeats callback.
   template<class BoolVoidFunctor>
-  uint exec_background (BoolVoidFunctor &&bvf); ///< Execute a callback with background priority (when idle), returning true repeats callback.
+  uint exec_background (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "idle", returning true repeats callback.
+  uint exec_dispatcher (const DispatcherSlot &sl, int priority
+                        = PRIORITY_NORMAL);     /// Execute a single dispatcher callback for prepare, check, dispatch.
   MainLoop* main_loop  () const { return main_loop_; }  ///< Get the main loop for this loop.
-  /// Execute a single dispatcher callback for prepare, check, dispatch.
-  uint exec_dispatcher (const DispatcherSlot &sl, int priority = PRIORITY_NORMAL);
   /// Execute a callback after a specified timeout, returning true repeats callback.
   template<class BoolVoidFunctor>
   uint exec_timer      (uint timeout_ms, BoolVoidFunctor &&bvf, int priority = PRIORITY_NORMAL);
@@ -144,9 +145,10 @@ public:
   virtual   ~MainLoop        ();
   int        run             (); ///< Run loop iterations until a call to quit() or finishable becomes true.
   bool       running         (); ///< Indicates if quit() has been called already.
-  void       quit            (int quit_code = 0); ///< Cause run() to return with @a quit_code.
   bool       finishable      (); ///< Indicates wether this loop has no primary sources left to process.
-  bool       iterate         (bool block); ///< Perform one loop iteration and return whether more iterations are needed.
+  void       quit            (int quit_code = 0);    ///< Cause run() to return with @a quit_code.
+  bool       pending         ();                     ///< Check if iterate() needs to be called for dispatching.
+  bool       iterate         (bool block);           ///< Perform one loop iteration and return whether more iterations are needed.
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
   EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
   static MainLoopP  create   ();
@@ -174,8 +176,8 @@ protected:
     uint       idx;
   }           *pfds_;
   uint         id_;
-  int          priority_;
-  uint16       loop_state_;
+  int16        priority_;
+  uint8        loop_state_;
   uint         may_recurse_ : 1;
   uint         dispatching_ : 1;
   uint         was_dispatching_ : 1;
@@ -296,11 +298,11 @@ EventLoop::exec_next (BoolVoidFunctor &&bvf)
 }
 
 template<class BoolVoidFunctor> uint
-EventLoop::exec_notify (BoolVoidFunctor &&bvf)
+EventLoop::exec_callback (BoolVoidFunctor &&bvf, int priority)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (TimedSource::create (slot), PRIORITY_NOTIFY);
+  return add (TimedSource::create (slot), priority);
 }
 
 template<class BoolVoidFunctor> uint
@@ -324,7 +326,7 @@ EventLoop::exec_background (BoolVoidFunctor &&bvf)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (TimedSource::create (slot), PRIORITY_BACKGROUND);
+  return add (TimedSource::create (slot), PRIORITY_IDLE);
 }
 
 inline uint

@@ -471,7 +471,7 @@ WidgetImpl::exec_slow_repeater (const EventLoop::BoolSlot &sl)
     {
       EventLoop *loop = rwidget->get_loop();
       if (loop)
-        return loop->exec_timer (250, 50, sl, EventLoop::PRIORITY_NOW);
+        return loop->exec_timer (250, 50, sl, EventLoop::PRIORITY_NORMAL);
     }
   return 0;
 }
@@ -484,7 +484,7 @@ WidgetImpl::exec_fast_repeater (const EventLoop::BoolSlot &sl)
     {
       EventLoop *loop = rwidget->get_loop();
       if (loop)
-        return loop->exec_timer (200, 20, sl, EventLoop::PRIORITY_NOW);
+        return loop->exec_timer (200, 20, sl, EventLoop::PRIORITY_NORMAL);
     }
   return 0;
 }
@@ -497,7 +497,7 @@ WidgetImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
     {
       EventLoop *loop = rwidget->get_loop();
       if (loop)
-        return loop->exec_timer (250, 33, sl, EventLoop::PRIORITY_NOW);
+        return loop->exec_timer (250, 33, sl, EventLoop::PRIORITY_NORMAL);
     }
   return 0;
 }

@@ -197,6 +197,13 @@ ApplicationH::run_and_exit ()
   ::exit (status);
 }
 
+/// Perform one loop iteration and return whether more iterations are needed.
+bool
+ApplicationH::iterate (bool block)
+{
+  return main_loop()->iterate (block);
+}
+
 /**
  * This function causes proper termination of Rapicorn's concurrently running
  * ui-thread and needs to be called before exit(3posix), to avoid parallel

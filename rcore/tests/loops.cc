@@ -70,7 +70,7 @@ test_loop_basics()
   TASSERT (loop);
   /* oneshot test */
   TASSERT (test_callback_touched == false);
-  uint tcid = loop->exec_now (test_callback);
+  uint tcid = loop->exec_next (test_callback);
   TASSERT (tcid > 0);
   TASSERT (test_callback_touched == false);
   loop->iterate_pending();
@@ -79,7 +79,7 @@ test_loop_basics()
   TASSERT (tremove == false);
   test_callback_touched = false;
   /* keep-alive test */
-  tcid = loop->exec_now (keep_alive_callback);
+  tcid = loop->exec_next (keep_alive_callback);
   for (uint counter = 0; counter < max_runs; counter++)
     if (!loop->iterate (false))
       break;
@@ -207,7 +207,7 @@ test_event_loop_sources()
   for (uint i = 0; i < nsrc; i++)
     {
       check_sources[i] = CheckSource::create();
-      loop->add (check_sources[i], quick_rand32());
+      loop->add (check_sources[i], 1 + quick_rand32() % 999);
     }
   TASSERT (check_source_counter == nsrc);
   TASSERT (check_source_destroyed_counter == 0);
@@ -229,74 +229,92 @@ test_event_loop_sources()
 REGISTER_TEST ("Loops/Test Event Sources", test_event_loop_sources);
 
 static bool round_robin_increment (uint *loc) { (*loc)++; return true; }
-static uint round_robin_1 = 0, round_robin_2 = 0;
+static uint round_robin_1 = 0, round_robin_2 = 0, round_robin_3 = 0;
 static void
 test_loop_round_robin (void)
 {
-  uint *const round_robin_1p = &round_robin_1, *const round_robin_2p = &round_robin_2;
+  uint *const round_robin_1p = &round_robin_1, *const round_robin_2p = &round_robin_2, *const round_robin_3p = &round_robin_3;
   const EventLoop::BoolSlot increment_round_robin_1 = [round_robin_1p] () { return round_robin_increment (round_robin_1p); };
   const EventLoop::BoolSlot increment_round_robin_2 = [round_robin_2p] () { return round_robin_increment (round_robin_2p); };
+  const EventLoop::BoolSlot increment_round_robin_3 = [round_robin_3p] () { return round_robin_increment (round_robin_3p); };
   const uint rungroup = 977;
   MainLoopP loop = MainLoop::create();
   TASSERT (loop);
   for (uint i = 0; i < 77; i++)
     loop->iterate (false);
-  uint id1, id2;
+  uint id1, id2, id3;
   /* We're roughly checking round-robin execution behaviour, by checking if
-   * two concurrently running handlers are both executed. If one starves,
+   * some concurrently running handlers are all executed. If one starves,
    * we'll catch that.
    */
-  TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  id1 = loop->exec_now (increment_round_robin_1);
-  id2 = loop->exec_now (increment_round_robin_2);
+  TASSERT (round_robin_1 == 0 && round_robin_2 == 0 && round_robin_3 == 0);
+  id1 = loop->exec_next (increment_round_robin_1);
+  id2 = loop->exec_next (increment_round_robin_2);
+  id3 = loop->exec_next (increment_round_robin_3);
   /* We make an educated guess at loop iterations needed for two handlers
    * to execute >= rungroup times. No correlation is guaranteed here, but
-   * we guess that any count in significant excess of 2 * rungroup should
-   * suffice.
+   * we guess that any count in significant excess of n_handlers * rungroup
+   * should suffice.
    */
-  const uint rungroup_for_two = 2 * rungroup + 2;
-  for (uint i = 0; i < rungroup_for_two; i++)
+  const uint rungroup_for_all = 3 * rungroup + 3;
+  for (uint i = 0; i < rungroup_for_all; i++)
     loop->iterate (false);
-  TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
+  TASSERT (round_robin_1 >= rungroup);
+  TASSERT (round_robin_2 >= rungroup);
+  TASSERT (round_robin_3 >= rungroup);
   loop->remove (id1);
   loop->remove (id2);
+  loop->remove (id3);
   // we should be able to repeat the check
   id1 = loop->exec_background (increment_round_robin_1);
   id2 = loop->exec_background (increment_round_robin_2);
-  round_robin_1 = round_robin_2 = 0;
-  TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  for (uint i = 0; i < rungroup_for_two; i++)
+  id3 = loop->exec_background (increment_round_robin_3);
+  round_robin_1 = round_robin_2 = round_robin_3 = 0;
+  TASSERT (round_robin_1 == 0 && round_robin_2 == 0 && round_robin_3 == 0);
+  for (uint i = 0; i < rungroup_for_all; i++)
     loop->iterate (false);
-  TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
+  TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup && round_robin_3 >= rungroup);
   loop->remove (id1);
   loop->remove (id2);
+  loop->remove (id3);
   // cross-check, intentionally cause starvation of one handler
   id1 = loop->exec_background (increment_round_robin_1);
-  id2 = loop->exec_now (increment_round_robin_2);
+  id2 = loop->exec_next (increment_round_robin_2);
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
+  const uint rungroup_for_two = 2 * rungroup + 2;
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 < rungroup && round_robin_2 >= rungroup);
   loop->remove (id1);
   loop->remove (id2);
   // check round-robin for loops
-  EventLoopP dummy1 = loop->create_slave();
   EventLoopP slave = loop->create_slave();
-  EventLoopP dummy2 = loop->create_slave();
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  id1 = loop->exec_background (increment_round_robin_1);
-  id2 = slave->exec_normal (increment_round_robin_2);
+  id1 = loop->exec_normal (increment_round_robin_1);
+  id2 = slave->exec_background (increment_round_robin_2);
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
-  if (1) // verbose, cleanups will also happen automatically from MainLoop::destroy_loop
-    {
-      loop->remove (id1);
-      slave->remove (id2);
-      slave->destroy_loop();
-    }
+  // cleanup
+  loop->remove (id1);
+  slave->remove (id2);
+  slave->destroy_loop();
+  // check round-robin starvation between loops due to PRIORITY_ASCENT and higher
+  slave = loop->create_slave();
+  round_robin_1 = round_robin_2 = 0;
+  TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
+  id1 = loop->exec_normal (increment_round_robin_1);
+  id2 = slave->exec_now (increment_round_robin_2); // PRIORITY_NOW starves other sources *and* loops
+  for (uint i = 0; i < rungroup_for_two; i++)
+    loop->iterate (false);
+  TASSERT (round_robin_1 < rungroup && round_robin_2 >= rungroup);
+  // cleanup
+  loop->remove (id1);
+  slave->remove (id2);
+  slave->destroy_loop();
+  // MainLoop::destroy_loop also cleans up all slaves and their sources
   loop->destroy_loop();
 }
 REGISTER_TEST ("Loops/Test Round Robin Looping", test_loop_round_robin);
@@ -308,7 +326,7 @@ static void handler_a() { loop_breadcrumbs += "a"; TASSERT (loop_breadcrumbs == 
 static void handler_b()
 {
   loop_breadcrumbs += "b"; TASSERT (loop_breadcrumbs == "ab");
-  breadcrumb_loop->exec_now (handler_d);
+  breadcrumb_loop->exec_next (handler_d);
 }
 static void handler_c() { loop_breadcrumbs += "c"; TASSERT (loop_breadcrumbs == "abDc"); }
 static void handler_d() { loop_breadcrumbs += "D"; TASSERT (loop_breadcrumbs == "abD"); }
