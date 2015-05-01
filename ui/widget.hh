@@ -108,6 +108,7 @@ protected:
     INVALID_ALLOCATION        = 1 << 29, ///< Flag indicates the need update widget's allocation, see set_allocation()
     INVALID_REQUISITION       = 1 << 30, ///< Flag indicates the need update widget's size requisition, see requisition()
     FINALIZING             = 1ULL << 31, ///< Flag used internally to short-cut destructor phase.
+    CONSTRUCTED            = 1ULL << 32, ///< Flag used internally to seal widget construction.
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
@@ -131,8 +132,8 @@ protected:
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~WidgetImpl       ();
-  void                        dtor_finalizing   ()              { change_flags_silently (FINALIZING, true); }
+  virtual                    ~WidgetImpl        ();
+  virtual void                constructed       () override;
   bool                        finalizing        () const        { return test_any_flag (FINALIZING); }
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);

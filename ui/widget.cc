@@ -51,6 +51,13 @@ WidgetImpl::WidgetImpl () :
 {}
 
 void
+WidgetImpl::constructed ()
+{
+  change_flags_silently (CONSTRUCTED, true);
+  ObjectImpl::constructed();
+}
+
+void
 WidgetImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
 {
   f (*this);
@@ -123,6 +130,13 @@ bool
 WidgetImpl::change_flags_silently (uint64 mask, bool on)
 {
   const uint64 old_flags = flags_;
+  if (old_flags & CONSTRUCTED)  // refuse to change constant flags
+    {
+      assert_return (mask != STATE_NORMAL, 0);
+      assert_return ((mask & CONSTRUCTED) == 0, 0);
+    }
+  if (old_flags & FINALIZING)
+    assert_return ((mask & FINALIZING) == 0, 0);
   if (on)
     flags_ |= mask;
   else
@@ -565,7 +579,8 @@ WidgetImpl::visual_update ()
 
 WidgetImpl::~WidgetImpl()
 {
-  dtor_finalizing();
+  critical_unless (flags_ & CONSTRUCTED);
+  change_flags_silently (FINALIZING, true);
   WidgetGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);
