@@ -109,6 +109,9 @@ protected:
     INVALID_REQUISITION       = 1 << 30, ///< Flag indicates the need update widget's size requisition, see requisition()
     FINALIZING             = 1ULL << 31, ///< Flag used internally to short-cut destructor phase.
     CONSTRUCTED            = 1ULL << 32, ///< Flag used internally to seal widget construction.
+    ALLOW_FOCUS            = 1ULL << 33, ///< Flag set by the widget user to indicate if a widget may or may not receive focus.
+    NEEDS_FOCUS_INDICATOR  = 1ULL << 34, ///< Flag used for containers that need a focus-indicator to receive input focus.
+    HAS_FOCUS_INDICATOR    = 1ULL << 35, ///< Flag set on #NEEDS_FOCUS_INDICATOR containers if a descendant provides a focus-indicator.
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
@@ -180,6 +183,7 @@ public:
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
   virtual bool                can_focus         () const; ///< Returns true if @a this widget can receive focus.
+  bool                        focusable         () const; ///< Returns true if @a this widget participates in input focus selection.
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();
   void                        unset_focus       ();

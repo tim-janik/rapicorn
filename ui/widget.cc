@@ -130,10 +130,12 @@ bool
 WidgetImpl::change_flags_silently (uint64 mask, bool on)
 {
   const uint64 old_flags = flags_;
-  if (old_flags & CONSTRUCTED)  // refuse to change constant flags
+  assert_return (mask != STATE_NORMAL, 0);
+  if (old_flags & CONSTRUCTED)
     {
-      assert_return (mask != STATE_NORMAL, 0);
+      // refuse to change constant flags
       assert_return ((mask & CONSTRUCTED) == 0, 0);
+      assert_return ((mask & NEEDS_FOCUS_INDICATOR) == 0, 0);
     }
   if (old_flags & FINALIZING)
     assert_return ((mask & FINALIZING) == 0, 0);
@@ -211,6 +213,12 @@ WidgetImpl::state () const
   st |= active()      ? STATE_ACTIVE : z0;
   // STATE_RETAINED
   return st;
+}
+
+bool
+WidgetImpl::focusable () const
+{
+  return test_all_flags (ALLOW_FOCUS | NEEDS_FOCUS_INDICATOR | HAS_FOCUS_INDICATOR);
 }
 
 bool
