@@ -184,6 +184,8 @@ public:
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
+  virtual bool                allow_focus       () const override; ///< Indicates if widget may receive input foucs.
+  virtual void                allow_focus       (bool b) override; ///< Toggle if widget may receive input focus.
   bool                        focusable         () const; ///< Returns true if @a this widget participates in input focus selection.
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();

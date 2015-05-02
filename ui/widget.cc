@@ -216,6 +216,18 @@ WidgetImpl::state () const
 }
 
 bool
+WidgetImpl::allow_focus () const
+{
+  return test_any_flag (ALLOW_FOCUS);
+}
+
+void
+WidgetImpl::allow_focus (bool b)
+{
+  set_flag (ALLOW_FOCUS, b);
+}
+
+bool
 WidgetImpl::can_focus () const
 {
   return true;
@@ -224,7 +236,7 @@ WidgetImpl::can_focus () const
 bool
 WidgetImpl::focusable () const
 {
-  return test_all_flags (ALLOW_FOCUS | NEEDS_FOCUS_INDICATOR | HAS_FOCUS_INDICATOR);
+  return test_all_flags (ALLOW_FOCUS | NEEDS_FOCUS_INDICATOR | HAS_FOCUS_INDICATOR) && can_focus();
 }
 
 bool
