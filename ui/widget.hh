@@ -233,6 +233,7 @@ public:
   bool                        exec_command      (const String    &command_call_string);
   Command*                    lookup_command    (const String    &command_name);
   virtual const CommandList&  list_commands     ();
+  WidgetImplP                 widgetp           () { return shared_ptr_cast<WidgetImpl> (this); }
   /* parents */
   ContainerImpl*              parent            () const { return parent_; }
   ContainerImplP              parentp           () const;
