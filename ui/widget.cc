@@ -524,6 +524,19 @@ WidgetImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
   return 0;
 }
 
+uint
+WidgetImpl::exec_now (const EventLoop::VoidSlot &sl)
+{
+  WindowImpl *rwidget = get_window();
+  if (rwidget)
+    {
+      EventLoop *loop = rwidget->get_loop();
+      if (loop)
+        return loop->exec_now (sl);
+    }
+  return 0;
+}
+
 bool
 WidgetImpl::remove_exec (uint exec_id)
 {

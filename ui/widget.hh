@@ -131,6 +131,7 @@ protected:
   uint                        exec_fast_repeater   (const EventLoop::BoolSlot &sl);
   uint                        exec_slow_repeater   (const EventLoop::BoolSlot &sl);
   uint                        exec_key_repeater    (const EventLoop::BoolSlot &sl);
+  uint                        exec_now             (const EventLoop::VoidSlot &sl);
   bool                        remove_exec          (uint            exec_id);
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
