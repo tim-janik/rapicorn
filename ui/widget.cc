@@ -9,6 +9,7 @@
 #include "factory.hh"
 #include "selector.hh"
 #include "selob.hh"
+#include "uithread.hh"  // uithread_main_loop
 #include <algorithm>
 
 #define SZDEBUG(...)    RAPICORN_KEY_DEBUG ("Sizing", __VA_ARGS__)
@@ -539,14 +540,12 @@ WidgetImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
 uint
 WidgetImpl::exec_now (const EventLoop::VoidSlot &sl)
 {
+  /* queue arbitrary code for asynchornous execution, i.e. this function pretty much guarantees
+   * slot execution if there's *any* main loop running, so fallback to the UIThread main loop if needed.
+   */
   WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->exec_now (sl);
-    }
-  return 0;
+  EventLoop *loop = rwidget ? rwidget->get_loop() : &*uithread_main_loop();
+  return loop ? loop->exec_now (sl) : 0;
 }
 
 bool
