@@ -533,17 +533,19 @@ static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn::Frame");
 
 // == FocusFrameImpl ==
 FocusFrameImpl::FocusFrameImpl() :
-  focus_frame_ (FRAME_FOCUS),
-  client_ (NULL), conid_client_ (0)
+  focus_container_ (NULL), container_has_focus_ (false), focus_frame_ (FRAME_FOCUS)
 {}
 
 FocusFrameImpl::~FocusFrameImpl ()
 {}
 
 void
-FocusFrameImpl::client_changed (const String &name)
+FocusFrameImpl::focusable_container_change (ContainerImpl &focus_container)
 {
-  if (name == "flags" or name.empty())
+  assert_return (&focus_container == focus_container_);
+  const bool had_focus = container_has_focus_;
+  container_has_focus_ = focus_container.has_focus();
+  if (had_focus != container_has_focus_)
     {
       if (overlap_child())
         expose();
@@ -562,21 +564,20 @@ FocusFrameImpl::set_focus_child (WidgetImpl *widget)
 void
 FocusFrameImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
-  if (client_)
-    {
-      client_->sig_changed() -= conid_client_;
-      conid_client_ = 0;
-      client_->unregister_focus_frame (*this);
-    }
-  client_ = NULL;
+  if (focus_container_)
+    focus_container_->unregister_focus_indicator (*this);
+  focus_container_ = NULL;
+  container_has_focus_ = false;
   this->FrameImpl::hierarchy_changed (old_toplevel);
   if (anchored())
     {
-      Client *client = parent_interface<Client*>();
-      if (client && client->register_focus_frame (*this))
-        client_ = client;
-      if (client_)
-        conid_client_ = client_->sig_changed() += Aida::slot (*this, &FocusFrameImpl::client_changed);
+      ContainerImpl *container = parent();
+      while (container && !container->test_all_flags (NEEDS_FOCUS_INDICATOR))
+        container = container->parent();
+      focus_container_ = container;
+      container_has_focus_ = focus_container_ && focus_container_->has_focus();
+      if (focus_container_)
+        focus_container_->register_focus_indicator (*this);
     }
 }
 
@@ -598,9 +599,8 @@ FocusFrameImpl::current_frame ()
 {
   bool in_focus = has_focus();
   in_focus |= get_focus_child() != NULL;
-  in_focus |= client_ && client_->has_focus();
-  ContainerImpl *cclient_ = container_cast (client_);
-  in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
+  in_focus |= focus_container_ && focus_container_->has_focus();
+  in_focus |= focus_container_ && focus_container_->get_focus_child() != NULL;
   if (in_focus)
     return focus_frame();
   return ancestry_active() ? active_frame() : normal_frame();

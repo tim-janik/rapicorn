@@ -15,17 +15,13 @@ class WidgetListImpl;
 
 class WidgetListRowImpl : public virtual SingleContainerImpl,
                           public virtual WidgetListRowIface,
-                          public virtual EventHandler,
-                          public virtual FocusFrameImpl::Client {
-  FocusFrameImpl *focus_frame_;
+                          public virtual EventHandler {
   int             index_;
   WidgetListImpl* widget_list          () const;
 protected:
+  virtual void  constructed            () override;
   virtual void  dump_private_data      (TestStream &tstream) override;
   virtual bool  handle_event           (const Event &event) override;
-  virtual bool  can_focus              () const override;
-  virtual bool  register_focus_frame   (FocusFrameImpl &frame) override;
-  virtual void  unregister_focus_frame (FocusFrameImpl &frame) override;
 public:
   explicit      WidgetListRowImpl      ();
   virtual int   row_index              () const override;
@@ -75,7 +71,6 @@ protected:
   virtual bool          handle_event            (const Event &event) override;
   virtual bool          row_event               (const Event &event, WidgetListRowImpl *lrow, int index) ;
   virtual void          reset                   (ResetMode mode) override;
-  virtual bool          can_focus               () const override               { return true; }
   virtual bool          move_focus              (FocusDirType fdir) override;
   virtual void          focus_lost              () override;
   bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }

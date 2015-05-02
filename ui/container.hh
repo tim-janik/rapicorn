@@ -8,6 +8,12 @@ namespace Rapicorn {
 
 class ResizeContainerImpl;
 
+// == FocusIndicator ==
+class FocusIndicator : public virtual Aida::ImplicitBase {
+public:
+  virtual void  focusable_container_change (ContainerImpl&) = 0;
+};
+
 // == Container ==
 struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface {
   friend              class WidgetImpl;
@@ -24,6 +30,7 @@ struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface 
   WidgetGroup*        retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create);
 protected:
   virtual            ~ContainerImpl     ();
+  virtual void        do_changed        (const String &name) override;
   virtual void        add_child         (WidgetImpl           &widget) = 0;
   virtual void        repack_child      (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew);
   virtual void        remove_child      (WidgetImpl           &widget) = 0;
@@ -40,12 +47,14 @@ protected:
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
   static Requisition  size_request_child (WidgetImpl &child, bool *hspread, bool *vspread);
 public:
-  virtual WidgetImplP*  begin           () const = 0;
-  virtual WidgetImplP*  end             () const = 0;
-  WidgetImpl*           get_focus_child () const;
+  virtual WidgetImplP*  begin             () const = 0;
+  virtual WidgetImplP*  end               () const = 0;
+  WidgetImpl*  get_focus_child            () const;
+  void         register_focus_indicator   (FocusIndicator&);
+  void         unregister_focus_indicator (FocusIndicator&);
+  virtual void foreach_recursive          (const std::function<void (WidgetImpl&)> &f) override;
   void                  child_container (ContainerImpl  *child_container);
   ContainerImpl&        child_container ();
-  virtual void          foreach_recursive  (const std::function<void (WidgetImpl&)> &f) override;
   virtual size_t        n_children      () = 0;
   virtual WidgetImpl*   nth_child       (size_t nth) = 0;
   bool                  has_children    ()                              { return 0 != n_children(); }

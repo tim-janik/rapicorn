@@ -74,32 +74,23 @@ public: // FrameIface
   virtual void      overlap_child   (bool) override;
 };
 
-class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrameIface {
+class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrameIface, public virtual FocusIndicator {
+  ContainerImpl    *focus_container_;
+  bool              container_has_focus_;
+  FrameType         focus_frame_;
 protected:
-  virtual void      set_focus_child   (WidgetImpl *widget) override;
-  virtual void      hierarchy_changed (WidgetImpl *old_toplevel) override;
+  virtual void set_focus_child            (WidgetImpl *widget) override;
+  virtual void hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void focusable_container_change (ContainerImpl &focus_container) override;
 public:
   explicit          FocusFrameImpl    ();
   virtual          ~FocusFrameImpl    () override;
-  /** FocusFrame registers itself with ancestors that implement the FocusFrameImpl::Client interface.
-   * This is useful for ancestors to be notified about a FocusFrameImpl descendant to implement
-   * .can_focus() efficiently and for a FocusFrame to reflect its ancestor's .has_focus() state.
-   */
-  struct Client : public virtual WidgetImpl {
-    virtual bool    register_focus_frame    (FocusFrameImpl &frame) = 0;
-    virtual void    unregister_focus_frame  (FocusFrameImpl &frame) = 0;
-  };
   virtual FrameType current_frame () override;
   // FocusFrameIface
   virtual FrameType focus_frame   () const override;
   virtual void      focus_frame   (FrameType) override;
   virtual bool      tight_focus   () const override;
   virtual void      tight_focus   (bool) override;
-private:
-  FrameType         focus_frame_;
-  Client           *client_;
-  size_t            conid_client_;
-  void              client_changed (const String &name);
 };
 
 class LayerPainterImpl : public virtual MultiContainerImpl, public virtual LayerPainterIface {

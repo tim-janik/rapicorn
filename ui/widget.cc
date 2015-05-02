@@ -216,6 +216,12 @@ WidgetImpl::state () const
 }
 
 bool
+WidgetImpl::can_focus () const
+{
+  return true;
+}
+
+bool
 WidgetImpl::focusable () const
 {
   return test_all_flags (ALLOW_FOCUS | NEEDS_FOCUS_INDICATOR | HAS_FOCUS_INDICATOR);
@@ -230,12 +236,6 @@ WidgetImpl::has_focus () const
       if (rwidget && rwidget->get_focus() == this)
         return true;
     }
-  return false;
-}
-
-bool
-WidgetImpl::can_focus () const
-{
   return false;
 }
 
@@ -255,7 +255,7 @@ WidgetImpl::grab_focus ()
 {
   if (has_focus())
     return true;
-  if (!can_focus() || !sensitive() || !ancestry_visible())
+  if (!focusable() || !sensitive() || !ancestry_visible())
     return false;
   // unset old focus
   WindowImpl *rwidget = get_window();
@@ -271,7 +271,7 @@ WidgetImpl::grab_focus ()
 bool
 WidgetImpl::move_focus (FocusDirType fdir)
 {
-  if (!has_focus() && can_focus())
+  if (!has_focus() && focusable())
     return grab_focus();
   return false;
 }

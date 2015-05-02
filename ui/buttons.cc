@@ -10,9 +10,15 @@ namespace Rapicorn {
 
 ButtonAreaImpl::ButtonAreaImpl() :
   button_ (0), repeater_ (0), unpress_ (0),
-  click_type_ (CLICK_ON_RELEASE),
-  focus_frame_ (NULL)
+  click_type_ (CLICK_ON_RELEASE)
 {}
+
+void
+ButtonAreaImpl::constructed ()
+{
+  set_flag (NEEDS_FOCUS_INDICATOR); // prerequisite for focusable
+  SingleContainerImpl::constructed();
+}
 
 ClickType
 ButtonAreaImpl::click_type () const
@@ -142,27 +148,6 @@ ButtonAreaImpl::activate_click (int       button,
     }
 }
 
-bool
-ButtonAreaImpl::can_focus () const
-{
-  return focus_frame_ != NULL;
-}
-
-bool
-ButtonAreaImpl::register_focus_frame (FocusFrameImpl &frame)
-{
-  if (!focus_frame_)
-    focus_frame_ = &frame;
-  return focus_frame_ == &frame;
-}
-
-void
-ButtonAreaImpl::unregister_focus_frame (FocusFrameImpl &frame)
-{
-  if (focus_frame_ == &frame)
-    focus_frame_ = NULL;
-}
-
 void
 ButtonAreaImpl::reset (ResetMode mode)
 {
@@ -201,7 +186,7 @@ ButtonAreaImpl::handle_event (const Event &event)
           bool inbutton = view.hover();
           button_ = bevent->button;
           view.active (true);
-          if (inbutton && can_focus())
+          if (inbutton)
             grab_focus();
           view.get_window()->add_grab (*this);
           activate_click (bevent->button, inbutton ? BUTTON_PRESS : BUTTON_CANCELED);

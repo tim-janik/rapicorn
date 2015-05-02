@@ -141,6 +141,7 @@ protected:
   bool                        finalizing        () const        { return test_any_flag (FINALIZING); }
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
+  virtual bool                can_focus         () const; ///< Widget specific sentinel on wether it can currently receive input focus.
   virtual bool                activate_widget   ();
   virtual bool                custom_command    (const String &command_name, const StringSeq &command_args);
   virtual void                set_user_data     (const String &name, const Any &any);
@@ -183,7 +184,6 @@ public:
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
-  virtual bool                can_focus         () const; ///< Returns true if @a this widget can receive focus.
   bool                        focusable         () const; ///< Returns true if @a this widget participates in input focus selection.
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();
