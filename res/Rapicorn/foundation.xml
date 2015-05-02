@@ -2,7 +2,7 @@
 <!-- This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 -->
 <interfaces>
 
-  <!-- Factory Types -->
+  <!-- Public Factory Types -->
   <Rapicorn_Factory id="RapicornAlignment" factory-type="Rapicorn::Alignment"/>
   <Rapicorn_Factory id="RapicornAmbience" factory-type="Rapicorn::Ambience"/>
   <Rapicorn_Factory id="RapicornArrangement" factory-type="Rapicorn::Arrangement"/>
@@ -20,22 +20,28 @@
   <Rapicorn_Factory id="RapicornSliderArea" factory-type="Rapicorn::SliderArea"/>
   <Rapicorn_Factory id="RapicornStatePainter" factory-type="Rapicorn::StatePainter"/>
   <Rapicorn_Factory id="RapicornTable" factory-type="Rapicorn::Table"/>
-  <Rapicorn_Factory id="RapicornTextEditor" factory-type="Rapicorn::TextEditor"/>
   <Rapicorn_Factory id="RapicornVBox" factory-type="Rapicorn::VBox"/>
   <Rapicorn_Factory id="RapicornWidgetList" factory-type="Rapicorn::WidgetList"/>
   <Rapicorn_Factory id="RapicornWidgetListRow" factory-type="Rapicorn::WidgetListRow"/>
   <Rapicorn_Factory id="RapicornWindow" factory-type="Rapicorn::Window"/>
 
-  <!-- Internal Types -->
+  <!-- Internal Factory Types -->
   <Rapicorn_Factory id="Rapicorn_ScrollArea" factory-type="Rapicorn::ScrollArea"/>
   <Rapicorn_Factory id="Rapicorn_ScrollPort" factory-type="Rapicorn::ScrollPort"/>
   <Rapicorn_Factory id="Rapicorn_SliderSkid" factory-type="Rapicorn::SliderSkid"/>
   <Rapicorn_Factory id="Rapicorn_SliderTrough" factory-type="Rapicorn::SliderTrough"/>
   <Rapicorn_Factory id="Rapicorn_TextBlock" factory-type="Rapicorn::TextPango"/>
+  <Rapicorn_Factory id="Rapicorn_TextEditor" factory-type="Rapicorn::TextEditor"/>
+  <Rapicorn_Factory id="Rapicorn_TextLabel" factory-type="Rapicorn::Label"/>
   <Rapicorn_Factory id="RapicornIdlTestWidget" factory-type="Rapicorn::IdlTestWidget"/>
   <Rapicorn_Factory id="RapicornTestBox" factory-type="Rapicorn::TestBox"/>
   <Rapicorn_Factory id="RapicornTestContainer" factory-type="Rapicorn::TestContainer"/>
   <RapicornTestContainer id="RapicornTestWidget" paint-allocation="1" width="10" height="10"/>
+
+  <!-- Composite Factory Types -->
+  <Rapicorn_TextEditor id="RapicornTextEditor" child-container="focus-frame">
+    <RapicornFocusFrame name="focus-frame" frame-type="none" />
+  </Rapicorn_TextEditor>
 
   <!-- Buttons -->
   <ButtonArea id="RapicornButton" child-container="child-area" >
