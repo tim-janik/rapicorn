@@ -84,10 +84,6 @@ test-aidacc-installation:
 installcheck-local: test-aidacc-installation
 
 # == 'aidacc' executable link ==
-# $(call SYMLINK_LATEST, GLOB, LINKNAME) - create symbolic link to latest versioned file
-SYMLINK_LATEST = ( L=`/bin/ls $(1) 2>/dev/null | sort -r | head -1` ; if test -n "$$L" ; \
-                  then echo "  RELINK" $(2) && rm -f $(2) && ln -s "$$L" $(2) ; \
-                  else echo "  UNLINK" $(2) && rm -f $(2) ; fi )
 install-exec-hook: # runs after ${AIDACCV} was installed
 	$(Q) cd $(DESTDIR)$(bindir) && \
 	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9][0-9][0-9], $(strip $(AIDACCLNK))) && \

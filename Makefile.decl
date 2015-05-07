@@ -16,12 +16,18 @@ QGEN    = $(Q:@=@echo '  GEN   ' $@; )
 QSTDERR = $(Q:@=2>/dev/null)
 QSTDOUT = $(Q:@=1>/dev/null)
 
-# == download ==
+# == Download ==
 # recursive rule supported by all Makefiles to download files hosted online
 .PHONY: download download-recursive download-local
 download: download-local download-recursive
 download-recursive:
 	$(Q) for subdir in $(SUBDIRS) ; do test "$$subdir" = '.' || $(MAKE) -C "$$subdir" $(AM_MAKEFLAGS) download || exit $$? ; done
+
+# == Install Helpers ==
+# $(call SYMLINK_LATEST, GLOB, LINKNAME) - create symbolic link to latest versioned file
+SYMLINK_LATEST = ( L=`/bin/ls $(1) 2>/dev/null | sort -r | head -1` ; if test -n "$$L" ; \
+		   then echo "  RELINK" $(2) && rm -f $(2) && ln -s "$$L" $(2) ; \
+		   else echo "  UNLINK" $(2) && rm -f $(2) ; fi )
 
 # == X11 for Unit Tests ==
 x11test_log   = $(abs_top_builddir)/.x11test.log
