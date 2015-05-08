@@ -424,8 +424,8 @@ public:
 };
 
 // == Conversion Type Tags ==
-constexpr struct _ServantType {} _servant; ///< Tag to retrieve servant from remote handle.
-constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve remote handle from servant.
+struct _ServantType {} constexpr _servant = _ServantType(); ///< Tag to retrieve servant from remote handle.
+struct _HandleType  {} constexpr _handle  = _HandleType();  ///< Tag to retrieve remote handle from servant.
 
 // == ObjectBroker ==
 class ObjectBroker {
