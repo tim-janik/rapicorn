@@ -68,9 +68,9 @@ AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@, $(findstring $(<F), $(OPTIMIZE_SOU
 
 # == Rapicorn Resources ==
 @mk@ include $(top_srcdir)/res/Makefile.res	# define RES_FILE_LIST
-zres.cc: rapidres $(top_srcdir)/res/Makefile.res
+zres.cc: $(RAPIDRESV) $(top_srcdir)/res/Makefile.res
 	$(AM_V_GEN)
-	$(Q) (cd $(top_srcdir)/res/ && $(abs_builddir)/rapidres $(RES_FILE_LIST) ) > xgen-$@
+	$(Q) (cd $(top_srcdir)/res/ && $(abs_builddir)/$(RAPIDRESV) $(RES_FILE_LIST) ) > xgen-$@
 	$(Q) mv xgen-$@ $@
 CLEANFILES += xgen-zres.cc zres.cc
 $(srcdir)/resources.cc: zres.cc
@@ -81,19 +81,33 @@ api-content:
 .PHONY: api-content
 
 # === programs (not installed) ===
-noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LIBS) -lm
+bin_PROGRAMS	= $(BIN_PROGS)
+noinst_PROGRAMS	= $(ALLTESTS)
+progs_ldadd	= librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LIBS) -lm
+BIN_PROGS	=
 
-# == Utilities (for installation) ==
-bin_PROGRAMS     = rapidres
-rapidres_SOURCES = rapidres.cc
-rapidres_LDADD   = $(LIBZ) # $(progs_ldadd)
+# == rapidres ==
+RAPIDRESV                           = rapidres-@RAPICORN_RELEASE@
+BIN_PROGS                          += $(RAPIDRESV)
+rapidres_@RAPICORN_RELEASE@_SOURCES = rapidres.cc
+rapidres_@RAPICORN_RELEASE@_LDADD   = $(LIBZ) # $(progs_ldadd)
+rapidres-install-hook:  # run after ${RAPIDRESV} was installed
+	$(Q) cd $(DESTDIR)$(bindir) && \
+	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9][0-9][0-9], rapidres) && \
+	  test -x rapidres -a -L rapidres
+install-exec-hook: rapidres-install-hook
+rapidres-uninstall-hook: # run after ${RAPIDRESV} was uninstalled
+	$(Q) cd $(DESTDIR)$(bindir) && \
+	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9][0-9][0-9], rapidres) && \
+	  test -x rapidres -o ! -e rapidres
+uninstall-hook: rapidres-uninstall-hook
+
 
 rapidres-installcheck:
 	$(Q) cd . \
 	&& echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a' > xtmp-empty.dat \
 	; eval "$$TSTDIAGNOSE" "'Create rapidres sample data'"
-	$(Q) $(bindir)/rapidres xtmp-empty.dat > xtmp-empty.out \
+	$(Q) $(bindir)/$(RAPIDRESV) xtmp-empty.dat > xtmp-empty.out \
 	; eval "$$TSTDIAGNOSE" "'Run    rapidres'"
 	$(Q) grep -q '"xtmp-empty.dat"' xtmp-empty.out \
 	; eval "$$TSTDIAGNOSE" "'Verify rapidres output file name'"
