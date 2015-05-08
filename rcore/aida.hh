@@ -343,8 +343,8 @@ union IdentifierParts {
 # elif __BYTE_ORDER == __BIG_ENDIAN
     uint        message_id : 8, free8 : 8, destination_connection : 16, free16 : 16, sender_connection : 16;
 # endif
-    static_assert (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN, "__BYTE_ORDER unknown");
   };
+  static_assert (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN, "__BYTE_ORDER unknown");
   constexpr IdentifierParts (uint64 vu64) : vuint64 (vu64) {}
   constexpr IdentifierParts (MessageId id, uint destination, uint sender) :
 # if __BYTE_ORDER == __LITTLE_ENDIAN
