@@ -640,7 +640,7 @@ Any::Any (const V &value) :
 }
 
 template<> inline
-Any::Any<Any::Field> (const Any::Field &clone) :
+Any::Any (const Any::Field &clone) :
   type_kind_ (UNTYPED), u_ {0}
 {
   this->operator= (clone);
