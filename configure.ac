@@ -117,9 +117,10 @@ AM_PROG_LIBTOOL
 AC_LIBTOOL_DLOPEN
 
 # AM_LDFLAGS, optimize linker to use faster ELF symbol hashing if we have compiler and linker support
-AC_MSG_CHECKING([whether CC and LD support gnu.hash sections])
-if ${CC-cc} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
-   ${LD-ld} --help     | grep -q -- '--hash-style=.*\(both\|gnu\)' ; then
+AC_MSG_CHECKING([whether CC, CXX and LD support gnu.hash sections])
+if ${CC}  -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
+   ${CXX} -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
+   ${LD}  --help     2>&1 | grep -q -- '--hash-style=.*\(both\|gnu\)' ; then
   MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--hash-style=both -Wl,--as-needed -Wl,-O1])
   AC_MSG_RESULT(yes)
 else
