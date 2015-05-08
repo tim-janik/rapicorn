@@ -57,7 +57,7 @@ class ServerConnection;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
-class PropertyList;
+struct PropertyList;
 class Property;
 typedef std::shared_ptr<OrbObject>    OrbObjectP;
 typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
