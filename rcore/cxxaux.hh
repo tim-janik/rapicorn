@@ -217,9 +217,9 @@ template<class... T0toN > using void_t = typename void_t__voider<T0toN...>::type
 #endif  // !_WIN32
 
 // == C++ Macros ==
-#define RAPICORN_CLASS_NON_COPYABLE(ClassName)                                  private: \
-  /*copy-ctor*/ ClassName  (const ClassName&) __attribute__ ((error ("NON_COPYABLE"))) = delete; \
-  ClassName&    operator=  (const ClassName&) __attribute__ ((error ("NON_COPYABLE"))) = delete
+#define RAPICORN_CLASS_NON_COPYABLE(ClassName)  \
+  /*copy-ctor*/ ClassName  (const ClassName&) = delete; \
+  ClassName&    operator=  (const ClassName&) = delete
 
 // == C++ Helper Classes ==
 /// Simple helper class to call one-line lambda initializers as static constructor.
