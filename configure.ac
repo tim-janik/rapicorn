@@ -131,10 +131,10 @@ MC_EVAR_ADD(AM_LDFLAGS, -lrt)
 AC_SUBST(AM_LDFLAGS)
 
 # Pick C++ dialect, needed in CXXFLAGS for compile tests
-MC_CXX_TRY_OPTION(CXXFLAGS,  -std=gnu++0x)
+MC_CXX_TRY_OPTION(CXXFLAGS,  -std=gnu++11)
 
 # AM_CFLAGS & AM_CXXFLAGS
-MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++0x)
+MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++11)
 BOTHCCXXFLAGS=
 if test "x$enable_debug" = "xyes"; then
   MC_EVAR_ADD(BOTHCCXXFLAGS,      -DG_ENABLE_DEBUG)
