@@ -625,12 +625,6 @@ RemoteHandle::__aida_null_orb_object__ ()
   return null_orbo;
 }
 
-const OrbObjectP&
-RemoteHandle::__aida_orb_object__ () const
-{
-  return orbop_;
-}
-
 RemoteHandle::RemoteHandle (OrbObjectP orbo) :
   orbop_ (orbo ? orbo : __aida_null_orb_object__())
 {}

@@ -387,10 +387,11 @@ class RemoteHandle {
 protected:
   explicit          RemoteHandle             (OrbObjectP);
   explicit          RemoteHandle             () : orbop_ (__aida_null_orb_object__()) {}
-  const OrbObjectP& __aida_orb_object__      () const;
+  const OrbObjectP& __aida_orb_object__      () const   { return orbop_; }
   void              __aida_upgrade_from__    (const OrbObjectP&);
   void              __aida_upgrade_from__    (const RemoteHandle &rhandle) { __aida_upgrade_from__ (rhandle.__aida_orb_object__()); }
 public:
+  /*copy*/                RemoteHandle         (const RemoteHandle &y) : orbop_ (y.orbop_) {}
   virtual                ~RemoteHandle         ();
   uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
   static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }
