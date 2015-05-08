@@ -84,15 +84,14 @@ test-aidacc-installation:
 installcheck-local: test-aidacc-installation
 
 # == 'aidacc' executable link ==
-install-exec-hook:
-	@echo "  LINK  " $(bindir)/$(AIDACCLNK)
-	$(Q) cd $(DESTDIR)$(bindir)			\
-	  && test -x ${AIDACCLNK}			\
-	  || (rm -f ${AIDACCLNK} && $(LN_S) ${AIDACCV} ${AIDACCLNK} )
-DESTDIRbinLINK = $(DESTDIR)$(bindir)/$(AIDACCLNK)
+install-exec-hook: # runs after ${AIDACCV} was installed
+	$(Q) cd $(DESTDIR)$(bindir) && \
+	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9][0-9][0-9], $(strip $(AIDACCLNK))) && \
+	  test -x $(AIDACCLNK) -a -L $(AIDACCLNK)
 uninstall-hook:	# runs after ${AIDACCV} was uninstalled
-	@    test ! -L $(DESTDIRbinLINK) -o -x $(DESTDIRbinLINK) || echo "  UNLINK" $(bindir)/$(AIDACCLNK)
-	$(Q) test ! -L $(DESTDIRbinLINK) -o -x $(DESTDIRbinLINK) || rm -f $(DESTDIRbinLINK)
+	$(Q) cd $(DESTDIR)$(bindir) && \
+	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9][0-9][0-9], $(strip $(AIDACCLNK))) && \
+	  test -x $(AIDACCLNK) -o ! -e $(AIDACCLNK)
 
 clean-local:
 	rm -f *.pyc

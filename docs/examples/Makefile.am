@@ -11,6 +11,7 @@ XML_FILES        =
 EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS) $(EXAMPLES)
 RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON)
 X11TEST_RPYTHON  = $(X11TEST_SERVER) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
+RAPIDRUN         = $(top_builddir)/tools/rapidrun-@RAPICORN_RELEASE@
 
 EXAMPLES = sample.xml
 
@@ -21,11 +22,11 @@ XML_FILES   += $(TEST_XMLUIS)
 
 # === TEST_XMLUIS ===
 .PHONY: check-TEST_XMLUIS
-check-TEST_XMLUIS: $(top_builddir)/tools/rapidrun
+check-TEST_XMLUIS: $(RAPIDRUN)
 	$(Q) $(X11TEST_SERVER) && \
 	  for tst in $(TEST_XMLUIS) ; do \
-	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;   		\
-	    $(top_builddir)/tools/rapidrun -x $$rt && echo "PASS: $$tst" || exit 1 ;	\
+	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;	\
+	    $(RAPIDRUN) -x $$rt && echo "PASS: $$tst" || exit 1 ;	\
 	  done
 check-am: check-TEST_XMLUIS
 
