@@ -520,7 +520,12 @@ TextControllerImpl::set_markup (const String &text)
 String
 TextControllerImpl::get_markup () const
 {
-  return cached_tblock_ ? cached_tblock_->markup_text() : next_markup_;
+  String result;
+  if (next_handler_ == 0 && cached_tblock_)
+    result = cached_tblock_->markup_text();
+  else
+    result = next_markup_;
+  return result;
 }
 
 String
