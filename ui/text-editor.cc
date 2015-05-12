@@ -531,15 +531,14 @@ TextControllerImpl::get_markup () const
 String
 TextControllerImpl::get_plain () const
 {
-  return cached_tblock_ ? cached_tblock_->plain_text() : "";
+  return XmlNode::strip_xml_tags (get_markup());
 }
 
 void
 TextControllerImpl::set_plain (const String &ptext)
 {
-  TextBlock *tblock = get_text_block();
-  if (tblock)
-    tblock->plain_text (ptext);
+  String text = XmlNode::xml_escape (ptext);
+  set_markup (text);
 }
 
 void
