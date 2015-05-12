@@ -497,7 +497,8 @@ void
 TextControllerImpl::set_markup (const String &text)
 {
   next_markup_ = text;
-  auto update_markup = [this] () {
+  WidgetImplP thisp = widgetp(); // passing thisp to exec_now keeps a life reference in the lambda
+  auto update_markup = [thisp, this] () {
     TextBlock *tblock = get_text_block();
     if (!tblock && !finalizing())
       {
