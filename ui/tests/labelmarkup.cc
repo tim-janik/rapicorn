@@ -81,7 +81,6 @@ test_text_markup()
 {
   WidgetImplP label = Factory::create_ui_widget ("Label");
   TOK();
-  TOK();
   String test_markup =
     "Start "
     "<bold>bold</bold> "
@@ -101,9 +100,14 @@ test_text_markup()
     "<larger>larger</larger>";
   label->set_property ("markup_text", test_markup);
   TOK();
+  /* Here, the Label widget has been created, but some updates might still be queued via exec_now,
+   * we need those completed before running tests (this is *not* generally recommended, outside tests).
+   */
+  uithread_main_loop ()->iterate_pending();
+  TOK();
   String str = label->get_property ("markup_text");
   const char *markup_result = str.c_str();
-  // g_printerr ("MARKUP: %s\n", markup_result);
+  // g_printerr ("MARKUP: %s\n", markup_resullt);
   TASSERT (strstr (markup_result, "<I"));
   TASSERT (strstr (markup_result, "italic<"));
   TASSERT (strstr (markup_result, "<B"));

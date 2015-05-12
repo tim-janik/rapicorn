@@ -441,6 +441,15 @@ test_selector_matching ()
 
   WindowIfaceP window = app.create_window ("test-dialog");
   TASSERT (window != NULL);
+
+  /* Here, the window has been created, but some updates, e.g. creating inner label/text widgets
+   * are queued as main loop handlers. we need those completing executed before we make conclusive
+   * assertions on the widget tree.
+   * Forcing the main loop like this is *not* generally recommended, in this confined test setup
+   * it's useful though.
+   */
+  uithread_main_loop ()->iterate_pending();
+
   WindowIfaceP w = app.query_window ("#test-dialog");
   TASSERT (window == w);
 
@@ -523,10 +532,10 @@ test_selector_matching ()
   test_query (__LINE__, w, "*#test-dialog > *:not(#test-dialog)", 1, "Ambience");
   // classes
   test_query (__LINE__, w, "*.Window", 1, "#test-dialog");
-  test_query (__LINE__, w, "*", -10, ".Object");
+  test_query (__LINE__, w, "*", -10, ".Object");        // expect 10 or more...
   test_query (__LINE__, w, "*", -10, ".Widget");
   test_query (__LINE__, w, "*:not(:empty)", -10, ".Container");
-  test_query (__LINE__, w, ".Widget:not(.Container)", -5, ":empty");
+  test_query (__LINE__, w, ".Widget:not(.Container)", -5, ":empty");    // find at least 5 Labels, each of which have leaf-children
   test_query (__LINE__, w, ".Label", -5, ".Widget");
   test_query (__LINE__, w, ".VBox", -1, ".Container");
   test_query (__LINE__, w, ".Container", -10, ".Widget");
