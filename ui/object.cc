@@ -31,7 +31,7 @@ ObjectImpl::~ObjectImpl()
 {}
 
 void
-ObjectImpl::constructed ()
+ObjectImpl::construct ()
 {}
 
 void

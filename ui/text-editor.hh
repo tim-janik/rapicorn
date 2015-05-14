@@ -104,7 +104,7 @@ class TextControllerImpl : public virtual SingleContainerImpl, public virtual Ev
 protected:
   explicit              TextControllerImpl      ();
   virtual              ~TextControllerImpl      () override;
-  virtual void          constructed             () override;
+  virtual void          construct               () override;
   virtual bool          can_focus               () const override;
   virtual void          reset                   (ResetMode mode = RESET_ALL) override;
   virtual bool          handle_event            (const Event &event) override;

@@ -52,10 +52,10 @@ WidgetImpl::WidgetImpl () :
 {}
 
 void
-WidgetImpl::constructed ()
+WidgetImpl::construct ()
 {
   change_flags_silently (CONSTRUCTED, true);
-  ObjectImpl::constructed();
+  ObjectImpl::construct();
 }
 
 void

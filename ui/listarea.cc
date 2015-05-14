@@ -52,11 +52,11 @@ WidgetListRowImpl::WidgetListRowImpl() :
 }
 
 void
-WidgetListRowImpl::constructed ()
+WidgetListRowImpl::construct ()
 {
   set_flag (NEEDS_FOCUS_INDICATOR); // prerequisite for focusable
   set_flag (ALLOW_FOCUS);
-  SingleContainerImpl::constructed();
+  SingleContainerImpl::construct();
 }
 
 int

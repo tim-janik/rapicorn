@@ -19,7 +19,7 @@ class WidgetListRowImpl : public virtual SingleContainerImpl,
   int             index_;
   WidgetListImpl* widget_list          () const;
 protected:
-  virtual void  constructed            () override;
+  virtual void  construct              () override;
   virtual void  dump_private_data      (TestStream &tstream) override;
   virtual bool  handle_event           (const Event &event) override;
 public:

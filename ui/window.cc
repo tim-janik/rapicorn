@@ -244,9 +244,9 @@ WindowImpl::WindowImpl() :
 }
 
 void
-WindowImpl::constructed ()
+WindowImpl::construct ()
 {
-  ViewportImpl::constructed();
+  ViewportImpl::construct();
   ApplicationImpl::the().add_window (*this);
 }
 

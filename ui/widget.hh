@@ -137,7 +137,7 @@ protected:
   virtual void                visual_update        ();
   /* misc */
   virtual                    ~WidgetImpl        ();
-  virtual void                constructed       () override;
+  virtual void                construct         () override;
   bool                        finalizing        () const        { return test_any_flag (FINALIZING); }
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
