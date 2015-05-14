@@ -611,7 +611,7 @@ WidgetImpl::visual_update ()
 
 WidgetImpl::~WidgetImpl()
 {
-  critical_unless (flags_ & CONSTRUCTED);
+  critical_unless (isconstructed());
   change_flags_silently (FINALIZING, true);
   WidgetGroup::delete_widget (*this);
   if (parent())

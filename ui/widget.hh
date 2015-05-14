@@ -138,7 +138,8 @@ protected:
   /* misc */
   virtual                    ~WidgetImpl        ();
   virtual void                construct         () override;
-  bool                        finalizing        () const        { return test_any_flag (FINALIZING); }
+  bool                        isconstructed     () const { return test_any_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
+  bool                        finalizing        () const { return test_any_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
   virtual bool                can_focus         () const; ///< Widget specific sentinel on wether it can currently receive input focus.
