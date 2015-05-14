@@ -283,6 +283,8 @@ ContainerImpl::child_container ()
 void
 ContainerImpl::add (WidgetImpl &widget)
 {
+  critical_unless (this->isconstructed());
+  critical_unless (widget.isconstructed());
   const WidgetImplP guard_widget = shared_ptr_cast<WidgetImpl> (&widget);
   if (widget.parent())
     throw Exception ("not adding widget with parent: ", widget.name());
