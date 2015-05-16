@@ -115,10 +115,10 @@ def process_specific (filename, text):
   def is_comment (t):
     return t.startswith ('//') or t.startswith ('/*')
   cxx_splitter = r"""(
-    "   (?: [^\\"] | \\  .   ) * "        # double quoted string
-  | '   (?: [^\\'] | \\  .   ) * '        # single quoted string
-  | /\* (?: [^*]   | \* [^/] ) * \*/      # C comment
-  | //  (?: [^\n]            ) * \n       # C++ comment
+    "   (?: [^\\"] | \\  .      )* "        # double quoted string
+  | '   (?: [^\\'] | \\  .      )* '        # single quoted string
+  | /\* (?: [^*]   | \* (?! / ) )* \*/      # C comment
+  | //  (?: [^\n]               )* \n       # C++ comment
   )"""
   parts = re.split (cxx_splitter, text, 0, re.MULTILINE | re.VERBOSE)
   # parts = filter (len, parts) # strip empty parts
