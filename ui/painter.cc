@@ -312,7 +312,14 @@ ImagePainter::ImagePainter (const String &resource_identifier)
   const ssize_t hashpos = resource_identifier.find ('#');
   const String fragment = hashpos < 0 ? "" : resource_identifier.substr (hashpos);
   const String resource = hashpos < 0 ? resource_identifier : resource_identifier.substr (0, hashpos);
-  Blob blob = Res (resource);
+  Blob blob;
+  bool do_svg_file_io = false;
+  if (!string_startswith (resource, "@res"))
+    do_svg_file_io = RAPICORN_FLIPPER ("svg-file-io", "Rapicorn::ImagePainter: allow loading of SVG files from local file system.");
+  if (do_svg_file_io)
+    blob = Blob::load (resource);
+  else
+    blob = Res (resource); // call this even if !startswith("@res") to preserve debug message about missing resource
   if (string_endswith (blob.name(), ".svg"))
     {
       auto svgf = Svg::File::load (blob);
