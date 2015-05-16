@@ -393,11 +393,6 @@ interface Alignment : Container {
   int32 padding        = Range (_("Padding"),        _("Amount of padding to add at the child's sides"),       "wo", 0, 65535, 3);
 };
 
-/// The FillAreaContainer is used to position a child within an image fill area.
-interface FillAreaContainer : Container {
-  String        source = String (_("Image Source"), _("Resource locator for an image (fragment) with fill area specification."), "rw");
-};
-
 /// The Frame container decorates its single child with a state dependant frame drawing.
 /// See also the corresponding implementation class FrameImpl.
 interface Frame : Container {
@@ -547,11 +542,11 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
-/// The ElementPainter widget displays state dependent SVG image elements.
+/// The ElementPainter widget displays state dependent SVG image elements and places its child within the fill area.
 /// See also the corresponding implementation class ElementPainterImpl.
-interface ElementPainter : Widget {
-  String svg_source           = String (_("SVG Source"), _("SVG source for the state dependent elements to be displayed."), "rw");
-  String svg_element          = String (_("SVG Element"), _("Base name of the SVG elements for various StateType flags."), "rw");
+interface ElementPainter : Container {
+  String svg_source           = String (_("SVG Source"), _("Source for the SVG element used for painting and as fill area."), "rw");
+  String svg_element          = String (_("SVG Element"), _("Base name of the SVG element without state dependent postfixes."), "rw");
 };
 
 /// A widget for text display.

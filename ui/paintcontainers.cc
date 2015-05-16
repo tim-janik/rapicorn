@@ -3,6 +3,7 @@
 #include "container.hh"
 #include "painter.hh"
 #include "factory.hh"
+#include "../rcore/rsvg/svg.hh" // Svg::Span
 
 namespace Rapicorn {
 
@@ -675,6 +676,9 @@ ElementPainterImpl::ElementPainterImpl() :
   cached_painter_ ("")
 {}
 
+ElementPainterImpl::~ElementPainterImpl()
+{}
+
 void
 ElementPainterImpl::svg_source (const String &resource)
 {
@@ -777,14 +781,60 @@ ElementPainterImpl::current_element ()
 void
 ElementPainterImpl::size_request (Requisition &requisition)
 {
+  bool chspread = false, cvspread = false;
+  if (has_visible_child())
+    requisition = size_request_child (get_child(), &chspread, &cvspread);
+  set_flag (HSPREAD_CONTAINER, chspread);
+  set_flag (VSPREAD_CONTAINER, cvspread);
   if (!size_painter_)
     size_painter_ = ImagePainter (state_element (STATE_NORMAL));
-  requisition = size_painter_.image_size();
+  const Requisition image_size = size_painter_.image_size ();
+  const Rect fill = size_painter_.fill_area();
+  assert_return (fill.x + fill.width <= image_size.width);
+  assert_return (fill.y + fill.height <= image_size.height);
+  requisition.width += image_size.width - fill.width;
+  requisition.height += image_size.height - fill.height;
 }
 
 void
 ElementPainterImpl::size_allocate (Allocation area, bool changed)
-{} // default: allocation_ = area;
+{
+  if (has_visible_child())
+    {
+      WidgetImpl &child = get_child();
+      Allocation child_area;
+      if (size_painter_)
+        {
+          const Requisition image_size = size_painter_.image_size ();
+          Rect fill = size_painter_.fill_area();
+          assert_return (fill.x + fill.width <= image_size.width);
+          assert_return (fill.y + fill.height <= image_size.height);
+          Svg::Span spans[3] = { { 0, 0 }, { 0, 1 }, { 0, 0 } };
+          // horizontal distribution & allocation
+          spans[0].length = fill.x;
+          spans[1].length = fill.width;
+          spans[2].length = image_size.width - fill.x - fill.width;
+          ssize_t dremain = Svg::Span::distribute (ARRAY_SIZE (spans), spans, area.width - image_size.width, 1);
+          if (dremain < 0)
+            Svg::Span::distribute (ARRAY_SIZE (spans), spans, dremain, 0); // shrink *any* segment
+          child_area.x = area.x + spans[0].length;
+          child_area.width = spans[1].length;
+          // vertical distribution & allocation
+          spans[0].length = fill.y;
+          spans[1].length = fill.height;
+          spans[2].length = image_size.height - fill.y - fill.height;
+          dremain = Svg::Span::distribute (ARRAY_SIZE (spans), spans, area.height - image_size.height, 1);
+          if (dremain < 0)
+            Svg::Span::distribute (ARRAY_SIZE (spans), spans, dremain, 0); // shrink *any* segment
+          child_area.y = area.y + spans[0].length;
+          child_area.height = spans[1].length;
+        }
+      else
+        child_area = area;
+      child_area = layout_child (child, child_area);
+      child.set_allocation (child_area);
+    }
+}
 
 void
 ElementPainterImpl::do_changed (const String &name)

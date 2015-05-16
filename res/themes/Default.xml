@@ -12,7 +12,6 @@
   <RapicornDefaultButton        id="DefaultButton"/>
   <RapicornDotGrid              id="DotGrid"/>
   <RapicornDrawable             id="Drawable"/>
-  <RapicornFillAreaContainer    id="FillAreaContainer"/>
   <RapicornFocusFrame           id="FocusFrame"/>
   <RapicornFrame                id="Frame"/>
   <RapicornHBox                 id="HBox"/>

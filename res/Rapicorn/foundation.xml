@@ -10,7 +10,6 @@
   <Rapicorn_Factory id="RapicornButtonArea" factory-type="Rapicorn::ButtonArea"/>
   <Rapicorn_Factory id="RapicornDotGrid" factory-type="Rapicorn::DotGrid"/>
   <Rapicorn_Factory id="RapicornDrawable" factory-type="Rapicorn::Drawable"/>
-  <Rapicorn_Factory id="RapicornFillAreaContainer" factory-type="Rapicorn::FillAreaContainer"/>
   <Rapicorn_Factory id="RapicornFocusFrame" factory-type="Rapicorn::FocusFrame"/>
   <Rapicorn_Factory id="RapicornFrame" factory-type="Rapicorn::Frame"/>
   <Rapicorn_Factory id="RapicornHBox" factory-type="Rapicorn::HBox"/>

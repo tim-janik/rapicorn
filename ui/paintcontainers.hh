@@ -104,7 +104,7 @@ protected:
   Allocation     local_child_allocation  (WidgetImpl &child, double width, double height);
 };
 
-class ElementPainterImpl : public virtual WidgetImpl, public virtual ElementPainterIface {
+class ElementPainterImpl : public virtual SingleContainerImpl, public virtual ElementPainterIface {
   String         svg_source_, svg_fragment_;
   ImagePainter   size_painter_, state_painter_;
   String         cached_painter_;
@@ -117,6 +117,7 @@ protected:
   virtual void   render              (RenderContext &rcontext, const Rect &rect) override;
 public:
   explicit       ElementPainterImpl   ();
+  virtual       ~ElementPainterImpl   () override;
   virtual String svg_source           () const override                 { return svg_source_; }
   virtual void   svg_source           (const String &source) override;
   virtual String svg_element          () const override                 { return svg_fragment_; }
