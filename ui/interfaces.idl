@@ -547,9 +547,9 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
-/// The StatePainter widget displays state dependent SVG image elements.
-/// See also the corresponding implementation class StatePainterImpl.
-interface StatePainter : Widget {
+/// The ElementPainter widget displays state dependent SVG image elements.
+/// See also the corresponding implementation class ElementPainterImpl.
+interface ElementPainter : Widget {
   String svg_source           = String (_("SVG Source"), _("SVG source for the state dependent elements to be displayed."), "rw");
   String svg_element          = String (_("SVG Element"), _("Base name of the SVG elements for various StateType flags."), "rw");
 };

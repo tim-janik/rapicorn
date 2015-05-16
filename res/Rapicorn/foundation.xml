@@ -18,7 +18,7 @@
   <Rapicorn_Factory id="RapicornLabel" factory-type="Rapicorn::Label"/>
   <Rapicorn_Factory id="RapicornLayerPainter" factory-type="Rapicorn::LayerPainter"/>
   <Rapicorn_Factory id="RapicornSliderArea" factory-type="Rapicorn::SliderArea"/>
-  <Rapicorn_Factory id="RapicornStatePainter" factory-type="Rapicorn::StatePainter"/>
+  <Rapicorn_Factory id="RapicornElementPainter" factory-type="Rapicorn::ElementPainter"/>
   <Rapicorn_Factory id="RapicornTable" factory-type="Rapicorn::Table"/>
   <Rapicorn_Factory id="RapicornVBox" factory-type="Rapicorn::VBox"/>
   <Rapicorn_Factory id="RapicornWidgetList" factory-type="Rapicorn::WidgetList"/>

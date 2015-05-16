@@ -3,6 +3,7 @@
 #define __RAPICORN_PAINT_CONTAINERS_HH__
 
 #include <ui/container.hh>
+#include <ui/painter.hh>
 
 namespace Rapicorn {
 
@@ -101,6 +102,25 @@ protected:
   virtual void   size_request            (Requisition &requisition);
   virtual void   size_allocate           (Allocation area, bool changed);
   Allocation     local_child_allocation  (WidgetImpl &child, double width, double height);
+};
+
+class ElementPainterImpl : public virtual WidgetImpl, public virtual ElementPainterIface {
+  String         svg_source_, svg_fragment_;
+  ImagePainter   size_painter_, state_painter_;
+  String         cached_painter_;
+  String         current_element     ();
+  String         state_element       (StateType state);
+protected:
+  virtual void   do_changed          (const String &name) override;
+  virtual void   size_request        (Requisition &requisition) override;
+  virtual void   size_allocate       (Allocation area, bool changed) override;
+  virtual void   render              (RenderContext &rcontext, const Rect &rect) override;
+public:
+  explicit       ElementPainterImpl   ();
+  virtual String svg_source           () const override                 { return svg_source_; }
+  virtual void   svg_source           (const String &source) override;
+  virtual String svg_element          () const override                 { return svg_fragment_; }
+  virtual void   svg_element          (const String &element) override;
 };
 
 } // Rapicorn

@@ -670,4 +670,142 @@ LayerPainterImpl::size_allocate (Allocation area, bool changed)
 
 static const WidgetFactory<LayerPainterImpl> layer_painter_factory ("Rapicorn::LayerPainter");
 
+// == ElementPainter ==
+ElementPainterImpl::ElementPainterImpl() :
+  cached_painter_ ("")
+{}
+
+void
+ElementPainterImpl::svg_source (const String &resource)
+{
+  return_unless (svg_source_ != resource);
+  svg_source_ = resource;
+  if (size_painter_)
+    size_painter_ = ImagePainter();
+  if (state_painter_)
+    state_painter_ = ImagePainter();
+  cached_painter_ = "";
+  invalidate();
+  changed ("svg_source");
+}
+
+void
+ElementPainterImpl::svg_element (const String &fragment)
+{
+  return_unless (svg_fragment_ != fragment);
+  svg_fragment_ = fragment;
+  if (size_painter_)
+    size_painter_ = ImagePainter();
+  if (state_painter_)
+    state_painter_ = ImagePainter();
+  cached_painter_ = "";
+  invalidate();
+  changed ("svg_source");
+}
+
+static constexpr uint64
+consthash_fnv64a (const char *string, uint64 hash = 0xcbf29ce484222325)
+{
+  return string[0] == 0 ? hash : consthash_fnv64a (string + 1, 0x100000001b3 * (hash ^ string[0]));
+}
+
+static const uint64 BROKEN = 0x80000000;
+
+static uint64
+single_state_score (const String &state_string)
+{
+  switch (consthash_fnv64a (state_string.c_str()))
+    {
+    case consthash_fnv64a ("normal"):           return STATE_NORMAL;
+    case consthash_fnv64a ("hover"):            return STATE_HOVER;
+    case consthash_fnv64a ("panel"):            return STATE_PANEL;
+    case consthash_fnv64a ("acceleratable"):    return STATE_ACCELERATABLE;
+    case consthash_fnv64a ("default"):          return STATE_DEFAULT;
+    case consthash_fnv64a ("selected"):         return STATE_SELECTED;
+    case consthash_fnv64a ("focused"):          return STATE_FOCUSED;
+    case consthash_fnv64a ("insensitive"):      return STATE_INSENSITIVE;
+    case consthash_fnv64a ("active"):           return STATE_ACTIVE;
+    case consthash_fnv64a ("retained"):         return STATE_RETAINED;
+    default:                                    return BROKEN;
+    }
+}
+
+static uint64
+state_score (const String &state_string)
+{
+  StringVector sv = string_split (state_string, "+");
+  uint64 r = 0;
+  for (const String &s : sv)
+    r |= single_state_score (s);
+  return r >= BROKEN ? 0 : r;
+}
+
+String
+ElementPainterImpl::state_element (StateType state)
+{
+  if (!size_painter_)
+    size_painter_ = ImagePainter (svg_source_);
+  return_unless (size_painter_ && svg_fragment_.size() && svg_fragment_[0] == '#', "");
+  // match an SVG element to state, ID syntax: <element id="elementname:active+insensitive"/>
+  const String element = svg_fragment_.substr (1); // fragment without initial hash symbol
+  const size_t colon = element.size();
+  String fallback, match;
+  size_t score = 0;
+  for (auto id : size_painter_.list (element))
+    if (id == element)                                  // element without state specification
+      fallback = id;
+    else if (id.size() > colon + 1 && id[colon] == ':') // element with state
+      {
+        const size_t s = state_score (id.substr (colon + 1));
+        if ((s & state) == s && s > score)
+          {
+            match = id;
+            score = s;
+          }
+      }
+  match = match.empty() ? fallback : match;
+  return svg_source_ + "#" + match;
+}
+
+String
+ElementPainterImpl::current_element ()
+{
+  const StateType mystate = ancestry_active() ? STATE_ACTIVE : state();
+  return state_element (mystate);
+}
+
+void
+ElementPainterImpl::size_request (Requisition &requisition)
+{
+  if (!size_painter_)
+    size_painter_ = ImagePainter (state_element (STATE_NORMAL));
+  requisition = size_painter_.image_size();
+}
+
+void
+ElementPainterImpl::size_allocate (Allocation area, bool changed)
+{} // default: allocation_ = area;
+
+void
+ElementPainterImpl::do_changed (const String &name)
+{
+  WidgetImpl::do_changed (name);
+  if (name == "state" && (cached_painter_ != current_element()))
+    invalidate (INVALID_CONTENT);
+}
+
+void
+ElementPainterImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  const String painter_src = current_element();
+  if (!state_painter_ || cached_painter_ != painter_src)
+    {
+      state_painter_ = ImagePainter (painter_src);
+      cached_painter_ = painter_src;
+    }
+  state_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
+}
+
+static const WidgetFactory<ElementPainterImpl> element_painter_factory ("Rapicorn::ElementPainter");
+
 } // Rapicorn

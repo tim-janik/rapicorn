@@ -22,7 +22,7 @@
   <RapicornLayerPainter         id="LayerPainter"/>
   <RapicornScrollArea           id="ScrollArea"/>
   <RapicornSliderArea           id="SliderArea"/>
-  <RapicornStatePainter         id="StatePainter" svg-source="@eval theme_svg_file"/>
+  <RapicornElementPainter       id="ElementPainter" svg-source="@eval theme_svg_file"/>
   <RapicornTable                id="Table"/>
   <RapicornTextEditor           id="TextEditor"/>
   <RapicornUnfocusedButton      id="UnfocusedButton"/>
