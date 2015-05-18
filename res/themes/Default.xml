@@ -13,6 +13,7 @@
   <RapicornDotGrid              id="DotGrid"/>
   <RapicornDrawable             id="Drawable"/>
   <RapicornFocusFrame           id="FocusFrame"/>
+  <RapicornFocusPainter         id="FocusPainter" svg-source="@eval theme_svg_file"/>
   <RapicornFrame                id="Frame"/>
   <RapicornHBox                 id="HBox"/>
   <RapicornHSlider              id="HSlider"/>

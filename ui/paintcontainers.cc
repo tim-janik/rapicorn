@@ -771,11 +771,19 @@ ElementPainterImpl::state_element (StateType state)
   return svg_source_ + "#" + match;
 }
 
+StateType
+ElementPainterImpl::element_state () const
+{
+  StateType mystate = state();
+  if (ancestry_active())
+    mystate |= STATE_ACTIVE;
+  return mystate;
+}
+
 String
 ElementPainterImpl::current_element ()
 {
-  const StateType mystate = ancestry_active() ? STATE_ACTIVE : state();
-  return state_element (mystate);
+  return state_element (element_state());
 }
 
 void
@@ -857,5 +865,65 @@ ElementPainterImpl::render (RenderContext &rcontext, const Rect &rect)
 }
 
 static const WidgetFactory<ElementPainterImpl> element_painter_factory ("Rapicorn::ElementPainter");
+
+// == FocusPainterImpl ==
+FocusPainterImpl::FocusPainterImpl() :
+  focus_container_ (NULL), container_has_focus_ (false)
+{}
+
+FocusPainterImpl::~FocusPainterImpl ()
+{}
+
+void
+FocusPainterImpl::focusable_container_change (ContainerImpl &focus_container)
+{
+  assert_return (&focus_container == focus_container_);
+  const bool had_focus = container_has_focus_;
+  container_has_focus_ = focus_container.has_focus();
+  if (had_focus != container_has_focus_)
+    expose();
+}
+
+void
+FocusPainterImpl::set_focus_child (WidgetImpl *widget)
+{
+  ElementPainterImpl::set_focus_child (widget);
+  expose();
+}
+
+void
+FocusPainterImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+{
+  if (focus_container_)
+    focus_container_->unregister_focus_indicator (*this);
+  focus_container_ = NULL;
+  container_has_focus_ = false;
+  this->ElementPainterImpl::hierarchy_changed (old_toplevel);
+  if (anchored())
+    {
+      ContainerImpl *container = parent();
+      while (container && !container->test_all_flags (NEEDS_FOCUS_INDICATOR))
+        container = container->parent();
+      focus_container_ = container;
+      container_has_focus_ = focus_container_ && focus_container_->has_focus();
+      if (focus_container_)
+        focus_container_->register_focus_indicator (*this);
+    }
+}
+
+StateType
+FocusPainterImpl::element_state () const
+{
+  bool in_focus = has_focus();
+  in_focus = in_focus || get_focus_child() != NULL;
+  in_focus = in_focus || (focus_container_ && focus_container_->has_focus());
+  in_focus = in_focus || (focus_container_ && focus_container_->get_focus_child() != NULL);
+  StateType mystate = ElementPainterImpl::element_state();
+  if (in_focus)
+    mystate |= STATE_FOCUSED;
+  return mystate;
+}
+
+static const WidgetFactory<FocusPainterImpl> focus_painter_factory ("Rapicorn::FocusPainter");
 
 } // Rapicorn

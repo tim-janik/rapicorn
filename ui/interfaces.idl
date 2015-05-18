@@ -549,6 +549,15 @@ interface ElementPainter : Container {
   String svg_element          = String (_("SVG Element"), _("Base name of the SVG element without state dependent postfixes."), "rw");
 };
 
+/// The FocusPainter container decorates its single child according to focus changes.
+/// This element painter container selects "focused" state elements depending on whether
+/// its descendants have focus, or its nextmost ancestor that has its #NEEDS_FOCUS_INDICATOR flag set.
+/// It also provide the #HAS_FOCUS_INDICATOR flag for its nextmost #NEEDS_FOCUS_INDICATOR ancestor.
+/// See also the corresponding implementation class FocusPainterImpl.
+interface FocusPainter : ElementPainter {
+  /* bool   tight_focus = Bool (_("Tight Focus"), _("Overlay child with focus frame"), "rw"); */
+};
+
 /// A widget for text display.
 /// See also the corresponding implementation class LabelImpl.
 interface Label : Container {

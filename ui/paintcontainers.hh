@@ -111,10 +111,11 @@ class ElementPainterImpl : public virtual SingleContainerImpl, public virtual El
   String         current_element     ();
   String         state_element       (StateType state);
 protected:
-  virtual void   do_changed          (const String &name) override;
-  virtual void   size_request        (Requisition &requisition) override;
-  virtual void   size_allocate       (Allocation area, bool changed) override;
-  virtual void   render              (RenderContext &rcontext, const Rect &rect) override;
+  virtual StateType element_state    () const;
+  virtual void      do_changed       (const String &name) override;
+  virtual void      size_request     (Requisition &requisition) override;
+  virtual void      size_allocate    (Allocation area, bool changed) override;
+  virtual void      render           (RenderContext &rcontext, const Rect &rect) override;
 public:
   explicit       ElementPainterImpl   ();
   virtual       ~ElementPainterImpl   () override;
@@ -122,6 +123,19 @@ public:
   virtual void   svg_source           (const String &source) override;
   virtual String svg_element          () const override                 { return svg_fragment_; }
   virtual void   svg_element          (const String &element) override;
+};
+
+class FocusPainterImpl : public virtual ElementPainterImpl, public virtual FocusPainterIface, public virtual FocusIndicator {
+  ContainerImpl *focus_container_;
+  bool           container_has_focus_, tight_;
+protected:
+  virtual StateType element_state              () const override;
+  virtual void      set_focus_child            (WidgetImpl *widget) override;
+  virtual void      hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void      focusable_container_change (ContainerImpl &focus_container) override;
+public:
+  explicit       FocusPainterImpl ();
+  virtual       ~FocusPainterImpl () override;
 };
 
 } // Rapicorn
