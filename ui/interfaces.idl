@@ -551,8 +551,8 @@ interface ElementPainter : Container {
 
 /// The FocusPainter container decorates its single child according to focus changes.
 /// This element painter container selects "focused" state elements depending on whether
-/// its descendants have focus, or its nextmost ancestor that has its #NEEDS_FOCUS_INDICATOR flag set.
-/// It also provide the #HAS_FOCUS_INDICATOR flag for its nextmost #NEEDS_FOCUS_INDICATOR ancestor.
+/// its descendants have focus, or its nextmost ancestor that has its NEEDS_FOCUS_INDICATOR flag set.
+/// It also provide the HAS_FOCUS_INDICATOR flag for its nextmost NEEDS_FOCUS_INDICATOR ancestor.
 /// See also the corresponding implementation class FocusPainterImpl.
 interface FocusPainter : ElementPainter {
   /* bool   tight_focus = Bool (_("Tight Focus"), _("Overlay child with focus frame"), "rw"); */
