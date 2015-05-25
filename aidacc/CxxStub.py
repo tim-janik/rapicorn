@@ -684,7 +684,7 @@ class Generator:
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
     # fetch args
     for a in mtype.args:
       s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
@@ -775,7 +775,7 @@ class Generator:
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
     # fetch property
     s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
     s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(fident, ftype)])
@@ -799,7 +799,7 @@ class Generator:
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
     # return var
     s += '  '
     s += self.R (ftype) + ' rval = '
@@ -825,7 +825,7 @@ class Generator:
     s += '  %s *self;\n' % self.C (class_info)  # fetch self
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
     s += '  self->__aida_typelist__ (thl);\n'
     # return: length (typehi, typelo)*length
@@ -962,7 +962,7 @@ class Generator:
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "self must be non-NULL");\n'
+    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
     s += '  size_t handler_id;\n'
     s += '  Rapicorn::Aida::uint64 signal_connection, result = 0;\n'
     s += '  fbr >>= handler_id;\n'
