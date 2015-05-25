@@ -323,7 +323,7 @@ enum MessageId {
   MSGID_CONNECT_RESULT      = 0xc000000000000000ULL, ///< Result message for CONNECT.
   MSGID_CALL_RESULT         = 0xd000000000000000ULL, ///< Result message for CALL_TWOWAY.
   MSGID_EMIT_RESULT         = 0xe000000000000000ULL, ///< Result message for EMIT_TWOWAY.
-  MSGID_META_REPLY          = 0xf000000000000000ULL, ///< Two-way method call, expects CALL_RESULT.
+  MSGID_META_REPLY          = 0xf000000000000000ULL, ///< Result message for MSGID_META_TWOWAY.
   // meta messages and results
   MSGID_META_HELLO          = 0x7100000000000000ULL, ///< Hello from client, expects WELCOME.
   MSGID_META_WELCOME        = 0xf100000000000000ULL, ///< Hello reply from server, contains remote_origin.
