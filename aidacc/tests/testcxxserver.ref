@@ -1673,12 +1673,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__FirstInterface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_FirstInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -1710,12 +1710,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__UIWidgetArea____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2036,12 +2036,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__Parent____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_ParentIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2053,12 +2053,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__Child____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_ChildIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2070,12 +2070,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__Descendant____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_DescendantIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2087,12 +2087,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__GrandChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_GrandChildIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2104,12 +2104,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__QuickIface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_QuickIfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2134,12 +2134,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__MethodTestInterface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2349,12 +2349,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__SignalTestInterface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -3541,12 +3541,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__ChildInheritingSignals____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_ChildInheritingSignalsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -3613,12 +3613,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__AnotherChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_AnotherChildIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -3630,12 +3630,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__PropertyTester____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -3936,12 +3936,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__ButtonArea____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -4154,12 +4154,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__PureMethods____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_PureMethodsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -4189,12 +4189,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__NameTests____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_NameTestsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -4226,12 +4226,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__Compressor____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -4295,12 +4295,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__SoundModule____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_SoundModuleIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)

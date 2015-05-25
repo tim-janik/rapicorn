@@ -822,12 +822,13 @@ class Generator:
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
     s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
+    s += '  Rapicorn::Aida::TypeHashList thl;\n'
     s += '  %s *self;\n' % self.C (class_info)  # fetch self
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
-    s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    s += '  self->__aida_typelist__ (thl);\n'
+    # support self==NULL here, to allow invalid cast handling at the client
+    s += '  if (self) // guard against invalid casts\n'
+    s += '    self->__aida_typelist__ (thl);\n'
     # return: length (typehi, typelo)*length
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, %s, 1 + 2 * thl.size());\n' % digest # invalidates fbr
     s += '  rb <<= Rapicorn::Aida::int64 (thl.size());\n'
