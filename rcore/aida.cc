@@ -175,20 +175,30 @@ static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer"
 
 // === Utilities ===
 void
-assertion_error (const char *file, uint line, const char *expr)
+fatal_error (const char *file, uint line, const String &msg)
 {
-  fatal_error (string_format ("%s:%u: assertion failed: %s", file, line, expr));
+  String s = msg;
+  if (s.size() < 1)
+    s = "!\"reached\"\n";
+  else if (s[s.size() - 1] != '\n')
+    s += "\n";
+  if (file)
+    fprintf (stderr, "%s:%d: ", file, line);
+  fprintf (stderr, "AIDA-ERROR: %s", s.c_str());
+  fflush (stderr);
+  abort();
 }
 
 void
 fatal_error (const String &msg)
 {
-  String s = msg;
-  if (s.empty() || s[s.size() - 1] != '\n')
-    s += "\n";
-  fprintf (stderr, "Aida: error: %s", s.c_str());
-  fflush (stderr);
-  abort();
+  fatal_error (NULL, 0, msg);
+}
+
+void
+assertion_error (const char *file, uint line, const char *expr)
+{
+  fatal_error (file, line, std::string ("assertion failed: ") + expr);
 }
 
 void
