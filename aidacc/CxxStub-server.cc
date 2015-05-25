@@ -107,9 +107,11 @@ slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
 } } // Anon::__AIDA_Local__
 
 namespace Rapicorn { namespace Aida {
+#ifndef RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
+#define RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 // namespace Rapicorn::Aida needed for argument dependent lookups of the operators
-static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v);
-static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v);
+static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
+static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
 {
@@ -120,4 +122,5 @@ operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
 {
   v = fr.pop_any (*__AIDA_Local__::server_connection);
 }
+#endif // RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 } } // Rapicorn::Aida
