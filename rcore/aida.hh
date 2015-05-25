@@ -313,17 +313,17 @@ enum MessageId {
   // none                   = 0x0000000000000000
   MSGID_CALL_ONEWAY         = 0x1000000000000000ULL, ///< One-way method call (void return).
   MSGID_EMIT_ONEWAY         = 0x2000000000000000ULL, ///< One-way signal emissions (void return).
-  MSGID_META_ONEWAY         = 0x3000000000000000ULL, ///< One-way method call (void return).
+  //MSGID_META_ONEWAY       = 0x3000000000000000ULL, ///< One-way method call (void return).
   MSGID_CONNECT             = 0x4000000000000000ULL, ///< Signal handler (dis-)connection, expects CONNECT_RESULT.
   MSGID_CALL_TWOWAY         = 0x5000000000000000ULL, ///< Two-way method call, expects CALL_RESULT.
   MSGID_EMIT_TWOWAY         = 0x6000000000000000ULL, ///< Two-way signal emissions, expects EMIT_RESULT.
-  MSGID_META_TWOWAY         = 0x7000000000000000ULL, ///< Two-way method call, expects META_REPLY.
+  //MSGID_META_TWOWAY       = 0x7000000000000000ULL, ///< Two-way method call, expects META_REPLY.
   // meta_exception         = 0x8000000000000000
   MSGID_DISCONNECT          = 0xa000000000000000ULL, ///< Signal destroyed, disconnect all handlers.
   MSGID_CONNECT_RESULT      = 0xc000000000000000ULL, ///< Result message for CONNECT.
   MSGID_CALL_RESULT         = 0xd000000000000000ULL, ///< Result message for CALL_TWOWAY.
   MSGID_EMIT_RESULT         = 0xe000000000000000ULL, ///< Result message for EMIT_TWOWAY.
-  MSGID_META_REPLY          = 0xf000000000000000ULL, ///< Result message for MSGID_META_TWOWAY.
+  //MSGID_META_REPLY        = 0xf000000000000000ULL, ///< Result message for MSGID_META_TWOWAY.
   // meta messages and results
   MSGID_META_HELLO          = 0x7100000000000000ULL, ///< Hello from client, expects WELCOME.
   MSGID_META_WELCOME        = 0xf100000000000000ULL, ///< Hello reply from server, contains remote_origin.
