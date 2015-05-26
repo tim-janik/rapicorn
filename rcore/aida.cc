@@ -2044,7 +2044,8 @@ void
 ObjectBroker::construct_server_connection (ServerConnection *&var)
 {
   AIDA_ASSERT (var == NULL);
-  AIDA_ASSERT (call_stack_connection_ctor_protocol != NULL);
+  if (call_stack_connection_ctor_protocol == NULL)
+    fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::bind<>");
   const std::string protocol = call_stack_connection_ctor_protocol;
   call_stack_connection_ctor_protocol = NULL;
   AIDA_ASSERT (ObjectBroker::connection_id_from_protocol (protocol) == 0);
@@ -2055,7 +2056,8 @@ void
 ObjectBroker::construct_client_connection (ClientConnection *&var)
 {
   AIDA_ASSERT (var == NULL);
-  AIDA_ASSERT (call_stack_connection_ctor_protocol != NULL);
+  if (call_stack_connection_ctor_protocol == NULL)
+    fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::connect<>");
   const std::string protocol = call_stack_connection_ctor_protocol;
   call_stack_connection_ctor_protocol = NULL;
   var = new ClientConnectionImpl (protocol);
