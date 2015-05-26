@@ -16,9 +16,6 @@ using namespace Rapicorn::Aida;
 
 // connection
 static Rapicorn::Aida::ClientConnection *client_connection = NULL;
-static Rapicorn::Init init_client_connection ([]() {
-  client_connection = ObjectBroker::new_client_connection (":AidaClientConnection:CxxStub:idl_file=aidacc/tests/testpass.idl:");
-});
 
 // helper
 
@@ -1132,7 +1129,7 @@ FirstInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const 
 Rapicorn::Aida::BaseConnection*
 FirstInterfaceHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 FirstInterfaceHandle::__aida_typelist__()
@@ -1688,7 +1685,7 @@ UIWidgetAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Ra
 Rapicorn::Aida::BaseConnection*
 UIWidgetAreaHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 UIWidgetAreaHandle::__aida_typelist__()
@@ -1948,7 +1945,7 @@ ParentHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn
 Rapicorn::Aida::BaseConnection*
 ParentHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 ParentHandle::__aida_typelist__()
@@ -2216,7 +2213,7 @@ QuickIfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
 Rapicorn::Aida::BaseConnection*
 QuickIfaceHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 QuickIfaceHandle::__aida_typelist__()
@@ -2285,7 +2282,7 @@ MethodTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, c
 Rapicorn::Aida::BaseConnection*
 MethodTestInterfaceHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 MethodTestInterfaceHandle::__aida_typelist__()
@@ -2981,7 +2978,7 @@ SignalTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, c
 Rapicorn::Aida::BaseConnection*
 SignalTestInterfaceHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 SignalTestInterfaceHandle::__aida_typelist__()
@@ -3165,7 +3162,7 @@ PropertyTesterHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const 
 Rapicorn::Aida::BaseConnection*
 PropertyTesterHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 PropertyTesterHandle::__aida_typelist__()
@@ -3528,7 +3525,7 @@ ButtonAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
 Rapicorn::Aida::BaseConnection*
 ButtonAreaHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 ButtonAreaHandle::__aida_typelist__()
@@ -3683,7 +3680,7 @@ PureMethodsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
 Rapicorn::Aida::BaseConnection*
 PureMethodsHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 PureMethodsHandle::__aida_typelist__()
@@ -3760,7 +3757,7 @@ NameTestsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapic
 Rapicorn::Aida::BaseConnection*
 NameTestsHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 NameTestsHandle::__aida_typelist__()
@@ -3836,7 +3833,7 @@ CompressorHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
 Rapicorn::Aida::BaseConnection*
 CompressorHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 CompressorHandle::__aida_typelist__()
@@ -3974,7 +3971,7 @@ SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
 Rapicorn::Aida::BaseConnection*
 SoundModuleHandle::__aida_connection__()
 {
-  return __AIDA_Local__::client_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 const Rapicorn::Aida::TypeHashList
 SoundModuleHandle::__aida_typelist__()

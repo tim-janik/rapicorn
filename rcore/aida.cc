@@ -1287,7 +1287,7 @@ BaseConnection::remote_origin (ImplicitBaseP)
  * feature keys as registered with the ObjectBroker.
  */
 RemoteHandle
-BaseConnection::remote_origin (const vector<std::string> &protocol_list)
+BaseConnection::remote_origin()
 {
   AIDA_ASSERT (!"reached");
 }
@@ -1368,7 +1368,7 @@ public:
   virtual void          add_handle        (FieldBuffer &fb, const RemoteHandle &rhandle);
   virtual void          pop_handle        (FieldReader &fr, RemoteHandle &rhandle);
   virtual void          remote_origin     (ImplicitBaseP rorigin) { fatal ("assert not reached"); }
-  virtual RemoteHandle  remote_origin     (const vector<std::string> &protocol_list);
+  virtual RemoteHandle  remote_origin     ();
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
   virtual std::string   type_name_from_handle (const RemoteHandle &rhandle);
@@ -1407,16 +1407,10 @@ ClientConnectionImpl::pop ()
 }
 
 RemoteHandle
-ClientConnectionImpl::remote_origin (const vector<std::string> &protocol_list)
+ClientConnectionImpl::remote_origin()
 {
+  const uint connection_id = ObjectBroker::connection_id_from_protocol (protocol());
   RemoteMember<RemoteHandle> rorigin;
-  uint connection_id = 0;
-  for (auto proto : protocol_list)
-    {
-      connection_id = ObjectBroker::connection_id_from_protocol (proto);
-      if (connection_id)
-        break;
-    }
   if (connection_id)
     {
       FieldBuffer *fb = FieldBuffer::_new (3);
@@ -1689,7 +1683,7 @@ public:
   virtual bool          pending        ()               { return transport_channel_.has_msg(); }
   virtual void          dispatch       ();
   virtual void          remote_origin  (ImplicitBaseP rorigin);
-  virtual RemoteHandle  remote_origin  (const vector<std::string> &protocol_list) { fatal ("assert not reached"); }
+  virtual RemoteHandle  remote_origin  () { fatal ("assert not reached"); }
   virtual void          add_interface  (FieldBuffer &fb, ImplicitBaseP ibase);
   virtual ImplicitBaseP pop_interface  (FieldReader &fr);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
@@ -2027,39 +2021,44 @@ ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
   return handler_index ? handler_id_parts.orbid_connection : 0; // FIXME
 }
 
-static __thread std::string *call_stack_server_connection_ctor_protocol = NULL;
+static __thread const char *call_stack_connection_ctor_protocol = NULL;
 
-static std::string
-object_broker_pop_server_connection_protocol ()
+void
+ObjectBroker::setup_connection_ctor_protocol (const char *protocol)
 {
-  assert_return (call_stack_server_connection_ctor_protocol != NULL, "");
-  const String protocol = *call_stack_server_connection_ctor_protocol;
-  delete call_stack_server_connection_ctor_protocol;
-  call_stack_server_connection_ctor_protocol = NULL;
-  return protocol;
+  if (protocol)
+    AIDA_ASSERT (call_stack_connection_ctor_protocol == NULL);
+  else
+    AIDA_ASSERT (call_stack_connection_ctor_protocol != NULL);
+  call_stack_connection_ctor_protocol = protocol;
 }
 
 void
-ObjectBroker::push_server_connection_protocol (const std::string &protocol)
+ObjectBroker::verify_connection_construction()
 {
-  assert_return (call_stack_server_connection_ctor_protocol == NULL);
-  call_stack_server_connection_ctor_protocol = new std::string (protocol);
+  const bool connection_ctor_consumed_protocol = call_stack_connection_ctor_protocol == NULL;
+  AIDA_ASSERT (connection_ctor_consumed_protocol);
 }
 
 void
 ObjectBroker::construct_server_connection (ServerConnection *&var)
 {
   AIDA_ASSERT (var == NULL);
-  const std::string protocol = object_broker_pop_server_connection_protocol();
+  AIDA_ASSERT (call_stack_connection_ctor_protocol != NULL);
+  const std::string protocol = call_stack_connection_ctor_protocol;
+  call_stack_connection_ctor_protocol = NULL;
   AIDA_ASSERT (ObjectBroker::connection_id_from_protocol (protocol) == 0);
   var = new ServerConnectionImpl (protocol);
 }
 
-ClientConnection*
-ObjectBroker::new_client_connection (const std::string &protocol)
+void
+ObjectBroker::construct_client_connection (ClientConnection *&var)
 {
-  ClientConnectionImpl *cimpl = new ClientConnectionImpl (protocol);
-  return cimpl;
+  AIDA_ASSERT (var == NULL);
+  AIDA_ASSERT (call_stack_connection_ctor_protocol != NULL);
+  const std::string protocol = call_stack_connection_ctor_protocol;
+  call_stack_connection_ctor_protocol = NULL;
+  var = new ClientConnectionImpl (protocol);
 }
 
 uint
@@ -2068,7 +2067,7 @@ ObjectBroker::connection_id_from_protocol (const std::string &protocol)
   for (size_t idx = 0; idx < MAX_CONNECTIONS; idx++)
     {
       BaseConnection *bcon = orb_connections[idx];
-      if (bcon && protocol == bcon->protocol_)
+      if (bcon && protocol == bcon->protocol() && dynamic_cast<ServerConnection*> (bcon))
         return bcon->connection_id();
     }
   return 0;     // unmatched

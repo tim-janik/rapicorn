@@ -514,7 +514,7 @@ class Generator:
     if self.gen_mode == G4SERVANT:
       s += '  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);\n'
     else:
-      s += '  return __AIDA_Local__::client_connection;\n'
+      s += '  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);\n'
     s += '}\n'
     return s
   def generate_client_class_methods (self, class_info):

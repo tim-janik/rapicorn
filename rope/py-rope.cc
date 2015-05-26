@@ -42,6 +42,7 @@ shutdown_rapicorn_atexit (void)
 static PyObject*
 rope_init_dispatcher (PyObject *self, PyObject *args)
 {
+  AIDA_ASSERT (__AIDA_local__client_connection == NULL);
   // parse args: application_name, cmdline_args
   const char *ns = NULL, *appclassstr = NULL;
   unsigned int nl = 0, appclasslen = 0;
@@ -81,6 +82,8 @@ rope_init_dispatcher (PyObject *self, PyObject *args)
   if (!app)
     return PyErr_Format (PyExc_RuntimeError, "Rapicorn initialization failed");
   atexit (shutdown_rapicorn_atexit);
+  __AIDA_local__client_connection = dynamic_cast<Aida::ClientConnection*> (app.__aida_connection__());
+  AIDA_ASSERT (__AIDA_local__client_connection != NULL);
   return __AIDA_pyfactory__create_handle (app, appclass_name.empty() ? NULL : appclass_name.c_str());
 }
 

@@ -262,8 +262,8 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   // install handler for UIThread test cases
   wrap_test_runner();
   // connect to remote UIThread and fetch main handle
-  auto keys = string_split ("inproc://Rapicorn-" RAPICORN_VERSION, "|");
-  return Aida::RemoteHandle::__aida_reinterpret_down_cast__<ApplicationH> (ApplicationH::__aida_connection__()->remote_origin (keys));
+  ApplicationH app = Aida::ObjectBroker::connect<ApplicationHandle> ("inproc://Rapicorn-" RAPICORN_VERSION);
+  return app;
 }
 
 } // Rapicorn
