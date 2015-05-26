@@ -26,9 +26,6 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, Rapicorn::Aida::Imp
 
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
-static Rapicorn::Init init_server_connection ([]() {
-  server_connection = ObjectBroker::new_server_connection (":AidaServerConnection:CxxStub:idl_file=aidacc/tests/testpass.idl:");
-});
 
 // EmitResultHandler
 static inline void erhandler_add (size_t id, const EmitResultHandler &function)
@@ -787,7 +784,7 @@ operator->* (I_FirstInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_FirstInterfaceIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_FirstInterfaceIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -843,7 +840,7 @@ operator->* (I_UIWidgetAreaIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_UIWidgetAreaIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_UIWidgetAreaIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -898,7 +895,7 @@ operator->* (I_ParentIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_ParentIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_ParentIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1101,7 +1098,7 @@ operator->* (I_QuickIfaceIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_QuickIfaceIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_QuickIfaceIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1154,7 +1151,7 @@ operator->* (I_MethodTestInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_MethodTestInterfaceIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_MethodTestInterfaceIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1207,7 +1204,7 @@ operator->* (I_SignalTestInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_SignalTestInterfaceIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_SignalTestInterfaceIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1358,7 +1355,7 @@ operator->* (I_PropertyTesterIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_PropertyTesterIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_PropertyTesterIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1425,7 +1422,7 @@ operator->* (I_ButtonAreaIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_ButtonAreaIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_ButtonAreaIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1482,7 +1479,7 @@ operator->* (I_PureMethodsIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_PureMethodsIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_PureMethodsIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1538,7 +1535,7 @@ operator->* (I_NameTestsIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_NameTestsIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_NameTestsIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1594,7 +1591,7 @@ operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_CompressorIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_CompressorIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1649,7 +1646,7 @@ operator->* (I_SoundModuleIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_SoundModuleIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_SoundModuleIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const

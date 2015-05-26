@@ -512,7 +512,7 @@ class Generator:
     s += 'Rapicorn::Aida::BaseConnection*\n'
     s += '%s::__aida_connection__()\n{\n' % classC
     if self.gen_mode == G4SERVANT:
-      s += '  return __AIDA_Local__::server_connection;\n'
+      s += '  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);\n'
     else:
       s += '  return __AIDA_Local__::client_connection;\n'
     s += '}\n'

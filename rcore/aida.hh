@@ -430,19 +430,22 @@ struct _HandleType  {} constexpr _handle  = _HandleType();  ///< Tag to retrieve
 
 // == ObjectBroker ==
 class ObjectBroker {
+  static void   push_server_connection_protocol (const std::string &protocol);
+  static void   construct_server_connection     (ServerConnection *&var);
 public:
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
-  static uint              register_connection   (BaseConnection    &connection, uint suggested_id);
-  static void              unregister_connection (BaseConnection    &connection);
-  static BaseConnection*   connection_from_id    (uint64             connection_id);
-  static ServerConnection* new_server_connection (const std::string &feature_keys);
-  static ClientConnection* new_client_connection (const std::string &feature_keys);
+  static uint              register_connection    (BaseConnection    &connection);
+  static void              unregister_connection  (BaseConnection    &connection);
+  static BaseConnection*   connection_from_id     (uint64             connection_id);
+  static ClientConnection* new_client_connection  (const std::string &protocol);
+  static ServerConnection* get_server_connection  (ServerConnection *&var);
+  static uint         connection_id_from_protocol (const std::string &protocol);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64 orbid)        { return OrbObject::orbid_connection (orbid); }
   static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh.__aida_orbid__()); }
-  static inline uint  connection_id_from_keys   (const vector<std::string> &feature_key_list);
   static inline uint  destination_connection_id (uint64 msgid)        { return IdentifierParts (msgid).destination_connection; }
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
+  template<class C> static void bind            (const std::string &protocol, std::shared_ptr<C> object_ptr);
 };
 
 // == FieldBuffer ==
@@ -567,13 +570,14 @@ public:
 // == Connections ==
 /// Base connection context for ORB message exchange.
 class BaseConnection {
-  const std::string feature_keys_;
+  const std::string protocol_;
   uint              conid_;
   friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
-  explicit               BaseConnection  (const std::string &feature_keys);
+  explicit               BaseConnection  (const std::string &protocol);
   virtual               ~BaseConnection  ();
+  virtual void           remote_origin   (ImplicitBaseP rorigin) = 0;
   virtual void           send_msg        (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   void                   assign_id       (uint connection_id);
 public:
@@ -581,7 +585,6 @@ public:
   virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
-  virtual void           remote_origin  (ImplicitBaseP rorigin) = 0;
   virtual RemoteHandle   remote_origin  (const vector<std::string> &feature_key_list) = 0;
   virtual Any*           any2remote     (const Any&);
   virtual void           any2local      (Any&);
@@ -594,7 +597,7 @@ typedef FieldBuffer* SignalEmitHandler (const FieldBuffer*, void*);
 class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 protected:
-  /*ctor*/           ServerConnection      (const std::string &feature_keys);
+  /*ctor*/           ServerConnection      (const std::string &protocol);
   virtual           ~ServerConnection      ();
   virtual void       cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
 public:
@@ -619,7 +622,7 @@ public:
 class ClientConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ClientConnection);
 protected:
-  explicit              ClientConnection (const std::string &feature_keys);
+  explicit              ClientConnection (const std::string &protocol);
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
   virtual FieldBuffer*  call_remote (FieldBuffer*) = 0; ///< Carry out a remote call syncronously, transfers memory.
@@ -710,6 +713,26 @@ FieldReader::pop_any (BaseConnection &bcon)
   FieldUnion &u = fb_popu (ANY);
   bcon.any2local (*u.vany);
   return *u.vany;
+}
+
+inline ServerConnection*
+ObjectBroker::get_server_connection (ServerConnection *&var)
+{
+  if (AIDA_UNLIKELY (var == NULL))
+    construct_server_connection (var);
+  return var;
+}
+
+/// Initialize the ServerConnection of @a C and accept connections on @a protocol
+template<class C> void
+ObjectBroker::bind (const std::string &protocol, std::shared_ptr<C> object_ptr)
+{
+  AIDA_ASSERT (object_ptr != NULL);
+  push_server_connection_protocol (protocol);
+  BaseConnection *new_connection = C::__aida_connection__();
+  ServerConnection *server_connection = dynamic_cast<ServerConnection*> (new_connection);
+  AIDA_ASSERT (server_connection != NULL);
+  server_connection->remote_origin (object_ptr);
 }
 
 } } // Rapicorn::Aida
