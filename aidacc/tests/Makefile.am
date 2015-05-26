@@ -114,10 +114,10 @@ components.cc: $(COMPONENT_FILES)
 # MAKE(1) supports parallel execution of a multiple-targets-rule *only* for implicit rules
 %-client.hh %-client.cc %-server.hh %-server.cc: %.idl $(CXXSTUB_PY)
 	$(AM_V_GEN)
-	$(Q) ${AIDACC} -x CxxStub -G clienthh -G apikey=ComponentsKey -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-client.hh
-	$(Q) ${AIDACC} -x CxxStub -G clientcc -G apikey=ComponentsKey -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-client.cc
-	$(Q) ${AIDACC} -x CxxStub -G serverhh -G apikey=ComponentsKey -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-server.hh
-	$(Q) ${AIDACC} -x CxxStub -G servercc -G apikey=ComponentsKey -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-server.cc
+	$(Q) ${AIDACC} -x CxxStub -G clienthh -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-client.hh
+	$(Q) ${AIDACC} -x CxxStub -G clientcc -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-client.cc
+	$(Q) ${AIDACC} -x CxxStub -G serverhh -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-server.hh
+	$(Q) ${AIDACC} -x CxxStub -G servercc -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-server.cc
 components-test: ./components
 	$(Q) $(<D)/$(<F) ; eval "$$TSTDIAGNOSE"
 check: components-test
