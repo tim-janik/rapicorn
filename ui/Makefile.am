@@ -112,8 +112,7 @@ serverapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/serverinsert.hh
 	mv xgen-$(@F) $@
 serverglue.cc: serverapi.cc
 serverapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl serverapi.hh
-	${AIDACC} -x CxxStub -G servercc \
-	  -G apikey=$(RAPICORN_NAMESPACE_NAME) -G strip-path=$(abs_top_srcdir)/ \
+	${AIDACC} -x CxxStub -G servercc -G strip-path=$(abs_top_srcdir)/ \
 	  --inclusions '"widget.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += serverapi.cc serverapi.hh
@@ -125,8 +124,7 @@ clientapi.hh: $(CXXSTUB_PY) $(srcdir)/interfaces.idl $(srcdir)/clientinsert.hh
 	mv xgen-$(@F) $@
 clientglue.cc: clientapi.cc
 clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
-	${AIDACC} -x CxxStub -G clientcc \
-	  -G apikey=$(RAPICORN_NAMESPACE_NAME) -G strip-path=$(abs_top_srcdir)/ \
+	${AIDACC} -x CxxStub -G clientcc -G strip-path=$(abs_top_srcdir)/ \
 	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh

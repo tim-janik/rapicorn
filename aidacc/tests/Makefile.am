@@ -7,7 +7,11 @@ DEFS        += -DRAPICORN_CONVENIENCE
 AIDACC = $(AIDACC_NODEBUG) $(if $(findstring 1, $(V)), --aida-debug)
 AIDACC_NODEBUG = ../aidacc-intern
 AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@RAPICORN_RELEASE@
+CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
 TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
+
+noinst_PROGRAMS  = $(TEST_PROGS)
+LDADDS           = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la
 
 # automake doesn't always emit CXXCOMPILE
 CXXCOMPILE ?= $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -96,3 +100,24 @@ check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
 	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxskels.cc testcxxskels.o testcxxsrvskel-stub.hh
 check: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code
+
+
+# == components ==
+# test app consisting of several Aida components
+TEST_PROGS	  += components
+components_SOURCES = components.cc
+components_LDADD   = $(LDADDS)
+EXTRA_DIST        += components-a1.idl # components-a2.idl components-b1.idl
+COMPONENT_FILES    = components-a1-client.hh components-a1-client.cc components-a1-server.hh components-a1-server.cc
+CLEANFILES += $(COMPONENT_FILES)
+components.cc: $(COMPONENT_FILES)
+# MAKE(1) supports parallel execution of a multiple-targets-rule *only* for implicit rules
+%-client.hh %-client.cc %-server.hh %-server.cc: %.idl $(CXXSTUB_PY)
+	$(AM_V_GEN)
+	$(Q) ${AIDACC} -x CxxStub -G clienthh -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-client.hh
+	$(Q) ${AIDACC} -x CxxStub -G clientcc -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-client.cc
+	$(Q) ${AIDACC} -x CxxStub -G serverhh -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-server.hh
+	$(Q) ${AIDACC} -x CxxStub -G servercc -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-server.cc
+components-test: ./components
+	$(Q) $(<D)/$(<F) ; eval "$$TSTDIAGNOSE"
+check: components-test

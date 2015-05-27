@@ -175,20 +175,30 @@ static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer"
 
 // === Utilities ===
 void
-assertion_error (const char *file, uint line, const char *expr)
+fatal_error (const char *file, uint line, const String &msg)
 {
-  fatal_error (string_format ("%s:%u: assertion failed: %s", file, line, expr));
+  String s = msg;
+  if (s.size() < 1)
+    s = "!\"reached\"\n";
+  else if (s[s.size() - 1] != '\n')
+    s += "\n";
+  if (file)
+    fprintf (stderr, "%s:%d: ", file, line);
+  fprintf (stderr, "AIDA-ERROR: %s", s.c_str());
+  fflush (stderr);
+  abort();
 }
 
 void
 fatal_error (const String &msg)
 {
-  String s = msg;
-  if (s.empty() || s[s.size() - 1] != '\n')
-    s += "\n";
-  fprintf (stderr, "Aida: error: %s", s.c_str());
-  fflush (stderr);
-  abort();
+  fatal_error (NULL, 0, msg);
+}
+
+void
+assertion_error (const char *file, uint line, const char *expr)
+{
+  fatal_error (file, line, std::string ("assertion failed: ") + expr);
 }
 
 void
@@ -1244,10 +1254,14 @@ ObjectMap<Instance>::instance_from_orbo (const OrbObjectP &orbo)
 }
 
 // == BaseConnection ==
-BaseConnection::BaseConnection (const std::string &feature_keys) :
-  feature_keys_ (feature_keys), conid_ (0)
+BaseConnection::BaseConnection (const std::string &protocol) :
+  protocol_ (protocol), conid_ (0)
 {
-  AIDA_ASSERT (feature_keys_.size() && feature_keys_[0] == ':' && feature_keys_[feature_keys_.size()-1] == ':');
+  AIDA_ASSERT (protocol.size() > 0);
+  if (protocol_[0] == ':')
+    AIDA_ASSERT (protocol_[protocol_.size()-1] == ':');
+  else
+    AIDA_ASSERT (string_startswith (protocol, "inproc://"));
 }
 
 BaseConnection::~BaseConnection ()
@@ -1264,7 +1278,7 @@ BaseConnection::assign_id (uint connection_id)
 void
 BaseConnection::remote_origin (ImplicitBaseP)
 {
-  assertion_error (__FILE__, __LINE__, "not supported by this object type");
+  AIDA_ASSERT (!"reached");
 }
 
 /** Retrieve initial handle after remote connection has been established.
@@ -1273,9 +1287,9 @@ BaseConnection::remote_origin (ImplicitBaseP)
  * feature keys as registered with the ObjectBroker.
  */
 RemoteHandle
-BaseConnection::remote_origin (const vector<std::string> &feature_key_list)
+BaseConnection::remote_origin()
 {
-  assertion_error (__FILE__, __LINE__, "not supported by this object type");
+  AIDA_ASSERT (!"reached");
 }
 
 Any*
@@ -1291,8 +1305,8 @@ BaseConnection::any2local (Any &any)
 }
 
 // == ClientConnection ==
-ClientConnection::ClientConnection (const std::string &feature_keys) :
-  BaseConnection (feature_keys)
+ClientConnection::ClientConnection (const std::string &protocol) :
+  BaseConnection (protocol)
 {}
 
 ClientConnection::~ClientConnection ()
@@ -1319,13 +1333,13 @@ class ClientConnectionImpl : public ClientConnection {
   bool                          seen_garbage_;
   SignalHandler*                signal_lookup (size_t handler_id);
 public:
-  ClientConnectionImpl (const std::string &feature_keys) :
-    ClientConnection (feature_keys), blocking_for_sem_ (false), seen_garbage_ (false)
+  ClientConnectionImpl (const std::string &protocol) :
+    ClientConnection (protocol), blocking_for_sem_ (false), seen_garbage_ (false)
   {
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
     sem_init (&transport_sem_, 0 /* unshared */, 0 /* init */);
-    uint realid = ObjectBroker::register_connection (*this, 0xcccc);
+    uint realid = ObjectBroker::register_connection (*this);
     if (!realid)
       fatal_error ("Aida: failed to register ClientConnection");
     assign_id (realid);
@@ -1354,7 +1368,7 @@ public:
   virtual void          add_handle        (FieldBuffer &fb, const RemoteHandle &rhandle);
   virtual void          pop_handle        (FieldReader &fr, RemoteHandle &rhandle);
   virtual void          remote_origin     (ImplicitBaseP rorigin) { fatal ("assert not reached"); }
-  virtual RemoteHandle  remote_origin     (const vector<std::string> &feature_key_list);
+  virtual RemoteHandle  remote_origin     ();
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
   virtual std::string   type_name_from_handle (const RemoteHandle &rhandle);
@@ -1393,24 +1407,27 @@ ClientConnectionImpl::pop ()
 }
 
 RemoteHandle
-ClientConnectionImpl::remote_origin (const vector<std::string> &feature_key_list)
+ClientConnectionImpl::remote_origin()
 {
+  const uint connection_id = ObjectBroker::connection_id_from_protocol (protocol());
   RemoteMember<RemoteHandle> rorigin;
-  const uint connection_id = ObjectBroker::connection_id_from_keys (feature_key_list);
-  if (connection_id)
+  if (!connection_id)
     {
-      FieldBuffer *fb = FieldBuffer::_new (3);
-      fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
-      FieldBuffer *fr = this->call_remote (fb); // takes over fb
-      FieldReader frr (*fr);
-      const MessageId msgid = MessageId (frr.pop_int64());
-      frr.skip(); // hashhigh
-      frr.skip(); // hashlow
-      if (!msgid_is (msgid, MSGID_META_WELCOME))
-        fatal_error (string_format ("HELLO failed, server refused WELCOME: %016x", msgid));
-      pop_handle (frr, rorigin);
-      delete fr;
+      errno = ECONNREFUSED; // EHOSTUNREACH;
+      return RemoteHandle::__aida_null_handle__();
     }
+  FieldBuffer *fb = FieldBuffer::_new (3);
+  fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
+  FieldBuffer *fr = this->call_remote (fb); // takes over fb
+  FieldReader frr (*fr);
+  const MessageId msgid = MessageId (frr.pop_int64());
+  frr.skip(); // hashhigh
+  frr.skip(); // hashlow
+  if (!msgid_is (msgid, MSGID_META_WELCOME))
+    fatal_error (string_format ("HELLO failed, server refused WELCOME: %016x", msgid));
+  pop_handle (frr, rorigin);
+  delete fr;
+  errno = 0;
   return rorigin;
 }
 
@@ -1663,13 +1680,13 @@ class ServerConnectionImpl : public ServerConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
   void                  start_garbage_collection (uint client_connection);
 public:
-  explicit              ServerConnectionImpl (const std::string &feature_keys);
+  explicit              ServerConnectionImpl (const std::string &protocol);
   virtual              ~ServerConnectionImpl ()         { ObjectBroker::unregister_connection (*this); }
   virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
   virtual bool          pending        ()               { return transport_channel_.has_msg(); }
   virtual void          dispatch       ();
   virtual void          remote_origin  (ImplicitBaseP rorigin);
-  virtual RemoteHandle  remote_origin  (const vector<std::string> &feature_key_list) { fatal ("assert not reached"); }
+  virtual RemoteHandle  remote_origin  () { fatal ("assert not reached"); }
   virtual void          add_interface  (FieldBuffer &fb, ImplicitBaseP ibase);
   virtual ImplicitBaseP pop_interface  (FieldReader &fr);
   virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
@@ -1696,10 +1713,10 @@ ServerConnectionImpl::start_garbage_collection (uint client_connection)
   ObjectBroker::post_msg (fb);
 }
 
-ServerConnectionImpl::ServerConnectionImpl (const std::string &feature_keys) :
-  ServerConnection (feature_keys), remote_origin_ (NULL), sweep_remotes_ (NULL)
+ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
+  ServerConnection (protocol), remote_origin_ (NULL), sweep_remotes_ (NULL)
 {
-  const uint realid = ObjectBroker::register_connection (*this, 0xaaaa);
+  const uint realid = ObjectBroker::register_connection (*this);
   if (!realid)
     fatal_error ("Aida: failed to register ServerConnection");
   assign_id (realid);
@@ -1881,8 +1898,8 @@ ServerConnectionImpl::emit_result_handler_pop (size_t id)
 }
 
 // == ServerConnection ==
-ServerConnection::ServerConnection (const std::string &feature_keys) :
-  BaseConnection (feature_keys)
+ServerConnection::ServerConnection (const std::string &protocol) :
+  BaseConnection (protocol)
 {}
 
 ServerConnection::~ServerConnection()
@@ -1964,18 +1981,21 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 static Atomic<BaseConnection*> orb_connections[MAX_CONNECTIONS] = { NULL, }; // initialization needed to call consexpr ctor
 
 uint
-ObjectBroker::register_connection (BaseConnection &connection, uint suggested_id)
+ObjectBroker::register_connection (BaseConnection &connection)
 {
-  for (size_t i = 0; i < MAX_CONNECTIONS; i++)
+  const uint first_id = 0xcc11;
+  for (size_t i = 0; i < MAX_CONNECTIONS * 2; i++)
     {
-      if (suggested_id + i == 0)
-        suggested_id++;
-      const uint64 idx = (suggested_id + i) % MAX_CONNECTIONS;
-      if (orb_connections[idx] == NULL &&
-          orb_connections[idx].cas (NULL, &connection))
-        return suggested_id + i;
+      uint next_id;
+      if (i < MAX_CONNECTIONS)  // "nice" id generation
+        next_id = first_id + i * 0x11;
+      else                      // sequential ids
+        next_id = first_id + i;
+      const uint64 idx = next_id % MAX_CONNECTIONS;
+      if (orb_connections[idx] == NULL && orb_connections[idx].cas (NULL, &connection))
+        return next_id;
     }
-  return 0;
+  fatal_error (__FILE__, __LINE__, "maximum number of runtime connections exceeded");
 }
 
 void
@@ -2004,48 +2024,56 @@ ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
   return handler_index ? handler_id_parts.orbid_connection : 0; // FIXME
 }
 
-ServerConnection*
-ObjectBroker::new_server_connection (const std::string &feature_keys)
+static __thread const char *call_stack_connection_ctor_protocol = NULL;
+
+void
+ObjectBroker::setup_connection_ctor_protocol (const char *protocol)
 {
-  ServerConnectionImpl *simpl = new ServerConnectionImpl (feature_keys);
-  return simpl;
+  if (protocol)
+    AIDA_ASSERT (call_stack_connection_ctor_protocol == NULL);
+  else
+    AIDA_ASSERT (call_stack_connection_ctor_protocol != NULL);
+  call_stack_connection_ctor_protocol = protocol;
 }
 
-ClientConnection*
-ObjectBroker::new_client_connection (const std::string &feature_keys)
+void
+ObjectBroker::verify_connection_construction()
 {
-  ClientConnectionImpl *cimpl = new ClientConnectionImpl (feature_keys);
-  return cimpl;
+  const bool connection_ctor_consumed_protocol = call_stack_connection_ctor_protocol == NULL;
+  AIDA_ASSERT (connection_ctor_consumed_protocol);
+}
+
+void
+ObjectBroker::construct_server_connection (ServerConnection *&var)
+{
+  AIDA_ASSERT (var == NULL);
+  if (call_stack_connection_ctor_protocol == NULL)
+    fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::bind<>");
+  const std::string protocol = call_stack_connection_ctor_protocol;
+  call_stack_connection_ctor_protocol = NULL;
+  AIDA_ASSERT (ObjectBroker::connection_id_from_protocol (protocol) == 0);
+  var = new ServerConnectionImpl (protocol);
+}
+
+void
+ObjectBroker::construct_client_connection (ClientConnection *&var)
+{
+  AIDA_ASSERT (var == NULL);
+  if (call_stack_connection_ctor_protocol == NULL)
+    fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::connect<>");
+  const std::string protocol = call_stack_connection_ctor_protocol;
+  call_stack_connection_ctor_protocol = NULL;
+  var = new ClientConnectionImpl (protocol);
 }
 
 uint
-ObjectBroker::connection_id_from_keys (const vector<std::string> &feature_key_list)
-{ // feature_key_list is a list of key=regex_pattern pairs
+ObjectBroker::connection_id_from_protocol (const std::string &protocol)
+{
   for (size_t idx = 0; idx < MAX_CONNECTIONS; idx++)
     {
       BaseConnection *bcon = orb_connections[idx];
-      if (!bcon)
-        continue;
-      const String &feature_keys = bcon->feature_keys_;
-      for (auto keyvalue : feature_key_list)
-        {
-          String key, value;
-          const size_t eq = keyvalue.find ('=');
-          if (eq != std::string::npos)
-            {
-              key = keyvalue.substr (0, eq);
-              value = keyvalue.substr (eq + 1);
-            }
-          else
-            {
-              key = keyvalue;
-              value = "1";
-            }
-          if (!Regex::match_simple (value, string_option_get (feature_keys, key), Regex::EXTENDED | Regex::CASELESS, Regex::MATCH_NORMAL))
-            goto mismatch;
-        }
-      return bcon->connection_id(); // all of feature_key_list matched
-    mismatch: ;
+      if (bcon && protocol == bcon->protocol() && dynamic_cast<ServerConnection*> (bcon))
+        return bcon->connection_id();
     }
   return 0;     // unmatched
 }
@@ -2070,6 +2098,23 @@ ObjectBroker::post_msg (FieldBuffer *fb)
       AIDA_MESSAGE ("dest=%p msgid=%016x h=%016x l=%016x", bcon, msgid, hashhigh, hashlow);
     }
   bcon->send_msg (fb);
+}
+
+void
+ObjectBroker::connection_handshake (const std::string                 &endpoint,
+                                    std::function<BaseConnection* ()>  aida_connection,
+                                    std::function<void (RemoteHandle)> origin_cast)
+{
+  setup_connection_ctor_protocol (endpoint.c_str());
+  BaseConnection *new_connection = aida_connection();
+  verify_connection_construction();
+  ClientConnection *client_connection = dynamic_cast<ClientConnection*> (new_connection);
+  AIDA_ASSERT (client_connection != NULL);
+  RemoteHandle remote = client_connection->remote_origin();
+  if (!remote)
+    return;             // preserve errno
+  origin_cast (remote);
+  errno = ENOMSG;       // indicates invalid type cast
 }
 
 } } // Rapicorn::Aida

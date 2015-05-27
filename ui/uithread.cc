@@ -142,8 +142,11 @@ private:
     assert_return (idata_ != NULL);
     // idata_core() already called
     ThisThread::affinity (string_to_int (string_vector_find_value (*idata_->args, "cpu-affinity=", "-1")));
-    // initialize ui_thread loop before components
-    ServerConnectionSourceP server_source = ServerConnectionSource::create (*main_loop_);
+    // initialize Application singleton
+    ApplicationImpl &application = ApplicationImpl::the();
+    // setup Aida server connection, so application.__aida_connection__() yields non-NULL
+    Aida::ObjectBroker::bind<ApplicationIface> ("inproc://Rapicorn-" RAPICORN_VERSION,
+                                                shared_ptr_cast<ApplicationIface> (&application));
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -156,8 +159,8 @@ private:
     assert_return (NULL != &ApplicationImpl::the());
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
-    // Setup root handle for remote calls
-    ApplicationImpl::the().__aida_connection__()->remote_origin (ApplicationImpl::the().shared_from_this());
+    // hook up server connection to main loop to process remote calls
+    ServerConnectionSourceP server_source = ServerConnectionSource::create (*main_loop_);
     // Complete initialization by signalling caller
     idata_->done = true;
     idata_->mutex.lock();
@@ -258,8 +261,9 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   assert (the_uithread->running());
   // install handler for UIThread test cases
   wrap_test_runner();
-  auto keys = string_split (RAPICORN_NAMESPACE_NAME ":CxxStub:AidaServerConnection:idl_file=\\bui/interfaces.idl", ":");
-  return Aida::RemoteHandle::__aida_reinterpret_down_cast__<ApplicationH> (ApplicationH::__aida_connection__()->remote_origin (keys));
+  // connect to remote UIThread and fetch main handle
+  ApplicationH app = Aida::ObjectBroker::connect<ApplicationHandle> ("inproc://Rapicorn-" RAPICORN_VERSION);
+  return app;
 }
 
 } // Rapicorn

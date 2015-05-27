@@ -1,6 +1,6 @@
 
 #ifndef AIDA_CHECK
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
+#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
 #endif
 
 namespace { // Anon
@@ -19,9 +19,6 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>:
 
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
-static Rapicorn::Init init_server_connection ([]() {
-  server_connection = ObjectBroker::new_server_connection ($AIDA_server_feature_keys$);
-});
 
 // EmitResultHandler
 static inline void erhandler_add (size_t id, const EmitResultHandler &function)
@@ -107,9 +104,11 @@ slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
 } } // Anon::__AIDA_Local__
 
 namespace Rapicorn { namespace Aida {
+#ifndef RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
+#define RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 // namespace Rapicorn::Aida needed for argument dependent lookups of the operators
-static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v);
-static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v);
+static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
+static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
 {
@@ -120,4 +119,5 @@ operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
 {
   v = fr.pop_any (*__AIDA_Local__::server_connection);
 }
+#endif // RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 } } // Rapicorn::Aida

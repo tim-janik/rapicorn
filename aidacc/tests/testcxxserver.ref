@@ -7,7 +7,7 @@
 
 
 #ifndef AIDA_CHECK
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (std::string ("AIDA-ERROR: ") + errmsg); } while (0)
+#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
 #endif
 
 namespace { // Anon
@@ -26,9 +26,6 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, Rapicorn::Aida::Imp
 
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
-static Rapicorn::Init init_server_connection ([]() {
-  server_connection = ObjectBroker::new_server_connection (":AidaServerConnection:CxxStub:idl_file=aidacc/tests/testpass.idl:");
-});
 
 // EmitResultHandler
 static inline void erhandler_add (size_t id, const EmitResultHandler &function)
@@ -114,9 +111,11 @@ slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
 } } // Anon::__AIDA_Local__
 
 namespace Rapicorn { namespace Aida {
+#ifndef RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
+#define RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 // namespace Rapicorn::Aida needed for argument dependent lookups of the operators
-static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v);
-static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v);
+static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
+static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void
 operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
 {
@@ -127,6 +126,7 @@ operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
 {
   v = fr.pop_any (*__AIDA_Local__::server_connection);
 }
+#endif // RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 } } // Rapicorn::Aida
 
 
@@ -784,7 +784,7 @@ operator->* (I_FirstInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_FirstInterfaceIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_FirstInterfaceIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -840,7 +840,7 @@ operator->* (I_UIWidgetAreaIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_UIWidgetAreaIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_UIWidgetAreaIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -895,7 +895,7 @@ operator->* (I_ParentIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_ParentIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_ParentIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1098,7 +1098,7 @@ operator->* (I_QuickIfaceIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_QuickIfaceIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_QuickIfaceIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1151,7 +1151,7 @@ operator->* (I_MethodTestInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_MethodTestInterfaceIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_MethodTestInterfaceIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1204,7 +1204,7 @@ operator->* (I_SignalTestInterfaceIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_SignalTestInterfaceIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_SignalTestInterfaceIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1355,7 +1355,7 @@ operator->* (I_PropertyTesterIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_PropertyTesterIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_PropertyTesterIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1422,7 +1422,7 @@ operator->* (I_ButtonAreaIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_ButtonAreaIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_ButtonAreaIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1479,7 +1479,7 @@ operator->* (I_PureMethodsIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_PureMethodsIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_PureMethodsIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1535,7 +1535,7 @@ operator->* (I_NameTestsIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_NameTestsIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_NameTestsIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1591,7 +1591,7 @@ operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_CompressorIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_CompressorIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1646,7 +1646,7 @@ operator->* (I_SoundModuleIface *obj, Rapicorn::Aida::_HandleType)
 Rapicorn::Aida::BaseConnection*
 I_SoundModuleIface::__aida_connection__()
 {
-  return __AIDA_Local__::server_connection;
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 void
 I_SoundModuleIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
@@ -1670,12 +1670,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__FirstInterface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_FirstInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -1689,7 +1689,7 @@ __aida_call__FirstInterface__void_func (Rapicorn::Aida::FieldReader &fbr)
   I_FirstInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   self->void_func ();
   return NULL;
 }
@@ -1707,12 +1707,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__UIWidgetArea____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -1726,7 +1726,7 @@ __aida_get__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   bool rval = self->dummy ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL);
   rb <<= rval;
@@ -1739,7 +1739,7 @@ __aida_set__UIWidgetArea__dummy (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   bool  arg_dummy;
   fbr >>= arg_dummy;
   self->dummy (arg_dummy);
@@ -1752,7 +1752,7 @@ __aida_get__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string rval = self->on_click ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL);
   rb <<= rval;
@@ -1765,7 +1765,7 @@ __aida_set__UIWidgetArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string  arg_on_click;
   fbr >>= arg_on_click;
   self->on_click (arg_on_click);
@@ -1778,7 +1778,7 @@ __aida_call__UIWidgetArea__simple_method (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double rval = self->simple_method ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
   rb <<= rval;
@@ -1791,7 +1791,7 @@ __aida_call__UIWidgetArea__single_arg (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   int  arg_n;
   fbr >>= arg_n;
   double rval = self->single_arg (arg_n);
@@ -1806,7 +1806,7 @@ __aida_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   int  arg_n;
   fbr >>= arg_n;
   double rval = self->single_arg2 (arg_n);
@@ -1821,7 +1821,7 @@ __aida_call__UIWidgetArea__two_args (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   int  arg_n;
   fbr >>= arg_n;
   double  arg_r;
@@ -1838,7 +1838,7 @@ __aida_call__UIWidgetArea__two_args2 (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   int  arg_n;
   fbr >>= arg_n;
   double  arg_r;
@@ -1855,7 +1855,7 @@ __aida_call__UIWidgetArea__multi_args (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   bool  arg_b;
   fbr >>= arg_b;
   Rapicorn::Aida::int64  arg_n;
@@ -1880,7 +1880,7 @@ __aida_call__UIWidgetArea__self_method (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   I_UIWidgetAreaIface *arg_ba1;
   fbr >>= arg_ba1;
   I_UIWidgetAreaIface *arg_ba2;
@@ -1897,7 +1897,7 @@ __aida_call__UIWidgetArea__void_method (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   self->void_method ();
   return NULL;
 }
@@ -1908,7 +1908,7 @@ __aida_call__UIWidgetArea__on_click2out (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string rval = self->on_click2out ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
   rb <<= rval;
@@ -1921,7 +1921,7 @@ __aida_call__UIWidgetArea__on_click2in (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string  arg_command;
   fbr >>= arg_command;
   self->on_click2in (arg_command);
@@ -1955,7 +1955,7 @@ __aida_connect__UIWidgetArea__void_signal (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2013,7 +2013,7 @@ __aida_connect__UIWidgetArea__sample_signal (Rapicorn::Aida::FieldReader &fbr)
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2033,12 +2033,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__Parent____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_ParentIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2050,12 +2050,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__Child____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_ChildIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2067,12 +2067,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__Descendant____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_DescendantIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2084,12 +2084,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__GrandChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_GrandChildIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2101,12 +2101,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__QuickIface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_QuickIfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2120,7 +2120,7 @@ __aida_call__QuickIface__simple_function (Rapicorn::Aida::FieldReader &fbr)
   I_QuickIfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   int  arg_i;
   fbr >>= arg_i;
   self->simple_function (arg_i);
@@ -2131,12 +2131,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__MethodTestInterface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2150,7 +2150,7 @@ __aida_call__MethodTestInterface__method_with_void (Rapicorn::Aida::FieldReader 
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   self->method_with_void ();
   return NULL;
 }
@@ -2161,7 +2161,7 @@ __aida_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::FieldReader
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   bool  arg_input;
   fbr >>= arg_input;
   bool  arg_optval;
@@ -2178,7 +2178,7 @@ __aida_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::FieldReade
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   int  arg_input;
   fbr >>= arg_input;
   int  arg_optval;
@@ -2195,7 +2195,7 @@ __aida_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::FieldReade
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   Rapicorn::Aida::int64  arg_input;
   fbr >>= arg_input;
   Rapicorn::Aida::int64  arg_optval;
@@ -2212,7 +2212,7 @@ __aida_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::FieldReade
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double  arg_input;
   fbr >>= arg_input;
   double  arg_optval;
@@ -2229,7 +2229,7 @@ __aida_call__MethodTestInterface__method_with_string (Rapicorn::Aida::FieldReade
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string  arg_input;
   fbr >>= arg_input;
   std::string  arg_optval;
@@ -2246,7 +2246,7 @@ __aida_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::FieldReader 
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickEnum  arg_input;
   fbr >>= arg_input;
   QuickEnum  arg_optval;
@@ -2263,7 +2263,7 @@ __aida_call__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReade
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickRecord  arg_input;
   fbr >>= arg_input;
   QuickRecord  arg_optval;
@@ -2280,7 +2280,7 @@ __aida_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldRea
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickSequence  arg_input;
   fbr >>= arg_input;
   QuickSequence  arg_optval;
@@ -2297,7 +2297,7 @@ __aida_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::FieldRe
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   I_GrandChildIface *arg_input;
   fbr >>= arg_input;
   I_GrandChildIface *arg_optval;
@@ -2314,7 +2314,7 @@ __aida_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::FieldReader 
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   Rapicorn::Aida::Any  arg_input;
   fbr >>= arg_input;
   Rapicorn::Aida::Any  arg_optval;
@@ -2331,7 +2331,7 @@ __aida_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::FieldR
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   I_QuickIfaceIface *arg_input;
   fbr >>= arg_input;
   I_QuickIfaceIface *arg_iface0;
@@ -2346,12 +2346,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__SignalTestInterface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -2386,7 +2386,7 @@ __aida_connect__SignalTestInterface__void_result (Rapicorn::Aida::FieldReader &f
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2440,7 +2440,7 @@ __aida_connect__SignalTestInterface__bool_result (Rapicorn::Aida::FieldReader &f
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2494,7 +2494,7 @@ __aida_connect__SignalTestInterface__int32_result (Rapicorn::Aida::FieldReader &
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2548,7 +2548,7 @@ __aida_connect__SignalTestInterface__int64_result (Rapicorn::Aida::FieldReader &
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2602,7 +2602,7 @@ __aida_connect__SignalTestInterface__float64_result (Rapicorn::Aida::FieldReader
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2656,7 +2656,7 @@ __aida_connect__SignalTestInterface__string_result (Rapicorn::Aida::FieldReader 
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2710,7 +2710,7 @@ __aida_connect__SignalTestInterface__enum_result (Rapicorn::Aida::FieldReader &f
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2764,7 +2764,7 @@ __aida_connect__SignalTestInterface__record_result (Rapicorn::Aida::FieldReader 
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2818,7 +2818,7 @@ __aida_connect__SignalTestInterface__sequence_result (Rapicorn::Aida::FieldReade
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2872,7 +2872,7 @@ __aida_connect__SignalTestInterface__interface_result (Rapicorn::Aida::FieldRead
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2926,7 +2926,7 @@ __aida_connect__SignalTestInterface__any_result (Rapicorn::Aida::FieldReader &fb
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -2980,7 +2980,7 @@ __aida_connect__SignalTestInterface__self_result (Rapicorn::Aida::FieldReader &f
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3023,7 +3023,7 @@ __aida_connect__SignalTestInterface__void_arg (Rapicorn::Aida::FieldReader &fbr)
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3068,7 +3068,7 @@ __aida_connect__SignalTestInterface__bool_arg (Rapicorn::Aida::FieldReader &fbr)
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3113,7 +3113,7 @@ __aida_connect__SignalTestInterface__int32_arg (Rapicorn::Aida::FieldReader &fbr
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3158,7 +3158,7 @@ __aida_connect__SignalTestInterface__int64_arg (Rapicorn::Aida::FieldReader &fbr
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3203,7 +3203,7 @@ __aida_connect__SignalTestInterface__float64_arg (Rapicorn::Aida::FieldReader &f
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3248,7 +3248,7 @@ __aida_connect__SignalTestInterface__string_arg (Rapicorn::Aida::FieldReader &fb
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3293,7 +3293,7 @@ __aida_connect__SignalTestInterface__enum_arg (Rapicorn::Aida::FieldReader &fbr)
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3338,7 +3338,7 @@ __aida_connect__SignalTestInterface__record_arg (Rapicorn::Aida::FieldReader &fb
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3383,7 +3383,7 @@ __aida_connect__SignalTestInterface__sequence_arg (Rapicorn::Aida::FieldReader &
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3428,7 +3428,7 @@ __aida_connect__SignalTestInterface__interface_arg (Rapicorn::Aida::FieldReader 
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3473,7 +3473,7 @@ __aida_connect__SignalTestInterface__any_arg (Rapicorn::Aida::FieldReader &fbr)
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3518,7 +3518,7 @@ __aida_connect__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3538,12 +3538,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__ChildInheritingSignals____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_ChildInheritingSignalsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -3590,7 +3590,7 @@ __aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReade
   I_ChildInheritingSignalsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3610,12 +3610,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__AnotherChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_AnotherChildIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -3627,12 +3627,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__PropertyTester____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -3646,7 +3646,7 @@ __aida_get__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   bool rval = self->bool_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL);
   rb <<= rval;
@@ -3659,7 +3659,7 @@ __aida_set__PropertyTester__bool_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   bool  arg_bool_prop;
   fbr >>= arg_bool_prop;
   self->bool_prop (arg_bool_prop);
@@ -3672,7 +3672,7 @@ __aida_get__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   int rval = self->int32_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL);
   rb <<= rval;
@@ -3685,7 +3685,7 @@ __aida_set__PropertyTester__int32_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   int  arg_int32_prop;
   fbr >>= arg_int32_prop;
   self->int32_prop (arg_int32_prop);
@@ -3698,7 +3698,7 @@ __aida_get__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   Rapicorn::Aida::int64 rval = self->int64_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
   rb <<= rval;
@@ -3711,7 +3711,7 @@ __aida_set__PropertyTester__int64_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   Rapicorn::Aida::int64  arg_int64_prop;
   fbr >>= arg_int64_prop;
   self->int64_prop (arg_int64_prop);
@@ -3724,7 +3724,7 @@ __aida_get__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double rval = self->float64_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL);
   rb <<= rval;
@@ -3737,7 +3737,7 @@ __aida_set__PropertyTester__float64_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double  arg_float64_prop;
   fbr >>= arg_float64_prop;
   self->float64_prop (arg_float64_prop);
@@ -3750,7 +3750,7 @@ __aida_get__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string rval = self->string_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL);
   rb <<= rval;
@@ -3763,7 +3763,7 @@ __aida_set__PropertyTester__string_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string  arg_string_prop;
   fbr >>= arg_string_prop;
   self->string_prop (arg_string_prop);
@@ -3776,7 +3776,7 @@ __aida_get__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickEnum rval = self->enum_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL);
   rb <<= rval;
@@ -3789,7 +3789,7 @@ __aida_set__PropertyTester__enum_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickEnum  arg_enum_prop;
   fbr >>= arg_enum_prop;
   self->enum_prop (arg_enum_prop);
@@ -3802,7 +3802,7 @@ __aida_get__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickRecord rval = self->record_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
   rb <<= rval;
@@ -3815,7 +3815,7 @@ __aida_set__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickRecord  arg_record_prop;
   fbr >>= arg_record_prop;
   self->record_prop (arg_record_prop);
@@ -3828,7 +3828,7 @@ __aida_get__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickSequence rval = self->sequence_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
   rb <<= rval;
@@ -3841,7 +3841,7 @@ __aida_set__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   QuickSequence  arg_sequence_prop;
   fbr >>= arg_sequence_prop;
   self->sequence_prop (arg_sequence_prop);
@@ -3854,7 +3854,7 @@ __aida_get__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   I_GrandChildIfaceP rval = self->interface_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL);
   rb <<= rval;
@@ -3867,7 +3867,7 @@ __aida_set__PropertyTester__interface_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   I_GrandChildIface *arg_interface_prop;
   fbr >>= arg_interface_prop;
   self->interface_prop (&*arg_interface_prop);
@@ -3880,7 +3880,7 @@ __aida_get__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   I_PropertyTesterIfaceP rval = self->self_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL);
   rb <<= rval;
@@ -3893,7 +3893,7 @@ __aida_set__PropertyTester__self_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   I_PropertyTesterIface *arg_self_prop;
   fbr >>= arg_self_prop;
   self->self_prop (&*arg_self_prop);
@@ -3906,7 +3906,7 @@ __aida_get__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   Rapicorn::Aida::Any rval = self->any_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL);
   rb <<= rval;
@@ -3919,7 +3919,7 @@ __aida_set__PropertyTester__any_prop (Rapicorn::Aida::FieldReader &fbr)
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   Rapicorn::Aida::Any  arg_any_prop;
   fbr >>= arg_any_prop;
   self->any_prop (arg_any_prop);
@@ -3933,12 +3933,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__ButtonArea____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -3952,7 +3952,7 @@ __aida_get__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string rval = self->on_click ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL);
   rb <<= rval;
@@ -3965,7 +3965,7 @@ __aida_set__ButtonArea__on_click (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string  arg_on_click;
   fbr >>= arg_on_click;
   self->on_click (arg_on_click);
@@ -3978,7 +3978,7 @@ __aida_get__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string rval = self->on_click2 ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x1b448d91990181daULL, 0x9751c08ae956c729ULL);
   rb <<= rval;
@@ -3991,7 +3991,7 @@ __aida_set__ButtonArea__on_click2 (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string  arg_on_click2;
   fbr >>= arg_on_click2;
   self->on_click2 (arg_on_click2);
@@ -4004,7 +4004,7 @@ __aida_get__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string rval = self->on_click3 ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL);
   rb <<= rval;
@@ -4017,7 +4017,7 @@ __aida_set__ButtonArea__on_click3 (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   std::string  arg_on_click3;
   fbr >>= arg_on_click3;
   self->on_click3 (arg_on_click3);
@@ -4030,7 +4030,7 @@ __aida_get__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   ClickType rval = self->click_type ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL);
   rb <<= rval;
@@ -4043,7 +4043,7 @@ __aida_set__ButtonArea__click_type (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   ClickType  arg_click_type;
   fbr >>= arg_click_type;
   self->click_type (arg_click_type);
@@ -4088,7 +4088,7 @@ __aida_connect__ButtonArea__check_activate (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4131,7 +4131,7 @@ __aida_connect__ButtonArea__activate (Rapicorn::Aida::FieldReader &fbr)
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4151,12 +4151,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__PureMethods____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_PureMethodsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -4170,7 +4170,7 @@ __aida_call__PureMethods__pure_method (Rapicorn::Aida::FieldReader &fbr)
   I_PureMethodsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double  arg_f;
   fbr >>= arg_f;
   int rval = self->pure_method (arg_f);
@@ -4186,12 +4186,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__NameTests____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_NameTestsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -4205,7 +4205,7 @@ __aida_call__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &
   I_NameTestsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   InterfaceTests::QuickRecord  arg_qr;
   fbr >>= arg_qr;
   RapicornAidaTest::ClickType  arg_qe;
@@ -4223,12 +4223,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__Compressor____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
@@ -4242,7 +4242,7 @@ __aida_get__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double rval = self->threshold ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL);
   rb <<= rval;
@@ -4255,7 +4255,7 @@ __aida_set__Compressor__threshold (Rapicorn::Aida::FieldReader &fbr)
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double  arg_threshold;
   fbr >>= arg_threshold;
   self->threshold (arg_threshold);
@@ -4268,7 +4268,7 @@ __aida_get__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double rval = self->ratio ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL);
   rb <<= rval;
@@ -4281,7 +4281,7 @@ __aida_set__Compressor__ratio (Rapicorn::Aida::FieldReader &fbr)
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
+  AIDA_CHECK (self, "invalid 'this' pointer");
   double  arg_ratio;
   fbr >>= arg_ratio;
   self->ratio (arg_ratio);
@@ -4292,12 +4292,12 @@ static Rapicorn::Aida::FieldBuffer*
 __aida_call__SoundModule____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  Rapicorn::Aida::TypeHashList thl;
   I_SoundModuleIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "self must be non-NULL");
-  Rapicorn::Aida::TypeHashList thl;
-  self->__aida_typelist__ (thl);
+  if (self) // guard against invalid casts
+    self->__aida_typelist__ (thl);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL, 1 + 2 * thl.size());
   rb <<= Rapicorn::Aida::int64 (thl.size());
   for (size_t i = 0; i < thl.size(); i++)
