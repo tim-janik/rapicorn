@@ -57,7 +57,7 @@ class ServerConnection;
 union FieldUnion;
 class FieldBuffer;
 class FieldReader;
-class PropertyList;
+struct PropertyList;
 class Property;
 typedef std::shared_ptr<OrbObject>    OrbObjectP;
 typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
@@ -343,8 +343,8 @@ union IdentifierParts {
 # elif __BYTE_ORDER == __BIG_ENDIAN
     uint        message_id : 8, free8 : 8, destination_connection : 16, free16 : 16, sender_connection : 16;
 # endif
-    static_assert (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN, "__BYTE_ORDER unknown");
   };
+  static_assert (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN, "__BYTE_ORDER unknown");
   constexpr IdentifierParts (uint64 vu64) : vuint64 (vu64) {}
   constexpr IdentifierParts (MessageId id, uint destination, uint sender) :
 # if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -387,10 +387,11 @@ class RemoteHandle {
 protected:
   explicit          RemoteHandle             (OrbObjectP);
   explicit          RemoteHandle             () : orbop_ (__aida_null_orb_object__()) {}
-  const OrbObjectP& __aida_orb_object__      () const;
+  const OrbObjectP& __aida_orb_object__      () const   { return orbop_; }
   void              __aida_upgrade_from__    (const OrbObjectP&);
   void              __aida_upgrade_from__    (const RemoteHandle &rhandle) { __aida_upgrade_from__ (rhandle.__aida_orb_object__()); }
 public:
+  /*copy*/                RemoteHandle         (const RemoteHandle &y) : orbop_ (y.orbop_) {}
   virtual                ~RemoteHandle         ();
   uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
   static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }
@@ -423,8 +424,8 @@ public:
 };
 
 // == Conversion Type Tags ==
-constexpr struct _ServantType {} _servant; ///< Tag to retrieve servant from remote handle.
-constexpr struct _HandleType  {} _handle;  ///< Tag to retrieve remote handle from servant.
+struct _ServantType {} constexpr _servant = _ServantType(); ///< Tag to retrieve servant from remote handle.
+struct _HandleType  {} constexpr _handle  = _HandleType();  ///< Tag to retrieve remote handle from servant.
 
 // == ObjectBroker ==
 class ObjectBroker {
@@ -639,7 +640,7 @@ Any::Any (const V &value) :
 }
 
 template<> inline
-Any::Any<Any::Field> (const Any::Field &clone) :
+Any::Any (const Any::Field &clone) :
   type_kind_ (UNTYPED), u_ {0}
 {
   this->operator= (clone);

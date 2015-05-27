@@ -117,9 +117,10 @@ AM_PROG_LIBTOOL
 AC_LIBTOOL_DLOPEN
 
 # AM_LDFLAGS, optimize linker to use faster ELF symbol hashing if we have compiler and linker support
-AC_MSG_CHECKING([whether CC and LD support gnu.hash sections])
-if ${CC-cc} -dumpspecs | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
-   ${LD-ld} --help     | grep -q -- '--hash-style=.*\(both\|gnu\)' ; then
+AC_MSG_CHECKING([whether CC, CXX and LD support gnu.hash sections])
+if ${CC}  -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
+   ${CXX} -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
+   ${LD}  --help     2>&1 | grep -q -- '--hash-style=.*\(both\|gnu\)' ; then
   MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--hash-style=both -Wl,--as-needed -Wl,-O1])
   AC_MSG_RESULT(yes)
 else
@@ -130,10 +131,10 @@ MC_EVAR_ADD(AM_LDFLAGS, -lrt)
 AC_SUBST(AM_LDFLAGS)
 
 # Pick C++ dialect, needed in CXXFLAGS for compile tests
-MC_CXX_TRY_OPTION(CXXFLAGS,  -std=gnu++0x)
+MC_CXX_TRY_OPTION(CXXFLAGS,  -std=gnu++11)
 
 # AM_CFLAGS & AM_CXXFLAGS
-MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++0x)
+MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++11)
 BOTHCCXXFLAGS=
 if test "x$enable_debug" = "xyes"; then
   MC_EVAR_ADD(BOTHCCXXFLAGS,      -DG_ENABLE_DEBUG)
@@ -256,13 +257,19 @@ AC_DEFUN([RAPICORN_CXX_REQUIREMENTS],
     cxx_version=`$CXX --version 2>/dev/null | head -n1`
     AC_MSG_RESULT([$cxx_version])
 
-    # check for minimum GCC version
-    DEPVERSION_GNUC='4.7.3'
-    DEPVERSION_FORMULA=[`echo " $DEPVERSION_GNUC" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
-    AC_MSG_CHECKING([for __GNUC__ >= $DEPVERSION_GNUC])
+    # check for minimum compiler version
+    DEPVERSION_GNUC='4.7.4'
+    DEPVERSION_CLANG='3.4.2'
+    DEPVERSION_NR_GNUC=[`echo " $DEPVERSION_GNUC" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
+    DEPVERSION_NR_CLANG=[`echo " $DEPVERSION_CLANG" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
+    AC_MSG_CHECKING([for g++ >= $DEPVERSION_GNUC or clang++ >= $DEPVERSION_CLANG])
     AC_TRY_COMPILE([
-	    #if defined __GNUC__
-	    #  if (__GNUC__ << 20) + (__GNUC_MINOR__ << 10) + __GNUC_PATCHLEVEL__ < $DEPVERSION_FORMULA
+	    #if defined __clang__
+	    #  if (__clang_major__ << 20) + (__clang_minor__ << 10) + __clang_patchlevel__ < $DEPVERSION_NR_CLANG
+	    #    error Clang version too old
+	    #  endif
+	    #elif defined __GNUC__
+	    #  if (__GNUC__ << 20) + (__GNUC_MINOR__ << 10) + __GNUC_PATCHLEVEL__ < $DEPVERSION_NR_GNUC
 	    #    error GCC version too old
 	    #  endif
 	    #endif

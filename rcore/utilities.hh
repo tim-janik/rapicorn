@@ -157,14 +157,6 @@ uint8*  zintern_decompress      (unsigned int          decompressed_size,
                                  unsigned int          cdata_size);
 void    zintern_free            (uint8                *dc_data);
 
-/* --- template errors --- */
-namespace TEMPLATE_ERROR {
-// to error out, call invalid_type<YourInvalidType>();
-template<typename Type> void invalid_type () { bool force_compiler_error = void (0); }
-// to error out, derive from InvalidType<YourInvalidType>
-template<typename Type> class InvalidType;
-} // TEMPLATE_ERROR
-
 /* --- Binary Lookups --- */
 template<typename RandIter, class Cmp, typename Arg, int case_lookup_or_sibling_or_insertion>
 static inline std::pair<RandIter,bool>

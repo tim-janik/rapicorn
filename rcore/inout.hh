@@ -18,7 +18,7 @@ template<class... Args> void printout (const char *format, const Args &...args) 
 template<class... Args> void printerr (const char *format, const Args &...args) RAPICORN_PRINTF (1, 0);
 
 // === User Messages ==
-class UserSource;
+struct UserSource;
 template<class... Args> void user_notice  (const UserSource &source, const char *format, const Args &...args) RAPICORN_PRINTF (2, 0);
 template<class... Args> void user_warning (const UserSource &source, const char *format, const Args &...args) RAPICORN_PRINTF (2, 0);
 

@@ -13,10 +13,10 @@ template<typename,typename> class ProtoSignal;  // left undefined
 template<typename> class AsyncSignal;           // left undefined
 
 /// CollectorInvocation invokes handlers differently depending on return type.
-template<typename,typename> class CollectorInvocation;
+template<typename,typename> struct CollectorInvocation;
 
 /// PromiseInvocation invokes handlers differently depending on the promise value type.
-template<typename,typename> class PromiseInvocation;
+template<typename,typename> struct PromiseInvocation;
 
 /// CollectorLast returns the result of the last handler from a signal emission.
 template<typename Result>
