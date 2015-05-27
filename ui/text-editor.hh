@@ -87,6 +87,8 @@ class TextControllerImpl : public virtual SingleContainerImpl, public virtual Ev
   bool       allow_edits_;
   TextBlockP cached_tblock_;
   size_t     tblock_sig_;
+  String     next_markup_;
+  uint       next_handler_;
   String     clipboard_;
   uint64     clipboard_nonce_, selection_nonce_, paste_nonce_;
   enum CursorMovement { NEXT_CHAR, PREV_CHAR, WARP_HOME, WARP_END, };
@@ -102,7 +104,7 @@ class TextControllerImpl : public virtual SingleContainerImpl, public virtual Ev
 protected:
   explicit              TextControllerImpl      ();
   virtual              ~TextControllerImpl      () override;
-  virtual void          constructed             () override;
+  virtual void          construct               () override;
   virtual bool          can_focus               () const override;
   virtual void          reset                   (ResetMode mode = RESET_ALL) override;
   virtual bool          handle_event            (const Event &event) override;

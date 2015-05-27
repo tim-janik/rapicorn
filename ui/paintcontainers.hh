@@ -3,6 +3,7 @@
 #define __RAPICORN_PAINT_CONTAINERS_HH__
 
 #include <ui/container.hh>
+#include <ui/painter.hh>
 
 namespace Rapicorn {
 
@@ -74,32 +75,23 @@ public: // FrameIface
   virtual void      overlap_child   (bool) override;
 };
 
-class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrameIface {
+class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrameIface, public virtual FocusIndicator {
+  ContainerImpl    *focus_container_;
+  bool              container_has_focus_;
+  FrameType         focus_frame_;
 protected:
-  virtual void      set_focus_child   (WidgetImpl *widget) override;
-  virtual void      hierarchy_changed (WidgetImpl *old_toplevel) override;
+  virtual void set_focus_child            (WidgetImpl *widget) override;
+  virtual void hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void focusable_container_change (ContainerImpl &focus_container) override;
 public:
   explicit          FocusFrameImpl    ();
   virtual          ~FocusFrameImpl    () override;
-  /** FocusFrame registers itself with ancestors that implement the FocusFrameImpl::Client interface.
-   * This is useful for ancestors to be notified about a FocusFrameImpl descendant to implement
-   * .can_focus() efficiently and for a FocusFrame to reflect its ancestor's .has_focus() state.
-   */
-  struct Client : public virtual WidgetImpl {
-    virtual bool    register_focus_frame    (FocusFrameImpl &frame) = 0;
-    virtual void    unregister_focus_frame  (FocusFrameImpl &frame) = 0;
-  };
   virtual FrameType current_frame () override;
   // FocusFrameIface
   virtual FrameType focus_frame   () const override;
   virtual void      focus_frame   (FrameType) override;
   virtual bool      tight_focus   () const override;
   virtual void      tight_focus   (bool) override;
-private:
-  FrameType         focus_frame_;
-  Client           *client_;
-  size_t            conid_client_;
-  void              client_changed (const String &name);
 };
 
 class LayerPainterImpl : public virtual MultiContainerImpl, public virtual LayerPainterIface {
@@ -110,6 +102,40 @@ protected:
   virtual void   size_request            (Requisition &requisition);
   virtual void   size_allocate           (Allocation area, bool changed);
   Allocation     local_child_allocation  (WidgetImpl &child, double width, double height);
+};
+
+class ElementPainterImpl : public virtual SingleContainerImpl, public virtual ElementPainterIface {
+  String         svg_source_, svg_fragment_;
+  ImagePainter   size_painter_, state_painter_;
+  String         cached_painter_;
+  String         current_element     ();
+  String         state_element       (StateType state);
+protected:
+  virtual StateType element_state    () const;
+  virtual void      do_changed       (const String &name) override;
+  virtual void      size_request     (Requisition &requisition) override;
+  virtual void      size_allocate    (Allocation area, bool changed) override;
+  virtual void      render           (RenderContext &rcontext, const Rect &rect) override;
+public:
+  explicit       ElementPainterImpl   ();
+  virtual       ~ElementPainterImpl   () override;
+  virtual String svg_source           () const override                 { return svg_source_; }
+  virtual void   svg_source           (const String &source) override;
+  virtual String svg_element          () const override                 { return svg_fragment_; }
+  virtual void   svg_element          (const String &element) override;
+};
+
+class FocusPainterImpl : public virtual ElementPainterImpl, public virtual FocusPainterIface, public virtual FocusIndicator {
+  ContainerImpl *focus_container_;
+  bool           container_has_focus_, tight_;
+protected:
+  virtual StateType element_state              () const override;
+  virtual void      set_focus_child            (WidgetImpl *widget) override;
+  virtual void      hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void      focusable_container_change (ContainerImpl &focus_container) override;
+public:
+  explicit       FocusPainterImpl ();
+  virtual       ~FocusPainterImpl () override;
 };
 
 } // Rapicorn

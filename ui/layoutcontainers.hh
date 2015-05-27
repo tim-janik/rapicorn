@@ -29,19 +29,6 @@ public:
   virtual void  padding         (int c) override;
 };
 
-class FillAreaContainerImpl : public virtual SingleContainerImpl, public virtual FillAreaContainerIface {
-  String       source_;
-  ImagePainter image_painter_;
-protected:
-  virtual void    size_request          (Requisition &requisition) override;
-  virtual void    size_allocate         (Allocation area, bool changed) override;
-public:
-  explicit        FillAreaContainerImpl ();
-  virtual        ~FillAreaContainerImpl () override;
-  virtual void    source                (const String &uri) override;
-  virtual String  source                () const override;
-};
-
 class HBoxImpl : public virtual TableLayoutImpl, public virtual HBoxIface {
 protected:
   virtual void  add_child       (WidgetImpl &widget) override;

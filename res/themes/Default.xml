@@ -12,8 +12,8 @@
   <RapicornDefaultButton        id="DefaultButton"/>
   <RapicornDotGrid              id="DotGrid"/>
   <RapicornDrawable             id="Drawable"/>
-  <RapicornFillAreaContainer    id="FillAreaContainer"/>
   <RapicornFocusFrame           id="FocusFrame"/>
+  <RapicornFocusPainter         id="FocusPainter" svg-source="@eval theme_svg_file"/>
   <RapicornFrame                id="Frame"/>
   <RapicornHBox                 id="HBox"/>
   <RapicornHSlider              id="HSlider"/>
@@ -22,7 +22,7 @@
   <RapicornLayerPainter         id="LayerPainter"/>
   <RapicornScrollArea           id="ScrollArea"/>
   <RapicornSliderArea           id="SliderArea"/>
-  <RapicornStatePainter         id="StatePainter" svg-source="@eval theme_svg_file"/>
+  <RapicornElementPainter       id="ElementPainter" svg-source="@eval theme_svg_file"/>
   <RapicornTable                id="Table"/>
   <RapicornTextEditor           id="TextEditor"/>
   <RapicornUnfocusedButton      id="UnfocusedButton"/>

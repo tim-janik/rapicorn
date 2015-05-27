@@ -72,13 +72,11 @@
 
   <!-- text editor test -->
   <Frame id="text-editor-test" frame-type="in">
-    <FocusFrame frame-type="none">
-      <TextEditor>
-	<TextEditor.markup-text>
-	  editorg<pre>  </pre>qtext Umlauts: ÄÖÜäöüß
-	</TextEditor.markup-text>
-      </TextEditor>
-    </FocusFrame>
+    <TextEditor>
+      <TextEditor.markup-text>
+	editorg<pre>  </pre>qtext Umlauts: ÄÖÜäöüß
+      </TextEditor.markup-text>
+    </TextEditor>
   </Frame>
 
   <!-- wrap text test -->

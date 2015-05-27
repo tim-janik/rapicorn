@@ -30,7 +30,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
 protected:
   void                  set_focus               (WidgetImpl *widget);
   virtual void          set_parent              (ContainerImpl *parent);
-  virtual void          constructed             () override;
+  virtual void          construct               () override;
   virtual void          dispose                 () override;
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.

@@ -294,6 +294,7 @@ interface Widget : Object {
   String          name         = String (_("Name"), _("Identification name of the widget"), "rw");
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
+  bool            allow_focus  = Bool (_("Allow Focus"), _("Whether this widget may receive input focus"), "rw");
   ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
   /// @name User Sizes and Size Groups
   String  hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
@@ -390,11 +391,6 @@ interface Alignment : Container {
   int32 bottom_padding = Range (_("Bottom Padding"), _("Amount of padding to add at the child's bottom side"), "rw", 0, 65535, 3);
   int32 top_padding    = Range (_("Top Padding"),    _("Amount of padding to add at the child's top side"),    "rw", 0, 65535, 3);
   int32 padding        = Range (_("Padding"),        _("Amount of padding to add at the child's sides"),       "wo", 0, 65535, 3);
-};
-
-/// The FillAreaContainer is used to position a child within an image fill area.
-interface FillAreaContainer : Container {
-  String        source = String (_("Image Source"), _("Resource locator for an image (fragment) with fill area specification."), "rw");
 };
 
 /// The Frame container decorates its single child with a state dependant frame drawing.
@@ -546,11 +542,20 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
-/// The StatePainter widget displays state dependent SVG image elements.
-/// See also the corresponding implementation class StatePainterImpl.
-interface StatePainter : Widget {
-  String svg_source           = String (_("SVG Source"), _("SVG source for the state dependent elements to be displayed."), "rw");
-  String svg_element          = String (_("SVG Element"), _("Base name of the SVG elements for various StateType flags."), "rw");
+/// The ElementPainter widget displays state dependent SVG image elements and places its child within the fill area.
+/// See also the corresponding implementation class ElementPainterImpl.
+interface ElementPainter : Container {
+  String svg_source           = String (_("SVG Source"), _("Source for the SVG element used for painting and as fill area."), "rw");
+  String svg_element          = String (_("SVG Element"), _("Base name of the SVG element without state dependent postfixes."), "rw");
+};
+
+/// The FocusPainter container decorates its single child according to focus changes.
+/// This element painter container selects "focused" state elements depending on whether
+/// its descendants have focus, or its nextmost ancestor that has its NEEDS_FOCUS_INDICATOR flag set.
+/// It also provide the HAS_FOCUS_INDICATOR flag for its nextmost NEEDS_FOCUS_INDICATOR ancestor.
+/// See also the corresponding implementation class FocusPainterImpl.
+interface FocusPainter : ElementPainter {
+  /* bool   tight_focus = Bool (_("Tight Focus"), _("Overlay child with focus frame"), "rw"); */
 };
 
 /// A widget for text display.

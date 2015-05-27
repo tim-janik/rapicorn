@@ -17,7 +17,7 @@ class ObjectImpl : public virtual ObjectIface, public virtual DataListContainer 
   static void                       ctor_factory_context (FactoryContext *fc);
 protected:
   virtual /*dtor*/                 ~ObjectImpl    () override;
-  virtual void                      constructed   ();
+  virtual void                      construct     ();
   virtual void                      dispose       ();
   virtual void                      do_changed    (const String &name);
   class                    InterfaceMatcher;
@@ -34,7 +34,7 @@ public:
     ctor_factory_context (&fc);
     std::shared_ptr<InstanceType> sptr = std::make_shared<InstanceType>();
     ctor_factory_context (NULL);
-    static_cast<ObjectImpl*> (&*sptr)->constructed();
+    static_cast<ObjectImpl*> (&*sptr)->construct();
     return sptr;
   }
 };

@@ -3,6 +3,7 @@
 #include "container.hh"
 #include "painter.hh"
 #include "factory.hh"
+#include "../rcore/rsvg/svg.hh" // Svg::Span
 
 namespace Rapicorn {
 
@@ -533,17 +534,19 @@ static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn::Frame");
 
 // == FocusFrameImpl ==
 FocusFrameImpl::FocusFrameImpl() :
-  focus_frame_ (FRAME_FOCUS),
-  client_ (NULL), conid_client_ (0)
+  focus_container_ (NULL), container_has_focus_ (false), focus_frame_ (FRAME_FOCUS)
 {}
 
 FocusFrameImpl::~FocusFrameImpl ()
 {}
 
 void
-FocusFrameImpl::client_changed (const String &name)
+FocusFrameImpl::focusable_container_change (ContainerImpl &focus_container)
 {
-  if (name == "flags" or name.empty())
+  assert_return (&focus_container == focus_container_);
+  const bool had_focus = container_has_focus_;
+  container_has_focus_ = focus_container.has_focus();
+  if (had_focus != container_has_focus_)
     {
       if (overlap_child())
         expose();
@@ -562,21 +565,20 @@ FocusFrameImpl::set_focus_child (WidgetImpl *widget)
 void
 FocusFrameImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
-  if (client_)
-    {
-      client_->sig_changed() -= conid_client_;
-      conid_client_ = 0;
-      client_->unregister_focus_frame (*this);
-    }
-  client_ = NULL;
+  if (focus_container_)
+    focus_container_->unregister_focus_indicator (*this);
+  focus_container_ = NULL;
+  container_has_focus_ = false;
   this->FrameImpl::hierarchy_changed (old_toplevel);
   if (anchored())
     {
-      Client *client = parent_interface<Client*>();
-      if (client && client->register_focus_frame (*this))
-        client_ = client;
-      if (client_)
-        conid_client_ = client_->sig_changed() += Aida::slot (*this, &FocusFrameImpl::client_changed);
+      ContainerImpl *container = parent();
+      while (container && !container->test_all_flags (NEEDS_FOCUS_INDICATOR))
+        container = container->parent();
+      focus_container_ = container;
+      container_has_focus_ = focus_container_ && focus_container_->has_focus();
+      if (focus_container_)
+        focus_container_->register_focus_indicator (*this);
     }
 }
 
@@ -598,9 +600,8 @@ FocusFrameImpl::current_frame ()
 {
   bool in_focus = has_focus();
   in_focus |= get_focus_child() != NULL;
-  in_focus |= client_ && client_->has_focus();
-  ContainerImpl *cclient_ = container_cast (client_);
-  in_focus |= cclient_ && cclient_->get_focus_child() != NULL;
+  in_focus |= focus_container_ && focus_container_->has_focus();
+  in_focus |= focus_container_ && focus_container_->get_focus_child() != NULL;
   if (in_focus)
     return focus_frame();
   return ancestry_active() ? active_frame() : normal_frame();
@@ -669,5 +670,260 @@ LayerPainterImpl::size_allocate (Allocation area, bool changed)
 }
 
 static const WidgetFactory<LayerPainterImpl> layer_painter_factory ("Rapicorn::LayerPainter");
+
+// == ElementPainter ==
+ElementPainterImpl::ElementPainterImpl() :
+  cached_painter_ ("")
+{}
+
+ElementPainterImpl::~ElementPainterImpl()
+{}
+
+void
+ElementPainterImpl::svg_source (const String &resource)
+{
+  return_unless (svg_source_ != resource);
+  svg_source_ = resource;
+  if (size_painter_)
+    size_painter_ = ImagePainter();
+  if (state_painter_)
+    state_painter_ = ImagePainter();
+  cached_painter_ = "";
+  invalidate();
+  changed ("svg_source");
+}
+
+void
+ElementPainterImpl::svg_element (const String &fragment)
+{
+  return_unless (svg_fragment_ != fragment);
+  svg_fragment_ = fragment;
+  if (size_painter_)
+    size_painter_ = ImagePainter();
+  if (state_painter_)
+    state_painter_ = ImagePainter();
+  cached_painter_ = "";
+  invalidate();
+  changed ("svg_source");
+}
+
+static constexpr uint64
+consthash_fnv64a (const char *string, uint64 hash = 0xcbf29ce484222325)
+{
+  return string[0] == 0 ? hash : consthash_fnv64a (string + 1, 0x100000001b3 * (hash ^ string[0]));
+}
+
+static const uint64 BROKEN = 0x80000000;
+
+static uint64
+single_state_score (const String &state_string)
+{
+  switch (consthash_fnv64a (state_string.c_str()))
+    {
+    case consthash_fnv64a ("normal"):           return STATE_NORMAL;
+    case consthash_fnv64a ("hover"):            return STATE_HOVER;
+    case consthash_fnv64a ("panel"):            return STATE_PANEL;
+    case consthash_fnv64a ("acceleratable"):    return STATE_ACCELERATABLE;
+    case consthash_fnv64a ("default"):          return STATE_DEFAULT;
+    case consthash_fnv64a ("selected"):         return STATE_SELECTED;
+    case consthash_fnv64a ("focused"):          return STATE_FOCUSED;
+    case consthash_fnv64a ("insensitive"):      return STATE_INSENSITIVE;
+    case consthash_fnv64a ("active"):           return STATE_ACTIVE;
+    case consthash_fnv64a ("retained"):         return STATE_RETAINED;
+    default:                                    return BROKEN;
+    }
+}
+
+static uint64
+state_score (const String &state_string)
+{
+  StringVector sv = string_split (state_string, "+");
+  uint64 r = 0;
+  for (const String &s : sv)
+    r |= single_state_score (s);
+  return r >= BROKEN ? 0 : r;
+}
+
+String
+ElementPainterImpl::state_element (StateType state)
+{
+  if (!size_painter_)
+    size_painter_ = ImagePainter (svg_source_);
+  return_unless (size_painter_ && svg_fragment_.size() && svg_fragment_[0] == '#', "");
+  // match an SVG element to state, ID syntax: <element id="elementname:active+insensitive"/>
+  const String element = svg_fragment_.substr (1); // fragment without initial hash symbol
+  const size_t colon = element.size();
+  String fallback, match;
+  size_t score = 0;
+  for (auto id : size_painter_.list (element))
+    if (id == element)                                  // element without state specification
+      fallback = id;
+    else if (id.size() > colon + 1 && id[colon] == ':') // element with state
+      {
+        const size_t s = state_score (id.substr (colon + 1));
+        if ((s & state) == s && s > score)
+          {
+            match = id;
+            score = s;
+          }
+      }
+  match = match.empty() ? fallback : match;
+  return svg_source_ + "#" + match;
+}
+
+StateType
+ElementPainterImpl::element_state () const
+{
+  StateType mystate = state();
+  if (ancestry_active())
+    mystate |= STATE_ACTIVE;
+  return mystate;
+}
+
+String
+ElementPainterImpl::current_element ()
+{
+  return state_element (element_state());
+}
+
+void
+ElementPainterImpl::size_request (Requisition &requisition)
+{
+  bool chspread = false, cvspread = false;
+  if (has_visible_child())
+    requisition = size_request_child (get_child(), &chspread, &cvspread);
+  set_flag (HSPREAD_CONTAINER, chspread);
+  set_flag (VSPREAD_CONTAINER, cvspread);
+  if (!size_painter_)
+    size_painter_ = ImagePainter (state_element (STATE_NORMAL));
+  const Requisition image_size = size_painter_.image_size ();
+  const Rect fill = size_painter_.fill_area();
+  assert_return (fill.x + fill.width <= image_size.width);
+  assert_return (fill.y + fill.height <= image_size.height);
+  requisition.width += image_size.width - fill.width;
+  requisition.height += image_size.height - fill.height;
+}
+
+void
+ElementPainterImpl::size_allocate (Allocation area, bool changed)
+{
+  if (has_visible_child())
+    {
+      WidgetImpl &child = get_child();
+      Allocation child_area;
+      if (size_painter_)
+        {
+          const Requisition image_size = size_painter_.image_size ();
+          Rect fill = size_painter_.fill_area();
+          assert_return (fill.x + fill.width <= image_size.width);
+          assert_return (fill.y + fill.height <= image_size.height);
+          Svg::Span spans[3] = { { 0, 0 }, { 0, 1 }, { 0, 0 } };
+          // horizontal distribution & allocation
+          spans[0].length = fill.x;
+          spans[1].length = fill.width;
+          spans[2].length = image_size.width - fill.x - fill.width;
+          ssize_t dremain = Svg::Span::distribute (ARRAY_SIZE (spans), spans, area.width - image_size.width, 1);
+          if (dremain < 0)
+            Svg::Span::distribute (ARRAY_SIZE (spans), spans, dremain, 0); // shrink *any* segment
+          child_area.x = area.x + spans[0].length;
+          child_area.width = spans[1].length;
+          // vertical distribution & allocation
+          spans[0].length = fill.y;
+          spans[1].length = fill.height;
+          spans[2].length = image_size.height - fill.y - fill.height;
+          dremain = Svg::Span::distribute (ARRAY_SIZE (spans), spans, area.height - image_size.height, 1);
+          if (dremain < 0)
+            Svg::Span::distribute (ARRAY_SIZE (spans), spans, dremain, 0); // shrink *any* segment
+          child_area.y = area.y + spans[0].length;
+          child_area.height = spans[1].length;
+        }
+      else
+        child_area = area;
+      child_area = layout_child (child, child_area);
+      child.set_allocation (child_area);
+    }
+}
+
+void
+ElementPainterImpl::do_changed (const String &name)
+{
+  WidgetImpl::do_changed (name);
+  if (name == "state" && (cached_painter_ != current_element()))
+    invalidate (INVALID_CONTENT);
+}
+
+void
+ElementPainterImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  const String painter_src = current_element();
+  if (!state_painter_ || cached_painter_ != painter_src)
+    {
+      state_painter_ = ImagePainter (painter_src);
+      cached_painter_ = painter_src;
+    }
+  state_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
+}
+
+static const WidgetFactory<ElementPainterImpl> element_painter_factory ("Rapicorn::ElementPainter");
+
+// == FocusPainterImpl ==
+FocusPainterImpl::FocusPainterImpl() :
+  focus_container_ (NULL), container_has_focus_ (false)
+{}
+
+FocusPainterImpl::~FocusPainterImpl ()
+{}
+
+void
+FocusPainterImpl::focusable_container_change (ContainerImpl &focus_container)
+{
+  assert_return (&focus_container == focus_container_);
+  const bool had_focus = container_has_focus_;
+  container_has_focus_ = focus_container.has_focus();
+  if (had_focus != container_has_focus_)
+    expose();
+}
+
+void
+FocusPainterImpl::set_focus_child (WidgetImpl *widget)
+{
+  ElementPainterImpl::set_focus_child (widget);
+  expose();
+}
+
+void
+FocusPainterImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+{
+  if (focus_container_)
+    focus_container_->unregister_focus_indicator (*this);
+  focus_container_ = NULL;
+  container_has_focus_ = false;
+  this->ElementPainterImpl::hierarchy_changed (old_toplevel);
+  if (anchored())
+    {
+      ContainerImpl *container = parent();
+      while (container && !container->test_all_flags (NEEDS_FOCUS_INDICATOR))
+        container = container->parent();
+      focus_container_ = container;
+      container_has_focus_ = focus_container_ && focus_container_->has_focus();
+      if (focus_container_)
+        focus_container_->register_focus_indicator (*this);
+    }
+}
+
+StateType
+FocusPainterImpl::element_state () const
+{
+  bool in_focus = has_focus();
+  in_focus = in_focus || get_focus_child() != NULL;
+  in_focus = in_focus || (focus_container_ && focus_container_->has_focus());
+  in_focus = in_focus || (focus_container_ && focus_container_->get_focus_child() != NULL);
+  StateType mystate = ElementPainterImpl::element_state();
+  if (in_focus)
+    mystate |= STATE_FOCUSED;
+  return mystate;
+}
+
+static const WidgetFactory<FocusPainterImpl> focus_painter_factory ("Rapicorn::FocusPainter");
 
 } // Rapicorn

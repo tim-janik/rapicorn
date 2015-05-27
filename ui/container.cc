@@ -283,6 +283,8 @@ ContainerImpl::child_container ()
 void
 ContainerImpl::add (WidgetImpl &widget)
 {
+  critical_unless (this->isconstructed());
+  critical_unless (widget.isconstructed());
   const WidgetImplP guard_widget = shared_ptr_cast<WidgetImpl> (&widget);
   if (widget.parent())
     throw Exception ("not adding widget with parent: ", widget.name());
@@ -372,6 +374,52 @@ ContainerImpl::repack_child (WidgetImpl       &widget,
                              const PackInfo &pnew)
 {
   widget.invalidate_parent();
+}
+
+static DataKey<vector<FocusIndicator*>> focus_indicator_key;
+
+void
+ContainerImpl::register_focus_indicator (FocusIndicator &focus_indicator)
+{
+  assert_return (test_all_flags (NEEDS_FOCUS_INDICATOR));
+  vector<FocusIndicator*> vfi = get_data (&focus_indicator_key);
+  for (auto &existing_indicator : vfi)
+    assert_return (existing_indicator != &focus_indicator);
+  vfi.push_back (&focus_indicator);
+  set_data (&focus_indicator_key, vfi);
+  set_flag (HAS_FOCUS_INDICATOR);
+}
+
+void
+ContainerImpl::unregister_focus_indicator (FocusIndicator &focus_indicator)
+{
+  vector<FocusIndicator*> vfi = get_data (&focus_indicator_key);
+  for (size_t i = 0; i < vfi.size(); i++)
+    if (vfi[i] == &focus_indicator)
+      {
+        vfi.erase (vfi.begin() + i);
+        if (vfi.size())
+          set_data (&focus_indicator_key, vfi);
+        else
+          {
+            delete_data (&focus_indicator_key);
+            unset_flag (HAS_FOCUS_INDICATOR);
+          }
+        return;
+      }
+  assert_return (!"failed to find focus_indicator!");
+}
+
+void
+ContainerImpl::do_changed (const String &name)
+{
+  WidgetImpl::do_changed (name);
+  if (test_all_flags (NEEDS_FOCUS_INDICATOR | HAS_FOCUS_INDICATOR) && name == "flags")
+    {
+      vector<FocusIndicator*> vfi = get_data (&focus_indicator_key);
+      for (size_t i = 0; i < vfi.size(); i++)
+        vfi[i]->focusable_container_change (*this);
+    }
 }
 
 static DataKey<WidgetImpl*> focus_child_key;
@@ -499,7 +547,7 @@ ContainerImpl::move_focus (FocusDirType fdir)
   if (!visible() || !sensitive())
     return false;
   // focus self
-  if (!has_focus() && can_focus() && !test_any_flag (STATE_FOCUSED))
+  if (!has_focus() && focusable() && !test_any_flag (STATE_FOCUSED))
     return grab_focus();
   // allow last focus descendant to handle movement
   WidgetImpl *last_child = get_data (&focus_child_key);

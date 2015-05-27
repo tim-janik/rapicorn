@@ -45,31 +45,18 @@ WidgetListRowImpl::handle_event (const Event &event)
   return list && list->row_event (event, this, index_);
 }
 
-bool
-WidgetListRowImpl::can_focus () const
+WidgetListRowImpl::WidgetListRowImpl() :
+  index_ (INT_MIN)
 {
-  return focus_frame_ != NULL;
-}
-
-bool
-WidgetListRowImpl::register_focus_frame (FocusFrameImpl &frame)
-{
-  if (!focus_frame_)
-    focus_frame_ = &frame;
-  return focus_frame_ == &frame;
+  color_scheme (COLOR_BASE);
 }
 
 void
-WidgetListRowImpl::unregister_focus_frame (FocusFrameImpl &frame)
+WidgetListRowImpl::construct ()
 {
-  if (focus_frame_ == &frame)
-    focus_frame_ = NULL;
-}
-
-WidgetListRowImpl::WidgetListRowImpl() :
-  focus_frame_ (NULL), index_ (INT_MIN)
-{
-  color_scheme (COLOR_BASE);
+  set_flag (NEEDS_FOCUS_INDICATOR); // prerequisite for focusable
+  set_flag (ALLOW_FOCUS);
+  SingleContainerImpl::construct();
 }
 
 int

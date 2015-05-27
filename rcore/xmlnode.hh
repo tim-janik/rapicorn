@@ -87,6 +87,7 @@ public:
                                          MarkupParser::Error *error,
                                          const String   &roottag = "");
   static String         xml_escape      (const String   &input);
+  static String         strip_xml_tags  (const String   &input);
 };
 
 } // Rapicorn

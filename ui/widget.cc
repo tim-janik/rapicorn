@@ -9,6 +9,7 @@
 #include "factory.hh"
 #include "selector.hh"
 #include "selob.hh"
+#include "uithread.hh"  // uithread_main_loop
 #include <algorithm>
 
 #define SZDEBUG(...)    RAPICORN_KEY_DEBUG ("Sizing", __VA_ARGS__)
@@ -49,6 +50,13 @@ WidgetImpl::WidgetImpl () :
   factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
+
+void
+WidgetImpl::construct ()
+{
+  change_flags_silently (CONSTRUCTED, true);
+  ObjectImpl::construct();
+}
 
 void
 WidgetImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
@@ -123,6 +131,15 @@ bool
 WidgetImpl::change_flags_silently (uint64 mask, bool on)
 {
   const uint64 old_flags = flags_;
+  assert_return (mask != STATE_NORMAL, 0);
+  if (old_flags & CONSTRUCTED)
+    {
+      // refuse to change constant flags
+      assert_return ((mask & CONSTRUCTED) == 0, 0);
+      assert_return ((mask & NEEDS_FOCUS_INDICATOR) == 0, 0);
+    }
+  if (old_flags & FINALIZING)
+    assert_return ((mask & FINALIZING) == 0, 0);
   if (on)
     flags_ |= mask;
   else
@@ -200,6 +217,30 @@ WidgetImpl::state () const
 }
 
 bool
+WidgetImpl::allow_focus () const
+{
+  return test_any_flag (ALLOW_FOCUS);
+}
+
+void
+WidgetImpl::allow_focus (bool b)
+{
+  set_flag (ALLOW_FOCUS, b);
+}
+
+bool
+WidgetImpl::can_focus () const
+{
+  return true;
+}
+
+bool
+WidgetImpl::focusable () const
+{
+  return test_all_flags (ALLOW_FOCUS | NEEDS_FOCUS_INDICATOR | HAS_FOCUS_INDICATOR) && can_focus();
+}
+
+bool
 WidgetImpl::has_focus () const
 {
   if (test_any_flag (STATE_FOCUSED))
@@ -208,12 +249,6 @@ WidgetImpl::has_focus () const
       if (rwidget && rwidget->get_focus() == this)
         return true;
     }
-  return false;
-}
-
-bool
-WidgetImpl::can_focus () const
-{
   return false;
 }
 
@@ -233,7 +268,7 @@ WidgetImpl::grab_focus ()
 {
   if (has_focus())
     return true;
-  if (!can_focus() || !sensitive() || !ancestry_visible())
+  if (!focusable() || !sensitive() || !ancestry_visible())
     return false;
   // unset old focus
   WindowImpl *rwidget = get_window();
@@ -249,7 +284,7 @@ WidgetImpl::grab_focus ()
 bool
 WidgetImpl::move_focus (FocusDirType fdir)
 {
-  if (!has_focus() && can_focus())
+  if (!has_focus() && focusable())
     return grab_focus();
   return false;
 }
@@ -502,6 +537,17 @@ WidgetImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
   return 0;
 }
 
+uint
+WidgetImpl::exec_now (const EventLoop::VoidSlot &sl)
+{
+  /* queue arbitrary code for asynchornous execution, i.e. this function pretty much guarantees
+   * slot execution if there's *any* main loop running, so fallback to the UIThread main loop if needed.
+   */
+  WindowImpl *rwidget = get_window();
+  EventLoop *loop = rwidget ? rwidget->get_loop() : &*uithread_main_loop();
+  return loop ? loop->exec_now (sl) : 0;
+}
+
 bool
 WidgetImpl::remove_exec (uint exec_id)
 {
@@ -565,7 +611,8 @@ WidgetImpl::visual_update ()
 
 WidgetImpl::~WidgetImpl()
 {
-  dtor_finalizing();
+  critical_unless (isconstructed());
+  change_flags_silently (FINALIZING, true);
   WidgetGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);

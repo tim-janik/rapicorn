@@ -378,6 +378,26 @@ XmlNode::xml_escape (const String &input)
   return escape_xml<ALL> (input);
 }
 
+/// Remove all opening and closing tags from a string, leaving just its plain text.
+String
+XmlNode::strip_xml_tags (const String &input_xml)
+{
+  size_t last = 0, tag = input_xml.find ('<', last);
+  if (tag == String::npos)
+    return input_xml;           // no tags to strip
+  String result;
+  while (tag != String::npos)
+    {
+      result += input_xml.substr (last, tag - last);
+      last = input_xml.find ('>', tag);
+      if (last == String::npos) // malformed, unclosed tag
+        break;
+      last += 1;                // skip '>'
+      tag = input_xml.find ('<', last);
+    }
+  return result;
+}
+
 static String
 node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t recursion_depth,
                  const XmlNode::XmlStringWrapper &wrapper, bool wrap_outer)

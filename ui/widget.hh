@@ -108,6 +108,10 @@ protected:
     INVALID_ALLOCATION        = 1 << 29, ///< Flag indicates the need update widget's allocation, see set_allocation()
     INVALID_REQUISITION       = 1 << 30, ///< Flag indicates the need update widget's size requisition, see requisition()
     FINALIZING             = 1ULL << 31, ///< Flag used internally to short-cut destructor phase.
+    CONSTRUCTED            = 1ULL << 32, ///< Flag used internally to seal widget construction.
+    ALLOW_FOCUS            = 1ULL << 33, ///< Flag set by the widget user to indicate if a widget may or may not receive focus.
+    NEEDS_FOCUS_INDICATOR  = 1ULL << 34, ///< Flag used for containers that need a focus-indicator to receive input focus.
+    HAS_FOCUS_INDICATOR    = 1ULL << 35, ///< Flag set on #NEEDS_FOCUS_INDICATOR containers if a descendant provides a focus-indicator.
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
@@ -127,15 +131,18 @@ protected:
   uint                        exec_fast_repeater   (const EventLoop::BoolSlot &sl);
   uint                        exec_slow_repeater   (const EventLoop::BoolSlot &sl);
   uint                        exec_key_repeater    (const EventLoop::BoolSlot &sl);
+  uint                        exec_now             (const EventLoop::VoidSlot &sl); ///< Run @a sl as next thing from the window (or global) event loop.
   bool                        remove_exec          (uint            exec_id);
   bool                        clear_exec           (uint           *exec_id);
   virtual void                visual_update        ();
   /* misc */
-  virtual                     ~WidgetImpl       ();
-  void                        dtor_finalizing   ()              { change_flags_silently (FINALIZING, true); }
-  bool                        finalizing        () const        { return test_any_flag (FINALIZING); }
+  virtual                    ~WidgetImpl        ();
+  virtual void                construct         () override;
+  bool                        isconstructed     () const { return test_any_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
+  bool                        finalizing        () const { return test_any_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
+  virtual bool                can_focus         () const; ///< Widget specific sentinel on wether it can currently receive input focus.
   virtual bool                activate_widget   ();
   virtual bool                custom_command    (const String &command_name, const StringSeq &command_args);
   virtual void                set_user_data     (const String &name, const Any &any);
@@ -178,7 +185,9 @@ public:
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
-  virtual bool                can_focus         () const; ///< Returns true if @a this widget can receive focus.
+  virtual bool                allow_focus       () const override; ///< Indicates if widget may receive input foucs.
+  virtual void                allow_focus       (bool b) override; ///< Toggle if widget may receive input focus.
+  bool                        focusable         () const; ///< Returns true if @a this widget participates in input focus selection.
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();
   void                        unset_focus       ();
@@ -227,6 +236,7 @@ public:
   bool                        exec_command      (const String    &command_call_string);
   Command*                    lookup_command    (const String    &command_name);
   virtual const CommandList&  list_commands     ();
+  WidgetImplP                 widgetp           () { return shared_ptr_cast<WidgetImpl> (this); }
   /* parents */
   ContainerImpl*              parent            () const { return parent_; }
   ContainerImplP              parentp           () const;

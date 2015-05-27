@@ -464,7 +464,10 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
       {
         const String aname = canonify_dashes (cnode->get_attribute ("name")); // canonify argument name
         if (aname.empty() || aname == "id" || aname == "name")
-          critical ("%s: invalid argument name: \"%s\"", node_location (cnode), aname);
+          critical ("%s: %s argument name: \"%s\"",
+                    node_location (cnode),
+                    cnode->has_attribute ("name") ? "invalid" : "missing",
+                    aname);
         else
           {
             argument_names.push_back (aname);

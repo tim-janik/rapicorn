@@ -71,11 +71,16 @@ TextBlock::plain_text () const
 // == TextControllerImpl ==
 TextControllerImpl::TextControllerImpl() :
   cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE), allow_edits_ (false),
-  cached_tblock_ (NULL), tblock_sig_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
+  cached_tblock_ (NULL), tblock_sig_ (0), next_handler_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
 {}
 
 TextControllerImpl::~TextControllerImpl()
 {
+  if (next_handler_)
+    {
+      remove_exec (next_handler_);
+      next_handler_ = 0;
+    }
   if (cached_tblock_)
     {
       cached_tblock_->sig_selection_changed() -= tblock_sig_;
@@ -85,11 +90,11 @@ TextControllerImpl::~TextControllerImpl()
 }
 
 void
-TextControllerImpl::constructed()
+TextControllerImpl::construct()
 {
-  SingleContainerImpl::constructed();
-  WidgetImplP label = Factory::create_ui_widget ("Rapicorn_TextBlock");
-  add (*label);
+  set_flag (NEEDS_FOCUS_INDICATOR); // prerequisite for focusable
+  set_flag (ALLOW_FOCUS);
+  SingleContainerImpl::construct();
   update_text_block();
 }
 
@@ -100,6 +105,14 @@ TextControllerImpl::get_text_block()
   TextBlock *candidate = interface<TextBlock*>();
   if (candidate == &*cached_tblock_)
     return candidate;
+  // if our text block changes, can_focus() and thus focusable() may change, ensure we notify about it
+  const bool old_focusable = focusable();
+  WidgetImplP thisp = widgetp(); // passing thisp to exec_now keeps a life reference in the lambda
+  auto update_focus = [thisp, this, old_focusable] () {
+    if (!finalizing() && old_focusable != focusable())
+      changed ("flags");
+  };
+  exec_now (update_focus);
   // adjust to new text block
   TextBlockP next_tblock = shared_ptr_cast<TextBlock> (candidate);
   if (cached_tblock_)
@@ -480,32 +493,52 @@ TextControllerImpl::selection_changed()
     }
 }
 
-String
-TextControllerImpl::get_markup () const
-{
-  return cached_tblock_ ? cached_tblock_->markup_text() : "";
-}
-
 void
 TextControllerImpl::set_markup (const String &text)
 {
-  TextBlock *tblock = get_text_block();
-  if (tblock)
-    tblock->markup_text (text);
+  next_markup_ = text;
+  WidgetImplP thisp = widgetp(); // passing thisp to exec_now keeps a life reference in the lambda
+  auto update_markup = [thisp, this] () {
+    TextBlock *tblock = get_text_block();
+    if (!tblock && !finalizing())
+      {
+        WidgetImplP label = Factory::create_ui_child (*this, "Rapicorn_TextBlock", StringVector());
+        update_text_block();
+        tblock = &*cached_tblock_;
+      }
+    if (tblock)
+      {
+        tblock->markup_text (next_markup_);
+        next_markup_.clear();
+      }
+    next_handler_ = 0;
+  };
+  if (next_handler_ == 0)
+    next_handler_ = exec_now (update_markup);
+}
+
+String
+TextControllerImpl::get_markup () const
+{
+  String result;
+  if (next_handler_ == 0 && cached_tblock_)
+    result = cached_tblock_->markup_text();
+  else
+    result = next_markup_;
+  return result;
 }
 
 String
 TextControllerImpl::get_plain () const
 {
-  return cached_tblock_ ? cached_tblock_->plain_text() : "";
+  return XmlNode::strip_xml_tags (get_markup());
 }
 
 void
 TextControllerImpl::set_plain (const String &ptext)
 {
-  TextBlock *tblock = get_text_block();
-  if (tblock)
-    tblock->plain_text (ptext);
+  String text = XmlNode::xml_escape (ptext);
+  set_markup (text);
 }
 
 void
