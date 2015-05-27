@@ -1411,20 +1411,23 @@ ClientConnectionImpl::remote_origin()
 {
   const uint connection_id = ObjectBroker::connection_id_from_protocol (protocol());
   RemoteMember<RemoteHandle> rorigin;
-  if (connection_id)
+  if (!connection_id)
     {
-      FieldBuffer *fb = FieldBuffer::_new (3);
-      fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
-      FieldBuffer *fr = this->call_remote (fb); // takes over fb
-      FieldReader frr (*fr);
-      const MessageId msgid = MessageId (frr.pop_int64());
-      frr.skip(); // hashhigh
-      frr.skip(); // hashlow
-      if (!msgid_is (msgid, MSGID_META_WELCOME))
-        fatal_error (string_format ("HELLO failed, server refused WELCOME: %016x", msgid));
-      pop_handle (frr, rorigin);
-      delete fr;
+      errno = ECONNREFUSED; // EHOSTUNREACH;
+      return RemoteHandle::__aida_null_handle__();
     }
+  FieldBuffer *fb = FieldBuffer::_new (3);
+  fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
+  FieldBuffer *fr = this->call_remote (fb); // takes over fb
+  FieldReader frr (*fr);
+  const MessageId msgid = MessageId (frr.pop_int64());
+  frr.skip(); // hashhigh
+  frr.skip(); // hashlow
+  if (!msgid_is (msgid, MSGID_META_WELCOME))
+    fatal_error (string_format ("HELLO failed, server refused WELCOME: %016x", msgid));
+  pop_handle (frr, rorigin);
+  delete fr;
+  errno = 0;
   return rorigin;
 }
 
@@ -2095,6 +2098,23 @@ ObjectBroker::post_msg (FieldBuffer *fb)
       AIDA_MESSAGE ("dest=%p msgid=%016x h=%016x l=%016x", bcon, msgid, hashhigh, hashlow);
     }
   bcon->send_msg (fb);
+}
+
+void
+ObjectBroker::connection_handshake (const std::string                 &endpoint,
+                                    std::function<BaseConnection* ()>  aida_connection,
+                                    std::function<void (RemoteHandle)> origin_cast)
+{
+  setup_connection_ctor_protocol (endpoint.c_str());
+  BaseConnection *new_connection = aida_connection();
+  verify_connection_construction();
+  ClientConnection *client_connection = dynamic_cast<ClientConnection*> (new_connection);
+  AIDA_ASSERT (client_connection != NULL);
+  RemoteHandle remote = client_connection->remote_origin();
+  if (!remote)
+    return;             // preserve errno
+  origin_cast (remote);
+  errno = ENOMSG;       // indicates invalid type cast
 }
 
 } } // Rapicorn::Aida

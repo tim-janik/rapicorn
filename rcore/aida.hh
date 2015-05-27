@@ -436,6 +436,9 @@ class ObjectBroker {
   static void   verify_connection_construction    ();
   static void   construct_server_connection       (ServerConnection *&var);
   static void   construct_client_connection       (ClientConnection *&var);
+  static void   connection_handshake              (const std::string                 &endpoint,
+                                                   std::function<BaseConnection*()>   aida_connection,
+                                                   std::function<void (RemoteHandle)> origin_cast);
 public:
   static void              post_msg   (FieldBuffer*); ///< Route message to the appropriate party.
   static uint              register_connection    (BaseConnection    &connection);
@@ -450,7 +453,7 @@ public:
   static inline uint  destination_connection_id (uint64 msgid)        { return IdentifierParts (msgid).destination_connection; }
   static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
   template<class C> static void bind            (const std::string &protocol, std::shared_ptr<C> object_ptr);
-  template<class H> static H    connect         (const std::string &protocol);
+  template<class H> static H    connect         (const std::string &endpoint);
 };
 
 // == FieldBuffer ==
@@ -750,17 +753,16 @@ ObjectBroker::bind (const std::string &protocol, std::shared_ptr<C> object_ptr)
   server_connection->remote_origin (object_ptr);
 }
 
-/// Initialize the ClientConnection of @a H and accept connections via @a protocol
+/// Initialize the ClientConnection of @a H and accept connections via @a protocol, assigns errno.
 template<class H> H
-ObjectBroker::connect (const std::string &protocol)
+ObjectBroker::connect (const std::string &endpoint)
 {
-  setup_connection_ctor_protocol (protocol.c_str());
-  BaseConnection *new_connection = H::__aida_connection__();
-  verify_connection_construction();
-  ClientConnection *client_connection = dynamic_cast<ClientConnection*> (new_connection);
-  AIDA_ASSERT (client_connection != NULL);
-  RemoteHandle remote = client_connection->remote_origin();
-  return RemoteHandle::__aida_reinterpret_down_cast__<H> (remote);
+  H remote_handle;
+  auto origin_cast = [&remote_handle] (RemoteHandle rh) {
+    remote_handle = RemoteHandle::__aida_reinterpret_down_cast__<H> (rh);
+  };
+  connection_handshake (endpoint, H::__aida_connection__, origin_cast);
+  return remote_handle;
 }
 
 } } // Rapicorn::Aida
