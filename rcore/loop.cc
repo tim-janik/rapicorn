@@ -178,8 +178,9 @@ uint
 EventLoop::add (SourceP source, int priority)
 {
   static_assert (UNDEFINED_PRIORITY < 1, "");
-  assert_return (priority >= 1 && priority <= 999, 0);
+  assert_return (priority >= 1 && priority <= PRIORITY_CEILING, 0);
   ScopedLock<Mutex> locker (main_loop_->mutex());
+  assert_return (source != NULL, 0);
   assert_return (source->loop_ == NULL, 0);
   source->loop_ = this;
   source->id_ = alloc_id();
@@ -288,13 +289,13 @@ EventLoop::wakeup ()
 // === MainLoop ===
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  rr_index_ (0), running_ (true), quit_code_ (0)
+  rr_index_ (0), running_ (false), has_quit_ (false), quit_code_ (0)
 {
   ScopedLock<Mutex> locker (main_loop_->mutex());
   const int err = eventfd_.open();
   if (err < 0)
     fatal ("MainLoop: failed to create wakeup pipe: %s", strerror (-err));
-  // running_ and eventfd_ need to be setup here, so calling quit() before run() works
+  // has_quit_ and eventfd_ need to be setup here, so calling quit() before run() works
 }
 
 /** Create a new main loop object, users can run or iterate this loop directly.
@@ -370,12 +371,17 @@ MainLoop::kill_loops_Lm()
 int
 MainLoop::run ()
 {
+  EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
   ScopedLock<Mutex> locker (mutex_);
   State state;
-  EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
+  running_ = !has_quit_;
   while (ISLIKELY (running_))
     iterate_loops_Lm (state, true, true);
-  return quit_code_;
+  const int last_quit_code = quit_code_;
+  running_ = false;
+  has_quit_ = false;    // allow loop resumption
+  quit_code_ = 0;       // allow loop resumption
+  return last_quit_code;
 }
 
 bool
@@ -390,7 +396,8 @@ MainLoop::quit (int quit_code)
 {
   ScopedLock<Mutex> locker (mutex_);
   quit_code_ = quit_code;
-  running_ = false;
+  has_quit_ = true;     // cancel run() upfront, or
+  running_ = false;     // interrupt current iteration
   wakeup();
 }
 
@@ -425,19 +432,28 @@ MainLoop::finishable()
 bool
 MainLoop::iterate (bool may_block)
 {
+  EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
   ScopedLock<Mutex> locker (mutex_);
   State state;
-  EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
-  return iterate_loops_Lm (state, may_block, true);
+  const bool was_running = running_;    // guard for recursion
+  running_ = true;
+  const bool sources_pending = iterate_loops_Lm (state, may_block, true);
+  running_ = was_running && !has_quit_;
+  return sources_pending;
 }
 
 void
 MainLoop::iterate_pending()
 {
+  EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
   ScopedLock<Mutex> locker (mutex_);
   State state;
-  EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
-  while (iterate_loops_Lm (state, false, true));
+  const bool was_running = running_;    // guard for recursion
+  running_ = true;
+  while (ISLIKELY (running_))
+    if (!iterate_loops_Lm (state, false, true))
+      break;
+  running_ = was_running && !has_quit_;
 }
 
 bool

@@ -77,6 +77,7 @@ public:
   typedef std::function<void (PollFD&)>      VPfdSlot;
   typedef std::function<bool (PollFD&)>      BPfdSlot;
   typedef std::function<bool (const State&)> DispatcherSlot;
+  static const int16 PRIORITY_CEILING = 999; ///< Internal upper limit, don't use.
   static const int16 PRIORITY_NOW     = 900; ///< Most important, used for immediate async execution.
   static const int16 PRIORITY_ASCENT  = 800; ///< Threshold for priorization across different loops.
   static const int16 PRIORITY_HIGH    = 700; ///< Very important, used for e.g. io handlers.
@@ -129,11 +130,12 @@ class MainLoop : public EventLoop
   friend                class EventLoop;
   friend                class SlaveLoop;
   Mutex                 mutex_;
+  uint                  rr_index_;
   vector<EventLoopP>    loops_;
   EventFd               eventfd_;
-  uint                  rr_index_;
-  bool                  running_;
-  int                   quit_code_;
+  int8                  running_;
+  int8                  has_quit_;
+  int16                 quit_code_;
   bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
