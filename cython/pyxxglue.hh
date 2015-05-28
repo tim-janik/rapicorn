@@ -63,7 +63,7 @@ pyxx_make_bool_functor (PyObject *pycallable, bool fallback)
 static void
 pyxx_main_loop_add_watchdog (Rapicorn::MainLoop &main_loop)
 {
-  auto exception_watchdog = [&main_loop] (const Rapicorn::EventLoop::State &state) {
+  auto exception_watchdog = [&main_loop] (const Rapicorn::LoopState &state) {
     if (PyErr_Occurred())
       main_loop.quit (-128);
     if (state.phase == state.DISPATCH)

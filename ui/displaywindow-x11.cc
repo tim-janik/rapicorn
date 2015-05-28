@@ -47,7 +47,7 @@ find_element (Container &container, PtrPredicate f)
 struct X11Widget {
   explicit     X11Widget() {}
   virtual     ~X11Widget() {}
-  virtual bool timer    (const EventLoop::State &state, int64 *timeout_usecs_p) = 0;
+  virtual bool timer    (const LoopState &state, int64 *timeout_usecs_p) = 0;
 };
 
 // == EventStake ==
@@ -82,13 +82,13 @@ class X11Context {
   vector<EventStake>                   event_stakes_;
   vector<IncrTransfer>                 incr_transfers_;
   int8                                 shared_mem_;
-  bool                  x11_timer               (const EventLoop::State &state);
-  bool                  x11_dispatcher          (const EventLoop::State &state);
+  bool                  x11_timer               (const LoopState &state);
+  bool                  x11_dispatcher          (const LoopState &state);
   bool                  x11_io_handler          (PollFD &pfd);
   void                  process_x11             ();
   bool                  filter_event            (const XEvent&);
   void                  process_updates         ();
-  bool                  cmd_dispatcher          (const EventLoop::State &state);
+  bool                  cmd_dispatcher          (const LoopState &state);
   EventStake*           find_event_stake        (Window window, bool create);
   void                  continue_incr           (Window window, Atom property);
 public:
@@ -197,7 +197,7 @@ struct DisplayWindowX11 : public virtual DisplayWindow, public virtual X11Widget
   vector<ContentRequest> content_requests_;
   explicit              DisplayWindowX11        (X11Context &_x11context);
   virtual              ~DisplayWindowX11        ();
-  virtual bool          timer                   (const EventLoop::State &state, int64 *timeout_usecs_p);
+  virtual bool          timer                   (const LoopState &state, int64 *timeout_usecs_p);
   void                  destroy_x11_resources   ();
   void                  handle_command          (DisplayCommand *command);
   void                  setup_window            (const DisplayWindow::Setup &setup);
@@ -263,7 +263,7 @@ DisplayWindowX11::destroy_x11_resources()
 }
 
 bool
-DisplayWindowX11::timer (const EventLoop::State &state, int64 *timeout_usecs_p)
+DisplayWindowX11::timer (const LoopState &state, int64 *timeout_usecs_p)
 {
   const uint64 now = state.current_time_usecs;
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
@@ -1488,7 +1488,7 @@ X11Context::connect()
 }
 
 bool
-X11Context::cmd_dispatcher (const EventLoop::State &state)
+X11Context::cmd_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return command_queue_.pending();
@@ -1566,7 +1566,7 @@ X11Context::run()
 }
 
 bool
-X11Context::x11_timer (const EventLoop::State &state)
+X11Context::x11_timer (const LoopState &state)
 {
   const uint64 now = state.current_time_usecs;
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
@@ -1603,7 +1603,7 @@ X11Context::x11_timer (const EventLoop::State &state)
         {
           X11Widget *xw = it.second;
           int64 timeout_usecs = -1;
-          EventLoop::State wstate = state;
+          LoopState wstate = state;
           wstate.phase = state.CHECK;
           if (xw->timer (wstate, &timeout_usecs))
             {
@@ -1621,7 +1621,7 @@ X11Context::x11_timer (const EventLoop::State &state)
 }
 
 bool
-X11Context::x11_dispatcher (const EventLoop::State &state)
+X11Context::x11_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return XPending (display);

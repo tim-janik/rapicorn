@@ -25,7 +25,7 @@ cdef extern from "pyxxglue.hh":
 # rapicorn-core.hh declarations
 cdef extern from "rapicorn-core.hh" namespace "Rapicorn":
   # EventSource class
-  cppclass Rapicorn__EventSource                "Rapicorn::EventLoop::Source"
+  cppclass Rapicorn__EventSource                "Rapicorn::EventSource"
   # EventLoop class
   cppclass Rapicorn__EventLoop                  "Rapicorn::EventLoop"
   cppclass Rapicorn__EventLoop:

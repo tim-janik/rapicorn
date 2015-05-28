@@ -123,7 +123,7 @@ quick_rand32 (void)
 class CheckSource;
 typedef std::shared_ptr<CheckSource> CheckSourceP;
 
-class CheckSource : public virtual EventLoop::Source {
+class CheckSource : public virtual EventSource {
   enum {
     INITIALIZED = 1,
     PREPARED,
@@ -141,8 +141,7 @@ class CheckSource : public virtual EventLoop::Source {
     check_source_counter++;
   }
   virtual bool
-  prepare (const EventLoop::State &state,
-           int64 *timeout_usecs_p)
+  prepare (const LoopState &state, int64 *timeout_usecs_p)
   {
     RAPICORN_ASSERT (state_ == INITIALIZED ||
                    state_ == PREPARED ||
@@ -154,7 +153,7 @@ class CheckSource : public virtual EventLoop::Source {
     return quick_rand32() & 0x00400200a;
   }
   virtual bool
-  check (const EventLoop::State &state)
+  check (const LoopState &state)
   {
     RAPICORN_ASSERT (state_ == INITIALIZED ||
                    state_ == PREPARED);
@@ -162,7 +161,7 @@ class CheckSource : public virtual EventLoop::Source {
     return quick_rand32() & 0xc0ffee;
   }
   virtual bool
-  dispatch (const EventLoop::State &state)
+  dispatch (const LoopState &state)
   {
     RAPICORN_ASSERT (state_ == PREPARED ||
                    state_ == CHECKED);

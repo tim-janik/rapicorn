@@ -85,7 +85,7 @@ WindowImpl::custom_command (const String &command_name, const StringSeq &command
 }
 
 bool
-WindowImpl::command_dispatcher (const EventLoop::State &state)
+WindowImpl::command_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return commands_emission_ && commands_emission_->pending();
@@ -928,7 +928,7 @@ WindowImpl::dispatch_event (const Event &event)
 }
 
 bool
-WindowImpl::event_dispatcher (const EventLoop::State &state)
+WindowImpl::event_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return display_window_ && display_window_->has_event();
@@ -951,7 +951,7 @@ WindowImpl::event_dispatcher (const EventLoop::State &state)
 }
 
 bool
-WindowImpl::immediate_event_dispatcher (const EventLoop::State &state)
+WindowImpl::immediate_event_dispatcher (const LoopState &state)
 {
   switch (state.phase)
     {
@@ -991,7 +991,7 @@ WindowImpl::clear_immediate_event ()
 }
 
 bool
-WindowImpl::resizing_dispatcher (const EventLoop::State &state)
+WindowImpl::resizing_dispatcher (const LoopState &state)
 {
   const bool can_resize = !pending_win_size_ && display_window_;
   const bool need_resize = can_resize && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
@@ -1008,7 +1008,7 @@ WindowImpl::resizing_dispatcher (const EventLoop::State &state)
 }
 
 bool
-WindowImpl::drawing_dispatcher (const EventLoop::State &state)
+WindowImpl::drawing_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return exposes_pending();

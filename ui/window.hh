@@ -92,13 +92,13 @@ private:
   /* main loop */
   void                  push_immediate_event                    (Event *event);
   void                  clear_immediate_event                   ();
-  bool                  immediate_event_dispatcher              (const EventLoop::State &state);
-  virtual bool          event_dispatcher                        (const EventLoop::State &state);
-  virtual bool          resizing_dispatcher                     (const EventLoop::State &state);
-  virtual bool          drawing_dispatcher                      (const EventLoop::State &state);
-  virtual bool          command_dispatcher                      (const EventLoop::State &state);
-  virtual bool          custom_command                          (const String       &command_name,
-                                                                 const StringSeq    &command_args);
+  bool                  immediate_event_dispatcher              (const LoopState &state);
+  virtual bool          event_dispatcher                        (const LoopState &state);
+  virtual bool          resizing_dispatcher                     (const LoopState &state);
+  virtual bool          drawing_dispatcher                      (const LoopState &state);
+  virtual bool          command_dispatcher                      (const LoopState &state);
+  virtual bool          custom_command                          (const String    &command_name,
+                                                                 const StringSeq &command_args);
   /* event handling */
   virtual void          cancel_widget_events                      (WidgetImpl               *widget);
   void                  cancel_widget_events                      (WidgetImpl &widget) { cancel_widget_events (&widget); }
