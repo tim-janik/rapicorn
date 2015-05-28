@@ -543,6 +543,35 @@ AC_DEFUN([RAPICORN_ROPE_REQUIREMENTS],
     CPPFLAGS="$saved_CPPFLAGS"
 ])
 
+dnl # RAPICORN_CYTHON_REQUIREMENTS() - rapicorn cython python binding checks
+AC_DEFUN([RAPICORN_CYTHON_REQUIREMENTS],
+[
+  # cython
+  CYTHON_REQUIRED=0.20.2
+  MC_ASSERT_PROG(CYTHON, cython, [cython can be found at http://cython.org/])
+  CYTHON_VERSION=[$($CYTHON --version 2>&1 | sed 's/[^0-9]*\(.*\)$/\1/g')]
+  AS_ECHO("checking cython version... $CYTHON_VERSION")
+  MC_CHECK_VERSION([$CYTHON_VERSION], [$CYTHON_REQUIRED], [], [
+      AC_MSG_ERROR([cython version $CYTHON_REQUIRED or newer is required])
+  ])
+  AC_SUBST(CYTHON)
+  dnl # AM_CONDITIONAL([HAVE_CYTHON], [test "_$CYTHON" = "_cython"])
+  # python
+  PYTHON_REQUIRED=2.7
+  AC_REQUIRE([AC_PYTHON_DEVEL]) # AC_PYTHON_DEVEL is usually provided by autoconf-archive
+  AC_PYTHON_DEVEL([>= $PYTHON_REQUIRED])
+  AC_MSG_CHECKING([for working Python extension compilation])
+  saved_CPPFLAGS="$CPPFLAGS"
+  PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
+  CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_CPPFLAGS"     # verify sane Python module builds
+  AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
+  CPPFLAGS="$saved_CPPFLAGS"
+  AC_MSG_RESULT($py_build)
+  if test "$py_build" != "ok" ; then
+    AC_MSG_ERROR([failed to build extension against Python (>=$PYTHON_REQUIRED) headers])
+  fi
+])
+
 dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
 AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 [
@@ -597,6 +626,7 @@ RAPICORN_I18N_REQUIREMENTS
 RAPICORN_CXX_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_ROPE_REQUIREMENTS
+RAPICORN_CYTHON_REQUIREMENTS
 RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_REQUIREMENTS
