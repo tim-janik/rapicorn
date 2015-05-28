@@ -522,28 +522,27 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
     AM_CONDITIONAL(WITH_PANGO, true)
 ])
 
-dnl # RAPICORN_ROPE_REQUIREMENTS() - rapicorn python binding checks
-AC_DEFUN([RAPICORN_ROPE_REQUIREMENTS],
+dnl # RAPICORN_PYTHON_REQUIREMENTS() - rapicorn python checks
+AC_DEFUN([RAPICORN_PYTHON_REQUIREMENTS],
 [
-    # Find Python execution and development environment
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="-Wall -Werror $CPPFLAGS" # ensure sane Python module builds
-    mypyversion=2.4
-    AM_PATH_PYTHON($mypyversion)
-    AC_REQUIRE([AC_PYTHON_DEVEL]) # AC_PYTHON_DEVEL is usually provided by autoconf-archive
-    AC_PYTHON_DEVEL([>= '$mypyversion'])
-    CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
-    AC_MSG_CHECKING([for working Python extension compilation])
-    PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
-    AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
-    AC_MSG_RESULT($py_build)
-    if test "$py_build" != "ok" ; then
-	AC_MSG_ERROR([failed to build extension against Python (>=$DEPVERSION_PYTHON) headers])
-    fi
-    CPPFLAGS="$saved_CPPFLAGS"
+  # python
+  PYTHON_REQUIRED=2.7
+  AM_PATH_PYTHON($PYTHON_REQUIRED)
+  dnl # AC_REQUIRE([AC_PYTHON_DEVEL]) # AC_PYTHON_DEVEL is usually provided by autoconf-archive
+  AC_PYTHON_DEVEL([>= $PYTHON_REQUIRED])
+  AC_MSG_CHECKING([for working Python extension compilation])
+  saved_CPPFLAGS="$CPPFLAGS"
+  PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
+  CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_CPPFLAGS"     # verify sane Python module builds
+  AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
+  CPPFLAGS="$saved_CPPFLAGS"
+  AC_MSG_RESULT($py_build)
+  if test "$py_build" != "ok" ; then
+    AC_MSG_ERROR([failed to build extension against Python (>=$PYTHON_REQUIRED) headers])
+  fi
 ])
 
-dnl # RAPICORN_CYTHON_REQUIREMENTS() - rapicorn cython python binding checks
+dnl # RAPICORN_CYTHON_REQUIREMENTS() - rapicorn cython binding checks
 AC_DEFUN([RAPICORN_CYTHON_REQUIREMENTS],
 [
   # cython
@@ -556,20 +555,6 @@ AC_DEFUN([RAPICORN_CYTHON_REQUIREMENTS],
   ])
   AC_SUBST(CYTHON)
   dnl # AM_CONDITIONAL([HAVE_CYTHON], [test "_$CYTHON" = "_cython"])
-  # python
-  PYTHON_REQUIRED=2.7
-  AC_REQUIRE([AC_PYTHON_DEVEL]) # AC_PYTHON_DEVEL is usually provided by autoconf-archive
-  AC_PYTHON_DEVEL([>= $PYTHON_REQUIRED])
-  AC_MSG_CHECKING([for working Python extension compilation])
-  saved_CPPFLAGS="$CPPFLAGS"
-  PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
-  CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_CPPFLAGS"     # verify sane Python module builds
-  AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
-  CPPFLAGS="$saved_CPPFLAGS"
-  AC_MSG_RESULT($py_build)
-  if test "$py_build" != "ok" ; then
-    AC_MSG_ERROR([failed to build extension against Python (>=$PYTHON_REQUIRED) headers])
-  fi
 ])
 
 dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
@@ -593,19 +578,10 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 # Aida requirements
 AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
 [
-    # Check for working $PYTHON and pythondir
-    dnl #ALREADYDONE# AM_PATH_PYTHON(2.4)
-    AC_MSG_CHECKING([for usable Python])
-    if $PYTHON -c "import sys; sys.exit (not sys.version_info >= (2,4))" &&
-       test -n "$pythondir" ; then
-      AC_MSG_RESULT(ok)
-    else
-      AC_MSG_RESULT(fail)
-      AC_MSG_ERROR([failed to check \$PYTHON and \$pythondir])
-    fi
+  # Python is checked for separately
 
-    # XML linting check
-    AC_CHECK_PROGS(XMLLINT, xmllint, true)
+  # XML linting check
+  AC_CHECK_PROGS(XMLLINT, xmllint, true)
 ])
 
 # check for package requirements.
@@ -625,7 +601,7 @@ AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 RAPICORN_I18N_REQUIREMENTS
 RAPICORN_CXX_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
-RAPICORN_ROPE_REQUIREMENTS
+RAPICORN_PYTHON_REQUIREMENTS
 RAPICORN_CYTHON_REQUIREMENTS
 RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_RSVG_REQUIREMENTS
@@ -680,7 +656,7 @@ Autoconfiguration complete.
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
 	Development mode:		${NOTDEVELMODE:+enabled}${DEVELMODE:+disabled}
 
-	Python extension:		enabled (curently mandatory)
+	Python extension:		enabled (mandatory)
 	Readline libs:			$READLINELIBS
 
 	Binaries:			`printexpandvar ${bindir}`
