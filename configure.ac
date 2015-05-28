@@ -623,6 +623,7 @@ aidacc/tests/Makefile
 ui/Makefile
 ui/tests/Makefile
 rope/Makefile
+cython/Makefile
 tools/Makefile
 tests/Makefile
 pytests/Makefile
