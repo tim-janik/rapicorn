@@ -15,6 +15,13 @@ cdef extern from "memory" namespace "std":
     bool unique    () const
     T*   get       ()
 
+# include pyxxglue.hh
+cdef extern from "pyxxglue.hh":
+  # Callback wrappers
+  cppclass PyxxBoolFunctor                      "std::function<bool()>"
+  PyxxBoolFunctor pyxx_make_bool_functor      (object pycallable, bool fallback) except *
+  void            pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
+
 # rapicorn-core.hh declarations
 cdef extern from "rapicorn-core.hh" namespace "Rapicorn":
   # EventSource class
@@ -95,6 +102,11 @@ cdef class EventLoop:
   def destroy_loop (self):              self.thisp.get().destroy_loop()
   def has_primary (self):               return self.thisp.get().has_primary()
   def flag_primary (self, on):          return self.thisp.get().flag_primary (on)
+  # note, we use bool_functor with fallback=1 to keep handlers connected across exceptions
+  def exec_timer (self, timeout_ms, callable, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
+    return self.thisp.get().exec_timer (timeout_ms, pyxx_make_bool_functor (callable, 1), priority)
+  def exec_now (self, callable):
+    return self.thisp.get().exec_now (pyxx_make_bool_functor (callable, 1))
 
 cdef class MainLoop (EventLoop):
   cdef Rapicorn__MainLoop *mainp                # wrapped C++ instance
@@ -104,6 +116,7 @@ cdef class MainLoop (EventLoop):
     EventLoop__internal_ctor = new shared_ptr[Rapicorn__EventLoop] (<shared_ptr[Rapicorn__EventLoop]> mlptr)
     super (MainLoop, self).__init__()           # EventLoop.__init__
     self.mainp = mlptr.get()                    # MainLoop*
+    pyxx_main_loop_add_watchdog (deref (self.mainp))
   def __dealloc__ (self):
     self.thisp.reset()
   def run (self):                       return self.mainp.run()
