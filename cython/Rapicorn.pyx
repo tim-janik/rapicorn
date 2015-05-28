@@ -52,3 +52,68 @@ cdef extern from "rapicorn-core.hh" namespace "Rapicorn":
     shared_ptr[Rapicorn__EventLoop]     create_slave ()
   shared_ptr[Rapicorn__MainLoop] MainLoop__create "Rapicorn::MainLoop::create" ()
 
+# rapicorn-core.hh wrappers
+
+cdef class EventSource:
+  cdef shared_ptr[Rapicorn__EventSource] thisp
+  def __cinit__ (self, do_not_construct_manually = False):
+    assert (do_not_construct_manually)
+
+cdef shared_ptr[Rapicorn__EventLoop] *EventLoop__internal_ctor
+
+cdef class EventLoop:
+  cdef shared_ptr[Rapicorn__EventLoop] thisp    # wrapped C++ instance
+  def __init__ (self):
+    global EventLoop__internal_ctor
+    assert (EventLoop__internal_ctor != NULL)
+    EventLoop__internal_ctor.swap (self.thisp)
+    del EventLoop__internal_ctor
+    EventLoop__internal_ctor = NULL
+  property PRIORITY_LOW:
+    def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_LOW
+  property PRIORITY_NOW:
+    def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_NOW
+  property PRIORITY_ASCENT:
+    def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_ASCENT
+  property PRIORITY_HIGH:
+    def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_HIGH
+  property PRIORITY_NEXT:
+    def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_NEXT
+  property PRIORITY_NORMAL:
+    def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_NORMAL
+  property PRIORITY_UPDATE:
+    def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_UPDATE
+  property PRIORITY_IDLE:
+    def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_IDLE
+  def add (self, EventSource source, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
+    if source.thisp.get() == NULL:
+      raise ValueError ("Argument '%s' required to be non empty" % "source")
+    return self.thisp.get().add (source.thisp, priority)
+  def wakeup (self):                    self.thisp.get().wakeup()
+  def remove (self, id):                self.thisp.get().remove (id)
+  def try_remove (self, id):            return self.thisp.get().try_remove (id)
+  def destroy_loop (self):              self.thisp.get().destroy_loop()
+  def has_primary (self):               return self.thisp.get().has_primary()
+  def flag_primary (self, on):          return self.thisp.get().flag_primary (on)
+
+cdef class MainLoop (EventLoop):
+  cdef Rapicorn__MainLoop *mainp                # wrapped C++ instance
+  def __init__ (self):
+    global EventLoop__internal_ctor
+    cdef shared_ptr[Rapicorn__MainLoop] mlptr = MainLoop__create()
+    EventLoop__internal_ctor = new shared_ptr[Rapicorn__EventLoop] (<shared_ptr[Rapicorn__EventLoop]> mlptr)
+    super (MainLoop, self).__init__()           # EventLoop.__init__
+    self.mainp = mlptr.get()                    # MainLoop*
+  def __dealloc__ (self):
+    self.thisp.reset()
+  def run (self):                       return self.mainp.run()
+  def running (self):                   return self.mainp.running()
+  def finishable (self):                return self.mainp.finishable()
+  def quit (self, quit_code = 0):       self.mainp.quit_ (quit_code)
+  def pending (self):                   return self.mainp.pending()
+  def iterate (self, blocking):         return self.mainp.iterate (blocking)
+  def iterate_pending (self):           self.mainp.iterate_pending()
+  def create_slave (self):
+      global EventLoop__internal_ctor
+      EventLoop__internal_ctor = new shared_ptr[Rapicorn__EventLoop] (self.mainp.create_slave())
+      return EventLoop()
