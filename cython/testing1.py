@@ -12,6 +12,21 @@ assert ml != sl and sl != ml and sm != sl and sl != sm
 assert ml == sm and sm == ml and ml != m3 and m3 != ml
 assert ml.main_loop() == ml  and m3.main_loop() == m3
 
+# test exec_callback
+ect_counter = 5
+ect_value = ""
+def bhandler():
+  global ect_counter, ect_value
+  if ect_counter:
+    ect_value += "*"
+    ect_counter -= 1
+  return ect_counter
+ml = Rapicorn.MainLoop()
+ml.exec_callback (bhandler)
+ml.iterate_pending()
+assert ect_counter == 0
+assert ect_value == "*****"
+
 # test exec_dispatcher
 prepared   = [ None, None, None ]
 checked    = [ None, None, None ]

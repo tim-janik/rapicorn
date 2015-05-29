@@ -1,6 +1,58 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rapicorn-core.hh>
 
+template<class R>
+class PyxxCaller0 {
+  typedef std::function<R ()> StdFunction;
+  typedef R (*Marshal) (PyObject*);
+  Marshal   marshal_;
+  PyObject *pyo_;
+public:
+  explicit PyxxCaller0 (PyObject *pyo, Marshal marshal) :
+    marshal_ (marshal), pyo_ (pyo)
+  {
+    Py_INCREF (pyo_);
+  }
+  /*copy*/ PyxxCaller0 (const PyxxCaller0 &other)
+  {
+    marshal_ = other.marshal_;
+    pyo_ = other.pyo_;
+    Py_INCREF (pyo_);
+  }
+  void
+  operator= (const PyxxCaller0 &other)
+  {
+    marshal_ = other.marshal_;
+    if (other.pyo_)
+      Py_INCREF (other.pyo_);
+    Py_XDECREF (pyo_);
+    pyo_ = other.pyo_;
+  }
+  ~PyxxCaller0()
+  {
+    Py_XDECREF (pyo_);
+  }
+  R
+  operator() ()
+  {
+    return marshal_ (pyo_);
+  }
+};
+
+/* PyxxCaller0<bool> is used for main loop handlers that will be disconnected if 'false'
+ * is returned. When Python exceptions are thrown, the 'marshal_' default behaviour is
+ * to return '0', but we want to keep main loop handlers alive, so we specialize here.
+ */
+template<> bool
+PyxxCaller0<bool>::operator() ()
+{
+  bool result = marshal_ (pyo_);
+  if (PyErr_Occurred())
+    result = true;
+  return result;
+}
+
+
 template<class R, class A1>
 class PyxxCaller1 {
   typedef std::function<R (A1)> StdFunction;
@@ -39,65 +91,6 @@ public:
   }
 };
 
-
-template<bool FALLBACK>
-struct PyxxFunctorClosure {
-  PyObject *pycallable_;
-  PyxxFunctorClosure (const PyxxFunctorClosure &other)
-  {
-    pycallable_ = other.pycallable_;
-    if (pycallable_)
-      Py_INCREF (pycallable_);
-  }
-  void
-  operator= (const PyxxFunctorClosure &other)
-  {
-    if (other.pycallable_)
-      Py_INCREF (other.pycallable_);
-    Py_XDECREF (pycallable_);
-    pycallable_ = other.pycallable_;
-  }
-  PyxxFunctorClosure (PyObject *pycallable)
-  {
-    pycallable_ = pycallable;
-    if (pycallable_)
-      Py_INCREF (pycallable_);
-  }
-  bool
-  operator() ()
-  {
-    bool keep_alive = FALLBACK; // value returned on exceptions
-    const uint length = 0;
-    PyObject *tuple = PyTuple_New (length);
-    if (!PyErr_Occurred())
-      {
-        PyObject *pyresult = PyObject_Call (pycallable_, tuple, NULL);
-        if (!PyErr_Occurred())
-          keep_alive = pyresult && pyresult != Py_None && PyObject_IsTrue (pyresult);
-        Py_XDECREF (pyresult);
-      }
-    Py_XDECREF (tuple);
-    return keep_alive;
-  }
-  ~PyxxFunctorClosure()
-  {
-    Py_XDECREF (pycallable_);
-  }
-};
-
-static std::function<bool()>
-pyxx_make_bool_functor (PyObject *pycallable, bool fallback)
-{
-  if (!PyCallable_Check (pycallable))
-    {
-      PyErr_Format (PyExc_TypeError, "'%s' object is not callable", Py_TYPE (pycallable)->tp_name);
-      return std::function<bool()>();
-    }
-  if (fallback)
-    return PyxxFunctorClosure<1> (pycallable);
-  else
-    return PyxxFunctorClosure<0> (pycallable);
-}
 
 static void
 pyxx_main_loop_add_watchdog (Rapicorn::MainLoop &main_loop)

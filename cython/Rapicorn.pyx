@@ -23,10 +23,11 @@ cdef extern from "memory" namespace "std":
 
 # == Utilities from pyxxglue.hh ==
 cdef extern from "pyxxglue.hh":
+  cppclass PyxxCaller0[R]:
+    PyxxCaller0 (object, R (*M) (object))
   cppclass PyxxCaller1[R,A1]:
     PyxxCaller1 (object, R (*M) (object, A1))
   cppclass PyxxBoolFunctor                      "std::function<bool()>"
-  PyxxBoolFunctor     pyxx_make_bool_functor      (object pycallable, bool fallback) except *
   void                pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
   Rapicorn__MainLoop* dynamic_cast_MainLoopPtr "dynamic_cast<Rapicorn::MainLoop*>" (Rapicorn__EventLoop*) except NULL
 
@@ -53,7 +54,14 @@ def _richcmp (object1, object2, op):
 
 # == Rapicorn C++ Core ==
 # callback types
+ctypedef PyxxCaller0[bool]                             Caller0__bool_
 ctypedef PyxxCaller1[bool, const Rapicorn__LoopState&] Caller1__bool__LoopState
+# marshal functions for callback types
+cdef bool pyx_marshal__bool_ (object pycallable) except *:
+  return pycallable ()
+cdef bool pyx_marshal__bool__LoopState (object pycallable, const Rapicorn__LoopState &a1) except *:
+  b1 = Rapicorn__LoopState__wrap (a1)
+  return pycallable (b1)
 # namespaced declarations
 cdef extern from "rapicorn-core.hh"   namespace "Rapicorn":
   cppclass Rapicorn__LoopState                  "Rapicorn::LoopState"
@@ -84,10 +92,10 @@ cdef extern from "rapicorn-core.hh"   namespace "Rapicorn":
     bool has_primary     ()
     bool flag_primary    (bool)
     Rapicorn__MainLoop* main_loop  () const
-    uint exec_now        (PyxxBoolFunctor)
-    uint exec_callback   (PyxxBoolFunctor, int priority)
-    uint exec_idle       (PyxxBoolFunctor)
-    uint exec_timer      (PyxxBoolFunctor, uint delay_ms, uint repeat_ms, int priority)
+    uint exec_now        (Caller0__bool_)
+    uint exec_callback   (Caller0__bool_, int priority)
+    uint exec_idle       (Caller0__bool_)
+    uint exec_timer      (Caller0__bool_, uint delay_ms, uint repeat_ms, int priority)
     uint exec_dispatcher (Caller1__bool__LoopState, int priority)
   int Rapicorn__EventLoop__PRIORITY_LOW         "Rapicorn::EventLoop::PRIORITY_LOW"
   int Rapicorn__EventLoop__PRIORITY_NOW         "Rapicorn::EventLoop::PRIORITY_NOW"
@@ -147,9 +155,6 @@ cdef object Rapicorn__LoopState__wrap (const Rapicorn__LoopState &c_arg1):
   Rapicorn__LoopState__ctarg = NULL
   return pyo
 cdef const Rapicorn__LoopState *Rapicorn__LoopState__ctarg = NULL
-cdef bool pyx_marshal__bool__LoopState (object pycallable, const Rapicorn__LoopState &a1) except *:
-  b1 = Rapicorn__LoopState__wrap (a1)
-  return pycallable (b1)
 
 cdef class EventLoop:
   cdef shared_ptr[Rapicorn__EventLoop] thisp    # wrapped C++ instance
@@ -202,14 +207,14 @@ cdef class EventLoop:
     return MainLoop()
   # note, we use bool_functor with fallback=1 to keep handlers connected across exceptions
   def exec_now (self, callable):
-    return self.thisp.get().exec_now (pyxx_make_bool_functor (callable, 1))
+    return self.thisp.get().exec_now (Caller0__bool_ (callable, &pyx_marshal__bool_))
   def exec_callback (self, callable, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
-    return self.thisp.get().exec_callback (pyxx_make_bool_functor (callable, 1), priority)
+    return self.thisp.get().exec_callback (Caller0__bool_ (callable, &pyx_marshal__bool_), priority)
   def exec_idle (self, callable):
-    return self.thisp.get().exec_idle (pyxx_make_bool_functor (callable, 1))
-  def exec_timer (self, callable, delay_ms, repeat_ms = -1, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
+    return self.thisp.get().exec_idle (Caller0__bool_ (callable, &pyx_marshal__bool_))
+  def exec_timer (self, pycallable, delay_ms, repeat_ms = -1, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
     if repeat_ms < 0: repeat_ms = delay_ms
-    return self.thisp.get().exec_timer (pyxx_make_bool_functor (callable, 1), delay_ms, repeat_ms, priority)
+    return self.thisp.get().exec_timer (Caller0__bool_ (pycallable, &pyx_marshal__bool_), delay_ms, repeat_ms, priority)
   def exec_dispatcher (self, pycallable, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
     return self.thisp.get().exec_dispatcher (Caller1__bool__LoopState (pycallable, &pyx_marshal__bool__LoopState), priority)
 cdef shared_ptr[Rapicorn__EventLoop] *EventLoop__internal_ctarg
