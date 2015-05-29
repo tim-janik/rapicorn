@@ -1,6 +1,45 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include <rapicorn-core.hh>
 
+template<class R, class A1>
+class PyxxCaller1 {
+  typedef std::function<R (A1)> StdFunction;
+  typedef R (*Marshal) (PyObject*, A1);
+  Marshal   marshal_;
+  PyObject *pyo_;
+public:
+  explicit PyxxCaller1 (PyObject *pyo, Marshal marshal) :
+    marshal_ (marshal), pyo_ (pyo)
+  {
+    Py_INCREF (pyo_);
+  }
+  /*copy*/ PyxxCaller1 (const PyxxCaller1 &other)
+  {
+    marshal_ = other.marshal_;
+    pyo_ = other.pyo_;
+    Py_INCREF (pyo_);
+  }
+  void
+  operator= (const PyxxCaller1 &other)
+  {
+    marshal_ = other.marshal_;
+    if (other.pyo_)
+      Py_INCREF (other.pyo_);
+    Py_XDECREF (pyo_);
+    pyo_ = other.pyo_;
+  }
+  ~PyxxCaller1()
+  {
+    Py_XDECREF (pyo_);
+  }
+  R
+  operator() (A1 a1)
+  {
+    return marshal_ (pyo_, a1);
+  }
+};
+
+
 template<bool FALLBACK>
 struct PyxxFunctorClosure {
   PyObject *pycallable_;

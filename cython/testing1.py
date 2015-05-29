@@ -12,5 +12,28 @@ assert ml != sl and sl != ml and sm != sl and sl != sm
 assert ml == sm and sm == ml and ml != m3 and m3 != ml
 assert ml.main_loop() == ml  and m3.main_loop() == m3
 
+# test exec_dispatcher
+prepared   = [ None, None, None ]
+checked    = [ None, None, None ]
+dispatched = [ None, None, None ]
+counter    = 0
+ml = Rapicorn.MainLoop()
+def dispatcher (loop_state):
+  global counter, prepared, checked, dispatched
+  if   loop_state.phase == loop_state.PREPARE:
+    prepared[counter] = True
+    return True
+  elif loop_state.phase == loop_state.CHECK:
+    checked[counter] = "Yes"
+    return True
+  elif loop_state.phase == loop_state.DISPATCH:
+    dispatched[counter] = counter
+    counter += 1
+    return counter <= 2
+ml.exec_dispatcher (dispatcher)
+ml.iterate_pending()
+summary = [ counter ] + prepared + checked + dispatched
+assert summary == [3, True, True, True, 'Yes', 'Yes', 'Yes', 0, 1, 2]
+
 # all done
 print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'

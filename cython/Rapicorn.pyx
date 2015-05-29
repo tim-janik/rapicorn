@@ -4,11 +4,12 @@ from cython.operator cimport dereference as deref
 from libc.stdint cimport *
 from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 
+# == Standard Typedefs ==
 ctypedef uint32_t uint
 ctypedef int64_t  int64
 ctypedef uint64_t uint64
 
-# std::shared_ptr
+# == Utilities from std:: ==
 cdef extern from "memory" namespace "std":
   cppclass shared_ptr[T]:
     shared_ptr     ()
@@ -20,6 +21,16 @@ cdef extern from "memory" namespace "std":
     bool unique    () const
     T*   get       ()
 
+# == Utilities from pyxxglue.hh ==
+cdef extern from "pyxxglue.hh":
+  cppclass PyxxCaller1[R,A1]:
+    PyxxCaller1 (object, R (*M) (object, A1))
+  cppclass PyxxBoolFunctor                      "std::function<bool()>"
+  PyxxBoolFunctor     pyxx_make_bool_functor      (object pycallable, bool fallback) except *
+  void                pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
+  Rapicorn__MainLoop* dynamic_cast_MainLoopPtr "dynamic_cast<Rapicorn::MainLoop*>" (Rapicorn__EventLoop*) except NULL
+
+# == Utilities inlined ==
 cdef inline int richcmp_op (ssize_t cmpv, int op): # cmpv==0 euqals, cmpv<0 lesser, cmpv>0 greater
   if   op == Py_LT: return cmpv <  0            # <     0
   elif op == Py_LE: return cmpv <= 0            # <=    1
@@ -40,23 +51,29 @@ def _richcmp (object1, object2, op):
   elif op == 4: return object1 >  object2
   elif op == 5: return object1 >= object2
 
-# include pyxxglue.hh
-cdef extern from "pyxxglue.hh":
-  # Callback wrappers
-  cppclass PyxxBoolFunctor                      "std::function<bool()>"
-  PyxxBoolFunctor     pyxx_make_bool_functor      (object pycallable, bool fallback) except *
-  void                pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
-  Rapicorn__MainLoop* dynamic_cast_MainLoopPtr "dynamic_cast<Rapicorn::MainLoop*>" (Rapicorn__EventLoop*) except NULL
-
-# rapicorn-core.hh declarations
-cdef extern from "rapicorn-core.hh" namespace "Rapicorn":
+# == Rapicorn C++ Core ==
+# callback types
+ctypedef PyxxCaller1[bool, const Rapicorn__LoopState&] Caller1__bool__LoopState
+# namespaced declarations
+cdef extern from "rapicorn-core.hh"   namespace "Rapicorn":
   cppclass Rapicorn__LoopState                  "Rapicorn::LoopState"
   cppclass Rapicorn__EventSource                "Rapicorn::EventSource"
   cppclass Rapicorn__EventLoop                  "Rapicorn::EventLoop"
   cppclass Rapicorn__MainLoop                   "Rapicorn::MainLoop"
-  # EventLoop class
+  cdef enum Rapicorn__LoopState__Phase          "Rapicorn::LoopState::Phase":
+    LoopState__NONE                             "Rapicorn::LoopState::NONE"
+    LoopState__COLLECT                          "Rapicorn::LoopState::COLLECT"
+    LoopState__PREPARE                          "Rapicorn::LoopState::PREPARE"
+    LoopState__CHECK                            "Rapicorn::LoopState::CHECK"
+    LoopState__DISPATCH                         "Rapicorn::LoopState::DISPATCH"
+    LoopState__DESTROY                          "Rapicorn::LoopState::DESTROY"
+  # C++ LoopState
+  cppclass Rapicorn__LoopState:
+    Rapicorn__LoopState__Phase  phase
+    uint64                      current_time_usecs
+    bool                        seen_primary
+  # C++ EventLoop
   cppclass Rapicorn__EventLoop:
-    cppclass DispatcherFunctor                  "std::function<bool (const LoopState&)>"
     cppclass BoolPollFunctor                    "std::function<bool (PollFD&)>"
     shared_ptr[Rapicorn__EventLoop]     shared_from_this()
     uint add             (shared_ptr[Rapicorn__EventSource], int)
@@ -71,6 +88,7 @@ cdef extern from "rapicorn-core.hh" namespace "Rapicorn":
     uint exec_callback   (PyxxBoolFunctor, int priority)
     uint exec_idle       (PyxxBoolFunctor)
     uint exec_timer      (PyxxBoolFunctor, uint delay_ms, uint repeat_ms, int priority)
+    uint exec_dispatcher (Caller1__bool__LoopState, int priority)
   int Rapicorn__EventLoop__PRIORITY_LOW         "Rapicorn::EventLoop::PRIORITY_LOW"
   int Rapicorn__EventLoop__PRIORITY_NOW         "Rapicorn::EventLoop::PRIORITY_NOW"
   int Rapicorn__EventLoop__PRIORITY_ASCENT      "Rapicorn::EventLoop::PRIORITY_ASCENT"
@@ -79,7 +97,7 @@ cdef extern from "rapicorn-core.hh" namespace "Rapicorn":
   int Rapicorn__EventLoop__PRIORITY_NORMAL      "Rapicorn::EventLoop::PRIORITY_NORMAL"
   int Rapicorn__EventLoop__PRIORITY_UPDATE      "Rapicorn::EventLoop::PRIORITY_UPDATE"
   int Rapicorn__EventLoop__PRIORITY_IDLE        "Rapicorn::EventLoop::PRIORITY_IDLE"
-  # MainLoop
+  # C++ MainLoop
   cppclass Rapicorn__MainLoop (Rapicorn__EventLoop):
     int                                 run             () except *
     bool                                running         () except *
@@ -91,24 +109,57 @@ cdef extern from "rapicorn-core.hh" namespace "Rapicorn":
     shared_ptr[Rapicorn__EventLoop]     create_slave ()
   shared_ptr[Rapicorn__MainLoop] MainLoop__create "Rapicorn::MainLoop::create" ()
 
-# rapicorn-core.hh wrappers
-
+# == Rapicorn Python Core ==
 cdef class EventSource:
   cdef shared_ptr[Rapicorn__EventSource] thisp
   def __cinit__ (self, do_not_construct_manually = False):
     assert (do_not_construct_manually)
 
-cdef shared_ptr[Rapicorn__EventLoop] *EventLoop__internal_ctor
+cdef class LoopState (object):
+  cdef Rapicorn__LoopState__Phase  phase
+  cdef uint64                      current_time_usecs
+  cdef bool                        seen_primary
+  NONE     = LoopState__NONE
+  COLLECT  = LoopState__COLLECT
+  PREPARE  = LoopState__PREPARE
+  CHECK    = LoopState__CHECK
+  DISPATCH = LoopState__DISPATCH
+  DESTROY  = LoopState__DESTROY
+  def __init__ (self):
+    if Rapicorn__LoopState__ctarg == NULL:
+      raise TypeError ("cannot create '%s' instances" % self.__class__.__name__)
+    self.current_time_usecs = Rapicorn__LoopState__ctarg.current_time_usecs
+    self.phase = Rapicorn__LoopState__ctarg.phase
+    self.seen_primary = Rapicorn__LoopState__ctarg.seen_primary
+  property current_time_usecs:
+    def __get__ (self):         return self.current_time_usecs
+    def __set__ (self, val):    self.current_time_usecs = val
+  property phase:
+    def __get__ (self):         return self.phase
+    def __set__ (self, val):    self.phase = val
+  property seen_primary:
+    def __get__ (self):         return self.seen_primary
+    def __set__ (self, val):    self.seen_primary = val
+cdef object Rapicorn__LoopState__wrap (const Rapicorn__LoopState &c_arg1):
+  global Rapicorn__LoopState__ctarg
+  Rapicorn__LoopState__ctarg = &c_arg1
+  cdef object pyo = LoopState()
+  Rapicorn__LoopState__ctarg = NULL
+  return pyo
+cdef const Rapicorn__LoopState *Rapicorn__LoopState__ctarg = NULL
+cdef bool pyx_marshal__bool__LoopState (object pycallable, const Rapicorn__LoopState &a1) except *:
+  b1 = Rapicorn__LoopState__wrap (a1)
+  return pycallable (b1)
 
 cdef class EventLoop:
   cdef shared_ptr[Rapicorn__EventLoop] thisp    # wrapped C++ instance
   def __init__ (self):
-    global EventLoop__internal_ctor
-    if EventLoop__internal_ctor == NULL:
+    global EventLoop__internal_ctarg
+    if EventLoop__internal_ctarg == NULL:
       raise TypeError ("cannot create '%s' instances" % self.__class__.__name__)
-    EventLoop__internal_ctor.swap (self.thisp)
-    del EventLoop__internal_ctor
-    EventLoop__internal_ctor = NULL
+    EventLoop__internal_ctarg.swap (self.thisp)
+    del EventLoop__internal_ctarg
+    EventLoop__internal_ctarg = NULL
   property PRIORITY_LOW:
     def __get__ (self):  return Rapicorn__EventLoop__PRIORITY_LOW
   property PRIORITY_NOW:
@@ -143,11 +194,11 @@ cdef class EventLoop:
   def has_primary (self):               return self.thisp.get().has_primary()
   def flag_primary (self, on):          return self.thisp.get().flag_primary (on)
   def main_loop (self):
-    global EventLoop__internal_ctor
+    global EventLoop__internal_ctarg
     cdef Rapicorn__MainLoop *ml = self.thisp.get().main_loop()
     if ml == NULL:
       return None
-    EventLoop__internal_ctor = new shared_ptr[Rapicorn__EventLoop] (ml.shared_from_this())
+    EventLoop__internal_ctarg = new shared_ptr[Rapicorn__EventLoop] (ml.shared_from_this())
     return MainLoop()
   # note, we use bool_functor with fallback=1 to keep handlers connected across exceptions
   def exec_now (self, callable):
@@ -159,14 +210,17 @@ cdef class EventLoop:
   def exec_timer (self, callable, delay_ms, repeat_ms = -1, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
     if repeat_ms < 0: repeat_ms = delay_ms
     return self.thisp.get().exec_timer (pyxx_make_bool_functor (callable, 1), delay_ms, repeat_ms, priority)
+  def exec_dispatcher (self, pycallable, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
+    return self.thisp.get().exec_dispatcher (Caller1__bool__LoopState (pycallable, &pyx_marshal__bool__LoopState), priority)
+cdef shared_ptr[Rapicorn__EventLoop] *EventLoop__internal_ctarg
 
 cdef class MainLoop (EventLoop):
   cdef Rapicorn__MainLoop *mainp                # wrapped C++ instance
   def __init__ (self):
-    global EventLoop__internal_ctor
-    if EventLoop__internal_ctor == NULL:
-      EventLoop__internal_ctor = new shared_ptr[Rapicorn__EventLoop] (<shared_ptr[Rapicorn__EventLoop]> MainLoop__create())
-    self.mainp = dynamic_cast_MainLoopPtr (EventLoop__internal_ctor.get()) # MainLoop*
+    global EventLoop__internal_ctarg
+    if EventLoop__internal_ctarg == NULL:
+      EventLoop__internal_ctarg = new shared_ptr[Rapicorn__EventLoop] (<shared_ptr[Rapicorn__EventLoop]> MainLoop__create())
+    self.mainp = dynamic_cast_MainLoopPtr (EventLoop__internal_ctarg.get()) # MainLoop*
     assert self.mainp != NULL   # need successful dynamic_cast<MainLoop*>
     super (MainLoop, self).__init__()           # EventLoop.__init__ sets up thisp
     pyxx_main_loop_add_watchdog (deref (self.mainp))
@@ -180,6 +234,6 @@ cdef class MainLoop (EventLoop):
   def iterate (self, blocking):         return self.mainp.iterate (blocking)
   def iterate_pending (self):           self.mainp.iterate_pending()
   def create_slave (self):
-    global EventLoop__internal_ctor
-    EventLoop__internal_ctor = new shared_ptr[Rapicorn__EventLoop] (self.mainp.create_slave())
+    global EventLoop__internal_ctarg
+    EventLoop__internal_ctarg = new shared_ptr[Rapicorn__EventLoop] (self.mainp.create_slave())
     return EventLoop()
