@@ -9,7 +9,6 @@ AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
-HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 # Loading Python modules requires accesss to libtool objdir
 objdir = .libs
 RPYTHON      = PYTHONPATH="$(abs_builddir)/$(objdir):$$PYTHONPATH" $(PYTHON)
@@ -20,14 +19,16 @@ Rapicorn_PYTHON 	= # __init__.py
 Rapicorn_LTLIBRARIES	= Rapicorn.la
 # Pyx Rapicorn module
 Rapicorn_la_SOURCES	= Rapicorn.cc
-Rapicorn_la_CXXFLAGS	= $(AM_CXXFLAGS) -Wno-redundant-decls
+Rapicorn_la_CXXFLAGS	= $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	= $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	= $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 EXTRA_DIST	       += Rapicorn.pyx pyxxglue.hh
 CLEANFILES	       += Rapicorn.cc
 
-%.cc: %.pyx
-	$(CYTHON) --cplus -Wextra -Werror $< -o $@
+Rapicorn.cc: Rapicorn.pyx
+	@echo "  CYTHON  " $@
+	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail Rapicorn.pyx -o $@
+
 
 # === Tests ===
 TEST_PYPROGS = testing1.py
