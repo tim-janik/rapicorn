@@ -10,6 +10,10 @@ AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
+# Loading Python modules requires accesss to libtool objdir
+objdir = .libs
+RPYTHON      = PYTHONPATH="$(abs_builddir)/$(objdir):$$PYTHONPATH" $(PYTHON)
+# VERIFY: python -ic "import sys, os; sys.path.insert (0, os.path.abspath ('.libs')) ; import Rapicorn"
 
 # Py Rapicorn - installation
 Rapicorndir         	= ${pythondir}/@RAPICORN_NAMESPACE_NAME@
@@ -26,3 +30,19 @@ CLEANFILES	       += Rapicorn.cc
 %.cc: %.pyx
 	$(CYTHON) --cplus -Wextra -Werror $< -o $@
 
+# === Tests ===
+TEST_PYPROGS = testing1.py
+
+# === TEST_PYPROGS ===
+.PHONY: check-TEST_PYPROGS
+check-TEST_PYPROGS:
+	$(Q) $(X11TEST_SERVER) && \
+	  for tst in $(TEST_PYPROGS) ; do				\
+	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;	\
+	    $(RPYTHON) $$rt && echo "PASS: $$tst" || exit $? ;		\
+	  done
+	@MESSAGETEXT="All $(words $(TEST_PYPROGS)) Python tests passed"	\
+	&& [ 0 -lt $(words $(TEST_PYPROGS)) ]				\
+	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
+	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
+check-local: check-TEST_PYPROGS
