@@ -123,7 +123,7 @@ public:
   queue_check_primaries()
   {
     if (loop_)
-      loop_->exec_background (Aida::slot (*this, &AppSource::check_primaries));
+      loop_->exec_idle (Aida::slot (*this, &AppSource::check_primaries));
   }
 };
 

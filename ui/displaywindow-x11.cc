@@ -1945,7 +1945,7 @@ X11Context::queue_update (size_t xid)
   const bool need_handler = queued_updates_.empty();
   queued_updates_.push_back (xid);
   if (need_handler)
-    loop_->exec_timer (50, Aida::slot (*this, &X11Context::process_updates));
+    loop_->exec_timer (Aida::slot (*this, &X11Context::process_updates), 50);
 }
 
 } // Rapicorn

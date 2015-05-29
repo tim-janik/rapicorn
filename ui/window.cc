@@ -761,7 +761,7 @@ WindowImpl::draw_now ()
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
       // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
-      loop_->exec_update ([this] () { if (display_window_) sig_displayed.emit(); });
+      loop_->exec_callback ([this] () { if (display_window_) sig_displayed.emit(); }, EventLoop::PRIORITY_UPDATE);
       const uint64 stop = timestamp_realtime();
       EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
               x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
@@ -1096,7 +1096,7 @@ WindowImpl::create_display_window ()
       RAPICORN_ASSERT (display_window_ != NULL);
       loop_->flag_primary (true); // FIXME: depends on WM-managable
       EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::async_show);
-      loop_->exec_normal (sl);
+      loop_->exec_callback (sl);
     }
 }
 

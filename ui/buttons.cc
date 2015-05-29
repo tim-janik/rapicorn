@@ -95,12 +95,15 @@ ButtonAreaImpl::activate_widget ()
       window->draw_child (view);
       handled = activate_button_command (1);
       if (!unpress_)
-        unpress_ = loop->exec_timer (50, 0, [this, &view] () {
+        {
+          auto unpress_handler = [this, &view] () {
             view.active (false);
             remove_exec (unpress_);
             unpress_ = 0;
             return false;
-          });
+          };
+          unpress_ = loop->exec_timer (unpress_handler, 50, 0);
+        }
     }
   return handled;
 }

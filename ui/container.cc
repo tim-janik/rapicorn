@@ -955,7 +955,7 @@ ResizeContainerImpl::invalidate_parent ()
           WindowImpl *w = get_window();
           EventLoop *loop = w ? w->get_loop() : NULL;
           if (loop)
-            resizer_ = loop->exec_timer (0, Aida::slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
+            resizer_ = loop->exec_callback (Aida::slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
         }
       return;
     }

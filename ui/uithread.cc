@@ -67,7 +67,7 @@ private:
     if (need_check_primary_)
       {
         need_check_primary_ = false;
-        loop_->exec_background (check_primaries);
+        loop_->exec_idle (check_primaries);
       }
     return true;
   }

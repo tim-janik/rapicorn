@@ -172,6 +172,12 @@ EventLoop::flag_primary (bool on)
   return was_primary;
 }
 
+MainLoop*
+EventLoop::main_loop () const
+{
+  return main_loop_;
+}
+
 static const int16 UNDEFINED_PRIORITY = -32768;
 
 uint

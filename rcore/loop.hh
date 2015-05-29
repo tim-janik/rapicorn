@@ -96,28 +96,19 @@ public:
   void destroy_loop    (void);
   bool has_primary     (void);                  ///< Indicates whether loop contains primary sources.
   bool flag_primary    (bool            on);
+  MainLoop* main_loop  () const;                ///< Get the main loop for this loop.
   template<class BoolVoidFunctor>
   uint exec_now        (BoolVoidFunctor &&bvf); ///< Execute a callback as primary source with priority "now" (highest), returning true repeats callback.
-  template<class BoolVoidFunctor>
-  uint exec_next       (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "next" (very important), returning true repeats callback.
   template<class BoolVoidFunctor>
   uint exec_callback   (BoolVoidFunctor &&bvf, int priority
                         = PRIORITY_NORMAL);     ///< Execute a callback at user defined priority returning true repeats callback.
   template<class BoolVoidFunctor>
-  uint exec_normal     (BoolVoidFunctor &&bvf); ///< Execute a callback with normal priority (round-robin for all events and requests), returning true repeats callback.
-  template<class BoolVoidFunctor>
-  uint exec_update     (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "update" (important idle), returning true repeats callback.
-  template<class BoolVoidFunctor>
-  uint exec_background (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "idle", returning true repeats callback.
+  uint exec_idle       (BoolVoidFunctor &&bvf); ///< Execute a callback with priority "idle", returning true repeats callback.
   uint exec_dispatcher (const DispatcherSlot &sl, int priority
                         = PRIORITY_NORMAL);     /// Execute a single dispatcher callback for prepare, check, dispatch.
-  MainLoop* main_loop  () const { return main_loop_; }  ///< Get the main loop for this loop.
-  /// Execute a callback after a specified timeout, returning true repeats callback.
-  template<class BoolVoidFunctor>
-  uint exec_timer      (uint timeout_ms, BoolVoidFunctor &&bvf, int priority = PRIORITY_NORMAL);
   /// Execute a callback after a specified timeout with adjustable initial timeout, returning true repeats callback.
   template<class BoolVoidFunctor>
-  uint exec_timer      (uint initial_timeout_ms, uint repeat_timeout_ms, BoolVoidFunctor &&bvf, int priority = PRIORITY_NORMAL);
+  uint exec_timer      (BoolVoidFunctor &&bvf, uint delay_ms, int64 repeat_ms = -1, int priority = PRIORITY_NORMAL);
   /// Execute a callback after polling for mode on fd, returning true repeats callback.
   template<class BoolVoidPollFunctor>
   uint exec_io_handler (BoolVoidPollFunctor &&bvf, int fd, const String &mode, int priority = PRIORITY_NORMAL);
@@ -296,14 +287,6 @@ EventLoop::exec_now (BoolVoidFunctor &&bvf)
 }
 
 template<class BoolVoidFunctor> uint
-EventLoop::exec_next (BoolVoidFunctor &&bvf)
-{
-  typedef decltype (bvf()) ReturnType;
-  std::function<ReturnType()> slot (bvf);
-  return add (TimedSource::create (slot), PRIORITY_NEXT);
-}
-
-template<class BoolVoidFunctor> uint
 EventLoop::exec_callback (BoolVoidFunctor &&bvf, int priority)
 {
   typedef decltype (bvf()) ReturnType;
@@ -312,23 +295,7 @@ EventLoop::exec_callback (BoolVoidFunctor &&bvf, int priority)
 }
 
 template<class BoolVoidFunctor> uint
-EventLoop::exec_normal (BoolVoidFunctor &&bvf)
-{
-  typedef decltype (bvf()) ReturnType;
-  std::function<ReturnType()> slot (bvf);
-  return add (TimedSource::create (slot), PRIORITY_NORMAL);
-}
-
-template<class BoolVoidFunctor> uint
-EventLoop::exec_update (BoolVoidFunctor &&bvf)
-{
-  typedef decltype (bvf()) ReturnType;
-  std::function<ReturnType()> slot (bvf);
-  return add (TimedSource::create (slot), PRIORITY_UPDATE);
-}
-
-template<class BoolVoidFunctor> uint
-EventLoop::exec_background (BoolVoidFunctor &&bvf)
+EventLoop::exec_idle (BoolVoidFunctor &&bvf)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
@@ -342,19 +309,11 @@ EventLoop::exec_dispatcher (const DispatcherSlot &slot, int priority)
 }
 
 template<class BoolVoidFunctor> uint
-EventLoop::exec_timer (uint timeout_ms, BoolVoidFunctor &&bvf, int priority)
+EventLoop::exec_timer (BoolVoidFunctor &&bvf, uint delay_ms, int64 repeat_ms, int priority)
 {
   typedef decltype (bvf()) ReturnType;
   std::function<ReturnType()> slot (bvf);
-  return add (TimedSource::create (slot, timeout_ms, timeout_ms), priority);
-}
-
-template<class BoolVoidFunctor> uint
-EventLoop::exec_timer (uint initial_timeout_ms, uint repeat_timeout_ms, BoolVoidFunctor &&bvf, int priority)
-{
-  typedef decltype (bvf()) ReturnType;
-  std::function<ReturnType()> slot (bvf);
-  return add (TimedSource::create (slot, initial_timeout_ms, repeat_timeout_ms), priority);
+  return add (TimedSource::create (slot, delay_ms, repeat_ms < 0 ? delay_ms : repeat_ms), priority);
 }
 
 template<class BoolVoidPollFunctor> uint
