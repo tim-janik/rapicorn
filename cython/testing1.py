@@ -1,5 +1,6 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 import Rapicorn
+# python -ic "import sys, os; sys.path.insert (0, os.path.abspath ('.libs')) ; import Rapicorn"
 
 # test MainLoop and EventLoop object identities
 ml = Rapicorn.MainLoop()

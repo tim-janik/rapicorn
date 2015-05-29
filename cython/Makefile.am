@@ -13,7 +13,6 @@ HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 # Loading Python modules requires accesss to libtool objdir
 objdir = .libs
 RPYTHON      = PYTHONPATH="$(abs_builddir)/$(objdir):$$PYTHONPATH" $(PYTHON)
-# VERIFY: python -ic "import sys, os; sys.path.insert (0, os.path.abspath ('.libs')) ; import Rapicorn"
 
 # Py Rapicorn - installation
 Rapicorndir         	= ${pythondir}/@RAPICORN_NAMESPACE_NAME@
