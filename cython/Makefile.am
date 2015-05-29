@@ -22,12 +22,15 @@ Rapicorn_la_SOURCES	= Rapicorn.cc
 Rapicorn_la_CXXFLAGS	= $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	= $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	= $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
-EXTRA_DIST	       += Rapicorn.pyx pyxxglue.hh rcore.pyx
-CLEANFILES	       += Rapicorn.cc
+EXTRA_DIST	       += Rapicorn.pyx pyxxglue.hh rcore.pyx PyxxStub.py
+CLEANFILES	       += Rapicorn.cc idlapi.pyx
 
-Rapicorn.cc: Rapicorn.pyx
+Rapicorn.cc: Rapicorn.pyx rcore.pyx idlapi.pyx
 	@echo "  CYTHON  " $@
 	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail Rapicorn.pyx -o $@
+idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
+	@echo "  AIDACC  " $@
+	$(Q) ${AIDACC} -x $(srcdir)/PyxxStub $(RAPICORNIDL) -o $@ -G strip-path=$(abs_top_srcdir)/
 
 
 # === Tests ===
