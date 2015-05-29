@@ -55,10 +55,9 @@ librapicorncore@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
 librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES = ldscript.map
 librapicorncore@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
 librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
+	$(AM_LDFLAGS) -no-undefined				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
-	-no-undefined $(SYMBOLIC_LDFLAGS)			\
-	$(AM_LDFLAGS)                                           \
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 

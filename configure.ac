@@ -109,12 +109,15 @@ AC_PROG_LD
 AC_LANG_CPLUSPLUS	# use CXX for compilation tests
 AC_LIB_PROG_LD
 AC_LIB_PROG_LD_GNU
-ACX_PROG_LD_GNU_SYMBOLIC
-AC_SUBST([SYMBOLIC_LDFLAGS])
-ACX_PROG_LD_GNU_DYNAMIC_LIST_CPP_NEW
-AC_SUBST([DYNAMIC_LIST_CPP_NEW_LDFLAGS])
 AM_PROG_LIBTOOL
 AC_LIBTOOL_DLOPEN
+ACX_PROG_LD_GNU_SYMBOLIC
+MC_EVAR_ADD(AM_LDFLAGS, $SYMBOLIC_LDFLAGS)
+MC_EVAR_ADD(AM_LDFLAGS, -pthread)
+MC_EVAR_ADD(AM_LDFLAGS, -lrt)
+if ${LD} --help 2>&1 | grep -q -- '-export-dynamic\b' ; then
+  MC_EVAR_ADD(AM_LDFLAGS, [-Wl,-export-dynamic])
+fi
 
 # AM_LDFLAGS, optimize linker to use faster ELF symbol hashing if we have compiler and linker support
 AC_MSG_CHECKING([whether CC, CXX and LD support gnu.hash sections])
@@ -126,8 +129,6 @@ if ${CC}  -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed'
 else
   AC_MSG_RESULT(no)
 fi
-MC_EVAR_ADD(AM_LDFLAGS, -pthread)
-MC_EVAR_ADD(AM_LDFLAGS, -lrt)
 AC_SUBST(AM_LDFLAGS)
 
 # Pick C++ dialect, needed in CXXFLAGS for compile tests

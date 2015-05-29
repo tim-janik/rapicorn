@@ -76,10 +76,9 @@ librapicorn@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
 librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la ldscript.map \
 						$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.la
 librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
+	$(AM_LDFLAGS) -no-undefined				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
-	-no-undefined $(SYMBOLIC_LDFLAGS)			\
-	$(AM_LDFLAGS)						\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
 	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la \

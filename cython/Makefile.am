@@ -18,10 +18,10 @@ Rapicorn_LTLIBRARIES	= Rapicorn.la
 # Pyx Rapicorn module
 Rapicorn_la_SOURCES	= Rapicorn.cc
 Rapicorn_la_CXXFLAGS	= $(AM_CXXFLAGS) -Wno-redundant-decls
-Rapicorn_la_LDFLAGS	= $(AM_LDFLAGS) $(SYMBOLIC_LDFLAGS) -module -avoid-version -no-undefined
+Rapicorn_la_LDFLAGS	= $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	= $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 EXTRA_DIST	       += Rapicorn.pyx pyxxglue.hh
-CLEANFILES		= Rapicorn.cc
+CLEANFILES	       += Rapicorn.cc
 
 %.cc: %.pyx
 	$(CYTHON) --cplus -Wextra -Werror $< -o $@
