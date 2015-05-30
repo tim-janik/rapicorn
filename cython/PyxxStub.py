@@ -171,10 +171,13 @@ class Generator:
       elif tp.storage == Decls.RECORD:
         s += '  cppclass %s:\n' % underscore_typename (tp)
         for fname, ftp in tp.fields:
-          s += '    %-40s %s\n' % (self.cxx_type (ftp), fname)
+          s += '    %-30s %s\n' % (self.cxx_type (ftp), fname)
       elif tp.storage == Decls.INTERFACE:
         s += '  cppclass %s:\n' % underscore_typename (tp)
-        s += '    pass\n' # FIXME
+        for fname, ftp in tp.fields:
+          s += '    %-30s %-20s () except *\n' % (underscore_typename (ftp), fname)
+          s += '    %-30s %-20s (%s) except *\n' % ('void', fname, underscore_typename (ftp))
+        s += '    pass\n'
     # Py Enums
     s += '\n'
     s += '# Python Enums\n'
@@ -211,7 +214,12 @@ class Generator:
         s += '  pass\n'
       elif tp.storage == Decls.INTERFACE:
         s += '\ncdef class %s:\n' % tp.name
-        s += '  pass\n' # FIXME
+        s += '  cdef %s _handle\n' % underscore_typename (tp)
+        for fname, ftp in tp.fields:
+          s += '  property %s:\n' % fname
+          s += '    def __get__ (self):    return %s\n' % self.py_wrap ('self._handle.%s()' % fname, ftp)
+          s += '    def __set__ (self, v): self._handle.%s (%s)\n' % (fname, self.cxx_unwrap ('v', ftp))
+        s += '  pass\n'
       if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
         s += 'cdef %s %s__unwrap (object pyo1) except *:\n' % (type____name, type____name)
         s += reindent ('  ', self.cxx_unwrap_impl ('pyo1', tp))

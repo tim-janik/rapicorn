@@ -13,6 +13,7 @@ ctypedef int32_t  int32
 ctypedef uint32_t uint32
 ctypedef int64_t  int64
 ctypedef uint64_t uint64
+ctypedef double   float64
 
 
 # == Utilities for richcmp ==
