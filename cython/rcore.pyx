@@ -13,27 +13,6 @@ cdef extern from "memory" namespace "std":
     bool unique    () const
     T*   get       ()
 
-# == Utilities inlined ==
-cdef inline int richcmp_op (ssize_t cmpv, int op): # cmpv==0 euqals, cmpv<0 lesser, cmpv>0 greater
-  if   op == Py_LT: return cmpv <  0            # <     0
-  elif op == Py_LE: return cmpv <= 0            # <=    1
-  elif op == Py_EQ: return cmpv == 0            # ==    2
-  elif op == Py_NE: return cmpv != 0            # !=    3
-  elif op == Py_GT: return cmpv >  0            # >     4
-  elif op == Py_GE: return cmpv >= 0            # >=    5
-
-cdef inline int ssize_richcmp (ssize_t s1, ssize_t s2, int op):
-  cdef ssize_t cmpv = -1 if s1 < s2 else s1 > s2
-  return richcmp_op (cmpv, op)
-
-def _richcmp (object1, object2, op):
-  if   op == 0: return object1 <  object2
-  elif op == 1: return object1 <= object2
-  elif op == 2: return object1 == object2
-  elif op == 3: return object1 != object2
-  elif op == 4: return object1 >  object2
-  elif op == 5: return object1 >= object2
-
 # == Rapicorn C++ Core ==
 # callback types
 ctypedef PyxxCaller0[bool]                             Caller0__bool_

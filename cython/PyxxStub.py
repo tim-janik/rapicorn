@@ -127,6 +127,9 @@ class Generator:
     s += '  raise NotImplementedError\n' # FIXME
     s += 'cdef object Rapicorn__Any__wrap (const Rapicorn__Any &cxx1):\n'
     s += '  raise NotImplementedError\n' # FIXME
+    s += 'cdef int32 int32__unwrap (object pyo1):\n'
+    s += '  cdef int64 v64 = pyo1 # type checks for int-convertible\n'
+    s += '  return <int32> v64 # silenty "cut" too big numbers'
     # C++ Declarations
     s += '\n'
     s += '# C++ declarations\n'
@@ -161,10 +164,14 @@ class Generator:
         continue
       s += self.open_namespace ('cdef extern from * namespace "%s":\n', '::', tp)
       if tp.storage == Decls.SEQUENCE:
-        ename, etp = tp.elements
-        s += '  cppclass %s (vector[%s]):\n' % (underscore_typename (tp), underscore_typename (etp))
+        fname, ftp = tp.elements
+        s += '  cppclass %s (vector[%s]):\n' % (underscore_typename (tp), underscore_typename (ftp))
         s += '    pass\n' # FIXME
-      elif tp.storage in (Decls.RECORD, Decls.INTERFACE):
+      elif tp.storage == Decls.RECORD:
+        s += '  cppclass %s:\n' % underscore_typename (tp)
+        for fname, ftp in tp.fields:
+          s += '    %-40s %s\n' % (self.cxx_type (ftp), fname)
+      elif tp.storage == Decls.INTERFACE:
         s += '  cppclass %s:\n' % underscore_typename (tp)
         s += '    pass\n' # FIXME
     # Py Enums
@@ -188,17 +195,18 @@ class Generator:
       assert type_namespace_names (tp) == [ 'Rapicorn' ] # FIXME: assert unique namespace
       type____name, type_cc_name = underscore_typename (tp), colon_typename (tp)
       if tp.storage == Decls.RECORD:
-        s += '\ncdef class %s:\n' % tp.name
+        s += '\ncdef class %s (Record):\n' % tp.name
         for field in tp.fields:
           ident, type_node = field
           s += '  cdef %s %s\n' % (self.cxx_type (type_node), ident)
-        for field in tp.fields:
-          ident, type_node = field
-          s += '  property %s:\n' % ident
-          s += '    def __get__ (self):    return %s\n' % self.py_wrap ('self.%s' % ident, type_node)
-          s += '    def __set__ (self, v): self.%s = %s\n' % (ident, self.cxx_unwrap ('v', type_node))
+        for fname, ftp in tp.fields:
+          s += '  property %s:\n' % fname
+          s += '    def __get__ (self):    return %s\n' % self.py_wrap ('self.%s' % fname, ftp)
+          s += '    def __set__ (self, v): self.%s = %s\n' % (fname, self.cxx_unwrap ('v', ftp))
+        s += '  property _fields:\n'
+        s += '    def __get__ (self):    return (' + ', '.join ("'%s'" % f[0] for f in tp.fields) + ')\n'
       elif tp.storage == Decls.SEQUENCE:
-        ename, etp = tp.elements
+        fname, ftp = tp.elements
         s += '\ncdef class %s (list):\n' % tp.name
         s += '  pass\n'
       elif tp.storage == Decls.INTERFACE:
@@ -215,16 +223,24 @@ class Generator:
       return underscore_typename (tp) + '__wrap (%s)' % ident
     return ident
   def cxx_unwrap (self, ident, tp): # unwrap a PyObject to yield a C++ object
+    if tp.storage == Decls.INT32:
+      return underscore_typename (tp) + '__unwrap (%s)' % ident
     if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
       return underscore_typename (tp) + '__unwrap (%s)' % ident
     return ident
   def cxx_unwrap_impl (self, ident, tp):
     s = ''
     if tp.storage == Decls.SEQUENCE:
-      ename, etp = tp.elements
+      fname, ftp = tp.elements
       s += 'cdef %s thisp\n' % self.cxx_type (tp)
       s += 'for element in %s:\n' % ident
-      s += '  thisp.push_back (%s);\n' % self.cxx_unwrap ('element', etp)
+      s += '  thisp.push_back (%s);\n' % self.cxx_unwrap ('element', ftp)
+      s += 'return thisp\n'
+    elif tp.storage == Decls.RECORD:
+      s += 'cdef %s cpy = <%s?> %s\n' % (tp.name, tp.name, ident)
+      s += 'cdef %s thisp\n' % self.cxx_type (tp)
+      for fname, ftp in tp.fields:
+        s += 'thisp.%s = %s;\n' % (fname, 'cpy.%s' % fname)
       s += 'return thisp\n'
     else:
       s += 'raise NotImplementedError\n'
@@ -232,10 +248,15 @@ class Generator:
   def py_wrap_impl (self, ident, tp):
     s = ''
     if tp.storage == Decls.SEQUENCE:
-      ename, etp = tp.elements
+      fname, ftp = tp.elements
       s += 'self = %s()\n' % tp.name
       s += 'for idx in range (%s.size()):\n' % ident
-      s += '  self.append (%s)\n' % self.py_wrap ('%s[idx]' % ident, etp)
+      s += '  self.append (%s)\n' % self.py_wrap ('%s[idx]' % ident, ftp)
+      s += 'return self\n'
+    elif tp.storage == Decls.RECORD:
+      s += 'self = %s()\n' % tp.name
+      for fname, ftp in tp.fields:
+        s += 'self.%s = %s\n' % (fname, '%s.%s' % (ident, fname)) # self.py_wrap ('field', ftp) # record fields are unwrapped
       s += 'return self\n'
     else:
       s += 'raise NotImplementedError\n'

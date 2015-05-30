@@ -1,5 +1,5 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
-import Rapicorn
+import Rapicorn, collections
 # python -ic "import sys, os; sys.path.insert (0, os.path.abspath ('.libs')) ; import Rapicorn"
 
 # verify that pycallable() raises Exception
@@ -73,6 +73,56 @@ assert Rapicorn.FOCUS_UP.value + Rapicorn.FOCUS_DOWN.value > 0
 s = Rapicorn.BoolSeq ([ True, False, "A", [], 88, None ])
 s = Rapicorn.StringSeq ([ '1', 'B' ])
 # assert_raises (TypeError, Rapicorn.StringSeq, [ None ])
+
+# Record Tests
+# Pixbuf
+p = Rapicorn.Pixbuf()
+p.row_length = 2
+p.pixels = [ 0x00000000, 0xff000000 ]
+p.variables = [ 'meta=foo' ]
+assert p.row_length == 2
+assert p.pixels == [ 0x00000000, -16777216 ]
+assert p.variables == [ 'meta=foo' ]
+# UpdateSpan
+u = Rapicorn.UpdateSpan()
+u.start = 7
+u.length = 20
+assert u.start == 7 and u.length == 20
+assert u._asdict() == collections.OrderedDict ([ ('start', 7), ('length', 20) ])
+def invalid_assignment (u): u.no_such_dummy = 999
+assert_raises (AttributeError, invalid_assignment, u)
+# UpdateRequest
+r = Rapicorn.UpdateRequest()
+r.kind = Rapicorn.UPDATE_CHANGE
+r.rowspan = u
+r.colspan = u
+r.variables = p.variables
+assert r.kind == Rapicorn.UPDATE_CHANGE
+assert r.colspan == u
+assert r.rowspan == r.colspan
+assert r.variables == p.variables
+# FIXME: r._asdict needs Any
+# Requisition
+q = Rapicorn.Requisition (width = 7, height = 8)
+assert q.width == 7 and q.height == 8
+assert list (q) == [ 7, 8 ]
+assert q._asdict() == collections.OrderedDict ([ ('width', 7), ('height', 8) ])
+assert q[0] == 7 and q[1] == 8
+def indexed_access (o, i): return o[i]
+assert_raises (IndexError, indexed_access, q, 2)
+def R (w, h):
+  return Rapicorn.Requisition (width = w, height = h)
+a = R (17, 33) ; b = R (17, 33) ; assert a == b and a <= b and a >= b and not (a != b) and not (a >  b) and not (a <  b)
+a = R (22, 11) ; b = R (22, 11) ; assert a == b and a <= b and a >= b and not (a != b) and not (a >  b) and not (a <  b)
+a = R (39, 99) ; b = [ 39, 99 ] ; assert a == b and a <= b and a >= b and not (a != b) and not (a >  b) and not (a <  b)
+a = [ 44, 40 ] ; b = R (44, 40) ; assert a == b and a <= b and a >= b and not (a != b) and not (a >  b) and not (a <  b)
+a = R (11, 22) ; b = R (11, 21) ; assert a != b and a >  b and a >= b and not (a == b) and not (a <= b) and not (a <  b)
+a = R (11, 22) ; b = R (11, 23) ; assert a != b and a <= b and a <  b and not (a == b) and not (a >  b) and not (a >= b)
+a = R (11, 22) ; b = [ 11 ]     ; assert a != b and a >= b and a >  b and not (a == b) and not (a <  b) and not (a <= b)
+a = R (1, 2)  ; b = [ 1, 2, 3 ] ; assert a != b and a <= b and a <  b and not (a == b) and not (a >  b) and not (a >= b)
+a = R (1, 2)  ; b = [ 1 ]       ; assert a != b and a >= b and a >  b and not (a == b) and not (a <  b) and not (a <= b)
+a = R (1, 99) ; b = [ 1, 1, 1 ] ; assert a != b and a >= b and a >  b and not (a == b) and not (a <  b) and not (a <= b)
+a = R (1, 0)  ; b = [ 1, 1, 1 ] ; assert a != b and a <= b and a <  b and not (a == b) and not (a >  b) and not (a >= b)
 
 # all done
 print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'

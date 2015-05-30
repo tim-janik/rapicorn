@@ -15,6 +15,28 @@ ctypedef int64_t  int64
 ctypedef uint64_t uint64
 
 
+# == Utilities for richcmp ==
+cdef inline int richcmp_op (ssize_t cmpv, int op): # cmpv==0 euqals, cmpv<0 lesser, cmpv>0 greater
+  if   op == Py_LT: return cmpv <  0            # <     0
+  elif op == Py_LE: return cmpv <= 0            # <=    1
+  elif op == Py_EQ: return cmpv == 0            # ==    2
+  elif op == Py_NE: return cmpv != 0            # !=    3
+  elif op == Py_GT: return cmpv >  0            # >     4
+  elif op == Py_GE: return cmpv >= 0            # >=    5
+
+cdef inline int ssize_richcmp (ssize_t s1, ssize_t s2, int op):
+  cdef ssize_t cmpv = -1 if s1 < s2 else s1 > s2
+  return richcmp_op (cmpv, op)
+
+def _richcmp (object1, object2, op):
+  if   op == 0: return object1 <  object2
+  elif op == 1: return object1 <= object2
+  elif op == 2: return object1 == object2
+  elif op == 3: return object1 != object2
+  elif op == 4: return object1 >  object2
+  elif op == 5: return object1 >= object2
+
+
 # == Enum Base ==
 # Enum base class, modeled after enum.Enum from Python3.4.
 # An enum class has a __members__ dict and supports Enum['VALUE_NAME'].
@@ -59,6 +81,39 @@ class EnumValue (long):
     return "<%s.%s: %d>" % (self.__classname, self.name, self.value)
   def __str__ (self):
     return "%s.%s" % (self.__classname, self.name)
+
+# == Record Base ==
+# Rich Record type with keyword initialisation, iteration, indexing and dict conversion.
+cdef class Record:
+  def __init__ (self, **kwargs):
+    for item in kwargs.items():
+      setattr (self, item[0], item[1])
+  def __getitem__ (self, key):
+    return getattr (self, self._fields[key])
+  def __iter__ (self):
+    for fname in self._fields:
+      yield getattr (self, fname)
+  def _asdict (self):
+    """Return an OrderedDict which maps field names to their values"""
+    import collections
+    return collections.OrderedDict (zip (self._fields, self))
+  def __richcmp__ (Record self, other, int op):
+    """Provides the '<', '<=', '==', '!=', '>', '>=' operators"""
+    it = self.__iter__()
+    for w in other:
+      try:                  v = it.next()
+      except StopIteration: return ssize_richcmp (1, 2, op) # other has more elements
+      if v == w:
+        continue                        # inspect other elements
+      if op == Py_EQ: return False      # ==
+      if op == Py_NE: return True       # !=
+      # Py_LT, Py_LE, Py_GT, Py_GE
+      return _richcmp (v, w, op)        # < <= > >=
+    try:
+      v = it.next()
+      return ssize_richcmp (2, 1, op) # other has less elements
+    except StopIteration: pass
+    return ssize_richcmp (0, 0, op)   # lengths match
 
 
 # == Utilities from pyxxutils.hh ==
