@@ -49,6 +49,13 @@ def colon_typename (tp):
   if tp.storage == Decls.INTERFACE:
     name += 'H' # e.g. WidgetHandle
   return name
+def cxx_argtype (tp):
+  typename = underscore_typename (tp)
+  if tp.storage in (Decls.STRING, Decls.SEQUENCE, Decls.RECORD, Decls.ANY):
+    typename = 'const %s&' % typename
+  elif tp.storage == Decls.INTERFACE:
+    typename = '%s&' % typename
+  return typename
 
 # exception class:
 # const char *exclass = PyExceptionClass_Check (t) ? PyExceptionClass_Name (t) : "<unknown>";
@@ -177,6 +184,11 @@ class Generator:
         for fname, ftp in tp.fields:
           s += '    %-30s %-20s () except *\n' % (underscore_typename (ftp), fname)
           s += '    %-30s %-20s (%s) except *\n' % ('void', fname, underscore_typename (ftp))
+        for mtp in tp.methods:
+          rtp, mname = mtp.rtype, mtp.name
+          atypes = [a[1] for a in mtp.args]
+          arglist = ', '.join (cxx_argtype (a) for a in atypes)
+          s += '    %-30s %-20s (%s) except *\n' % (underscore_typename (rtp), mname, arglist)
         s += '    pass\n'
     # Py Enums
     s += '\n'
@@ -219,6 +231,17 @@ class Generator:
           s += '  property %s:\n' % fname
           s += '    def __get__ (self):    return %s\n' % self.py_wrap ('self._handle.%s()' % fname, ftp)
           s += '    def __set__ (self, v): self._handle.%s (%s)\n' % (fname, self.cxx_unwrap ('v', ftp))
+        for mtp in tp.methods:
+          rtp, mname = mtp.rtype, mtp.name
+          atypes = [a[1] for a in mtp.args]
+          anames = [a[0] for a in mtp.args]
+          s += '  def %s (%s):\n' % (mname, ', '.join ([ 'self' ] + anames))
+          result = '_cxxret =' if rtp.storage != Decls.VOID else ''
+          s += '    %s self._handle.%s (' % (result, mname) # method call without args
+          s += ', '.join (self.cxx_unwrap (a[0], a[1]) for a in mtp.args)
+          s += ')\n'
+          if result:
+            s += '    return %s\n' % self.py_wrap ('_cxxret', rtp)
         s += '  pass\n'
       if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
         s += 'cdef %s %s__unwrap (object pyo1) except *:\n' % (type____name, type____name)
