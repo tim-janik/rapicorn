@@ -2,6 +2,12 @@
 import Rapicorn
 # python -ic "import sys, os; sys.path.insert (0, os.path.abspath ('.libs')) ; import Rapicorn"
 
+# verify that pycallable() raises Exception
+def assert_raises (Exception, pycallable, *args, **kwds):
+  try:    pycallable (*args, **kwds)
+  except Exception: return
+  raise AssertionError('%s not raised' % Exception.__name__)
+
 # test MainLoop and EventLoop object identities
 ml = Rapicorn.MainLoop()
 sl = ml.create_slave()
@@ -62,6 +68,11 @@ assert Rapicorn.FOCUS_UP < Rapicorn.FOCUS_DOWN and Rapicorn.FOCUS_DOWN > Rapicor
 assert Rapicorn.FOCUS_UP != Rapicorn.FOCUS_DOWN
 assert Rapicorn.FOCUS_UP.value > 0 and Rapicorn.FOCUS_DOWN.value > 0
 assert Rapicorn.FOCUS_UP.value + Rapicorn.FOCUS_DOWN.value > 0
+
+# List Base Tests
+s = Rapicorn.BoolSeq ([ True, False, "A", [], 88, None ])
+s = Rapicorn.StringSeq ([ '1', 'B' ])
+# assert_raises (TypeError, Rapicorn.StringSeq, [ None ])
 
 # all done
 print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'

@@ -1,9 +1,24 @@
 # This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0   -*-mode:python;-*-
 
+from libc.stdint cimport *
+from libcpp.string cimport string as String
+from libcpp.vector cimport vector
+from cython.operator cimport dereference as deref
+from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
+
+# == Standard Typedefs ==
+#ctypedef int32_t int
+ctypedef uint32_t uint
+ctypedef int32_t  int32
+ctypedef uint32_t uint32
+ctypedef int64_t  int64
+ctypedef uint64_t uint64
+
+
 # == Enum Base ==
-# Enum base class, modeled after enum.Enum from Python3.4
-# An enum class has a __members__ dict and supports Enum['VALUE_NAME']
-# Each enum value has 'name' and 'value' attributes
+# Enum base class, modeled after enum.Enum from Python3.4.
+# An enum class has a __members__ dict and supports Enum['VALUE_NAME'].
+# Each enum value has 'name' and 'value' attributes.
 class EnumMeta (type):
   def __init__ (klass, name, bases, dict):
     import collections

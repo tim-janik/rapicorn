@@ -1,13 +1,5 @@
 # This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0   -*-mode:python;-*-
 from libcpp cimport *
-from cython.operator cimport dereference as deref
-from libc.stdint cimport *
-from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
-
-# == Standard Typedefs ==
-ctypedef uint32_t uint
-ctypedef int64_t  int64
-ctypedef uint64_t uint64
 
 # == Utilities from std:: ==
 cdef extern from "memory" namespace "std":

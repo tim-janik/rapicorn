@@ -6,7 +6,7 @@ More details at http://www.rapicorn.org/
 import Decls, re, sys, os
 
 def reindent (prefix, lines):
-  return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
+  return re.compile (r'^(?=.)', re.M).sub (prefix, lines)
 def strcquote (string):
   result = ''
   for c in string:
@@ -41,9 +41,14 @@ def underscore_namespace (tp):
 def colon_namespace (tp):
   return '::'.join (type_namespace_names (tp))
 def underscore_typename (tp):
+  if tp.storage == Decls.ANY:
+    return 'Rapicorn__Any'
   return '__'.join (type_namespace_names (tp) + [ tp.name ])
 def colon_typename (tp):
-  return '::'.join (type_namespace_names (tp) + [ tp.name ])
+  name = '::'.join (type_namespace_names (tp) + [ tp.name ])
+  if tp.storage == Decls.INTERFACE:
+    name += 'H' # e.g. WidgetHandle
+  return name
 
 # exception class:
 # const char *exclass = PyExceptionClass_Check (t) ? PyExceptionClass_Name (t) : "<unknown>";
@@ -84,7 +89,7 @@ class Generator:
     if tstorage == Decls.INT32:         return 'int'
     if tstorage == Decls.INT64:         return 'int64_t'
     if tstorage == Decls.FLOAT64:       return 'double'
-    if tstorage == Decls.STRING:        return 'std::string'
+    if tstorage == Decls.STRING:        return 'String'
     if tstorage == Decls.ANY:           return 'Rapicorn__Any'
     fullnsname = underscore_typename (type_node)
     return fullnsname
@@ -118,10 +123,10 @@ class Generator:
     s += '  cppclass %-40s "%s"\n' % ('Rapicorn__Any', 'Rapicorn::Any')
     s += '  cppclass Rapicorn__Any:\n'
     s += '    pass\n' # FIXME
-    s += 'cdef Rapicorn__Any Any__unwrap (object self):\n'
-    s += '  pass\n' # FIXME
-    s += 'cdef object Any__wrap (const Rapicorn__Any &cxx1):\n'
-    s += '  pass\n' # FIXME
+    s += 'cdef Rapicorn__Any Rapicorn__Any__unwrap (object pyo1):\n'
+    s += '  raise NotImplementedError\n' # FIXME
+    s += 'cdef object Rapicorn__Any__wrap (const Rapicorn__Any &cxx1):\n'
+    s += '  raise NotImplementedError\n' # FIXME
     # C++ Declarations
     s += '\n'
     s += '# C++ declarations\n'
@@ -155,7 +160,11 @@ class Generator:
       if tp.typedef_origin or tp.is_forward:
         continue
       s += self.open_namespace ('cdef extern from * namespace "%s":\n', '::', tp)
-      if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
+      if tp.storage == Decls.SEQUENCE:
+        ename, etp = tp.elements
+        s += '  cppclass %s (vector[%s]):\n' % (underscore_typename (tp), underscore_typename (etp))
+        s += '    pass\n' # FIXME
+      elif tp.storage in (Decls.RECORD, Decls.INTERFACE):
         s += '  cppclass %s:\n' % underscore_typename (tp)
         s += '    pass\n' # FIXME
     # Py Enums
@@ -177,9 +186,7 @@ class Generator:
       if tp.typedef_origin or tp.is_forward:
         continue
       assert type_namespace_names (tp) == [ 'Rapicorn' ] # FIXME: assert unique namespace
-      nsn = type_namespace_names (tp)
-      tns = nsn + [ tp.name ]
-      type____name, type_cc_name = '__'.join (tns), '::'.join (tns)
+      type____name, type_cc_name = underscore_typename (tp), colon_typename (tp)
       if tp.storage == Decls.RECORD:
         s += '\ncdef class %s:\n' % tp.name
         for field in tp.fields:
@@ -188,28 +195,51 @@ class Generator:
         for field in tp.fields:
           ident, type_node = field
           s += '  property %s:\n' % ident
-          s += '    def __get__ (self):    return %s\n' % self.py_wrap_cxx ('self.%s' % ident, type_node)
-          s += '    def __set__ (self, v): self.%s = %s\n' % (ident, self.cxx_unwrap_py ('v', type_node))
-      if tp.storage == Decls.SEQUENCE:
+          s += '    def __get__ (self):    return %s\n' % self.py_wrap ('self.%s' % ident, type_node)
+          s += '    def __set__ (self, v): self.%s = %s\n' % (ident, self.cxx_unwrap ('v', type_node))
+      elif tp.storage == Decls.SEQUENCE:
+        ename, etp = tp.elements
         s += '\ncdef class %s (list):\n' % tp.name
-        s += '  pass\n' # FIXME
-      if tp.storage == Decls.INTERFACE:
+        s += '  pass\n'
+      elif tp.storage == Decls.INTERFACE:
         s += '\ncdef class %s:\n' % tp.name
         s += '  pass\n' # FIXME
-      if tp.storage in (Decls.SEQUENCE, Decls.RECORD):
-        s += 'cdef %s %s__unwrap (object self):\n' % (type____name, type____name)
-        s += '  pass\n'
+      if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
+        s += 'cdef %s %s__unwrap (object pyo1) except *:\n' % (type____name, type____name)
+        s += reindent ('  ', self.cxx_unwrap_impl ('pyo1', tp))
         s += 'cdef object %s__wrap (const %s &cxx1):\n' % (type____name, type____name)
-        s += '  pass\n' # FIXME
+        s += reindent ('  ', self.py_wrap_impl ('cxx1', tp))
     return s
-  def py_wrap_cxx (self, ident, tp):
-    if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD):
+  def py_wrap (self, ident, tp): # wrap a C++ object to return a PyObject
+    if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
       return underscore_typename (tp) + '__wrap (%s)' % ident
     return ident
-  def cxx_unwrap_py (self, ident, tp):
-    if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD):
+  def cxx_unwrap (self, ident, tp): # unwrap a PyObject to yield a C++ object
+    if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
       return underscore_typename (tp) + '__unwrap (%s)' % ident
     return ident
+  def cxx_unwrap_impl (self, ident, tp):
+    s = ''
+    if tp.storage == Decls.SEQUENCE:
+      ename, etp = tp.elements
+      s += 'cdef %s thisp\n' % self.cxx_type (tp)
+      s += 'for element in %s:\n' % ident
+      s += '  thisp.push_back (%s);\n' % self.cxx_unwrap ('element', etp)
+      s += 'return thisp\n'
+    else:
+      s += 'raise NotImplementedError\n'
+    return s
+  def py_wrap_impl (self, ident, tp):
+    s = ''
+    if tp.storage == Decls.SEQUENCE:
+      ename, etp = tp.elements
+      s += 'self = %s()\n' % tp.name
+      s += 'for idx in range (%s.size()):\n' % ident
+      s += '  self.append (%s)\n' % self.py_wrap ('%s[idx]' % ident, etp)
+      s += 'return self\n'
+    else:
+      s += 'raise NotImplementedError\n'
+    return s
 
 def generate (namespace_list, **args):
   import sys, tempfile, os
