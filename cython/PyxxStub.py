@@ -158,6 +158,17 @@ class Generator:
       if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
         s += '  cppclass %s:\n' % underscore_typename (tp)
         s += '    pass\n' # FIXME
+    # Py Enums
+    s += '\n'
+    s += '# Python Enums\n'
+    for tp in [t for t in types if t.storage == Decls.ENUM]:
+      s += '\nclass %s (Enum):\n' % tp.name
+      for opt in tp.options:
+        (ident, label, blurb, number) = opt
+        s += '  %-40s = %s\n' % (ident, '%s__%s' % (tp.name, ident))
+      for opt in tp.options:
+        (ident, label, blurb, number) = opt
+        s += '%-42s =  %s.%s\n' % (ident, tp.name, ident)
     # Py Classes
     s += '\n'
     s += '# Python classes\n'

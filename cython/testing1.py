@@ -50,5 +50,18 @@ ml.iterate_pending()
 summary = [ counter ] + prepared + checked + dispatched
 assert summary == [3, True, True, True, 'Yes', 'Yes', 'Yes', 0, 1, 2]
 
+# Enum Tests
+assert Rapicorn.FocusDirType
+assert Rapicorn.FocusDirType.FOCUS_UP and Rapicorn.FOCUS_UP
+assert Rapicorn.FocusDirType.FOCUS_DOWN and Rapicorn.FOCUS_DOWN
+assert Rapicorn.FOCUS_UP.name == 'FOCUS_UP'
+assert Rapicorn.FOCUS_DOWN.name == 'FOCUS_DOWN'
+assert Rapicorn.FocusDirType[Rapicorn.FOCUS_UP.name] == Rapicorn.FOCUS_UP
+assert Rapicorn.FocusDirType[Rapicorn.FOCUS_DOWN.name] == Rapicorn.FOCUS_DOWN
+assert Rapicorn.FOCUS_UP < Rapicorn.FOCUS_DOWN and Rapicorn.FOCUS_DOWN > Rapicorn.FOCUS_UP
+assert Rapicorn.FOCUS_UP != Rapicorn.FOCUS_DOWN
+assert Rapicorn.FOCUS_UP.value > 0 and Rapicorn.FOCUS_DOWN.value > 0
+assert Rapicorn.FOCUS_UP.value + Rapicorn.FOCUS_DOWN.value > 0
+
 # all done
 print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
