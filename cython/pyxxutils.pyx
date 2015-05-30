@@ -1,9 +1,9 @@
 # This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0   -*-mode:python;-*-
 
+# == Enum Base ==
 # Enum base class, modeled after enum.Enum from Python3.4
 # An enum class has a __members__ dict and supports Enum['VALUE_NAME']
 # Each enum value has 'name' and 'value' attributes
-
 class EnumMeta (type):
   def __init__ (klass, name, bases, dict):
     import collections
@@ -44,3 +44,14 @@ class EnumValue (long):
     return "<%s.%s: %d>" % (self.__classname, self.name, self.value)
   def __str__ (self):
     return "%s.%s" % (self.__classname, self.name)
+
+
+# == Utilities from pyxxutils.hh ==
+cdef extern from "pyxxutils.hh":
+  cppclass PyxxCaller0[R]:
+    PyxxCaller0 (object, R (*M) (object))
+  cppclass PyxxCaller1[R,A1]:
+    PyxxCaller1 (object, R (*M) (object, A1))
+  cppclass PyxxBoolFunctor                      "std::function<bool()>"
+  void                pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
+  Rapicorn__MainLoop* dynamic_cast_MainLoopPtr "dynamic_cast<Rapicorn::MainLoop*>" (Rapicorn__EventLoop*) except NULL

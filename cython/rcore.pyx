@@ -21,16 +21,6 @@ cdef extern from "memory" namespace "std":
     bool unique    () const
     T*   get       ()
 
-# == Utilities from pyxxutils.hh ==
-cdef extern from "pyxxutils.hh":
-  cppclass PyxxCaller0[R]:
-    PyxxCaller0 (object, R (*M) (object))
-  cppclass PyxxCaller1[R,A1]:
-    PyxxCaller1 (object, R (*M) (object, A1))
-  cppclass PyxxBoolFunctor                      "std::function<bool()>"
-  void                pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
-  Rapicorn__MainLoop* dynamic_cast_MainLoopPtr "dynamic_cast<Rapicorn::MainLoop*>" (Rapicorn__EventLoop*) except NULL
-
 # == Utilities inlined ==
 cdef inline int richcmp_op (ssize_t cmpv, int op): # cmpv==0 euqals, cmpv<0 lesser, cmpv>0 greater
   if   op == Py_LT: return cmpv <  0            # <     0
