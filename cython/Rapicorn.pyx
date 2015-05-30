@@ -1,3 +1,3 @@
-include "enum.pyx"
+include "pyxxutils.pyx"
 include "rcore.pyx"
 include "idlapi.pyx"

@@ -21,8 +21,8 @@ cdef extern from "memory" namespace "std":
     bool unique    () const
     T*   get       ()
 
-# == Utilities from pyxxglue.hh ==
-cdef extern from "pyxxglue.hh":
+# == Utilities from pyxxutils.hh ==
+cdef extern from "pyxxutils.hh":
   cppclass PyxxCaller0[R]:
     PyxxCaller0 (object, R (*M) (object))
   cppclass PyxxCaller1[R,A1]:
