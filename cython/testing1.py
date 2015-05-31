@@ -125,7 +125,11 @@ a = R (1, 99) ; b = [ 1, 1, 1 ] ; assert a != b and a >= b and a >  b and not (a
 a = R (1, 0)  ; b = [ 1, 1, 1 ] ; assert a != b and a <= b and a <  b and not (a == b) and not (a >  b) and not (a >= b)
 
 # Application
-a = Rapicorn.Application()
+assert_raises (TypeError, Rapicorn.Object)
+assert_raises (TypeError, Rapicorn.Widget)
+assert_raises (TypeError, Rapicorn.Container)
+assert_raises (TypeError, Rapicorn.Window)
+assert_raises (TypeError, Rapicorn.Application)
 
 
 # all done
