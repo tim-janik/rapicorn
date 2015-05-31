@@ -131,6 +131,7 @@ assert_raises (TypeError, Rapicorn.Container)
 assert_raises (TypeError, Rapicorn.Window)
 assert_raises (TypeError, Rapicorn.Application)
 
+Rapicorn.init_app ('testing1.py')
 
 # all done
 print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
