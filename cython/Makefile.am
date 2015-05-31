@@ -12,6 +12,7 @@ RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
 # Loading Python modules requires accesss to libtool objdir
 objdir = .libs
 RPYTHON      = PYTHONPATH="$(abs_builddir)/$(objdir):$$PYTHONPATH" $(PYTHON)
+XMANIFOLD    = $(top_srcdir)/aidacc/xmanifold.py
 
 # Py Rapicorn - installation
 Rapicorndir         	= ${pythondir}/@RAPICORN_NAMESPACE_NAME@
@@ -25,12 +26,18 @@ Rapicorn_la_LIBADD	= $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
 EXTRA_DIST	       += Rapicorn.pyx pyxxutils.hh pyxxutils.pyx rcore.pyx PyxxStub.py
 CLEANFILES	       += Rapicorn.cc idlapi.pyx
 
-Rapicorn.cc: Rapicorn.pyx pyxxutils.pyx rcore.pyx idlapi.pyx
+Rapicorn.cc: Rapicorn.pyx pyxxutils.pyx rcore.pyx idlapi.pyx pyxxutils-xmany.hh
 	@echo "  CYTHON  " $@
 	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail Rapicorn.pyx -o $@
 idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
 	@echo "  AIDACC  " $@
 	$(Q) ${AIDACC} -x $(srcdir)/PyxxStub $(RAPICORNIDL) -o $@ -G strip-path=$(abs_top_srcdir)/
+$(srcdir)/*.cc: pyxxutils-xmany.hh
+pyxxutils-xmany.hh: $(srcdir)/pyxxutils.hh $(XMANIFOLD)
+	$(AM_V_GEN)
+	$(Q) $(XMANIFOLD) -S $(srcdir)/pyxxutils.hh 18 >xtmp-$(@F) \
+	&& mv xtmp-$(@F) $@
+CLEANFILES += pyxxutils-xmany.hh
 
 
 # === Tests ===
