@@ -6,8 +6,10 @@ import sys, re
 
 rules = [
   (r'const size_t NARGS = 2;',        'const size_t NARGS = %i;'),
+  (r'PyxxCaller2',                    'PyxxCaller%i'),
   # pattern                           strip  repeat         join postfix
   (r'class A1, class A2',             ('',   'class A%i',   ', ', '')),
+  (r', A1, A2',                       (', ', 'A%i',         ', ', '')),
   (r'A1, A2',                         ('',   'A%i',         ', ', '')),
   (r', a1, a2',                       (', ', 'a%i',         ', ', '')),
   (r'a1, a2',                         ('',   'a%i',         ', ', '')),
@@ -47,8 +49,8 @@ def verify_patterns (n):
     if m != t:
       raise AssertionError ('%s == %s' % (repr (m), repr (t)))
 
-def manifold (s, n, filename):
-  loc = '# %u\n' % (n * 1000 + 1)
+def manifold (s, n, filename, line_offset):
+  loc = '# %u "%s"\n' % (n * 1000 + line_offset, filename)
   for pair in rules:
     m, t = unfold (pair, n)
     if m[0].isalnum():  m = r'\b' + m
@@ -63,15 +65,35 @@ def manifold (s, n, filename):
 
 def main():
   verify_patterns (2)
-  if len (sys.argv) < 2:
-    raise RuntimeError ('missing filename')
-  if len (sys.argv) < 3:
-    raise RuntimeError ('missing manifold count')
-  filename = sys.argv[1]
-  maxfold = int (sys.argv[2])
+  if len (sys.argv) <= 1:
+    print 'Usage: xmanifold.py [-S] <filename> [maxcount]'
+    sys.exit (1)
+  filename = None
+  parse_sections = False
+  maxfold = None
+  for arg in sys.argv[1:]:
+    if   arg == '-S':
+      parse_sections = True
+    elif filename:
+      if maxfold != None:
+        raise RuntimeError ('Exactly 1 filename required')
+      maxfold = int (arg)
+    else:
+      filename = arg
+  if not filename:
+    raise RuntimeError ('Missing filename')
+  if maxfold == None:
+    maxfold = 20
   txt = open (filename).read()
+  line_offset = 1
+  if parse_sections:
+    m = re.match (r'^(.*)#\s*ifdef\s+XMANIFOLD_SECTION(.*)#\s*endif\s+//\s*XMANIFOLD_SECTION\b', txt, re.MULTILINE | re.DOTALL)
+    if not m:
+      raise RuntimeError ('%s: failed to identify XMANIFOLD_SECTION' % filename)
+    line_offset = 1 + m.group (1).count ('\n')
+    txt = m.group (2)
   for i in range (0, maxfold + 1):
-    print manifold (txt, i, filename)
+    print manifold (txt, i, filename, line_offset)
 
 if __name__ == '__main__':
   main()
