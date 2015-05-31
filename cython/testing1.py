@@ -124,5 +124,9 @@ a = R (1, 2)  ; b = [ 1 ]       ; assert a != b and a >= b and a >  b and not (a
 a = R (1, 99) ; b = [ 1, 1, 1 ] ; assert a != b and a >= b and a >  b and not (a == b) and not (a <  b) and not (a <= b)
 a = R (1, 0)  ; b = [ 1, 1, 1 ] ; assert a != b and a <= b and a <  b and not (a == b) and not (a >  b) and not (a >= b)
 
+# Application
+a = Rapicorn.Application()
+
+
 # all done
 print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
