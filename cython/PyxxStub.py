@@ -208,7 +208,7 @@ class Generator:
       if tp.storage == Decls.SEQUENCE:
         fname, ftp = tp.elements
         s += '  cppclass %s (vector[%s]):\n' % (u_typename, underscore_typename (ftp))
-        s += '    pass\n' # FIXME
+        s += '    pass\n'
       elif tp.storage == Decls.RECORD:
         s += '  cppclass %s:\n' % u_typename
         for fname, ftp in tp.fields:
@@ -242,7 +242,6 @@ class Generator:
     for tp in types:
       if tp.typedef_origin or tp.is_forward:
         continue
-      assert type_namespace_names (tp) == [ 'Rapicorn' ] # FIXME: assert unique namespace
       u_typename, type_cc_name = underscore_typename (tp), colon_typename (tp)
       if tp.storage == Decls.RECORD:
         s += '\ncdef class %s (Record):\n' % tp.name
