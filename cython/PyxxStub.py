@@ -162,25 +162,6 @@ class Generator:
     s += 'cdef int32 int32__unwrap (object pyo1):\n'
     s += '  cdef int64 v64 = pyo1 # type checks for int-convertible\n'
     s += '  return <int32> v64 # silenty "cut" too big numbers\n'
-    # C++ Declarations
-    s += '\n'
-    s += '# C++ declarations\n'
-    s += 'cdef extern from * namespace "%s":\n' % self.namespace
-    s += '  pass\n'
-    for tp in types:
-      if tp.typedef_origin or tp.is_forward:
-        continue
-      if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
-        s += '  cppclass %-40s "%s"\n' % (underscore_typename (tp), colon_typename (tp))
-    # C++ This Pointer Casts
-    for tp in types:
-      if tp.typedef_origin or tp.is_forward or tp.storage != Decls.INTERFACE:
-        continue
-      u_typename, c_typename = underscore_typename (tp), colon_typename (tp)
-      s += '  %-25s %-40s "dynamic_cast<%s*>" (void*) except NULL\n' % (u_typename + '*', u_typename + 'H__dynamic_cast', c_typename)
-      # 'except NULL' means that cython checks the return value for NULL. allthough
-      # dynamic_cast will not set a Python exception, raising a 'SystemError: error
-      # return without exception set' is still better than dereferencing and crashing
     # C++ Enum Values
     s += '\n'
     s += '# C++ Enums\n'
@@ -194,6 +175,28 @@ class Generator:
         for opt in tp.options:
           (ident, label, blurb, number) = opt
           s += '    %-60s "%s"\n' % ('%s__%s' % (tp.name, ident), colon_namespace (tp) + '::' + ident)
+    # C++ Declarations
+    s += '\n'
+    s += '# C++ Declarations\n'
+    s += 'cdef extern from * namespace "%s":\n' % self.namespace
+    s += '  pass\n'
+    for tp in types:
+      if tp.typedef_origin or tp.is_forward:
+        continue
+      if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
+        s += '  cppclass %-40s "%s"\n' % (underscore_typename (tp), colon_typename (tp))
+    # C++ This Pointer Casts
+    s += '\n'
+    s += '# C++ Handle Casts\n'
+    s += 'cdef extern from * namespace "%s":\n' % self.namespace
+    for tp in types:
+      if tp.typedef_origin or tp.is_forward or tp.storage != Decls.INTERFACE:
+        continue
+      u_typename, c_typename = underscore_typename (tp), colon_typename (tp)
+      s += '  %-25s %-40s "dynamic_cast<%s*>" (void*) except NULL\n' % (u_typename + '*', u_typename + 'H__dynamic_cast', c_typename)
+      # 'except NULL' means that cython checks the return value for NULL. allthough
+      # dynamic_cast will not set a Python exception, raising a 'SystemError: error
+      # return without exception set' is still better than dereferencing and crashing
     # TODO: C++ Callback Types
     # TODO: C++ Marshal Functions
     # C++ classes
@@ -325,8 +328,6 @@ class Generator:
       u_typename = underscore_typename (tp)
       s += 'cdef %s self = <%s?> %s\n' % (tp.name, tp.name, ident)
       s += 'return _dereference (%s (self._this0))\n' % (u_typename + 'H__dynamic_cast')
-    else:
-      s += 'raise NotImplementedError\n'
     return s
   def py_wrap_impl (self, ident, tp):
     s = ''
@@ -349,8 +350,6 @@ class Generator:
       s += 'self = %s() # picks up %s__ctarg\n' % (tp.name, u_base)
       s += 'assert %s__ctarg == NULL\n' % u_base
       s += 'return self\n'
-    else:
-      s += 'raise NotImplementedError\n'
     return s
 
 def generate (namespace_list, **args):
