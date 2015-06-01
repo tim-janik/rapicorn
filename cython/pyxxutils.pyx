@@ -116,13 +116,62 @@ cdef class Record:
     except StopIteration: pass
     return ssize_richcmp (0, 0, op)   # lengths match
 
+# == Signal Connection Wrapper ==
+cdef class PyxxSignalConnector:
+  cdef object connector
+  cdef object disconnector
+  def __init__ (self, connector, disconnector):
+    self.connector = connector
+    self.disconnector = disconnector
+  def connect (self, pycallable):
+    return self.connector (pycallable)
+  def disconnect (self, callable_id):
+    return self.disconnector (callable_id)
 
 # == Utilities from pyxxutils.hh ==
 cdef extern from "pyxxutils.hh":
-  cppclass PyxxCaller0[R]:
-    PyxxCaller0 (object, R (*M) (object))
-  cppclass PyxxCaller1[R,A1]:
-    PyxxCaller1 (object, R (*M) (object, A1))
-  cppclass PyxxBoolFunctor                      "std::function<bool()>"
   void                pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
   Rapicorn__MainLoop* dynamic_cast_MainLoopPtr "dynamic_cast<Rapicorn::MainLoop*>" (Rapicorn__EventLoop*) except NULL
+
+  cppclass PyxxCaller0[R]:
+    PyxxCaller0 (object, R (*M) (object))
+  cppclass PyxxCaller1[R, A1]:
+    PyxxCaller1 (object, R (*M) (object, A1))
+  cppclass PyxxCaller2[R, A1, A2]:
+    PyxxCaller2 (object, R (*M) (object, A1, A2))
+  cppclass PyxxCaller3[R, A1, A2, A3]:
+    PyxxCaller3 (object, R (*M) (object, A1, A2, A3))
+  cppclass PyxxCaller4[R, A1, A2, A3, A4]:
+    PyxxCaller4 (object, R (*M) (object, A1, A2, A3, A4))
+  cppclass PyxxCaller5[R, A1, A2, A3, A4, A5]:
+    PyxxCaller5 (object, R (*M) (object, A1, A2, A3, A4, A5))
+  cppclass PyxxCaller6[R, A1, A2, A3, A4, A5, A6]:
+    PyxxCaller6 (object, R (*M) (object, A1, A2, A3, A4, A5, A6))
+  cppclass PyxxCaller7[R, A1, A2, A3, A4, A5, A6, A7]:
+    PyxxCaller7 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7))
+  cppclass PyxxCaller8[R, A1, A2, A3, A4, A5, A6, A7, A8]:
+    PyxxCaller8 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8))
+  cppclass PyxxCaller9[R, A1, A2, A3, A4, A5, A6, A7, A8, A9]:
+    PyxxCaller9 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9))
+  cppclass PyxxCaller10[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10]:
+    PyxxCaller10 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10))
+  cppclass PyxxCaller11[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11]:
+    PyxxCaller11 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11))
+  cppclass PyxxCaller12[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12]:
+    PyxxCaller12 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12))
+  cppclass PyxxCaller13[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13]:
+    PyxxCaller13 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13))
+  cppclass PyxxCaller14[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14]:
+    PyxxCaller14 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14))
+  cppclass PyxxCaller15[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15]:
+    PyxxCaller15 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15))
+  cppclass PyxxCaller16[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16]:
+    PyxxCaller16 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16))
+  cppclass PyxxCaller17[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17]:
+    PyxxCaller17 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17))
+  cppclass PyxxCaller18[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18]:
+    PyxxCaller18 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18))
+# cppclass PyxxCaller19[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19]:
+#   PyxxCaller19 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19))
+# cppclass PyxxCaller20[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20]:
+#   PyxxCaller20 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20))
