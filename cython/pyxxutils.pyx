@@ -1,6 +1,7 @@
 # This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0   -*-mode:python;-*-
 
 from libc.stdint cimport *
+from libcpp cimport *
 from libcpp.string cimport string as String
 from libcpp.vector cimport vector
 from cython.operator cimport dereference as deref
@@ -15,6 +16,17 @@ ctypedef int64_t  int64
 ctypedef uint64_t uint64
 ctypedef double   float64
 
+# == Utilities from std:: ==
+cdef extern from "memory" namespace "std":
+  cppclass shared_ptr[T]:
+    shared_ptr     ()
+    shared_ptr     (T)
+    shared_ptr     (shared_ptr[T]&)
+    void reset     ()
+    void swap      (shared_ptr&)
+    long use_count () const
+    bool unique    () const
+    T*   get       ()
 
 # == Utilities for richcmp ==
 cdef inline int richcmp_op (ssize_t cmpv, int op): # cmpv==0 euqals, cmpv<0 lesser, cmpv>0 greater
