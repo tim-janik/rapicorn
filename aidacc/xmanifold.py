@@ -9,9 +9,7 @@ rules = [
   (r'PyxxCaller2',                    'PyxxCaller%i'),
   # pattern                           strip  repeat         join postfix
   (r'class A1, class A2',             ('',   'class A%i',   ', ', '')),
-  (r', A1, A2',                       (', ', 'A%i',         ', ', '')),
   (r'A1, A2',                         ('',   'A%i',         ', ', '')),
-  (r', a1, a2',                       (', ', 'a%i',         ', ', '')),
   (r'a1, a2',                         ('',   'a%i',         ', ', '')),
   (r'typename Type<A1>::T a1; '+
    r'typename Type<A2>::T a2;',       ('',   'typename Type<A%i>::T a%i', '; ', ';')),
@@ -24,9 +22,10 @@ rules = [
   (r'm_a1, m_a2',                     ('',   'm_a%i',       ', ', '')),
   (r': m_a1 \(a1\), m_a2 \(a2\)',     (': ', 'm_a%i (a%i)', ', ', '')),
 ]
-fixups = {
-  0 : ('<class R, >',           '<class R>'),
-}
+fixups = [
+  [ 0, (', >',  '>') ],
+  [ 0, (', \)', ')') ],
+]
 
 def reindex (s, i):
   return re.sub (r'%i\b', '%i' % i, s)
@@ -56,12 +55,12 @@ def manifold (s, n, filename, line_offset):
     if m[0].isalnum():  m = r'\b' + m
     if m[-1].isalnum(): m = m + r'\b'
     s = re.sub (m, t, s)
-  if fixups.get (n, None):
-    m, t = fixups[n]
+  for fixup in [f[1] for f in fixups if f[0] == n]: # pick out fixups for level 'n'
+    m, t = fixup
     if m[0].isalnum():  m = r'\b' + m
     if m[-1].isalnum(): m = m + r'\b'
     s = re.sub (m, t, s)
-  return loc + s
+  return s # loc + s
 
 def main():
   verify_patterns (2)
