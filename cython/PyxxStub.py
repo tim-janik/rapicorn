@@ -315,9 +315,11 @@ class Generator:
         s += '\ncdef class %s (list):\n' % tp.name
         s += '  pass\n'
       elif tp.storage == Decls.INTERFACE:
+        # class inheritance
         handle = '%s__unwrap (self)' % u_typename
         baselist = ', '.join (b.name for b in self.bases (tp))
         s += '\ncdef class %s (%s):\n' % (tp.name, baselist or 'object')
+        # cinit/dealloc (BaseClass only)
         if not baselist:
           s += '  cdef %s *_this0\n' % u_typename
           s += '  def __cinit__ (self):\n'
@@ -329,10 +331,12 @@ class Generator:
           s += '  def __dealloc__ (self):\n'
           s += '    if self._this0:\n'
           s += '      del self._this0 ; self._this0 = NULL\n'
+        # properties
         for fname, ftp in tp.fields:
           s += '  property %s:\n' % fname
           s += '    def __get__ (self):    return %s\n' % self.py_wrap ('%s.%s()' % (handle, fname), ftp)
           s += '    def __set__ (self, v): %s.%s (%s)\n' % (handle, fname, self.cxx_unwrap ('v', ftp))
+        # signals
         for stp in tp.signals:
           marshal, mid = self.marshal (stp.rtype, [a[1] for a in stp.args])
           s += '  property sig_%s:\n' % stp.name
@@ -345,6 +349,7 @@ class Generator:
           s += '      def sig_%s_disconnect (handlerid):\n' % stp.name
           s += '        return %s.sig_%s_disconnect (handlerid)\n' % (handle, stp.name)
           s += '      return PyxxSignalConnector (sig_%s_connect, sig_%s_disconnect)\n' % (stp.name, stp.name)
+        # methods
         for mtp in tp.methods:
           rtp, mname = mtp.rtype, mtp.name
           atypes = [a[1] for a in mtp.args]
@@ -356,9 +361,21 @@ class Generator:
           s += ')\n'
           if result:
             s += '    return %s\n' % self.py_wrap ('_cxxret', rtp)
-        s += '  pass\n'
+        # __aida_wrapper__
+        wrapperclass = '%s__aida_wrapper_Class%d' % (tp.name, self.idcounter) ; self.idcounter += 1
+        s += '  @classmethod\n'
+        s += '  def __aida_wrapper__ (klass, Class = None):\n'
+        s += '    global %s\n' % wrapperclass
+        s += '    if Class and issubclass (Class, %s):\n' % tp.name
+        s += '      %s = Class\n' % wrapperclass
+        s += '    elif not %s:\n' % wrapperclass
+        s += '      %s = %s\n' % (wrapperclass, tp.name)
+        s += '    return %s\n' % wrapperclass
+        s += 'cdef object %s\n' % wrapperclass
+        # ctarg (BaseClass only)
         if not baselist:
           s += 'cdef %s *%s__ctarg\n' % (u_typename, u_typename)
+      # wrap/unwrap for SEQUENCE, RECORD, INTERFACE
       if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
         s += 'cdef %s %s__unwrap (object pyo1) except *:\n' % (u_typename, u_typename)
         s += reindent ('  ', self.cxx_unwrap_impl ('pyo1', tp))
@@ -412,7 +429,8 @@ class Generator:
       u_typename, u_base = underscore_typename (tp), underscore_typename (self.inheritance_base (tp))
       s += 'global %s__ctarg\n' % u_base
       s += '%s__ctarg = <%s*> new %s (%s)\n' % (u_base, u_base, u_typename, ident)
-      s += 'self = %s() # picks up %s__ctarg\n' % (tp.name, u_base)
+      s += 'Class = %s.__aida_wrapper__()\n' % tp.name
+      s += 'self = Class() # picks up %s__ctarg\n' % u_base
       s += 'assert %s__ctarg == NULL\n' % u_base
       s += 'return self\n'
     return s
