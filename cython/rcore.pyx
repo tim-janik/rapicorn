@@ -16,6 +16,9 @@ cdef extern from "rapicorn-core.hh"   namespace "Rapicorn":
   cppclass Rapicorn__EventSource                "Rapicorn::EventSource"
   cppclass Rapicorn__EventLoop                  "Rapicorn::EventLoop"
   cppclass Rapicorn__MainLoop                   "Rapicorn::MainLoop"
+  Rapicorn__MainLoop*             dynamic_cast_MainLoopPtr       "dynamic_cast<Rapicorn::MainLoop*>" (Rapicorn__EventLoop*) except NULL
+  shared_ptr[Rapicorn__EventLoop] dynamic_pointer_cast_EventLoop "std::dynamic_pointer_cast<typename std::remove_pointer<Rapicorn::EventLoop>::type>"  (shared_ptr[Rapicorn__MainLoop])
+  shared_ptr[Rapicorn__MainLoop]  dynamic_pointer_cast_MainLoop  "std::dynamic_pointer_cast<typename std::remove_pointer<Rapicorn::MainLoop>::type>"   (shared_ptr[Rapicorn__EventLoop])
   cdef enum Rapicorn__LoopState__Phase          "Rapicorn::LoopState::Phase":
     LoopState__NONE                             "Rapicorn::LoopState::NONE"
     LoopState__COLLECT                          "Rapicorn::LoopState::COLLECT"
@@ -176,9 +179,11 @@ cdef class MainLoop (EventLoop):
     self.mainp = dynamic_cast_MainLoopPtr (EventLoop__internal_ctarg.get()) # MainLoop*
     assert self.mainp != NULL   # need successful dynamic_cast<MainLoop*>
     super (MainLoop, self).__init__()           # EventLoop.__init__ sets up thisp
-    pyxx_main_loop_add_watchdog (deref (self.mainp))
+    pyxx_main_loop_add_watchdog (_dereference (self.mainp))
   def __dealloc__ (self):
     self.thisp.reset()
+  cdef shared_ptr[Rapicorn__MainLoop] _MainLoop_unwrap (self):
+    return dynamic_pointer_cast_MainLoop (self.mainp.shared_from_this())
   def run (self):                       return self.mainp.run()
   def running (self):                   return self.mainp.running()
   def finishable (self):                return self.mainp.finishable()
@@ -190,3 +195,12 @@ cdef class MainLoop (EventLoop):
     global EventLoop__internal_ctarg
     EventLoop__internal_ctarg = new shared_ptr[Rapicorn__EventLoop] (self.mainp.create_slave())
     return EventLoop()
+cdef shared_ptr[Rapicorn__MainLoop] Rapicorn__MainLoop__unwrap (object pyo1) except *:
+  cdef MainLoop mself = <MainLoop?> pyo1
+  return mself._MainLoop_unwrap()
+cdef object Rapicorn__MainLoopP__wrap (shared_ptr[Rapicorn__MainLoop] cxx1):
+  if cxx1.get() == NULL:
+    return None
+  global EventLoop__internal_ctarg
+  EventLoop__internal_ctarg = new shared_ptr[Rapicorn__EventLoop] (dynamic_pointer_cast_EventLoop (cxx1))
+  return MainLoop() # picks up EventLoop__internal_ctarg

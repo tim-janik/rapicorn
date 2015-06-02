@@ -4,7 +4,7 @@ from libc.stdint cimport *
 from libcpp cimport *
 from libcpp.string cimport string as String
 from libcpp.vector cimport vector
-from cython.operator cimport dereference as deref
+from cython.operator cimport dereference as _dereference
 from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 
 # == Standard Typedefs ==
@@ -142,9 +142,7 @@ cdef class PyxxSignalConnector:
 
 # == Utilities from pyxxutils.hh ==
 cdef extern from "pyxxutils.hh":
-  void                pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
-  Rapicorn__MainLoop* dynamic_cast_MainLoopPtr "dynamic_cast<Rapicorn::MainLoop*>" (Rapicorn__EventLoop*) except NULL
-
+  void pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
   cppclass PyxxCaller0[R]:
     PyxxCaller0 (object, R (*M) (object))
   cppclass PyxxCaller1[R, A1]:
