@@ -150,6 +150,11 @@ assert w1 != w2
 assert w1 != wl[0] or w1 != wl[1]
 assert w2 != wl[0] or w2 != wl[1]
 assert w1 in wl and w2 in wl
+if w1 == wl[0]: # equal objects must hash to the same value
+  assert hash (w1) == hash (wl[0]) and hash (w2) == hash (wl[1])
+else:
+  assert hash (w2) == hash (wl[0]) and hash (w1) == hash (wl[1])
+assert hash (w1) != hash (w2) or hash (w1) != hash (app) # highly likely
 a, b = (w1, w2) if w1 < w2 else (w2, w1)
 assert a != b and a <= b and a < b and not (a == b) and not (a >= b) and not (a > b)
 b = a

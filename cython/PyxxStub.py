@@ -340,6 +340,8 @@ class Generator:
           s += '    cdef size_t p1 = self._this0.__aida_orbid__()\n'
           s += '    cdef size_t p2 = (<%s> other)._this0.__aida_orbid__()\n' % tp.name
           s += '    return usize_richcmp (p1, p2, op)\n'
+          s += '  def __hash__ (%s self):\n' % tp.name
+          s += '    return self._this0.__aida_orbid__()\n' # equal objects need the same hash value
           s += '  def __repr__ (%s self):\n' % tp.name
           s += '    oaddr = object.__repr__ (self)\n' # '<Module.Class object at 0x0abcdef>'
           s += "    assert oaddr[-1] == '>' ; oaddr = oaddr[:-1] # strip trailing '>'\n"
