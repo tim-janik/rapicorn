@@ -110,6 +110,7 @@ assert q._asdict() == collections.OrderedDict ([ ('width', 7), ('height', 8) ])
 assert q[0] == 7 and q[1] == 8
 def indexed_access (o, i): return o[i]
 assert_raises (IndexError, indexed_access, q, 2)
+# Test richcmp
 def R (w, h):
   return Rapicorn.Requisition (width = w, height = h)
 a = R (17, 33) ; b = R (17, 33) ; assert a == b and a <= b and a >= b and not (a != b) and not (a >  b) and not (a <  b)
@@ -124,28 +125,48 @@ a = R (1, 2)  ; b = [ 1 ]       ; assert a != b and a >= b and a >  b and not (a
 a = R (1, 99) ; b = [ 1, 1, 1 ] ; assert a != b and a >= b and a >  b and not (a == b) and not (a <  b) and not (a <= b)
 a = R (1, 0)  ; b = [ 1, 1, 1 ] ; assert a != b and a <= b and a <  b and not (a == b) and not (a >  b) and not (a >= b)
 
-# Application
+# Manual object creation is not possible
 assert_raises (TypeError, Rapicorn.Object)
 assert_raises (TypeError, Rapicorn.Widget)
 assert_raises (TypeError, Rapicorn.Container)
 assert_raises (TypeError, Rapicorn.Window)
 assert_raises (TypeError, Rapicorn.Application)
 
+# Application setup
 app = Rapicorn.init ('testing1.py')
-w = app.create_window ('Window', '')
-l = w.create_widget ('Label', ['markup-text=Hello Cython World!'])
+
+# Test object handles
+w1 = app.create_window ('Window', '')
+wl = app.query_windows ("")
+assert wl == []
+wl = app.query_windows ("Window")
+assert len (wl) == 1
+
+w2 = app.create_window ('Window', '')
+wl = app.query_windows ("Window")
+assert len (wl) == 2
+assert w2 != app and w1 != app
+assert w1 != w2
+assert w1 != wl[0] or w1 != wl[1]
+assert w2 != wl[0] or w2 != wl[1]
+assert w1 in wl and w2 in wl
+a, b = (w1, w2) if w1 < w2 else (w2, w1)
+assert a != b and a <= b and a < b and not (a == b) and not (a >= b) and not (a > b)
+b = a
+assert a == b and a <= b and a >= b and not (a != b) and not (a < b) and not (a > b)
+
+# Show Window
+# w1 = app.create_window ('Window', '')
+l = w1.create_widget ('Label', ['markup-text=Hello Cython World!'])
 seen_window_display = False
 def displayed():
   global seen_window_display
   print "Hello, window is being displayed"
   seen_window_display = True
   app.quit()
-w.sig_displayed.connect (displayed)
-w.show()
+w1.sig_displayed.connect (displayed)
+w1.show()
 app.main_loop().exec_timer (app.quit, 2500) # ensures test doesn't hang
-
-wl = app.query_windows ("")
-assert wl == []
 
 app.run()
 assert seen_window_display

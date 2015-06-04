@@ -325,16 +325,22 @@ class Generator:
         # cinit/dealloc (BaseClass only)
         if not baselist:
           s += '  cdef %s *_this0\n' % u_typename
-          s += '  def __cinit__ (self):\n'
+          s += '  def __cinit__ (%s self):\n' % tp.name
           s += '    global %s__ctarg\n' % u_typename
           s += '    if not %s__ctarg:\n' % u_typename
           s += '      raise TypeError ("cannot create \'%s\' instances" % self.__class__.__name__)\n'
           s += '    self._this0 = %s__ctarg\n' % u_typename
           s += '    %s__ctarg = NULL\n' % u_typename
-          s += '  def __dealloc__ (self):\n'
+          s += '  def __dealloc__ (%s self):\n' % tp.name
           s += '    if self._this0:\n'
           s += '      del self._this0 ; self._this0 = NULL\n'
-          s += '  def __repr__ (self):\n'
+          s += '  def __richcmp__ (%s self, other, int op):\n' % tp.name
+          s += '    if self.__class__ != other.__class__:\n'
+          s += '      return _richcmp (self.__class__, other.__class__, op)\n'
+          s += '    cdef size_t p1 = self._this0.__aida_orbid__()\n'
+          s += '    cdef size_t p2 = (<%s> other)._this0.__aida_orbid__()\n' % tp.name
+          s += '    return usize_richcmp (p1, p2, op)\n'
+          s += '  def __repr__ (%s self):\n' % tp.name
           s += '    oaddr = object.__repr__ (self)\n' # '<Module.Class object at 0x0abcdef>'
           s += "    assert oaddr[-1] == '>' ; oaddr = oaddr[:-1] # strip trailing '>'\n"
           s += '    return "%s (orbid = 0x%08x)>" % (oaddr, self._this0.__aida_orbid__())\n'

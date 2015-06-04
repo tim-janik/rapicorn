@@ -37,7 +37,7 @@ cdef inline int richcmp_op (ssize_t cmpv, int op): # cmpv==0 euqals, cmpv<0 less
   elif op == Py_GT: return cmpv >  0            # >     4
   elif op == Py_GE: return cmpv >= 0            # >=    5
 
-cdef inline int ssize_richcmp (ssize_t s1, ssize_t s2, int op):
+cdef inline int usize_richcmp (size_t s1, size_t s2, int op):
   cdef ssize_t cmpv = -1 if s1 < s2 else s1 > s2
   return richcmp_op (cmpv, op)
 
@@ -115,7 +115,7 @@ cdef class Record:
     it = self.__iter__()
     for w in other:
       try:                  v = it.next()
-      except StopIteration: return ssize_richcmp (1, 2, op) # other has more elements
+      except StopIteration: return usize_richcmp (1, 2, op) # other has more elements
       if v == w:
         continue                        # inspect other elements
       if op == Py_EQ: return False      # ==
@@ -124,9 +124,9 @@ cdef class Record:
       return _richcmp (v, w, op)        # < <= > >=
     try:
       v = it.next()
-      return ssize_richcmp (2, 1, op) # other has less elements
+      return usize_richcmp (2, 1, op) # other has less elements
     except StopIteration: pass
-    return ssize_richcmp (0, 0, op)   # lengths match
+    return usize_richcmp (0, 0, op)   # lengths match
 
 # == Signal Connection Wrapper ==
 cdef class PyxxSignalConnector:

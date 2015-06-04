@@ -137,7 +137,7 @@ cdef class EventLoop:
       return _richcmp (self.__class__, other.__class__, op)
     cdef size_t p1 = <size_t> self.thisp.get()
     cdef size_t p2 = <size_t> (<EventLoop> other).thisp.get()
-    r = ssize_richcmp (p1, p2, op)
+    r = usize_richcmp (p1, p2, op)
     return r
   def add (self, EventSource source, priority = Rapicorn__EventLoop__PRIORITY_NORMAL):
     if source.thisp.get() == NULL:
