@@ -270,6 +270,9 @@ class Generator:
           marshal, mid = self.marshal (stp.rtype, [a[1] for a in stp.args])
           s += '    size_t sig_%-30s "sig_%s().operator+=" (%s)\n' % (stp.name + '_connect', stp.name, marshal['Caller'])
           s += '    bool   sig_%-30s "sig_%s().operator-=" (size_t)\n' % (stp.name + '_disconnect', stp.name)
+        # RemoteHandle (BaseClass only) bindings
+        if not self.bases (tp):
+          s += '    uint64 __aida_orbid__ () const\n'
     # C++ Marshallers
     s += '\n'
     s += '# C++ Marshallers\n'
@@ -331,6 +334,10 @@ class Generator:
           s += '  def __dealloc__ (self):\n'
           s += '    if self._this0:\n'
           s += '      del self._this0 ; self._this0 = NULL\n'
+          s += '  def __repr__ (self):\n'
+          s += '    oaddr = object.__repr__ (self)\n' # '<Module.Class object at 0x0abcdef>'
+          s += "    assert oaddr[-1] == '>' ; oaddr = oaddr[:-1] # strip trailing '>'\n"
+          s += '    return "%s (orbid = 0x%08x)>" % (oaddr, self._this0.__aida_orbid__())\n'
         # properties
         for fname, ftp in tp.fields:
           s += '  property %s:\n' % fname
