@@ -131,7 +131,24 @@ assert_raises (TypeError, Rapicorn.Container)
 assert_raises (TypeError, Rapicorn.Window)
 assert_raises (TypeError, Rapicorn.Application)
 
-Rapicorn.init_app ('testing1.py')
+app = Rapicorn.init ('testing1.py')
+w = app.create_window ('Window', '')
+l = w.create_widget ('Label', ['markup-text=Hello Cython World!'])
+seen_window_display = False
+def displayed():
+  global seen_window_display
+  print "Hello, window is being displayed"
+  seen_window_display = True
+  app.quit()
+w.sig_displayed.connect (displayed)
+w.show()
+app.main_loop().exec_timer (app.quit, 2500) # ensures test doesn't hang
+
+wl = app.query_windows ("")
+assert wl == []
+
+app.run()
+assert seen_window_display
 
 # all done
 print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
