@@ -277,10 +277,7 @@ class Generator:
     s += 'operator>>= (Rapicorn::Aida::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Rapicorn::Aida::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
-    if el[1].storage == Decls.INTERFACE:
-      s += '  self.reserve (len);\n'
-    else:
-      s += '  self.resize (len);\n'
+    s += '  self.resize (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
     s += '    fbr >>= self[k];\n'
     s += '  }\n'

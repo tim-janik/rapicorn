@@ -1421,7 +1421,7 @@ operator>>= (Rapicorn::Aida::FieldReader &src, InterfaceSequence &self)
 {
   Rapicorn::Aida::FieldReader fbr (src.pop_seq());
   const size_t len = fbr.remaining();
-  self.reserve (len);
+  self.resize (len);
   for (size_t k = 0; k < len; k++) {
     fbr >>= self[k];
   }
