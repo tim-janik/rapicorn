@@ -225,18 +225,19 @@ class Generator:
           continue
         marshal_set.add (mid)
         s += marshal['ctypedef']
-    # C++ This Pointer Casts
+    # C++ Casts
     s += '\n'
     s += '# C++ Handle Casts\n'
     s += 'cdef extern from * namespace "%s":\n' % self.namespace
     for tp in types:
       if tp.typedef_origin or tp.is_forward or tp.storage != Decls.INTERFACE:
         continue
-      u_typename, c_typename = underscore_typename (tp), colon_typename (tp)
+      u_typename, c_typename, u_base = underscore_typename (tp), colon_typename (tp), underscore_typename (self.inheritance_base (tp))
       s += '  %-25s %-40s "dynamic_cast<%s*>" (void*) except NULL\n' % (u_typename + '*', u_typename + 'H__dynamic_cast', c_typename)
       # 'except NULL' means that cython checks the return value for NULL. allthough
       # dynamic_cast will not set a Python exception, raising a 'SystemError: error
       # return without exception set' is still better than dereferencing and crashing
+      s += '  %-25s %-40s "%s::down_cast" (%s)\n' % (u_typename, u_typename + 'H__down_cast', c_typename, u_base)
     # C++ Classes
     s += '\n'
     s += '# C++ Classes\n'
@@ -326,6 +327,8 @@ class Generator:
         # class inheritance
         handle = '%s__unwrap (self)' % u_typename
         baselist = ', '.join (b.name for b in self.bases (tp))
+        ibase = self.inheritance_base (tp)
+        u_base = underscore_typename (ibase)
         s += '\ncdef class %s (%s):\n' % (tp.name, baselist or 'object')
         # cinit/dealloc (BaseClass only)
         if not baselist:
@@ -381,6 +384,19 @@ class Generator:
           s += ')\n'
           if result:
             s += '    return %s\n' % self.py_wrap ('_cxxret', rtp)
+        # down_cast
+        s += '  @classmethod\n'
+        s += '  def down_cast (klass, other):\n'
+        s += '    cdef %s target\n' % u_typename
+        s += '    cdef %s base\n' % u_base
+        s += '    try:\n'
+        s += '      base = %s\n' % self.cxx_unwrap ('other', ibase)
+        s += '    except: pass\n'
+        s += '    if base.__aida_notnull__():\n'
+        s += '      target = %sH__down_cast (base)\n' % u_typename
+        s += '      if target.__aida_notnull__():\n'
+        s += '        return %s\n' % self.py_wrap ('target', tp)
+        s += '    return None\n'
         # __aida_wrapper__
         wrapperclass = '%s__aida_wrapper_Class%d' % (tp.name, self.idcounter) ; self.idcounter += 1
         s += '  @classmethod\n'
