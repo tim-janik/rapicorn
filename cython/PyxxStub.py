@@ -277,6 +277,7 @@ class Generator:
         # RemoteHandle (BaseClass only) bindings
         if not self.bases (tp):
           s += '    uint64 __aida_orbid__ () const\n'
+          s += '    bool   __aida_notnull__ "operator bool" () const\n'
     # C++ Marshallers
     s += '\n'
     s += '# C++ Marshallers\n'
