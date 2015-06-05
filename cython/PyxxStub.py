@@ -255,7 +255,11 @@ class Generator:
         for fname, ftp in tp.fields:
           s += '    %-30s %s\n' % (self.cxx_type (ftp), fname)
       elif tp.storage == Decls.INTERFACE:
-        s += '  cppclass %s:\n' % u_typename
+        s += '  cppclass %s' % u_typename
+        baselist = ', '.join (underscore_typename (b) for b in self.bases (tp))
+        if baselist:
+          s += ' (%s)' % baselist
+        s += ':\n'
         s += '    %s ()\n' % u_typename                 # default ctor
         s += '    %s (%s)\n' % (u_typename, u_typename) # copy ctor
         for fname, ftp in tp.fields:
