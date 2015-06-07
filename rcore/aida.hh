@@ -385,7 +385,7 @@ class RemoteHandle {
   OrbObjectP        orbop_;
   template<class Parent>
   struct NullRemoteHandleT : public Parent {
-    TypeHashList __aida_typelist__ () { return TypeHashList(); }
+    TypeHashList __aida_typelist__ () const { return TypeHashList(); }
   };
   typedef NullRemoteHandleT<RemoteHandle> NullRemoteHandle;
   static OrbObjectP __aida_null_orb_object__ ();

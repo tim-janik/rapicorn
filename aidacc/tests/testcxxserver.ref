@@ -948,8 +948,8 @@ operator->* (I_ChildIface *obj, Rapicorn::Aida::_HandleType)
 void
 I_ChildIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
 {
-  thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
   thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
+  thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
 }
 const Rapicorn::Aida::PropertyList&
 I_ChildIface::__aida_properties__ ()
@@ -997,9 +997,9 @@ operator->* (I_DescendantIface *obj, Rapicorn::Aida::_HandleType)
 void
 I_DescendantIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
 {
-  thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
-  thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
   thl.push_back (Rapicorn::Aida::TypeHash (0x846a6876889dd896ULL, 0xbe521465806f3d42ULL)); // Descendant
+  thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
+  thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
 }
 const Rapicorn::Aida::PropertyList&
 I_DescendantIface::__aida_properties__ ()
@@ -1047,10 +1047,10 @@ operator->* (I_GrandChildIface *obj, Rapicorn::Aida::_HandleType)
 void
 I_GrandChildIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
 {
-  thl.push_back (Rapicorn::Aida::TypeHash (0x846a6876889dd896ULL, 0xbe521465806f3d42ULL)); // Descendant
-  thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
-  thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
   thl.push_back (Rapicorn::Aida::TypeHash (0xf6975e5e92250718ULL, 0x53730d44919c46f9ULL)); // GrandChild
+  thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
+  thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
+  thl.push_back (Rapicorn::Aida::TypeHash (0x846a6876889dd896ULL, 0xbe521465806f3d42ULL)); // Descendant
 }
 const Rapicorn::Aida::PropertyList&
 I_GrandChildIface::__aida_properties__ ()
@@ -1257,8 +1257,8 @@ operator->* (I_ChildInheritingSignalsIface *obj, Rapicorn::Aida::_HandleType)
 void
 I_ChildInheritingSignalsIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
 {
-  thl.push_back (Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL)); // SignalTestInterface
   thl.push_back (Rapicorn::Aida::TypeHash (0xf20ff30241b5b694ULL, 0x9f544b2626e183f0ULL)); // ChildInheritingSignals
+  thl.push_back (Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL)); // SignalTestInterface
 }
 const Rapicorn::Aida::PropertyList&
 I_ChildInheritingSignalsIface::__aida_properties__ ()
@@ -1306,8 +1306,8 @@ operator->* (I_AnotherChildIface *obj, Rapicorn::Aida::_HandleType)
 void
 I_AnotherChildIface::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const
 {
-  thl.push_back (Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL)); // SignalTestInterface
   thl.push_back (Rapicorn::Aida::TypeHash (0x9a33af1b27f7e36dULL, 0xdf625f7bd18934faULL)); // AnotherChild
+  thl.push_back (Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL)); // SignalTestInterface
 }
 const Rapicorn::Aida::PropertyList&
 I_AnotherChildIface::__aida_properties__ ()
