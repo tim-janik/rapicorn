@@ -1905,11 +1905,6 @@ ServerConnection::ServerConnection (const std::string &protocol) :
 ServerConnection::~ServerConnection()
 {}
 
-static inline bool
-operator< (const TypeHash &a, const TypeHash &b)
-{
-  return AIDA_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
-}
 struct HashTypeHash {
   inline size_t operator() (const TypeHash &t) const
   {

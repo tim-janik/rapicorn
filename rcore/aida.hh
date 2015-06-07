@@ -295,6 +295,10 @@ struct TypeHash {
   explicit    TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
   explicit    TypeHash   () : typehi (0), typelo (0) {}
   inline bool operator== (const TypeHash &z) const { return typehi == z.typehi && typelo == z.typelo; }
+  friend bool operator<  (const TypeHash &a, const TypeHash &b)
+  {
+    return AIDA_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
+  }
 };
 typedef std::vector<TypeHash> TypeHashList;
 
