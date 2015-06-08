@@ -140,9 +140,11 @@ cdef class PyxxSignalConnector:
   def disconnect (self, callable_id):
     return self.disconnector (callable_id)
 
+
 # == Utilities from pyxxutils.hh ==
 cdef extern from "pyxxutils.hh":
   void pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
+
   cppclass PyxxCaller0[R]:
     PyxxCaller0 (object, R (*M) (object))
   cppclass PyxxCaller1[R, A1]:
