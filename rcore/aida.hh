@@ -103,6 +103,20 @@ template<> const EnumValue* enum_value_list<TypeKind> ();
 
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 
+// == TypeHash ==
+struct TypeHash {
+  uint64 typehi, typelo;
+  explicit    TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
+  explicit    TypeHash   () : typehi (0), typelo (0) {}
+  String      to_string  () const;
+  inline bool operator== (const TypeHash &z) const { return typehi == z.typehi && typelo == z.typelo; }
+  friend bool operator<  (const TypeHash &a, const TypeHash &b)
+  {
+    return AIDA_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
+  }
+};
+typedef std::vector<TypeHash> TypeHashList;
+
 // == ImplicitBase ==
 /// Abstract base interface that all IDL interfaces are implicitely derived from.
 class ImplicitBase : public virtual std::enable_shared_from_this<ImplicitBase> {
@@ -288,19 +302,6 @@ public:
   void     flush     (); ///< Clear pending wakeups.
   /*Des*/ ~EventFd   ();
 };
-
-// == Type Hash ==
-struct TypeHash {
-  uint64 typehi, typelo;
-  explicit    TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
-  explicit    TypeHash   () : typehi (0), typelo (0) {}
-  inline bool operator== (const TypeHash &z) const { return typehi == z.typehi && typelo == z.typelo; }
-  friend bool operator<  (const TypeHash &a, const TypeHash &b)
-  {
-    return AIDA_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
-  }
-};
-typedef std::vector<TypeHash> TypeHashList;
 
 // == Utilities ==
 void assertion_error (const char *file, uint line, const char *expr) AIDA_NORETURN;
