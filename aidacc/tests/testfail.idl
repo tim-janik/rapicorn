@@ -6,7 +6,7 @@ Const a = 5; Const a = 6; // redefining existing identifier
 
 Const record = 5; // keyword assignment
 
-typedef String String; // keyword redefinition (without --system-typedefs)
+
 
 namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
 
@@ -50,19 +50,19 @@ sequence S1 { bool b; }; sequence S2 { _S1 s; }; // need existing typenames
 
 sequence Dup { bool b; }; sequence Dup { bool b; }; // duplicate definition
 
-typedef Const X; // unknown type Const
 
-typedef bool Const; // keyword redefinition
+
+
 
 Const class = 5; // keyword redefinition
 
-enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
+enum Enu1 { AA }; enum Enu1 { AA }; // type redefinition
 
-typedef int32 x = _No_SUCH_initializer (17); // unknown type definition
 
-typedef int32 x = Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
 
-typedef int32 string_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
+
+
+
 
 record R { String s = Num ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
 

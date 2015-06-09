@@ -201,7 +201,7 @@ class Generator:
     s += 'cdef extern from * namespace "%s":\n' % self.namespace
     s += '  pass\n'
     for tp in types:
-      if tp.typedef_origin or tp.is_forward:
+      if tp.is_forward:
         continue
       if tp.storage == Decls.ENUM:
         s += '  cdef enum %-50s "%s":\n' % (underscore_typename (tp), colon_typename (tp))
@@ -213,7 +213,7 @@ class Generator:
     s += '# C++ Declarations\n'
     s += 'cdef extern from * namespace "%s":\n' % self.namespace
     for tp in types:
-      if tp.typedef_origin or tp.is_forward:
+      if tp.is_forward:
         continue
       if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
         s += '  cppclass %-40s "%s"\n' % (underscore_typename (tp), colon_typename (tp))
@@ -222,7 +222,7 @@ class Generator:
     s += '\n'
     s += '# C++ Callback Types\n'
     marshal_set = set()
-    for tp in [tp for tp in types if tp.storage == Decls.INTERFACE and not (tp.typedef_origin or tp.is_forward)]:
+    for tp in [tp for tp in types if tp.storage == Decls.INTERFACE and not tp.is_forward]:
       for stp in tp.signals:
         marshal, mid = self.marshal (stp.rtype, [a[1] for a in stp.args])
         if mid in marshal_set:
@@ -234,7 +234,7 @@ class Generator:
     s += '# C++ Handle Casts\n'
     s += 'cdef extern from * namespace "%s":\n' % self.namespace
     for tp in types:
-      if tp.typedef_origin or tp.is_forward or tp.storage != Decls.INTERFACE:
+      if tp.is_forward or tp.storage != Decls.INTERFACE:
         continue
       u_typename, c_typename, u_base = underscore_typename (tp), colon_typename (tp), underscore_typename (self.inheritance_base (tp))
       s += '  %-25s %-40s "dynamic_cast<%s*>" (void*) except NULL\n' % (u_typename + '*', u_typename + 'H__dynamic_cast', c_typename)
@@ -250,7 +250,7 @@ class Generator:
     s += '  pass\n'
     for tp in types:
       u_typename = underscore_typename (tp)
-      if tp.typedef_origin or tp.is_forward:
+      if tp.is_forward:
         continue
       if tp.storage == Decls.SEQUENCE:
         fname, ftp = tp.elements
@@ -295,7 +295,7 @@ class Generator:
     s += '\n'
     s += '# C++ Marshallers\n'
     marshal_set = set()
-    for tp in [tp for tp in types if tp.storage == Decls.INTERFACE and not (tp.typedef_origin or tp.is_forward)]:
+    for tp in [tp for tp in types if tp.storage == Decls.INTERFACE and not tp.is_forward]:
       for stp in tp.signals:
         marshal, mid = self.marshal (stp.rtype, [a[1] for a in stp.args])
         if mid in marshal_set:
@@ -317,7 +317,7 @@ class Generator:
     s += '\n'
     s += '# Python Classes\n'
     for tp in types:
-      if tp.typedef_origin or tp.is_forward:
+      if tp.is_forward:
         continue
       u_typename, type_cc_name = underscore_typename (tp), colon_typename (tp)
       if tp.storage == Decls.RECORD:

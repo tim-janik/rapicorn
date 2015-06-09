@@ -380,24 +380,6 @@ struct NestedTypesSeq : public std::vector<NestedTypesRec>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::FieldReader&, NestedTypesSeq&);
 
-typedef Rapicorn::Aida::Any AliasAny;
-
-typedef bool AliasBool;
-
-typedef int AliasInt32;
-
-typedef int64_t AliasInt64;
-
-typedef double AliasFloat;
-
-typedef std::string AliasString;
-
-typedef XFooRecord AliasRecord;
-
-typedef XFooSequence AliasSequence;
-
-typedef ExtensiveEnum AliasEnum;
-
 struct NewRecord
 {
   /// @cond GeneratedFields
@@ -467,15 +449,22 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SomeRecord&);
 
 namespace Auxdata {
 
-typedef bool AuxBool;
-
-typedef int Aux32;
-
-typedef int64_t Aux64;
-
-typedef double AuxF64;
-
-typedef std::string AuxStr;
+struct RecordWithAuxdata
+{
+  /// @cond GeneratedFields
+  bool                          aux_bool;
+  int                           aux32;
+  int64_t                       aux64;
+  double                        auxf64;
+  std::string                   aux_str;
+  /// @endcond
+  inline                        RecordWithAuxdata () { aux_bool = 0; aux32 = 0; aux64 = 0; auxf64 = 0; }
+  std::string                   __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  bool                          operator==  (const RecordWithAuxdata &other) const;
+  bool                          operator!=  (const RecordWithAuxdata &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const RecordWithAuxdata&);
+void operator>>= (Rapicorn::Aida::FieldReader&, RecordWithAuxdata&);
 } // Auxdata
 
 namespace InterfaceTests {
@@ -1611,6 +1600,40 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SomeRecord &self)
   fbr >>= self.r4;
 }
 } // OtherNamespace
+
+namespace Auxdata {
+bool
+RecordWithAuxdata::operator== (const RecordWithAuxdata &other) const
+{
+  if (this->aux_bool != other.aux_bool) return false;
+  if (this->aux32 != other.aux32) return false;
+  if (this->aux64 != other.aux64) return false;
+  if (this->auxf64 != other.auxf64) return false;
+  if (this->aux_str != other.aux_str) return false;
+  return true;
+}
+inline void __attribute__ ((used))
+operator<<= (Rapicorn::Aida::FieldBuffer &dst, const RecordWithAuxdata &self)
+{
+  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (5);
+  fb <<= self.aux_bool;
+  fb <<= self.aux32;
+  fb <<= self.aux64;
+  fb <<= self.auxf64;
+  fb <<= self.aux_str;
+}
+inline void __attribute__ ((used))
+operator>>= (Rapicorn::Aida::FieldReader &src, RecordWithAuxdata &self)
+{
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  if (fbr.remaining() < 5) return;
+  fbr >>= self.aux_bool;
+  fbr >>= self.aux32;
+  fbr >>= self.aux64;
+  fbr >>= self.auxf64;
+  fbr >>= self.aux_str;
+}
+} // Auxdata
 
 namespace InterfaceTests {
 static Rapicorn::Aida::FieldBuffer*

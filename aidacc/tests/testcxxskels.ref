@@ -34,38 +34,7 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIfaceP&);
 I_FirstInterfaceIface* operator->* (FirstInterfaceHandle &sh, Rapicorn::Aida::_ServantType);
 FirstInterfaceHandle operator->* (I_FirstInterfaceIface *obj, Rapicorn::Aida::_HandleType);
-
-typedef Rapicorn::Aida::Any AliasAny;
-
-typedef bool AliasBool;
-
-typedef int AliasInt32;
-
-typedef int64_t AliasInt64;
-
-typedef double AliasFloat;
-
-typedef std::string AliasString;
-
-typedef XFooRecord AliasRecord;
-
-typedef XFooSequence AliasSequence;
-
-typedef ExtensiveEnum AliasEnum;
 } // MandatoryNamespace
-
-namespace Auxdata {
-
-typedef bool AuxBool;
-
-typedef int Aux32;
-
-typedef int64_t Aux64;
-
-typedef double AuxF64;
-
-typedef std::string AuxStr;
-} // Auxdata
 
 namespace InterfaceTests {
 

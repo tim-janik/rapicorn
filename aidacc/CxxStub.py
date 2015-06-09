@@ -1146,9 +1146,6 @@ class Generator:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
           s += 'class %s;\n' % self.C (tp)
-        elif tp.typedef_origin:
-          s += self.open_namespace (tp) + '\n'
-          s += 'typedef %s %s;\n' % (self.C (tp.typedef_origin), tp.name)
         elif tp.storage in (Decls.RECORD, Decls.SEQUENCE) and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_recseq_decl (tp)
@@ -1175,7 +1172,7 @@ class Generator:
       s += '\n// --- Implementations ---\n'
       spc_enums = []
       for tp in types:
-        if tp.typedef_origin or tp.is_forward:
+        if tp.is_forward:
           continue
         if tp.storage == Decls.RECORD and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
@@ -1209,7 +1206,7 @@ class Generator:
       s += '\n// --- Method Dispatchers & Registry ---\n'
       reglines = []
       for tp in types:
-        if tp.typedef_origin or tp.is_forward:
+        if tp.is_forward:
           continue
         s += self.open_namespace (tp)
         if tp.storage == Decls.INTERFACE:
@@ -1230,7 +1227,7 @@ class Generator:
       self.gen_mode = G4SERVANT
       s += '\n// --- Interface Skeletons ---\n'
       for tp in types:
-        if tp.typedef_origin or tp.is_forward:
+        if tp.is_forward:
           continue
         elif tp.storage == Decls.INTERFACE:
           s += self.generate_interface_skel (tp)

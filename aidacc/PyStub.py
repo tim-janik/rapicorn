@@ -283,7 +283,7 @@ class Generator:
         types += [ tp ]
     # generate types
     for tp in types:
-      if tp.is_forward: # or tp.typedef_origin
+      if tp.is_forward:
         pass
       elif tp.storage == Decls.ENUM:
         s += self.enter_namespace_pyimpl (tp)
@@ -649,13 +649,13 @@ class Generator:
         types += [ tp ]
     # generate prototypes
     for tp in types:
-      if tp.typedef_origin or tp.is_forward:
-        pass # s += 'typedef %s %s;\n' % (self.type2cxx (tp.typedef_origin.name), tp.name)
+      if tp.is_forward:
+        pass
       elif tp.storage == Decls.RECORD:
         s += 'struct %s;\n' % tp.name
     # generate types
     for tp in types:
-      if tp.typedef_origin or tp.is_forward:
+      if tp.is_forward:
         pass
       elif tp.storage == Decls.RECORD:
         s += self.generate_record_cxximpl (tp) + '\n'
@@ -666,7 +666,7 @@ class Generator:
     # generate accessors
     mdefs = []
     for tp in types:
-      if tp.typedef_origin or tp.is_forward:
+      if tp.is_forward:
         pass
       elif tp.storage == Decls.RECORD:
         pass
