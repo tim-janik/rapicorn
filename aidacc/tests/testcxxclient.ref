@@ -251,7 +251,7 @@ struct XFooRecord
   /// @cond GeneratedFields
   bool                          single_bool;
   int                           single_num;
-  Rapicorn::Aida::int64         num64;
+  int64_t                       num64;
   double                        single_float;
   std::string                   single_string;
   int                           sibling1;
@@ -386,7 +386,7 @@ typedef bool AliasBool;
 
 typedef int AliasInt32;
 
-typedef Rapicorn::Aida::int64 AliasInt64;
+typedef int64_t AliasInt64;
 
 typedef double AliasFloat;
 
@@ -471,7 +471,7 @@ typedef bool AuxBool;
 
 typedef int Aux32;
 
-typedef Rapicorn::Aida::int64 Aux64;
+typedef int64_t Aux64;
 
 typedef double AuxF64;
 
@@ -513,7 +513,7 @@ public:
   double                        two_args2          (int n = 6,
                                                     double r = 7.7); 	///< See UIWidgetArea::two_args2()
   double                        multi_args         (bool b,
-                                                    Rapicorn::Aida::int64 n,
+                                                    int64_t n,
                                                     double r,
                                                     int i,
                                                     const std::string &s = "String ding",
@@ -677,8 +677,8 @@ public:
                                                            bool optval = 0); 	///< See MethodTestInterface::method_with_bools()
   int                           method_with_ints32        (int input,
                                                            int optval = -2); 	///< See MethodTestInterface::method_with_ints32()
-  Rapicorn::Aida::int64         method_with_ints64        (Rapicorn::Aida::int64 input,
-                                                           Rapicorn::Aida::int64 optval = 576460752303423488); 	///< See MethodTestInterface::method_with_ints64()
+  int64_t                       method_with_ints64        (int64_t input,
+                                                           int64_t optval = 576460752303423488); 	///< See MethodTestInterface::method_with_ints64()
   double                        method_with_floats        (double input,
                                                            double optval = 309.9); 	///< See MethodTestInterface::method_with_floats()
   std::string                   method_with_string        (const std::string &input,
@@ -711,8 +711,8 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
   size_t __aida_connect__bool_result (size_t, const std::function<bool ()>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, int ()> __Aida_Signal__int32_result;
   size_t __aida_connect__int32_result (size_t, const std::function<int ()>&);
-  typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, Rapicorn::Aida::int64 ()> __Aida_Signal__int64_result;
-  size_t __aida_connect__int64_result (size_t, const std::function<Rapicorn::Aida::int64 ()>&);
+  typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, int64_t ()> __Aida_Signal__int64_result;
+  size_t __aida_connect__int64_result (size_t, const std::function<int64_t ()>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, double ()> __Aida_Signal__float64_result;
   size_t __aida_connect__float64_result (size_t, const std::function<double ()>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, std::string ()> __Aida_Signal__string_result;
@@ -735,8 +735,8 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
   size_t __aida_connect__bool_arg (size_t, const std::function<void (bool b)>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (int i)> __Aida_Signal__int32_arg;
   size_t __aida_connect__int32_arg (size_t, const std::function<void (int i)>&);
-  typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (Rapicorn::Aida::int64 i)> __Aida_Signal__int64_arg;
-  size_t __aida_connect__int64_arg (size_t, const std::function<void (Rapicorn::Aida::int64 i)>&);
+  typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (int64_t i)> __Aida_Signal__int64_arg;
+  size_t __aida_connect__int64_arg (size_t, const std::function<void (int64_t i)>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (double f)> __Aida_Signal__float64_arg;
   size_t __aida_connect__float64_arg (size_t, const std::function<void (double f)>&);
   typedef Rapicorn::Aida::Connector<SignalTestInterfaceHandle, void (const std::string &s)> __Aida_Signal__string_arg;
@@ -852,8 +852,8 @@ public:
   void                          bool_prop      (bool); 	///< See PropertyTester::bool_prop
   int                           int32_prop     () const; 	///< See PropertyTester::int32_prop
   void                          int32_prop     (int); 	///< See PropertyTester::int32_prop
-  Rapicorn::Aida::int64         int64_prop     () const; 	///< See PropertyTester::int64_prop
-  void                          int64_prop     (Rapicorn::Aida::int64); 	///< See PropertyTester::int64_prop
+  int64_t                       int64_prop     () const; 	///< See PropertyTester::int64_prop
+  void                          int64_prop     (int64_t); 	///< See PropertyTester::int64_prop
   double                        float64_prop   () const; 	///< See PropertyTester::float64_prop
   void                          float64_prop   (double); 	///< See PropertyTester::float64_prop
   std::string                   string_prop    () const; 	///< See PropertyTester::string_prop
@@ -1837,7 +1837,7 @@ UIWidgetAreaHandle::two_args2 (int arg_n,
 }
 double
 UIWidgetAreaHandle::multi_args (bool arg_b,
-                                Rapicorn::Aida::int64 arg_n,
+                                int64_t arg_n,
                                 double arg_r,
                                 int arg_i,
                                 const std::string &arg_s,
@@ -2349,9 +2349,9 @@ MethodTestInterfaceHandle::method_with_ints32 (int arg_input,
   delete fr;
   return retval;
 }
-Rapicorn::Aida::int64
-MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64 arg_input,
-                                               Rapicorn::Aida::int64 arg_optval) /// See MethodTestInterface::method_with_ints64()
+int64_t
+MethodTestInterfaceHandle::method_with_ints64 (int64_t arg_input,
+                                               int64_t arg_optval) /// See MethodTestInterface::method_with_ints64()
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 2), *fr = NULL;
   __AIDA_Local__::add_header2_call (fb, *this, 0x678de8636167b6a1ULL, 0xb27d37ca066b5335ULL);
@@ -2361,7 +2361,7 @@ MethodTestInterfaceHandle::method_with_ints64 (Rapicorn::Aida::int64 arg_input,
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_header();
-  Rapicorn::Aida::int64  retval;
+  int64_t  retval;
   frr >>= retval;
   delete fr;
   return retval;
@@ -2562,21 +2562,21 @@ SignalTestInterfaceHandle::__aida_connect__int32_result (size_t signal_handler_i
 static Rapicorn::Aida::FieldBuffer*
 __aida_emit2__SignalTestInterfaceHandle__int64_result (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
-  auto fptr = (const std::function<Rapicorn::Aida::int64 ()>*) data;
+  auto fptr = (const std::function<int64_t ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::int64 rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  int64_t rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_emit_result (sfb, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
   return &rb;
 }
 size_t
-SignalTestInterfaceHandle::__aida_connect__int64_result (size_t signal_handler_id, const std::function<Rapicorn::Aida::int64 ()> &func)
+SignalTestInterfaceHandle::__aida_connect__int64_result (size_t signal_handler_id, const std::function<int64_t ()> &func)
 {
   if (signal_handler_id)
     return __AIDA_Local__::signal_disconnect (signal_handler_id);
-  void *fptr = new std::function<Rapicorn::Aida::int64 ()> (func);
+  void *fptr = new std::function<int64_t ()> (func);
   return __AIDA_Local__::signal_connect (0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, *this, __aida_emit2__SignalTestInterfaceHandle__int64_result, fptr);
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -2793,18 +2793,18 @@ SignalTestInterfaceHandle::__aida_connect__int32_arg (size_t signal_handler_id, 
 static Rapicorn::Aida::FieldBuffer*
 __aida_emit1__SignalTestInterfaceHandle__int64_arg (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
 {
-  auto fptr = (const std::function<void (Rapicorn::Aida::int64 i)>*) data;
+  auto fptr = (const std::function<void (int64_t i)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
   Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
-SignalTestInterfaceHandle::__aida_connect__int64_arg (size_t signal_handler_id, const std::function<void (Rapicorn::Aida::int64 i)> &func)
+SignalTestInterfaceHandle::__aida_connect__int64_arg (size_t signal_handler_id, const std::function<void (int64_t i)> &func)
 {
   if (signal_handler_id)
     return __AIDA_Local__::signal_disconnect (signal_handler_id);
-  void *fptr = new std::function<void (Rapicorn::Aida::int64 i)> (func);
+  void *fptr = new std::function<void (int64_t i)> (func);
   return __AIDA_Local__::signal_connect (0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL, *this, __aida_emit1__SignalTestInterfaceHandle__int64_arg, fptr);
 }
 static Rapicorn::Aida::FieldBuffer*
@@ -3234,7 +3234,7 @@ PropertyTesterHandle::int32_prop (int value) /// See PropertyTester::int32_prop
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
-Rapicorn::Aida::int64
+int64_t
 PropertyTesterHandle::int64_prop () const /// See PropertyTester::int64_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1), *fr = NULL;
@@ -3243,13 +3243,13 @@ PropertyTesterHandle::int64_prop () const /// See PropertyTester::int64_prop
   fr = __AIDA_Local__::invoke (&fb);
   Rapicorn::Aida::FieldReader frr (*fr);
   frr.skip_header();
-  Rapicorn::Aida::int64  retval;
+  int64_t  retval;
   frr >>= retval;
   delete fr;
   return retval;
 }
 void
-PropertyTesterHandle::int64_prop (Rapicorn::Aida::int64 value) /// See PropertyTester::int64_prop
+PropertyTesterHandle::int64_prop (int64_t value) /// See PropertyTester::int64_prop
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
   __AIDA_Local__::add_header1_call (fb, *this, 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL);

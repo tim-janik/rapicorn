@@ -66,7 +66,7 @@ class Generator:
     if tstorage == Decls.VOID:          return 'void'
     if tstorage == Decls.BOOL:          return 'bool'
     if tstorage == Decls.INT32:         return 'int'
-    if tstorage == Decls.INT64:         return 'Rapicorn::Aida::int64'
+    if tstorage == Decls.INT64:         return 'int64_t'
     if tstorage == Decls.FLOAT64:       return 'double'
     if tstorage == Decls.STRING:        return 'std::string'
     if tstorage == Decls.ANY:           return 'Rapicorn::Aida::Any'
@@ -828,7 +828,7 @@ class Generator:
     s += '    thl = self->__aida_typelist__();\n'
     # return: length (typehi, typelo)*length
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, %s, 1 + 2 * thl.size());\n' % digest # invalidates fbr
-    s += '  rb <<= Rapicorn::Aida::int64 (thl.size());\n'
+    s += '  rb <<= int64_t (thl.size());\n'
     s += '  for (size_t i = 0; i < thl.size(); i++)\n'
     s += '    rb <<= thl[i];\n'
     s += '  return &rb;\n'
