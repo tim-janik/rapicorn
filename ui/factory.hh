@@ -65,11 +65,11 @@ class WidgetFactory : Factory::ObjectTypeFactory {
   virtual void
   type_name_list (std::vector<const char*> &names) const override
   {
-#define __RAPICORN_SERVERAPI_HH__INTERFACE_NAME(CLASS)  \
+#define RAPICORN_IDL_INTERFACE_NAME(CLASS)  \
     if (std::is_base_of<CLASS ## Iface, Type>::value)   \
       names.push_back ( #CLASS );
-    __RAPICORN_SERVERAPI_HH__INTERFACE_LIST ; // enlist all known IDL classes matching Type
-#undef __RAPICORN_SERVERAPI_HH__INTERFACE_NAME
+    RAPICORN_IDL_INTERFACE_LIST ; // enlist all known IDL classes matching Type
+#undef RAPICORN_IDL_INTERFACE_NAME
     if (std::is_base_of<EventHandler, Type>::value)
       names.push_back ("Rapicorn::EventHandler");
   }
