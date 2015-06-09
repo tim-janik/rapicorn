@@ -173,6 +173,17 @@ w1.sig_displayed.connect (displayed)
 w1.show()
 app.main_loop().exec_timer (app.quit, 2500) # ensures test doesn't hang
 
+# Check for the absence of type erasure
+w2 = app.create_window ('Window', '')
+hb = w2.create_widget ('HBox', [])
+l1 = hb.create_widget ('Label', ['markup-text=Hello 1'])
+l2 = hb.create_widget ('Label', ['markup-text=Hello 2'])
+l3 = hb.create_widget ('Label', ['markup-text=Hello 3'])
+widgets = w2.query_selector_all ('.Widget')
+assert Rapicorn.Window in [w.__class__ for w in widgets]
+assert Rapicorn.HBox   in [w.__class__ for w in widgets]
+assert Rapicorn.Label  in [w.__class__ for w in widgets]
+
 app.run()
 assert seen_window_display
 
