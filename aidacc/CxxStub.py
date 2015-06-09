@@ -55,13 +55,16 @@ class Generator:
       loc = self.idl_path()
     input_file = input_file if input_file else self.idl_path()
     print >>sys.stderr, '%s: WARNING: %s' % (loc, message)
-  def Iwrap (self, name):
-    cc = name.rfind ('::')
+  @staticmethod
+  def prefix_namespaced_identifier (prefix, ident, postfix = ''):     # Foo::bar -> Foo::PREFIX_bar_POSTFIX
+    cc = ident.rfind ('::')
     if cc >= 0:
-      ns, base = name[:cc+2], name[cc+2:]
+      ns, base = ident[:cc+2], ident[cc+2:]
     else:
-      ns, base = '', name
-    return ns + I_prefix_postfix[0] + base + I_prefix_postfix[1]
+      ns, base = '', ident
+    return ns + prefix + base + postfix
+  def Iwrap (self, name):
+    return self.prefix_namespaced_identifier (I_prefix_postfix[0], name, I_prefix_postfix[1])
   def type2cpp (self, type_node):
     tstorage = type_node.storage
     if tstorage == Decls.VOID:          return 'void'
@@ -77,11 +80,15 @@ class Generator:
     tname = self.type2cpp (type_node)
     if type_node.storage == Decls.INTERFACE:
       return self.Iwrap (tname)                         # construct servant class interface name
+    elif type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
+      return self.prefix_namespaced_identifier ('SrvT_', tname)
     return tname
   def C4client (self, type_node):
     tname = self.type2cpp (type_node)
     if type_node.storage == Decls.INTERFACE:
       return tname + 'Handle'                           # construct client class RemoteHandle
+    elif type_node.storage in (Decls.SEQUENCE, Decls.RECORD):
+      return self.prefix_namespaced_identifier ('ClnT_', tname)
     return tname
   def C (self, type_node, mode = None):                 # construct Class name
     mode = mode or self.gen_mode
@@ -1148,7 +1155,7 @@ class Generator:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
           s += 'class %s;\n' % self.C (tp)
-        elif tp.storage in (Decls.RECORD, Decls.SEQUENCE) and self.gen_mode == G4STUB:
+        elif tp.storage in (Decls.RECORD, Decls.SEQUENCE):
           s += self.open_namespace (tp)
           s += self.generate_recseq_decl (tp)
         elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:

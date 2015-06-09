@@ -162,7 +162,227 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIfaceP&);
 I_FirstInterfaceIface* operator->* (FirstInterfaceHandle &sh, Rapicorn::Aida::_ServantType);
 FirstInterfaceHandle operator->* (I_FirstInterfaceIface *obj, Rapicorn::Aida::_HandleType);
+
+struct SrvT_XFooRecord
+{
+  /// @cond GeneratedFields
+  bool                          single_bool;
+  int                           single_num;
+  int64_t                       num64;
+  double                        single_float;
+  std::string                   single_string;
+  int                           sibling1;
+  int                           sibling2;
+  int                           multi1;
+  int                           multi2;
+  int                           multi3;
+  int                           multi4;
+  ExtensiveEnum                 enum_field;
+  I_FirstInterfaceIfaceP        iface1;
+  I_FirstInterfaceIfaceP        iface2;
+  I_FirstInterfaceIfaceP        iface3;
+  Rapicorn::Aida::Any           any1;
+  Rapicorn::Aida::Any           any2;
+  Rapicorn::Aida::Any           any3;
+  /// @endcond
+  inline                        SrvT_XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  bool                          operator==  (const SrvT_XFooRecord &other) const;
+  bool                          operator!=  (const SrvT_XFooRecord &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_XFooRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooRecord&);
+
+struct SrvT_XFooSequence : public std::vector<bool>
+{
+  typedef std::vector<bool> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_XFooSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooSequence&);
+
+struct SrvT_IntSequence : public std::vector<int>
+{
+  typedef std::vector<int> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_IntSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_IntSequence&);
+
+struct SrvT_FloatSequence : public std::vector<double>
+{
+  typedef std::vector<double> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_FloatSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_FloatSequence&);
+
+struct SrvT_StringSequence : public std::vector<std::string>
+{
+  typedef std::vector<std::string> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_StringSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_StringSequence&);
+
+struct SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
+{
+  typedef std::vector<ExtensiveEnum> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_ExtensiveEnumSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_ExtensiveEnumSequence&);
+
+struct SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
+{
+  typedef std::vector<SrvT_XFooRecord> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordSequence&);
+
+struct SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
+{
+  typedef std::vector<SrvT_IntSequence> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_SequenceSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SequenceSequence&);
+
+struct SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
+{
+  typedef std::vector<I_FirstInterfaceIfaceP> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_InterfaceSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InterfaceSequence&);
+
+struct SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
+{
+  typedef std::vector<Rapicorn::Aida::Any> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_AnySequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_AnySequence&);
+
+struct SrvT_NestedTypesRec
+{
+  /// @cond GeneratedFields
+  SrvT_XFooRecord               rec;
+  SrvT_XFooSequence             seq;
+  /// @endcond
+  inline                        SrvT_NestedTypesRec () { }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  bool                          operator==  (const SrvT_NestedTypesRec &other) const;
+  bool                          operator!=  (const SrvT_NestedTypesRec &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NestedTypesRec&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesRec&);
+
+struct SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
+{
+  typedef std::vector<SrvT_NestedTypesRec> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NestedTypesSeq&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesSeq&);
+
+struct SrvT_NewRecord
+{
+  /// @cond GeneratedFields
+  int                           i;
+  Enum1                         enum1;
+  SrvT_XFooSequence             xfs;
+  SrvT_NestedTypesRec           ntr;
+  /// @endcond
+  inline                        SrvT_NewRecord () { i = 0; enum1 = Enum1 (0); }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  bool                          operator==  (const SrvT_NewRecord &other) const;
+  bool                          operator!=  (const SrvT_NewRecord &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NewRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NewRecord&);
+
+namespace Inner {
+
+struct SrvT_InnerRecord
+{
+  /// @cond GeneratedFields
+  int                           x;
+  int                           y;
+  SrvT_NewRecord                rec;
+  /// @endcond
+  inline                        SrvT_InnerRecord () { x = 0; y = 0; }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  bool                          operator==  (const SrvT_InnerRecord &other) const;
+  bool                          operator!=  (const SrvT_InnerRecord &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_InnerRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InnerRecord&);
+} // Inner
+
+struct SrvT_Refer2Inner
+{
+  /// @cond GeneratedFields
+  Inner::SrvT_InnerRecord       r;
+  /// @endcond
+  inline                        SrvT_Refer2Inner () { }
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  bool                          operator==  (const SrvT_Refer2Inner &other) const;
+  bool                          operator!=  (const SrvT_Refer2Inner &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_Refer2Inner&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_Refer2Inner&);
 } // MandatoryNamespace
+
+namespace OtherNamespace {
+
+struct SrvT_SomeRecord
+{
+  /// @cond GeneratedFields
+  MandatoryNamespace::SrvT_NewRecord r1;
+  MandatoryNamespace::SrvT_NewRecord r2;
+  MandatoryNamespace::Inner::SrvT_InnerRecord r3;
+  MandatoryNamespace::Inner::SrvT_InnerRecord r4;
+  /// @endcond
+  inline                        SrvT_SomeRecord () { }
+  std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  bool                          operator==  (const SrvT_SomeRecord &other) const;
+  bool                          operator!=  (const SrvT_SomeRecord &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_SomeRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SomeRecord&);
+} // OtherNamespace
+
+namespace Auxdata {
+
+struct SrvT_RecordWithAuxdata
+{
+  /// @cond GeneratedFields
+  bool                          aux_bool;
+  int                           aux32;
+  int64_t                       aux64;
+  double                        auxf64;
+  std::string                   aux_str;
+  /// @endcond
+  inline                        SrvT_RecordWithAuxdata () { aux_bool = 0; aux32 = 0; aux64 = 0; auxf64 = 0; }
+  std::string                   __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  bool                          operator==  (const SrvT_RecordWithAuxdata &other) const;
+  bool                          operator!=  (const SrvT_RecordWithAuxdata &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordWithAuxdata&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordWithAuxdata&);
+} // Auxdata
 
 namespace InterfaceTests {
 
@@ -314,6 +534,29 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIfaceP&);
 I_GrandChildIface* operator->* (GrandChildHandle &sh, Rapicorn::Aida::_ServantType);
 GrandChildHandle operator->* (I_GrandChildIface *obj, Rapicorn::Aida::_HandleType);
 
+struct SrvT_QuickRecord
+{
+  /// @cond GeneratedFields
+  int                           int1;
+  int                           int2;
+  /// @endcond
+  inline                        SrvT_QuickRecord () { int1 = 0; int2 = 0; }
+  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  bool                          operator==  (const SrvT_QuickRecord &other) const;
+  bool                          operator!=  (const SrvT_QuickRecord &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_QuickRecord&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickRecord&);
+
+struct SrvT_QuickSequence : public std::vector<double>
+{
+  typedef std::vector<double> Sequence;
+  reference append_back(); ///< Append data at the end, returns write reference to data.
+  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_QuickSequence&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickSequence&);
+
 class I_QuickIfaceIface;
 typedef std::shared_ptr<I_QuickIfaceIface> I_QuickIfaceIfaceP;
 typedef std::weak_ptr  <I_QuickIfaceIface> I_QuickIfaceIfaceW;
@@ -370,10 +613,10 @@ public:
                                                                     const std::string &optval = "default"); 	///< See MethodTestInterface::method_with_string()
   virtual QuickEnum                     method_with_enum           (QuickEnum input,
                                                                     QuickEnum optval = QuickEnum (0)); 	///< See MethodTestInterface::method_with_enum()
-  virtual QuickRecord                   method_with_record         (const QuickRecord &input,
-                                                                    const QuickRecord &optval = QuickRecord()); 	///< See MethodTestInterface::method_with_record()
-  virtual QuickSequence                 method_with_sequence       (const QuickSequence &input,
-                                                                    const QuickSequence &optval = QuickSequence()); 	///< See MethodTestInterface::method_with_sequence()
+  virtual SrvT_QuickRecord              method_with_record         (const SrvT_QuickRecord &input,
+                                                                    const SrvT_QuickRecord &optval = SrvT_QuickRecord()); 	///< See MethodTestInterface::method_with_record()
+  virtual SrvT_QuickSequence            method_with_sequence       (const SrvT_QuickSequence &input,
+                                                                    const SrvT_QuickSequence &optval = SrvT_QuickSequence()); 	///< See MethodTestInterface::method_with_sequence()
   virtual I_GrandChildIfaceP            method_with_interface      (I_GrandChildIface &input,
                                                                     I_GrandChildIface &optval = *(I_GrandChildIface*) NULL); 	///< See MethodTestInterface::method_with_interface()
   virtual Rapicorn::Aida::Any           method_with_anys           (const Rapicorn::Aida::Any &input,
@@ -412,8 +655,8 @@ public:
   typedef Rapicorn::Aida::AsyncSignal<double ()> Signal_float64_result;
   typedef Rapicorn::Aida::AsyncSignal<std::string ()> Signal_string_result;
   typedef Rapicorn::Aida::AsyncSignal<QuickEnum ()> Signal_enum_result;
-  typedef Rapicorn::Aida::AsyncSignal<QuickRecord ()> Signal_record_result;
-  typedef Rapicorn::Aida::AsyncSignal<QuickSequence ()> Signal_sequence_result;
+  typedef Rapicorn::Aida::AsyncSignal<SrvT_QuickRecord ()> Signal_record_result;
+  typedef Rapicorn::Aida::AsyncSignal<SrvT_QuickSequence ()> Signal_sequence_result;
   typedef Rapicorn::Aida::AsyncSignal<I_GrandChildIfaceP ()> Signal_interface_result;
   typedef Rapicorn::Aida::AsyncSignal<Rapicorn::Aida::Any ()> Signal_any_result;
   typedef Rapicorn::Aida::AsyncSignal<I_SignalTestInterfaceIfaceP ()> Signal_self_result;
@@ -424,8 +667,8 @@ public:
   typedef Rapicorn::Aida::Signal<void (double f)> Signal_float64_arg;
   typedef Rapicorn::Aida::Signal<void (const std::string &s)> Signal_string_arg;
   typedef Rapicorn::Aida::Signal<void (QuickEnum e)> Signal_enum_arg;
-  typedef Rapicorn::Aida::Signal<void (const QuickRecord &r)> Signal_record_arg;
-  typedef Rapicorn::Aida::Signal<void (const QuickSequence &s)> Signal_sequence_arg;
+  typedef Rapicorn::Aida::Signal<void (const SrvT_QuickRecord &r)> Signal_record_arg;
+  typedef Rapicorn::Aida::Signal<void (const SrvT_QuickSequence &s)> Signal_sequence_arg;
   typedef Rapicorn::Aida::Signal<void (I_GrandChildIface &i)> Signal_interface_arg;
   typedef Rapicorn::Aida::Signal<void (const Rapicorn::Aida::Any &a)> Signal_any_arg;
   typedef Rapicorn::Aida::Signal<void (I_SignalTestInterfaceIface &self_)> Signal_self_args;
@@ -477,7 +720,7 @@ public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::ChildInheritingSignals"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const QuickRecord &r, const QuickSequence &s)> Signal_child_signal;
+  typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const SrvT_QuickRecord &r, const SrvT_QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignalsIface*);
@@ -540,10 +783,10 @@ public:
   virtual void                          string_prop    (const std::string&) = 0; 	///< See PropertyTester::string_prop
   virtual QuickEnum                     enum_prop      () const = 0; 	///< See PropertyTester::enum_prop
   virtual void                          enum_prop      (QuickEnum) = 0; 	///< See PropertyTester::enum_prop
-  virtual QuickRecord                   record_prop    () const = 0; 	///< See PropertyTester::record_prop
-  virtual void                          record_prop    (const QuickRecord&) = 0; 	///< See PropertyTester::record_prop
-  virtual QuickSequence                 sequence_prop  () const = 0; 	///< See PropertyTester::sequence_prop
-  virtual void                          sequence_prop  (const QuickSequence&) = 0; 	///< See PropertyTester::sequence_prop
+  virtual SrvT_QuickRecord              record_prop    () const = 0; 	///< See PropertyTester::record_prop
+  virtual void                          record_prop    (const SrvT_QuickRecord&) = 0; 	///< See PropertyTester::record_prop
+  virtual SrvT_QuickSequence            sequence_prop  () const = 0; 	///< See PropertyTester::sequence_prop
+  virtual void                          sequence_prop  (const SrvT_QuickSequence&) = 0; 	///< See PropertyTester::sequence_prop
   virtual I_GrandChildIfaceP            interface_prop () const = 0; 	///< See PropertyTester::interface_prop
   virtual void                          interface_prop (I_GrandChildIface*) = 0; 	///< See PropertyTester::interface_prop
   virtual I_PropertyTesterIfaceP        self_prop      () const = 0; 	///< See PropertyTester::self_prop
@@ -646,9 +889,9 @@ public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "Other::NameTests"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual void                          args_from_other_namespace (const InterfaceTests::QuickRecord &qr,
+  virtual void                          args_from_other_namespace (const InterfaceTests::SrvT_QuickRecord &qr,
                                                                    RapicornAidaTest::ClickType qe,
-                                                                   const OtherNamespace::SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
+                                                                   const OtherNamespace::SrvT_SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIfaceP&);
@@ -688,6 +931,23 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIfaceP&);
 I_CompressorIface* operator->* (CompressorHandle &sh, Rapicorn::Aida::_ServantType);
 CompressorHandle operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleType);
+
+struct SrvT_RecordForGroups
+{
+  /// @cond GeneratedFields
+  int                           i;
+  double                        ratio;
+  bool                          ordinary_bool;
+  double                        threshold1;
+  double                        threshold2;
+  /// @endcond
+  inline                        SrvT_RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
+  std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  bool                          operator==  (const SrvT_RecordForGroups &other) const;
+  bool                          operator!=  (const SrvT_RecordForGroups &other) const { return !operator== (other); }
+};
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordForGroups&);
+void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordForGroups&);
 
 class I_SoundModuleIface;
 typedef std::shared_ptr<I_SoundModuleIface> I_SoundModuleIfaceP;
@@ -2292,11 +2552,11 @@ __aida_call__MethodTestInterface__method_with_record (Rapicorn::Aida::FieldReade
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "invalid 'this' pointer");
-  QuickRecord  arg_input;
+  SrvT_QuickRecord  arg_input;
   fbr >>= arg_input;
-  QuickRecord  arg_optval;
+  SrvT_QuickRecord  arg_optval;
   fbr >>= arg_optval;
-  QuickRecord rval = self->method_with_record (arg_input, arg_optval);
+  SrvT_QuickRecord rval = self->method_with_record (arg_input, arg_optval);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x852c7f5942a87cceULL, 0x487dc78cd38240f6ULL);
   rb <<= rval;
   return &rb;
@@ -2309,11 +2569,11 @@ __aida_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::FieldRea
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "invalid 'this' pointer");
-  QuickSequence  arg_input;
+  SrvT_QuickSequence  arg_input;
   fbr >>= arg_input;
-  QuickSequence  arg_optval;
+  SrvT_QuickSequence  arg_optval;
   fbr >>= arg_optval;
-  QuickSequence rval = self->method_with_sequence (arg_input, arg_optval);
+  SrvT_QuickSequence rval = self->method_with_sequence (arg_input, arg_optval);
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5534838e08bdc63dULL, 0xd852fd5abb88ab7dULL);
   rb <<= rval;
   return &rb;
@@ -2765,17 +3025,17 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static std::future<QuickRecord>
+  static std::future<SrvT_QuickRecord>
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
     __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
     fb <<= sp->handler_id_;
-    auto promise = std::make_shared<std::promise<QuickRecord>> ();
+    auto promise = std::make_shared<std::promise<SrvT_QuickRecord>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
     auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
-      QuickRecord retval;
+      SrvT_QuickRecord retval;
       frr >>= retval;
       promise->set_value (retval);
     };
@@ -2819,17 +3079,17 @@ public:
     fb <<= handler_id_;
     __AIDA_Local__::post_msg (&fb);
   }
-  static std::future<QuickSequence>
+  static std::future<SrvT_QuickSequence>
   handler (const SharedPtr &sp)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 0 + 1);
     __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
     fb <<= sp->handler_id_;
-    auto promise = std::make_shared<std::promise<QuickSequence>> ();
+    auto promise = std::make_shared<std::promise<SrvT_QuickSequence>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
     auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {
-      QuickSequence retval;
+      SrvT_QuickSequence retval;
       frr >>= retval;
       promise->set_value (retval);
     };
@@ -3350,7 +3610,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-           const QuickRecord &arg_r)
+           const SrvT_QuickRecord &arg_r)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
     __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
@@ -3395,7 +3655,7 @@ public:
   }
   static void
   handler (const SharedPtr &sp,
-           const QuickSequence &arg_s)
+           const SrvT_QuickSequence &arg_s)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1 + 0);
     __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
@@ -3596,8 +3856,8 @@ public:
            I_SignalTestInterfaceIface &arg_p,
            const Rapicorn::Aida::Any &arg_a,
            int arg_i,
-           const QuickRecord &arg_r,
-           const QuickSequence &arg_s)
+           const SrvT_QuickRecord &arg_r,
+           const SrvT_QuickSequence &arg_s)
   {
     Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 6 + 0);
     __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
@@ -3831,7 +4091,7 @@ __aida_get__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "invalid 'this' pointer");
-  QuickRecord rval = self->record_prop ();
+  SrvT_QuickRecord rval = self->record_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
   rb <<= rval;
   return &rb;
@@ -3844,7 +4104,7 @@ __aida_set__PropertyTester__record_prop (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "invalid 'this' pointer");
-  QuickRecord  arg_record_prop;
+  SrvT_QuickRecord  arg_record_prop;
   fbr >>= arg_record_prop;
   self->record_prop (arg_record_prop);
   return NULL;
@@ -3857,7 +4117,7 @@ __aida_get__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "invalid 'this' pointer");
-  QuickSequence rval = self->sequence_prop ();
+  SrvT_QuickSequence rval = self->sequence_prop ();
   Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
   rb <<= rval;
   return &rb;
@@ -3870,7 +4130,7 @@ __aida_set__PropertyTester__sequence_prop (Rapicorn::Aida::FieldReader &fbr)
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "invalid 'this' pointer");
-  QuickSequence  arg_sequence_prop;
+  SrvT_QuickSequence  arg_sequence_prop;
   fbr >>= arg_sequence_prop;
   self->sequence_prop (arg_sequence_prop);
   return NULL;
@@ -4234,11 +4494,11 @@ __aida_call__NameTests__args_from_other_namespace (Rapicorn::Aida::FieldReader &
   fbr.skip_header();
   fbr >>= self;
   AIDA_CHECK (self, "invalid 'this' pointer");
-  InterfaceTests::QuickRecord  arg_qr;
+  InterfaceTests::SrvT_QuickRecord  arg_qr;
   fbr >>= arg_qr;
   RapicornAidaTest::ClickType  arg_qe;
   fbr >>= arg_qe;
-  OtherNamespace::SomeRecord  arg_sr;
+  OtherNamespace::SrvT_SomeRecord  arg_sr;
   fbr >>= arg_sr;
   self->args_from_other_namespace (arg_qr, arg_qe, arg_sr);
   return NULL;
