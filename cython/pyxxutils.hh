@@ -77,3 +77,24 @@ pyxx_main_loop_add_watchdog (Rapicorn::MainLoop &main_loop)
   };
   main_loop.exec_dispatcher (exception_watchdog, Rapicorn::EventLoop::PRIORITY_CEILING);
 }
+
+// Map from TypeHash to Python wrapper ctor.
+template<class Class> static Class*
+pyxx_aida_type_class_mapper (const Rapicorn::Aida::TypeHash &thash, Class *ptr)
+{
+  typedef Rapicorn::Aida::TypeHash TypeHash;
+  static std::map<TypeHash, Class*> tmap;
+  Class *current = tmap[thash];
+  if (ptr)    // setter
+    {
+      tmap[thash] = ptr;
+      Rapicorn::printerr ("%s_set %s = %p\n", __func__, thash.to_string(), ptr);
+      return NULL;
+    }
+  else          // getter
+    {
+      ptr = current ? current : NULL;
+      Rapicorn::printerr ("%s_get %s = %p\n", __func__, thash.to_string(), ptr);
+      return ptr;     // return new reference
+    }
+}
