@@ -391,14 +391,19 @@ class Generator:
     else:
       cl = l if l == [aida_remotehandle] else [aida_remotehandle] + l
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-descendant (of ancestry root)
+  def generate_interface_pointerdefs (self, type_info):
+    s, classC = '', self.C (type_info)
+    assert self.gen_mode == G4SERVANT
+    s += 'class %s;\n' % classC
+    s += 'typedef std::shared_ptr<%s> %sP;\n' % (classC, classC)
+    s += 'typedef std::weak_ptr  <%s> %sW;\n' % (classC, classC)
+    s += '\n'
+    return s
   def generate_interface_class (self, type_info, class_name_list):
     s, classC, classH, classFull = '\n', self.C (type_info), self.C4client (type_info), self.namespaced_identifier (type_info.name)
     class_name_list += [ classFull ]
     if self.gen_mode == G4SERVANT:
-      s += 'class %s;\n' % classC
-      s += 'typedef std::shared_ptr<%s> %sP;\n' % (classC, classC)
-      s += 'typedef std::weak_ptr  <%s> %sW;\n' % (classC, classC)
-      s += '\n'
+      s += self.generate_interface_pointerdefs (type_info)
     # declare
     s += self.generate_shortdoc (type_info)     # doxygen IDL snippet
     s += 'class %s' % classC
@@ -1154,7 +1159,10 @@ class Generator:
       for tp in types:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
-          s += 'class %s;\n' % self.C (tp)
+          if tp.storage == Decls.INTERFACE and self.gen_mode == G4SERVANT:
+            s += self.generate_interface_pointerdefs (tp)
+          else:
+            s += 'class %s;\n' % self.C (tp)
         elif tp.storage in (Decls.RECORD, Decls.SEQUENCE):
           s += self.open_namespace (tp)
           s += self.generate_recseq_decl (tp)

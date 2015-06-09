@@ -842,6 +842,9 @@ I_ButtonAreaIface* operator->* (ButtonAreaHandle &sh, Rapicorn::Aida::_ServantTy
 ButtonAreaHandle operator->* (I_ButtonAreaIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_PureMethodsIface;
+typedef std::shared_ptr<I_PureMethodsIface> I_PureMethodsIfaceP;
+typedef std::weak_ptr  <I_PureMethodsIface> I_PureMethodsIfaceW;
+
 
 class I_PureMethodsIface;
 typedef std::shared_ptr<I_PureMethodsIface> I_PureMethodsIfaceP;
