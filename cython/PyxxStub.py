@@ -33,6 +33,10 @@ def strcquote (string):
   return '"' + result + '"'
 
 # == Utilities ==
+def class_digest (class_info):
+  return digest2cbytes (class_info.type_hash())
+def digest2cbytes (digest):
+  return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
 def hasancestor (child, parent):
   for p in child.prerequisites:
     if p == parent or hasancestor (p, parent):
