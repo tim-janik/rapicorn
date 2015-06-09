@@ -88,13 +88,11 @@ pyxx_aida_type_class_mapper (const Rapicorn::Aida::TypeHash &thash, Class *ptr)
   if (ptr)    // setter
     {
       tmap[thash] = ptr;
-      Rapicorn::printerr ("%s_set %s = %p\n", __func__, thash.to_string(), ptr);
       return NULL;
     }
   else          // getter
     {
       ptr = current ? current : NULL;
-      Rapicorn::printerr ("%s_get %s = %p\n", __func__, thash.to_string(), ptr);
       return ptr;     // return new reference
     }
 }

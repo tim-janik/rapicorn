@@ -243,6 +243,7 @@ class Generator:
       # return without exception set' is still better than dereferencing and crashing
       s += '  %-25s %-40s "%s::down_cast" (%s)\n' % (u_typename, u_typename + 'H__down_cast', c_typename, u_base)
     # C++ Classes
+    t = '' # definitions to append
     s += '\n'
     s += '# C++ Classes\n'
     s += 'cdef extern from * namespace "%s":\n' % self.namespace
@@ -260,6 +261,8 @@ class Generator:
         for fname, ftp in tp.fields:
           s += '    %-30s %s\n' % (self.cxx_type (ftp), fname)
       elif tp.storage == Decls.INTERFACE:
+        ibase = self.inheritance_base (tp)
+        u_base = underscore_typename (ibase)
         s += '  cppclass %s' % u_typename
         baselist = ', '.join (underscore_typename (b) for b in self.bases (tp))
         if baselist:
@@ -283,6 +286,11 @@ class Generator:
         if not self.bases (tp):
           s += '    uint64 __aida_orbid__ () const\n'
           s += '    bool   __aida_notnull__ "operator bool" () const\n'
+          s += '    Aida__TypeHashList __aida_typelist__()\n'
+          t += 'ctypedef object (*%s_WrapFunc) (const %s&)\n' % (u_base, u_typename)
+          t += 'cdef extern from *:\n'
+          t += '  %s_WrapFunc pyxx_aida_type_class_mapper (const Aida__TypeHash&, %s_WrapFunc)\n' % (u_base, u_base)
+    s += t # definitions to append after cppclass
     # C++ Marshallers
     s += '\n'
     s += '# C++ Marshallers\n'
@@ -415,17 +423,27 @@ class Generator:
         # ctarg (BaseClass only)
         if not baselist:
           s += 'cdef %s *%s__ctarg\n' % (u_typename, u_typename)
+          s += self.py_base_wrap_impl (tp)
       # wrap/unwrap for SEQUENCE, RECORD, INTERFACE
       if tp.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
         s += 'cdef %s %s__unwrap (object pyo1) except *:\n' % (u_typename, u_typename)
         s += reindent ('  ', self.cxx_unwrap_impl ('pyo1', tp))
+      if tp.storage in (Decls.SEQUENCE, Decls.RECORD):
         s += 'cdef object %s__wrap (const %s &cxx1):\n' % (u_typename, u_typename)
         s += reindent ('  ', self.py_wrap_impl ('cxx1', tp))
+      elif tp.storage == Decls.INTERFACE:
+        s += 'cdef object %s__wrapfunc (const %s &cxxbase):\n' % (u_typename, u_base)
+        s += reindent ('  ', self.py_wrap_impl ('cxxbase', tp))
+        s += 'pyxx_aida_type_class_mapper (Aida__TypeHash (%s), %s__wrapfunc)\n' % (class_digest (tp), u_typename)
     return s
   def py_wrap (self, ident, tp): # wrap a C++ object to return a PyObject
-    if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
+    if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD):
       return underscore_typename (tp) + '__wrap (%s)' % ident
-    return ident
+    elif tp.storage == Decls.INTERFACE:
+      u_base = underscore_typename (self.inheritance_base (tp))
+      return '%s__wrap (%s)' % (u_base, ident)
+    else:
+      return ident
   def cxx_unwrap (self, ident, tp): # unwrap a PyObject to yield a C++ object
     if tp.storage == Decls.INT32:
       return underscore_typename (tp) + '__unwrap (%s)' % ident
@@ -465,14 +483,30 @@ class Generator:
         s += 'self.%s = %s\n' % (fname, '%s.%s' % (ident, fname)) # self.py_wrap ('field', ftp) # record fields are unwrapped
       s += 'return self\n'
     elif tp.storage == Decls.INTERFACE:
-      basetype = (self.bases (tp) + [ tp ])[0] # first base type we derive from, usually 'Object' of some kind
       u_typename, u_base = underscore_typename (tp), underscore_typename (self.inheritance_base (tp))
-      s += 'global %s__ctarg\n' % u_base
-      s += '%s__ctarg = <%s*> new %s (%s)\n' % (u_base, u_base, u_typename, ident)
-      s += 'Class = %s.__aida_wrapper__()\n' % tp.name
-      s += 'self = Class() # picks up %s__ctarg\n' % u_base
-      s += 'assert %s__ctarg == NULL\n' % u_base
-      s += 'return self\n'
+      s += 'cdef %s target\n' % u_typename # wrapfunc impl
+      s += 'target = %sH__down_cast (%s)\n' % (u_typename, ident)
+      s += 'if target.__aida_notnull__():\n'
+      s += '  global %s__ctarg\n' % u_base
+      s += '  %s__ctarg = <%s*> new %s (target)\n' % (u_base, u_base, u_typename)
+      s += '  Class = %s.__aida_wrapper__()\n' % tp.name
+      s += '  self = Class() # picks up %s__ctarg\n' % u_base
+      s += '  assert %s__ctarg == NULL\n' % u_base
+      s += '  return self\n'
+      s += 'return None\n'
+    return s
+  def py_base_wrap_impl (self, tp):
+    s, ident = '', 'cxxbase'
+    u_typename, u_base = underscore_typename (tp), underscore_typename (self.inheritance_base (tp))
+    assert u_typename == u_base
+    s += 'cdef object %s__wrap (const %s &%s):\n' % (u_typename, u_typename, ident)
+    s += '  cdef Aida__TypeHashList thl = %s.__aida_typelist__()\n' % ident
+    s += '  cdef Rapicorn__Object_WrapFunc object_pywrapper\n'
+    s += '  for idx in range (thl.size()):\n'
+    s += '    object_pywrapper = pyxx_aida_type_class_mapper (thl[idx], <Rapicorn__Object_WrapFunc> NULL)\n'
+    s += '    if object_pywrapper:\n'
+    s += '      return object_pywrapper (%s)\n' % ident
+    s += '  return None\n'
     return s
 
 def generate (namespace_list, **args):

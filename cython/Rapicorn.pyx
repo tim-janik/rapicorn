@@ -40,4 +40,4 @@ def init (app_name):
   cdef int   argc = 1
   cdef char *argv = sys.argv[0]
   # Application = RapicornApplication
-  return Rapicorn__Application__wrap (Rapicorn__init_app (app_name, &argc, &argv))
+  return Rapicorn__Object__wrap (Rapicorn__init_app (app_name, &argc, &argv))
