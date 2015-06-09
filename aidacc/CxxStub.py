@@ -472,10 +472,6 @@ class Generator:
     else: # G4STUB
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, const %s&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s&);\n' % self.C (type_info)
-    # conversion operators
-    if self.gen_mode == G4SERVANT:       # ->* _servant and ->* _handle operators
-      s += '%s* operator->* (%s &sh, Rapicorn::Aida::_ServantType);\n' % (classC, classH)
-      s += '%s operator->* (%s *obj, Rapicorn::Aida::_HandleType);\n' % (classH, classC)
     # typedef alias
     if self.gen_mode == G4STUB:
       s += self.generate_shortalias (type_info)
@@ -600,12 +596,6 @@ class Generator:
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
     s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr).get();\n' % classC
-    s += '}\n'
-    s += '%s*\noperator->* (%s &sh, Rapicorn::Aida::_ServantType)\n{\n' % (classC, classH)
-    s += '  return __AIDA_Local__::remote_handle_to_interface<%s> (sh);\n' % classC
-    s += '}\n'
-    s += '%s\noperator->* (%s *obj, Rapicorn::Aida::_HandleType)\n{\n' % (classH, classC)
-    s += '  return __AIDA_Local__::interface_to_remote_handle<%s> (obj);\n' % classH
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
     s += 'Rapicorn::Aida::TypeHashList\n'

@@ -432,10 +432,6 @@ public:
   void     operator=   (const RemoteHandle &src) { RemoteHandle::operator= (src); }
 };
 
-// == Conversion Type Tags ==
-struct _ServantType {} constexpr _servant = _ServantType(); ///< Tag to retrieve servant from remote handle.
-struct _HandleType  {} constexpr _handle  = _HandleType();  ///< Tag to retrieve remote handle from servant.
-
 // == ObjectBroker ==
 class ObjectBroker {
   static void   setup_connection_ctor_protocol    (const char *protocol);

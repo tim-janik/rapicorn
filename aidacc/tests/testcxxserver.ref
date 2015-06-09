@@ -160,8 +160,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIfaceP&);
-I_FirstInterfaceIface* operator->* (FirstInterfaceHandle &sh, Rapicorn::Aida::_ServantType);
-FirstInterfaceHandle operator->* (I_FirstInterfaceIface *obj, Rapicorn::Aida::_HandleType);
 
 struct SrvT_XFooRecord
 {
@@ -434,8 +432,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIfaceP&);
-I_UIWidgetAreaIface* operator->* (UIWidgetAreaHandle &sh, Rapicorn::Aida::_ServantType);
-UIWidgetAreaHandle operator->* (I_UIWidgetAreaIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_ParentIface;
 typedef std::shared_ptr<I_ParentIface> I_ParentIfaceP;
@@ -459,8 +455,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIfaceP&);
-I_ParentIface* operator->* (ParentHandle &sh, Rapicorn::Aida::_ServantType);
-ParentHandle operator->* (I_ParentIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_ChildIface;
 typedef std::shared_ptr<I_ChildIface> I_ChildIfaceP;
@@ -483,8 +477,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIfaceP&);
-I_ChildIface* operator->* (ChildHandle &sh, Rapicorn::Aida::_ServantType);
-ChildHandle operator->* (I_ChildIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_DescendantIface;
 typedef std::shared_ptr<I_DescendantIface> I_DescendantIfaceP;
@@ -507,8 +499,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIfaceP&);
-I_DescendantIface* operator->* (DescendantHandle &sh, Rapicorn::Aida::_ServantType);
-DescendantHandle operator->* (I_DescendantIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_GrandChildIface;
 typedef std::shared_ptr<I_GrandChildIface> I_GrandChildIfaceP;
@@ -531,8 +521,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIfaceP&);
-I_GrandChildIface* operator->* (GrandChildHandle &sh, Rapicorn::Aida::_ServantType);
-GrandChildHandle operator->* (I_GrandChildIface *obj, Rapicorn::Aida::_HandleType);
 
 struct SrvT_QuickRecord
 {
@@ -580,8 +568,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIfaceP&);
-I_QuickIfaceIface* operator->* (QuickIfaceHandle &sh, Rapicorn::Aida::_ServantType);
-QuickIfaceHandle operator->* (I_QuickIfaceIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_MethodTestInterfaceIface;
 typedef std::shared_ptr<I_MethodTestInterfaceIface> I_MethodTestInterfaceIfaceP;
@@ -628,8 +614,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIfaceP&);
-I_MethodTestInterfaceIface* operator->* (MethodTestInterfaceHandle &sh, Rapicorn::Aida::_ServantType);
-MethodTestInterfaceHandle operator->* (I_MethodTestInterfaceIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_SignalTestInterfaceIface;
 typedef std::shared_ptr<I_SignalTestInterfaceIface> I_SignalTestInterfaceIfaceP;
@@ -701,8 +685,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SignalTestInterfaceIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SignalTestInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SignalTestInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SignalTestInterfaceIfaceP&);
-I_SignalTestInterfaceIface* operator->* (SignalTestInterfaceHandle &sh, Rapicorn::Aida::_ServantType);
-SignalTestInterfaceHandle operator->* (I_SignalTestInterfaceIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_ChildInheritingSignalsIface;
 typedef std::shared_ptr<I_ChildInheritingSignalsIface> I_ChildInheritingSignalsIfaceP;
@@ -727,8 +709,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignalsIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignalsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildInheritingSignalsIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildInheritingSignalsIfaceP&);
-I_ChildInheritingSignalsIface* operator->* (ChildInheritingSignalsHandle &sh, Rapicorn::Aida::_ServantType);
-ChildInheritingSignalsHandle operator->* (I_ChildInheritingSignalsIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_AnotherChildIface;
 typedef std::shared_ptr<I_AnotherChildIface> I_AnotherChildIfaceP;
@@ -751,8 +731,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIfaceP&);
-I_AnotherChildIface* operator->* (AnotherChildHandle &sh, Rapicorn::Aida::_ServantType);
-AnotherChildHandle operator->* (I_AnotherChildIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_PropertyTesterIface;
 typedef std::shared_ptr<I_PropertyTesterIface> I_PropertyTesterIfaceP;
@@ -798,8 +776,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PropertyTesterIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PropertyTesterIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIfaceP&);
-I_PropertyTesterIface* operator->* (PropertyTesterHandle &sh, Rapicorn::Aida::_ServantType);
-PropertyTesterHandle operator->* (I_PropertyTesterIface *obj, Rapicorn::Aida::_HandleType);
 } // InterfaceTests
 
 namespace RapicornAidaTest {
@@ -838,8 +814,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ButtonAreaIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ButtonAreaIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ButtonAreaIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ButtonAreaIfaceP&);
-I_ButtonAreaIface* operator->* (ButtonAreaHandle &sh, Rapicorn::Aida::_ServantType);
-ButtonAreaHandle operator->* (I_ButtonAreaIface *obj, Rapicorn::Aida::_HandleType);
 
 class I_PureMethodsIface;
 typedef std::shared_ptr<I_PureMethodsIface> I_PureMethodsIfaceP;
@@ -869,8 +843,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIfaceP&);
-I_PureMethodsIface* operator->* (PureMethodsHandle &sh, Rapicorn::Aida::_ServantType);
-PureMethodsHandle operator->* (I_PureMethodsIface *obj, Rapicorn::Aida::_HandleType);
 } // RapicornAidaTest
 
 namespace Other {
@@ -900,8 +872,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIfaceP&);
-I_NameTestsIface* operator->* (NameTestsHandle &sh, Rapicorn::Aida::_ServantType);
-NameTestsHandle operator->* (I_NameTestsIface *obj, Rapicorn::Aida::_HandleType);
 } // Other
 
 namespace BseTest {
@@ -932,8 +902,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_CompressorIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_CompressorIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIfaceP&);
-I_CompressorIface* operator->* (CompressorHandle &sh, Rapicorn::Aida::_ServantType);
-CompressorHandle operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleType);
 
 struct SrvT_RecordForGroups
 {
@@ -974,8 +942,6 @@ void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIfaceP&);
-I_SoundModuleIface* operator->* (SoundModuleHandle &sh, Rapicorn::Aida::_ServantType);
-SoundModuleHandle operator->* (I_SoundModuleIface *obj, Rapicorn::Aida::_HandleType);
 } // BseTest
 
 #define __testpass_idl_INTERFACE_LIST \
@@ -1025,16 +991,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_FirstInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_FirstInterfaceIface> (fbr).get();
 }
-I_FirstInterfaceIface*
-operator->* (FirstInterfaceHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_FirstInterfaceIface> (sh);
-}
-FirstInterfaceHandle
-operator->* (I_FirstInterfaceIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<FirstInterfaceHandle> (obj);
-}
 Rapicorn::Aida::BaseConnection*
 I_FirstInterfaceIface::__aida_connection__()
 {
@@ -1083,16 +1039,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_UIWidgetAreaIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_UIWidgetAreaIface> (fbr).get();
 }
-I_UIWidgetAreaIface*
-operator->* (UIWidgetAreaHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_UIWidgetAreaIface> (sh);
-}
-UIWidgetAreaHandle
-operator->* (I_UIWidgetAreaIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<UIWidgetAreaHandle> (obj);
-}
 Rapicorn::Aida::BaseConnection*
 I_UIWidgetAreaIface::__aida_connection__()
 {
@@ -1140,16 +1086,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ParentIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_ParentIface> (fbr).get();
 }
-I_ParentIface*
-operator->* (ParentHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_ParentIface> (sh);
-}
-ParentHandle
-operator->* (I_ParentIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<ParentHandle> (obj);
-}
 Rapicorn::Aida::BaseConnection*
 I_ParentIface::__aida_connection__()
 {
@@ -1195,16 +1131,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ChildIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_ChildIface> (fbr).get();
 }
-I_ChildIface*
-operator->* (ChildHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_ChildIface> (sh);
-}
-ChildHandle
-operator->* (I_ChildIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<ChildHandle> (obj);
-}
 Rapicorn::Aida::TypeHashList
 I_ChildIface::__aida_typelist__ () const
 {
@@ -1245,16 +1171,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_DescendantIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_DescendantIface> (fbr).get();
-}
-I_DescendantIface*
-operator->* (DescendantHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_DescendantIface> (sh);
-}
-DescendantHandle
-operator->* (I_DescendantIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<DescendantHandle> (obj);
 }
 Rapicorn::Aida::TypeHashList
 I_DescendantIface::__aida_typelist__ () const
@@ -1298,16 +1214,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_GrandChildIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_GrandChildIface> (fbr).get();
 }
-I_GrandChildIface*
-operator->* (GrandChildHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_GrandChildIface> (sh);
-}
-GrandChildHandle
-operator->* (I_GrandChildIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<GrandChildHandle> (obj);
-}
 Rapicorn::Aida::TypeHashList
 I_GrandChildIface::__aida_typelist__ () const
 {
@@ -1350,16 +1256,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_QuickIfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_QuickIfaceIface> (fbr).get();
-}
-I_QuickIfaceIface*
-operator->* (QuickIfaceHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_QuickIfaceIface> (sh);
-}
-QuickIfaceHandle
-operator->* (I_QuickIfaceIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<QuickIfaceHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_QuickIfaceIface::__aida_connection__()
@@ -1406,16 +1302,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_MethodTestInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_MethodTestInterfaceIface> (fbr).get();
 }
-I_MethodTestInterfaceIface*
-operator->* (MethodTestInterfaceHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_MethodTestInterfaceIface> (sh);
-}
-MethodTestInterfaceHandle
-operator->* (I_MethodTestInterfaceIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<MethodTestInterfaceHandle> (obj);
-}
 Rapicorn::Aida::BaseConnection*
 I_MethodTestInterfaceIface::__aida_connection__()
 {
@@ -1460,16 +1346,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SignalTestInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_SignalTestInterfaceIface> (fbr).get();
-}
-I_SignalTestInterfaceIface*
-operator->* (SignalTestInterfaceHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_SignalTestInterfaceIface> (sh);
-}
-SignalTestInterfaceHandle
-operator->* (I_SignalTestInterfaceIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<SignalTestInterfaceHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_SignalTestInterfaceIface::__aida_connection__()
@@ -1516,16 +1392,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ChildInheritingSignalsIface* &o
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_ChildInheritingSignalsIface> (fbr).get();
 }
-I_ChildInheritingSignalsIface*
-operator->* (ChildInheritingSignalsHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_ChildInheritingSignalsIface> (sh);
-}
-ChildInheritingSignalsHandle
-operator->* (I_ChildInheritingSignalsIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<ChildInheritingSignalsHandle> (obj);
-}
 Rapicorn::Aida::TypeHashList
 I_ChildInheritingSignalsIface::__aida_typelist__ () const
 {
@@ -1567,16 +1433,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_AnotherChildIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_AnotherChildIface> (fbr).get();
 }
-I_AnotherChildIface*
-operator->* (AnotherChildHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_AnotherChildIface> (sh);
-}
-AnotherChildHandle
-operator->* (I_AnotherChildIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<AnotherChildHandle> (obj);
-}
 Rapicorn::Aida::TypeHashList
 I_AnotherChildIface::__aida_typelist__ () const
 {
@@ -1617,16 +1473,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PropertyTesterIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_PropertyTesterIface> (fbr).get();
-}
-I_PropertyTesterIface*
-operator->* (PropertyTesterHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_PropertyTesterIface> (sh);
-}
-PropertyTesterHandle
-operator->* (I_PropertyTesterIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<PropertyTesterHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_PropertyTesterIface::__aida_connection__()
@@ -1687,16 +1533,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ButtonAreaIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_ButtonAreaIface> (fbr).get();
 }
-I_ButtonAreaIface*
-operator->* (ButtonAreaHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_ButtonAreaIface> (sh);
-}
-ButtonAreaHandle
-operator->* (I_ButtonAreaIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<ButtonAreaHandle> (obj);
-}
 Rapicorn::Aida::BaseConnection*
 I_ButtonAreaIface::__aida_connection__()
 {
@@ -1746,16 +1582,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PureMethodsIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_PureMethodsIface> (fbr).get();
 }
-I_PureMethodsIface*
-operator->* (PureMethodsHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_PureMethodsIface> (sh);
-}
-PureMethodsHandle
-operator->* (I_PureMethodsIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<PureMethodsHandle> (obj);
-}
 Rapicorn::Aida::BaseConnection*
 I_PureMethodsIface::__aida_connection__()
 {
@@ -1803,16 +1629,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_NameTestsIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_NameTestsIface> (fbr).get();
-}
-I_NameTestsIface*
-operator->* (NameTestsHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_NameTestsIface> (sh);
-}
-NameTestsHandle
-operator->* (I_NameTestsIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<NameTestsHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_NameTestsIface::__aida_connection__()
@@ -1862,16 +1678,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_CompressorIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_CompressorIface> (fbr).get();
 }
-I_CompressorIface*
-operator->* (CompressorHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_CompressorIface> (sh);
-}
-CompressorHandle
-operator->* (I_CompressorIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<CompressorHandle> (obj);
-}
 Rapicorn::Aida::BaseConnection*
 I_CompressorIface::__aida_connection__()
 {
@@ -1918,16 +1724,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SoundModuleIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_SoundModuleIface> (fbr).get();
-}
-I_SoundModuleIface*
-operator->* (SoundModuleHandle &sh, Rapicorn::Aida::_ServantType)
-{
-  return __AIDA_Local__::remote_handle_to_interface<I_SoundModuleIface> (sh);
-}
-SoundModuleHandle
-operator->* (I_SoundModuleIface *obj, Rapicorn::Aida::_HandleType)
-{
-  return __AIDA_Local__::interface_to_remote_handle<SoundModuleHandle> (obj);
 }
 Rapicorn::Aida::BaseConnection*
 I_SoundModuleIface::__aida_connection__()
