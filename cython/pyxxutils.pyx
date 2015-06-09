@@ -7,6 +7,7 @@ from libcpp.vector cimport vector
 from cython.operator cimport dereference as _dereference
 from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 
+
 # == Standard Typedefs ==
 #ctypedef int32_t int
 ctypedef uint32_t uint
@@ -15,6 +16,7 @@ ctypedef uint32_t uint32
 ctypedef int64_t  int64
 ctypedef uint64_t uint64
 ctypedef double   float64
+
 
 # == Utilities from std:: ==
 cdef extern from "memory" namespace "std":
@@ -27,6 +29,7 @@ cdef extern from "memory" namespace "std":
     long use_count () const
     bool unique    () const
     T*   get       ()
+
 
 # == Utilities for richcmp ==
 cdef inline int richcmp_op (ssize_t cmpv, int op): # cmpv==0 euqals, cmpv<0 lesser, cmpv>0 greater
@@ -95,6 +98,7 @@ class EnumValue (long):
   def __str__ (self):
     return "%s.%s" % (self.__classname, self.name)
 
+
 # == Record Base ==
 # Rich Record type with keyword initialisation, iteration, indexing and dict conversion.
 cdef class Record:
@@ -128,6 +132,7 @@ cdef class Record:
     except StopIteration: pass
     return usize_richcmp (0, 0, op)   # lengths match
 
+
 # == Signal Connection Wrapper ==
 cdef class PyxxSignalConnector:
   cdef object connector
@@ -139,6 +144,19 @@ cdef class PyxxSignalConnector:
     return self.connector (pycallable)
   def disconnect (self, callable_id):
     return self.disconnector (callable_id)
+
+
+# == Aida Helpers ==
+cdef extern from *:
+  cppclass Aida__TypeHash         "Rapicorn::Aida::TypeHash"
+  cppclass Aida__TypeHash:
+    uint64 typehi
+    uint64 typelo
+    Aida__TypeHash()
+    Aida__TypeHash (uint64, uint64)
+    String to_string() const
+    bool __eq__   "Rapicorn::Aida::TypeHash::operator==" (const Aida__TypeHash&)
+  ctypedef vector[Aida__TypeHash] Aida__TypeHashList "Rapicorn::Aida::TypeHashList"
 
 
 # == Utilities from pyxxutils.hh ==
