@@ -415,12 +415,12 @@ class Generator:
     if ddc:
       s += c
     if self.gen_mode == G4SERVANT:
-      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const\t{ return "%s"; }\n' % classFull
-      s += '  virtual ' + self.F ('void') + ' __aida_typelist__ (Rapicorn::Aida::TypeHashList&) const;\n'
+      s += '  virtual ' + self.F ('Rapicorn::Aida::TypeHashList') + ' __aida_typelist__  () const override;\n'
+      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const override\t{ return "%s"; }\n' % classFull
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
-      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_typelist__() const;\n'
+      s += '  ' + self.F ('Rapicorn::Aida::TypeHashList          ') + '__aida_typelist__  () const;\n'
       s += '  template<class RemoteHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (RemoteHandle smh) '
       s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_typelist__()); }\n' % classH
@@ -544,7 +544,7 @@ class Generator:
     s += '  return target;\n'
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
-    s += 'const Rapicorn::Aida::TypeHashList\n'
+    s += 'Rapicorn::Aida::TypeHashList\n'
     s += '%s::__aida_typelist__() const\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
     s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.list_types_digest (class_info)
@@ -595,11 +595,13 @@ class Generator:
     s += '  return __AIDA_Local__::interface_to_remote_handle<%s> (obj);\n' % classH
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
-    s += 'void\n'
-    s += '%s::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
+    s += 'Rapicorn::Aida::TypeHashList\n'
+    s += '%s::__aida_typelist__ () const\n{\n' % classC
+    s += '  Rapicorn::Aida::TypeHashList thl;\n'
     ancestors = self.class_ancestry (class_info)
     for an in ancestors:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
+    s += '  return thl;\n'
     s += '}\n'
     return s
   def generate_server_list_properties (self, class_info):
@@ -823,7 +825,7 @@ class Generator:
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
     # support self==NULL here, to allow invalid cast handling at the client
     s += '  if (self) // guard against invalid casts\n'
-    s += '    self->__aida_typelist__ (thl);\n'
+    s += '    thl = self->__aida_typelist__();\n'
     # return: length (typehi, typelo)*length
     s += '  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, %s, 1 + 2 * thl.size());\n' % digest # invalidates fbr
     s += '  rb <<= Rapicorn::Aida::int64 (thl.size());\n'
