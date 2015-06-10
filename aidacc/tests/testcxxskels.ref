@@ -8,6 +8,219 @@
 
 #include <rapicorn-core.hh> // for rcore/signal.hh
 
+#ifndef __CLNT____testpass_idl__ENUMS
+#define __SRVT____testpass_idl__ENUMS
+
+namespace MandatoryNamespace {
+
+/// @cond GeneratedEnums
+enum Enum1 {
+  E1_A = 1,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum1  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum1c {
+  E1C_A = 1,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum1c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum2 {
+  E2_A = 1,
+  E2_B = 2,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum2  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum2c {
+  E2C_A = 1,
+  E2C_B = 2,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum2c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum3 {
+  E3_A = 1,
+  E3_B = 2,
+  E3_C = 3,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum3  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum3c {
+  E3C_A = 1,
+  E3C_B = 2,
+  E3C_C = 3,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum3c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum4a {
+  E4A_A = 1,
+  E4A_B = 2,
+  E4A_C = 3,
+  E4A_D = 4,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4a  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum4b {
+  E4B_A = 1,
+  E4B_B = 2,
+  E4B_C = 3,
+  E4B_D = 4,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4b  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum4c {
+  E4C_A = 1,
+  E4C_B = 2,
+  E4C_C = 3,
+  E4C_D = 4,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum Enum4d {
+  E4D_A = 1,
+  E4D_B = 2,
+  E4D_C = 3,
+  E4D_D = 4,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4d  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum ExtensiveEnum {
+  V1a = 1,
+  V1b = 1,
+  V2 = 2,
+  V3 = 3,
+  V4 = 4,
+  V5 = 5, // "V5"
+  V6 = 6, // "V6"
+  V7 = 7, // _("V7")
+  V8 = 8, // _("V8")
+  V9 = 9,
+  V10 = 10,
+  V11 = 11,
+  V12 = 12,
+  V13 = 13,
+  V14 = 14,
+  V15 = 15, // "V15"
+  V16 = 16, // "V16"
+  V17 = 17, // _("V17")
+  V18 = 18, // _("V18")
+  V20 = 20,
+  V21 = 21,
+  V22 = 22,
+  V23 = 23,
+  V24 = 24,
+  V25 = -16,
+  V26 = 16,
+  V27 = -16,
+  V28 = -28,
+  V30 = 42,
+  V31 = 43,
+  V32 = 42,
+  V33 = 43,
+  V34 = 44, // "foo"
+  V35 = 42,
+  V36 = 42, // "foo""4"
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ExtensiveEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
+/// @endcond
+} // MandatoryNamespace
+
+namespace InterfaceTests {
+
+/// @cond GeneratedEnums
+enum QuickEnum {
+  ZERO = 0,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  QuickEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
+/// @endcond
+} // InterfaceTests
+
+namespace RapicornAidaTest {
+
+/// @cond GeneratedEnums
+enum ClickType {
+  CLICK_ON_PRESS = 1,
+  CLICK_ON_RELEASE = 2,
+  CLICK_SLOW_REPEAT = 3,
+  CLICK_FAST_REPEAT = 4,
+  CLICK_KEY_REPEAT = 5,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ClickType  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
+/// @endcond
+
+/// @cond GeneratedEnums
+enum MathExpressions {
+  RESULT_2 = 2,
+  RESULT_5 = 5,
+  RESULT_8 = 8,
+  RESULT_6 = 6,
+  RESULT_7 = 7,
+  RESULT_16 = 16,
+  RESULT_3 = 3,
+  RESULT_24 = 24,
+  RESULT_13 = 13,
+  RESULT_m2 = -2,
+  RESULT_77 = 77,
+  RESULT_511 = 511,
+};
+inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
+/// @endcond
+} // RapicornAidaTest
+
+namespace Rapicorn {
+
+namespace Aida {
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum1> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum1c> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum2> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum2c> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum3> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum3c> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4a> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4b> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4c> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4d> ();
+template<> const EnumValue* enum_value_list<MandatoryNamespace::ExtensiveEnum> ();
+template<> const EnumValue* enum_value_list<InterfaceTests::QuickEnum> ();
+template<> const EnumValue* enum_value_list<RapicornAidaTest::ClickType> ();
+template<> const EnumValue* enum_value_list<RapicornAidaTest::MathExpressions> ();
+} // Aida
+} // Rapicorn
+#endif // __CLNT____testpass_idl__ENUMS
+
+
 // --- Interfaces (class declarations) ---
 
 namespace MandatoryNamespace {

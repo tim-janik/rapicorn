@@ -1057,7 +1057,7 @@ class Generator:
     s += '/// @endcond\n'
     return s
   def generate_enum_info_specialization (self, type_info):
-    s = '\n'
+    s = ''
     classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
     s += 'template<> const EnumValue* enum_value_list<%s> ();\n' % classFull
     return s
@@ -1141,11 +1141,32 @@ class Generator:
     for tp in implementation_types:
       if tp.isimpl:
         types += [ tp ]
+    # Generate Enum Declarations
+    if self.gen_clienthh or self.gen_serverhh:
+      s += self.open_namespace (None)
+      if self.gen_serverhh:
+        s += '\n#ifndef __CLNT__%s__ENUMS\n' % self.cppmacro # guard against duplicate declarations
+      s += '#define %s__ENUMS\n' % (sc_macro_prefix + self.cppmacro)
+      spc_enums = []
+      for tp in types:
+        if tp.is_forward:
+          continue
+        elif tp.storage == Decls.ENUM:
+          s += self.open_namespace (tp)
+          s += self.generate_enum_decl (tp)
+          spc_enums += [ tp ]
+      if spc_enums:
+        s += self.open_namespace (self.ns_aida)
+        for tp in spc_enums:
+          s += self.generate_enum_info_specialization (tp)
+        s += self.open_namespace (None)
+      if self.gen_serverhh:
+        s += '#endif // __CLNT__%s__ENUMS\n\n' % self.cppmacro
     # generate client/server decls
     if self.gen_clienthh or self.gen_serverhh:
       self.gen_mode = G4SERVANT if self.gen_serverhh else G4STUB
       s += '\n// --- Interfaces (class declarations) ---\n'
-      spc_enums, class_name_list = [], []
+      class_name_list = []
       for tp in types:
         if tp.is_forward:
           s += self.open_namespace (tp) + '\n'
@@ -1156,17 +1177,11 @@ class Generator:
         elif tp.storage in (Decls.RECORD, Decls.SEQUENCE):
           s += self.open_namespace (tp)
           s += self.generate_recseq_decl (tp)
-        elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:
-          s += self.open_namespace (tp)
-          s += self.generate_enum_decl (tp)
-          spc_enums += [ tp ]
+        elif tp.storage == Decls.ENUM:
+          pass
         elif tp.storage == Decls.INTERFACE:
           s += self.open_namespace (tp)
           s += self.generate_interface_class (tp, class_name_list)     # Class remote handle
-      if spc_enums:
-        s += self.open_namespace (self.ns_aida)
-        for tp in spc_enums:
-          s += self.generate_enum_info_specialization (tp)
       s += self.open_namespace (None)
       if self.gen_serverhh and class_name_list:
         s += '\n#define %s_INTERFACE_LIST' % self.cppmacro
@@ -1177,7 +1192,6 @@ class Generator:
     if self.gen_clientcc or self.gen_servercc:
       self.gen_mode = G4SERVANT if self.gen_servercc else G4STUB
       s += '\n// --- Implementations ---\n'
-      spc_enums = []
       for tp in types:
         if tp.is_forward:
           continue
@@ -1187,8 +1201,8 @@ class Generator:
         elif tp.storage == Decls.SEQUENCE and self.gen_mode == G4STUB:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
-        elif tp.storage == Decls.ENUM and self.gen_mode == G4STUB:
-          spc_enums += [ tp ]
+        elif tp.storage == Decls.ENUM:
+          pass
         elif tp.storage == Decls.INTERFACE:
           if self.gen_servercc:
             s += self.open_namespace (tp)
@@ -1203,10 +1217,24 @@ class Generator:
               s += self.generate_client_property_stub (tp, fl[0], fl[1])
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
+    # Generate Enum Implementations
+    if self.gen_clientcc or self.gen_servercc:
+      spc_enums = []
+      for tp in types:
+        if tp.is_forward:
+          continue
+        elif tp.storage == Decls.ENUM:
+          spc_enums += [ tp ]
       if spc_enums:
+        s += self.open_namespace (None)
+        if self.gen_servercc:
+          s += '\n#ifndef __CLNT__%s__ENUMS\n' % self.cppmacro # guard against duplicate implementations
         s += self.open_namespace (self.ns_aida)
         for tp in spc_enums:
           s += self.generate_enum_impl (tp)
+        s += self.open_namespace (None)
+        if self.gen_servercc:
+          s += '#endif // __CLNT__%s__ENUMS\n\n' % self.cppmacro
     # generate unmarshalling server calls
     if self.gen_servercc:
       self.gen_mode = G4SERVANT
