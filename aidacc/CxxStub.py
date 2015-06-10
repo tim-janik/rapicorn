@@ -1228,7 +1228,7 @@ class Generator:
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
     # Generate Enum Implementations
-    if self.gen_clientcc or self.gen_servercc:
+    if self.gen_clientcc:
       spc_enums = []
       for tp in types:
         if tp.is_forward:
@@ -1237,14 +1237,10 @@ class Generator:
           spc_enums += [ tp ]
       if spc_enums:
         s += self.open_namespace (None)
-        if self.gen_servercc:
-          s += '\n#ifndef __CLNT__%s__ENUMS\n' % self.cppmacro # guard against duplicate implementations
         s += self.open_namespace (self.ns_aida)
         for tp in spc_enums:
           s += self.generate_enum_impl (tp)
         s += self.open_namespace (None)
-        if self.gen_servercc:
-          s += '#endif // __CLNT__%s__ENUMS\n\n' % self.cppmacro
     # generate unmarshalling server calls
     if self.gen_servercc:
       self.gen_mode = G4SERVANT
