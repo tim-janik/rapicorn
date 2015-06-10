@@ -16,6 +16,7 @@ rapicorn_public_headers = $(strip	\
 	image.hh	widget.hh			keysymbols.hh	\
 	layoutcontainers.hh	listarea.hh	models.hh	object.hh	\
 	paintcontainers.hh	painter.hh	paintwidgets.hh	primitives.hh	\
+	pixmap.hh	\
 	region.hh	\
 	scrollwidgets.hh	selector.hh	selob.hh	\
 	sinfex.hh	sizegroup.hh	slider.hh	\
@@ -23,7 +24,7 @@ rapicorn_public_headers = $(strip	\
 	table.hh	testwidgets.hh	text-editor.hh	text-pango.hh	\
 	uithread.hh	utilities.hh	viewport.hh	window.hh	\
 	displaywindow.hh	\
-	$(rapicorn_impl_headers)	internal.hh	pixmap.hh	\
+	$(rapicorn_impl_headers)	internal.hh	\
 )
 rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	adjustment.cc	application.cc	arrangement.cc	\
@@ -34,6 +35,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	image.cc	widget.cc	\
 	layoutcontainers.cc	listarea.cc	models.cc	object.cc	\
 	paintcontainers.cc	painter.cc	paintwidgets.cc	primitives.cc	\
+	pixmap.cc			\
 	region.cc	regionimpl.c	\
 	scrollwidgets.cc	selector.cc	selob.cc	\
 	sinfex.cc	sizegroup.cc	slider.cc	\
@@ -56,7 +58,6 @@ rapicorn_private_files = $(strip 	\
 	clientapi.cc			\
 	displaywindow-xaux.cc		\
 	serverapi.cc			\
-	pixmap.cc			\
 )
 EXTRA_DIST += widget.dox
 
