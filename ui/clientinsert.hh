@@ -70,5 +70,5 @@ ApplicationHandle init_test_app           (const String       &app_ident,
 void              exit_app                (int status) RAPICORN_NORETURN;
 
 } // Rapicorn
-#define RAPICORN_PIXBUF_TYPE    Rapicorn::ClnT_Pixbuf
+
 #include <ui/pixmap.hh>

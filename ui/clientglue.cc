@@ -1,6 +1,5 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "clientapi.hh"
-#include "uithread.hh"
 #include "internal.hh"
 #include <stdlib.h>
 
@@ -41,7 +40,10 @@ init_app (const String &app_ident, int *argcp, char **argv, const StringVector &
   else if (app_ident != program_ident())
     fatal ("librapicornui: application identifier changed during ui initialization");
   // boot up UI thread
-  ApplicationH app = uithread_bootup (argcp, argv, args);
+  const bool boot_ok = uithread_bootup (argcp, argv, args);
+  assert (boot_ok);
+  // connect to remote UIThread and fetch main handle
+  ApplicationH app = Aida::ObjectBroker::connect<ApplicationHandle> ("inproc://Rapicorn-" RAPICORN_VERSION);
   assert (app != NULL);
   // assign global remote handle
   app_cached = app;
@@ -132,9 +134,6 @@ public:
 
 // compile client-side API
 #include "clientapi.cc"
-
-// compile client-side Pixmap<PixbufStruct> template
-#include "pixmap.cc"
 
 #include <rcore/testutils.hh>
 namespace Rapicorn {
