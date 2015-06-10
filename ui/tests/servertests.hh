@@ -2,6 +2,7 @@
 #ifndef __RAPICORN_SERVERTESTS_HH__
 #define __RAPICORN_SERVERTESTS_HH__
 
+#include <rapicorn.hh>
 #include <rcore/testutils.hh>
 
 namespace ServerTests {

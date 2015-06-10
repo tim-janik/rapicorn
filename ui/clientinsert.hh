@@ -3,7 +3,6 @@
 // C++ interface code insertions for client stubs
 
 includes:
-#include <ui/utilities.hh>
 namespace Rapicorn {
 class WidgetImpl; // FIXME
 class WindowImpl;
