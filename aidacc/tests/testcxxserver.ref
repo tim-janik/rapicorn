@@ -1013,10 +1013,6 @@ typedef std::shared_ptr<I_PureMethodsIface> I_PureMethodsIfaceP;
 typedef std::weak_ptr  <I_PureMethodsIface> I_PureMethodsIfaceW;
 
 
-class I_PureMethodsIface;
-typedef std::shared_ptr<I_PureMethodsIface> I_PureMethodsIfaceP;
-typedef std::weak_ptr  <I_PureMethodsIface> I_PureMethodsIfaceW;
-
 /** @interface PureMethods
  * See also the corresponding C++ servant class I_PureMethodsIface. */
 /// See also the corresponding IDL class PureMethods.

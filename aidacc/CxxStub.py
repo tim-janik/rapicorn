@@ -45,6 +45,7 @@ class Generator:
     self.aliases = ''
     self.aliases_namespaces = []
     self.aliases_namespacenode = None
+    self.declared_pointerdefs = set() # types for which pointerdefs have been generated
   def warning (self, message, input_file = '', input_line = -1, input_col = -1):
     import sys
     if input_file:
@@ -400,11 +401,14 @@ class Generator:
     return (l, heritage, cl, ddc) # prerequisites, heritage type, constructor args, direct-descendant (of ancestry root)
   def generate_interface_pointerdefs (self, type_info):
     s, classC = '', self.C (type_info)
+    if classC in self.declared_pointerdefs:
+      return s
     assert self.gen_mode == G4SERVANT
     s += 'class %s;\n' % classC
     s += 'typedef std::shared_ptr<%s> %sP;\n' % (classC, classC)
     s += 'typedef std::weak_ptr  <%s> %sW;\n' % (classC, classC)
     s += '\n'
+    self.declared_pointerdefs.add (classC)
     return s
   def generate_interface_class (self, type_info, class_name_list):
     s, classC, classH, classFull = '\n', self.C (type_info), self.C4client (type_info), self.namespaced_identifier (type_info.name)
