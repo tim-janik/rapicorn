@@ -2093,20 +2093,4 @@ WidgetImpl::drawable () const
   return false;
 }
 
-// == WidgetIfaceVector ==
-WidgetIfaceVector::WidgetIfaceVector (const WidgetSeq &widgetseq)
-{
-  for (auto it : widgetseq)
-    push_back (it.get());
-}
-
-WidgetSeq
-WidgetIfaceVector::to_widget_seq () const
-{
-  WidgetSeq itseq;
-  for (auto it : *this)
-    itseq.push_back (shared_ptr_cast<WidgetIface> (it));
-  return itseq;
-}
-
 } // Rapicorn

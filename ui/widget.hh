@@ -414,13 +414,6 @@ private:
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
 
-// == WidgetIfaceVector ==
-struct WidgetIfaceVector : public std::vector<WidgetIface*> {
-  explicit WidgetIfaceVector (const WidgetSeq &widgetseq);
-  /*ctor*/ WidgetIfaceVector () {}
-  WidgetSeq  to_widget_seq     () const;
-};
-
 // == Implementations ==
 template<class C> typename WidgetImpl::InterfaceMatch<C>::Result
 WidgetImpl::interface (const String         &ident,

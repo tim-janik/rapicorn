@@ -393,8 +393,7 @@ test_query (int line, WidgetIfaceP iroot, const String &selector, ssize_t expect
 
   WidgetIfaceP query_first = root->query_selector (selector);
   WidgetIfaceP query_unique = root->query_selector_unique (selector);
-  WidgetSeq qa_itseq = root->query_selector_all (selector);
-  WidgetIfaceVector query_all (qa_itseq);
+  WidgetSeq query_all = root->query_selector_all (selector);
 
   if (Test::verbose())
     {
@@ -411,7 +410,7 @@ test_query (int line, WidgetIfaceP iroot, const String &selector, ssize_t expect
   TASSERT_AT (line, expect != 1 || query_unique != NULL);
   TASSERT_AT (line, query_unique == NULL || query_unique == query_first);
   TASSERT_AT (line, query_all.size() >= (query_first != NULL));
-  TASSERT_AT (line, query_first == NULL || query_all[0] == query_first.get()); // query_all.size() >= 1
+  TASSERT_AT (line, query_first == NULL || query_all[0].get() == query_first.get()); // query_all.size() >= 1
   if (expect >= 0)
     {
       size_t expected = expect;
