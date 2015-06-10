@@ -145,6 +145,13 @@ type_kind_name (TypeKind type_kind)
   return ev ? ev->ident : NULL;
 }
 
+// == TypeHash ==
+String
+TypeHash::to_string () const
+{
+  return string_format ("(0x%016x,0x%016x)", typehi, typelo);
+}
+
 // == SignalHandlerIdParts ==
 union SignalHandlerIdParts {
   size_t   vsize;

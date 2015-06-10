@@ -90,19 +90,31 @@ class YYGlobals (object):
       fdict[field[0]] = true
       rec.add_field (field[0], field[1])
     self.namespaces[-1].add_type (rec)
-  def nsadd_interface (self, name, addproto = False):
+  def nsadd_interface (self, name, fwddecl = False):
     iface = yy.namespace_lookup (name, astype = True)
-    if not iface or (iface.storage == Decls.INTERFACE and
-                     iface.is_forward and not addproto):
+    if fwddecl:
+      if iface and iface.storage == Decls.INTERFACE:
+        return iface
+      elif iface:
+        AIn (name)
       iface = Decls.TypeInfo (name, Decls.INTERFACE, yy.impl_includes)
-      iface.set_location (*yy.scanner.get_pos())
-      if addproto:
-        iface.is_forward = True
-      self.namespaces[-1].add_type (iface)
-    elif (iface.storage != Decls.INTERFACE or # exists as different identifier
-          (not iface.is_forward and not addproto)): # interface redefinition
+      fwd = iface.link (yy.impl_includes)
+      fwd.is_forward = True
+      fwd.set_location (*yy.scanner.get_pos())
+      self.namespaces[-1].add_type (fwd)
+      return fwd # a forward decl is simply a link to the real type
+    # not fwddecl
+    if not iface:
+      iface = Decls.TypeInfo (name, Decls.INTERFACE, yy.impl_includes)
+    elif iface.storage == Decls.INTERFACE and iface.is_forward and not iface.__origin__.location[0]:
+      iface = iface.__origin__ # complete previous forward declaration
+    else:
       AIn (name)
-    return iface
+    assert not iface.is_forward
+    iface.set_location (*yy.scanner.get_pos())
+    iface.isimpl = yy.impl_includes
+    self.namespaces[-1].add_type (iface)
+    return iface # real type
   def interface_fill (self, iface, prerequisites, ifields, imethods, isignals):
     for prq in prerequisites:
       iface.add_prerequisite (yy.namespace_lookup (prq, astype = True))
@@ -223,11 +235,11 @@ class YYGlobals (object):
       if result:
         return result
     return None
-  def clone_type (self, typename, errorident, **flags):
+  def link_type (self, typename, errorident, **flags):
     if not flags.get ('stream', 0):
       ANOSTREAM (typename, errorident)
     type_info = self.resolve_type (typename, flags.get ('void', 0))
-    new_type = type_info.clone (type_info.name, yy.impl_includes)
+    new_type = type_info.link (yy.impl_includes)
     new_type.set_location (*yy.scanner.get_pos())
     return new_type
   def resolve_type (self, typename, void = False):
@@ -491,15 +503,15 @@ rule auxinit:
         '\)'                                    {{ return (tiident, tiargs) }}
 
 rule field_decl:
-        typename IDENT                          {{ ftype = yy.clone_type (typename, IDENT); ftuple = (IDENT, ftype, () ) }}
+        typename IDENT                          {{ ftype = yy.link_type (typename, IDENT); ftuple = (IDENT, ftype, () ) }}
         [ '=' auxinit                           {{ ftuple = (ftuple[0], ftuple[1], auxinit) }}
         ] ';'                                   {{ return [ ftuple ] }}
 
 rule method_args:
-        typename IDENT                          {{ aident = IDENT; adef = None; atype = yy.clone_type (typename, IDENT) }}
+        typename IDENT                          {{ aident = IDENT; adef = None; atype = yy.link_type (typename, IDENT) }}
         [ '=' expression                        {{ adef = expression }}
         ]                                       {{ a = yy.argcheck (aident, atype, adef); args = [ a ] }}
-        ( ',' typename IDENT                    {{ aident = IDENT; adef = None; atype = yy.clone_type (typename, IDENT) }}
+        ( ',' typename IDENT                    {{ aident = IDENT; adef = None; atype = yy.link_type (typename, IDENT) }}
           [ '=' expression                      {{ adef = expression }}
           ]                                     {{ a = yy.argcheck (aident, atype, adef); args += [ a ] }}
         ) *                                     {{ return args }}
@@ -521,7 +533,7 @@ rule field_stream_method_signal_decl:
           ] ';'                                 {{ if kind == 'field': ANOSIG (signal, dident) }}
                                                 {{ if kind == 'field' and TSTREAM (dtname): kind = 'stream' }}
                                                 {{ flags = { 'void' : kind in ('func', 'signal'), 'stream' : kind == 'stream' } }}
-                                                {{ dtype = yy.clone_type (dtname, dident, **flags) }}
+                                                {{ dtype = yy.link_type (dtname, dident, **flags) }}
                                                 {{ if kind == 'signal': dtype.set_collector (coll) }}
                                                 {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
                                                 {{ return (kind, (dident, dtype, daux, fargs, pure)) }}

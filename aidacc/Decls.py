@@ -179,6 +179,13 @@ class TypeInfo (BaseDecl):
     bytes = self.hash128digest (tag, postfix)
     t = tuple ([ord (c) for c in bytes])
     return t
+  def link (self, isimpl):
+    origin = self
+    while hasattr (origin, '__origin__'):
+      origin = origin.__origin__ # resolve links to links
+    ti = TypeLink (self)
+    ti.isimpl = self.isimpl
+    return ti
   def clone (self, newname, isimpl):
     if newname == None: newname = self.name
     ti = TypeInfo (newname, self.storage, isimpl)
@@ -294,3 +301,10 @@ class TypeInfo (BaseDecl):
     prefix = self.namespace.full_name() if self.namespace else ''
     if prefix: prefix += '::'
     return prefix + self.name
+
+class TypeLink (TypeInfo):
+  def __init__ (self, type_info):
+    assert issubclass (type_info.__class__, TypeInfo)
+    self.__origin__ = type_info
+  def __getattr__ (self, name):
+    return getattr (self.__origin__, name)
