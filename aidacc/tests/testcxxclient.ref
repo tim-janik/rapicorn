@@ -83,6 +83,8 @@ operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
 #endif // RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 } } // Rapicorn::Aida
 
+
+#ifndef __SRVT____testpass_idl__ENUMS
 #define __CLNT____testpass_idl__ENUMS
 
 namespace MandatoryNamespace {
@@ -292,6 +294,8 @@ template<> const EnumValue* enum_value_list<RapicornAidaTest::ClickType> ();
 template<> const EnumValue* enum_value_list<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
+#endif // __SRVT____testpass_idl__ENUMS
+
 
 // --- Interfaces (class declarations) ---
 
@@ -4231,5 +4235,4 @@ enum_value_list<RapicornAidaTest::MathExpressions> () {
 template const EnumValue* enum_value_list<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
-
 #endif /* __CLNT____testpass_idl */
