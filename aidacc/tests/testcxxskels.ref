@@ -245,7 +245,7 @@ public:
   virtual void                          void_func             (); 	///< See FirstInterface::void_func()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_FirstInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIfaceP&);
 
@@ -517,7 +517,7 @@ public:
   virtual void                          on_click2in         (const std::string &command); 	///< See UIWidgetArea::on_click2in()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_UIWidgetAreaIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIfaceP&);
 
@@ -540,7 +540,7 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_ParentIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIfaceP&);
 
@@ -562,7 +562,7 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_ChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIfaceP&);
 
@@ -584,7 +584,7 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_DescendantIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIfaceP&);
 
@@ -606,7 +606,7 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_GrandChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIfaceP&);
 
@@ -653,7 +653,7 @@ public:
   virtual void                          simple_function   (int i = 9); 	///< See QuickIface::simple_function()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_QuickIfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIfaceP&);
 
@@ -699,7 +699,7 @@ public:
                                                                     I_QuickIfaceIface &iface0 = *(I_QuickIfaceIface*) NULL); 	///< See MethodTestInterface::method_with_quickiface()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_MethodTestInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIfaceP&);
 
@@ -770,7 +770,7 @@ public:
   Signal_self_args sig_self_args;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SignalTestInterfaceIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SignalTestInterfaceIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_SignalTestInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SignalTestInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SignalTestInterfaceIfaceP&);
 
@@ -794,7 +794,7 @@ public:
   Signal_child_signal sig_child_signal;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignalsIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignalsIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_ChildInheritingSignalsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildInheritingSignalsIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildInheritingSignalsIfaceP&);
 
@@ -816,7 +816,7 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_AnotherChildIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIfaceP&);
 
@@ -861,7 +861,7 @@ public:
   virtual void                          any_prop       (const Rapicorn::Aida::Any&) = 0; 	///< See PropertyTester::any_prop
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PropertyTesterIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PropertyTesterIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_PropertyTesterIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIfaceP&);
 } // InterfaceTests
@@ -899,7 +899,7 @@ public:
   Signal_activate sig_activate;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ButtonAreaIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ButtonAreaIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_ButtonAreaIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ButtonAreaIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_ButtonAreaIfaceP&);
 
@@ -928,7 +928,7 @@ public:
   virtual int                           pure_method        (double f) = 0; 	///< See PureMethods::pure_method()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_PureMethodsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIfaceP&);
 } // RapicornAidaTest
@@ -957,7 +957,7 @@ public:
                                                                    const OtherNamespace::SrvT_SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_NameTestsIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIfaceP&);
 } // Other
@@ -987,7 +987,7 @@ public:
   virtual void                          ratio     (double) = 0; 	///< See Compressor::ratio
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_CompressorIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_CompressorIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_CompressorIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIfaceP&);
 
@@ -1027,7 +1027,7 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIfaceP&);
+void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_SoundModuleIfaceP&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIface*&);
 void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIfaceP&);
 } // BseTest

@@ -466,7 +466,7 @@ class Generator:
     s += '};\n'
     if self.gen_mode == G4SERVANT:
       s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %s*);\n' % self.C (type_info)
-      s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, %sP&);\n' % self.C (type_info)
+      s += 'void operator<<= (Rapicorn::Aida::FieldBuffer&, const %sP&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s*&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %sP&);\n' % self.C (type_info)
     else: # G4STUB
@@ -582,7 +582,7 @@ class Generator:
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % (classC, classC) # dtor
     s += 'void\n'
-    s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, %sP &ptr)\n{\n' % classC
+    s += 'operator<<= (Rapicorn::Aida::FieldBuffer &fb, const %sP &ptr)\n{\n' % classC
     s += '  fb <<= ptr.get();\n'
     s += '}\n'
     s += 'void\n'
@@ -1195,10 +1195,10 @@ class Generator:
       for tp in types:
         if tp.is_forward:
           continue
-        if tp.storage == Decls.RECORD and self.gen_mode == G4STUB:
+        if tp.storage == Decls.RECORD:
           s += self.open_namespace (tp)
           s += self.generate_record_impl (tp)
-        elif tp.storage == Decls.SEQUENCE and self.gen_mode == G4STUB:
+        elif tp.storage == Decls.SEQUENCE:
           s += self.open_namespace (tp)
           s += self.generate_sequence_impl (tp)
         elif tp.storage == Decls.ENUM:
