@@ -506,7 +506,7 @@ WidgetImpl::exec_slow_repeater (const EventLoop::BoolSlot &sl)
     {
       EventLoop *loop = rwidget->get_loop();
       if (loop)
-        return loop->exec_timer (250, 50, sl, EventLoop::PRIORITY_NORMAL);
+        return loop->exec_timer (sl, 250, 50, EventLoop::PRIORITY_NORMAL);
     }
   return 0;
 }
@@ -519,7 +519,7 @@ WidgetImpl::exec_fast_repeater (const EventLoop::BoolSlot &sl)
     {
       EventLoop *loop = rwidget->get_loop();
       if (loop)
-        return loop->exec_timer (200, 20, sl, EventLoop::PRIORITY_NORMAL);
+        return loop->exec_timer (sl, 200, 20, EventLoop::PRIORITY_NORMAL);
     }
   return 0;
 }
@@ -532,7 +532,7 @@ WidgetImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
     {
       EventLoop *loop = rwidget->get_loop();
       if (loop)
-        return loop->exec_timer (250, 33, sl, EventLoop::PRIORITY_NORMAL);
+        return loop->exec_timer (sl, 250, 33, EventLoop::PRIORITY_NORMAL);
     }
   return 0;
 }
@@ -586,7 +586,7 @@ WidgetImpl::queue_visual_update ()
           EventLoop *loop = rwidget->get_loop();
           if (loop)
             {
-              timer_id = loop->exec_timer (20, Aida::slot (*this, &WidgetImpl::force_visual_update));
+              timer_id = loop->exec_timer (Aida::slot (*this, &WidgetImpl::force_visual_update), 20);
               set_data (&visual_update_key, timer_id);
             }
         }

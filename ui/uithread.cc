@@ -12,7 +12,7 @@ namespace Rapicorn {
 class ServerConnectionSource;
 typedef std::shared_ptr<ServerConnectionSource> ServerConnectionSourceP;
 
-class ServerConnectionSource : public virtual EventLoop::Source {
+class ServerConnectionSource : public virtual EventSource {
   static Aida::BaseConnection *connection_;
   const char             *WHERE;
   PollFD                  pollfd_;
@@ -46,14 +46,14 @@ private:
     loop_remove();
   }
   virtual bool
-  prepare (const EventLoop::State &state, int64*)
+  prepare (const LoopState &state, int64*)
   {
     if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
       need_check_primary_ = true;
     return need_check_primary_ || connection_->pending();
   }
   virtual bool
-  check (const EventLoop::State &state)
+  check (const LoopState &state)
   {
     if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
       need_check_primary_ = true;
@@ -61,13 +61,13 @@ private:
     return need_check_primary_ || connection_->pending();
   }
   virtual bool
-  dispatch (const EventLoop::State &state)
+  dispatch (const LoopState &state)
   {
     connection_->dispatch();
     if (need_check_primary_)
       {
         need_check_primary_ = false;
-        loop_->exec_background (check_primaries);
+        loop_->exec_idle (check_primaries);
       }
     return true;
   }

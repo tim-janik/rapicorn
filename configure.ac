@@ -109,12 +109,15 @@ AC_PROG_LD
 AC_LANG_CPLUSPLUS	# use CXX for compilation tests
 AC_LIB_PROG_LD
 AC_LIB_PROG_LD_GNU
-ACX_PROG_LD_GNU_SYMBOLIC
-AC_SUBST([SYMBOLIC_LDFLAGS])
-ACX_PROG_LD_GNU_DYNAMIC_LIST_CPP_NEW
-AC_SUBST([DYNAMIC_LIST_CPP_NEW_LDFLAGS])
 AM_PROG_LIBTOOL
 AC_LIBTOOL_DLOPEN
+ACX_PROG_LD_GNU_SYMBOLIC
+MC_EVAR_ADD(AM_LDFLAGS, $SYMBOLIC_LDFLAGS)
+MC_EVAR_ADD(AM_LDFLAGS, -pthread)
+MC_EVAR_ADD(AM_LDFLAGS, -lrt)
+if ${LD} --help 2>&1 | grep -q -- '-export-dynamic\b' ; then
+  MC_EVAR_ADD(AM_LDFLAGS, [-Wl,-export-dynamic])
+fi
 
 # AM_LDFLAGS, optimize linker to use faster ELF symbol hashing if we have compiler and linker support
 AC_MSG_CHECKING([whether CC, CXX and LD support gnu.hash sections])
@@ -126,8 +129,6 @@ if ${CC}  -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed'
 else
   AC_MSG_RESULT(no)
 fi
-MC_EVAR_ADD(AM_LDFLAGS, -pthread)
-MC_EVAR_ADD(AM_LDFLAGS, -lrt)
 AC_SUBST(AM_LDFLAGS)
 
 # Pick C++ dialect, needed in CXXFLAGS for compile tests
@@ -522,25 +523,39 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
     AM_CONDITIONAL(WITH_PANGO, true)
 ])
 
-dnl # RAPICORN_ROPE_REQUIREMENTS() - rapicorn python binding checks
-AC_DEFUN([RAPICORN_ROPE_REQUIREMENTS],
+dnl # RAPICORN_PYTHON_REQUIREMENTS() - rapicorn python checks
+AC_DEFUN([RAPICORN_PYTHON_REQUIREMENTS],
 [
-    # Find Python execution and development environment
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="-Wall -Werror $CPPFLAGS" # ensure sane Python module builds
-    mypyversion=2.4
-    AM_PATH_PYTHON($mypyversion)
-    AC_REQUIRE([AC_PYTHON_DEVEL]) # AC_PYTHON_DEVEL is usually provided by autoconf-archive
-    AC_PYTHON_DEVEL([>= '$mypyversion'])
-    CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
-    AC_MSG_CHECKING([for working Python extension compilation])
-    PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
-    AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
-    AC_MSG_RESULT($py_build)
-    if test "$py_build" != "ok" ; then
-	AC_MSG_ERROR([failed to build extension against Python (>=$DEPVERSION_PYTHON) headers])
-    fi
-    CPPFLAGS="$saved_CPPFLAGS"
+  # python
+  PYTHON_REQUIRED=2.7
+  AM_PATH_PYTHON($PYTHON_REQUIRED)
+  dnl # AC_REQUIRE([AC_PYTHON_DEVEL]) # AC_PYTHON_DEVEL is usually provided by autoconf-archive
+  AC_PYTHON_DEVEL([>= $PYTHON_REQUIRED])
+  AC_MSG_CHECKING([for working Python extension compilation])
+  saved_CPPFLAGS="$CPPFLAGS"
+  PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
+  CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_CPPFLAGS"     # verify sane Python module builds
+  AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
+  CPPFLAGS="$saved_CPPFLAGS"
+  AC_MSG_RESULT($py_build)
+  if test "$py_build" != "ok" ; then
+    AC_MSG_ERROR([failed to build extension against Python (>=$PYTHON_REQUIRED) headers])
+  fi
+])
+
+dnl # RAPICORN_CYTHON_REQUIREMENTS() - rapicorn cython binding checks
+AC_DEFUN([RAPICORN_CYTHON_REQUIREMENTS],
+[
+  # cython
+  CYTHON_REQUIRED=0.20.2
+  MC_ASSERT_PROG(CYTHON, cython, [cython can be found at http://cython.org/])
+  CYTHON_VERSION=[$($CYTHON --version 2>&1 | sed 's/[^0-9]*\(.*\)$/\1/g')]
+  AS_ECHO("checking cython version... $CYTHON_VERSION")
+  MC_CHECK_VERSION([$CYTHON_VERSION], [$CYTHON_REQUIRED], [], [
+      AC_MSG_ERROR([cython version $CYTHON_REQUIRED or newer is required])
+  ])
+  AC_SUBST(CYTHON)
+  dnl # AM_CONDITIONAL([HAVE_CYTHON], [test "_$CYTHON" = "_cython"])
 ])
 
 dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
@@ -564,19 +579,10 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 # Aida requirements
 AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
 [
-    # Check for working $PYTHON and pythondir
-    dnl #ALREADYDONE# AM_PATH_PYTHON(2.4)
-    AC_MSG_CHECKING([for usable Python])
-    if $PYTHON -c "import sys; sys.exit (not sys.version_info >= (2,4))" &&
-       test -n "$pythondir" ; then
-      AC_MSG_RESULT(ok)
-    else
-      AC_MSG_RESULT(fail)
-      AC_MSG_ERROR([failed to check \$PYTHON and \$pythondir])
-    fi
+  # Python is checked for separately
 
-    # XML linting check
-    AC_CHECK_PROGS(XMLLINT, xmllint, true)
+  # XML linting check
+  AC_CHECK_PROGS(XMLLINT, xmllint, true)
 ])
 
 # check for package requirements.
@@ -596,7 +602,8 @@ AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
 RAPICORN_I18N_REQUIREMENTS
 RAPICORN_CXX_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
-RAPICORN_ROPE_REQUIREMENTS
+RAPICORN_PYTHON_REQUIREMENTS
+RAPICORN_CYTHON_REQUIREMENTS
 RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_REQUIREMENTS
@@ -617,6 +624,7 @@ aidacc/tests/Makefile
 ui/Makefile
 ui/tests/Makefile
 rope/Makefile
+cython/Makefile
 tools/Makefile
 tests/Makefile
 pytests/Makefile
@@ -650,7 +658,7 @@ Autoconfiguration complete.
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
 	Development mode:		${NOTDEVELMODE:+enabled}${DEVELMODE:+disabled}
 
-	Python extension:		enabled (curently mandatory)
+	Python extension:		enabled (mandatory)
 	Readline libs:			$READLINELIBS
 
 	Binaries:			`printexpandvar ${bindir}`

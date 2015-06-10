@@ -55,10 +55,9 @@ librapicorncore@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
 librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES = ldscript.map
 librapicorncore@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
 librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
+	$(AM_LDFLAGS) -no-undefined				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
-	-no-undefined $(SYMBOLIC_LDFLAGS)			\
-	$(AM_LDFLAGS)                                           \
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 
@@ -143,7 +142,8 @@ $(srcdir)/main.cc: configbits.cc
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile
-	cd . \
+	$(AM_V_GEN)
+	$(Q) cd . \
 	&& echo "/* Generated data from $< (by make $@) */" 					 > xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- select programming environment --- */"					>> xgen-$(@F) \
@@ -220,13 +220,15 @@ $(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): rapicornconfig.h
 
 
 # === aidavariants.hh ===
+XMANIFOLD = $(top_srcdir)/aidacc/xmanifold.py
 $(srcdir)/*.cc: aidavariants.hh
-aidavariants.hh: $(srcdir)/aidaproto.hh $(srcdir)/xmanifold.py
+aidavariants.hh: $(srcdir)/aidaproto.hh $(XMANIFOLD)
+	$(AM_V_GEN)
 	$(Q) cd . \
 	&& echo "/* Aida Variants -- Generated from: $(^F) */"	 >xtmp-$(@F) \
 	&& echo '# 1 "aidaproto.hh"'				>>xtmp-$(@F) \
-	&& $(srcdir)/xmanifold.py $(srcdir)/aidaproto.hh 18	>>xtmp-$(@F) \
+	&& $(XMANIFOLD) $(srcdir)/aidaproto.hh 18		>>xtmp-$(@F) \
 	&& cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
 CLEANFILES += xtmp-aidavariants.hh aidavariants.hh xgen-aidas.sed
-EXTRA_DIST += aidaproto.hh xmanifold.py
+EXTRA_DIST += aidaproto.hh
 # not using "$(abs_srcdir)/aidaproto.hh" to avoid hardcoded paths in distribution tarballs

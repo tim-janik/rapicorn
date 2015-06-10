@@ -277,10 +277,7 @@ class Generator:
     s += 'operator>>= (Rapicorn::Aida::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
     s += '  Rapicorn::Aida::FieldReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
-    if el[1].storage == Decls.INTERFACE:
-      s += '  self.reserve (len);\n'
-    else:
-      s += '  self.resize (len);\n'
+    s += '  self.resize (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
     s += '    fbr >>= self[k];\n'
     s += '  }\n'
@@ -423,7 +420,7 @@ class Generator:
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
-      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_typelist__();\n'
+      s += '  ' + self.F ('const Rapicorn::Aida::TypeHashList    ') + '__aida_typelist__() const;\n'
       s += '  template<class RemoteHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (RemoteHandle smh) '
       s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_typelist__()); }\n' % classH
@@ -548,7 +545,7 @@ class Generator:
     s += '}\n'
     s += self.generate_aida_connection_impl (class_info)
     s += 'const Rapicorn::Aida::TypeHashList\n'
-    s += '%s::__aida_typelist__()\n{\n' % classH
+    s += '%s::__aida_typelist__() const\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
     s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.list_types_digest (class_info)
     s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
@@ -601,7 +598,6 @@ class Generator:
     s += 'void\n'
     s += '%s::__aida_typelist__ (Rapicorn::Aida::TypeHashList &thl) const\n{\n' % classC
     ancestors = self.class_ancestry (class_info)
-    ancestors.reverse()
     for an in ancestors:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
     s += '}\n'

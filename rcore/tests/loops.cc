@@ -70,7 +70,7 @@ test_loop_basics()
   TASSERT (loop);
   /* oneshot test */
   TASSERT (test_callback_touched == false);
-  uint tcid = loop->exec_next (test_callback);
+  uint tcid = loop->exec_callback (test_callback, EventLoop::PRIORITY_NEXT);
   TASSERT (tcid > 0);
   TASSERT (test_callback_touched == false);
   loop->iterate_pending();
@@ -79,7 +79,7 @@ test_loop_basics()
   TASSERT (tremove == false);
   test_callback_touched = false;
   /* keep-alive test */
-  tcid = loop->exec_next (keep_alive_callback);
+  tcid = loop->exec_callback (keep_alive_callback, EventLoop::PRIORITY_NEXT);
   for (uint counter = 0; counter < max_runs; counter++)
     if (!loop->iterate (false))
       break;
@@ -123,7 +123,7 @@ quick_rand32 (void)
 class CheckSource;
 typedef std::shared_ptr<CheckSource> CheckSourceP;
 
-class CheckSource : public virtual EventLoop::Source {
+class CheckSource : public virtual EventSource {
   enum {
     INITIALIZED = 1,
     PREPARED,
@@ -141,8 +141,7 @@ class CheckSource : public virtual EventLoop::Source {
     check_source_counter++;
   }
   virtual bool
-  prepare (const EventLoop::State &state,
-           int64 *timeout_usecs_p)
+  prepare (const LoopState &state, int64 *timeout_usecs_p)
   {
     RAPICORN_ASSERT (state_ == INITIALIZED ||
                    state_ == PREPARED ||
@@ -154,7 +153,7 @@ class CheckSource : public virtual EventLoop::Source {
     return quick_rand32() & 0x00400200a;
   }
   virtual bool
-  check (const EventLoop::State &state)
+  check (const LoopState &state)
   {
     RAPICORN_ASSERT (state_ == INITIALIZED ||
                    state_ == PREPARED);
@@ -162,7 +161,7 @@ class CheckSource : public virtual EventLoop::Source {
     return quick_rand32() & 0xc0ffee;
   }
   virtual bool
-  dispatch (const EventLoop::State &state)
+  dispatch (const LoopState &state)
   {
     RAPICORN_ASSERT (state_ == PREPARED ||
                    state_ == CHECKED);
@@ -248,9 +247,9 @@ test_loop_round_robin (void)
    * we'll catch that.
    */
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0 && round_robin_3 == 0);
-  id1 = loop->exec_next (increment_round_robin_1);
-  id2 = loop->exec_next (increment_round_robin_2);
-  id3 = loop->exec_next (increment_round_robin_3);
+  id1 = loop->exec_callback (increment_round_robin_1, EventLoop::PRIORITY_NEXT);
+  id2 = loop->exec_callback (increment_round_robin_2, EventLoop::PRIORITY_NEXT);
+  id3 = loop->exec_callback (increment_round_robin_3, EventLoop::PRIORITY_NEXT);
   /* We make an educated guess at loop iterations needed for two handlers
    * to execute >= rungroup times. No correlation is guaranteed here, but
    * we guess that any count in significant excess of n_handlers * rungroup
@@ -266,9 +265,9 @@ test_loop_round_robin (void)
   loop->remove (id2);
   loop->remove (id3);
   // we should be able to repeat the check
-  id1 = loop->exec_background (increment_round_robin_1);
-  id2 = loop->exec_background (increment_round_robin_2);
-  id3 = loop->exec_background (increment_round_robin_3);
+  id1 = loop->exec_idle (increment_round_robin_1);
+  id2 = loop->exec_idle (increment_round_robin_2);
+  id3 = loop->exec_idle (increment_round_robin_3);
   round_robin_1 = round_robin_2 = round_robin_3 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0 && round_robin_3 == 0);
   for (uint i = 0; i < rungroup_for_all; i++)
@@ -278,8 +277,8 @@ test_loop_round_robin (void)
   loop->remove (id2);
   loop->remove (id3);
   // cross-check, intentionally cause starvation of one handler
-  id1 = loop->exec_background (increment_round_robin_1);
-  id2 = loop->exec_next (increment_round_robin_2);
+  id1 = loop->exec_idle (increment_round_robin_1);
+  id2 = loop->exec_callback (increment_round_robin_2, EventLoop::PRIORITY_NEXT);
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
   const uint rungroup_for_two = 2 * rungroup + 2;
@@ -292,8 +291,8 @@ test_loop_round_robin (void)
   EventLoopP slave = loop->create_slave();
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  id1 = loop->exec_normal (increment_round_robin_1);
-  id2 = slave->exec_background (increment_round_robin_2);
+  id1 = loop->exec_callback (increment_round_robin_1);
+  id2 = slave->exec_idle (increment_round_robin_2);
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup && round_robin_2 >= rungroup);
@@ -305,7 +304,7 @@ test_loop_round_robin (void)
   slave = loop->create_slave();
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  id1 = loop->exec_normal (increment_round_robin_1);
+  id1 = loop->exec_callback (increment_round_robin_1);
   id2 = slave->exec_now (increment_round_robin_2); // PRIORITY_NOW starves other sources *and* loops
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
@@ -326,7 +325,7 @@ static void handler_a() { loop_breadcrumbs += "a"; TASSERT (loop_breadcrumbs == 
 static void handler_b()
 {
   loop_breadcrumbs += "b"; TASSERT (loop_breadcrumbs == "ab");
-  breadcrumb_loop->exec_next (handler_d);
+  breadcrumb_loop->exec_callback (handler_d, EventLoop::PRIORITY_NEXT);
 }
 static void handler_c() { loop_breadcrumbs += "c"; TASSERT (loop_breadcrumbs == "abDc"); }
 static void handler_d() { loop_breadcrumbs += "D"; TASSERT (loop_breadcrumbs == "abD"); }
@@ -337,9 +336,9 @@ test_loop_priorities (void)
   breadcrumb_loop = MainLoop::create();
   for (uint i = 0; i < 7; i++)
     breadcrumb_loop->iterate (false);
-  breadcrumb_loop->exec_normal (handler_a);
-  breadcrumb_loop->exec_normal (handler_b);
-  breadcrumb_loop->exec_normal (handler_c);
+  breadcrumb_loop->exec_callback (handler_a);
+  breadcrumb_loop->exec_callback (handler_b);
+  breadcrumb_loop->exec_callback (handler_c);
   breadcrumb_loop->iterate_pending();
   TASSERT (loop_breadcrumbs == "abDc");
   breadcrumb_loop->destroy_loop();

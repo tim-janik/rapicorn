@@ -69,7 +69,7 @@ exit_app (int status)
 class AppSource;
 typedef std::shared_ptr<AppSource> AppSourceP;
 
-class AppSource : public EventLoop::Source {
+class AppSource : public EventSource {
   Rapicorn::Aida::BaseConnection &connection_;
   PollFD pfd_;
   bool   last_seen_primary, need_check_primary;
@@ -92,13 +92,12 @@ class AppSource : public EventLoop::Source {
     ApplicationH::the().sig_missing_primary() += [this]() { queue_check_primaries(); };
   }
   virtual bool
-  prepare (const EventLoop::State &state,
-           int64                  *timeout_usecs_p)
+  prepare (const LoopState &state, int64 *timeout_usecs_p)
   {
     return need_check_primary || connection_.pending();
   }
   virtual bool
-  check (const EventLoop::State &state)
+  check (const LoopState &state)
   {
     if (UNLIKELY (last_seen_primary && !state.seen_primary && !need_check_primary))
       need_check_primary = true;
@@ -106,7 +105,7 @@ class AppSource : public EventLoop::Source {
     return need_check_primary || connection_.pending();
   }
   virtual bool
-  dispatch (const EventLoop::State &state)
+  dispatch (const LoopState &state)
   {
     connection_.dispatch();
     if (need_check_primary)
@@ -124,7 +123,7 @@ public:
   queue_check_primaries()
   {
     if (loop_)
-      loop_->exec_background (Aida::slot (*this, &AppSource::check_primaries));
+      loop_->exec_idle (Aida::slot (*this, &AppSource::check_primaries));
   }
 };
 

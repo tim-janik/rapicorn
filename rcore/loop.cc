@@ -107,8 +107,8 @@ public:
 struct EventLoop::QuickPfdArray : public QuickArray<PollFD> {
   QuickPfdArray (uint n_reserved, PollFD *reserved) : QuickArray (n_reserved, reserved) {}
 };
-struct QuickSourcePArray : public QuickArray<EventLoop::SourceP*> {
-  QuickSourcePArray (uint n_reserved, EventLoop::SourceP **reserved) : QuickArray (n_reserved, reserved) {}
+struct QuickSourcePArray : public QuickArray<EventSourceP*> {
+  QuickSourcePArray (uint n_reserved, EventSourceP **reserved) : QuickArray (n_reserved, reserved) {}
 };
 
 // === EventLoop ===
@@ -126,20 +126,20 @@ EventLoop::~EventLoop ()
   // we cannot *use* main_loop_ anymore, because we might be called from within MainLoop::MainLoop(), see ~SlaveLoop()
 }
 
-inline EventLoop::SourceP&
+inline EventSourceP&
 EventLoop::find_first_L()
 {
-  static SourceP null_source;
+  static EventSourceP null_source;
   return sources_.empty() ? null_source : sources_[0];
 }
 
-inline EventLoop::SourceP&
+inline EventSourceP&
 EventLoop::find_source_L (uint id)
 {
   for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
     if (id == (*lit)->id_)
       return *lit;
-  static SourceP null_source;
+  static EventSourceP null_source;
   return null_source;
 }
 
@@ -172,14 +172,21 @@ EventLoop::flag_primary (bool on)
   return was_primary;
 }
 
+MainLoop*
+EventLoop::main_loop () const
+{
+  return main_loop_;
+}
+
 static const int16 UNDEFINED_PRIORITY = -32768;
 
 uint
-EventLoop::add (SourceP source, int priority)
+EventLoop::add (EventSourceP source, int priority)
 {
   static_assert (UNDEFINED_PRIORITY < 1, "");
-  assert_return (priority >= 1 && priority <= 999, 0);
+  assert_return (priority >= 1 && priority <= PRIORITY_CEILING, 0);
   ScopedLock<Mutex> locker (main_loop_->mutex());
+  assert_return (source != NULL, 0);
   assert_return (source->loop_ == NULL, 0);
   source->loop_ = this;
   source->id_ = alloc_id();
@@ -192,7 +199,7 @@ EventLoop::add (SourceP source, int priority)
 }
 
 void
-EventLoop::remove_source_Lm (SourceP source)
+EventLoop::remove_source_Lm (EventSourceP source)
 {
   ScopedLock<Mutex> locker (main_loop_->mutex(), BALANCED_LOCK);
   assert_return (source->loop_ == this);
@@ -212,7 +219,7 @@ bool
 EventLoop::try_remove (uint id)
 {
   ScopedLock<Mutex> locker (main_loop_->mutex());
-  SourceP &source = find_source_L (id);
+  EventSourceP &source = find_source_L (id);
   if (source)
     {
       remove_source_Lm (source);
@@ -230,7 +237,7 @@ EventLoop::remove (uint id)
     critical ("%s: failed to remove loop source: %u", RAPICORN_SIMPLE_FUNCTION, id);
 }
 
-/* void EventLoop::change_priority (Source *source, int priority) {
+/* void EventLoop::change_priority (EventSource *source, int priority) {
  * // ensure that source belongs to this
  * // reset all source->pfds[].idx = UINT_MAX
  * // unlink source
@@ -243,7 +250,7 @@ EventLoop::kill_sources_Lm()
 {
   for (;;)
     {
-      SourceP &source = find_first_L();
+      EventSourceP &source = find_first_L();
       if (source == NULL)
         break;
       remove_source_Lm (source);
@@ -288,13 +295,13 @@ EventLoop::wakeup ()
 // === MainLoop ===
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  rr_index_ (0), running_ (true), quit_code_ (0)
+  rr_index_ (0), running_ (false), has_quit_ (false), quit_code_ (0)
 {
   ScopedLock<Mutex> locker (main_loop_->mutex());
   const int err = eventfd_.open();
   if (err < 0)
     fatal ("MainLoop: failed to create wakeup pipe: %s", strerror (-err));
-  // running_ and eventfd_ need to be setup here, so calling quit() before run() works
+  // has_quit_ and eventfd_ need to be setup here, so calling quit() before run() works
 }
 
 /** Create a new main loop object, users can run or iterate this loop directly.
@@ -370,12 +377,17 @@ MainLoop::kill_loops_Lm()
 int
 MainLoop::run ()
 {
-  ScopedLock<Mutex> locker (mutex_);
-  State state;
   EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
+  ScopedLock<Mutex> locker (mutex_);
+  LoopState state;
+  running_ = !has_quit_;
   while (ISLIKELY (running_))
     iterate_loops_Lm (state, true, true);
-  return quit_code_;
+  const int last_quit_code = quit_code_;
+  running_ = false;
+  has_quit_ = false;    // allow loop resumption
+  quit_code_ = 0;       // allow loop resumption
+  return last_quit_code;
 }
 
 bool
@@ -390,7 +402,8 @@ MainLoop::quit (int quit_code)
 {
   ScopedLock<Mutex> locker (mutex_);
   quit_code_ = quit_code;
-  running_ = false;
+  has_quit_ = true;     // cancel run() upfront, or
+  running_ = false;     // interrupt current iteration
   wakeup();
 }
 
@@ -425,26 +438,35 @@ MainLoop::finishable()
 bool
 MainLoop::iterate (bool may_block)
 {
-  ScopedLock<Mutex> locker (mutex_);
-  State state;
   EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
-  return iterate_loops_Lm (state, may_block, true);
+  ScopedLock<Mutex> locker (mutex_);
+  LoopState state;
+  const bool was_running = running_;    // guard for recursion
+  running_ = true;
+  const bool sources_pending = iterate_loops_Lm (state, may_block, true);
+  running_ = was_running && !has_quit_;
+  return sources_pending;
 }
 
 void
 MainLoop::iterate_pending()
 {
-  ScopedLock<Mutex> locker (mutex_);
-  State state;
   EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
-  while (iterate_loops_Lm (state, false, true));
+  ScopedLock<Mutex> locker (mutex_);
+  LoopState state;
+  const bool was_running = running_;    // guard for recursion
+  running_ = true;
+  while (ISLIKELY (running_))
+    if (!iterate_loops_Lm (state, false, true))
+      break;
+  running_ = was_running && !has_quit_;
 }
 
 bool
 MainLoop::pending()
 {
   ScopedLock<Mutex> locker (mutex_);
-  State state;
+  LoopState state;
   EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
   return iterate_loops_Lm (state, false, false);
 }
@@ -457,7 +479,7 @@ EventLoop::unpoll_sources_U() // must be unlocked!
 }
 
 void
-EventLoop::collect_sources_Lm (State &state)
+EventLoop::collect_sources_Lm (LoopState &state)
 {
   // enforce clean slate
   if (UNLIKELY (!poll_sources_.empty()))
@@ -470,13 +492,13 @@ EventLoop::collect_sources_Lm (State &state)
     }
   if (UNLIKELY (!state.seen_primary && primary_))
     state.seen_primary = true;
-  SourceP* arraymem[7]; // using a vector+malloc here shows up in the profiles
+  EventSourceP* arraymem[7]; // using a vector+malloc here shows up in the profiles
   QuickSourcePArray poll_candidates (ARRAY_SIZE (arraymem), arraymem);
   // determine dispatch priority & collect sources for preparing
   dispatch_priority_ = UNDEFINED_PRIORITY; // initially, consider sources at *all* priorities
   for (SourceList::iterator lit = sources_.begin(); lit != sources_.end(); lit++)
     {
-      Source &source = **lit;
+      EventSource &source = **lit;
       if (UNLIKELY (!state.seen_primary && source.primary_))
         state.seen_primary = true;
       if (source.loop_ != this ||                               // ignore destroyed and
@@ -504,15 +526,13 @@ EventLoop::collect_sources_Lm (State &state)
 }
 
 bool
-EventLoop::prepare_sources_Lm (State          &state,
-                               int64          *timeout_usecs,
-                               QuickPfdArray  &pfda)
+EventLoop::prepare_sources_Lm (LoopState &state, int64 *timeout_usecs, QuickPfdArray &pfda)
 {
   Mutex &main_mutex = main_loop_->mutex();
   // prepare sources, up to NEEDS_DISPATCH priority
   for (auto lit = poll_sources_.begin(); lit != poll_sources_.end(); lit++)
     {
-      Source &source = **lit;
+      EventSource &source = **lit;
       if (source.loop_ != this) // test undestroyed
         continue;
       int64 timeout = -1;
@@ -546,14 +566,13 @@ EventLoop::prepare_sources_Lm (State          &state,
 }
 
 bool
-EventLoop::check_sources_Lm (State               &state,
-                             const QuickPfdArray &pfda)
+EventLoop::check_sources_Lm (LoopState &state, const QuickPfdArray &pfda)
 {
   Mutex &main_mutex = main_loop_->mutex();
   // check polled sources
   for (auto lit = poll_sources_.begin(); lit != poll_sources_.end(); lit++)
     {
-      Source &source = **lit;
+      EventSource &source = **lit;
       if (source.loop_ != this && // test undestroyed
           source.loop_state_ != PREPARED)
         continue; // only check prepared sources
@@ -584,16 +603,16 @@ EventLoop::check_sources_Lm (State               &state,
 }
 
 void
-EventLoop::dispatch_source_Lm (State &state)
+EventLoop::dispatch_source_Lm (LoopState &state)
 {
   Mutex &main_mutex = main_loop_->mutex();
   // find a source to dispatch at dispatch_priority_
-  SourceP dispatch_source = NULL;       // shared_ptr to keep alive even if everything else is destroyed
+  EventSourceP dispatch_source = NULL;                  // shared_ptr to keep alive even if everything else is destroyed
   for (auto lit = poll_sources_.begin(); lit != poll_sources_.end(); lit++)
     {
-      SourceP &source = *lit;
-      if (source->loop_ == this &&                    // test undestroyed
-          source->priority_ == dispatch_priority_ &&  // only dispatch at dispatch priority
+      EventSourceP &source = *lit;
+      if (source->loop_ == this &&                      // test undestroyed
+          source->priority_ == dispatch_priority_ &&    // only dispatch at dispatch priority
           source->loop_state_ == NEEDS_DISPATCH)
         {
           dispatch_source = source;
@@ -619,7 +638,7 @@ EventLoop::dispatch_source_Lm (State &state)
 }
 
 bool
-MainLoop::iterate_loops_Lm (State &state, bool may_block, bool may_dispatch)
+MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
 {
   assert_return (state.phase == state.NONE, false);
   Mutex &main_mutex = main_loop_->mutex();
@@ -722,13 +741,13 @@ MainLoop::create_slave()
   return slave_loop;
 }
 
-// === EventLoop::State ===
-EventLoop::State::State() :
+// === EventLoop::LoopState ===
+LoopState::LoopState() :
   current_time_usecs (0), phase (NONE), seen_primary (false)
 {}
 
-// === EventLoop::Source ===
-EventLoop::Source::Source () :
+// === EventSource ===
+EventSource::EventSource () :
   loop_ (NULL),
   pfds_ (NULL),
   id_ (0),
@@ -741,7 +760,7 @@ EventLoop::Source::Source () :
 {}
 
 uint
-EventLoop::Source::n_pfds ()
+EventSource::n_pfds ()
 {
   uint i = 0;
   if (pfds_)
@@ -751,43 +770,43 @@ EventLoop::Source::n_pfds ()
 }
 
 void
-EventLoop::Source::may_recurse (bool may_recurse)
+EventSource::may_recurse (bool may_recurse)
 {
   may_recurse_ = may_recurse;
 }
 
 bool
-EventLoop::Source::may_recurse () const
+EventSource::may_recurse () const
 {
   return may_recurse_;
 }
 
 bool
-EventLoop::Source::primary () const
+EventSource::primary () const
 {
   return primary_;
 }
 
 void
-EventLoop::Source::primary (bool is_primary)
+EventSource::primary (bool is_primary)
 {
   primary_ = is_primary;
 }
 
 bool
-EventLoop::Source::recursion () const
+EventSource::recursion () const
 {
   return dispatching_ && was_dispatching_;
 }
 
 void
-EventLoop::Source::add_poll (PollFD *const pfd)
+EventSource::add_poll (PollFD *const pfd)
 {
   const uint idx = n_pfds();
   uint npfds = idx + 1;
   pfds_ = (typeof (pfds_)) realloc (pfds_, sizeof (pfds_[0]) * (npfds + 1));
   if (!pfds_)
-    fatal ("EventLoopSource: out of memory");
+    fatal ("EventSource: out of memory");
   pfds_[npfds].idx = UINT_MAX;
   pfds_[npfds].pfd = NULL;
   pfds_[idx].idx = UINT_MAX;
@@ -795,7 +814,7 @@ EventLoop::Source::add_poll (PollFD *const pfd)
 }
 
 void
-EventLoop::Source::remove_poll (PollFD *const pfd)
+EventSource::remove_poll (PollFD *const pfd)
 {
   uint idx, npfds = n_pfds();
   for (idx = 0; idx < npfds; idx++)
@@ -810,79 +829,78 @@ EventLoop::Source::remove_poll (PollFD *const pfd)
       pfds_[npfds - 1].pfd = NULL;
     }
   else
-    critical ("EventLoopSource: unremovable PollFD: %p (fd=%d)", pfd, pfd->fd);
+    critical ("EventSource: unremovable PollFD: %p (fd=%d)", pfd, pfd->fd);
 }
 
 void
-EventLoop::Source::destroy ()
+EventSource::destroy ()
 {}
 
 void
-EventLoop::Source::loop_remove ()
+EventSource::loop_remove ()
 {
   if (loop_)
     loop_->try_remove (source_id());
 }
 
-EventLoop::Source::~Source ()
+EventSource::~EventSource ()
 {
   RAPICORN_ASSERT (loop_ == NULL);
   if (pfds_)
     free (pfds_);
 }
 
-// == EventLoop::DispatcherSource ==
-EventLoop::DispatcherSource::DispatcherSource (const DispatcherSlot &slot) :
+// == DispatcherSource ==
+DispatcherSource::DispatcherSource (const DispatcherSlot &slot) :
   slot_ (slot)
 {}
 
-EventLoop::DispatcherSource::~DispatcherSource ()
+DispatcherSource::~DispatcherSource ()
 {
   slot_ = NULL;
 }
 
 bool
-EventLoop::DispatcherSource::prepare (const State &state, int64 *timeout_usecs_p)
+DispatcherSource::prepare (const LoopState &state, int64 *timeout_usecs_p)
 {
   return slot_ (state);
 }
 
 bool
-EventLoop::DispatcherSource::check (const State &state)
+DispatcherSource::check (const LoopState &state)
 {
   return slot_ (state);
 }
 
 bool
-EventLoop::DispatcherSource::dispatch (const State &state)
+DispatcherSource::dispatch (const LoopState &state)
 {
   return slot_ (state);
 }
 
 void
-EventLoop::DispatcherSource::destroy()
+DispatcherSource::destroy()
 {
-  State state;
+  LoopState state;
   state.phase = state.DESTROY;
   slot_ (state);
 }
 
-// == EventLoop::TimedSource ==
-EventLoop::TimedSource::TimedSource (const VoidSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs) :
+// == TimedSource ==
+TimedSource::TimedSource (const VoidSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs) :
   expiration_usecs_ (timestamp_realtime() + 1000ULL * initial_interval_msecs),
   interval_msecs_ (repeat_interval_msecs), first_interval_ (true),
   oneshot_ (true), void_slot_ (slot)
 {}
 
-EventLoop::TimedSource::TimedSource (const BoolSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs) :
+TimedSource::TimedSource (const BoolSlot &slot, uint initial_interval_msecs, uint repeat_interval_msecs) :
   expiration_usecs_ (timestamp_realtime() + 1000ULL * initial_interval_msecs),
   interval_msecs_ (repeat_interval_msecs), first_interval_ (true),
   oneshot_ (false), bool_slot_ (slot)
 {}
 
 bool
-EventLoop::TimedSource::prepare (const State &state,
-                                 int64 *timeout_usecs_p)
+TimedSource::prepare (const LoopState &state, int64 *timeout_usecs_p)
 {
   if (state.current_time_usecs >= expiration_usecs_)
     return true;                                            /* timeout expired */
@@ -897,13 +915,13 @@ EventLoop::TimedSource::prepare (const State &state,
 }
 
 bool
-EventLoop::TimedSource::check (const State &state)
+TimedSource::check (const LoopState &state)
 {
   return state.current_time_usecs >= expiration_usecs_;
 }
 
 bool
-EventLoop::TimedSource::dispatch (const State &state)
+TimedSource::dispatch (const LoopState &state)
 {
   bool repeat = false;
   first_interval_ = false;
@@ -916,7 +934,7 @@ EventLoop::TimedSource::dispatch (const State &state)
   return repeat;
 }
 
-EventLoop::TimedSource::~TimedSource ()
+TimedSource::~TimedSource ()
 {
   if (oneshot_)
     void_slot_.~VoidSlot();
@@ -924,8 +942,8 @@ EventLoop::TimedSource::~TimedSource ()
     bool_slot_.~BoolSlot();
 }
 
-// == EventLoop::PollFDSource ==
-/*! @class EventLoop::PollFDSource
+// == PollFDSource ==
+/*! @class PollFDSource
  * A PollFDSource can be used to execute a callback function from the main loop,
  * depending on certain file descriptor states.
  * The modes supported for polling the file descriptor are as follows:
@@ -938,7 +956,7 @@ EventLoop::TimedSource::~TimedSource ()
  * @li @c "H" - ignore hangup (or auto destroy)
  * @li @c "C" - prevent auto close on destroy
  */
-EventLoop::PollFDSource::PollFDSource (const BPfdSlot &slot, int fd, const String &mode) :
+PollFDSource::PollFDSource (const BPfdSlot &slot, int fd, const String &mode) :
   pfd_ ((PollFD) { fd, 0, 0 }),
   ignore_errors_ (strchr (mode.c_str(), 'E') != NULL),
   ignore_hangup_ (strchr (mode.c_str(), 'H') != NULL),
@@ -948,7 +966,7 @@ EventLoop::PollFDSource::PollFDSource (const BPfdSlot &slot, int fd, const Strin
   construct (mode);
 }
 
-EventLoop::PollFDSource::PollFDSource (const VPfdSlot &slot, int fd, const String &mode) :
+PollFDSource::PollFDSource (const VPfdSlot &slot, int fd, const String &mode) :
   pfd_ ((PollFD) { fd, 0, 0 }),
   ignore_errors_ (strchr (mode.c_str(), 'E') != NULL),
   ignore_hangup_ (strchr (mode.c_str(), 'H') != NULL),
@@ -959,7 +977,7 @@ EventLoop::PollFDSource::PollFDSource (const VPfdSlot &slot, int fd, const Strin
 }
 
 void
-EventLoop::PollFDSource::construct (const String &mode)
+PollFDSource::construct (const String &mode)
 {
   add_poll (&pfd_);
   pfd_.events |= strchr (mode.c_str(), 'w') ? PollFD::OUT : 0;
@@ -984,21 +1002,20 @@ EventLoop::PollFDSource::construct (const String &mode)
 }
 
 bool
-EventLoop::PollFDSource::prepare (const State &state,
-                                  int64 *timeout_usecs_p)
+PollFDSource::prepare (const LoopState &state, int64 *timeout_usecs_p)
 {
   pfd_.revents = 0;
   return pfd_.fd < 0;
 }
 
 bool
-EventLoop::PollFDSource::check (const State &state)
+PollFDSource::check (const LoopState &state)
 {
   return pfd_.fd < 0 || pfd_.revents != 0;
 }
 
 bool
-EventLoop::PollFDSource::dispatch (const State &state)
+PollFDSource::dispatch (const LoopState &state)
 {
   bool keep_alive = false;
   if (pfd_.fd >= 0 && (pfd_.revents & PollFD::NVAL))
@@ -1022,7 +1039,7 @@ EventLoop::PollFDSource::dispatch (const State &state)
 }
 
 void
-EventLoop::PollFDSource::destroy()
+PollFDSource::destroy()
 {
   /* close down */
   if (!never_close_ && pfd_.fd >= 0)
@@ -1030,7 +1047,7 @@ EventLoop::PollFDSource::destroy()
   pfd_.fd = -1;
 }
 
-EventLoop::PollFDSource::~PollFDSource ()
+PollFDSource::~PollFDSource ()
 {
   if (oneshot_)
     void_poll_slot_.~VPfdSlot();
@@ -1063,15 +1080,15 @@ EventLoop::PollFDSource::~PollFDSource ()
   @li The main loop and its slave loops are handled in round-robin fahsion, priorities below Rapicorn::EventLoop::PRIORITY_ASCENT only apply internally to a loop.
   @li Loops are thread safe, so any thready may add or remove sources to a loop at any time, regardless of which thread
   is currently running the loop.
-  @li Sources added to a loop may be flagged as "primary" (see Rapicorn::EventLoop::Source::primary()),
+  @li Sources added to a loop may be flagged as "primary" (see Rapicorn::EventSource::primary()),
   to keep the loop from exiting. This is used to distinguish background jobs, e.g. updating a window's progress bar,
   from primary jobs, like processing events on the main window.
   Sticking with the example, a window's event loop should be exited if the window vanishes, but not when it's
   progress bar stoped updating.
 
-  Loop integration of a Rapicorn::EventLoop::Source class:
+  Loop integration of a Rapicorn::EventSource class:
   @li First, prepare() is called on a source, returning true here flags the source to be ready for immediate dispatching.
-  @li Second, poll(2) monitors all PollFD file descriptors of the source (see Rapicorn::EventLoop::Source::add_poll()).
+  @li Second, poll(2) monitors all PollFD file descriptors of the source (see Rapicorn::EventSource::add_poll()).
   @li Third, check() is called for the source to check whether dispatching is needed depending on PollFD states.
   @li Fourth, the source is dispatched if it returened true from either prepare() or check(). If multiple sources are
   ready to be dispatched, the entire process may be repeated several times (after dispatching other sources),

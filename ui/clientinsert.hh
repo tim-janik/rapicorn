@@ -51,8 +51,7 @@ class_scope:Application:
   static int                      run_and_exit   () RAPICORN_NORETURN;
   static bool                     iterate        (bool block);
   static ApplicationHandle        the            ();
-protected:
-  static MainLoopP                main_loop     ();
+  static MainLoopP                main_loop      ();
 
 IGNORE: // close last _scope
 }; // close dummy class scope

@@ -85,7 +85,7 @@ WindowImpl::custom_command (const String &command_name, const StringSeq &command
 }
 
 bool
-WindowImpl::command_dispatcher (const EventLoop::State &state)
+WindowImpl::command_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return commands_emission_ && commands_emission_->pending();
@@ -761,7 +761,7 @@ WindowImpl::draw_now ()
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
       // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
-      loop_->exec_update ([this] () { if (display_window_) sig_displayed.emit(); });
+      loop_->exec_callback ([this] () { if (display_window_) sig_displayed.emit(); }, EventLoop::PRIORITY_UPDATE);
       const uint64 stop = timestamp_realtime();
       EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
               x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
@@ -928,7 +928,7 @@ WindowImpl::dispatch_event (const Event &event)
 }
 
 bool
-WindowImpl::event_dispatcher (const EventLoop::State &state)
+WindowImpl::event_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return display_window_ && display_window_->has_event();
@@ -951,7 +951,7 @@ WindowImpl::event_dispatcher (const EventLoop::State &state)
 }
 
 bool
-WindowImpl::immediate_event_dispatcher (const EventLoop::State &state)
+WindowImpl::immediate_event_dispatcher (const LoopState &state)
 {
   switch (state.phase)
     {
@@ -991,7 +991,7 @@ WindowImpl::clear_immediate_event ()
 }
 
 bool
-WindowImpl::resizing_dispatcher (const EventLoop::State &state)
+WindowImpl::resizing_dispatcher (const LoopState &state)
 {
   const bool can_resize = !pending_win_size_ && display_window_;
   const bool need_resize = can_resize && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
@@ -1008,7 +1008,7 @@ WindowImpl::resizing_dispatcher (const EventLoop::State &state)
 }
 
 bool
-WindowImpl::drawing_dispatcher (const EventLoop::State &state)
+WindowImpl::drawing_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return exposes_pending();
@@ -1096,7 +1096,7 @@ WindowImpl::create_display_window ()
       RAPICORN_ASSERT (display_window_ != NULL);
       loop_->flag_primary (true); // FIXME: depends on WM-managable
       EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::async_show);
-      loop_->exec_normal (sl);
+      loop_->exec_callback (sl);
     }
 }
 
