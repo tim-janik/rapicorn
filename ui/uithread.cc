@@ -241,10 +241,10 @@ uithread_uncancelled_atexit()
 
 static void wrap_test_runner (void);
 
-ApplicationH
+bool
 uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.hh
 {
-  assert_return (the_uithread == NULL, ApplicationH());
+  assert_return (the_uithread == NULL, false);
   // catch exit() while UIThread is still running
   atexit (uithread_uncancelled_atexit);
   // setup client/server connection pair
@@ -261,9 +261,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   assert (the_uithread->running());
   // install handler for UIThread test cases
   wrap_test_runner();
-  // connect to remote UIThread and fetch main handle
-  ApplicationH app = Aida::ObjectBroker::connect<ApplicationHandle> ("inproc://Rapicorn-" RAPICORN_VERSION);
-  return app;
+  return true;
 }
 
 } // Rapicorn
