@@ -237,7 +237,7 @@ class YYGlobals (object):
   def resolve_type (self, typename, void = False):
     type_info = self.namespace_lookup (typename, astype = True)
     if not type_info:   # builtin types
-      type_info = Decls.TypeInfo.builtin_type (typename)
+      type_info = Decls.TypeInfo.builtin_type (typename, self.config.get ('bse-extensions', False))
     if type_info and type_info.storage == Decls.VOID and not void:
       type_info = None
     if not type_info:
