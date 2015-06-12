@@ -222,8 +222,8 @@ interface BindableRelay : Object {
   signal void relay_set  (String bpath, int64 nonce, Any value);   ///< Signal to request setting of a property.
   signal void relay_get  (String bpath, int64 nonce);              ///< Signal to request getting of a property.
   signal void relay_list (String bpath, int64 nonce);              ///< Signal to request listing of property names.
-  void report_notify     (String bpath) = 0;                       ///< Notify about changes of a property.
-  void report_result (int64 nonce, Any result, String error) = 0;  ///< Function to report set/get/list results.
+  void report_notify     (String bpath);                           ///< Notify about changes of a property.
+  void report_result (int64 nonce, Any result, String error);      ///< Function to report set/get/list results.
 };
 
 /// Classification for element update request messages.
@@ -260,8 +260,8 @@ record UpdateRequest {
  * while random order read outs may be of O(log n) or even O(n).
  */
 interface ListModel : Object {
-  int32       count   () = 0;		        ///< Obtain the number of rows provided by this model.
-  Any         row     (int32 index) = 0;        ///< Read-out row at @a index. In-order read outs are generally fastest.
+  int32       count   ();    		        ///< Obtain the number of rows provided by this model.
+  Any         row     (int32 index);            ///< Read-out row at @a index. In-order read outs are generally fastest.
   signal void updated (UpdateRequest urequest); ///< Notify about row insertions, changes and deletions.
 };
 
@@ -271,10 +271,10 @@ interface ListModel : Object {
  * be displayed is provided sparsely on demand through explicit API calls.
  */
 interface ListModelRelay : Object {
-  ListModel   model  () = 0;                          ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
-  void        fill   (int32 first, AnySeq asq) = 0;   ///< Provide row data as requested by refill().
+  ListModel   model  ();                              ///< Obtain the ListModel, bundled with this relay, to which all data is relayed.
+  void        fill   (int32 first, AnySeq asq);       ///< Provide row data as requested by refill().
   signal void refill (UpdateRequest urequest);        ///< Refill requests row data for bound-first rows.
-  void        update (UpdateRequest urequest) = 0;    ///< Issue model notification for row change, insertion and deletion.
+  void        update (UpdateRequest urequest);        ///< Issue model notification for row change, insertion and deletion.
 };
 
 /// Requisition information, providing requisition @a width and @a height.
@@ -301,7 +301,7 @@ interface Widget : Object {
   String  vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
   float64 width  = Range (_("Requested Width"),  _("The width to request from its container for this widget, -1=automatic"),  "rw", -1, MAXINT31);
   float64 height = Range (_("Requested Height"), _("The height to request from its container for this widget, -1=automatic"), "rw", -1, MAXINT31);
-  Requisition requisition () = 0;               ///< Get the current effective size requisition
+  Requisition requisition ();                   ///< Get the current effective size requisition
   /// @name Widget Packing Properties
   bool    hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this widget horizontally"), "rw");
   bool    vexpand = Bool (_("Vertical Expand"),   _("Whether to expand this widget vertically"), "rw");
@@ -324,25 +324,25 @@ interface Widget : Object {
   int32   bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the widget's bottom side"), "Prw", 0, 65535, 3);
   int32   top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the widget's top side"),    "Prw", 0, 65535, 3);
   /// @name Widget Selector API
-  bool            match_selector          (String selector) = 0; ///< Check if selector matches this widget.
-  Widget          query_selector          (String selector) = 0; ///< Returns first selector match.
-  WidgetSeq       query_selector_all      (String selector) = 0; ///< Returns all selector matches.
-  Widget          query_selector_unique   (String selector) = 0; ///< Returns single selector match if unique.
+  bool            match_selector          (String selector);     ///< Check if selector matches this widget.
+  Widget          query_selector          (String selector);     ///< Returns first selector match.
+  WidgetSeq       query_selector_all      (String selector);     ///< Returns all selector matches.
+  Widget          query_selector_unique   (String selector);     ///< Returns single selector match if unique.
   /// @name Widget Miscellaneous
-  void            data_context            (Object context) = 0;  ///< Provide context object for data Binding.
+  void            data_context            (Object context);      ///< Provide context object for data Binding.
   /// @name Hosting arbitrary user data
-  void            set_user_data           (String name, Any any) = 0;   ///< Store user data @a any under @a name.
-  Any             get_user_data           (String name) = 0;            ///< Retrieve user data stored under @a name.
+  void            set_user_data           (String name, Any any);       ///< Store user data @a any under @a name.
+  Any             get_user_data           (String name);                ///< Retrieve user data stored under @a name.
   /// @name Testing & Debugging
-  String	  test_dump               () = 0;
+  String	  test_dump               ();
 };
 
 /// Container is a special type of Widget that can contain other widgets.
 /// See also the corresponding implementation class ContainerImpl.
 interface Container : Widget {
   /// Create a child widget from the @a widget_identifier template and add it to the container.
-  Widget create_widget (String widget_identifier, StringSeq args = 0) = 0;
-  void   remove_widget (Widget child) = 0;
+  Widget create_widget (String widget_identifier, StringSeq args = 0);
+  void   remove_widget (Widget child);
 };
 
 /** Window represents the toplevel onscreen widget.
@@ -354,21 +354,21 @@ interface Container : Widget {
 interface Window : Container {
   String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
   bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
-  bool          screen_viewable         () = 0;
-  void          show                    () = 0;
-  bool          closed                  () = 0;
-  void          close                   () = 0;
-  bool          snapshot                (String     pngname) = 0;
+  bool          screen_viewable         ();
+  void          show                    ();
+  bool          closed                  ();
+  void          close                   ();
+  bool          snapshot                (String     pngname);
   signal bool   commands                (String     cmdname, StringSeq args);
   signal void   displayed               ();
   bool          synthesize_click        (Widget       widget,
                                          int32        button,
                                          float64      xalign = 0.5,
-                                         float64      yalign = 0.5) = 0;
+                                         float64      yalign = 0.5);
   bool          synthesize_enter        (float64      xalign = 0.5,
-                                         float64      yalign = 0.5) = 0;
-  bool          synthesize_leave        () = 0;
-  bool          synthesize_delete       () = 0;
+                                         float64      yalign = 0.5);
+  bool          synthesize_leave        ();
+  bool          synthesize_delete       ();
 };
 
 /// A sequence of Window objects.
@@ -400,7 +400,7 @@ interface Frame : Container {
   FrameType active_frame    = Enum (_("Active Frame"), _("The kind of frame to draw in active state"), "rw");
   FrameType frame_type      = Enum (_("Frame Type"),     _("The kind of frame to draw in all states"), "wo");
   bool      overlap_child   = Bool (_("Overlap Child"),  _("Draw frame into child allocation"), "rw");
-  FrameType current_frame () = 0; ///< Retrieve the kind of frame that is currently being displayed.
+  FrameType current_frame ();     ///< Retrieve the kind of frame that is currently being displayed.
 };
 
 /// The FocusFrame container decorates its single child depending on whether its descendants have focus.
@@ -438,11 +438,11 @@ interface Table : Container {
   int32 row_spacing = Range (_("Row Spacing"), _("The amount of space between two consecutive rows"), "rw", 0, 65535, 10);
   int32 n_cols      = Range (_("Number of Columns"), _("The number of columns available in this table to attach children"), "rw", 0, MAXINT31, 1);
   int32 n_rows      = Range (_("Number of Rows"), _("The number of rows available in this table to attach children"), "rw", 0, MAXINT31, 1);
-  bool  is_col_used (int32 col) = 0; ///< Find out if any child allocates the specified column.
-  bool  is_row_used (int32 row) = 0; ///< Find out if any child allocates the specified row.
-  void  resize      (int32 n_cols, int32 n_rows) = 0;    ///< Resize columns and rows, but accomodate for space needed by children.
-  void  insert_cols (int32 first_col, int32 n_cols) = 0; ///< Insert a number of columns, shifting or stretching children as needed.
-  void  insert_rows (int32 first_row, int32 n_rows) = 0; ///< Insert a number of rows, shifting or stretching children as needed.
+  bool  is_col_used (int32 col);     ///< Find out if any child allocates the specified column.
+  bool  is_row_used (int32 row);     ///< Find out if any child allocates the specified row.
+  void  resize      (int32 n_cols, int32 n_rows);        ///< Resize columns and rows, but accomodate for space needed by children.
+  void  insert_cols (int32 first_col, int32 n_cols);     ///< Insert a number of columns, shifting or stretching children as needed.
+  void  insert_rows (int32 first_row, int32 n_rows);     ///< Insert a number of rows, shifting or stretching children as needed.
 };
 
 /// The HBox layout container arranges its children horizontally.
@@ -474,9 +474,9 @@ interface ButtonArea : Container {
 /// The ScrollArea container can display its child paritally and scroll to different parts.
 /// See also the corresponding implementation class ScrollAreaImpl.
 interface ScrollArea : Container {
-  float64 x_offset  () = 0; ///< Retrieve the current @a x scroll offset.
-  float64 y_offset  () = 0; ///< Retrieve the current @a x scroll offset.
-  void    scroll_to (float64 x, float64 y) = 0; ///< Scroll to the position denoted by (x, y).
+  float64 x_offset  ();     ///< Retrieve the current @a x scroll offset.
+  float64 y_offset  ();     ///< Retrieve the current @a x scroll offset.
+  void    scroll_to (float64 x, float64 y);     ///< Scroll to the position denoted by (x, y).
 };
 
 /// The SliderArea container serves as control area for a slider trough and skid.
@@ -516,7 +516,7 @@ interface DotGrid : Widget {
   int32 top_padding_dots    = Range (_("Top Padding Dots"), _("Amount of padding in dots to add at the child's top side"), "rw", 0, 65535, 3);
   int32 left_padding_dots   = Range (_("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), "rw", 0, 65535, 3);
   int32 bottom_padding_dots = Range (_("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), "rw", 0, 65535, 3);
-  FrameType current_dot () = 0; ///< Retrieve the kind of dot that is currently being displayed.
+  FrameType current_dot ();     ///< Retrieve the kind of dot that is currently being displayed.
 };
 
 /** The Drawable widget allows display of custom graphics.
@@ -526,7 +526,7 @@ interface DotGrid : Widget {
  */
 interface Drawable : Widget {
   signal void redraw    (int32 x, int32 y, int32 w, int32 h);   ///< Requests a redraw at @a width and @a height.
-  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf) = 0;  ///< Draws pixels on the drawable display.
+  void	      draw_rect	(int32 x, int32 y, Pixbuf pixbuf);      ///< Draws pixels on the drawable display.
 };
 
 /// The LayerPainter container allows rendering widgets on top of each other.
@@ -594,11 +594,11 @@ interface WidgetList : Container {
                                                                "Browse - always select a single row<br/>"
                                                                "Multiple - allow any row selection combinations<br/>"),
                                         "rw");
-  void          set_selection  (BoolSeq selection) = 0;
-  BoolSeq       get_selection  () = 0;
-  void          select_range   (int32 first, int32 length) = 0;
-  void          unselect_range (int32 first, int32 length) = 0;
-  void          set_list_model (ListModel model) = 0;
+  void          set_selection  (BoolSeq selection);
+  BoolSeq       get_selection  ();
+  void          select_range   (int32 first, int32 length);
+  void          unselect_range (int32 first, int32 length);
+  void          set_list_model (ListModel model);
 };
 
 /** Application singleton.
@@ -612,30 +612,30 @@ interface Application : Object {
   /// @name Application Startup
   String        auto_path       (String         file_name,
                                  String         binary_path,
-                                 bool           search_vpath = true) = 0;
+                                 bool           search_vpath = true);
   StringSeq     auto_load       (String         file_name,
                                  String         binary_path,
-                                 String         i18n_domain = "") = 0;
+                                 String         i18n_domain = "");
   bool          factory_window  (String         factory_definition);
   void          load_string     (String         xml_string,
-                                 String         i18n_domain = "") = 0;
+                                 String         i18n_domain = "");
   /// @name Window handling
-  Window        create_window   (String window_identifier, StringSeq arguments = 0) = 0; ///< Create a hidden window with children.
+  Window        create_window   (String window_identifier, StringSeq arguments = 0);     ///< Create a hidden window with children.
   bool          finishable      ();                     ///< Indicates whether all windows and other primary event sources are gone.
   signal void   missing_primary ();                     ///< Indicates the Application entering finishable() state.
-  void          close_all       () = 0;                 ///< Forces closing of all windows.
-  Window        query_window    (String selector) = 0;  ///< Returns first Window match for @a selector.
-  WindowList    query_windows   (String selector) = 0;  ///< Returns all Window matches for @a selector.
-  WindowList    list_windows    () = 0;
+  void          close_all       ();                     ///< Forces closing of all windows.
+  Window        query_window    (String selector);      ///< Returns first Window match for @a selector.
+  WindowList    query_windows   (String selector);      ///< Returns all Window matches for @a selector.
+  WindowList    list_windows    ();
   /// @name Application Factory
-  BindableRelay  create_bindable_relay   () = 0;	///< Create a BindableRelay, usually for uses in @a data_context.
-  ListModelRelay create_list_model_relay () = 0;	///< Create a ListModelRelay coupled with a ListModel.
+  BindableRelay  create_bindable_relay   ();    	///< Create a BindableRelay, usually for uses in @a data_context.
+  ListModelRelay create_list_model_relay ();    	///< Create a ListModelRelay coupled with a ListModel.
   /// @name Test counter for debugging/profiling
-  void          test_counter_set        (int32 val) = 0;  ///< Testing, set the test counter.
-  void          test_counter_add        (int32 val) = 0;  ///< Testing, add to the test counter.
-  int32         test_counter_get        () = 0;           ///< Testing, retrieve the test counter value.
-  int32         test_counter_inc_fetch  () = 0;           ///< Testing, increment and return the resulting test counter value.
-  int64         test_hook               () = 0;
+  void          test_counter_set        (int32 val);      ///< Testing, set the test counter.
+  void          test_counter_add        (int32 val);      ///< Testing, add to the test counter.
+  int32         test_counter_get        ();               ///< Testing, retrieve the test counter value.
+  int32         test_counter_inc_fetch  ();               ///< Testing, increment and return the resulting test counter value.
+  int64         test_hook               ();
 };
 
 /// An enum used exclusively for unit testing.

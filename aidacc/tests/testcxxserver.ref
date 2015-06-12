@@ -347,7 +347,7 @@ public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "MandatoryNamespace::FirstInterface"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual void                          void_func             (); 	///< See FirstInterface::void_func()
+  virtual void                          void_func             () = 0; 	///< See FirstInterface::void_func()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_FirstInterfaceIfaceP&);
@@ -602,24 +602,24 @@ public:
   typedef Rapicorn::Aida::AsyncSignal<double (I_UIWidgetAreaIface &ba1, int someint)> Signal_sample_signal;
   Signal_void_signal sig_void_signal;
   Signal_sample_signal sig_sample_signal;
-  virtual double                        simple_method       (); 	///< See UIWidgetArea::simple_method()
-  virtual double                        single_arg          (int n); 	///< See UIWidgetArea::single_arg()
-  virtual double                        single_arg2         (int n = 5); 	///< See UIWidgetArea::single_arg2()
+  virtual double                        simple_method       () = 0; 	///< See UIWidgetArea::simple_method()
+  virtual double                        single_arg          (int n) = 0; 	///< See UIWidgetArea::single_arg()
+  virtual double                        single_arg2         (int n = 5) = 0; 	///< See UIWidgetArea::single_arg2()
   virtual double                        two_args            (int n,
-                                                             double r); 	///< See UIWidgetArea::two_args()
+                                                             double r) = 0; 	///< See UIWidgetArea::two_args()
   virtual double                        two_args2           (int n = 6,
-                                                             double r = 7.7); 	///< See UIWidgetArea::two_args2()
+                                                             double r = 7.7) = 0; 	///< See UIWidgetArea::two_args2()
   virtual double                        multi_args          (bool b,
                                                              int64_t n,
                                                              double r,
                                                              int i,
                                                              const std::string &s = "String ding",
-                                                             double y = 5); 	///< See UIWidgetArea::multi_args()
+                                                             double y = 5) = 0; 	///< See UIWidgetArea::multi_args()
   virtual double                        self_method         (I_UIWidgetAreaIface &ba1,
-                                                             I_UIWidgetAreaIface &ba2); 	///< See UIWidgetArea::self_method()
-  virtual void                          void_method         (); 	///< See UIWidgetArea::void_method()
-  virtual std::string                   on_click2out        (); 	///< See UIWidgetArea::on_click2out()
-  virtual void                          on_click2in         (const std::string &command); 	///< See UIWidgetArea::on_click2in()
+                                                             I_UIWidgetAreaIface &ba2) = 0; 	///< See UIWidgetArea::self_method()
+  virtual void                          void_method         () = 0; 	///< See UIWidgetArea::void_method()
+  virtual std::string                   on_click2out        () = 0; 	///< See UIWidgetArea::on_click2out()
+  virtual void                          on_click2in         (const std::string &command) = 0; 	///< See UIWidgetArea::on_click2in()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_UIWidgetAreaIfaceP&);
@@ -755,7 +755,7 @@ public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::QuickIface"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual void                          simple_function   (int i = 9); 	///< See QuickIface::simple_function()
+  virtual void                          simple_function   (int i = 9) = 0; 	///< See QuickIface::simple_function()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_QuickIfaceIfaceP&);
@@ -779,29 +779,29 @@ public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::MethodTestInterface"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
-  virtual void                          method_with_void           (); 	///< See MethodTestInterface::method_with_void()
+  virtual void                          method_with_void           () = 0; 	///< See MethodTestInterface::method_with_void()
   virtual bool                          method_with_bools          (bool input,
-                                                                    bool optval = 0); 	///< See MethodTestInterface::method_with_bools()
+                                                                    bool optval = 0) = 0; 	///< See MethodTestInterface::method_with_bools()
   virtual int                           method_with_ints32         (int input,
-                                                                    int optval = -2); 	///< See MethodTestInterface::method_with_ints32()
+                                                                    int optval = -2) = 0; 	///< See MethodTestInterface::method_with_ints32()
   virtual int64_t                       method_with_ints64         (int64_t input,
-                                                                    int64_t optval = 576460752303423488); 	///< See MethodTestInterface::method_with_ints64()
+                                                                    int64_t optval = 576460752303423488) = 0; 	///< See MethodTestInterface::method_with_ints64()
   virtual double                        method_with_floats         (double input,
-                                                                    double optval = 309.9); 	///< See MethodTestInterface::method_with_floats()
+                                                                    double optval = 309.9) = 0; 	///< See MethodTestInterface::method_with_floats()
   virtual std::string                   method_with_string         (const std::string &input,
-                                                                    const std::string &optval = "default"); 	///< See MethodTestInterface::method_with_string()
+                                                                    const std::string &optval = "default") = 0; 	///< See MethodTestInterface::method_with_string()
   virtual QuickEnum                     method_with_enum           (QuickEnum input,
-                                                                    QuickEnum optval = QuickEnum (0)); 	///< See MethodTestInterface::method_with_enum()
+                                                                    QuickEnum optval = QuickEnum (0)) = 0; 	///< See MethodTestInterface::method_with_enum()
   virtual SrvT_QuickRecord              method_with_record         (const SrvT_QuickRecord &input,
-                                                                    const SrvT_QuickRecord &optval = SrvT_QuickRecord()); 	///< See MethodTestInterface::method_with_record()
+                                                                    const SrvT_QuickRecord &optval = SrvT_QuickRecord()) = 0; 	///< See MethodTestInterface::method_with_record()
   virtual SrvT_QuickSequence            method_with_sequence       (const SrvT_QuickSequence &input,
-                                                                    const SrvT_QuickSequence &optval = SrvT_QuickSequence()); 	///< See MethodTestInterface::method_with_sequence()
+                                                                    const SrvT_QuickSequence &optval = SrvT_QuickSequence()) = 0; 	///< See MethodTestInterface::method_with_sequence()
   virtual I_GrandChildIfaceP            method_with_interface      (I_GrandChildIface &input,
-                                                                    I_GrandChildIface &optval = *(I_GrandChildIface*) NULL); 	///< See MethodTestInterface::method_with_interface()
+                                                                    I_GrandChildIface &optval = *(I_GrandChildIface*) NULL) = 0; 	///< See MethodTestInterface::method_with_interface()
   virtual Rapicorn::Aida::Any           method_with_anys           (const Rapicorn::Aida::Any &input,
-                                                                    const Rapicorn::Aida::Any &optval); 	///< See MethodTestInterface::method_with_anys()
+                                                                    const Rapicorn::Aida::Any &optval) = 0; 	///< See MethodTestInterface::method_with_anys()
   virtual I_QuickIfaceIfaceP            method_with_quickiface     (I_QuickIfaceIface &input,
-                                                                    I_QuickIfaceIface &iface0 = *(I_QuickIfaceIface*) NULL); 	///< See MethodTestInterface::method_with_quickiface()
+                                                                    I_QuickIfaceIface &iface0 = *(I_QuickIfaceIface*) NULL) = 0; 	///< See MethodTestInterface::method_with_quickiface()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_MethodTestInterfaceIfaceP&);
@@ -1055,7 +1055,7 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          args_from_other_namespace (const InterfaceTests::SrvT_QuickRecord &qr,
                                                                    RapicornAidaTest::ClickType qe,
-                                                                   const OtherNamespace::SrvT_SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
+                                                                   const OtherNamespace::SrvT_SomeRecord &sr) = 0; 	///< See NameTests::args_from_other_namespace()
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIface*);
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_NameTestsIfaceP&);

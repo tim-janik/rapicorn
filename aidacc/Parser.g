@@ -508,7 +508,7 @@ rule method_args:
         ) *                                     {{ return args }}
 
 rule field_stream_method_signal_decl:
-                                                {{ signal = false; pure = 0; fargs = []; daux = () }}
+                                                {{ signal = false; pure = 1; fargs = []; daux = () }}
         [ 'signal'                              {{ signal = true; coll = 'void' }}
           ]
         ( 'void'                                {{ dtname = 'void' }}
@@ -520,7 +520,7 @@ rule field_stream_method_signal_decl:
         | '\('                                  {{ kind = signal and 'signal' or 'func' }}
               [ method_args                     {{ fargs = method_args }}
               ] '\)'                            # [ '=' auxinit {{ daux = auxinit }} ]
-        ) [ '=' '0'                             {{ pure = 1; ANP (kind == 'func', dident) }}
+        ) [ '=' 'concrete'                      {{ pure = 0; ANP (kind == 'func', dident) }}
           ] ';'                                 {{ if kind == 'field': ANOSIG (signal, dident) }}
                                                 {{ if kind == 'field' and TSTREAM (dtname): kind = 'stream' }}
                                                 {{ flags = { 'void' : kind in ('func', 'signal'), 'stream' : kind == 'stream' } }}
