@@ -176,14 +176,23 @@ static void
 test_paths()
 {
   String p, s;
+  // Path::join
   s = Path::join ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
 #if RAPICORN_DIR_SEPARATOR == '/'
   p = "0/1/2/3/4/5/6/7/8/9/a/b/c/d/e/f";
 #else
   p = "0\\1\\2\\3\\4\\5\\6\\7\\8\\9\\a\\b\\c\\d\\e\\f";
 #endif
-  // printerr ("%s == %s\n", s.c_str(), p.c_str());
   TCMP (s, ==, p);
+  // Path::searchpath_join
+  s = Path::searchpath_join ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
+#if RAPICORN_SEARCHPATH_SEPARATOR == ';'
+  p = "0;1;2;3;4;5;6;7;8;9;a;b;c;d;e;f";
+#else
+  p = "0:1:2:3:4:5:6:7:8:9:a:b:c:d:e:f";
+#endif
+  TCMP (s, ==, p);
+  // Path
   bool b = Path::isabs (p);
   TCMP (b, ==, false);
 #if RAPICORN_DIR_SEPARATOR == '/'

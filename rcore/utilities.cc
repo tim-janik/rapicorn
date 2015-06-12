@@ -651,6 +651,43 @@ searchpath_find (const String &searchpath, const String &file, const String &mod
   return "";
 }
 
+static String
+searchpath_join1 (const String &a, const String &b)
+{
+  if (a.empty())
+    return b;
+  if (b.empty())
+    return a;
+  if (a[a.size()-1] == RAPICORN_SEARCHPATH_SEPARATOR ||
+      b[0] == RAPICORN_SEARCHPATH_SEPARATOR)
+    return a + b;
+  return a + RAPICORN_SEARCHPATH_SEPARATOR_S + b;
+}
+
+String
+searchpath_join (const String &frag0, const String &frag1, const String &frag2, const String &frag3,
+                 const String &frag4, const String &frag5, const String &frag6, const String &frag7,
+                 const String &frag8, const String &frag9, const String &frag10, const String &frag11,
+                 const String &frag12, const String &frag13, const String &frag14, const String &frag15)
+{
+  String result = searchpath_join1 (frag0, frag1);
+  result = searchpath_join1 (result, frag2);
+  result = searchpath_join1 (result, frag3);
+  result = searchpath_join1 (result, frag4);
+  result = searchpath_join1 (result, frag5);
+  result = searchpath_join1 (result, frag6);
+  result = searchpath_join1 (result, frag7);
+  result = searchpath_join1 (result, frag8);
+  result = searchpath_join1 (result, frag9);
+  result = searchpath_join1 (result, frag10);
+  result = searchpath_join1 (result, frag11);
+  result = searchpath_join1 (result, frag12);
+  result = searchpath_join1 (result, frag13);
+  result = searchpath_join1 (result, frag14);
+  result = searchpath_join1 (result, frag15);
+  return result;
+}
+
 String
 vpath_find (const String &file, const String &mode)
 {

@@ -124,14 +124,10 @@ String  abspath         (const String &path, const String &incwd = "");
 bool    isabs           (const String &path);
 bool    isdirname       (const String &path);
 String  skip_root       (const String &path);
-String  join            (const String &frag0, const String &frag1,
-                         const String &frag2 = "", const String &frag3 = "",
-                         const String &frag4 = "", const String &frag5 = "",
-                         const String &frag6 = "", const String &frag7 = "",
-                         const String &frag8 = "", const String &frag9 = "",
-                         const String &frag10 = "", const String &frag11 = "",
-                         const String &frag12 = "", const String &frag13 = "",
-                         const String &frag14 = "", const String &frag15 = "");
+String  join            (const String &frag0, const String &frag1, const String &frag2 = "", const String &frag3 = "",
+                         const String &frag4 = "", const String &frag5 = "", const String &frag6 = "", const String &frag7 = "",
+                         const String &frag8 = "", const String &frag9 = "", const String &frag10 = "", const String &frag11 = "",
+                         const String &frag12 = "", const String &frag13 = "", const String &frag14 = "", const String &frag15 = "");
 bool    check           (const String &file,
                          const String &mode);
 bool    equals          (const String &file1,
@@ -144,6 +140,11 @@ String  cwd             ();
 String       vpath_find        (const String &file, const String &mode = "e");
 String       searchpath_find  (const String &searchpath, const String &file, const String &mode = "e");
 StringVector searchpath_split (const String &searchpath);
+String       searchpath_join  (const String &frag0, const String &frag1, const String &frag2 = "", const String &frag3 = "",
+                               const String &frag4 = "", const String &frag5 = "", const String &frag6 = "", const String &frag7 = "",
+                               const String &frag8 = "", const String &frag9 = "", const String &frag10 = "",
+                               const String &frag11 = "", const String &frag12 = "", const String &frag13 = "",
+                               const String &frag14 = "", const String &frag15 = "");
 extern const String     dir_separator;         /* 1char */
 extern const String     searchpath_separator;  /* 1char */
 } // Path
