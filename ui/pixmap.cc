@@ -1,7 +1,7 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-#ifndef __RAPICORN_SERVERAPI_HH_
-#include "clientapi.hh" // includes pixmap.hh
-#endif
+#define __RAPICORN_IDL_ALIASES__ 0      // provide no ClnT or SrvT aliases
+#include "serverapi.hh" // to instantiate template class PixmapT<Rapicorn::SrvT_Pixbuf>;
+#include "clientapi.hh" // to instantiate template class PixmapT<Rapicorn::ClnT_Pixbuf>;
 #include <errno.h>
 #include <math.h>
 #include <cstring>
@@ -12,7 +12,8 @@
 namespace {
 using namespace Rapicorn;
 
-static bool anon_load_png (Pixmap pixmap, size_t nbytes, const char *bytes); /* assigns errno */
+template<class Pixbuf> static bool
+anon_load_png (PixmapT<Pixbuf> pixmap, size_t nbytes, const char *bytes); /* assigns errno */
 
 } // Anon
 
@@ -234,8 +235,8 @@ PixmapT<Pixbuf>::get_attribute (const String &name) const
     return pixbuf_->variables[it - pixbuf_->variables.begin()].substr (name.size() + 1);
 }
 
-static void
-pixmap_border (Pixmap pixmap, uint32 pixel)
+template<class Pixbuf> static void
+pixmap_border (PixmapT<Pixbuf> pixmap, uint32 pixel)
 {
   uint32 *row = pixmap.row (0);
   for (int i = 0; i < pixmap.width(); i++)
@@ -264,13 +265,9 @@ premultiply (uint32 pixel)
   return p;
 }
 
-static int /* errno */
-fill_pixmap_from_pixstream (Pixmap       pixmap,
-                            bool         has_alpha,
-                            bool         rle_encoded,
-                            uint         pixdata_width,
-                            uint         pixdata_height,
-                            const uint8 *encoded_pixdata)
+template<class Pixbuf> static int /* errno */
+fill_pixmap_from_pixstream (PixmapT<Pixbuf> pixmap, bool has_alpha, bool rle_encoded,
+                            uint pixdata_width, uint pixdata_height, const uint8 *encoded_pixdata)
 {
   if (pixdata_width < 1 || pixdata_height < 1)
     return EINVAL;
@@ -440,14 +437,15 @@ argb_pre_2_rgba (png_structp png, png_row_infop row_info, png_bytep data)
     }
 }
 
+template<class Pixbuf>
 struct PngContext {
-  Pixmap      pixmap;
-  int         error;
-  png_byte  **rows;
-  FILE       *fp;
-  const char *fbytes;
-  size_t      fsize, foffset;
-  PngContext (Pixmap pxm) : pixmap (pxm), error (0), rows (NULL), fp (NULL), fbytes (NULL), fsize (0), foffset (0) {}
+  PixmapT<Pixbuf> pixmap;
+  int             error;
+  png_byte      **rows;
+  FILE           *fp;
+  const char     *fbytes;
+  size_t          fsize, foffset;
+  PngContext (PixmapT<Pixbuf> pxm) : pixmap (pxm), error (0), rows (NULL), fp (NULL), fbytes (NULL), fsize (0), foffset (0) {}
 };
 
 static int /* returns errno; longjmp() may jump out of this function */
@@ -501,10 +499,10 @@ pngcontext_configure_4argb (png_structp  png_ptr,
   return 0;
 }
 
-static void
+template<class Pixbuf> static void
 pngcontext_read_bytes (png_structp png_ptr, png_bytep data, png_size_t length)
 {
-  PngContext &pcontext = *(PngContext*) png_get_io_ptr (png_ptr);
+  PngContext<Pixbuf> &pcontext = *(PngContext<Pixbuf>*) png_get_io_ptr (png_ptr);
   const size_t l = pcontext.foffset >= pcontext.fsize ? 0 : MIN (length, pcontext.fsize - pcontext.foffset);
   memcpy (data, pcontext.fbytes + pcontext.foffset, l);
   memset (data + l, 0, length - l); // PNG provides no (!!) way to return length of short reads...
@@ -513,15 +511,15 @@ pngcontext_read_bytes (png_structp png_ptr, png_bytep data, png_size_t length)
     png_error (png_ptr, "End Of File");
 }
 
-static void /* longjmp() may jump out of this function */
-pngcontext_read_image (PngContext &pcontext,
+template<class Pixbuf> static void /* longjmp() may jump out of this function */
+pngcontext_read_image (PngContext<Pixbuf> &pcontext,
                        png_structp png_ptr,
                        png_infop   info_ptr)
 {
   /* setup PNG io */
   png_init_io (png_ptr, pcontext.fp);
   if (pcontext.fbytes)
-    png_set_read_fn (png_ptr, &pcontext, pngcontext_read_bytes);
+    png_set_read_fn (png_ptr, &pcontext, pngcontext_read_bytes<Pixbuf>);
   png_set_sig_bytes (png_ptr, 8);                       /* advance by the 8 signature bytes we read earlier */
   png_set_user_limits (png_ptr, 0x7ffffff, 0x7ffffff);  /* we check the size ourselves */
   /* setup from meta data */
@@ -568,11 +566,10 @@ pngcontext_read_image (PngContext &pcontext,
   pcontext.error = 0;
 }
 
-static void
-pngcontext_error (png_structp     png_ptr,
-                  png_const_charp error_msg)
+template<class Pixbuf> static void
+pngcontext_error (png_structp png_ptr, png_const_charp error_msg)
 {
-  PngContext *pcontext = (PngContext*) png_get_error_ptr (png_ptr);
+  PngContext<Pixbuf> *pcontext = (PngContext<Pixbuf>*) png_get_error_ptr (png_ptr);
   if (!pcontext->error)
     pcontext->error = EIO;
   longjmp (png_ptr->jmpbuf, 1);
@@ -583,10 +580,10 @@ pngcontext_nop (png_structp     png_ptr,
                 png_const_charp error_msg)
 {}
 
-static bool
-anon_load_png (Pixmap pixmap, size_t nbytes, const char *bytes)
+template<class Pixbuf> static bool
+anon_load_png (PixmapT<Pixbuf> pixmap, size_t nbytes, const char *bytes)
 {
-  PngContext pcontext (pixmap);
+  PngContext<Pixbuf> pcontext (pixmap);
   // open image
   pcontext.fp = NULL; // fopen (filename.c_str(), "rb");
   pcontext.fbytes = bytes;
@@ -608,7 +605,7 @@ anon_load_png (Pixmap pixmap, size_t nbytes, const char *bytes)
     }
   /* allocate resources */
   pcontext.error = ENOMEM;
-  png_structp png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, &pcontext, pngcontext_error, pngcontext_nop);
+  png_structp png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, &pcontext, pngcontext_error<Pixbuf>, pngcontext_nop);
   png_infop info_ptr = !png_ptr ? NULL : png_create_info_struct (png_ptr);
   if (!info_ptr)
     {
@@ -647,10 +644,10 @@ PixmapT<Pixbuf>::save_png (const String &filename) /* assigns errno */
   const int h = height();
   const int depth = 8;
   // allocate resources
-  PngContext pcontext (*this);
+  PngContext<Pixbuf> pcontext (*this);
   pcontext.error = ENOMEM;
   png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, &pcontext,
-                                                 pngcontext_error, pngcontext_nop);
+                                                 pngcontext_error<Pixbuf>, pngcontext_nop);
   png_infop info_ptr = !png_ptr ? NULL : png_create_info_struct (png_ptr);
   if (!info_ptr)
     {
@@ -730,7 +727,8 @@ PixmapT<Pixbuf>::save_png (const String &filename) /* assigns errno */
   return pcontext.error == 0;
 }
 
-// Explicitely force instantiation and compilation of this template
-template class PixmapT<RAPICORN_PIXBUF_TYPE>; // Instantiates client-side for PixbufStruct and server-side for Pixbuf
+// Explicitely force instantiation and compilation of these templates
+template class PixmapT<Rapicorn::ClnT_Pixbuf>; // Instantiate client-side Pixmap
+template class PixmapT<Rapicorn::SrvT_Pixbuf>; // Instantiate server-side Pixmap
 
 } // Rapicorn

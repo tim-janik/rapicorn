@@ -90,7 +90,6 @@ class TypeInfo (BaseDecl):
     self.storage = storage
     self.isimpl = isimpl
     # clonable fields:
-    self.typedef_origin = None
     self.is_forward = False
     self.options = []           # holds: (ident, label, blurb, number)
     self.combinable = False
@@ -189,7 +188,6 @@ class TypeInfo (BaseDecl):
   def clone (self, newname, isimpl):
     if newname == None: newname = self.name
     ti = TypeInfo (newname, self.storage, isimpl)
-    ti.typedef_origin = self.typedef_origin
     ti.is_forward = self.is_forward
     ti.options += self.options
     ti.combinable = self.combinable

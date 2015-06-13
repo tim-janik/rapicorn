@@ -84,8 +84,8 @@ EXTRA_DIST += testcxxserver.ref testcxxclient.ref testcxxskels.ref
 check-CxxStub-server-code: $(srcdir)/testcxxserver.ref check-CxxStub-client-gen
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh \
 	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
-	$(Q) echo '#include "testcxxserver-stub.hh"'	 >testcxxserver.cc
-	$(Q) cat $(srcdir)/testcxxserver.ref		>>testcxxserver.cc
+	$(Q) cat $(srcdir)/testcxxserver.ref		 >testcxxserver.cc
+	$(Q) echo '#include "testcxxserver-stub.hh"'	>>testcxxserver.cc
 	$(Q) $(CXXCOMPILE) -D__RAPICORN_BUILD__  testcxxserver.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxserver.cc testcxxserver.o testcxxserver-stub.hh
 check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
@@ -95,8 +95,8 @@ check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
 check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh \
 	  $(srcdir)/testpass.idl -o testcxxsrvskel-stub.hh
-	$(Q) echo '#include "testcxxsrvskel-stub.hh"'	 >testcxxskels.cc
-	$(Q) cat $(srcdir)/testcxxskels.ref		>>testcxxskels.cc
+	$(Q) cat $(srcdir)/testcxxskels.ref		 >testcxxskels.cc
+	$(Q) echo '#include "testcxxsrvskel-stub.hh"'	>>testcxxskels.cc
 	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxskels.cc testcxxskels.o testcxxsrvskel-stub.hh
 check: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code

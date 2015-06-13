@@ -10,7 +10,7 @@ import AuxData
 reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
 keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
-            'namespace', 'enum', 'Const', 'typedef', 'interface',
+            'namespace', 'enum', 'Const', 'interface',
             'record', 'sequence', 'bool', 'String', 'Any',
             # golang types
             'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64',
@@ -39,14 +39,6 @@ class YYGlobals (object):
     if not isinstance (value, (int, long, float, str)):
       raise TypeError ('constant expression does not yield string or number: ' + repr (typename))
     self.namespaces[-1].add_const (name, value, yy.impl_includes)
-  def nsadd_typedef (self, fielddecl):
-    typename,srctype,auxinit = fielddecl
-    AIn (typename)
-    typeinfo = srctype.clone (typename, yy.impl_includes)
-    typeinfo.set_location (*yy.scanner.get_pos())
-    typeinfo.typedef_origin = srctype
-    self.parse_assign_auxdata ([ (typename, typeinfo, auxinit) ])
-    self.namespaces[-1].add_type (typeinfo)
   def nsadd_evalue (self, evalue_ident, evalue_label, evalue_blurb, evalue_number = None):
     AS (evalue_ident)
     if evalue_number == None:
@@ -448,7 +440,6 @@ rule declaration:
           ';'
         | const_assignment
         | enumeration
-        | typedef
         | sequence
         | record
         | interface
@@ -537,9 +528,6 @@ rule field_stream_method_signal_decl:
                                                 {{ if kind == 'signal': dtype.set_collector (coll) }}
                                                 {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
                                                 {{ return (kind, (dident, dtype, daux, fargs, pure)) }}
-
-rule typedef:
-        'typedef' field_decl                    {{ yy.nsadd_typedef (field_decl[0]) }}
 
 rule field_group:
                'group'                          {{ gfields = [] }}

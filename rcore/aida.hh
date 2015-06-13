@@ -128,6 +128,7 @@ protected:
   std::string                 __aida_getter__     (const std::string &property_name);
 public:
   virtual std::string        __aida_type_name__   () const = 0; ///< Retrieve the IDL type name of an instance.
+  virtual TypeHashList       __aida_typelist__    () const = 0;
   std::shared_ptr
   <const ImplicitBase>       shared_from_this     () const { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
   ImplicitBaseP              shared_from_this     ()       { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
@@ -430,10 +431,6 @@ public:
   explicit RemoteMember () : RemoteHandle() {}
   void     operator=   (const RemoteHandle &src) { RemoteHandle::operator= (src); }
 };
-
-// == Conversion Type Tags ==
-struct _ServantType {} constexpr _servant = _ServantType(); ///< Tag to retrieve servant from remote handle.
-struct _HandleType  {} constexpr _handle  = _HandleType();  ///< Tag to retrieve remote handle from servant.
 
 // == ObjectBroker ==
 class ObjectBroker {

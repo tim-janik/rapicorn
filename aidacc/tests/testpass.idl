@@ -179,17 +179,6 @@ sequence NestedTypesSeq {
   NestedTypesRec ntr;
 };
 
-// typedef tests
-typedef Any AliasAny;
-typedef bool AliasBool;
-typedef int32 AliasInt32;
-typedef int64 AliasInt64;
-typedef float64 AliasFloat;
-typedef String AliasString;
-typedef XFooRecord AliasRecord;
-typedef XFooSequence AliasSequence;
-typedef ExtensiveEnum AliasEnum;
-
 } // MandatoryNamespace
 
 // Test namespace continuation
@@ -240,15 +229,15 @@ Const dummy = FromInner + FromMiddle + FromOuter;
 
 // Auxdata tests
 namespace Auxdata {
-// FIXME: can't check auxdata of record fields yet
-//record RecordWithAuxdata {
-  typedef bool    AuxBool = Bool   ("AuxBool", "A Boolean", "rw");
-  typedef int32   Aux32   = Num    ("Aux32", "The Bar number", "rw", 10007.000);
-  typedef int64   Aux64   = Num    ("Aux64", "64bit auxillary number", "rw", 1152921504606846976);
-  typedef float64 AuxF64  = Num    ("AuxF64", "X coordinate", "ro", 19e-3);
-  typedef String  AuxStr  = String ("AuxStr", "Specify text here", "rw", "auxtest3");
+
+record RecordWithAuxdata {
+  bool    aux_bool = Bool   ("AuxBool", "A Boolean", "rw");
+  int32   aux32   = Num    ("Aux32", "The Bar number", "rw", 10007.000);
+  int64   aux64   = Num    ("Aux64", "64bit auxillary number", "rw", 1152921504606846976);
+  float64 auxf64  = Num    ("AuxF64", "X coordinate", "ro", 19e-3);
+  String  aux_str  = String ("AuxStr", "Specify text here", "rw", "auxtest3");
   /* auxtest1 and auxtest2 are explicit testing keywords */
-//};
+};
 }
 
 namespace InterfaceTests {

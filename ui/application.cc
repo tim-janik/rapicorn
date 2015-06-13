@@ -160,7 +160,7 @@ ApplicationImpl::query_windows (const String &selector)
   vector<Selector::Selob*> result = Selector::Matcher::query_selector_objects (selector, input.begin(), input.end());
   WindowList wlist;
   for (vector<Selector::Selob*>::const_iterator it = result.begin(); it != result.end(); it++)
-    wlist.push_back (dynamic_cast<WindowIface*> (sallocator.selob_widget (**it))->*Aida::_handle);
+    wlist.push_back (shared_ptr_cast<WindowIface> (sallocator.selob_widget (**it)));
   return wlist;
 }
 
@@ -169,10 +169,7 @@ ApplicationImpl::list_windows ()
 {
   WindowList wl;
   for (size_t i = 0; i < windows_.size(); i++)
-    {
-      WindowHandle wh = (&*windows_[i])->*Aida::_handle;
-      wl.push_back (wh);
-    }
+    wl.push_back (windows_[i]);
   return wl;
 }
 

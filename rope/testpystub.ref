@@ -384,154 +384,6 @@ class NestedTypesRec (_BaseRecord_):
 MandatoryNamespace.NestedTypesRec = NestedTypesRec
 del NestedTypesRec
 
-class AliasRecord (_BaseRecord_):
-  def __init__ (self, **entries):
-    defaults = { 'single_bool' : 0,  'single_num' : 0,  'num64' : 0,  'single_float' : 0,  'single_string' : '',  'sibling1' : 0,  'sibling2' : 0,  'multi1' : 0,  'multi2' : 0,  'multi3' : 0,  'multi4' : 0,  'enum_field' : 0,  'iface1' : None,  'iface2' : None,  'iface3' : None,  'any1' : (),  'any2' : (),  'any3' : (), }
-    self.__dict__.update (defaults)
-    _BaseRecord_.__init__ (self, **entries)
-  @staticmethod
-  def create (args):
-    self = AliasRecord()
-    if hasattr (args, "__iter__") and len (args) == 18:
-      self.single_bool = args[0]
-      #  self.single_bool.vint64 = args[0]
-      self.single_num = args[1]
-      #  self.single_num.vint64 = args[1]
-      self.num64 = args[2]
-      #  self.num64.vint64 = args[2]
-      self.single_float = args[3]
-      #  self.single_float.vdouble = args[3]
-      self.single_string = args[4]
-      #  self.single_string.vstring = args[4]
-      self.sibling1 = args[5]
-      #  self.sibling1.vint64 = args[5]
-      self.sibling2 = args[6]
-      #  self.sibling2.vint64 = args[6]
-      self.multi1 = args[7]
-      #  self.multi1.vint64 = args[7]
-      self.multi2 = args[8]
-      #  self.multi2.vint64 = args[8]
-      self.multi3 = args[9]
-      #  self.multi3.vint64 = args[9]
-      self.multi4 = args[10]
-      #  self.multi4.vint64 = args[10]
-      self.enum_field = args[11]
-      #  self.enum_field.vint64 = args[11]
-      self.iface1 = args[12]
-      #  self.iface1.vstring (Instance2StringCast (args[12]))
-      self.iface2 = args[13]
-      #  self.iface2.vstring (Instance2StringCast (args[13]))
-      self.iface3 = args[14]
-      #  self.iface3.vstring (Instance2StringCast (args[14]))
-      self.any1 = args[15]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any1.vany, args[15])
-      self.any2 = args[16]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any2.vany, args[16])
-      self.any3 = args[17]
-      #  # FIXME: support Aida::Any with Any.to_proto (self.any3.vany, args[17])
-    elif isinstance (args, dict):
-      self.single_bool = args["single_bool"]
-      self.single_num = args["single_num"]
-      self.num64 = args["num64"]
-      self.single_float = args["single_float"]
-      self.single_string = args["single_string"]
-      self.sibling1 = args["sibling1"]
-      self.sibling2 = args["sibling2"]
-      self.multi1 = args["multi1"]
-      self.multi2 = args["multi2"]
-      self.multi3 = args["multi3"]
-      self.multi4 = args["multi4"]
-      self.enum_field = args["enum_field"]
-      self.iface1 = args["iface1"]
-      self.iface2 = args["iface2"]
-      self.iface3 = args["iface3"]
-      self.any1 = args["any1"]
-      self.any2 = args["any2"]
-      self.any3 = args["any3"]
-    else: raise RuntimeError ("invalid or missing record initializers")
-    return self
-  @staticmethod
-  def to_proto (self, _aida_rec):
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.single_bool
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.single_num
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.num64
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vdouble = self.single_float
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vstring = self.single_string
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.sibling1
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.sibling2
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.multi1
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.multi2
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.multi3
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.multi4
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vint64 = self.enum_field
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vstring (Instance2StringCast (self.iface1))
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vstring (Instance2StringCast (self.iface2))
-    _aida_field = _aida_rp.fields.add()
-    _aida_field.vstring (Instance2StringCast (self.iface3))
-    _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any1)
-    _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any2)
-    _aida_field = _aida_rp.fields.add()
-    # FIXME: support Aida::Any with Any.to_proto (_aida_field.vany, self.any3)
-MandatoryNamespace.AliasRecord = AliasRecord
-del AliasRecord
-
-class AliasEnum (__AIDA_Enum__):
-  enum_values = {}
-  _valuedict = {}
-MandatoryNamespace.V1a = AliasEnum (1, "V1a")
-MandatoryNamespace.V1b = AliasEnum (1, "V1b")
-MandatoryNamespace.V2 = AliasEnum (2, "V2")
-MandatoryNamespace.V3 = AliasEnum (3, "V3")
-MandatoryNamespace.V4 = AliasEnum (4, "V4")
-MandatoryNamespace.V5 = AliasEnum (5, "V5")
-MandatoryNamespace.V6 = AliasEnum (6, "V6")
-MandatoryNamespace.V7 = AliasEnum (7, "V7")
-MandatoryNamespace.V8 = AliasEnum (8, "V8")
-MandatoryNamespace.V9 = AliasEnum (9, "V9")
-MandatoryNamespace.V10 = AliasEnum (10, "V10")
-MandatoryNamespace.V11 = AliasEnum (11, "V11")
-MandatoryNamespace.V12 = AliasEnum (12, "V12")
-MandatoryNamespace.V13 = AliasEnum (13, "V13")
-MandatoryNamespace.V14 = AliasEnum (14, "V14")
-MandatoryNamespace.V15 = AliasEnum (15, "V15")
-MandatoryNamespace.V16 = AliasEnum (16, "V16")
-MandatoryNamespace.V17 = AliasEnum (17, "V17")
-MandatoryNamespace.V18 = AliasEnum (18, "V18")
-MandatoryNamespace.V20 = AliasEnum (20, "V20")
-MandatoryNamespace.V21 = AliasEnum (21, "V21")
-MandatoryNamespace.V22 = AliasEnum (22, "V22")
-MandatoryNamespace.V23 = AliasEnum (23, "V23")
-MandatoryNamespace.V24 = AliasEnum (24, "V24")
-MandatoryNamespace.V25 = AliasEnum (-16, "V25")
-MandatoryNamespace.V26 = AliasEnum (16, "V26")
-MandatoryNamespace.V27 = AliasEnum (-16, "V27")
-MandatoryNamespace.V28 = AliasEnum (-28, "V28")
-MandatoryNamespace.V30 = AliasEnum (42, "V30")
-MandatoryNamespace.V31 = AliasEnum (43, "V31")
-MandatoryNamespace.V32 = AliasEnum (42, "V32")
-MandatoryNamespace.V33 = AliasEnum (43, "V33")
-MandatoryNamespace.V34 = AliasEnum (44, "V34")
-MandatoryNamespace.V35 = AliasEnum (42, "V35")
-MandatoryNamespace.V36 = AliasEnum (42, "V36")
-MandatoryNamespace.AliasEnum = AliasEnum
-del AliasEnum
-
 class NewRecord (_BaseRecord_):
   def __init__ (self, **entries):
     defaults = { 'i' : 0,  'enum1' : 0,  'xfs' : (),  'ntr' : None, }
@@ -667,6 +519,52 @@ class SomeRecord (_BaseRecord_):
     InnerRecord.to_proto (_aida_field.vrec, self.r4)
 OtherNamespace.SomeRecord = SomeRecord
 del SomeRecord
+
+
+__name__ = "Auxdata" # NAMESPACE Auxdata
+Auxdata = __AIDA__open_namespace__ (__name__, __file__)
+
+class RecordWithAuxdata (_BaseRecord_):
+  def __init__ (self, **entries):
+    defaults = { 'aux_bool' : 0,  'aux32' : 0,  'aux64' : 0,  'auxf64' : 0,  'aux_str' : '', }
+    self.__dict__.update (defaults)
+    _BaseRecord_.__init__ (self, **entries)
+  @staticmethod
+  def create (args):
+    self = RecordWithAuxdata()
+    if hasattr (args, "__iter__") and len (args) == 5:
+      self.aux_bool = args[0]
+      #  self.aux_bool.vint64 = args[0]
+      self.aux32 = args[1]
+      #  self.aux32.vint64 = args[1]
+      self.aux64 = args[2]
+      #  self.aux64.vint64 = args[2]
+      self.auxf64 = args[3]
+      #  self.auxf64.vdouble = args[3]
+      self.aux_str = args[4]
+      #  self.aux_str.vstring = args[4]
+    elif isinstance (args, dict):
+      self.aux_bool = args["aux_bool"]
+      self.aux32 = args["aux32"]
+      self.aux64 = args["aux64"]
+      self.auxf64 = args["auxf64"]
+      self.aux_str = args["aux_str"]
+    else: raise RuntimeError ("invalid or missing record initializers")
+    return self
+  @staticmethod
+  def to_proto (self, _aida_rec):
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vint64 = self.aux_bool
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vint64 = self.aux32
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vint64 = self.aux64
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vdouble = self.auxf64
+    _aida_field = _aida_rp.fields.add()
+    _aida_field.vstring = self.aux_str
+Auxdata.RecordWithAuxdata = RecordWithAuxdata
+del RecordWithAuxdata
 
 
 __name__ = "InterfaceTests" # NAMESPACE InterfaceTests

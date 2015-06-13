@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_OBJECT_HH_
 #define __RAPICORN_OBJECT_HH_
 
-#include <ui/serverapi.hh>
+#include <ui/primitives.hh>
 
 namespace Rapicorn {
 

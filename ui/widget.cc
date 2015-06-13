@@ -485,7 +485,7 @@ WidgetImpl::query_selector_all (const String &selector)
     {
       WidgetImpl *widget = sallocator.selob_widget (**it);
       if (widget)
-        widgets.push_back (widget->*Aida::_handle);
+        widgets.push_back (shared_ptr_cast<WidgetIface> (widget));
     }
   return widgets;
 }
@@ -2091,22 +2091,6 @@ WidgetImpl::drawable () const
       return true;
     }
   return false;
-}
-
-// == WidgetIfaceVector ==
-WidgetIfaceVector::WidgetIfaceVector (const WidgetSeq &widgetseq)
-{
-  for (auto it : widgetseq)
-    push_back (it->*Aida::_servant);
-}
-
-WidgetSeq
-WidgetIfaceVector::to_widget_seq () const
-{
-  WidgetSeq itseq;
-  for (auto it : *this)
-    itseq.push_back (it->*Aida::_handle);
-  return itseq;
 }
 
 } // Rapicorn

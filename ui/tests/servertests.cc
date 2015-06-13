@@ -1,6 +1,5 @@
 /* This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0 */
 #include "servertests.hh"
-#include <rapicorn.hh>
 
 using namespace Rapicorn;
 

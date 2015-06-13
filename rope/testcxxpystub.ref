@@ -253,6 +253,7 @@ struct NewRecord;
 struct InnerRecord;
 struct Refer2Inner;
 struct SomeRecord;
+struct RecordWithAuxdata;
 struct QuickRecord;
 struct RecordForGroups;
 static RAPICORN_UNUSED bool
@@ -917,6 +918,57 @@ aida_pySomeRecord_proto_pop (Rapicorn::Aida::FieldReader &src)
   if (PyDict_Take_Item (dictR, "r3", &pyfoR) < 0) goto error;
   pyfoR = aida_pyInnerRecord_proto_pop (fbr); ERRORif (!pyfoR);
   if (PyDict_Take_Item (dictR, "r4", &pyfoR) < 0) goto error;
+  pyret = pyinstR;
+ error:
+  Py_XDECREF (pytypeR);
+  Py_XDECREF (pyfoR);
+  Py_XDECREF (dictR);
+  if (pyret != pyinstR)
+    Py_XDECREF (pyinstR);
+  return pyret;
+}
+
+static RAPICORN_UNUSED bool
+aida_pyRecordWithAuxdata_proto_add (PyObject *pyrec, Rapicorn::Aida::FieldBuffer &dst)
+{
+  Rapicorn::Aida::FieldBuffer &fb = dst.add_rec (5);
+  bool success = false;
+  PyObject *dictR = NULL, *item = NULL;
+  dictR = PyObject_GetAttrString (pyrec, "__dict__"); ERRORif (!dictR);
+  item = PyDict_GetItemString (dictR, "aux_bool"); ERRORif (!item);
+  fb.add_bool (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "aux32"); ERRORif (!item);
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "aux64"); ERRORif (!item);
+  fb.add_int64 (PyIntLong_AsLongLong (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "auxf64"); ERRORif (!item);
+  fb.add_double (PyFloat_AsDouble (item)); ERRORifpy();
+  item = PyDict_GetItemString (dictR, "aux_str"); ERRORif (!item);
+  fb.add_string (PyString_As_std_string (item)); ERRORifpy();
+  success = true;
+ error:
+  Py_XDECREF (dictR);
+  return success;
+}
+static RAPICORN_UNUSED PyObject*
+aida_pyRecordWithAuxdata_proto_pop (Rapicorn::Aida::FieldReader &src)
+{
+  PyObject *pytypeR = NULL, *pyinstR = NULL, *dictR = NULL, *pyfoR = NULL, *pyret = NULL;
+  Rapicorn::Aida::FieldReader fbr (src.pop_rec());
+  if (fbr.remaining() != 5) ERRORpy ("Aida: marshalling error: invalid record length");
+  pytypeR = PyObject_GetAttrString (__AIDA_PYMODULE__OBJECT, "__AIDA_BaseRecord__"); AIDA_ASSERT (pytypeR != NULL);
+  pyinstR = PyObject_CallObject (pytypeR, NULL); ERRORif (!pyinstR);
+  dictR = PyObject_GetAttrString (pyinstR, "__dict__"); ERRORif (!dictR);
+  pyfoR = PyLong_FromLongLong (fbr.pop_bool()); ERRORifpy ();
+  if (PyDict_Take_Item (dictR, "aux_bool", &pyfoR) < 0) goto error;
+  pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
+  if (PyDict_Take_Item (dictR, "aux32", &pyfoR) < 0) goto error;
+  pyfoR = PyLong_FromLongLong (fbr.pop_int64()); ERRORifpy ();
+  if (PyDict_Take_Item (dictR, "aux64", &pyfoR) < 0) goto error;
+  pyfoR = PyFloat_FromDouble (fbr.pop_double()); ERRORifpy();
+  if (PyDict_Take_Item (dictR, "auxf64", &pyfoR) < 0) goto error;
+  pyfoR = PyString_From_std_string (fbr.pop_string()); ERRORifpy();
+  if (PyDict_Take_Item (dictR, "aux_str", &pyfoR) < 0) goto error;
   pyret = pyinstR;
  error:
   Py_XDECREF (pytypeR);

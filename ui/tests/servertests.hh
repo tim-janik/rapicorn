@@ -2,6 +2,8 @@
 #ifndef __RAPICORN_SERVERTESTS_HH__
 #define __RAPICORN_SERVERTESTS_HH__
 
+#include <ui/uithread.hh>
+#include <rapicorn.hh> // needed for init_test_app()
 #include <rcore/testutils.hh>
 
 namespace ServerTests {

@@ -4,9 +4,6 @@
 .../testfail.idl:7:18: TypeError: redefining existing identifier: record
 >  Const record = 5; // keyword assignment
 >                   ^
-.../testfail.idl:9:23: TypeError: redefining existing identifier: String
->  typedef String String; // keyword redefinition (without --system-typedefs)
->                        ^
 .../testfail.idl:11:22: NameError: invalid characters in namespace: broken$name
 >  namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
 >                       ^
@@ -70,27 +67,12 @@
 .../testfail.idl:51:52: TypeError: redefining existing identifier: Dup
 >  sequence Dup { bool b; }; sequence Dup { bool b; }; // duplicate definition
 >                                                     ^
-.../testfail.idl:53:16: TypeError: unknown type: 'Const'
->  typedef Const X; // unknown type Const
->                 ^
-.../testfail.idl:55:20: TypeError: redefining existing identifier: Const
->  typedef bool Const; // keyword redefinition
->                     ^
 .../testfail.idl:57:17: TypeError: redefining existing identifier: class
 >  Const class = 5; // keyword redefinition
 >                  ^
-.../testfail.idl:59:37: TypeError: redefining existing identifier: Enu1
->  enum Enu1 { AA }; typedef Enu1 Enu1; // type redefinition
->                                      ^
-.../testfail.idl:61:45: TypeError: invalid type definition: = _No_SUCH_initializer (17,)
->  typedef int32 x = _No_SUCH_initializer (17); // unknown type definition
->                                              ^
-.../testfail.idl:63:74: TypeError: too many args for type definition: = Num ('"too"', '"many"', '"args"', 1, 2, 3, 4, 5, 6, 7, 8, 9)
->  ... Num ("too", "many", "args", 1, 2, 3, 4, 5, 6, 7, 8, 9); // too many args
->                                                             ^
-.../testfail.idl:65:69: TypeError: invalid type definition: = String ('"nick"', '"txt"', '"dflt"', '"rw"')
->  ...ing_for_num = String ("nick", "txt", "dflt", "rw"); // type/initializer mismatch
->                                                        ^
+.../testfail.idl:59:33: TypeError: redefining existing identifier: AA
+>  enum Enu1 { AA }; enum Enu1 { AA }; // type redefinition
+>                                  ^
 .../testfail.idl:67:71: TypeError: invalid type definition: = Num ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
 >  ... s = Num ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
 >                                                          ^
