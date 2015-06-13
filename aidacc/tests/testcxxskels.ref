@@ -272,6 +272,27 @@ struct SrvT_XFooRecord
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
   bool                          operator==  (const SrvT_XFooRecord &other) const;
   bool                          operator!=  (const SrvT_XFooRecord &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (single_bool, "single_bool");
+    _visitor_ (single_num, "single_num");
+    _visitor_ (num64, "num64");
+    _visitor_ (single_float, "single_float");
+    _visitor_ (single_string, "single_string");
+    _visitor_ (sibling1, "sibling1");
+    _visitor_ (sibling2, "sibling2");
+    _visitor_ (multi1, "multi1");
+    _visitor_ (multi2, "multi2");
+    _visitor_ (multi3, "multi3");
+    _visitor_ (multi4, "multi4");
+    _visitor_ (enum_field, "enum_field");
+    _visitor_ (iface1, "iface1");
+    _visitor_ (iface2, "iface2");
+    _visitor_ (iface3, "iface3");
+    _visitor_ (any1, "any1");
+    _visitor_ (any2, "any2");
+    _visitor_ (any3, "any3");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_XFooRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooRecord&);
@@ -367,6 +388,11 @@ struct SrvT_NestedTypesRec
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
   bool                          operator==  (const SrvT_NestedTypesRec &other) const;
   bool                          operator!=  (const SrvT_NestedTypesRec &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (rec, "rec");
+    _visitor_ (seq, "seq");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NestedTypesRec&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesRec&);
@@ -392,6 +418,13 @@ struct SrvT_NewRecord
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
   bool                          operator==  (const SrvT_NewRecord &other) const;
   bool                          operator!=  (const SrvT_NewRecord &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (i, "i");
+    _visitor_ (enum1, "enum1");
+    _visitor_ (xfs, "xfs");
+    _visitor_ (ntr, "ntr");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NewRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NewRecord&);
@@ -409,6 +442,12 @@ struct SrvT_InnerRecord
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
   bool                          operator==  (const SrvT_InnerRecord &other) const;
   bool                          operator!=  (const SrvT_InnerRecord &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (x, "x");
+    _visitor_ (y, "y");
+    _visitor_ (rec, "rec");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_InnerRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InnerRecord&);
@@ -423,6 +462,10 @@ struct SrvT_Refer2Inner
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
   bool                          operator==  (const SrvT_Refer2Inner &other) const;
   bool                          operator!=  (const SrvT_Refer2Inner &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (r, "r");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_Refer2Inner&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_Refer2Inner&);
@@ -442,6 +485,13 @@ struct SrvT_SomeRecord
   std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
   bool                          operator==  (const SrvT_SomeRecord &other) const;
   bool                          operator!=  (const SrvT_SomeRecord &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (r1, "r1");
+    _visitor_ (r2, "r2");
+    _visitor_ (r3, "r3");
+    _visitor_ (r4, "r4");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_SomeRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SomeRecord&);
@@ -462,6 +512,14 @@ struct SrvT_RecordWithAuxdata
   std::string                   __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
   bool                          operator==  (const SrvT_RecordWithAuxdata &other) const;
   bool                          operator!=  (const SrvT_RecordWithAuxdata &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (aux_bool, "aux_bool");
+    _visitor_ (aux32, "aux32");
+    _visitor_ (aux64, "aux64");
+    _visitor_ (auxf64, "auxf64");
+    _visitor_ (aux_str, "aux_str");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordWithAuxdata&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordWithAuxdata&);
@@ -617,6 +675,11 @@ struct SrvT_QuickRecord
   std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
   bool                          operator==  (const SrvT_QuickRecord &other) const;
   bool                          operator!=  (const SrvT_QuickRecord &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (int1, "int1");
+    _visitor_ (int2, "int2");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_QuickRecord&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickRecord&);
@@ -997,6 +1060,14 @@ struct SrvT_RecordForGroups
   std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
   bool                          operator==  (const SrvT_RecordForGroups &other) const;
   bool                          operator!=  (const SrvT_RecordForGroups &other) const { return !operator== (other); }
+  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  {
+    _visitor_ (i, "i");
+    _visitor_ (ratio, "ratio");
+    _visitor_ (ordinary_bool, "ordinary_bool");
+    _visitor_ (threshold1, "threshold1");
+    _visitor_ (threshold2, "threshold2");
+  }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordForGroups&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordForGroups&);
