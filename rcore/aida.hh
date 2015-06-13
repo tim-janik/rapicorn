@@ -74,7 +74,7 @@ struct EnumValue {
 };
 
 template<class Enum>
-const EnumValue* enum_value_list  (); ///< Template to be specialised for enums to introspect enum values.
+const EnumValue* enum_value_list  () { return NULL; } ///< Template to be specialised for enums to introspect enum values.
 const EnumValue* enum_value_find  (const EnumValue *values, int64 value);        ///< Find first enum value equal to @a value.
 const EnumValue* enum_value_find  (const EnumValue *values, const String &name); ///< Find first enum value matching @a name.
 size_t           enum_value_count (const EnumValue *values);                     ///< Count number of enum values.
