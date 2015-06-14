@@ -63,19 +63,21 @@ String
 XmlNode::get_attribute (const String &name,
                         bool          case_insensitive) const
 {
-  vector<String>::const_iterator it = find_attribute (attribute_names_, name, case_insensitive);
-  if (it != attribute_names_.end())
-    return attribute_values_[it - attribute_names_.begin()];
-  else
-    return "";
+  String value;
+  has_attribute (name, case_insensitive, &value);
+  return value;
 }
 
 bool
 XmlNode::has_attribute (const String &name,
-                        bool          case_insensitive) const
+                        bool          case_insensitive,
+                        String       *valuep) const
 {
   vector<String>::const_iterator it = find_attribute (attribute_names_, name, case_insensitive);
-  return it != attribute_names_.end();
+  const bool has_attr = it != attribute_names_.end();
+  if (has_attr && valuep)
+    *valuep = attribute_values_[it - attribute_names_.begin()];
+  return has_attr;
 }
 
 bool

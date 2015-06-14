@@ -40,7 +40,8 @@ public:
   String                get_attribute   (const String   &name,
                                          bool            case_insensitive = false) const;
   bool                  has_attribute   (const String   &name,
-                                         bool            case_insensitive = false) const;
+                                         bool            case_insensitive = false,
+                                         String         *valuep = NULL) const;
   bool                  del_attribute   (const String   &name);
   String                parsed_file     () const                { return file_; }
   uint                  parsed_line     () const                { return line_; }
