@@ -423,17 +423,19 @@ node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t 
       if (include_outer)
         s += ">";
       bool need_break = include_outer && node.break_within();
+      bool last_text = false;
       for (size_t i = 0; i < cl.size(); i++)
         {
-          if (need_break)
+          if (need_break && !cl[i]->istext())
             s += "\n" + istr + "  ";
           if (wrapper)
             s += wrapper (*cl[i], indent + 2, true, recursion_depth - 1);
           else
             s += cl[i]->xml_string (indent + 2, true, recursion_depth - 1, wrapper, true);
           need_break = cl[i]->break_after();
+          last_text = cl[i]->istext();
         }
-      if (include_outer && node.break_within())
+      if (include_outer && node.break_within() && !last_text)
         s += "\n" + istr;
       if (include_outer)
         s += "</" + node.xml_escape (node.name()) + ">";
