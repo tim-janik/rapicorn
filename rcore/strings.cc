@@ -80,6 +80,18 @@ string_canonify (const String &string, const String &valid_chars, const String &
   return d;
 }
 
+/// Check if string_canonify() would modify @a string.
+bool
+string_is_canonified (const String &string, const String &valid_chars)
+{
+  const size_t l = string.size();
+  const char *valids = valid_chars.c_str(), *p = string.c_str();
+  for (size_t i = 0; i < l; i++)
+    if (!strchr (valids, p[i]))
+      return false;
+  return true;
+}
+
 /// Returns a string containing all of a-z.
 String
 string_set_a2z ()
