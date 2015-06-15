@@ -286,6 +286,14 @@ IniFile::load_ini (const String &inputname, const String &data)
           if (debugp)
             printerr ("%s:%d: %s\n", inputname.c_str(), lineno, text.c_str());
           section = text;
+          if (strchr (section.c_str(), '"'))
+            { // reconstruct section path from '[branch "devel.wip"]' syntax
+              StringVector sv = string_split (section);
+              for (auto &s : sv)
+                if (s.c_str()[0] == '"')
+                  s = string_from_cquote (s);
+              section = string_join (".", sv);
+            }
         }
       else if (parse_assignment (&p, &nextno, &key, &locale, &text))
         {
@@ -309,14 +317,11 @@ IniFile::load_ini (const String &inputname, const String &data)
     }
 }
 
-IniFile::IniFile (const String &filename)
+IniFile::IniFile (const String &name, const String &inidata)
 {
-  errno = ENOENT;
-  Blob blob = Blob::load (filename);
-  if (blob)
-    load_ini (blob.name(), blob.string());
+  load_ini (name, inidata);
   if (sections_.empty())
-    RAPICORN_DIAG ("empty INI file %s: %s", CQUOTE (filename), strerror (errno));
+    RAPICORN_DIAG ("empty INI file: %s", CQUOTE (name));
 }
 
 IniFile::IniFile (Blob blob)
@@ -324,7 +329,7 @@ IniFile::IniFile (Blob blob)
   if (blob)
     load_ini (blob.name(), blob.string());
   if (sections_.empty())
-    RAPICORN_DIAG ("empty INI file %s: %s", CQUOTE (blob ? blob.name() : "<NULL>"), strerror (errno));
+    RAPICORN_DIAG ("empty INI file: %s", CQUOTE (blob ? blob.name() : "<NULL>"));
 }
 
 IniFile::IniFile (const IniFile &source)
@@ -408,22 +413,34 @@ IniFile::raw_values () const
   return opts;
 }
 
-String
-IniFile::raw_value (const String &dotpath) const
+bool
+IniFile::has_raw_value (const String &dotpath, String *valuep) const
 {
-  const char *p = dotpath.c_str(), *d = strchr (p, '.');
+  const char *p = dotpath.c_str(), *d = strrchr (p, '.');
   if (!d)
-    return "";
+    return false;
   const String secname = String (p, d - p);
   d++; // point to key
   const StringVector &sv = section (secname);
   if (!sv.size())
-    return "";
+    return false;
   const size_t l = dotpath.size() - (d - p); // key length
   for (auto kv : sv)
     if (kv.size() > l && kv[l] == '=' && memcmp (kv.data(), d, l) == 0)
-      return kv.substr (l + 1);
-  return "";
+      {
+        if (valuep)
+          *valuep = kv.substr (l + 1);
+        return true;
+      }
+  return false;
+}
+
+String
+IniFile::raw_value (const String &dotpath) const
+{
+  String v;
+  has_raw_value (dotpath, &v);
+  return v;
 }
 
 String
@@ -465,6 +482,14 @@ IniFile::cook_string (const String &input)
   return v;
 }
 
+bool
+IniFile::has_value (const String &dotpath, String *valuep) const
+{
+  const bool hasit = has_raw_value (dotpath, valuep);
+  if (valuep && hasit)
+    *valuep = cook_string (*valuep);
+  return hasit;
+}
 
 String
 IniFile::value_as_string (const String &dotpath) const

@@ -15,8 +15,8 @@ class IniFile {
   //bool        value           (const String &dotpath, const String &value);
   const StringVector& section   (const String &name) const;
 public:
-  explicit      IniFile         (const String &filename);       ///< Load INI file @a filename and construct IniFile.
-  explicit      IniFile         (Blob blob);                    ///< Construct IniFile from Blob.
+  explicit      IniFile         (const String &name, const String &inidata); ///< Load INI file from immediate @a data.
+  explicit      IniFile         (Blob blob);                    ///< Load INI file from Blob.
   explicit      IniFile         (const IniFile &source);        ///< Copy constructor.
   IniFile&      operator=       (const IniFile &source);        ///< Assignment operator.
   //String      get             (const String &section, const String &key, const String &locale = "") const;
@@ -25,9 +25,13 @@ public:
   bool          has_section     (const String &section) const;  ///< Check presence of a section.
   StringVector  attributes      (const String &section) const;  ///< List all attributes available in @a section.
   bool          has_attribute   (const String &section, const String &key) const; ///< Return if @a section contains @a key.
+  bool          has_raw_value   (const String &dotpath,
+                                 String *valuep = NULL) const;  ///< Check and possibly retrieve raw value if present.
   String        raw_value       (const String &dotpath) const;  ///< Retrieve raw (uncooked) value of section.attribute[locale].
   StringVector  raw_values      () const;                       ///< List all section.attribute=value pairs.
   String        value_as_string (const String &dotpath) const;  ///< Retrieve value of section.attribute[locale].
+  bool          has_value       (const String &dotpath,
+                                 String *valuep = NULL) const;  ///< Check and possibly retrieve value if present.
   static String cook_string     (const String &input_string);   ///< Unquote contents of @a input_string;
 };
 
