@@ -312,6 +312,7 @@ split_string_tests (void)
   sv = string_split ("a;b;c", ";");
   TCMP (string_join ("//", sv), ==, "a//b//c");
   TCMP (string_join ("_", string_split ("a;b;c;", ";")), ==, "a_b_c_");
+  TCMP (string_join ("_", string_split ("a;b;c;d;e", ";", 2)), ==, "a_b_c;d;e");
   TCMP (string_join ("_", string_split (";;a;b;c", ";")), ==, "__a_b_c");
   TCMP (string_join ("+", string_split (" a  b \n c \t\n\r\f\v d")), ==, "a+b+c+d");
   TCMP (string_join ("^", Path::searchpath_split ("one;two;three;;")), ==, "one^two^three");
@@ -345,10 +346,14 @@ split_string_tests (void)
   TCMP (string_join (";", sv), ==, "a;;b;;c");
   string_vector_erase_empty (sv);
   TCMP (string_join (";", sv), ==, "a;b;c");
+  sv = string_split_any ("a, b, c", ", ", 1);
+  TCMP (string_join (";", sv), ==, "a; b, c");
   sv = string_split_any ("abcdef", "");
   TCMP (string_join (";", sv), ==, "a;b;c;d;e;f");
   string_vector_erase_empty (sv);
   TCMP (string_join (";", sv), ==, "a;b;c;d;e;f");
+  sv = string_split_any ("abcdef", "", 2);
+  TCMP (string_join (";", sv), ==, "a;b;cdef");
   sv = string_split_any ("  foo  , bar     , \t\t baz \n", ",");
   string_vector_lstrip (sv);
   TCMP (string_join (";", sv), ==, "foo  ;bar     ;baz \n");

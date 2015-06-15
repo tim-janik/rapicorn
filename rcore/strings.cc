@@ -192,18 +192,19 @@ string_locale_vprintf (const char *format, va_list vargs)
 }
 
 static StringVector
-string_whitesplit (const String &string)
+string_whitesplit (const String &string, size_t maxn)
 {
   static const char whitespaces[] = " \t\n\r\f\v";
   StringVector sv;
-  uint i, l = 0;
-  for (i = 0; i < string.size(); i++)
+  size_t i, l = 0;
+  for (i = 0; i < string.size() && sv.size() < maxn; i++)
     if (strchr (whitespaces, string[i]))
       {
         if (i > l)
           sv.push_back (string.substr (l, i - l));
         l = i + 1;
       }
+  i = string.size();
   if (i > l)
     sv.push_back (string.substr (l, i - l));
   return sv;
@@ -212,19 +213,20 @@ string_whitesplit (const String &string)
 /// Split a string, using @a splitter as delimiter.
 /// Passing "" as @a splitter will split the string at whitespace positions.
 StringVector
-string_split (const String &string, const String &splitter)
+string_split (const String &string, const String &splitter, size_t maxn)
 {
   if (splitter == "")
-    return string_whitesplit (string);
+    return string_whitesplit (string, maxn);
   StringVector sv;
-  uint i, l = 0, k = splitter.size();
-  for (i = 0; i < string.size(); i++)
+  size_t i, l = 0, k = splitter.size();
+  for (i = 0; i < string.size() && sv.size() < maxn; i++)
     if (string.substr (i, k) == splitter)
       {
         if (i >= l)
           sv.push_back (string.substr (l, i - l));
         l = i + k;
       }
+  i = string.size();
   if (i >= l)
     sv.push_back (string.substr (l, i - l));
   return sv;
@@ -233,25 +235,29 @@ string_split (const String &string, const String &splitter)
 /// Split a string, using any of the @a splitchars as delimiter.
 /// Passing "" as @a splitter will split the string between all position.
 StringVector
-string_split_any (const String &string, const String &splitchars)
+string_split_any (const String &string, const String &splitchars, size_t maxn)
 {
   StringVector sv;
+  size_t i, l = 0;
   if (splitchars.empty())
     {
-      for (uint i = 0; i < string.size(); i++)
+      for (i = 0; i < string.size() && sv.size() < maxn; i++)
         sv.push_back (string.substr (i, 1));
+      if (i < string.size())
+        sv.push_back (string.substr (i, string.size() - i));
     }
   else
     {
       const char *schars = splitchars.c_str();
-      uint i, l = 0;
-      for (i = 0; i < string.size(); i++)
+      l = 0;
+      for (i = 0; i < string.size() && sv.size() < maxn; i++)
         if (strchr (schars, string[i]))
           {
             if (i >= l)
               sv.push_back (string.substr (l, i - l));
             l = i + 1;
           }
+      i = string.size();
       if (i >= l)
         sv.push_back (string.substr (l, i - l));
     }
