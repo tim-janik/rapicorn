@@ -302,6 +302,15 @@ string_conversions (void)
              string_from_cquote (string_to_cquote (quotetests[i])).c_str());
   TCMP (string_substitute_char ("foo", '3', '4'), ==, "foo");
   TCMP (string_substitute_char ("foobar", 'o', '_'), ==, "f__bar");
+  TCMP (string_to_double ("1.0"), ==, 1.0);
+  TCMP (string_to_double ("0.5"), ==, 0.5);
+  TCMP (string_to_double ("-1.0"), ==, -1.0);
+  TCMP (string_to_double ("-0.5"), ==, -0.5);
+  double tfloat;
+  tfloat = string_to_double ("+NAN");
+  assert (isnan (tfloat) && std::signbit (tfloat) == 0);
+  tfloat = string_to_double ("-NAN");
+  assert (isnan (tfloat) && std::signbit (tfloat) == 1);
 }
 REGISTER_TEST ("Strings/conversions", string_conversions);
 

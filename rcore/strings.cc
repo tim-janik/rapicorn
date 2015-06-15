@@ -4,6 +4,7 @@
 #include "main.hh"
 
 #include <cstring>
+#include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
 #include <libintl.h>
@@ -409,13 +410,28 @@ string_from_int (int64 value)
   return string_format ("%d", value);
 }
 
+static long double
+libc_strtold (const char *nptr, char **endptr)
+{
+  const long double result = strtold (nptr, endptr);
+  if (isnan (result) && std::signbit (result) == 0)
+    {
+      const char *p = nptr;
+      while (isspace (*p))
+        p++;
+      if (strncasecmp (p, "-nan", 4) == 0)
+        return -result; // glibc-2.19 doesn't get the NAN sign right
+    }
+  return result;
+}
+
 /// Parse a double from a string ala strtod(), trying locale specific characters and POSIX/C formatting.
 long double
 posix_locale_strtold (const char *nptr, char **endptr)
 {
   ScopedPosixLocale posix_locale_scope; // pushes POSIX/C locale for this scope
   char *fail_pos = NULL;
-  const long double val = strtold (nptr, &fail_pos);
+  const long double val = libc_strtold (nptr, &fail_pos);
   if (endptr)
     *endptr = fail_pos;
   return val;
@@ -430,7 +446,7 @@ current_locale_strtold (const char *nptr, char **endptr)
   if (fail_pos_1 && fail_pos_1[0] != 0)
     {
       char *fail_pos_2 = NULL;
-      const long double val_2 = strtold (nptr, &fail_pos_2);
+      const long double val_2 = libc_strtold (nptr, &fail_pos_2);
       if (fail_pos_2 > fail_pos_1)
         {
           if (endptr)
