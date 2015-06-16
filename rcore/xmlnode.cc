@@ -114,15 +114,15 @@ XmlNode::flags (uint64 flagvalues)
   set_data (&xml_node_flags_key, flagvalues);
 }
 
-const XmlNode*
-XmlNode::first_child (const String &element_name) const
+XmlNodeP
+XmlNode::find_child (const std::string &name) const
 {
-  ConstNodes *c = &children();
-  if (c)
-    for (ConstNodes::const_iterator it = c->begin(); it != c->end(); it++)
-      if (element_name == (*it)->name())
-        return &**it;
-  return NULL;
+  ConstNodes *node_children = &children();
+  if (node_children)
+    for (auto &xchild : *node_children)
+      if (xchild->name() == name)
+        return xchild;
+  return XmlNodeP();
 }
 
 void

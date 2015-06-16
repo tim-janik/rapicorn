@@ -53,7 +53,7 @@ public:
   virtual ConstNodes&   children        () const = 0;
   ConstChildIter        children_begin  () const { return children().begin(); }
   ConstChildIter        children_end    () const { return children().end(); }
-  const XmlNode*        first_child     (const String   &element_name) const;
+  XmlNodeP              find_child      (const String   &name) const;
   virtual bool          add_child       (XmlNode        &child) = 0;
   virtual bool          del_child       (XmlNode        &child) = 0;
   void                  steal_children  (XmlNode        &parent);
