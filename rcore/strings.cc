@@ -500,6 +500,10 @@ string_to_double (const char *dblstring, const char **endptr)
 String
 string_from_float (float value)
 {
+  if (isnan (value))
+    return std::signbit (value) ? "-NaN" : "+NaN";
+  if (isinf (value))
+    return std::signbit (value) ? "-Infinity" : "+Infinity";
   return string_format ("%.7g", value);
 }
 
@@ -507,6 +511,10 @@ string_from_float (float value)
 String
 string_from_double (double value)
 {
+  if (isnan (value))
+    return std::signbit (value) ? "-NaN" : "+NaN";
+  if (isinf (value))
+    return std::signbit (value) ? "-Infinity" : "+Infinity";
   return string_format ("%.17g", value);
 }
 
