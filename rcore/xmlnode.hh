@@ -56,14 +56,9 @@ public:
   virtual bool          del_child       (XmlNode        &child) = 0;
   void                  steal_children  (XmlNode        &parent);
   // Node Creation
-  static XmlNodeP       create_text     (const String   &utf8text,
-                                         uint            line,
-                                         uint            _char,
-                                         const String   &file);
-  static XmlNodeP       create_parent   (const String   &element_name,
-                                         uint            line,
-                                         uint            _char,
-                                         const String   &file);
+  XmlNodeP              create_child    (const String &element_name, uint line, uint _char, const String &file);
+  static XmlNodeP       create_text     (const String &utf8text, uint line, uint _char, const String &file);
+  static XmlNodeP       create_parent   (const String &element_name, uint line, uint _char, const String &file);
   // Writing and Parsing
   typedef std::function<  String        (const XmlNode &node,
                                          size_t         indent,

@@ -284,6 +284,14 @@ public:
 namespace Rapicorn {
 
 XmlNodeP
+XmlNode::create_child (const String &element_name, uint line, uint _char, const String &file)
+{
+  XmlNodeP xchild = create_parent (element_name, line, _char, file);
+  add_child (*xchild);
+  return xchild;
+}
+
+XmlNodeP
 XmlNode::create_text (const String &utf8text,
                       uint          line,
                       uint          _char,
