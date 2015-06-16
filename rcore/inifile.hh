@@ -6,6 +6,8 @@
 
 namespace Rapicorn {
 
+// == IniFile ==
+/// Class to parse INI configuration file sections and values.
 class IniFile {
   typedef std::map<String,StringVector> SectionMap;
   SectionMap                    sections_;
@@ -35,6 +37,22 @@ public:
   static String cook_string     (const String &input_string);   ///< Unquote contents of @a input_string;
 };
 
+
+// == IniWriter ==
+/// Class to write INI configuration file sections and values.
+class IniWriter {
+  struct Section {
+    String name;
+    StringVector entries;
+  };
+  std::vector<Section> sections_;
+  Section*      find_section    (String name, bool create);
+  size_t        find_entry      (Section &section, String name, bool create);
+public:
+  void          set             (String key, String value);
+  String        output          ();
+};
+
 } // Rapicorn
 
-#endif /* __RAPICORN_INIFILE_HH__ */
+#endif // __RAPICORN_INIFILE_HH__

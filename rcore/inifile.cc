@@ -11,11 +11,11 @@
 namespace Rapicorn {
 
 /** @class IniFile
- * Configuration parser for INI files.
  * This class parses configuration files, commonly known as INI files.
  * The files contain "[Section]" markers and "attribute=value" definitions.
  * Comment lines are preceeded by a hash "#" sign.
  * For a detailed reference, see: http://wikipedia.org/wiki/INI_file <BR>
+ * To write INI files, refer to the IniWriter class.
  * Localization of attributes is supported with the "attribute[locale]=value" syntax, in accordance
  * with the desktop file spec: http://freedesktop.org/Standards/desktop-entry-spec <BR>
  * Example:
@@ -34,7 +34,6 @@ namespace Rapicorn {
    - support merging of duplicates
    - support %(var) interpolation like Pyton's configparser.ConfigParser
    - parse into vector<IniEntry> which are: { kind=(section|assignment|other); String text, comment; }
-   - support storage, based on vector<IniEntry>
  */
 
 static bool
@@ -497,6 +496,90 @@ IniFile::value_as_string (const String &dotpath) const
   String raw = raw_value (dotpath);
   String v = cook_string (raw);
   return v;
+}
+
+
+// == IniWriter ==
+/** @class IniWriter
+ * This class implements a simple section and value syntax writer as used in INI files.
+ * For a detailed reference, see: http://wikipedia.org/wiki/INI_file <BR>
+ * To parse the output of this class, refer to the IniFile class.
+ */
+IniWriter::Section*
+IniWriter::find_section (String name, bool create)
+{
+  for (size_t i = 0; i < sections_.size(); i++)
+    if (sections_[i].name == name)
+      return &sections_[i];
+  if (create)
+    {
+      const size_t i = sections_.size();
+      sections_.resize (i + 1);
+      sections_[i].name = name;
+      return &sections_[i];
+    }
+  return NULL;
+}
+
+size_t
+IniWriter::find_entry (IniWriter::Section &section, String name, bool create)
+{
+  for (size_t i = 0; i < section.entries.size(); i++)
+    if (section.entries[i].size() > name.size() &&
+        section.entries[i][name.size()] == '=' &&
+        section.entries[i].compare (0, name.size(), name) == 0)
+      return i;
+  if (create)
+    {
+      const size_t i = section.entries.size();
+      section.entries.push_back (name + "=");
+      return i;
+    }
+  return size_t (-1);
+}
+
+/// Set (or add) a value with INI file semantics: @a section.key = @a value.
+void
+IniWriter::set (String key, String value)
+{
+  const size_t p = key.rfind ('.');
+  if (p <= 0 || p + 1 >= key.size())
+    {
+      critical ("%s: invalid key: %s", __func__, key); // FIXME: strict
+      return;   // invalid entry
+    }
+  Section *section = find_section (key.substr (0, p), true);
+  const String entry_key = key.substr (p + 1);
+  const size_t idx = find_entry (*section, entry_key, true);
+  section->entries[idx] = entry_key + "=" + value;
+}
+
+/// Generate INI file syntax for all values store in the class.
+String
+IniWriter::output ()
+{
+  String s;
+  for (size_t i = 0; i < sections_.size(); i++)
+    if (!sections_[i].entries.empty())
+      {
+        String sec = sections_[i].name;
+        const size_t d = sec.find ('.');
+        if (d >= 0 && d < sec.size())
+          sec = sec.substr (0, d) + " " + string_to_cquote (sec.substr (d + 1));
+        s += String ("[") + sec + "]\n";
+        for (size_t j = 0; j < sections_[i].entries.size(); j++)
+          {
+            const String raw = sections_[i].entries[j];
+            const size_t p = raw.find ('=');
+            const String k = raw.substr (0, p);
+            String v = raw.substr (p + 1);
+            static String allowed_chars = string_set_ascii_alnum() + "<>,;.:-_~*/+^!$=?";
+            if (!string_is_canonified (v, allowed_chars))
+              v = string_to_cquote (v);
+            s += string_format ("\t%s = %s\n", k, v);
+          }
+      }
+  return s;
 }
 
 } // Rapicorn
