@@ -23,6 +23,7 @@
 #include <rcore/quicktimer.hh>
 #include <rcore/randomhash.hh>
 #include <rcore/thread.hh>
+#include <rcore/visitor.hh>
 #include <rcore/math.hh>
 #include <rcore/unicode.hh>
 #include <rcore/utilities.hh>
