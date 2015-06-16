@@ -315,6 +315,10 @@ class Generator:
     s += '}\n'
     return s
   def generate_enum_impl (self, type_info):
+    def simple_quote (string):
+      string = re.sub (r'\\', r'\\\\', string)
+      string = re.sub ('"', r'\\"', string)
+      return '"' + string + '"'
     s = '\n'
     enum_ns, enum_class = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
     l = []
@@ -326,11 +330,9 @@ class Generator:
       (ident, label, blurb, number) = opt
       # number = self.c_long_postfix (number)
       number = enum_ns + '::' + ident
-      ident = TypeMap.cquote (ident)
-      label = TypeMap.cquote (label)
-      label = "NULL" if label == '""' else label
-      blurb = TypeMap.cquote (blurb)
-      blurb = "NULL" if blurb == '""' else blurb
+      ident = simple_quote (ident)
+      label = label if label else "NULL"
+      blurb = blurb if blurb else "NULL"
       s += '    { %s,\t%s, %s, %s },\n' % (number, ident, label, blurb)
     s += '    { 0,\tNULL, NULL, NULL }     // sentinel\n  };\n'
     s += '  return values;\n}\n'
