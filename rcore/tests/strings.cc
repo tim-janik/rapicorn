@@ -311,6 +311,8 @@ string_conversions (void)
   assert (isnan (tfloat) && std::signbit (tfloat) == 0);
   tfloat = string_to_double ("-NAN");
   assert (isnan (tfloat) && std::signbit (tfloat) == 1);
+  TCMP (string_capitalize ("fOO bar"), ==, "Foo Bar");
+  TCMP (string_capitalize ("foo BAR BAZ", 2), ==, "Foo Bar BAZ");
 }
 REGISTER_TEST ("Strings/conversions", string_conversions);
 

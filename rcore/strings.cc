@@ -119,7 +119,7 @@ String
 string_tolower (const String &str)
 {
   String s (str);
-  for (uint i = 0; i < s.size(); i++)
+  for (size_t i = 0; i < s.size(); i++)
     s[i] = Unicode::tolower (s[i]);
   return s;
 }
@@ -129,7 +129,7 @@ String
 string_toupper (const String &str)
 {
   String s (str);
-  for (uint i = 0; i < s.size(); i++)
+  for (size_t i = 0; i < s.size(); i++)
     s[i] = Unicode::toupper (s[i]);
   return s;
 }
@@ -139,8 +139,31 @@ String
 string_totitle (const String &str)
 {
   String s (str);
-  for (uint i = 0; i < s.size(); i++)
+  for (size_t i = 0; i < s.size(); i++)
     s[i] = Unicode::totitle (s[i]);
+  return s;
+}
+
+/// Capitalize words, so the first letter is upper case, the rest lower case.
+String
+string_capitalize (const String &str, size_t maxn)
+{
+  String s (str);
+  bool wasalpha = false;
+  for (size_t i = 0; i < s.size(); i++)
+    {
+      const bool atalpha = isalpha (s[i]);
+      if (!wasalpha && atalpha)
+        {
+          if (maxn == 0)
+            break;
+          s[i] = Unicode::toupper (s[i]);
+          maxn--;
+        }
+      else
+        s[i] = Unicode::tolower (s[i]);
+      wasalpha = atalpha;
+    }
   return s;
 }
 
