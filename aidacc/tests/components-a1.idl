@@ -2,7 +2,7 @@
 
 namespace A1  {
 
-enum CountEnum { ONE, TWO, THREE };
+enum CountEnum { ZERO = 0, ONE, TWO, THREE };
 
 record Location {
   float64 x;
