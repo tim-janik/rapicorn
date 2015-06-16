@@ -99,21 +99,6 @@ XmlNode::set_parent (XmlNode *c,
   c->parent_ = p;
 }
 
-static DataKey<uint64> xml_node_flags_key;
-
-uint64
-XmlNode::flags () const
-{
-  const uint64 flagvalues = get_data (&xml_node_flags_key);
-  return flagvalues;
-}
-
-void
-XmlNode::flags (uint64 flagvalues)
-{
-  set_data (&xml_node_flags_key, flagvalues);
-}
-
 XmlNodeP
 XmlNode::find_child (const std::string &name) const
 {
@@ -136,30 +121,6 @@ XmlNode::steal_children (XmlNode &parent)
     parent.del_child (*cl[i-1]);
   for (auto c : temp)
     add_child (*c);
-}
-
-void
-XmlNode::break_after (bool newline_after_tag)
-{
-  flags (4 | flags());
-}
-
-bool
-XmlNode::break_after () const
-{
-  return !!(4 & flags());
-}
-
-void
-XmlNode::break_within (bool newlines_around_chidlren)
-{
-  flags (8 | flags());
-}
-
-bool
-XmlNode::break_within () const
-{
-  return !!(8 & flags());
 }
 
 } // Rapicorn
@@ -424,7 +385,7 @@ node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t 
     {
       if (include_outer)
         s += ">";
-      bool need_break = include_outer && node.break_within();
+      bool need_break = include_outer;
       bool last_text = false;
       for (size_t i = 0; i < cl.size(); i++)
         {
@@ -434,10 +395,10 @@ node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t 
             s += wrapper (*cl[i], indent + 2, true, recursion_depth - 1);
           else
             s += cl[i]->xml_string (indent + 2, true, recursion_depth - 1, wrapper, true);
-          need_break = cl[i]->break_after();
+          need_break = !cl[i]->istext();
           last_text = cl[i]->istext();
         }
-      if (include_outer && node.break_within() && !last_text)
+      if (include_outer && !last_text)
         s += "\n" + istr;
       if (include_outer)
         s += "</" + node.xml_escape (node.name()) + ">";
