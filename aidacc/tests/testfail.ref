@@ -73,9 +73,7 @@
 .../testfail.idl:59:33: TypeError: redefining existing identifier: AA
 >  enum Enu1 { AA }; enum Enu1 { AA }; // type redefinition
 >                                  ^
-.../testfail.idl:67:71: TypeError: invalid type definition: = Num ('"x"', '"X coord"', 0, 0, 100.0, 0.5, '"ro"')
->  ... s = Num ("x", "X coord", 0, 0, 100.0, +.5, "ro"); }; // type/initializer mismatch
->                                                          ^
+.../testfail.idl:67: invalid type definition: = Num ("x", "X coord", 0, 0, 100.0, 0.5, "ro")
 .../testfail.idl:69:29: Trying to find one of ...
 >  interface I { int32 method (,); }; // invalid method arg separator
 >                              ^

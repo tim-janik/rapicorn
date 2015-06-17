@@ -16,8 +16,10 @@ auxillary_initializers = {
   (Decls.STREAM,    'Stream')   : ('label', 'blurb', 'hints'),
 }
 
-class Error (Exception):
-  pass
+class AuxError (Exception):
+  def __init__ (self, location, message):
+    super (Exception, self).__init__ (message)
+    self.location = location
 
 def auxillary_initializer_dict():
   # we need to merge dicts no earlier than before the first call, to avoid depending on extension load order
@@ -28,13 +30,15 @@ def auxillary_initializer_dict():
     auxillary_initializer_dict.cached_dict = d
   return auxillary_initializer_dict.cached_dict
 
-def parse2dict (type, name, arglist):
+def parse2dict (type_info, name, arglist):
   # find matching initializer
-  adef = auxillary_initializer_dict().get ((type, name), None)
+  adef = auxillary_initializer_dict().get ((type_info.storage, name), None)
   if not adef:
-    raise Error ('invalid type definition: = %s%s%s' % (name, name and ' ', tuple (arglist)))
+    raise AuxError (type_info.location, 'invalid type definition: = %s%s(%s)' %
+                    (name, name and ' ', ', '.join (str (a) for a in arglist)))
   if len (arglist) > len (adef):
-    raise Error ('too many args for type definition: = %s%s%s' % (name, name and ' ', tuple (arglist)))
+    raise AuxError (type_info.location, 'too many args for type definition: = %s%s(%s)' %
+                    (name, name and ' ', ', '.join (str (a) for a in arglist)))
   # assign arglist to matching initializer positions
   adict = {}
   for i in range (0, len (arglist)):
@@ -49,4 +53,4 @@ def parse2dict (type, name, arglist):
   return adict
 
 # define module exports
-__all__ = ['auxillary_initializers', 'parse2dict', 'Error']
+__all__ = ['auxillary_initializers', 'parse2dict', 'AuxError']
