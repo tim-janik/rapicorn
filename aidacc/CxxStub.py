@@ -1357,8 +1357,6 @@ def generate (namespace_list, **args):
       I_prefix_postfix = (I_prefix_postfix[0], opt[14:])
     if opt.startswith ('iface-prefix='):
       I_prefix_postfix = (opt[13:], I_prefix_postfix[1])
-    if opt.startswith ('iface-base='):
-      gg.iface_base = opt[11:]
     if opt.startswith ('property-list=') and opt[14:].lower() in ('0', 'no', 'none', 'false'):
       gg.property_list = ""
   for ifile in config['insertions']:
