@@ -236,7 +236,7 @@ Heritage::resolve_color (const String  &color_name,
 {
   if (color_name[0] == '#')
     {
-      uint32 argb = string_to_int (&color_name[1], 16);
+      uint32 argb = string_to_int (&color_name[1], NULL, 16);
       Color c (argb);
       /* invert alpha (transparency -> opacity) */
       c.alpha (0xff - c.alpha());
