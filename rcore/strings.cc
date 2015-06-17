@@ -389,13 +389,23 @@ string_from_bool (bool value)
 
 /// Parse a string into a 64bit unsigned integer, optionally specifying the expected number base.
 uint64
-string_to_uint (const String &string, uint base)
+string_to_uint (const String &string, size_t *consumed, uint base)
 {
-  const char *p = string.c_str();
+  const char *const start = string.c_str(), *p = start;
   while (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')
     p++;
-  bool hex = p[0] == '0' && (p[1] == 'X' || p[1] == 'x');
-  return strtoull (hex ? p + 2 : p, NULL, hex ? 16 : base);
+  const bool hex = p[0] == '0' && (p[1] == 'X' || p[1] == 'x');
+  const char *const number = hex ? p + 2 : p;
+  char *endptr = NULL;
+  const uint64 result = strtoull (number, &endptr, hex ? 16 : base);
+  if (consumed)
+    {
+      if (!endptr || endptr <= number)
+        *consumed = 0;
+      else
+        *consumed = endptr - start;
+    }
+  return result;
 }
 
 /// Convert a 64bit unsigned integer into a string.
@@ -417,13 +427,23 @@ string_has_int (const String &string)
 
 /// Parse a string into a 64bit integer, optionally specifying the expected number base.
 int64
-string_to_int (const String &string, uint base)
+string_to_int (const String &string, size_t *consumed, uint base)
 {
-  const char *p = string.c_str();
+  const char *const start = string.c_str(), *p = start;
   while (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')
     p++;
-  bool hex = p[0] == '0' && (p[1] == 'X' || p[1] == 'x');
-  return strtoll (hex ? p + 2 : p, NULL, hex ? 16 : base);
+  const bool hex = p[0] == '0' && (p[1] == 'X' || p[1] == 'x');
+  const char *const number = hex ? p + 2 : p;
+  char *endptr = NULL;
+  const int64 result = strtoll (number, &endptr, hex ? 16 : base);
+  if (consumed)
+    {
+      if (!endptr || endptr <= number)
+        *consumed = 0;
+      else
+        *consumed = endptr - start;
+    }
+  return result;
 }
 
 /// Convert a 64bit signed integer into a string.

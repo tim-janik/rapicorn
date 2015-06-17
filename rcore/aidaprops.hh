@@ -138,12 +138,12 @@ create_property (void (Class::*setter) (const String&), String (Class::*getter) 
 // == Enum Properties ==
 template<class Class, typename Type>
 struct PropertyEnum : Property {
-  const EnumValue *const enum_values;
+  const EnumInfo enum_;
   void (Class::*setter) (Type);
   Type (Class::*getter) () const;
   PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) () const,
                 const char *cident, const char *clabel, const char *cblurb,
-                const EnumValue *values, const char *chints);
+                const EnumInfo enuminfo, const char *chints);
   virtual void   set_value   (PropertyHostInterface &obj, const String &svalue);
   virtual String get_value   (PropertyHostInterface &obj);
   virtual bool   get_range   (PropertyHostInterface &obj, double &minimum, double &maximum, double &stepping) { return false; }
@@ -153,7 +153,7 @@ template<class Class, typename Type,
 create_property (void (Class::*setter) (Type), Type (Class::*getter) () const,
                  const char *ident, const char *label, const char *blurb, const char *hints)
 {
-  return new PropertyEnum<Class,Type> (setter, getter, ident, label, blurb, enum_value_list<Type>(), hints);
+  return new PropertyEnum<Class,Type> (setter, getter, ident, label, blurb, enum_info<Type>(), hints);
 }
 
 /* --- implementations --- */
@@ -251,9 +251,9 @@ PropertyString<Class>::get_value (PropertyHostInterface &obj)
 template<class Class, typename Type>
 PropertyEnum<Class,Type>::PropertyEnum (void (Class::*csetter) (Type), Type (Class::*cgetter) () const,
                                         const char *cident, const char *clabel, const char *cblurb,
-                                        const EnumValue *values, const char *chints) :
+                                        const EnumInfo enuminfo, const char *chints) :
   Property (cident, clabel, cblurb, chints),
-  enum_values (values),
+  enum_ (enuminfo),
   setter (csetter),
   getter (cgetter)
 {}
@@ -262,7 +262,7 @@ template<class Class, typename Type> void
 PropertyEnum<Class,Type>::set_value (PropertyHostInterface &obj, const String &svalue)
 {
   String error_string;
-  const EnumValue *ev = enum_value_find (enum_values, svalue.c_str());
+  const EnumValue *ev = enum_.find_value (svalue);
   if (!ev)
     print_warning (String (__PRETTY_FUNCTION__) + ": invalid enum value name: " + svalue);
   Type v = Type (ev ? ev->value : 0);
@@ -275,7 +275,7 @@ PropertyEnum<Class,Type>::get_value (PropertyHostInterface &obj)
 {
   Class *instance = dynamic_cast<Class*> (&obj);
   Type v = (instance->*getter) ();
-  const EnumValue *ev = enum_value_find (enum_values, v);
+  const EnumValue *ev = enum_.find_value (v);
   if (!ev)
     print_warning (String (__PRETTY_FUNCTION__) + ": unrecognized enum value");
   return ev ? ev->ident : "";

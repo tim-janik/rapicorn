@@ -56,21 +56,21 @@ REGISTER_UITHREAD_TEST ("Server/Application ListModelRelay", test_application_li
 static void
 test_idl_enums()
 {
-  const Aida::EnumValue *avalues = Aida::enum_value_list<AnchorType>();
+  const Aida::EnumInfo einfo = Aida::enum_info<AnchorType>();
   const Aida::EnumValue *ev;
-  ev = enum_value_find (avalues, 0); assert (ev && ev->ident == String ("ANCHOR_NONE"));
-  ev = enum_value_find (avalues, "ANCHOR_CENTER"); assert (ev && ev->value == 1);
-  // assert (avalues.enum_combinable() == false);
-  ev = enum_value_find (avalues, "ANCHOR_NORTH");
+  ev = einfo.find_value (0); assert (ev && ev->ident == String ("ANCHOR_NONE"));
+  ev = einfo.find_value ("ANCHOR_CENTER"); assert (ev && ev->value == 1);
+  assert (einfo.flags_enum() == false);
+  ev = einfo.find_value ("ANCHOR_NORTH");
   assert (ev && ev->ident == String ("ANCHOR_NORTH"));
-  // uint64 amask = avalues.enum_parse ("south-west");
-  // assert (amask == ANCHOR_SOUTH_WEST);
-  const Aida::EnumValue *svalues = Aida::enum_value_list<StateType>();
-  ev = enum_value_find (svalues, STATE_INSENSITIVE); assert (ev && ev->ident == String ("STATE_INSENSITIVE"));
-  // assert (svalues.enum_combinable() == true);
-  //uint64 smask = st.enum_parse ("STATE_INSENSITIVE|STATE_HOVER|STATE_ACTIVE");
+  const uint64 evalue = einfo.value_from_string ("south-west");
+  assert (evalue == ANCHOR_SOUTH_WEST);
+  const Aida::EnumInfo sinfo = Aida::enum_info<StateType>();
+  ev = sinfo.find_value (STATE_INSENSITIVE); assert (ev && ev->ident == String ("STATE_INSENSITIVE"));
+  assert (sinfo.flags_enum() == true);
+  //const uint64 smask = sinfo.value_from_string ("STATE_INSENSITIVE|STATE_HOVER|STATE_ACTIVE"); // FIXME
   //assert (smask == (STATE_INSENSITIVE | STATE_HOVER | STATE_ACTIVE));
-  //assert (st.enum_string (STATE_INSENSITIVE|STATE_ACTIVE) == "STATE_ACTIVE|STATE_INSENSITIVE");
+  //assert (sinfo.value_to_string (STATE_INSENSITIVE|STATE_ACTIVE) == "STATE_ACTIVE|STATE_INSENSITIVE");
 }
 REGISTER_UITHREAD_TEST ("Server/IDL Enums", test_idl_enums);
 

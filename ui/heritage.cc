@@ -236,13 +236,13 @@ Heritage::resolve_color (const String  &color_name,
 {
   if (color_name[0] == '#')
     {
-      uint32 argb = string_to_int (&color_name[1], 16);
+      uint32 argb = string_to_int (&color_name[1], NULL, 16);
       Color c (argb);
       /* invert alpha (transparency -> opacity) */
       c.alpha (0xff - c.alpha());
       return state_color (c, state, color_type);
     }
-  const Aida::EnumValue *evalue = enum_value_find (Aida::enum_value_list<ColorType>(), color_name);
+  const Aida::EnumValue *evalue = Aida::enum_info<ColorType>().find_value (color_name);
   if (evalue)
     return get_color (state, ColorType (evalue->value));
   else

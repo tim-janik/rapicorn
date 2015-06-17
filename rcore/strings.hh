@@ -48,10 +48,10 @@ StringVector 			string_split_any         (const String &string, const String &sp
 String  			string_join              (const String &junctor, const StringVector &strvec);
 bool    			string_to_bool           (const String &string, bool fallback = false);
 String  			string_from_bool         (bool value);
-uint64  			string_to_uint           (const String &string, uint base = 10);
+uint64  			string_to_uint           (const String &string, size_t *consumed = NULL, uint base = 10);
 String  			string_from_uint         (uint64 value);
 bool    			string_has_int           (const String &string);
-int64   			string_to_int            (const String &string, uint base = 10);
+int64   			string_to_int            (const String &string, size_t *consumed = NULL, uint base = 10);
 String  			string_from_int          (int64 value);
 String  			string_from_float        (float value);
 double  			string_to_double         (const String &string);

@@ -72,12 +72,33 @@ struct EnumValue {
   constexpr EnumValue (int64 v, const char *vident, const char *vlabel, const char *vblurb) :
     value (v), ident (vident), label (vlabel), blurb (vblurb) {}
 };
+typedef std::vector<const EnumValue*> EnumValueVector;
 
-template<class Enum>
-const EnumValue* enum_value_list  () { return NULL; } ///< Template to be specialised for enums to introspect enum values.
-const EnumValue* enum_value_find  (const EnumValue *values, int64 value);        ///< Find first enum value equal to @a value.
-const EnumValue* enum_value_find  (const EnumValue *values, const String &name); ///< Find first enum value matching @a name.
-size_t           enum_value_count (const EnumValue *values);                     ///< Count number of enum values.
+// == Enum ==
+/// Class for enum type introspection.
+class EnumInfo {
+  const char      *const name_;
+  const EnumValue *values_;
+  const uint32_t   n_values_;
+  const bool       flags_;
+  explicit         EnumInfo ();
+  template<size_t N>
+  explicit         EnumInfo (const char *nm, const EnumValue (&ev)[N], bool f) : name_ (nm), values_ (ev), n_values_ (N), flags_ (f) {}
+public:
+  String           name              () const;                          ///< Retrieve the enum type name for this Enum.
+  const EnumValue* find_value        (const String &name) const;        ///< Find first enum value matching @a name.
+  const EnumValue* find_value        (int64        value) const;        ///< Find first enum value equal to @a value.
+  String           value_to_string   (int64        value) const;        ///< Create a string representing @a value.
+  int64            value_from_string (const String &valuestring) const; ///< Reconstruct an enum value from @a valuestring.
+  bool             flags_enum        () const;  ///< Whether enum values support bit combinations to form flags.
+  size_t           n_values          () const;  ///< The number of enum values defined for this Enum.
+  const EnumValue* values            () const;  ///< Get an enum value array with n_values() elements for this Enum.
+  EnumValueVector  value_vector      () const;  ///< Retrieve the list of possible enum values as a std::vector<>.
+  /// Template to be specialised by introspectable enums.
+  template<typename>
+  friend EnumInfo  enum_info         () { return EnumInfo (); }
+};
+
 
 // == TypeKind ==
 /// Classification enum for the underlying type.
@@ -99,7 +120,7 @@ enum TypeKind {
   REMOTE         = 'r', ///< Remote object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
-template<> const EnumValue* enum_value_list<TypeKind> ();
+template<> EnumInfo enum_info<TypeKind> ();
 
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 

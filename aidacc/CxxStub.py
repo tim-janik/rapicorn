@@ -22,6 +22,12 @@ rapicornsignal_boilerplate = r"""
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
+def type_name_parts (type_node, include_empty = False):
+  parts = [ns.name for ns in type_node.list_namespaces()] + [ type_node.name ]
+  if not include_empty:
+    parts = [p for p in parts if p]
+  return parts
+
 I_prefix_postfix = ('', 'Iface')
 
 class G4STUB: pass    # generate stub classes (remote handles)
@@ -31,6 +37,7 @@ class Generator:
   def __init__ (self, idl_file):
     assert len (idl_file) > 0
     self.ntab = 26
+    self.idcounter = 1001
     self.namespaces = []
     self.insertions = {}
     self.idl_file = idl_file
@@ -319,12 +326,13 @@ class Generator:
       string = re.sub (r'\\', r'\\\\', string)
       string = re.sub ('"', r'\\"', string)
       return '"' + string + '"'
-    s = '\n'
+    u_typename, c_typename = '__'.join (type_name_parts (type_info)), '::'.join (type_name_parts (type_info))
+    s, varray = '\n', '_aida_enumvalues_%u' % self.idcounter
+    self.idcounter += 1
     enum_ns, enum_class = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
-    l = []
-    s += 'template<> const EnumValue*\n'
-    s += 'enum_value_list<%s::%s> () {\n' % (enum_ns, enum_class)
-    s += '  static const EnumValue values[] = {\n'
+    s += 'template<> EnumInfo\n'
+    s += 'enum_info<%s> ()\n{\n' % c_typename
+    s += '  static const EnumValue %s[] = {\n' % varray
     import TypeMap
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
@@ -333,10 +341,12 @@ class Generator:
       ident = simple_quote (ident)
       label = label if label else "NULL"
       blurb = blurb if blurb else "NULL"
-      s += '    { %s,\t%s, %s, %s },\n' % (number, ident, label, blurb)
-    s += '    { 0,\tNULL, NULL, NULL }     // sentinel\n  };\n'
-    s += '  return values;\n}\n'
-    s += 'template const EnumValue* enum_value_list<%s::%s> ();\n' % (enum_ns, enum_class)
+      s += '    { %s, %s, %s, %s },\n' % (number, ident, label, blurb)
+    s += '  };\n'
+    """   template<> EnumInfo enum_info<X> () { return EnumInfo ("X", 3, xvalues, false); } """
+    s += '  return ::Rapicorn::Aida::EnumInfo ("%s", %s, %s);\n' % (c_typename, varray, int (type_info.combinable))
+    s += '} // specialization\n'
+    s += 'template EnumInfo enum_info<%s> (); // instantiation\n' % c_typename
     return s
   def digest2cbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
@@ -1082,7 +1092,7 @@ class Generator:
   def generate_enum_info_specialization (self, type_info):
     s = ''
     classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
-    s += 'template<> const EnumValue* enum_value_list<%s> ();\n' % classFull
+    s += 'template<> EnumInfo enum_info<%s> ();\n' % classFull
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')

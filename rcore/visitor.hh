@@ -139,14 +139,7 @@ public:
   template<class A> void
   visit_enum (A &a, Name name)
   {
-    const Rapicorn::Aida::EnumValue *evalues = Rapicorn::Aida::enum_value_list<A>();
-    const Rapicorn::Aida::EnumValue *ev = enum_value_find (evalues, a);
-    String v;
-    if (ev)
-      v += string_format ("%s", ev->ident);
-    else
-      v += string_format ("%zd", ssize_t (a));
-    iwriter_.set (key (name), v);
+    iwriter_.set (key (name), Rapicorn::Aida::enum_info<A>().value_to_string (a));
   }
   void
   visit_string (::std::string &a, Name name)
@@ -220,19 +213,9 @@ public:
   template<class A> void
   visit_enum (A &a, Name name)
   {
-    const Rapicorn::Aida::EnumValue *evalues = Rapicorn::Aida::enum_value_list<A>();
     String value;
-    const bool hasattr = ifile_.has_value (key (name), &value);
-    if (hasattr && evalues)
-      {
-        const Rapicorn::Aida::EnumValue *ev = enum_value_find (evalues, value);
-        if (ev)
-          a = (A) ev->value;
-        else
-          evalues = NULL; // try numeric
-      }
-    if (hasattr && !evalues)
-      a = (A) string_to_int (value);
+    if (ifile_.has_value (key (name), &value))
+      a = (A) Rapicorn::Aida::enum_info<A>().value_from_string (value);
   }
   void
   visit_string (::std::string &a, Name name)
@@ -306,14 +289,8 @@ public:
   template<class A> void
   visit_enum (A &a, Name name)
   {
-    const Rapicorn::Aida::EnumValue *evalues = Rapicorn::Aida::enum_value_list<A>();
-    const Rapicorn::Aida::EnumValue *ev = enum_value_find (evalues, a);
-    String value;
-    if (ev)
-      value = string_tolower (ev->ident);
-    else
-      value = string_format ("%zd", ssize_t (a));
-    xnode_->set_attribute (name, value);
+    String value = Rapicorn::Aida::enum_info<A>().value_to_string (a);
+    xnode_->set_attribute (name, string_tolower (value));
   }
   void
   visit_string (::std::string &a, Name name)
@@ -392,18 +369,8 @@ public:
   visit_enum (A &a, Name name)
   {
     String value;
-    const bool hasattr = xnode_->has_attribute (name, false, &value);
-    const Rapicorn::Aida::EnumValue *evalues = Rapicorn::Aida::enum_value_list<A>();
-    if (hasattr && evalues)
-      {
-        const Rapicorn::Aida::EnumValue *ev = enum_value_find (evalues, value);
-        if (ev)
-          a = (A) ev->value;
-        else
-          evalues = NULL; // try numeric
-      }
-    if (hasattr && !evalues)
-      a = (A) string_to_int (value);
+    if (xnode_->has_attribute (name, false, &value))
+      a = (A) Rapicorn::Aida::enum_info<A>().value_from_string (value);
   }
   void
   visit_string (::std::string &a, Name name)
