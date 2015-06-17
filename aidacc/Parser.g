@@ -470,8 +470,8 @@ rule enumerator_decl:
           )
         ]                                       {{ return yy.nsadd_evalue (l[0], l[2], l[3], l[1]) }}
 rule enumerator_args:
-        'Enum' '\(' expression                  {{ l = [ expression ] }}
-                                                {{ if TS (expression): l = [ None ] + l }}
+        'Enum' '\(' expression                  {{ l = [ expression ] }} # first argument maybe numeric
+                                                {{ if TS (expression): l = [ None ] + l }} # or skipped
         [   ',' expression                      {{ AS (expression); l.append (expression) }}
         ] [ ',' expression                      {{ if len (l) >= 3: raise OverflowError ("too many arguments") }}
                                                 {{ AS (expression); l.append (expression) }}
