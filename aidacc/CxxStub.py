@@ -546,10 +546,8 @@ class Generator:
     s += '; \t///< %s\n' % copydoc
     return s
   def generate_aida_connection_impl (self, class_info):
-    precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    assert not bases (class_info) # must be non-derived type
     s, classC = '', self.C (class_info)
-    if not ddc:
-      return s
     s += 'Rapicorn::Aida::BaseConnection*\n'
     s += '%s::__aida_connection__()\n{\n' % classC
     if self.gen_mode == G4SERVANT:
@@ -616,9 +614,11 @@ class Generator:
     s += '  return thl;\n'
     s += '}\n'
     return s
-  def generate_server_class_methods (self, class_info):
+  def generate_server_class_methods (self, tp):
     assert self.gen_mode == G4SERVANT
-    s, classC, classH = '\n', self.C (class_info), self.C4client (class_info)
+    s, classC, classH = '\n', self.C (tp), self.C4client (tp)
+    if not bases (tp):
+      s += self.generate_server_base_class_methods (tp)
     s += '%s::%s ()' % (classC, classC) # ctor
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % (classC, classC) # dtor
@@ -638,15 +638,18 @@ class Generator:
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
     s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr).get();\n' % classC
     s += '}\n'
-    s += self.generate_aida_connection_impl (class_info)
     s += 'Rapicorn::Aida::TypeHashList\n'
     s += '%s::__aida_typelist__ () const\n{\n' % classC
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    ancestors = self.class_ancestry (class_info)
+    ancestors = self.class_ancestry (tp)
     for an in ancestors:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
     s += '  return thl;\n'
     s += '}\n'
+    return s
+  def generate_server_base_class_methods (self, tp):
+    s, classC = '', self.C (tp)
+    s += self.generate_aida_connection_impl (tp)
     return s
   def generate_server_list_properties (self, class_info):
     def fill_range (ptype, hints):
@@ -853,20 +856,20 @@ class Generator:
     s += '  return &rb;\n'
     s += '}\n'
     return s
-  def generate_server_list_types (self, class_info, reglines):
+  def generate_server_list_types (self, tp, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__aida_call__%s____aida_typelist__' % class_info.name
-    digest = self.list_types_digest (class_info)
+    dispatcher_name = '__aida_call__%s____aida_typelist__' % tp.name
+    digest = self.list_types_digest (tp)
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
     s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    s += '  %s *self;\n' % self.C (class_info)  # fetch self
+    s += '  %s *self;\n' % self.C (tp)  # fetch self
     s += '  fbr.skip_header();\n'
-    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
+    s += self.generate_proto_pop_args ('fbr', tp, '', [('self', tp)])
     # support self==NULL here, to allow invalid cast handling at the client
     s += '  if (self) // guard against invalid casts\n'
     s += '    thl = self->__aida_typelist__();\n'
@@ -1285,7 +1288,8 @@ class Generator:
           continue
         s += self.open_namespace (tp)
         if tp.storage == Decls.INTERFACE:
-          s += self.generate_server_list_types (tp, reglines)
+          if not bases (tp):
+            s += self.generate_server_list_types (tp, reglines)
           for fl in tp.fields:
             s += self.generate_server_property_getter (tp, fl[0], fl[1], reglines)
             s += self.generate_server_property_setter (tp, fl[0], fl[1], reglines)

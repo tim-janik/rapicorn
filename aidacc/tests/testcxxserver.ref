@@ -1227,6 +1227,11 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIfaceP&);
 
 namespace MandatoryNamespace {
 
+Rapicorn::Aida::BaseConnection*
+I_FirstInterfaceIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_FirstInterfaceIface::I_FirstInterfaceIface ()
 {}
 I_FirstInterfaceIface::~I_FirstInterfaceIface ()
@@ -1250,11 +1255,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_FirstInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_FirstInterfaceIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_FirstInterfaceIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_FirstInterfaceIface::__aida_typelist__ () const
@@ -1757,6 +1757,11 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_RecordWithAuxdata &self)
 
 namespace InterfaceTests {
 
+Rapicorn::Aida::BaseConnection*
+I_UIWidgetAreaIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_UIWidgetAreaIface::I_UIWidgetAreaIface ()
 {}
 I_UIWidgetAreaIface::~I_UIWidgetAreaIface ()
@@ -1781,11 +1786,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_UIWidgetAreaIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_UIWidgetAreaIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_UIWidgetAreaIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_UIWidgetAreaIface::__aida_typelist__ () const
 {
@@ -1804,6 +1804,11 @@ I_UIWidgetAreaIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_ParentIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_ParentIface::I_ParentIface ()
 {}
 I_ParentIface::~I_ParentIface ()
@@ -1827,11 +1832,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ParentIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_ParentIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_ParentIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_ParentIface::__aida_typelist__ () const
@@ -2022,6 +2022,11 @@ SrvT_QuickSequence::append_back()
   return back();
 }
 
+Rapicorn::Aida::BaseConnection*
+I_QuickIfaceIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_QuickIfaceIface::I_QuickIfaceIface ()
 {}
 I_QuickIfaceIface::~I_QuickIfaceIface ()
@@ -2046,11 +2051,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_QuickIfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_QuickIfaceIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_QuickIfaceIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_QuickIfaceIface::__aida_typelist__ () const
 {
@@ -2067,6 +2067,11 @@ I_QuickIfaceIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_MethodTestInterfaceIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_MethodTestInterfaceIface::I_MethodTestInterfaceIface ()
 {}
 I_MethodTestInterfaceIface::~I_MethodTestInterfaceIface ()
@@ -2091,11 +2096,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_MethodTestInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_MethodTestInterfaceIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_MethodTestInterfaceIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_MethodTestInterfaceIface::__aida_typelist__ () const
 {
@@ -2112,6 +2112,11 @@ I_MethodTestInterfaceIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_SignalTestInterfaceIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_SignalTestInterfaceIface::I_SignalTestInterfaceIface ()
 {}
 I_SignalTestInterfaceIface::~I_SignalTestInterfaceIface ()
@@ -2135,11 +2140,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SignalTestInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_SignalTestInterfaceIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_SignalTestInterfaceIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_SignalTestInterfaceIface::__aida_typelist__ () const
@@ -2239,6 +2239,11 @@ I_AnotherChildIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_PropertyTesterIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_PropertyTesterIface::I_PropertyTesterIface ()
 {}
 I_PropertyTesterIface::~I_PropertyTesterIface ()
@@ -2262,11 +2267,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PropertyTesterIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_PropertyTesterIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_PropertyTesterIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_PropertyTesterIface::__aida_typelist__ () const
@@ -2298,6 +2298,11 @@ I_PropertyTesterIface::__aida_properties__ ()
 
 namespace RapicornAidaTest {
 
+Rapicorn::Aida::BaseConnection*
+I_ButtonAreaIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_ButtonAreaIface::I_ButtonAreaIface ()
 {}
 I_ButtonAreaIface::~I_ButtonAreaIface ()
@@ -2322,11 +2327,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ButtonAreaIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_ButtonAreaIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_ButtonAreaIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_ButtonAreaIface::__aida_typelist__ () const
 {
@@ -2347,6 +2347,11 @@ I_ButtonAreaIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_PureMethodsIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_PureMethodsIface::I_PureMethodsIface ()
 {}
 I_PureMethodsIface::~I_PureMethodsIface ()
@@ -2371,11 +2376,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PureMethodsIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_PureMethodsIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_PureMethodsIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_PureMethodsIface::__aida_typelist__ () const
 {
@@ -2395,6 +2395,11 @@ I_PureMethodsIface::__aida_properties__ ()
 
 namespace Other {
 
+Rapicorn::Aida::BaseConnection*
+I_NameTestsIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_NameTestsIface::I_NameTestsIface ()
 {}
 I_NameTestsIface::~I_NameTestsIface ()
@@ -2419,11 +2424,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_NameTestsIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_NameTestsIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_NameTestsIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_NameTestsIface::__aida_typelist__ () const
 {
@@ -2443,6 +2443,11 @@ I_NameTestsIface::__aida_properties__ ()
 
 namespace BseTest {
 
+Rapicorn::Aida::BaseConnection*
+I_CompressorIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_CompressorIface::I_CompressorIface ()
 {}
 I_CompressorIface::~I_CompressorIface ()
@@ -2466,11 +2471,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_CompressorIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_CompressorIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_CompressorIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_CompressorIface::__aida_typelist__ () const
@@ -2521,6 +2521,11 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_RecordForGroups &self)
   fbr >>= self.threshold2;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_SoundModuleIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_SoundModuleIface::I_SoundModuleIface ()
 {}
 I_SoundModuleIface::~I_SoundModuleIface ()
@@ -2544,11 +2549,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SoundModuleIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_SoundModuleIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_SoundModuleIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_SoundModuleIface::__aida_typelist__ () const
@@ -2953,56 +2953,8 @@ __aida_call__Parent____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__Child____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_ChildIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__Descendant____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_DescendantIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__GrandChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_GrandChildIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
 static Rapicorn::Aida::FieldBuffer*
 __aida_call__QuickIface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
@@ -4441,22 +4393,6 @@ __aida_connect__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr
   return &rb;
 }
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__ChildInheritingSignals____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_ChildInheritingSignalsIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 class __AIDA_Closure__ChildInheritingSignals__child_signal {
   size_t handler_id_;
 public:
@@ -4513,22 +4449,6 @@ __aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReade
   return &rb;
 }
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__AnotherChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_AnotherChildIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
 static Rapicorn::Aida::FieldBuffer*
 __aida_call__PropertyTester____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
@@ -5234,9 +5154,6 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, InterfaceTests::__aida_connect__UIWidgetArea__void_signal, },
   { 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, InterfaceTests::__aida_connect__UIWidgetArea__sample_signal, },
   { 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL, InterfaceTests::__aida_call__Parent____aida_typelist__, },
-  { 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL, InterfaceTests::__aida_call__Child____aida_typelist__, },
-  { 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL, InterfaceTests::__aida_call__Descendant____aida_typelist__, },
-  { 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL, InterfaceTests::__aida_call__GrandChild____aida_typelist__, },
   { 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL, InterfaceTests::__aida_call__QuickIface____aida_typelist__, },
   { 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL, InterfaceTests::__aida_call__QuickIface__simple_function, },
   { 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL, InterfaceTests::__aida_call__MethodTestInterface____aida_typelist__, },
@@ -5277,9 +5194,7 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, InterfaceTests::__aida_connect__SignalTestInterface__interface_arg, },
   { 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, InterfaceTests::__aida_connect__SignalTestInterface__any_arg, },
   { 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, InterfaceTests::__aida_connect__SignalTestInterface__self_args, },
-  { 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL, InterfaceTests::__aida_call__ChildInheritingSignals____aida_typelist__, },
   { 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, InterfaceTests::__aida_connect__ChildInheritingSignals__child_signal, },
-  { 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL, InterfaceTests::__aida_call__AnotherChild____aida_typelist__, },
   { 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL, InterfaceTests::__aida_call__PropertyTester____aida_typelist__, },
   { 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL, InterfaceTests::__aida_get__PropertyTester__bool_prop, },
   { 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL, InterfaceTests::__aida_set__PropertyTester__bool_prop, },
