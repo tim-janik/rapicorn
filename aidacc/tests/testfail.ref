@@ -129,9 +129,6 @@
 .../testfail.idl:90:63: AttributeError: missing subsequent default initializer: method (...c...)
 >  ...I { int32 method (int32 a, int32 b = 2, int32 c); }; // missing subsequent default initializer
 >                                                         ^
-.../testfail.idl:91:35: TypeError: non-method invalidly declared as pure: m
->  interface I { signal int32 m() = 0; }; // invalid pure decl for non-method
->                                    ^
 .../testfail.idl:93:30: TypeError: unknown type: 'void'
 >  interface P { void void_prop; }; // invalid property type
 >                               ^

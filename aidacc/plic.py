@@ -129,10 +129,10 @@ def print_help (with_help = True):
 def parse_files_and_args():
   import re, getopt
   config = { 'files' : [], 'backend' : 'PrettyDump', 'backend-options' : [], 'includedirs' : [],
-             'insertions' : [], 'inclusions' : [], 'skip-skels' : [], 'system-typedefs' : False }
+             'insertions' : [], 'inclusions' : [], 'skip-skels' : [], 'system-typedefs' : False, 'bse-extensions' : False }
   sop = 'vhG:g:o:I:x:'
   lop = ['help', 'version', 'list-formats',
-         'aida-debug', 'cc-intern-file=',
+         'aida-debug', 'cc-intern-file=', 'bse-extensions',
          'insertions=', 'inclusions=', 'skip-skels=']
   if pkginstall_configvars.get ('INTERN', 0):
     lop += [ 'system-typedefs' ]
@@ -152,6 +152,7 @@ def parse_files_and_args():
     if arg == '--skip-skels': config['skip-skels'] += [ val ]
     if arg == '-G': config['backend-options'] += [ val ]
     if arg == '-x': module_import (val)
+    if arg == '--bse-extensions': config['bse-extensions'] = True
     if arg == '--cc-intern-file':
       import TypeMap
       data = open (val).read()

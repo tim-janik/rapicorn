@@ -112,8 +112,8 @@ class TypeInfo (BaseDecl):
     self.auxdata = {}
     if self.storage == STREAM:
       self.ioj_stream = ''      # one of: 'I', 'O', 'J'
-  @classmethod
-  def builtin_type (cls, ident):
+  @staticmethod
+  def builtin_type (ident, bseextensions = False):
     def mkstream (ioj):
       ti = TypeInfo (ioj + 'Stream', STREAM, False)
       ti.set_stream_type (ioj)
@@ -130,6 +130,12 @@ class TypeInfo (BaseDecl):
       'OStream' : mkstream ('O'),
       'JStream' : mkstream ('J'),
     }
+    if bseextensions:
+      builtins['Bool'] = builtins['bool']
+      builtins['Int']  = builtins['int32']
+      builtins['Num']  = builtins['int64']
+      builtins['Real'] = builtins['float64']
+      builtins['SfiString'] = builtins['String']
     return builtins.get (ident, None)
   def string_digest (self):
     typelist, arglist = [], [] # owner, self, rtype, arg*type, ...

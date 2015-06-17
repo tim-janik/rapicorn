@@ -368,7 +368,7 @@ interface ButtonArea // : public virtual Container, public virtual FocusFrame::C
 interface PureMethods; // interface prototyping
 
 interface PureMethods {
-  int32 pure_method (float64 f) = 0;
+  int32 pure_method (float64 f);
 };
 
 interface PureMethods; // interface prototyping

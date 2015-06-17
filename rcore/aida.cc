@@ -1420,7 +1420,7 @@ ClientConnectionImpl::remote_origin()
   RemoteMember<RemoteHandle> rorigin;
   if (!connection_id)
     {
-      errno = ECONNREFUSED; // EHOSTUNREACH;
+      errno = EHOSTUNREACH; // ECONNREFUSED;
       return RemoteHandle::__aida_null_handle__();
     }
   FieldBuffer *fb = FieldBuffer::_new (3);

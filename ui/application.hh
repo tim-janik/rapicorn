@@ -17,10 +17,12 @@ public:
   virtual StringSeq   auto_load              (const std::string &file_name,
                                               const std::string &binary_path,
                                               const std::string &i18n_domain = "") override;
+  virtual bool        factory_window         (const std::string &factory_definition) override;
   virtual void        load_string            (const std::string &xml_string,
                                               const std::string &i18n_domain = "") override;
   virtual WindowIfaceP create_window         (const std::string &window_identifier,
                                               const StringSeq &arguments = StringSeq()) override;
+  virtual bool        finishable             () override;
   void                add_window             (WindowIface &window);
   bool                remove_window          (WindowIface &window);
   virtual void        close_all              () override;

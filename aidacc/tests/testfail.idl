@@ -88,7 +88,7 @@ interface I { int32 method (I self); }; // invalid method arg name
 
 interface I { int32 self; }; // invalid property name
 interface I { int32 method (int32 a, int32 b = 2, int32 c); }; // missing subsequent default initializer
-interface I { signal int32 m() = 0; }; // invalid pure decl for non-method
+
 
 interface P { void void_prop; }; // invalid property type
 

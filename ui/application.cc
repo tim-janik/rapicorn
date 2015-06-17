@@ -12,12 +12,6 @@
 
 namespace Rapicorn {
 
-bool
-ApplicationIface::factory_window (const std::string &factory_definition)
-{
-  return Factory::check_ui_window (factory_definition);
-}
-
 ApplicationImpl::ApplicationImpl() :
   tc_ (0)
 {}
@@ -111,7 +105,13 @@ ApplicationImpl::load_string (const std::string &xml_string,
 }
 
 bool
-ApplicationIface::finishable ()
+ApplicationImpl::factory_window (const std::string &factory_definition)
+{
+  return Factory::check_ui_window (factory_definition);
+}
+
+bool
+ApplicationImpl::finishable ()
 {
   return uithread_main_loop()->finishable();
 }
