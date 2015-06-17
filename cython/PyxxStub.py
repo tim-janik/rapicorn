@@ -54,6 +54,9 @@ def inherit_reduce (type_list):
     if not skip:
       reduced = [ p ] + reduced
   return reduced
+def bases (tp):
+  ancestors = [pr for pr in tp.prerequisites]
+  return inherit_reduce (ancestors)
 def type_namespace_names (tp):
   namespaces = tp.list_namespaces() # [ Namespace... ]
   return [d.name for d in namespaces if d.name]
@@ -118,9 +121,6 @@ class Generator:
     if tstorage == Decls.ANY:           return 'Rapicorn__Any'
     fullnsname = underscore_typename (type_node)
     return fullnsname
-  def bases (self, tp):
-    ancestors = [pr for pr in tp.prerequisites]
-    return inherit_reduce (ancestors)
   def inheritance_base (self, tp):
     # find the type everything else derives from
     basetype = tp
@@ -264,7 +264,7 @@ class Generator:
         ibase = self.inheritance_base (tp)
         u_base = underscore_typename (ibase)
         s += '  cppclass %s' % u_typename
-        baselist = ', '.join (underscore_typename (b) for b in self.bases (tp))
+        baselist = ', '.join (underscore_typename (b) for b in bases (tp))
         if baselist:
           s += ' (%s)' % baselist
         s += ':\n'
@@ -283,7 +283,7 @@ class Generator:
           s += '    size_t sig_%-30s "sig_%s().operator+=" (%s)\n' % (stp.name + '_connect', stp.name, marshal['Caller'])
           s += '    bool   sig_%-30s "sig_%s().operator-=" (size_t)\n' % (stp.name + '_disconnect', stp.name)
         # RemoteHandle (BaseClass only) bindings
-        if not self.bases (tp):
+        if not bases (tp):
           s += '    uint64 __aida_orbid__ () const\n'
           s += '    bool   __aida_notnull__ "operator bool" () const\n'
           s += '    Aida__TypeHashList __aida_typelist__()\n'
@@ -338,7 +338,7 @@ class Generator:
       elif tp.storage == Decls.INTERFACE:
         # class inheritance
         handle = '%s__unwrap (self)' % u_typename
-        baselist = ', '.join (b.name for b in self.bases (tp))
+        baselist = ', '.join (b.name for b in bases (tp))
         ibase = self.inheritance_base (tp)
         u_base = underscore_typename (ibase)
         s += '\ncdef class %s (%s):\n' % (tp.name, baselist or 'object')
