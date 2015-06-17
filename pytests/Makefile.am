@@ -10,7 +10,6 @@ noinst_DATA      =
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS) $(EXAMPLES)
 RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON) # -c "import @RAPICORN_NAMESPACE_NAME@"
-X11TEST_RPYTHON  = $(X11TEST_SERVER) && rrun() { $(RPYTHON) "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
 
 
 EXAMPLES = example-bind.py

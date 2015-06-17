@@ -9,7 +9,6 @@ AM_CXXFLAGS += $(RAPICORN_ROPE_CFLAGS) $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
-HARDCODEDIDL = $(srcdir)/../ui/hardcoded.idl
 
 # === Cxxrapicorn ===
 PyRapicorndir          = ${pythondir}/@RAPICORN_NAMESPACE_NAME@
