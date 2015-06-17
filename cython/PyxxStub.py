@@ -396,19 +396,6 @@ class Generator:
           s += ')\n'
           if result:
             s += '    return %s\n' % self.py_wrap ('_cxxret', rtp)
-        # down_cast
-        s += '  @classmethod\n'
-        s += '  def down_cast (klass, other):\n'
-        s += '    cdef %s target\n' % u_typename
-        s += '    cdef %s base\n' % u_base
-        s += '    try:\n'
-        s += '      base = %s\n' % self.cxx_unwrap ('other', ibase)
-        s += '    except: pass\n'
-        s += '    if base.__aida_notnull__():\n'
-        s += '      target = %sH__down_cast (base)\n' % u_typename
-        s += '      if target.__aida_notnull__():\n'
-        s += '        return %s\n' % self.py_wrap ('target', tp)
-        s += '    return None\n'
         # __aida_wrapper__
         wrapperclass = '%s__aida_wrapper_Class%d' % (tp.name, self.idcounter) ; self.idcounter += 1
         s += '  @classmethod\n'
