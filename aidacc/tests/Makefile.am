@@ -72,6 +72,7 @@ check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) sed -i -e '1i#define _(string) string\' $(TSTOUT)
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G server-skel -G strip-path=$(abs_top_srcdir)/ \
@@ -107,6 +108,7 @@ check: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleto
 TEST_PROGS	  += components
 components_SOURCES = components.cc
 components_LDADD   = $(LDADDS)
+components_CXXFLAGS = -O0 -g # $(AM_CXXFLAGS) # compile fast
 EXTRA_DIST        += components-a1.idl # components-a2.idl components-b1.idl
 COMPONENT_FILES    = components-a1-client.hh components-a1-client.cc components-a1-server.hh components-a1-server.cc
 CLEANFILES += $(COMPONENT_FILES)

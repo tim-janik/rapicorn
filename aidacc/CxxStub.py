@@ -198,6 +198,15 @@ class Generator:
     if type.storage in (Decls.RECORD, Decls.SEQUENCE, Decls.ANY):
       return self.C (type) + '()'
     return '0'
+  def generate_recseq_accept (self, type_info):
+    s = ''
+    s += '  template<class Visitor> void  __accept__  (Visitor _visitor_)\n'
+    s += '  {\n'
+    if type_info.storage == Decls.RECORD:
+      for fname, ftype in type_info.fields:
+        s += '    _visitor_ (%s, "%s");\n' % (fname, fname)
+    s += '  }\n'
+    return s
   def generate_recseq_decl (self, type_info):
     s = '\n'
     classFull = self.namespaced_identifier (type_info.name)
@@ -230,6 +239,7 @@ class Generator:
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('bool') + 'operator==  (const %s &other) const;\n' % self.C (type_info)
       s += '  ' + self.F ('bool') + 'operator!=  (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
+      s += self.generate_recseq_accept (type_info)
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
@@ -305,6 +315,10 @@ class Generator:
     s += '}\n'
     return s
   def generate_enum_impl (self, type_info):
+    def simple_quote (string):
+      string = re.sub (r'\\', r'\\\\', string)
+      string = re.sub ('"', r'\\"', string)
+      return '"' + string + '"'
     s = '\n'
     enum_ns, enum_class = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
     l = []
@@ -316,11 +330,9 @@ class Generator:
       (ident, label, blurb, number) = opt
       # number = self.c_long_postfix (number)
       number = enum_ns + '::' + ident
-      ident = TypeMap.cquote (ident)
-      label = TypeMap.cquote (label)
-      label = "NULL" if label == '""' else label
-      blurb = TypeMap.cquote (blurb)
-      blurb = "NULL" if blurb == '""' else blurb
+      ident = simple_quote (ident)
+      label = label if label else "NULL"
+      blurb = blurb if blurb else "NULL"
       s += '    { %s,\t%s, %s, %s },\n' % (number, ident, label, blurb)
     s += '    { 0,\tNULL, NULL, NULL }     // sentinel\n  };\n'
     s += '  return values;\n}\n'

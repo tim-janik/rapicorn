@@ -63,19 +63,21 @@ String
 XmlNode::get_attribute (const String &name,
                         bool          case_insensitive) const
 {
-  vector<String>::const_iterator it = find_attribute (attribute_names_, name, case_insensitive);
-  if (it != attribute_names_.end())
-    return attribute_values_[it - attribute_names_.begin()];
-  else
-    return "";
+  String value;
+  has_attribute (name, case_insensitive, &value);
+  return value;
 }
 
 bool
 XmlNode::has_attribute (const String &name,
-                        bool          case_insensitive) const
+                        bool          case_insensitive,
+                        String       *valuep) const
 {
   vector<String>::const_iterator it = find_attribute (attribute_names_, name, case_insensitive);
-  return it != attribute_names_.end();
+  const bool has_attr = it != attribute_names_.end();
+  if (has_attr && valuep)
+    *valuep = attribute_values_[it - attribute_names_.begin()];
+  return has_attr;
 }
 
 bool
@@ -97,30 +99,15 @@ XmlNode::set_parent (XmlNode *c,
   c->parent_ = p;
 }
 
-static DataKey<uint64> xml_node_flags_key;
-
-uint64
-XmlNode::flags () const
+XmlNodeP
+XmlNode::find_child (const std::string &name) const
 {
-  const uint64 flagvalues = get_data (&xml_node_flags_key);
-  return flagvalues;
-}
-
-void
-XmlNode::flags (uint64 flagvalues)
-{
-  set_data (&xml_node_flags_key, flagvalues);
-}
-
-const XmlNode*
-XmlNode::first_child (const String &element_name) const
-{
-  ConstNodes *c = &children();
-  if (c)
-    for (ConstNodes::const_iterator it = c->begin(); it != c->end(); it++)
-      if (element_name == (*it)->name())
-        return &**it;
-  return NULL;
+  ConstNodes *node_children = &children();
+  if (node_children)
+    for (auto &xchild : *node_children)
+      if (xchild->name() == name)
+        return xchild;
+  return XmlNodeP();
 }
 
 void
@@ -134,30 +121,6 @@ XmlNode::steal_children (XmlNode &parent)
     parent.del_child (*cl[i-1]);
   for (auto c : temp)
     add_child (*c);
-}
-
-void
-XmlNode::break_after (bool newline_after_tag)
-{
-  flags (4 | flags());
-}
-
-bool
-XmlNode::break_after () const
-{
-  return !!(4 & flags());
-}
-
-void
-XmlNode::break_within (bool newlines_around_chidlren)
-{
-  flags (8 | flags());
-}
-
-bool
-XmlNode::break_within () const
-{
-  return !!(8 & flags());
 }
 
 } // Rapicorn
@@ -321,6 +284,14 @@ public:
 namespace Rapicorn {
 
 XmlNodeP
+XmlNode::create_child (const String &element_name, uint line, uint _char, const String &file)
+{
+  XmlNodeP xchild = create_parent (element_name, line, _char, file);
+  add_child (*xchild);
+  return xchild;
+}
+
+XmlNodeP
 XmlNode::create_text (const String &utf8text,
                       uint          line,
                       uint          _char,
@@ -422,18 +393,20 @@ node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t 
     {
       if (include_outer)
         s += ">";
-      bool need_break = include_outer && node.break_within();
+      bool need_break = include_outer;
+      bool last_text = false;
       for (size_t i = 0; i < cl.size(); i++)
         {
-          if (need_break)
+          if (need_break && !cl[i]->istext())
             s += "\n" + istr + "  ";
           if (wrapper)
             s += wrapper (*cl[i], indent + 2, true, recursion_depth - 1);
           else
             s += cl[i]->xml_string (indent + 2, true, recursion_depth - 1, wrapper, true);
-          need_break = cl[i]->break_after();
+          need_break = !cl[i]->istext();
+          last_text = cl[i]->istext();
         }
-      if (include_outer && node.break_within())
+      if (include_outer && !last_text)
         s += "\n" + istr;
       if (include_outer)
         s += "</" + node.xml_escape (node.name()) + ">";

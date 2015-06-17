@@ -18,7 +18,7 @@ rapicorn_public_headers = $(strip	\
 			regex.hh  strings.hh	loop.hh		main.hh	memory.hh \
 	quicktimer.hh	randomhash.hh	thread.hh	\
 	$(rapicorn_impl_headers) \
-	cpuasm.hh	cxxaux.hh	rcore.hh	aidasignal.hh	\
+	cpuasm.hh	cxxaux.hh	rcore.hh	visitor.hh	aidasignal.hh	\
 )
 rapicorn_cc_sources = $(sort	\
 	aida.cc		aidaprops.cc	\

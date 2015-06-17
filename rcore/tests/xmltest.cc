@@ -41,7 +41,7 @@ xml_tree_test (void)
         const char *children[] = { "child3", "x", "y", "z", "A", "B", "C" };
         for (uint i = 0; i < ARRAY_SIZE (children); i++)
           {
-            const XmlNode *c = child->first_child (children[i]);
+            const XmlNodeP c = child->find_child (children[i]);
             TCMP (c, !=, nullptr);
             TCMP (c->name(), ==, children[i]);
           }
@@ -64,7 +64,7 @@ xml_tree_test (void)
       }
   TCMP (testmask, ==, 15);
   /* check attribute order */
-  const XmlNode *cnode = xnode->first_child ("orderedattribs");
+  const XmlNodeP cnode = xnode->find_child ("orderedattribs");
   TCMP (cnode, !=, nullptr);
   TCMP (cnode->text(), ==, "orderedattribs-text");
   const vector<String> oa = cnode->list_attributes();

@@ -4,6 +4,7 @@
 #include "main.hh"
 
 #include <cstring>
+#include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
 #include <libintl.h>
@@ -80,6 +81,18 @@ string_canonify (const String &string, const String &valid_chars, const String &
   return d;
 }
 
+/// Check if string_canonify() would modify @a string.
+bool
+string_is_canonified (const String &string, const String &valid_chars)
+{
+  const size_t l = string.size();
+  const char *valids = valid_chars.c_str(), *p = string.c_str();
+  for (size_t i = 0; i < l; i++)
+    if (!strchr (valids, p[i]))
+      return false;
+  return true;
+}
+
 /// Returns a string containing all of a-z.
 String
 string_set_a2z ()
@@ -106,7 +119,7 @@ String
 string_tolower (const String &str)
 {
   String s (str);
-  for (uint i = 0; i < s.size(); i++)
+  for (size_t i = 0; i < s.size(); i++)
     s[i] = Unicode::tolower (s[i]);
   return s;
 }
@@ -116,7 +129,7 @@ String
 string_toupper (const String &str)
 {
   String s (str);
-  for (uint i = 0; i < s.size(); i++)
+  for (size_t i = 0; i < s.size(); i++)
     s[i] = Unicode::toupper (s[i]);
   return s;
 }
@@ -126,8 +139,31 @@ String
 string_totitle (const String &str)
 {
   String s (str);
-  for (uint i = 0; i < s.size(); i++)
+  for (size_t i = 0; i < s.size(); i++)
     s[i] = Unicode::totitle (s[i]);
+  return s;
+}
+
+/// Capitalize words, so the first letter is upper case, the rest lower case.
+String
+string_capitalize (const String &str, size_t maxn)
+{
+  String s (str);
+  bool wasalpha = false;
+  for (size_t i = 0; i < s.size(); i++)
+    {
+      const bool atalpha = isalpha (s[i]);
+      if (!wasalpha && atalpha)
+        {
+          if (maxn == 0)
+            break;
+          s[i] = Unicode::toupper (s[i]);
+          maxn--;
+        }
+      else
+        s[i] = Unicode::tolower (s[i]);
+      wasalpha = atalpha;
+    }
   return s;
 }
 
@@ -180,18 +216,19 @@ string_locale_vprintf (const char *format, va_list vargs)
 }
 
 static StringVector
-string_whitesplit (const String &string)
+string_whitesplit (const String &string, size_t maxn)
 {
   static const char whitespaces[] = " \t\n\r\f\v";
   StringVector sv;
-  uint i, l = 0;
-  for (i = 0; i < string.size(); i++)
+  size_t i, l = 0;
+  for (i = 0; i < string.size() && sv.size() < maxn; i++)
     if (strchr (whitespaces, string[i]))
       {
         if (i > l)
           sv.push_back (string.substr (l, i - l));
         l = i + 1;
       }
+  i = string.size();
   if (i > l)
     sv.push_back (string.substr (l, i - l));
   return sv;
@@ -200,19 +237,20 @@ string_whitesplit (const String &string)
 /// Split a string, using @a splitter as delimiter.
 /// Passing "" as @a splitter will split the string at whitespace positions.
 StringVector
-string_split (const String &string, const String &splitter)
+string_split (const String &string, const String &splitter, size_t maxn)
 {
   if (splitter == "")
-    return string_whitesplit (string);
+    return string_whitesplit (string, maxn);
   StringVector sv;
-  uint i, l = 0, k = splitter.size();
-  for (i = 0; i < string.size(); i++)
+  size_t i, l = 0, k = splitter.size();
+  for (i = 0; i < string.size() && sv.size() < maxn; i++)
     if (string.substr (i, k) == splitter)
       {
         if (i >= l)
           sv.push_back (string.substr (l, i - l));
         l = i + k;
       }
+  i = string.size();
   if (i >= l)
     sv.push_back (string.substr (l, i - l));
   return sv;
@@ -221,25 +259,29 @@ string_split (const String &string, const String &splitter)
 /// Split a string, using any of the @a splitchars as delimiter.
 /// Passing "" as @a splitter will split the string between all position.
 StringVector
-string_split_any (const String &string, const String &splitchars)
+string_split_any (const String &string, const String &splitchars, size_t maxn)
 {
   StringVector sv;
+  size_t i, l = 0;
   if (splitchars.empty())
     {
-      for (uint i = 0; i < string.size(); i++)
+      for (i = 0; i < string.size() && sv.size() < maxn; i++)
         sv.push_back (string.substr (i, 1));
+      if (i < string.size())
+        sv.push_back (string.substr (i, string.size() - i));
     }
   else
     {
       const char *schars = splitchars.c_str();
-      uint i, l = 0;
-      for (i = 0; i < string.size(); i++)
+      l = 0;
+      for (i = 0; i < string.size() && sv.size() < maxn; i++)
         if (strchr (schars, string[i]))
           {
             if (i >= l)
               sv.push_back (string.substr (l, i - l));
             l = i + 1;
           }
+      i = string.size();
       if (i >= l)
         sv.push_back (string.substr (l, i - l));
     }
@@ -391,13 +433,28 @@ string_from_int (int64 value)
   return string_format ("%d", value);
 }
 
+static long double
+libc_strtold (const char *nptr, char **endptr)
+{
+  const long double result = strtold (nptr, endptr);
+  if (isnan (result) && std::signbit (result) == 0)
+    {
+      const char *p = nptr;
+      while (isspace (*p))
+        p++;
+      if (strncasecmp (p, "-nan", 4) == 0)
+        return -result; // glibc-2.19 doesn't get the NAN sign right
+    }
+  return result;
+}
+
 /// Parse a double from a string ala strtod(), trying locale specific characters and POSIX/C formatting.
 long double
 posix_locale_strtold (const char *nptr, char **endptr)
 {
   ScopedPosixLocale posix_locale_scope; // pushes POSIX/C locale for this scope
   char *fail_pos = NULL;
-  const long double val = strtold (nptr, &fail_pos);
+  const long double val = libc_strtold (nptr, &fail_pos);
   if (endptr)
     *endptr = fail_pos;
   return val;
@@ -412,7 +469,7 @@ current_locale_strtold (const char *nptr, char **endptr)
   if (fail_pos_1 && fail_pos_1[0] != 0)
     {
       char *fail_pos_2 = NULL;
-      const long double val_2 = strtold (nptr, &fail_pos_2);
+      const long double val_2 = libc_strtold (nptr, &fail_pos_2);
       if (fail_pos_2 > fail_pos_1)
         {
           if (endptr)
@@ -443,6 +500,10 @@ string_to_double (const char *dblstring, const char **endptr)
 String
 string_from_float (float value)
 {
+  if (isnan (value))
+    return std::signbit (value) ? "-NaN" : "+NaN";
+  if (isinf (value))
+    return std::signbit (value) ? "-Infinity" : "+Infinity";
   return string_format ("%.7g", value);
 }
 
@@ -450,6 +511,10 @@ string_from_float (float value)
 String
 string_from_double (double value)
 {
+  if (isnan (value))
+    return std::signbit (value) ? "-NaN" : "+NaN";
+  if (isinf (value))
+    return std::signbit (value) ? "-Infinity" : "+Infinity";
   return string_format ("%.17g", value);
 }
 
