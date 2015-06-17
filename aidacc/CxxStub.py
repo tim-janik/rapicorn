@@ -22,6 +22,26 @@ rapicornsignal_boilerplate = r"""
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 
+def hasancestor (child, parent):
+  for p in child.prerequisites:
+    if p == parent or hasancestor (p, parent):
+      return True
+def inherit_reduce (type_list):
+  # find the type(s) we *directly* derive from
+  reduced = []
+  while type_list:
+    p = type_list.pop()
+    skip = 0
+    for c in type_list + reduced:
+      if c == p or hasancestor (c, p):
+        skip = 1
+        break
+    if not skip:
+      reduced = [ p ] + reduced
+  return reduced
+def bases (tp):
+  ancestors = [pr for pr in tp.prerequisites]
+  return inherit_reduce (ancestors)
 def type_name_parts (type_node, include_empty = False):
   parts = [ns.name for ns in type_node.list_namespaces()] + [ type_node.name ]
   if not include_empty:
@@ -376,29 +396,11 @@ class Generator:
           r += [ e ]
       return r
     return make_list_uniq (deep_ancestors (type_info))
-  def inherit_reduce (self, type_list):
-    def hasancestor (child, parent):
-      if child == parent:
-        return True
-      for childpre in child.prerequisites:
-        if hasancestor (childpre, parent):
-          return True
-    reduced = []
-    while type_list:
-      p = type_list.pop()
-      skip = 0
-      for c in type_list + reduced:
-        if hasancestor (c, p):
-          skip = 1
-          break
-      if not skip:
-        reduced = [ p ] + reduced
-    return reduced
   def interface_class_ancestors (self, type_info):
     l = []
     for pr in type_info.prerequisites:
       l += [ pr ]
-    l = self.inherit_reduce (l)
+    l = inherit_reduce (l)
     return l
   def interface_class_inheritance (self, type_info):
     aida_remotehandle, ddc = 'Rapicorn::Aida::RemoteHandle', False
@@ -466,7 +468,8 @@ class Generator:
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
-      s += '  ' + self.F ('Rapicorn::Aida::TypeHashList          ') + '__aida_typelist__  () const;\n'
+      if not bases (type_info):
+        s += '  ' + self.F ('Rapicorn::Aida::TypeHashList          ') + '__aida_typelist__  () const;\n'
       s += '  template<class RemoteHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (RemoteHandle smh) '
       s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_typelist__()); }\n' % classH
@@ -559,6 +562,8 @@ class Generator:
     s, classH = '', self.C4client (class_info)
     classH2 = (classH, classH)
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    if not bases (class_info):
+      s += self.generate_client_base_class_methods (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % classH2 # dtor
@@ -585,12 +590,15 @@ class Generator:
     s += '    }\n'
     s += '  return target;\n'
     s += '}\n'
-    s += self.generate_aida_connection_impl (class_info)
+    return s
+  def generate_client_base_class_methods (self, tp):
+    s, classH = '', self.C4client (tp)
+    s += self.generate_aida_connection_impl (tp)
     s += 'Rapicorn::Aida::TypeHashList\n'
     s += '%s::__aida_typelist__() const\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
-    s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.list_types_digest (class_info)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
+    s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.list_types_digest (tp)
+    s += self.generate_proto_add_args ('fb', tp, '', [('*this', tp)], '')
     s += '  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
     s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'

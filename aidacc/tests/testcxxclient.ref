@@ -682,7 +682,6 @@ class ChildHandle : public virtual ParentHandle
 protected:
 public:
   virtual /*Des*/                       ~ChildHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static ChildHandle            down_cast (RemoteHandle smh) { return smh == NULL ? ChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ChildHandle ();
@@ -701,7 +700,6 @@ class DescendantHandle : public virtual ChildHandle
 protected:
 public:
   virtual /*Des*/                       ~DescendantHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static DescendantHandle       down_cast (RemoteHandle smh) { return smh == NULL ? DescendantHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      DescendantHandle ();
@@ -720,7 +718,6 @@ class GrandChildHandle : public virtual DescendantHandle
 protected:
 public:
   virtual /*Des*/                       ~GrandChildHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static GrandChildHandle       down_cast (RemoteHandle smh) { return smh == NULL ? GrandChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      GrandChildHandle ();
@@ -925,7 +922,6 @@ class ChildInheritingSignalsHandle : public virtual SignalTestInterfaceHandle
 protected:
 public:
   virtual /*Des*/                       ~ChildInheritingSignalsHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static ChildInheritingSignalsHandle down_cast (RemoteHandle smh) { return smh == NULL ? ChildInheritingSignalsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ChildInheritingSignalsHandle ();
@@ -945,7 +941,6 @@ class AnotherChildHandle : public virtual SignalTestInterfaceHandle
 protected:
 public:
   virtual /*Des*/                       ~AnotherChildHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static AnotherChildHandle     down_cast (RemoteHandle smh) { return smh == NULL ? AnotherChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      AnotherChildHandle ();
@@ -1158,6 +1153,33 @@ typedef SoundModuleHandle SoundModuleH; ///< Convenience alias for the IDL type 
 // --- Implementations ---
 
 namespace MandatoryNamespace {
+Rapicorn::Aida::BaseConnection*
+FirstInterfaceHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+FirstInterfaceHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
 FirstInterfaceHandle::~FirstInterfaceHandle ()
@@ -1189,33 +1211,6 @@ FirstInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const 
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-FirstInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-FirstInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 void
 FirstInterfaceHandle::void_func () /// See FirstInterface::void_func()
@@ -1748,6 +1743,33 @@ UIWidgetAreaHandle::__aida_connect__sample_signal (size_t signal_handler_id, con
   void *fptr = new std::function<double (UIWidgetAreaHandle &ba1, int someint)> (func);
   return __AIDA_Local__::signal_connect (0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, *this, __aida_emit2__UIWidgetAreaHandle__sample_signal, fptr);
 }
+Rapicorn::Aida::BaseConnection*
+UIWidgetAreaHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+UIWidgetAreaHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 UIWidgetAreaHandle::UIWidgetAreaHandle ()
 {}
 UIWidgetAreaHandle::~UIWidgetAreaHandle ()
@@ -1779,33 +1801,6 @@ UIWidgetAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Ra
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-UIWidgetAreaHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-UIWidgetAreaHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 bool
 UIWidgetAreaHandle::dummy () const /// See UIWidgetArea::dummy
@@ -2008,6 +2003,33 @@ UIWidgetAreaHandle::on_click2in (const std::string &arg_command) /// See UIWidge
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
+Rapicorn::Aida::BaseConnection*
+ParentHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+ParentHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 ParentHandle::ParentHandle ()
 {}
 ParentHandle::~ParentHandle ()
@@ -2039,33 +2061,6 @@ ParentHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-ParentHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-ParentHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 ChildHandle::ChildHandle ()
 {}
@@ -2099,28 +2094,6 @@ ChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn:
     }
   return target;
 }
-Rapicorn::Aida::TypeHashList
-ChildHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 DescendantHandle::DescendantHandle ()
 {}
 DescendantHandle::~DescendantHandle ()
@@ -2153,28 +2126,6 @@ DescendantHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
     }
   return target;
 }
-Rapicorn::Aida::TypeHashList
-DescendantHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 GrandChildHandle::GrandChildHandle ()
 {}
 GrandChildHandle::~GrandChildHandle ()
@@ -2206,28 +2157,6 @@ GrandChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
       break;
     }
   return target;
-}
-Rapicorn::Aida::TypeHashList
-GrandChildHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 bool
 ClnT_QuickRecord::operator== (const ClnT_QuickRecord &other) const
@@ -2276,6 +2205,33 @@ ClnT_QuickSequence::append_back()
   resize (size() + 1);
   return back();
 }
+Rapicorn::Aida::BaseConnection*
+QuickIfaceHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+QuickIfaceHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 QuickIfaceHandle::QuickIfaceHandle ()
 {}
 QuickIfaceHandle::~QuickIfaceHandle ()
@@ -2308,16 +2264,26 @@ QuickIfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
     }
   return target;
 }
+void
+QuickIfaceHandle::simple_function (int arg_i) /// See QuickIface::simple_function()
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  __AIDA_Local__::add_header1_call (fb, *this, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
+  fb <<= *this;
+  fb <<= arg_i;
+  fr = __AIDA_Local__::invoke (&fb);
+  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
+}
 Rapicorn::Aida::BaseConnection*
-QuickIfaceHandle::__aida_connection__()
+MethodTestInterfaceHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 Rapicorn::Aida::TypeHashList
-QuickIfaceHandle::__aida_typelist__() const
+MethodTestInterfaceHandle::__aida_typelist__() const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2334,16 +2300,6 @@ QuickIfaceHandle::__aida_typelist__() const
   }
   delete fr;
   return thl;
-}
-void
-QuickIfaceHandle::simple_function (int arg_i) /// See QuickIface::simple_function()
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (fb, *this, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
-  fb <<= *this;
-  fb <<= arg_i;
-  fr = __AIDA_Local__::invoke (&fb);
-  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
@@ -2376,33 +2332,6 @@ MethodTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, c
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-MethodTestInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-MethodTestInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 void
 MethodTestInterfaceHandle::method_with_void () /// See MethodTestInterface::method_with_void()
@@ -3041,6 +2970,33 @@ SignalTestInterfaceHandle::__aida_connect__self_args (size_t signal_handler_id, 
   void *fptr = new std::function<void (SignalTestInterfaceHandle &self_)> (func);
   return __AIDA_Local__::signal_connect (0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, *this, __aida_emit1__SignalTestInterfaceHandle__self_args, fptr);
 }
+Rapicorn::Aida::BaseConnection*
+SignalTestInterfaceHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+SignalTestInterfaceHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 {}
 SignalTestInterfaceHandle::~SignalTestInterfaceHandle ()
@@ -3072,33 +3028,6 @@ SignalTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, c
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-SignalTestInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-SignalTestInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 static Rapicorn::Aida::FieldBuffer*
 __aida_emit1__ChildInheritingSignalsHandle__child_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
@@ -3149,28 +3078,6 @@ ChildInheritingSignalsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other
     }
   return target;
 }
-Rapicorn::Aida::TypeHashList
-ChildInheritingSignalsHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 AnotherChildHandle::AnotherChildHandle ()
 {}
 AnotherChildHandle::~AnotherChildHandle ()
@@ -3203,11 +3110,16 @@ AnotherChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Ra
     }
   return target;
 }
+Rapicorn::Aida::BaseConnection*
+PropertyTesterHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
 Rapicorn::Aida::TypeHashList
-AnotherChildHandle::__aida_typelist__() const
+PropertyTesterHandle::__aida_typelist__() const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3256,33 +3168,6 @@ PropertyTesterHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const 
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-PropertyTesterHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-PropertyTesterHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 bool
 PropertyTesterHandle::bool_prop () const /// See PropertyTester::bool_prop
@@ -3588,6 +3473,33 @@ ButtonAreaHandle::__aida_connect__activate (size_t signal_handler_id, const std:
   void *fptr = new std::function<void ()> (func);
   return __AIDA_Local__::signal_connect (0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, *this, __aida_emit1__ButtonAreaHandle__activate, fptr);
 }
+Rapicorn::Aida::BaseConnection*
+ButtonAreaHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+ButtonAreaHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 ButtonAreaHandle::ButtonAreaHandle ()
 {}
 ButtonAreaHandle::~ButtonAreaHandle ()
@@ -3619,33 +3531,6 @@ ButtonAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-ButtonAreaHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-ButtonAreaHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 std::string
 ButtonAreaHandle::on_click () const /// See ButtonArea::on_click
@@ -3743,6 +3628,33 @@ ButtonAreaHandle::click_type (ClickType value) /// See ButtonArea::click_type
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
+Rapicorn::Aida::BaseConnection*
+PureMethodsHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+PureMethodsHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 PureMethodsHandle::PureMethodsHandle ()
 {}
 PureMethodsHandle::~PureMethodsHandle ()
@@ -3775,33 +3687,6 @@ PureMethodsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
     }
   return target;
 }
-Rapicorn::Aida::BaseConnection*
-PureMethodsHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-PureMethodsHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 int
 PureMethodsHandle::pure_method (double arg_f) /// See PureMethods::pure_method()
 {
@@ -3820,6 +3705,33 @@ PureMethodsHandle::pure_method (double arg_f) /// See PureMethods::pure_method()
 } // RapicornAidaTest
 
 namespace Other {
+Rapicorn::Aida::BaseConnection*
+NameTestsHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+NameTestsHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 NameTestsHandle::NameTestsHandle ()
 {}
 NameTestsHandle::~NameTestsHandle ()
@@ -3852,33 +3764,6 @@ NameTestsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapic
     }
   return target;
 }
-Rapicorn::Aida::BaseConnection*
-NameTestsHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-NameTestsHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 void
 NameTestsHandle::args_from_other_namespace (const InterfaceTests::ClnT_QuickRecord &arg_qr,
                                             RapicornAidaTest::ClickType arg_qe,
@@ -3896,6 +3781,33 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::ClnT_QuickReco
 } // Other
 
 namespace BseTest {
+Rapicorn::Aida::BaseConnection*
+CompressorHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+CompressorHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 CompressorHandle::CompressorHandle ()
 {}
 CompressorHandle::~CompressorHandle ()
@@ -3927,33 +3839,6 @@ CompressorHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-CompressorHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-CompressorHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 double
 CompressorHandle::threshold () const /// See Compressor::threshold
@@ -4034,6 +3919,33 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_RecordForGroups &self)
   fbr >>= self.threshold1;
   fbr >>= self.threshold2;
 }
+Rapicorn::Aida::BaseConnection*
+SoundModuleHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+SoundModuleHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 SoundModuleHandle::SoundModuleHandle ()
 {}
 SoundModuleHandle::~SoundModuleHandle ()
@@ -4065,33 +3977,6 @@ SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-SoundModuleHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-SoundModuleHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 } // BseTest
 
