@@ -80,40 +80,86 @@ msgid_is (uint64 msgid, MessageId check_id)
   return msgid_mask (msgid) == check_id;
 }
 
-// == EnumValue ==
+// == EnumInfo ==
+EnumInfo::EnumInfo () :
+  name_ (""), values_ (NULL), n_values_ (0), flags_ (0)
+{}
+
+String
+EnumInfo::name () const
+{
+  return name_;
+}
+
+bool
+EnumInfo::flags_enum () const
+{
+  return flags_;
+}
+
 size_t
-enum_value_count (const EnumValue *values)
+EnumInfo::n_values () const
 {
-  size_t n = 0;
-  if (values)
-    while (values[n].ident)
-      n++;
-  return n;
+  return n_values_;
 }
 
 const EnumValue*
-enum_value_find (const EnumValue *values, int64 value)
+EnumInfo::values () const
 {
-  if (values)
-    for (size_t i = 0; values[i].ident; i++)
-      if (values[i].value == value)
-        return &values[i];
+  return values_;
+}
+
+EnumValueVector
+EnumInfo::value_vector () const
+{
+  std::vector<const EnumValue*> vv;
+  for (size_t i = 0; i < n_values_; i++)
+    vv.push_back (&values_[i]);
+  return vv;
+}
+
+const EnumValue*
+EnumInfo::find_value (int64 value) const
+{
+  for (size_t i = 0; i < n_values_; i++)
+    if (values_[i].value == value)
+      return &values_[i];
   return NULL;
 }
 
 const EnumValue*
-enum_value_find (const EnumValue *values, const String &name)
+EnumInfo::find_value (const String &name) const
 {
-  if (values)
-    for (size_t i = 0; values[i].ident; i++)
-      if (string_match_identifier_tail (values[i].ident, name))
-        return &values[i];
+  for (size_t i = 0; i < n_values_; i++)
+    if (string_match_identifier_tail (values_[i].ident, name))
+      return &values_[i];
   return NULL;
 }
+
+String
+EnumInfo::value_to_string (int64 value) const
+{
+  const EnumValue *ev = find_value (value);
+  if (ev)
+    return ev->ident;
+  else
+    return string_format ("%d", value);
+}
+
+int64
+EnumInfo::value_from_string (const String &valuestring) const
+{
+  const EnumValue *ev = find_value (valuestring);
+  if (ev)
+    return ev->value;
+  else
+    return string_to_int (valuestring);
+}
+
 
 // == TypeKind ==
-template<> const EnumValue*
-enum_value_list<TypeKind> ()
+template<> EnumInfo
+enum_info<TypeKind> ()
 {
   static const EnumValue values[] = {
     { UNTYPED,          "UNTYPED",              NULL, NULL },
@@ -132,16 +178,15 @@ enum_value_list<TypeKind> ()
     { LOCAL,            "LOCAL",                NULL, NULL },
     { REMOTE,           "REMOTE",               NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
-    { 0,                NULL,                   NULL, NULL }     // sentinel
   };
-  return values;
-}
-template const EnumValue* enum_value_list<TypeKind> ();
+  return ::Rapicorn::Aida::EnumInfo ("Rapicorn::Aida::TypeKind", values, false);
+} // specialization
+template<> EnumInfo enum_info<TypeKind> (); // instantiation
 
 const char*
 type_kind_name (TypeKind type_kind)
 {
-  const EnumValue *ev = enum_value_find (enum_value_list<TypeKind>(), type_kind);
+  const EnumValue *ev = enum_info<TypeKind>().find_value (type_kind);
   return ev ? ev->ident : NULL;
 }
 

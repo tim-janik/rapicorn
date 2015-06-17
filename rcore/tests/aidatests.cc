@@ -12,11 +12,12 @@ struct Bar { String s; };       // uncomparable
 static void
 test_basics()
 {
-  const Aida::EnumValue *tkv = Aida::enum_value_list<Aida::TypeKind>();
-  TASSERT (tkv != NULL && enum_value_count (tkv) > 0);
-  const Aida::EnumValue *ev = enum_value_find (tkv, "UNTYPED");
+  const Aida::EnumInfo tke1 = Aida::enum_info<Aida::TypeKind>();
+  const Aida::EnumInfo tke = tke1;
+  TASSERT (not tke.name().empty() && tke.n_values() > 0);
+  const Aida::EnumValue *ev = tke.find_value ("UNTYPED");
   TASSERT (ev && ev->value == Aida::UNTYPED);
-  ev = enum_value_find (tkv, Aida::STRING);
+  ev = tke.find_value (Aida::STRING);
   TASSERT (ev && String ("STRING") == ev->ident);
   TASSERT (type_kind_name (Aida::VOID) == String ("VOID"));
 

@@ -201,20 +201,20 @@ inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) {
 namespace Rapicorn {
 
 namespace Aida {
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum1> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum1c> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum2> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum2c> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum3> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum3c> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4a> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4b> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4c> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::Enum4d> ();
-template<> const EnumValue* enum_value_list<MandatoryNamespace::ExtensiveEnum> ();
-template<> const EnumValue* enum_value_list<InterfaceTests::QuickEnum> ();
-template<> const EnumValue* enum_value_list<RapicornAidaTest::ClickType> ();
-template<> const EnumValue* enum_value_list<RapicornAidaTest::MathExpressions> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum1> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum1c> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum2> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum2c> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum3> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum3c> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum4a> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum4b> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum4c> ();
+template<> EnumInfo enum_info<MandatoryNamespace::Enum4d> ();
+template<> EnumInfo enum_info<MandatoryNamespace::ExtensiveEnum> ();
+template<> EnumInfo enum_info<InterfaceTests::QuickEnum> ();
+template<> EnumInfo enum_info<RapicornAidaTest::ClickType> ();
+template<> EnumInfo enum_info<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
 
