@@ -408,7 +408,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooRecord&);
 struct SrvT_XFooSequence : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_XFooSequence&);
@@ -417,7 +418,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooSequence&);
 struct SrvT_IntSequence : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_IntSequence&);
@@ -426,7 +428,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_IntSequence&);
 struct SrvT_FloatSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_FloatSequence&);
@@ -435,7 +438,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_FloatSequence&);
 struct SrvT_StringSequence : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_StringSequence&);
@@ -444,7 +448,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_StringSequence&);
 struct SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_ExtensiveEnumSequence&);
@@ -453,7 +458,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_ExtensiveEnumSequence&);
 struct SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
 {
   typedef std::vector<SrvT_XFooRecord> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordSequence&);
@@ -462,7 +468,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordSequence&);
 struct SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
 {
   typedef std::vector<SrvT_IntSequence> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_SequenceSequence&);
@@ -471,7 +478,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SequenceSequence&);
 struct SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
 {
   typedef std::vector<I_FirstInterfaceIfaceP> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_InterfaceSequence&);
@@ -480,7 +488,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InterfaceSequence&);
 struct SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_AnySequence&);
@@ -508,7 +517,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesRec&);
 struct SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
 {
   typedef std::vector<SrvT_NestedTypesRec> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NestedTypesSeq&);
@@ -795,7 +805,8 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickRecord&);
 struct SrvT_QuickSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
   std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_QuickSequence&);
@@ -1360,12 +1371,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_XFooSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_XFooSequence::reference
-SrvT_XFooSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
-}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_IntSequence &self)
 {
@@ -1384,12 +1389,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_IntSequence &self)
   for (size_t k = 0; k < len; k++) {
     fbr >>= self[k];
   }
-}
-SrvT_IntSequence::reference
-SrvT_IntSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_FloatSequence &self)
@@ -1410,12 +1409,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_FloatSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_FloatSequence::reference
-SrvT_FloatSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
-}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_StringSequence &self)
 {
@@ -1434,12 +1427,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_StringSequence &self)
   for (size_t k = 0; k < len; k++) {
     fbr >>= self[k];
   }
-}
-SrvT_StringSequence::reference
-SrvT_StringSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_ExtensiveEnumSequence &self)
@@ -1460,12 +1447,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_ExtensiveEnumSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_ExtensiveEnumSequence::reference
-SrvT_ExtensiveEnumSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
-}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_RecordSequence &self)
 {
@@ -1484,12 +1465,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_RecordSequence &self)
   for (size_t k = 0; k < len; k++) {
     fbr >>= self[k];
   }
-}
-SrvT_RecordSequence::reference
-SrvT_RecordSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_SequenceSequence &self)
@@ -1510,12 +1485,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_SequenceSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_SequenceSequence::reference
-SrvT_SequenceSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
-}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_InterfaceSequence &self)
 {
@@ -1535,12 +1504,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_InterfaceSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_InterfaceSequence::reference
-SrvT_InterfaceSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
-}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_AnySequence &self)
 {
@@ -1559,12 +1522,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_AnySequence &self)
   for (size_t k = 0; k < len; k++) {
     fbr >>= self[k];
   }
-}
-SrvT_AnySequence::reference
-SrvT_AnySequence::append_back()
-{
-  resize (size() + 1);
-  return back();
 }
 bool
 SrvT_NestedTypesRec::operator== (const SrvT_NestedTypesRec &other) const
@@ -1606,12 +1563,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_NestedTypesSeq &self)
   for (size_t k = 0; k < len; k++) {
     fbr >>= self[k];
   }
-}
-SrvT_NestedTypesSeq::reference
-SrvT_NestedTypesSeq::append_back()
-{
-  resize (size() + 1);
-  return back();
 }
 bool
 SrvT_NewRecord::operator== (const SrvT_NewRecord &other) const
@@ -2014,12 +1965,6 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_QuickSequence &self)
   for (size_t k = 0; k < len; k++) {
     fbr >>= self[k];
   }
-}
-SrvT_QuickSequence::reference
-SrvT_QuickSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
 }
 
 Rapicorn::Aida::BaseConnection*

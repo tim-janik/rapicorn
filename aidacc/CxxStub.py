@@ -255,7 +255,8 @@ class Generator:
       s += '  /// @endcond\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.M (fl[1]) + '> Sequence;\n'
-      s += '  reference append_back(); ///< Append data at the end, returns write reference to data.\n'
+      s += '  reference append_back() ///< Append data at the end, returns write reference to data.\n'
+      s += '  { resize (size() + 1); return back(); }\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info) # ctor
       for fl in fieldlist:
@@ -334,11 +335,6 @@ class Generator:
     s += '  for (size_t k = 0; k < len; k++) {\n'
     s += '    fbr >>= self[k];\n'
     s += '  }\n'
-    s += '}\n'
-    s += '%s::reference\n' % self.C (type_info)
-    s += '%s::append_back()\n{\n' % self.C (type_info)
-    s += '  resize (size() + 1);\n'
-    s += '  return back();\n'
     s += '}\n'
     return s
   def generate_enum_impl (self, type_info):
