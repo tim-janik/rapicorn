@@ -43,11 +43,6 @@ class AidaMain:
       return None
 __builtins__.__Aida__ = AidaMain() # used by extensions
 
-class ParseError (Exception):
-  def __init__ (self, msg = "Parse Error", kind = "ParseError"):
-    Exception.__init__ (self, msg)
-    self.kind = kind
-
 def parse_main (config, filepairs):
   impltypes, error, caret, inclist = Parser.parse_files (config, filepairs)
   nsdict = {}
