@@ -8,7 +8,8 @@
 
 #include <rapicorn-core.hh> // for rcore/signal.hh
 
-#define __SRVT____testpass_idl__ENUMS
+#ifndef __ENUMHH____testpass_idl__
+#define __ENUMHH____testpass_idl__
 
 namespace MandatoryNamespace {
 
@@ -217,6 +218,9 @@ template<> EnumInfo enum_info<RapicornAidaTest::ClickType> ();
 template<> EnumInfo enum_info<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
+
+#endif // __ENUMHH____testpass_idl__
+
 
 // --- Interfaces (class declarations) ---
 

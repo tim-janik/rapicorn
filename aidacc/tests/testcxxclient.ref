@@ -85,8 +85,8 @@ operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
 } } // Rapicorn::Aida
 
 
-#ifndef __SRVT____testpass_idl__ENUMS
-#define __CLNT____testpass_idl__ENUMS
+#ifndef __ENUMHH____testpass_idl__
+#define __ENUMHH____testpass_idl__
 
 namespace MandatoryNamespace {
 
@@ -295,7 +295,8 @@ template<> EnumInfo enum_info<RapicornAidaTest::ClickType> ();
 template<> EnumInfo enum_info<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
-#endif // __SRVT____testpass_idl__ENUMS
+
+#endif // __ENUMHH____testpass_idl__
 
 
 // --- Interfaces (class declarations) ---
@@ -4145,6 +4146,8 @@ SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
 }
 } // BseTest
 
+#if     __ENUMCC____testpass_idl__ == 1
+
 namespace Rapicorn {
 
 namespace Aida {
@@ -4357,4 +4360,7 @@ enum_info<RapicornAidaTest::MathExpressions> ()
 template EnumInfo enum_info<RapicornAidaTest::MathExpressions> (); // instantiation
 } // Aida
 } // Rapicorn
+
+#endif // __ENUMCC____testpass_idl__
+
 #endif /* __CLNT____testpass_idl */

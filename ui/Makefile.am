@@ -126,6 +126,8 @@ clientapi.cc: $(CXXSTUB_PY) $(srcdir)/interfaces.idl clientapi.hh
 	  --inclusions '"clientapi.hh"' $(srcdir)/interfaces.idl -o - >> xgen-$(@F)
 	mv xgen-$(@F) $@
 CLEANFILES += clientapi.cc clientapi.hh
+# Choose either ClnT or SrvT implementation for enums to avoid duplicate symbols
+AM_CXXFLAGS += $(patsubst %, -D__ENUMCC__RAPICORN_IDL__=1, $(findstring $(<F), clientglue.cc serverglue.cc))
 # generate skeletons for non-virtual methods, skipping existing symbols
 skeletons.cc: $(CXXSTUB_PY) $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS)
 	for obj in $(librapicorn@RAPICORN_RELEASE@_la_OBJECTS) ; do case "$$obj" in \
