@@ -40,7 +40,8 @@ def parse2dict (type_info, name, arglist):
     raise AuxError (type_info.location, 'too many args for type definition: = %s%s(%s)' %
                     (name, name and ' ', ', '.join (str (a) for a in arglist)))
   # assign arglist to matching initializer positions
-  adict = {}
+  import collections
+  adict = collections.OrderedDict()
   for i in range (0, len (arglist)):
     arg = adef[i].split ('=')   # 'foo=0' => ['foo', ...]
     adict[arg[0]] = arglist[i]

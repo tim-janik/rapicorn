@@ -106,6 +106,8 @@ template<typename EnumType> String
 enum_value_to_string (EnumType evalue)                  ///< Type-safe variant of EnumInfo.value_to_string().
 { return Rapicorn::Aida::enum_info<EnumType>().value_to_string (evalue); }
 
+std::vector<const char*> split_aux_char_array (const char *char_array, size_t length); ///< Split @a char_array at '\\0'.
+
 // == TypeKind ==
 /// Classification enum for the underlying type.
 enum TypeKind {

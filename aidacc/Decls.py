@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
-import os, sys, re, shutil, hashlib;
+import os, sys, re, shutil, hashlib, collections
 true, false, length = (True, False, len)
 
 # --- types ---
@@ -109,7 +109,7 @@ class TypeInfo (BaseDecl):
       self.prerequisites = []
       self.methods = []         # holds: TypeInfo
       self.signals = []         # holds: TypeInfo
-    self.auxdata = {}
+    self.auxdata = collections.OrderedDict()
     if self.storage == STREAM:
       self.ioj_stream = ''      # one of: 'I', 'O', 'J'
   @staticmethod

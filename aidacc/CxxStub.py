@@ -21,6 +21,37 @@ rapicornsignal_boilerplate = r"""
 
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
+def backslash_quote (string):
+  return re.sub (r'(\\|")', r'\\\1', string)
+def cquote (string):
+  string = backslash_quote (string)
+  return '"' + string + '"'
+def cunquote (string):
+  assert len (string) >= 2 and string.startswith ('"') and string.endswith ('"')
+  string = string[1:-1]
+  string = re.sub (r'\\(\\|")', r'\1', string)
+  return string
+def cunquote_chain (stringchain): # handle: "foo""bar""zonk" -> "foobarzonk"
+  s, dq, sin = '', False, stringchain
+  while sin:
+    c, sin = sin[0], sin[1:]
+    if   c == '"':
+      dq = not dq
+    elif c == '\\':
+      assert len (sin) > 0
+      c, sin = sin[0], sin[1:]
+      s += c
+    else:
+      s += c
+  assert not dq
+  return s
+
+def aux_data_value_string (cvalue):
+  if isinstance (cvalue, str) and cvalue.startswith ('_(') and cvalue.endswith (')'):
+    cvalue = cvalue[2:-1]
+  if isinstance (cvalue, str):
+    return cunquote_chain (cvalue)
+  return str (cvalue)
 
 def hasancestor (child, parent):
   for p in child.prerequisites:
@@ -263,7 +294,8 @@ class Generator:
         if fl[1].storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
-    s += '  ' + self.F ('std::string') + '__aida_type_name__ () const\t{ return "%s"; }\n' % classFull
+    s += '  ' + self.F ('std::string') + '  __aida_type_name__ () const\t{ return "%s"; }\n' % classFull
+    s += '  ' + self.F ('const std::vector<const char*>&') + '__aida_aux_data__ () const;\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('bool') + 'operator==  (const %s &other) const;\n' % self.C (type_info)
       s += '  ' + self.F ('bool') + 'operator!=  (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
@@ -293,8 +325,31 @@ class Generator:
       ident = aprefix + ident + apostfix
       s += '  %s >>= %s;\n' % (fbr, ident)
     return s
+  def generate_aux_data_string (self, name, tp):
+    s, prefix = '', (name + '.' if name else '')
+    for k,v in tp.auxdata.items():
+      qvalue = backslash_quote (aux_data_value_string (v))
+      if qvalue:
+        s += '    "%s%s=%s\\0"\n' % (prefix, k, qvalue)
+    if tp.storage == Decls.SEQUENCE:
+      s += self.generate_aux_data_string (prefix + tp.elements[0], tp.elements[1])
+    if tp.storage == Decls.RECORD:
+      for fid, ftp in tp.fields:
+        s += self.generate_aux_data_string (prefix + fid, ftp)
+    return s
+  def generate_aux_data (self, type_info):
+    s = ''
+    s += 'const std::vector<const char*>&\n%s::__aida_aux_data__  () const\n{\n' % self.C (type_info)
+    aux_data_string = self.generate_aux_data_string ('', type_info)
+    aux_data_string = aux_data_string if aux_data_string else '    ""\n'
+    s += '  static const char aux_array[] =\n%s  ;\n' % aux_data_string
+    s += '  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));\n'
+    s += '  return aux_data;\n'
+    s += '}\n'
+    return s
   def generate_record_impl (self, type_info):
     s = ''
+    s += self.generate_aux_data (type_info)
     s += 'bool\n'
     s += '%s::operator== (const %s &other) const\n{\n' % (self.C (type_info), self.C (type_info))
     for field in type_info.fields:
@@ -316,6 +371,7 @@ class Generator:
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
+    s += self.generate_aux_data (type_info)
     el = type_info.elements
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
@@ -338,10 +394,6 @@ class Generator:
     s += '}\n'
     return s
   def generate_enum_impl (self, type_info):
-    def simple_quote (string):
-      string = re.sub (r'\\', r'\\\\', string)
-      string = re.sub ('"', r'\\"', string)
-      return '"' + string + '"'
     u_typename, c_typename = '__'.join (type_name_parts (type_info)), '::'.join (type_name_parts (type_info))
     s, varray = '\n', '_aida_enumvalues_%u' % self.idcounter
     self.idcounter += 1
@@ -354,7 +406,7 @@ class Generator:
       (ident, label, blurb, number) = opt
       # number = self.c_long_postfix (number)
       number = enum_ns + '::' + ident
-      ident = simple_quote (ident)
+      ident = cquote (ident)
       label = label if label else "NULL"
       blurb = blurb if blurb else "NULL"
       s += '    { %s, %s, %s, %s },\n' % (number, ident, label, blurb)

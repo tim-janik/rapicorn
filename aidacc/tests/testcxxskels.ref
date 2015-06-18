@@ -269,7 +269,8 @@ struct SrvT_XFooRecord
   Rapicorn::Aida::Any           any3;
   /// @endcond
   inline                        SrvT_XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_XFooRecord &other) const;
   bool                          operator!=  (const SrvT_XFooRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -302,7 +303,8 @@ struct SrvT_XFooSequence : public std::vector<bool>
   typedef std::vector<bool> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_XFooSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooSequence&);
@@ -312,7 +314,8 @@ struct SrvT_IntSequence : public std::vector<int>
   typedef std::vector<int> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_IntSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_IntSequence&);
@@ -322,7 +325,8 @@ struct SrvT_FloatSequence : public std::vector<double>
   typedef std::vector<double> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_FloatSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_FloatSequence&);
@@ -332,7 +336,8 @@ struct SrvT_StringSequence : public std::vector<std::string>
   typedef std::vector<std::string> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_StringSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_StringSequence&);
@@ -342,7 +347,8 @@ struct SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_ExtensiveEnumSequence&);
@@ -352,7 +358,8 @@ struct SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
   typedef std::vector<SrvT_XFooRecord> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordSequence&);
@@ -362,7 +369,8 @@ struct SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
   typedef std::vector<SrvT_IntSequence> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SequenceSequence&);
@@ -372,7 +380,8 @@ struct SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
   typedef std::vector<I_FirstInterfaceIfaceP> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InterfaceSequence&);
@@ -382,7 +391,8 @@ struct SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_AnySequence&);
@@ -394,7 +404,8 @@ struct SrvT_NestedTypesRec
   SrvT_XFooSequence             seq;
   /// @endcond
   inline                        SrvT_NestedTypesRec () { }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_NestedTypesRec &other) const;
   bool                          operator!=  (const SrvT_NestedTypesRec &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -411,7 +422,8 @@ struct SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
   typedef std::vector<SrvT_NestedTypesRec> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesSeq&);
@@ -425,7 +437,8 @@ struct SrvT_NewRecord
   SrvT_NestedTypesRec           ntr;
   /// @endcond
   inline                        SrvT_NewRecord () { i = 0; enum1 = Enum1 (0); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_NewRecord &other) const;
   bool                          operator!=  (const SrvT_NewRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -449,7 +462,8 @@ struct SrvT_InnerRecord
   SrvT_NewRecord                rec;
   /// @endcond
   inline                        SrvT_InnerRecord () { x = 0; y = 0; }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_InnerRecord &other) const;
   bool                          operator!=  (const SrvT_InnerRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -469,7 +483,8 @@ struct SrvT_Refer2Inner
   Inner::SrvT_InnerRecord       r;
   /// @endcond
   inline                        SrvT_Refer2Inner () { }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_Refer2Inner &other) const;
   bool                          operator!=  (const SrvT_Refer2Inner &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -492,7 +507,8 @@ struct SrvT_SomeRecord
   MandatoryNamespace::Inner::SrvT_InnerRecord r4;
   /// @endcond
   inline                        SrvT_SomeRecord () { }
-  std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_SomeRecord &other) const;
   bool                          operator!=  (const SrvT_SomeRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -519,7 +535,8 @@ struct SrvT_RecordWithAuxdata
   std::string                   aux_str;
   /// @endcond
   inline                        SrvT_RecordWithAuxdata () { aux_bool = 0; aux32 = 0; aux64 = 0; auxf64 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  std::string                     __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_RecordWithAuxdata &other) const;
   bool                          operator!=  (const SrvT_RecordWithAuxdata &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -682,7 +699,8 @@ struct SrvT_QuickRecord
   int                           int2;
   /// @endcond
   inline                        SrvT_QuickRecord () { int1 = 0; int2 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_QuickRecord &other) const;
   bool                          operator!=  (const SrvT_QuickRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -699,7 +717,8 @@ struct SrvT_QuickSequence : public std::vector<double>
   typedef std::vector<double> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_QuickSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickSequence&);
@@ -1068,7 +1087,8 @@ struct SrvT_RecordForGroups
   double                        threshold2;
   /// @endcond
   inline                        SrvT_RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  std::string                     __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_RecordForGroups &other) const;
   bool                          operator!=  (const SrvT_RecordForGroups &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
