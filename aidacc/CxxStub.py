@@ -21,7 +21,58 @@ rapicornsignal_boilerplate = r"""
 
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
+def backslash_quote (string):
+  return re.sub (r'(\\|")', r'\\\1', string)
+def cquote (string):
+  string = backslash_quote (string)
+  return '"' + string + '"'
+def cunquote (string):
+  assert len (string) >= 2 and string.startswith ('"') and string.endswith ('"')
+  string = string[1:-1]
+  string = re.sub (r'\\(\\|")', r'\1', string)
+  return string
+def cunquote_chain (stringchain): # handle: "foo""bar""zonk" -> "foobarzonk"
+  s, dq, sin = '', False, stringchain
+  while sin:
+    c, sin = sin[0], sin[1:]
+    if   c == '"':
+      dq = not dq
+    elif c == '\\':
+      assert len (sin) > 0
+      c, sin = sin[0], sin[1:]
+      s += c
+    else:
+      s += c
+  assert not dq
+  return s
 
+def aux_data_value_string (cvalue):
+  if isinstance (cvalue, str) and cvalue.startswith ('_(') and cvalue.endswith (')'):
+    cvalue = cvalue[2:-1]
+  if isinstance (cvalue, str):
+    return cunquote_chain (cvalue)
+  return str (cvalue)
+
+def hasancestor (child, parent):
+  for p in child.prerequisites:
+    if p == parent or hasancestor (p, parent):
+      return True
+def inherit_reduce (type_list):
+  # find the type(s) we *directly* derive from
+  reduced = []
+  while type_list:
+    p = type_list.pop()
+    skip = 0
+    for c in type_list + reduced:
+      if c == p or hasancestor (c, p):
+        skip = 1
+        break
+    if not skip:
+      reduced = [ p ] + reduced
+  return reduced
+def bases (tp):
+  ancestors = [pr for pr in tp.prerequisites]
+  return inherit_reduce (ancestors)
 def type_name_parts (type_node, include_empty = False):
   parts = [ns.name for ns in type_node.list_namespaces()] + [ type_node.name ]
   if not include_empty:
@@ -235,14 +286,16 @@ class Generator:
       s += '  /// @endcond\n'
     elif type_info.storage == Decls.SEQUENCE:
       s += '  typedef std::vector<' + self.M (fl[1]) + '> Sequence;\n'
-      s += '  reference append_back(); ///< Append data at the end, returns write reference to data.\n'
+      s += '  reference append_back() ///< Append data at the end, returns write reference to data.\n'
+      s += '  { resize (size() + 1); return back(); }\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('inline') + '%s () {' % self.C (type_info) # ctor
       for fl in fieldlist:
         if fl[1].storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
-    s += '  ' + self.F ('std::string') + '__aida_type_name__ () const\t{ return "%s"; }\n' % classFull
+    s += '  ' + self.F ('std::string') + '  __aida_type_name__ () const\t{ return "%s"; }\n' % classFull
+    s += '  ' + self.F ('const std::vector<const char*>&') + '__aida_aux_data__ () const;\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('bool') + 'operator==  (const %s &other) const;\n' % self.C (type_info)
       s += '  ' + self.F ('bool') + 'operator!=  (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
@@ -272,8 +325,31 @@ class Generator:
       ident = aprefix + ident + apostfix
       s += '  %s >>= %s;\n' % (fbr, ident)
     return s
+  def generate_aux_data_string (self, name, tp):
+    s, prefix = '', (name + '.' if name else '')
+    for k,v in tp.auxdata.items():
+      qvalue = backslash_quote (aux_data_value_string (v))
+      if qvalue:
+        s += '    "%s%s=%s\\0"\n' % (prefix, k, qvalue)
+    if tp.storage == Decls.SEQUENCE:
+      s += self.generate_aux_data_string (prefix + tp.elements[0], tp.elements[1])
+    if tp.storage == Decls.RECORD:
+      for fid, ftp in tp.fields:
+        s += self.generate_aux_data_string (prefix + fid, ftp)
+    return s
+  def generate_aux_data (self, type_info):
+    s = ''
+    s += 'const std::vector<const char*>&\n%s::__aida_aux_data__  () const\n{\n' % self.C (type_info)
+    aux_data_string = self.generate_aux_data_string ('', type_info)
+    aux_data_string = aux_data_string if aux_data_string else '    ""\n'
+    s += '  static const char aux_array[] =\n%s  ;\n' % aux_data_string
+    s += '  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));\n'
+    s += '  return aux_data;\n'
+    s += '}\n'
+    return s
   def generate_record_impl (self, type_info):
     s = ''
+    s += self.generate_aux_data (type_info)
     s += 'bool\n'
     s += '%s::operator== (const %s &other) const\n{\n' % (self.C (type_info), self.C (type_info))
     for field in type_info.fields:
@@ -295,6 +371,7 @@ class Generator:
     return s
   def generate_sequence_impl (self, type_info):
     s = ''
+    s += self.generate_aux_data (type_info)
     el = type_info.elements
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator<<= (Rapicorn::Aida::FieldBuffer &dst, const %s &self)\n{\n' % self.C (type_info)
@@ -315,17 +392,8 @@ class Generator:
     s += '    fbr >>= self[k];\n'
     s += '  }\n'
     s += '}\n'
-    s += '%s::reference\n' % self.C (type_info)
-    s += '%s::append_back()\n{\n' % self.C (type_info)
-    s += '  resize (size() + 1);\n'
-    s += '  return back();\n'
-    s += '}\n'
     return s
-  def generate_enum_impl (self, type_info):
-    def simple_quote (string):
-      string = re.sub (r'\\', r'\\\\', string)
-      string = re.sub ('"', r'\\"', string)
-      return '"' + string + '"'
+  def generate_enum_info_impl (self, type_info):
     u_typename, c_typename = '__'.join (type_name_parts (type_info)), '::'.join (type_name_parts (type_info))
     s, varray = '\n', '_aida_enumvalues_%u' % self.idcounter
     self.idcounter += 1
@@ -338,7 +406,7 @@ class Generator:
       (ident, label, blurb, number) = opt
       # number = self.c_long_postfix (number)
       number = enum_ns + '::' + ident
-      ident = simple_quote (ident)
+      ident = cquote (ident)
       label = label if label else "NULL"
       blurb = blurb if blurb else "NULL"
       s += '    { %s, %s, %s, %s },\n' % (number, ident, label, blurb)
@@ -376,29 +444,11 @@ class Generator:
           r += [ e ]
       return r
     return make_list_uniq (deep_ancestors (type_info))
-  def inherit_reduce (self, type_list):
-    def hasancestor (child, parent):
-      if child == parent:
-        return True
-      for childpre in child.prerequisites:
-        if hasancestor (childpre, parent):
-          return True
-    reduced = []
-    while type_list:
-      p = type_list.pop()
-      skip = 0
-      for c in type_list + reduced:
-        if hasancestor (c, p):
-          skip = 1
-          break
-      if not skip:
-        reduced = [ p ] + reduced
-    return reduced
   def interface_class_ancestors (self, type_info):
     l = []
     for pr in type_info.prerequisites:
       l += [ pr ]
-    l = self.inherit_reduce (l)
+    l = inherit_reduce (l)
     return l
   def interface_class_inheritance (self, type_info):
     aida_remotehandle, ddc = 'Rapicorn::Aida::RemoteHandle', False
@@ -466,7 +516,8 @@ class Generator:
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
-      s += '  ' + self.F ('Rapicorn::Aida::TypeHashList          ') + '__aida_typelist__  () const;\n'
+      if not bases (type_info):
+        s += '  ' + self.F ('Rapicorn::Aida::TypeHashList          ') + '__aida_typelist__  () const;\n'
       s += '  template<class RemoteHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (RemoteHandle smh) '
       s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_typelist__()); }\n' % classH
@@ -543,10 +594,8 @@ class Generator:
     s += '; \t///< %s\n' % copydoc
     return s
   def generate_aida_connection_impl (self, class_info):
-    precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    assert not bases (class_info) # must be non-derived type
     s, classC = '', self.C (class_info)
-    if not ddc:
-      return s
     s += 'Rapicorn::Aida::BaseConnection*\n'
     s += '%s::__aida_connection__()\n{\n' % classC
     if self.gen_mode == G4SERVANT:
@@ -559,6 +608,8 @@ class Generator:
     s, classH = '', self.C4client (class_info)
     classH2 = (classH, classH)
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
+    if not bases (class_info):
+      s += self.generate_client_base_class_methods (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % classH2 # dtor
@@ -585,12 +636,15 @@ class Generator:
     s += '    }\n'
     s += '  return target;\n'
     s += '}\n'
-    s += self.generate_aida_connection_impl (class_info)
+    return s
+  def generate_client_base_class_methods (self, tp):
+    s, classH = '', self.C4client (tp)
+    s += self.generate_aida_connection_impl (tp)
     s += 'Rapicorn::Aida::TypeHashList\n'
     s += '%s::__aida_typelist__() const\n{\n' % classH
     s += '  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);\n' # header + self
-    s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.list_types_digest (class_info)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
+    s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.list_types_digest (tp)
+    s += self.generate_proto_add_args ('fb', tp, '', [('*this', tp)], '')
     s += '  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
     s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
@@ -608,9 +662,11 @@ class Generator:
     s += '  return thl;\n'
     s += '}\n'
     return s
-  def generate_server_class_methods (self, class_info):
+  def generate_server_class_methods (self, tp):
     assert self.gen_mode == G4SERVANT
-    s, classC, classH = '\n', self.C (class_info), self.C4client (class_info)
+    s, classC, classH = '\n', self.C (tp), self.C4client (tp)
+    if not bases (tp):
+      s += self.generate_server_base_class_methods (tp)
     s += '%s::%s ()' % (classC, classC) # ctor
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % (classC, classC) # dtor
@@ -630,15 +686,18 @@ class Generator:
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
     s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr).get();\n' % classC
     s += '}\n'
-    s += self.generate_aida_connection_impl (class_info)
     s += 'Rapicorn::Aida::TypeHashList\n'
     s += '%s::__aida_typelist__ () const\n{\n' % classC
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    ancestors = self.class_ancestry (class_info)
+    ancestors = self.class_ancestry (tp)
     for an in ancestors:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
     s += '  return thl;\n'
     s += '}\n'
+    return s
+  def generate_server_base_class_methods (self, tp):
+    s, classC = '', self.C (tp)
+    s += self.generate_aida_connection_impl (tp)
     return s
   def generate_server_list_properties (self, class_info):
     def fill_range (ptype, hints):
@@ -845,20 +904,20 @@ class Generator:
     s += '  return &rb;\n'
     s += '}\n'
     return s
-  def generate_server_list_types (self, class_info, reglines):
+  def generate_server_list_types (self, tp, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__aida_call__%s____aida_typelist__' % class_info.name
-    digest = self.list_types_digest (class_info)
+    dispatcher_name = '__aida_call__%s____aida_typelist__' % tp.name
+    digest = self.list_types_digest (tp)
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::FieldBuffer*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
     s += '{\n'
     s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    s += '  %s *self;\n' % self.C (class_info)  # fetch self
+    s += '  %s *self;\n' % self.C (tp)  # fetch self
     s += '  fbr.skip_header();\n'
-    s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
+    s += self.generate_proto_pop_args ('fbr', tp, '', [('self', tp)])
     # support self==NULL here, to allow invalid cast handling at the client
     s += '  if (self) // guard against invalid casts\n'
     s += '    thl = self->__aida_typelist__();\n'
@@ -1144,8 +1203,9 @@ class Generator:
       return txt
     self.gen_mode = G4SERVANT if self.gen_serverhh or self.gen_servercc else G4STUB
     s = '// --- Generated by AidaCxxStub ---\n'
-    # CPP guard
+    # CPP guards
     sc_macro_prefix, sc_other_prefix = '__CLNT__', '__SRVT__' # for G4STUB
+    clntsrvt_id = 2 if self.gen_serverhh or self.gen_servercc else 1
     if self.gen_mode == G4SERVANT:
       sc_macro_prefix, sc_other_prefix = sc_other_prefix, sc_macro_prefix
     if self.gen_serverhh or self.gen_clienthh:
@@ -1179,10 +1239,8 @@ class Generator:
     # Generate Enum Declarations
     if self.gen_clienthh or self.gen_serverhh:
       s += self.open_namespace (None)
-      s += '\n'
-      if self.gen_clienthh:
-        s += '#ifndef %s__ENUMS\n' % (sc_other_prefix + self.cppmacro) # guard against duplicate declarations
-      s += '#define %s__ENUMS\n' % (sc_macro_prefix + self.cppmacro)
+      s += '\n#ifndef __ENUMHH__%s__\n' % self.cppmacro # guard against duplicate declarations
+      s += '#define __ENUMHH__%s__\n' % self.cppmacro
       spc_enums = []
       for tp in types:
         if tp.is_forward:
@@ -1196,8 +1254,7 @@ class Generator:
         for tp in spc_enums:
           s += self.generate_enum_info_specialization (tp)
         s += self.open_namespace (None)
-      if self.gen_clienthh:
-        s += '#endif // %s__ENUMS\n\n' % (sc_other_prefix + self.cppmacro)
+      s += '\n#endif // __ENUMHH__%s__\n\n' % self.cppmacro
     # generate client/server decls
     if self.gen_clienthh or self.gen_serverhh:
       self.gen_mode = G4SERVANT if self.gen_serverhh else G4STUB
@@ -1254,7 +1311,7 @@ class Generator:
             for m in tp.methods:
               s += self.generate_client_method_stub (tp, m)
     # Generate Enum Implementations
-    if self.gen_clientcc:
+    if self.gen_clientcc or self.gen_servercc:
       spc_enums = []
       for tp in types:
         if tp.is_forward:
@@ -1263,10 +1320,17 @@ class Generator:
           spc_enums += [ tp ]
       if spc_enums:
         s += self.open_namespace (None)
+        s += '\n'
+        if self.gen_servercc:
+          s += '#ifndef __ENUMCC__%s__\n' % self.cppmacro # pick default implementation
+          s += '#define __ENUMCC__%s__    %d\n' % (self.cppmacro, clntsrvt_id)
+          s += '#endif\n'
+        s += '#if     __ENUMCC__%s__ == %d\n' % (self.cppmacro, clntsrvt_id) # pick either client or server aliases
         s += self.open_namespace (self.ns_aida)
         for tp in spc_enums:
-          s += self.generate_enum_impl (tp)
+          s += self.generate_enum_info_impl (tp)
         s += self.open_namespace (None)
+        s += '\n#endif // __ENUMCC__%s__\n\n' % self.cppmacro
     # generate unmarshalling server calls
     if self.gen_servercc:
       self.gen_mode = G4SERVANT
@@ -1277,7 +1341,8 @@ class Generator:
           continue
         s += self.open_namespace (tp)
         if tp.storage == Decls.INTERFACE:
-          s += self.generate_server_list_types (tp, reglines)
+          if not bases (tp):
+            s += self.generate_server_list_types (tp, reglines)
           for fl in tp.fields:
             s += self.generate_server_property_getter (tp, fl[0], fl[1], reglines)
             s += self.generate_server_property_setter (tp, fl[0], fl[1], reglines)
@@ -1301,13 +1366,12 @@ class Generator:
     s += self.open_namespace (None) # close all namespaces
     # Generate Aliases (works for single namespace only)
     if len (self.aliases_namespaces) == 1 and (self.gen_serverhh or self.gen_clienthh):
-      alias_tag = 2 if self.gen_serverhh else 1
       s += '\n'
       s += '// C++ Aliases\n'
       s += '#ifndef __%s_ALIASES__\n' % self.cppmacro
-      s += '#define __%s_ALIASES__    %d\n' % (self.cppmacro, alias_tag)
+      s += '#define __%s_ALIASES__    %d\n' % (self.cppmacro, clntsrvt_id)
       s += '#endif\n'
-      s += '#if     __%s_ALIASES__ == %d' % (self.cppmacro, alias_tag) # pick eitehr client or server aliases
+      s += '#if     __%s_ALIASES__ == %d' % (self.cppmacro, clntsrvt_id) # pick either client or server aliases
       s += self.open_namespace (self.aliases_namespacenode)
       s += self.aliases
       s += self.open_namespace (None) # close all namespaces
@@ -1349,8 +1413,6 @@ def generate (namespace_list, **args):
       I_prefix_postfix = (I_prefix_postfix[0], opt[14:])
     if opt.startswith ('iface-prefix='):
       I_prefix_postfix = (opt[13:], I_prefix_postfix[1])
-    if opt.startswith ('iface-base='):
-      gg.iface_base = opt[11:]
     if opt.startswith ('property-list=') and opt[14:].lower() in ('0', 'no', 'none', 'false'):
       gg.property_list = ""
   for ifile in config['insertions']:

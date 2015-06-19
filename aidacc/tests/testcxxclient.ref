@@ -85,8 +85,8 @@ operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
 } } // Rapicorn::Aida
 
 
-#ifndef __SRVT____testpass_idl__ENUMS
-#define __CLNT____testpass_idl__ENUMS
+#ifndef __ENUMHH____testpass_idl__
+#define __ENUMHH____testpass_idl__
 
 namespace MandatoryNamespace {
 
@@ -295,7 +295,8 @@ template<> EnumInfo enum_info<RapicornAidaTest::ClickType> ();
 template<> EnumInfo enum_info<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
-#endif // __SRVT____testpass_idl__ENUMS
+
+#endif // __ENUMHH____testpass_idl__
 
 
 // --- Interfaces (class declarations) ---
@@ -346,7 +347,8 @@ struct ClnT_XFooRecord
   Rapicorn::Aida::Any           any3;
   /// @endcond
   inline                        ClnT_XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_XFooRecord &other) const;
   bool                          operator!=  (const ClnT_XFooRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -377,8 +379,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_XFooRecord&);
 struct ClnT_XFooSequence : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_XFooSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_XFooSequence&);
@@ -386,8 +390,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_XFooSequence&);
 struct ClnT_IntSequence : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_IntSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_IntSequence&);
@@ -395,8 +401,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_IntSequence&);
 struct ClnT_FloatSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_FloatSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_FloatSequence&);
@@ -404,8 +412,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_FloatSequence&);
 struct ClnT_StringSequence : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_StringSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_StringSequence&);
@@ -413,8 +423,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_StringSequence&);
 struct ClnT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_ExtensiveEnumSequence&);
@@ -422,8 +434,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_ExtensiveEnumSequence&);
 struct ClnT_RecordSequence : public std::vector<ClnT_XFooRecord>
 {
   typedef std::vector<ClnT_XFooRecord> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_RecordSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_RecordSequence&);
@@ -431,8 +445,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_RecordSequence&);
 struct ClnT_SequenceSequence : public std::vector<ClnT_IntSequence>
 {
   typedef std::vector<ClnT_IntSequence> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_SequenceSequence&);
@@ -440,8 +456,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_SequenceSequence&);
 struct ClnT_InterfaceSequence : public std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>>
 {
   typedef std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_InterfaceSequence&);
@@ -449,8 +467,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_InterfaceSequence&);
 struct ClnT_AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_AnySequence&);
@@ -462,7 +482,8 @@ struct ClnT_NestedTypesRec
   ClnT_XFooSequence             seq;
   /// @endcond
   inline                        ClnT_NestedTypesRec () { }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_NestedTypesRec &other) const;
   bool                          operator!=  (const ClnT_NestedTypesRec &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -477,8 +498,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_NestedTypesRec&);
 struct ClnT_NestedTypesSeq : public std::vector<ClnT_NestedTypesRec>
 {
   typedef std::vector<ClnT_NestedTypesRec> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_NestedTypesSeq&);
@@ -492,7 +515,8 @@ struct ClnT_NewRecord
   ClnT_NestedTypesRec           ntr;
   /// @endcond
   inline                        ClnT_NewRecord () { i = 0; enum1 = Enum1 (0); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_NewRecord &other) const;
   bool                          operator!=  (const ClnT_NewRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -516,7 +540,8 @@ struct ClnT_InnerRecord
   ClnT_NewRecord                rec;
   /// @endcond
   inline                        ClnT_InnerRecord () { x = 0; y = 0; }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_InnerRecord &other) const;
   bool                          operator!=  (const ClnT_InnerRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -536,7 +561,8 @@ struct ClnT_Refer2Inner
   Inner::ClnT_InnerRecord       r;
   /// @endcond
   inline                        ClnT_Refer2Inner () { }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_Refer2Inner &other) const;
   bool                          operator!=  (const ClnT_Refer2Inner &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -559,7 +585,8 @@ struct ClnT_SomeRecord
   MandatoryNamespace::Inner::ClnT_InnerRecord r4;
   /// @endcond
   inline                        ClnT_SomeRecord () { }
-  std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_SomeRecord &other) const;
   bool                          operator!=  (const ClnT_SomeRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -586,7 +613,8 @@ struct ClnT_RecordWithAuxdata
   std::string                   aux_str;
   /// @endcond
   inline                        ClnT_RecordWithAuxdata () { aux_bool = 0; aux32 = 0; aux64 = 0; auxf64 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  std::string                     __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_RecordWithAuxdata &other) const;
   bool                          operator!=  (const ClnT_RecordWithAuxdata &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -682,7 +710,6 @@ class ChildHandle : public virtual ParentHandle
 protected:
 public:
   virtual /*Des*/                       ~ChildHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static ChildHandle            down_cast (RemoteHandle smh) { return smh == NULL ? ChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ChildHandle ();
@@ -701,7 +728,6 @@ class DescendantHandle : public virtual ChildHandle
 protected:
 public:
   virtual /*Des*/                       ~DescendantHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static DescendantHandle       down_cast (RemoteHandle smh) { return smh == NULL ? DescendantHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      DescendantHandle ();
@@ -720,7 +746,6 @@ class GrandChildHandle : public virtual DescendantHandle
 protected:
 public:
   virtual /*Des*/                       ~GrandChildHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static GrandChildHandle       down_cast (RemoteHandle smh) { return smh == NULL ? GrandChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      GrandChildHandle ();
@@ -736,7 +761,8 @@ struct ClnT_QuickRecord
   int                           int2;
   /// @endcond
   inline                        ClnT_QuickRecord () { int1 = 0; int2 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_QuickRecord &other) const;
   bool                          operator!=  (const ClnT_QuickRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -751,8 +777,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_QuickRecord&);
 struct ClnT_QuickSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_QuickSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_QuickSequence&);
@@ -925,7 +953,6 @@ class ChildInheritingSignalsHandle : public virtual SignalTestInterfaceHandle
 protected:
 public:
   virtual /*Des*/                       ~ChildInheritingSignalsHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static ChildInheritingSignalsHandle down_cast (RemoteHandle smh) { return smh == NULL ? ChildInheritingSignalsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ChildInheritingSignalsHandle ();
@@ -945,7 +972,6 @@ class AnotherChildHandle : public virtual SignalTestInterfaceHandle
 protected:
 public:
   virtual /*Des*/                       ~AnotherChildHandle () override;
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static AnotherChildHandle     down_cast (RemoteHandle smh) { return smh == NULL ? AnotherChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      AnotherChildHandle ();
@@ -1119,7 +1145,8 @@ struct ClnT_RecordForGroups
   double                        threshold2;
   /// @endcond
   inline                        ClnT_RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  std::string                     __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const ClnT_RecordForGroups &other) const;
   bool                          operator!=  (const ClnT_RecordForGroups &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -1158,6 +1185,33 @@ typedef SoundModuleHandle SoundModuleH; ///< Convenience alias for the IDL type 
 // --- Implementations ---
 
 namespace MandatoryNamespace {
+Rapicorn::Aida::BaseConnection*
+FirstInterfaceHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+FirstInterfaceHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
 FirstInterfaceHandle::~FirstInterfaceHandle ()
@@ -1190,33 +1244,6 @@ FirstInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const 
     }
   return target;
 }
-Rapicorn::Aida::BaseConnection*
-FirstInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-FirstInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 void
 FirstInterfaceHandle::void_func () /// See FirstInterface::void_func()
 {
@@ -1225,6 +1252,15 @@ FirstInterfaceHandle::void_func () /// See FirstInterface::void_func()
   fb <<= *this;
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
+}
+const std::vector<const char*>&
+ClnT_XFooRecord::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 bool
 ClnT_XFooRecord::operator== (const ClnT_XFooRecord &other) const
@@ -1296,6 +1332,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_XFooRecord &self)
   fbr >>= self.any2;
   fbr >>= self.any3;
 }
+const std::vector<const char*>&
+ClnT_XFooSequence::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_XFooSequence &self)
 {
@@ -1315,11 +1360,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_XFooSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_XFooSequence::reference
-ClnT_XFooSequence::append_back()
+const std::vector<const char*>&
+ClnT_IntSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_IntSequence &self)
@@ -1340,11 +1388,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_IntSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_IntSequence::reference
-ClnT_IntSequence::append_back()
+const std::vector<const char*>&
+ClnT_FloatSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_FloatSequence &self)
@@ -1365,11 +1416,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_FloatSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_FloatSequence::reference
-ClnT_FloatSequence::append_back()
+const std::vector<const char*>&
+ClnT_StringSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_StringSequence &self)
@@ -1390,11 +1444,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_StringSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_StringSequence::reference
-ClnT_StringSequence::append_back()
+const std::vector<const char*>&
+ClnT_ExtensiveEnumSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_ExtensiveEnumSequence &self)
@@ -1415,11 +1472,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_ExtensiveEnumSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_ExtensiveEnumSequence::reference
-ClnT_ExtensiveEnumSequence::append_back()
+const std::vector<const char*>&
+ClnT_RecordSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_RecordSequence &self)
@@ -1440,11 +1500,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_RecordSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_RecordSequence::reference
-ClnT_RecordSequence::append_back()
+const std::vector<const char*>&
+ClnT_SequenceSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_SequenceSequence &self)
@@ -1465,11 +1528,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_SequenceSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_SequenceSequence::reference
-ClnT_SequenceSequence::append_back()
+const std::vector<const char*>&
+ClnT_InterfaceSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_InterfaceSequence &self)
@@ -1490,11 +1556,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_InterfaceSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_InterfaceSequence::reference
-ClnT_InterfaceSequence::append_back()
+const std::vector<const char*>&
+ClnT_AnySequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_AnySequence &self)
@@ -1515,11 +1584,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_AnySequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_AnySequence::reference
-ClnT_AnySequence::append_back()
+const std::vector<const char*>&
+ClnT_NestedTypesRec::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 bool
 ClnT_NestedTypesRec::operator== (const ClnT_NestedTypesRec &other) const
@@ -1543,6 +1615,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_NestedTypesRec &self)
   fbr >>= self.rec;
   fbr >>= self.seq;
 }
+const std::vector<const char*>&
+ClnT_NestedTypesSeq::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_NestedTypesSeq &self)
 {
@@ -1562,11 +1643,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_NestedTypesSeq &self)
     fbr >>= self[k];
   }
 }
-ClnT_NestedTypesSeq::reference
-ClnT_NestedTypesSeq::append_back()
+const std::vector<const char*>&
+ClnT_NewRecord::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 bool
 ClnT_NewRecord::operator== (const ClnT_NewRecord &other) const
@@ -1598,6 +1682,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_NewRecord &self)
 }
 
 namespace Inner {
+const std::vector<const char*>&
+ClnT_InnerRecord::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 ClnT_InnerRecord::operator== (const ClnT_InnerRecord &other) const
 {
@@ -1624,6 +1717,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_InnerRecord &self)
   fbr >>= self.rec;
 }
 } // Inner
+const std::vector<const char*>&
+ClnT_Refer2Inner::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 ClnT_Refer2Inner::operator== (const ClnT_Refer2Inner &other) const
 {
@@ -1646,6 +1748,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_Refer2Inner &self)
 } // MandatoryNamespace
 
 namespace OtherNamespace {
+const std::vector<const char*>&
+ClnT_SomeRecord::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 ClnT_SomeRecord::operator== (const ClnT_SomeRecord &other) const
 {
@@ -1677,6 +1788,34 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_SomeRecord &self)
 } // OtherNamespace
 
 namespace Auxdata {
+const std::vector<const char*>&
+ClnT_RecordWithAuxdata::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    "aux_bool.label=AuxBool\0"
+    "aux_bool.blurb=A Boolean\0"
+    "aux_bool.hints=rw\0"
+    "aux_bool.default=0\0"
+    "aux32.label=Aux32\0"
+    "aux32.blurb=The Bar number\0"
+    "aux32.hints=rw\0"
+    "aux32.default=10007.0\0"
+    "aux64.label=Aux64\0"
+    "aux64.blurb=64bit auxillary number\0"
+    "aux64.hints=rw\0"
+    "aux64.default=1152921504606846976\0"
+    "auxf64.label=AuxF64\0"
+    "auxf64.blurb=X coordinate\0"
+    "auxf64.hints=ro\0"
+    "auxf64.default=0.019\0"
+    "aux_str.label=AuxStr\0"
+    "aux_str.blurb=Specify text here\0"
+    "aux_str.hints=rw\0"
+    "aux_str.default=auxtest3\0"
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 ClnT_RecordWithAuxdata::operator== (const ClnT_RecordWithAuxdata &other) const
 {
@@ -1748,6 +1887,33 @@ UIWidgetAreaHandle::__aida_connect__sample_signal (size_t signal_handler_id, con
   void *fptr = new std::function<double (UIWidgetAreaHandle &ba1, int someint)> (func);
   return __AIDA_Local__::signal_connect (0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, *this, __aida_emit2__UIWidgetAreaHandle__sample_signal, fptr);
 }
+Rapicorn::Aida::BaseConnection*
+UIWidgetAreaHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+UIWidgetAreaHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 UIWidgetAreaHandle::UIWidgetAreaHandle ()
 {}
 UIWidgetAreaHandle::~UIWidgetAreaHandle ()
@@ -1779,33 +1945,6 @@ UIWidgetAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Ra
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-UIWidgetAreaHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-UIWidgetAreaHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 bool
 UIWidgetAreaHandle::dummy () const /// See UIWidgetArea::dummy
@@ -2008,6 +2147,33 @@ UIWidgetAreaHandle::on_click2in (const std::string &arg_command) /// See UIWidge
   fr = __AIDA_Local__::invoke (&fb);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
+Rapicorn::Aida::BaseConnection*
+ParentHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+ParentHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 ParentHandle::ParentHandle ()
 {}
 ParentHandle::~ParentHandle ()
@@ -2039,33 +2205,6 @@ ParentHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-ParentHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-ParentHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 ChildHandle::ChildHandle ()
 {}
@@ -2099,28 +2238,6 @@ ChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapicorn:
     }
   return target;
 }
-Rapicorn::Aida::TypeHashList
-ChildHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 DescendantHandle::DescendantHandle ()
 {}
 DescendantHandle::~DescendantHandle ()
@@ -2152,28 +2269,6 @@ DescendantHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
       break;
     }
   return target;
-}
-Rapicorn::Aida::TypeHashList
-DescendantHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 GrandChildHandle::GrandChildHandle ()
 {}
@@ -2207,27 +2302,14 @@ GrandChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
     }
   return target;
 }
-Rapicorn::Aida::TypeHashList
-GrandChildHandle::__aida_typelist__() const
+const std::vector<const char*>&
+ClnT_QuickRecord::__aida_aux_data__  () const
 {
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 bool
 ClnT_QuickRecord::operator== (const ClnT_QuickRecord &other) const
@@ -2251,6 +2333,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_QuickRecord &self)
   fbr >>= self.int1;
   fbr >>= self.int2;
 }
+const std::vector<const char*>&
+ClnT_QuickSequence::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const ClnT_QuickSequence &self)
 {
@@ -2270,11 +2361,32 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_QuickSequence &self)
     fbr >>= self[k];
   }
 }
-ClnT_QuickSequence::reference
-ClnT_QuickSequence::append_back()
+Rapicorn::Aida::BaseConnection*
+QuickIfaceHandle::__aida_connection__()
 {
-  resize (size() + 1);
-  return back();
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+QuickIfaceHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
 }
 QuickIfaceHandle::QuickIfaceHandle ()
 {}
@@ -2308,16 +2420,26 @@ QuickIfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
     }
   return target;
 }
+void
+QuickIfaceHandle::simple_function (int arg_i) /// See QuickIface::simple_function()
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
+  __AIDA_Local__::add_header1_call (fb, *this, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
+  fb <<= *this;
+  fb <<= arg_i;
+  fr = __AIDA_Local__::invoke (&fb);
+  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
+}
 Rapicorn::Aida::BaseConnection*
-QuickIfaceHandle::__aida_connection__()
+MethodTestInterfaceHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 Rapicorn::Aida::TypeHashList
-QuickIfaceHandle::__aida_typelist__() const
+MethodTestInterfaceHandle::__aida_typelist__() const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -2334,16 +2456,6 @@ QuickIfaceHandle::__aida_typelist__() const
   }
   delete fr;
   return thl;
-}
-void
-QuickIfaceHandle::simple_function (int arg_i) /// See QuickIface::simple_function()
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (fb, *this, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
-  fb <<= *this;
-  fb <<= arg_i;
-  fr = __AIDA_Local__::invoke (&fb);
-  if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
 MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
@@ -2376,33 +2488,6 @@ MethodTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, c
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-MethodTestInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-MethodTestInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 void
 MethodTestInterfaceHandle::method_with_void () /// See MethodTestInterface::method_with_void()
@@ -3041,6 +3126,33 @@ SignalTestInterfaceHandle::__aida_connect__self_args (size_t signal_handler_id, 
   void *fptr = new std::function<void (SignalTestInterfaceHandle &self_)> (func);
   return __AIDA_Local__::signal_connect (0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, *this, __aida_emit1__SignalTestInterfaceHandle__self_args, fptr);
 }
+Rapicorn::Aida::BaseConnection*
+SignalTestInterfaceHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+SignalTestInterfaceHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 {}
 SignalTestInterfaceHandle::~SignalTestInterfaceHandle ()
@@ -3072,33 +3184,6 @@ SignalTestInterfaceHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, c
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-SignalTestInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-SignalTestInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 static Rapicorn::Aida::FieldBuffer*
 __aida_emit1__ChildInheritingSignalsHandle__child_signal (const Rapicorn::Aida::FieldBuffer *sfb, void *data)
@@ -3149,28 +3234,6 @@ ChildInheritingSignalsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other
     }
   return target;
 }
-Rapicorn::Aida::TypeHashList
-ChildInheritingSignalsHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 AnotherChildHandle::AnotherChildHandle ()
 {}
 AnotherChildHandle::~AnotherChildHandle ()
@@ -3203,11 +3266,16 @@ AnotherChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Ra
     }
   return target;
 }
+Rapicorn::Aida::BaseConnection*
+PropertyTesterHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
 Rapicorn::Aida::TypeHashList
-AnotherChildHandle::__aida_typelist__() const
+PropertyTesterHandle::__aida_typelist__() const
 {
   Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL);
   fb <<= *this;
   Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
   AIDA_CHECK (fr != NULL, "missing result from 2-way call");
@@ -3256,33 +3324,6 @@ PropertyTesterHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const 
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-PropertyTesterHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-PropertyTesterHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 bool
 PropertyTesterHandle::bool_prop () const /// See PropertyTester::bool_prop
@@ -3588,6 +3629,33 @@ ButtonAreaHandle::__aida_connect__activate (size_t signal_handler_id, const std:
   void *fptr = new std::function<void ()> (func);
   return __AIDA_Local__::signal_connect (0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, *this, __aida_emit1__ButtonAreaHandle__activate, fptr);
 }
+Rapicorn::Aida::BaseConnection*
+ButtonAreaHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+ButtonAreaHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 ButtonAreaHandle::ButtonAreaHandle ()
 {}
 ButtonAreaHandle::~ButtonAreaHandle ()
@@ -3619,33 +3687,6 @@ ButtonAreaHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-ButtonAreaHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-ButtonAreaHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 std::string
 ButtonAreaHandle::on_click () const /// See ButtonArea::on_click
@@ -3743,6 +3784,33 @@ ButtonAreaHandle::click_type (ClickType value) /// See ButtonArea::click_type
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
+Rapicorn::Aida::BaseConnection*
+PureMethodsHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+PureMethodsHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 PureMethodsHandle::PureMethodsHandle ()
 {}
 PureMethodsHandle::~PureMethodsHandle ()
@@ -3775,33 +3843,6 @@ PureMethodsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
     }
   return target;
 }
-Rapicorn::Aida::BaseConnection*
-PureMethodsHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-PureMethodsHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 int
 PureMethodsHandle::pure_method (double arg_f) /// See PureMethods::pure_method()
 {
@@ -3820,6 +3861,33 @@ PureMethodsHandle::pure_method (double arg_f) /// See PureMethods::pure_method()
 } // RapicornAidaTest
 
 namespace Other {
+Rapicorn::Aida::BaseConnection*
+NameTestsHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+NameTestsHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 NameTestsHandle::NameTestsHandle ()
 {}
 NameTestsHandle::~NameTestsHandle ()
@@ -3852,33 +3920,6 @@ NameTestsHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapic
     }
   return target;
 }
-Rapicorn::Aida::BaseConnection*
-NameTestsHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-NameTestsHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 void
 NameTestsHandle::args_from_other_namespace (const InterfaceTests::ClnT_QuickRecord &arg_qr,
                                             RapicornAidaTest::ClickType arg_qe,
@@ -3896,6 +3937,33 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::ClnT_QuickReco
 } // Other
 
 namespace BseTest {
+Rapicorn::Aida::BaseConnection*
+CompressorHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+CompressorHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
+}
 CompressorHandle::CompressorHandle ()
 {}
 CompressorHandle::~CompressorHandle ()
@@ -3927,33 +3995,6 @@ CompressorHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-CompressorHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-CompressorHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
 }
 double
 CompressorHandle::threshold () const /// See Compressor::threshold
@@ -4003,6 +4044,16 @@ CompressorHandle::ratio (double value) /// See Compressor::ratio
   fr = __AIDA_Local__::invoke (&fb);
   if (fr) delete fr;
 }
+const std::vector<const char*>&
+ClnT_RecordForGroups::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    "ratio.hints=w\0"
+    "ratio.default=0\0"
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 ClnT_RecordForGroups::operator== (const ClnT_RecordForGroups &other) const
 {
@@ -4033,6 +4084,33 @@ operator>>= (Rapicorn::Aida::FieldReader &src, ClnT_RecordForGroups &self)
   fbr >>= self.ordinary_bool;
   fbr >>= self.threshold1;
   fbr >>= self.threshold2;
+}
+Rapicorn::Aida::BaseConnection*
+SoundModuleHandle::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
+}
+Rapicorn::Aida::TypeHashList
+SoundModuleHandle::__aida_typelist__() const
+{
+  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
+  __AIDA_Local__::add_header2_call (fb, *this, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL);
+  fb <<= *this;
+  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
+  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
+  Rapicorn::Aida::FieldReader frr (*fr);
+  frr.skip_header();
+  size_t len;
+  frr >>= len;
+  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
+  Rapicorn::Aida::TypeHashList thl;
+  Rapicorn::Aida::TypeHash thash;
+  for (size_t i = 0; i < len; i++) {
+    frr >>= thash;
+    thl.push_back (thash);
+  }
+  delete fr;
+  return thl;
 }
 SoundModuleHandle::SoundModuleHandle ()
 {}
@@ -4066,34 +4144,9 @@ SoundModuleHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rap
     }
   return target;
 }
-Rapicorn::Aida::BaseConnection*
-SoundModuleHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-SoundModuleHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::FieldBuffer &fb = *Rapicorn::Aida::FieldBuffer::_new (3 + 1);
-  __AIDA_Local__::add_header2_call (fb, *this, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL);
-  fb <<= *this;
-  Rapicorn::Aida::FieldBuffer *fr = __AIDA_Local__::invoke (&fb);
-  AIDA_CHECK (fr != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::FieldReader frr (*fr);
-  frr.skip_header();
-  size_t len;
-  frr >>= len;
-  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    frr >>= thash;
-    thl.push_back (thash);
-  }
-  delete fr;
-  return thl;
-}
 } // BseTest
+
+#if     __ENUMCC____testpass_idl__ == 1
 
 namespace Rapicorn {
 
@@ -4307,4 +4360,7 @@ enum_info<RapicornAidaTest::MathExpressions> ()
 template EnumInfo enum_info<RapicornAidaTest::MathExpressions> (); // instantiation
 } // Aida
 } // Rapicorn
+
+#endif // __ENUMCC____testpass_idl__
+
 #endif /* __CLNT____testpass_idl */

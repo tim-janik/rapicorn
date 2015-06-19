@@ -116,7 +116,8 @@ operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
 } } // Rapicorn::Aida
 
 
-#define __SRVT____testpass_idl__ENUMS
+#ifndef __ENUMHH____testpass_idl__
+#define __ENUMHH____testpass_idl__
 
 namespace MandatoryNamespace {
 
@@ -326,6 +327,9 @@ template<> EnumInfo enum_info<RapicornAidaTest::MathExpressions> ();
 } // Aida
 } // Rapicorn
 
+#endif // __ENUMHH____testpass_idl__
+
+
 // --- Interfaces (class declarations) ---
 
 namespace MandatoryNamespace {
@@ -377,7 +381,8 @@ struct SrvT_XFooRecord
   Rapicorn::Aida::Any           any3;
   /// @endcond
   inline                        SrvT_XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_XFooRecord &other) const;
   bool                          operator!=  (const SrvT_XFooRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -408,8 +413,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooRecord&);
 struct SrvT_XFooSequence : public std::vector<bool>
 {
   typedef std::vector<bool> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_XFooSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooSequence&);
@@ -417,8 +424,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooSequence&);
 struct SrvT_IntSequence : public std::vector<int>
 {
   typedef std::vector<int> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_IntSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_IntSequence&);
@@ -426,8 +435,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_IntSequence&);
 struct SrvT_FloatSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_FloatSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_FloatSequence&);
@@ -435,8 +446,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_FloatSequence&);
 struct SrvT_StringSequence : public std::vector<std::string>
 {
   typedef std::vector<std::string> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_StringSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_StringSequence&);
@@ -444,8 +457,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_StringSequence&);
 struct SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
   typedef std::vector<ExtensiveEnum> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_ExtensiveEnumSequence&);
@@ -453,8 +468,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_ExtensiveEnumSequence&);
 struct SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
 {
   typedef std::vector<SrvT_XFooRecord> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordSequence&);
@@ -462,8 +479,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordSequence&);
 struct SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
 {
   typedef std::vector<SrvT_IntSequence> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_SequenceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SequenceSequence&);
@@ -471,8 +490,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SequenceSequence&);
 struct SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
 {
   typedef std::vector<I_FirstInterfaceIfaceP> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InterfaceSequence&);
@@ -480,8 +501,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InterfaceSequence&);
 struct SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_AnySequence&);
@@ -493,7 +516,8 @@ struct SrvT_NestedTypesRec
   SrvT_XFooSequence             seq;
   /// @endcond
   inline                        SrvT_NestedTypesRec () { }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_NestedTypesRec &other) const;
   bool                          operator!=  (const SrvT_NestedTypesRec &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -508,8 +532,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesRec&);
 struct SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
 {
   typedef std::vector<SrvT_NestedTypesRec> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesSeq&);
@@ -523,7 +549,8 @@ struct SrvT_NewRecord
   SrvT_NestedTypesRec           ntr;
   /// @endcond
   inline                        SrvT_NewRecord () { i = 0; enum1 = Enum1 (0); }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_NewRecord &other) const;
   bool                          operator!=  (const SrvT_NewRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -547,7 +574,8 @@ struct SrvT_InnerRecord
   SrvT_NewRecord                rec;
   /// @endcond
   inline                        SrvT_InnerRecord () { x = 0; y = 0; }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_InnerRecord &other) const;
   bool                          operator!=  (const SrvT_InnerRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -567,7 +595,8 @@ struct SrvT_Refer2Inner
   Inner::SrvT_InnerRecord       r;
   /// @endcond
   inline                        SrvT_Refer2Inner () { }
-  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_Refer2Inner &other) const;
   bool                          operator!=  (const SrvT_Refer2Inner &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -590,7 +619,8 @@ struct SrvT_SomeRecord
   MandatoryNamespace::Inner::SrvT_InnerRecord r4;
   /// @endcond
   inline                        SrvT_SomeRecord () { }
-  std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_SomeRecord &other) const;
   bool                          operator!=  (const SrvT_SomeRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -617,7 +647,8 @@ struct SrvT_RecordWithAuxdata
   std::string                   aux_str;
   /// @endcond
   inline                        SrvT_RecordWithAuxdata () { aux_bool = 0; aux32 = 0; aux64 = 0; auxf64 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  std::string                     __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_RecordWithAuxdata &other) const;
   bool                          operator!=  (const SrvT_RecordWithAuxdata &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -780,7 +811,8 @@ struct SrvT_QuickRecord
   int                           int2;
   /// @endcond
   inline                        SrvT_QuickRecord () { int1 = 0; int2 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_QuickRecord &other) const;
   bool                          operator!=  (const SrvT_QuickRecord &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -795,8 +827,10 @@ void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickRecord&);
 struct SrvT_QuickSequence : public std::vector<double>
 {
   typedef std::vector<double> Sequence;
-  reference append_back(); ///< Append data at the end, returns write reference to data.
-  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  reference append_back() ///< Append data at the end, returns write reference to data.
+  { resize (size() + 1); return back(); }
+  std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
 };
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_QuickSequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickSequence&);
@@ -1165,7 +1199,8 @@ struct SrvT_RecordForGroups
   double                        threshold2;
   /// @endcond
   inline                        SrvT_RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
-  std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  std::string                     __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  const std::vector<const char*>& __aida_aux_data__ () const;
   bool                          operator==  (const SrvT_RecordForGroups &other) const;
   bool                          operator!=  (const SrvT_RecordForGroups &other) const { return !operator== (other); }
   template<class Visitor> void  __accept__  (Visitor _visitor_)
@@ -1227,6 +1262,11 @@ void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIfaceP&);
 
 namespace MandatoryNamespace {
 
+Rapicorn::Aida::BaseConnection*
+I_FirstInterfaceIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_FirstInterfaceIface::I_FirstInterfaceIface ()
 {}
 I_FirstInterfaceIface::~I_FirstInterfaceIface ()
@@ -1251,11 +1291,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_FirstInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_FirstInterfaceIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_FirstInterfaceIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_FirstInterfaceIface::__aida_typelist__ () const
 {
@@ -1270,6 +1305,15 @@ I_FirstInterfaceIface::__aida_properties__ ()
   };
   static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
+}
+const std::vector<const char*>&
+SrvT_XFooRecord::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 bool
 SrvT_XFooRecord::operator== (const SrvT_XFooRecord &other) const
@@ -1341,6 +1385,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_XFooRecord &self)
   fbr >>= self.any2;
   fbr >>= self.any3;
 }
+const std::vector<const char*>&
+SrvT_XFooSequence::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_XFooSequence &self)
 {
@@ -1360,11 +1413,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_XFooSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_XFooSequence::reference
-SrvT_XFooSequence::append_back()
+const std::vector<const char*>&
+SrvT_IntSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_IntSequence &self)
@@ -1385,11 +1441,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_IntSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_IntSequence::reference
-SrvT_IntSequence::append_back()
+const std::vector<const char*>&
+SrvT_FloatSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_FloatSequence &self)
@@ -1410,11 +1469,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_FloatSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_FloatSequence::reference
-SrvT_FloatSequence::append_back()
+const std::vector<const char*>&
+SrvT_StringSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_StringSequence &self)
@@ -1435,11 +1497,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_StringSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_StringSequence::reference
-SrvT_StringSequence::append_back()
+const std::vector<const char*>&
+SrvT_ExtensiveEnumSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_ExtensiveEnumSequence &self)
@@ -1460,11 +1525,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_ExtensiveEnumSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_ExtensiveEnumSequence::reference
-SrvT_ExtensiveEnumSequence::append_back()
+const std::vector<const char*>&
+SrvT_RecordSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_RecordSequence &self)
@@ -1485,11 +1553,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_RecordSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_RecordSequence::reference
-SrvT_RecordSequence::append_back()
+const std::vector<const char*>&
+SrvT_SequenceSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_SequenceSequence &self)
@@ -1510,11 +1581,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_SequenceSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_SequenceSequence::reference
-SrvT_SequenceSequence::append_back()
+const std::vector<const char*>&
+SrvT_InterfaceSequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_InterfaceSequence &self)
@@ -1535,11 +1609,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_InterfaceSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_InterfaceSequence::reference
-SrvT_InterfaceSequence::append_back()
+const std::vector<const char*>&
+SrvT_AnySequence::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_AnySequence &self)
@@ -1560,11 +1637,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_AnySequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_AnySequence::reference
-SrvT_AnySequence::append_back()
+const std::vector<const char*>&
+SrvT_NestedTypesRec::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 bool
 SrvT_NestedTypesRec::operator== (const SrvT_NestedTypesRec &other) const
@@ -1588,6 +1668,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_NestedTypesRec &self)
   fbr >>= self.rec;
   fbr >>= self.seq;
 }
+const std::vector<const char*>&
+SrvT_NestedTypesSeq::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_NestedTypesSeq &self)
 {
@@ -1607,11 +1696,14 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_NestedTypesSeq &self)
     fbr >>= self[k];
   }
 }
-SrvT_NestedTypesSeq::reference
-SrvT_NestedTypesSeq::append_back()
+const std::vector<const char*>&
+SrvT_NewRecord::__aida_aux_data__  () const
 {
-  resize (size() + 1);
-  return back();
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 bool
 SrvT_NewRecord::operator== (const SrvT_NewRecord &other) const
@@ -1643,6 +1735,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_NewRecord &self)
 }
 
 namespace Inner {
+const std::vector<const char*>&
+SrvT_InnerRecord::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 SrvT_InnerRecord::operator== (const SrvT_InnerRecord &other) const
 {
@@ -1669,6 +1770,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_InnerRecord &self)
   fbr >>= self.rec;
 }
 } // Inner
+const std::vector<const char*>&
+SrvT_Refer2Inner::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 SrvT_Refer2Inner::operator== (const SrvT_Refer2Inner &other) const
 {
@@ -1691,6 +1801,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_Refer2Inner &self)
 } // MandatoryNamespace
 
 namespace OtherNamespace {
+const std::vector<const char*>&
+SrvT_SomeRecord::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 SrvT_SomeRecord::operator== (const SrvT_SomeRecord &other) const
 {
@@ -1722,6 +1841,34 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_SomeRecord &self)
 } // OtherNamespace
 
 namespace Auxdata {
+const std::vector<const char*>&
+SrvT_RecordWithAuxdata::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    "aux_bool.label=AuxBool\0"
+    "aux_bool.blurb=A Boolean\0"
+    "aux_bool.hints=rw\0"
+    "aux_bool.default=0\0"
+    "aux32.label=Aux32\0"
+    "aux32.blurb=The Bar number\0"
+    "aux32.hints=rw\0"
+    "aux32.default=10007.0\0"
+    "aux64.label=Aux64\0"
+    "aux64.blurb=64bit auxillary number\0"
+    "aux64.hints=rw\0"
+    "aux64.default=1152921504606846976\0"
+    "auxf64.label=AuxF64\0"
+    "auxf64.blurb=X coordinate\0"
+    "auxf64.hints=ro\0"
+    "auxf64.default=0.019\0"
+    "aux_str.label=AuxStr\0"
+    "aux_str.blurb=Specify text here\0"
+    "aux_str.hints=rw\0"
+    "aux_str.default=auxtest3\0"
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 SrvT_RecordWithAuxdata::operator== (const SrvT_RecordWithAuxdata &other) const
 {
@@ -1757,6 +1904,11 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_RecordWithAuxdata &self)
 
 namespace InterfaceTests {
 
+Rapicorn::Aida::BaseConnection*
+I_UIWidgetAreaIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_UIWidgetAreaIface::I_UIWidgetAreaIface ()
 {}
 I_UIWidgetAreaIface::~I_UIWidgetAreaIface ()
@@ -1781,11 +1933,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_UIWidgetAreaIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_UIWidgetAreaIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_UIWidgetAreaIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_UIWidgetAreaIface::__aida_typelist__ () const
 {
@@ -1804,6 +1951,11 @@ I_UIWidgetAreaIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_ParentIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_ParentIface::I_ParentIface ()
 {}
 I_ParentIface::~I_ParentIface ()
@@ -1827,11 +1979,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ParentIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_ParentIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_ParentIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_ParentIface::__aida_typelist__ () const
@@ -1974,6 +2121,15 @@ I_GrandChildIface::__aida_properties__ ()
   static const Rapicorn::Aida::PropertyList property_list (properties, I_DescendantIface::__aida_properties__());
   return property_list;
 }
+const std::vector<const char*>&
+SrvT_QuickRecord::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 bool
 SrvT_QuickRecord::operator== (const SrvT_QuickRecord &other) const
 {
@@ -1996,6 +2152,15 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_QuickRecord &self)
   fbr >>= self.int1;
   fbr >>= self.int2;
 }
+const std::vector<const char*>&
+SrvT_QuickSequence::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    ""
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
+}
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::FieldBuffer &dst, const SrvT_QuickSequence &self)
 {
@@ -2015,13 +2180,12 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_QuickSequence &self)
     fbr >>= self[k];
   }
 }
-SrvT_QuickSequence::reference
-SrvT_QuickSequence::append_back()
-{
-  resize (size() + 1);
-  return back();
-}
 
+Rapicorn::Aida::BaseConnection*
+I_QuickIfaceIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_QuickIfaceIface::I_QuickIfaceIface ()
 {}
 I_QuickIfaceIface::~I_QuickIfaceIface ()
@@ -2046,11 +2210,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_QuickIfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_QuickIfaceIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_QuickIfaceIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_QuickIfaceIface::__aida_typelist__ () const
 {
@@ -2067,6 +2226,11 @@ I_QuickIfaceIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_MethodTestInterfaceIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_MethodTestInterfaceIface::I_MethodTestInterfaceIface ()
 {}
 I_MethodTestInterfaceIface::~I_MethodTestInterfaceIface ()
@@ -2091,11 +2255,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_MethodTestInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_MethodTestInterfaceIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_MethodTestInterfaceIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_MethodTestInterfaceIface::__aida_typelist__ () const
 {
@@ -2112,6 +2271,11 @@ I_MethodTestInterfaceIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_SignalTestInterfaceIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_SignalTestInterfaceIface::I_SignalTestInterfaceIface ()
 {}
 I_SignalTestInterfaceIface::~I_SignalTestInterfaceIface ()
@@ -2135,11 +2299,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SignalTestInterfaceIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_SignalTestInterfaceIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_SignalTestInterfaceIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_SignalTestInterfaceIface::__aida_typelist__ () const
@@ -2239,6 +2398,11 @@ I_AnotherChildIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_PropertyTesterIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_PropertyTesterIface::I_PropertyTesterIface ()
 {}
 I_PropertyTesterIface::~I_PropertyTesterIface ()
@@ -2262,11 +2426,6 @@ void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PropertyTesterIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_PropertyTesterIface> (fbr).get();
-}
-Rapicorn::Aida::BaseConnection*
-I_PropertyTesterIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
 }
 Rapicorn::Aida::TypeHashList
 I_PropertyTesterIface::__aida_typelist__ () const
@@ -2298,6 +2457,11 @@ I_PropertyTesterIface::__aida_properties__ ()
 
 namespace RapicornAidaTest {
 
+Rapicorn::Aida::BaseConnection*
+I_ButtonAreaIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_ButtonAreaIface::I_ButtonAreaIface ()
 {}
 I_ButtonAreaIface::~I_ButtonAreaIface ()
@@ -2322,11 +2486,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ButtonAreaIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_ButtonAreaIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_ButtonAreaIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_ButtonAreaIface::__aida_typelist__ () const
 {
@@ -2347,6 +2506,11 @@ I_ButtonAreaIface::__aida_properties__ ()
   return property_list;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_PureMethodsIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_PureMethodsIface::I_PureMethodsIface ()
 {}
 I_PureMethodsIface::~I_PureMethodsIface ()
@@ -2371,11 +2535,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PureMethodsIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_PureMethodsIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_PureMethodsIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_PureMethodsIface::__aida_typelist__ () const
 {
@@ -2395,6 +2554,11 @@ I_PureMethodsIface::__aida_properties__ ()
 
 namespace Other {
 
+Rapicorn::Aida::BaseConnection*
+I_NameTestsIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_NameTestsIface::I_NameTestsIface ()
 {}
 I_NameTestsIface::~I_NameTestsIface ()
@@ -2419,11 +2583,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_NameTestsIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_NameTestsIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_NameTestsIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_NameTestsIface::__aida_typelist__ () const
 {
@@ -2443,6 +2602,11 @@ I_NameTestsIface::__aida_properties__ ()
 
 namespace BseTest {
 
+Rapicorn::Aida::BaseConnection*
+I_CompressorIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_CompressorIface::I_CompressorIface ()
 {}
 I_CompressorIface::~I_CompressorIface ()
@@ -2467,11 +2631,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_CompressorIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_CompressorIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_CompressorIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_CompressorIface::__aida_typelist__ () const
 {
@@ -2488,6 +2647,16 @@ I_CompressorIface::__aida_properties__ ()
   };
   static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
+}
+const std::vector<const char*>&
+SrvT_RecordForGroups::__aida_aux_data__  () const
+{
+  static const char aux_array[] =
+    "ratio.hints=w\0"
+    "ratio.default=0\0"
+  ;
+  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
+  return aux_data;
 }
 bool
 SrvT_RecordForGroups::operator== (const SrvT_RecordForGroups &other) const
@@ -2521,6 +2690,11 @@ operator>>= (Rapicorn::Aida::FieldReader &src, SrvT_RecordForGroups &self)
   fbr >>= self.threshold2;
 }
 
+Rapicorn::Aida::BaseConnection*
+I_SoundModuleIface::__aida_connection__()
+{
+  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
+}
 I_SoundModuleIface::I_SoundModuleIface ()
 {}
 I_SoundModuleIface::~I_SoundModuleIface ()
@@ -2545,11 +2719,6 @@ operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SoundModuleIface* &obj)
 {
   obj = __AIDA_Local__::field_reader_pop_interface<I_SoundModuleIface> (fbr).get();
 }
-Rapicorn::Aida::BaseConnection*
-I_SoundModuleIface::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);
-}
 Rapicorn::Aida::TypeHashList
 I_SoundModuleIface::__aida_typelist__ () const
 {
@@ -2565,9 +2734,230 @@ I_SoundModuleIface::__aida_properties__ ()
   static const Rapicorn::Aida::PropertyList property_list (properties, Rapicorn::Aida::ImplicitBase::__aida_properties__());
   return property_list;
 }
+} // BseTest
+
+#ifndef __ENUMCC____testpass_idl__
+#define __ENUMCC____testpass_idl__    2
+#endif
+#if     __ENUMCC____testpass_idl__ == 2
+
+namespace Rapicorn {
+
+namespace Aida {
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum1> ()
+{
+  static const EnumValue _aida_enumvalues_1001[] = {
+    { MandatoryNamespace::E1_A, "E1_A", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum1", _aida_enumvalues_1001, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum1> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum1c> ()
+{
+  static const EnumValue _aida_enumvalues_1002[] = {
+    { MandatoryNamespace::E1C_A, "E1C_A", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum1c", _aida_enumvalues_1002, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum1c> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum2> ()
+{
+  static const EnumValue _aida_enumvalues_1003[] = {
+    { MandatoryNamespace::E2_A, "E2_A", NULL, NULL },
+    { MandatoryNamespace::E2_B, "E2_B", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum2", _aida_enumvalues_1003, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum2> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum2c> ()
+{
+  static const EnumValue _aida_enumvalues_1004[] = {
+    { MandatoryNamespace::E2C_A, "E2C_A", NULL, NULL },
+    { MandatoryNamespace::E2C_B, "E2C_B", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum2c", _aida_enumvalues_1004, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum2c> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum3> ()
+{
+  static const EnumValue _aida_enumvalues_1005[] = {
+    { MandatoryNamespace::E3_A, "E3_A", NULL, NULL },
+    { MandatoryNamespace::E3_B, "E3_B", NULL, NULL },
+    { MandatoryNamespace::E3_C, "E3_C", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum3", _aida_enumvalues_1005, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum3> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum3c> ()
+{
+  static const EnumValue _aida_enumvalues_1006[] = {
+    { MandatoryNamespace::E3C_A, "E3C_A", NULL, NULL },
+    { MandatoryNamespace::E3C_B, "E3C_B", NULL, NULL },
+    { MandatoryNamespace::E3C_C, "E3C_C", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum3c", _aida_enumvalues_1006, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum3c> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum4a> ()
+{
+  static const EnumValue _aida_enumvalues_1007[] = {
+    { MandatoryNamespace::E4A_A, "E4A_A", NULL, NULL },
+    { MandatoryNamespace::E4A_B, "E4A_B", NULL, NULL },
+    { MandatoryNamespace::E4A_C, "E4A_C", NULL, NULL },
+    { MandatoryNamespace::E4A_D, "E4A_D", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum4a", _aida_enumvalues_1007, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum4a> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum4b> ()
+{
+  static const EnumValue _aida_enumvalues_1008[] = {
+    { MandatoryNamespace::E4B_A, "E4B_A", NULL, NULL },
+    { MandatoryNamespace::E4B_B, "E4B_B", NULL, NULL },
+    { MandatoryNamespace::E4B_C, "E4B_C", NULL, NULL },
+    { MandatoryNamespace::E4B_D, "E4B_D", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum4b", _aida_enumvalues_1008, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum4b> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum4c> ()
+{
+  static const EnumValue _aida_enumvalues_1009[] = {
+    { MandatoryNamespace::E4C_A, "E4C_A", NULL, NULL },
+    { MandatoryNamespace::E4C_B, "E4C_B", NULL, NULL },
+    { MandatoryNamespace::E4C_C, "E4C_C", NULL, NULL },
+    { MandatoryNamespace::E4C_D, "E4C_D", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum4c", _aida_enumvalues_1009, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum4c> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::Enum4d> ()
+{
+  static const EnumValue _aida_enumvalues_1010[] = {
+    { MandatoryNamespace::E4D_A, "E4D_A", NULL, NULL },
+    { MandatoryNamespace::E4D_B, "E4D_B", NULL, NULL },
+    { MandatoryNamespace::E4D_C, "E4D_C", NULL, NULL },
+    { MandatoryNamespace::E4D_D, "E4D_D", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::Enum4d", _aida_enumvalues_1010, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::Enum4d> (); // instantiation
+
+template<> EnumInfo
+enum_info<MandatoryNamespace::ExtensiveEnum> ()
+{
+  static const EnumValue _aida_enumvalues_1011[] = {
+    { MandatoryNamespace::V1a, "V1a", NULL, NULL },
+    { MandatoryNamespace::V1b, "V1b", NULL, NULL },
+    { MandatoryNamespace::V2, "V2", NULL, NULL },
+    { MandatoryNamespace::V3, "V3", "v3", NULL },
+    { MandatoryNamespace::V4, "V4", _("v4"), NULL },
+    { MandatoryNamespace::V5, "V5", "v5", "V5" },
+    { MandatoryNamespace::V6, "V6", _("v6"), "V6" },
+    { MandatoryNamespace::V7, "V7", "v7", _("V7") },
+    { MandatoryNamespace::V8, "V8", _("v8"), _("V8") },
+    { MandatoryNamespace::V9, "V9", NULL, NULL },
+    { MandatoryNamespace::V10, "V10", "v10", NULL },
+    { MandatoryNamespace::V11, "V11", _("v11"), NULL },
+    { MandatoryNamespace::V12, "V12", "v12", NULL },
+    { MandatoryNamespace::V13, "V13", NULL, NULL },
+    { MandatoryNamespace::V14, "V14", _("v14"), NULL },
+    { MandatoryNamespace::V15, "V15", "v15", "V15" },
+    { MandatoryNamespace::V16, "V16", _("v16"), "V16" },
+    { MandatoryNamespace::V17, "V17", "v17", _("V17") },
+    { MandatoryNamespace::V18, "V18", _("v18"), _("V18") },
+    { MandatoryNamespace::V20, "V20", NULL, NULL },
+    { MandatoryNamespace::V21, "V21", NULL, NULL },
+    { MandatoryNamespace::V22, "V22", NULL, NULL },
+    { MandatoryNamespace::V23, "V23", NULL, NULL },
+    { MandatoryNamespace::V24, "V24", NULL, NULL },
+    { MandatoryNamespace::V25, "V25", NULL, NULL },
+    { MandatoryNamespace::V26, "V26", NULL, NULL },
+    { MandatoryNamespace::V27, "V27", NULL, NULL },
+    { MandatoryNamespace::V28, "V28", NULL, NULL },
+    { MandatoryNamespace::V30, "V30", NULL, NULL },
+    { MandatoryNamespace::V31, "V31", "foo", NULL },
+    { MandatoryNamespace::V32, "V32", NULL, NULL },
+    { MandatoryNamespace::V33, "V33", "foo", NULL },
+    { MandatoryNamespace::V34, "V34", "foo", "foo" },
+    { MandatoryNamespace::V35, "V35", "foo", NULL },
+    { MandatoryNamespace::V36, "V36", "foo", "foo""4" },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("MandatoryNamespace::ExtensiveEnum", _aida_enumvalues_1011, 0);
+} // specialization
+template EnumInfo enum_info<MandatoryNamespace::ExtensiveEnum> (); // instantiation
+
+template<> EnumInfo
+enum_info<InterfaceTests::QuickEnum> ()
+{
+  static const EnumValue _aida_enumvalues_1012[] = {
+    { InterfaceTests::ZERO, "ZERO", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("InterfaceTests::QuickEnum", _aida_enumvalues_1012, 0);
+} // specialization
+template EnumInfo enum_info<InterfaceTests::QuickEnum> (); // instantiation
+
+template<> EnumInfo
+enum_info<RapicornAidaTest::ClickType> ()
+{
+  static const EnumValue _aida_enumvalues_1013[] = {
+    { RapicornAidaTest::CLICK_ON_PRESS, "CLICK_ON_PRESS", NULL, NULL },
+    { RapicornAidaTest::CLICK_ON_RELEASE, "CLICK_ON_RELEASE", NULL, NULL },
+    { RapicornAidaTest::CLICK_SLOW_REPEAT, "CLICK_SLOW_REPEAT", NULL, NULL },
+    { RapicornAidaTest::CLICK_FAST_REPEAT, "CLICK_FAST_REPEAT", NULL, NULL },
+    { RapicornAidaTest::CLICK_KEY_REPEAT, "CLICK_KEY_REPEAT", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("RapicornAidaTest::ClickType", _aida_enumvalues_1013, 0);
+} // specialization
+template EnumInfo enum_info<RapicornAidaTest::ClickType> (); // instantiation
+
+template<> EnumInfo
+enum_info<RapicornAidaTest::MathExpressions> ()
+{
+  static const EnumValue _aida_enumvalues_1014[] = {
+    { RapicornAidaTest::RESULT_2, "RESULT_2", NULL, NULL },
+    { RapicornAidaTest::RESULT_5, "RESULT_5", NULL, NULL },
+    { RapicornAidaTest::RESULT_8, "RESULT_8", NULL, NULL },
+    { RapicornAidaTest::RESULT_6, "RESULT_6", NULL, NULL },
+    { RapicornAidaTest::RESULT_7, "RESULT_7", NULL, NULL },
+    { RapicornAidaTest::RESULT_16, "RESULT_16", NULL, NULL },
+    { RapicornAidaTest::RESULT_3, "RESULT_3", NULL, NULL },
+    { RapicornAidaTest::RESULT_24, "RESULT_24", NULL, NULL },
+    { RapicornAidaTest::RESULT_13, "RESULT_13", NULL, NULL },
+    { RapicornAidaTest::RESULT_m2, "RESULT_m2", NULL, NULL },
+    { RapicornAidaTest::RESULT_77, "RESULT_77", NULL, NULL },
+    { RapicornAidaTest::RESULT_511, "RESULT_511", NULL, NULL },
+  };
+  return ::Rapicorn::Aida::EnumInfo ("RapicornAidaTest::MathExpressions", _aida_enumvalues_1014, 0);
+} // specialization
+template EnumInfo enum_info<RapicornAidaTest::MathExpressions> (); // instantiation
+} // Aida
+} // Rapicorn
+
+#endif // __ENUMCC____testpass_idl__
+
 
 // --- Method Dispatchers & Registry ---
-} // BseTest
 
 namespace MandatoryNamespace {
 static Rapicorn::Aida::FieldBuffer*
@@ -2953,56 +3343,8 @@ __aida_call__Parent____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
   return &rb;
 }
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__Child____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_ChildIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__Descendant____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_DescendantIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__GrandChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_GrandChildIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
 static Rapicorn::Aida::FieldBuffer*
 __aida_call__QuickIface____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
@@ -4441,22 +4783,6 @@ __aida_connect__SignalTestInterface__self_args (Rapicorn::Aida::FieldReader &fbr
   return &rb;
 }
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__ChildInheritingSignals____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_ChildInheritingSignalsIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 class __AIDA_Closure__ChildInheritingSignals__child_signal {
   size_t handler_id_;
 public:
@@ -4513,22 +4839,6 @@ __aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::FieldReade
   return &rb;
 }
 
-static Rapicorn::Aida::FieldBuffer*
-__aida_call__AnotherChild____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_AnotherChildIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::FieldBuffer &rb = *__AIDA_Local__::new_call_result (fbr, 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
 static Rapicorn::Aida::FieldBuffer*
 __aida_call__PropertyTester____aida_typelist__ (Rapicorn::Aida::FieldReader &fbr)
@@ -5234,9 +5544,6 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, InterfaceTests::__aida_connect__UIWidgetArea__void_signal, },
   { 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, InterfaceTests::__aida_connect__UIWidgetArea__sample_signal, },
   { 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL, InterfaceTests::__aida_call__Parent____aida_typelist__, },
-  { 0xf12312304ba136fdULL, 0xa77c19d1413f4e7fULL, InterfaceTests::__aida_call__Child____aida_typelist__, },
-  { 0x25c480d73f591587ULL, 0x6dd13a33bab33967ULL, InterfaceTests::__aida_call__Descendant____aida_typelist__, },
-  { 0x5c0476de00912d29ULL, 0xfb69f6a1e0a78e4fULL, InterfaceTests::__aida_call__GrandChild____aida_typelist__, },
   { 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL, InterfaceTests::__aida_call__QuickIface____aida_typelist__, },
   { 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL, InterfaceTests::__aida_call__QuickIface__simple_function, },
   { 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL, InterfaceTests::__aida_call__MethodTestInterface____aida_typelist__, },
@@ -5277,9 +5584,7 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL, InterfaceTests::__aida_connect__SignalTestInterface__interface_arg, },
   { 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, InterfaceTests::__aida_connect__SignalTestInterface__any_arg, },
   { 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, InterfaceTests::__aida_connect__SignalTestInterface__self_args, },
-  { 0x8b9467d7db8651a9ULL, 0x8400cc0d7089975dULL, InterfaceTests::__aida_call__ChildInheritingSignals____aida_typelist__, },
   { 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, InterfaceTests::__aida_connect__ChildInheritingSignals__child_signal, },
-  { 0xb0dcc7e6e41eabafULL, 0x16ed0fc13e53cf22ULL, InterfaceTests::__aida_call__AnotherChild____aida_typelist__, },
   { 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL, InterfaceTests::__aida_call__PropertyTester____aida_typelist__, },
   { 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL, InterfaceTests::__aida_get__PropertyTester__bool_prop, },
   { 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL, InterfaceTests::__aida_set__PropertyTester__bool_prop, },

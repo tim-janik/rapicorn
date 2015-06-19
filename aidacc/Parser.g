@@ -149,9 +149,9 @@ class YYGlobals (object):
         continue
       name,typeinfo,(auxident,auxargs) = field
       try:
-        adict = AuxData.parse2dict (typeinfo.storage, auxident, auxargs)
-      except AuxData.Error, ex:
-        raise TypeError (str (ex))
+        adict = AuxData.parse2dict (typeinfo, auxident, auxargs)
+      except AuxData.AuxError, ex:
+        raise IdlError ('%s:%d: %s' % (ex.location[0], ex.location[1], str (ex)), '')
       typeinfo.update_auxdata (adict)
   def argcheck (self, aident, atype, adef):
     if adef == None:
@@ -275,11 +275,11 @@ class YYGlobals (object):
     input = f.read()
     try:
       result = parse_try (filepath, input, implinc)
-    except Error, ex:
+    except IdlError, ex:
       pos_file, pos_line, pos_col = origscanner.get_pos()
       if self.config.get ('anonymize-filepaths', 0):
         pos_file = re.sub (r'.*/([^/]+)$', r'.../\1', '/' + pos_file)
-      ix = Error ('%s:%d: note: included "%s" from here' % (pos_file, pos_line, includefilename))
+      ix = IdlError ('%s:%d: note: included "%s" from here' % (pos_file, pos_line, includefilename))
       ix.exception = ex.exception
       ex.exception = ix
       raise ex
@@ -342,7 +342,7 @@ def ASC (collkind): # assert signal collector
   if not collkind in collectors:
     raise TypeError ('invalid signal collector: %s' % collkind)
 
-class Error (Exception):
+class IdlError (Exception):
   def __init__ (self, msg, ecaret = None):
     Exception.__init__ (self, msg)
     self.ecaret = ecaret
@@ -364,7 +364,7 @@ def parse_try (filename, input_string, implinc):
     result = xparser.IdlSyntax () # returns yy.impl_list
     yy.impl_includes = saved_impl_includes
   except AssertionError: raise  # pass on language exceptions
-  except Error: raise           # preprocessed parsing exception
+  except IdlError: raise        # preprocessed parsing exception
   except runtime.SyntaxError, synex:
     exmsg = synex.msg
   except Exception, ex:
@@ -384,7 +384,7 @@ def parse_try (filename, input_string, implinc):
     wo = WritableObject()
     xscanner.print_line_with_pointer (pos, out = wo)
     ecaret = ''.join (wo.content).strip()
-    raise Error (errstr, ecaret)
+    raise IdlError (errstr, ecaret)
   yy.scanner = saved_yy_scanner
   return result
 
@@ -400,7 +400,7 @@ def parse_files (config, filepairs):
       filename, fileinput = fp
       result = parse_try (filename, fileinput, True)
     return (result, None, None, [])
-  except Error, ex:
+  except IdlError, ex:
     el = []
     cx = ex.exception
     while cx:
@@ -470,8 +470,8 @@ rule enumerator_decl:
           )
         ]                                       {{ return yy.nsadd_evalue (l[0], l[2], l[3], l[1]) }}
 rule enumerator_args:
-        'Enum' '\(' expression                  {{ l = [ expression ] }}
-                                                {{ if TS (expression): l = [ None ] + l }}
+        'Enum' '\(' expression                  {{ l = [ expression ] }} # first argument maybe numeric
+                                                {{ if TS (expression): l = [ None ] + l }} # or skipped
         [   ',' expression                      {{ AS (expression); l.append (expression) }}
         ] [ ',' expression                      {{ if len (l) >= 3: raise OverflowError ("too many arguments") }}
                                                 {{ AS (expression); l.append (expression) }}

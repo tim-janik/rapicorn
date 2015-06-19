@@ -1,6 +1,5 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 import Rapicorn, collections
-# python -ic "import sys, os; sys.path.insert (0, os.path.abspath ('.libs')) ; import Rapicorn"
 
 # verify that pycallable() raises Exception
 def assert_raises (Exception, pycallable, *args, **kwds):
@@ -189,3 +188,4 @@ assert seen_window_display
 
 # all done
 print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
+# python -ic "import sys, os; sys.path.insert (0, os.path.abspath ('.libs')) ; import Rapicorn"

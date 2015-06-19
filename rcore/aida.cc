@@ -156,6 +156,22 @@ EnumInfo::value_from_string (const String &valuestring) const
     return string_to_int (valuestring);
 }
 
+std::vector<const char*>
+split_aux_char_array (const char *char_array, size_t length)
+{
+  assert (char_array && length >= 1);
+  assert (char_array[length-1] == 0);
+  const char *p = char_array, *const end = char_array + length - 1;
+  std::vector<const char*> cv;
+  while (p < end)
+    {
+      const size_t l = strlen (p);
+      cv.push_back (p);
+      p += l + 1;
+    }
+  return cv;
+}
+
 
 // == TypeKind ==
 template<> EnumInfo
