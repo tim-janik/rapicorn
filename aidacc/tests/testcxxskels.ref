@@ -401,6 +401,10 @@ struct SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_AnySequence&);
 
+class SrvT_NestedTypesRec;
+
+class SrvT_NestedTypesSeq;
+
 struct SrvT_NestedTypesRec
 {
   /// @cond GeneratedFields

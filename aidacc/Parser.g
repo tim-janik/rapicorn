@@ -65,14 +65,32 @@ class YYGlobals (object):
         raise Exception ("Invalid enum value: %d" % number)
       enum.add_option (*ev)
     self.namespaces[-1].add_type (enum)
-  def nsadd_record (self, name, rfields):
-    AIn (name)
+  def nsadd_record (self, name, rfields, fwddecl = False):
+    rec = yy.namespace_lookup (name, astype = True)
+    if fwddecl:
+      if rec and rec.storage == Decls.RECORD:
+        return rec
+      elif rec:
+        AIn (name)
+      rec = Decls.TypeInfo (name, Decls.RECORD, yy.impl_includes)
+      fwd = rec.link (yy.impl_includes)
+      fwd.is_forward = True
+      fwd.set_location (*yy.scanner.get_pos())
+      self.namespaces[-1].add_type (fwd)
+      return fwd # a forward decl is simply a link to the real type
+    # not fwddecl
+    if not rec:
+      rec = Decls.TypeInfo (name, Decls.RECORD, yy.impl_includes)
+    elif rec.storage == Decls.RECORD and rec.is_forward and not rec.__origin__.location[0]:
+      rec = rec.__origin__ # complete previous forward declaration
+    else:
+      AIn (name)
+    assert not rec.is_forward
     if (self.config.get ('system-typedefs', 0) and self.namespaces[-1].name == 'Aida' and
         len (rfields) == 1 and rfields[0][0] == '__builtin__deleteme__'):
       rfields = []
     elif len (rfields) < 1:
       raise AttributeError ('invalid empty record: %s' % name)
-    rec = Decls.TypeInfo (name, Decls.RECORD, yy.impl_includes)
     rec.set_location (*yy.scanner.get_pos())
     self.parse_assign_auxdata (rfields)
     fdict = {}
@@ -104,7 +122,6 @@ class YYGlobals (object):
       AIn (name)
     assert not iface.is_forward
     iface.set_location (*yy.scanner.get_pos())
-    iface.isimpl = yy.impl_includes
     self.namespaces[-1].add_type (iface)
     return iface # real type
   def interface_fill (self, iface, prerequisites, ifields, imethods, isignals):
@@ -171,14 +188,32 @@ class YYGlobals (object):
     else:
       raise AttributeError ('invalid default initializer: %s = %s' % (aident, adef))
     return (aident, atype, adef)
-  def nsadd_sequence (self, name, sfields):
-    AIn (name)
+  def nsadd_sequence (self, name, sfields, fwddecl = False):
+    seq = yy.namespace_lookup (name, astype = True)
+    if fwddecl:
+      if seq and seq.storage == Decls.SEQUENCE:
+        return seq
+      elif seq:
+        AIn (name)
+      seq = Decls.TypeInfo (name, Decls.SEQUENCE, yy.impl_includes)
+      fwd = seq.link (yy.impl_includes)
+      fwd.is_forward = True
+      fwd.set_location (*yy.scanner.get_pos())
+      self.namespaces[-1].add_type (fwd)
+      return fwd # a forward decl is simply a link to the real type
+    # not fwddecl
+    if not seq:
+      seq = Decls.TypeInfo (name, Decls.SEQUENCE, yy.impl_includes)
+    elif seq.storage == Decls.SEQUENCE and seq.is_forward and not seq.__origin__.location[0]:
+      seq = seq.__origin__ # complete previous forward declaration
+    else:
+      AIn (name)
+    assert not seq.is_forward
     if len (sfields) < 1:
       raise AttributeError ('invalid empty sequence: %s' % name)
     if len (sfields) > 1:
       raise AttributeError ('invalid multiple fields in sequence: %s' % name)
     self.parse_assign_auxdata (sfields)
-    seq = Decls.TypeInfo (name, Decls.SEQUENCE, yy.impl_includes)
     seq.set_location (*yy.scanner.get_pos())
     seq.set_elements (sfields[0][0], sfields[0][1])
     self.namespaces[-1].add_type (seq)
@@ -555,23 +590,31 @@ rule interface:
         )
 
 rule record:
-        'record' IDENT '{'                      {{ rfields = []; rident = IDENT }}
-          ( field_decl                          {{ rfields = rfields + field_decl }}
-          | field_group                         {{ rfields = rfields + field_group }}
-          | info_assignment                     {{ }}
-          )+
-        '}' ';'                                 {{ yy.nsadd_record (rident, rfields) }}
+        'record' IDENT                          {{ rident, rfields = IDENT, [];  }}
+        ( ';'                                   {{ yy.nsadd_record (rident, rfields, True) }}
+        |
+          '{'
+            ( field_decl                        {{ rfields = rfields + field_decl }}
+            | field_group                       {{ rfields = rfields + field_group }}
+            | info_assignment                   {{ }}
+            )+
+          '}' ';'                               {{ yy.nsadd_record (rident, rfields) }}
+        )
 
 rule sequence:
-        'sequence' IDENT '{'                    {{ sfields = [] }}
-          ( info_assignment                     {{ }}
-          )*
-          ( field_decl                          {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
+        'sequence' IDENT                        {{ sident, sfields = IDENT, [];  }}
+        ( ';'                                   {{ yy.nsadd_sequence (sident, sfields, True) }}
+        |
+          '{'
+            ( info_assignment                   {{ }}
+            )*
+            ( field_decl                        {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
                                                 {{ sfields = sfields + field_decl }}
-          )
-          ( info_assignment                     {{ }}
-          )*
-        '}' ';'                                 {{ yy.nsadd_sequence (IDENT, sfields) }}
+            )
+            ( info_assignment                   {{ }}
+            )*
+          '}' ';'                               {{ yy.nsadd_sequence (sident, sfields) }}
+        )
 
 rule const_assignment:
         'Const' IDENT '=' expression ';'        {{ AIn (IDENT); yy.nsadd_const (IDENT, expression); }}

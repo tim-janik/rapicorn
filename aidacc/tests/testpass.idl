@@ -170,6 +170,10 @@ sequence AnySequence {
   Any any_value;
 };
 
+// forward declarations
+record NestedTypesRec;
+sequence NestedTypesSeq;
+
 // test nested types
 record NestedTypesRec {
   XFooRecord    rec;
