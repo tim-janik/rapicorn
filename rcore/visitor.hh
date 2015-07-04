@@ -14,20 +14,10 @@ class VisitorDispatcher {
   ~VisitorDispatcher() {} // private dtor prevents undesirable inheritance
   friend DerivedVisitor;  // allow inheritance for DerivedVisitor only (CRTP)
   DerivedVisitor* derived () { return static_cast<DerivedVisitor*> (this); }
-  // REQUIRES - SFINAE metafunction
-  template<bool value> using REQUIRES = typename ::std::enable_if<value, bool>::type;
-  // is_bool
-  template<class T> using is_bool = ::std::is_same<bool, typename ::std::remove_cv<T>::type>;
   // has__accept__
   template<class, class, class = void> struct has__accept__ : std::false_type {};
   template<class T, class V>
   struct has__accept__<T, V, void_t< decltype (std::declval<T>().template __accept__<V> (std::declval<V>())) >> : std::true_type {};
-  // derives_string
-  template<class T> using derives_string = typename std::is_base_of<::std::string, T>;
-  // derives_vector (uses void_t to prevent errors for T without vector's typedefs)
-  template<class T, typename = void> struct derives_vector : std::false_type {};
-  template<class T> struct derives_vector<T, void_t< typename T::value_type, typename T::allocator_type > > :
-  std::is_base_of< std::vector<typename T::value_type, typename T::allocator_type>, T > {};
 protected:
   typedef const char* Name; ///< Member name argument type for visit() methods.
 public:
@@ -37,12 +27,12 @@ public:
 #endif // DOXYGEN
 
   template<class A,
-           REQUIRES< is_bool<A>::value > = true> void
+           REQUIRES< IsBool<A>::value > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_bool (a, n); }
 
   template<class A,
-           REQUIRES< (std::is_integral<A>::value && !is_bool<A>::value) > = true> void
+           REQUIRES< (std::is_integral<A>::value && !IsBool<A>::value) > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_integral (a, n); }
 
@@ -58,13 +48,13 @@ public:
 
   template<class A,
            REQUIRES< (!has__accept__<A, VisitorDispatcher>::value &&
-                      derives_string<A>::value) > = true> void
+                      DerivesString<A>::value) > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_string (a, n); }
 
   template<class A,
            REQUIRES< (!has__accept__<A, VisitorDispatcher>::value &&
-                      derives_vector<A>::value) > = true> void
+                      DerivesVector<A>::value) > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_vector (a, n); }
 
@@ -75,8 +65,8 @@ public:
 
   template<class A,
            REQUIRES< (!has__accept__<A, VisitorDispatcher>::value &&
-                      !derives_string<A>::value &&
-                      !derives_vector<A>::value &&
+                      !DerivesString<A>::value &&
+                      !DerivesVector<A>::value &&
                       std::is_class<A>::value) > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_class (a, n); }
