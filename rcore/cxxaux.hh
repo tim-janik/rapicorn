@@ -318,7 +318,7 @@ shared_ptr_cast (const std::shared_ptr<Source> &sptr)
 }
 
 // == C++ Traits ==
-/// Simplified version of std::enable_if<> to use SFINAE in function templates.
+/// REQUIRES<value> - Simplified version of std::enable_if<> to use SFINAE in function templates.
 template<bool value> using REQUIRES = typename ::std::enable_if<value, bool>::type;
 
 /// IsBool<T> - Check if @a T is of type 'bool'.
@@ -344,6 +344,12 @@ template<class T> struct IsSharedPtr<std::shared_ptr<T> > : std::true_type {};
 /// IsWeakPtr<T> - Check if a type @a T is a std::weak_ptr<>.
 template<class T> struct IsWeakPtr                        : std::false_type {};
 template<class T> struct IsWeakPtr<std::weak_ptr<T> >     : std::true_type {};
+
+/// DerivesSharedPtr<T> - Check if @a T derives from std::shared_ptr<>.
+template<class T, typename = void> struct DerivesSharedPtr : std::false_type {};
+// use void_t to prevent errors for T without shared_ptr's typedefs
+template<class T> struct DerivesSharedPtr<T, Rapicorn::void_t< typename T::element_type > > :
+std::is_base_of< std::shared_ptr<typename T::element_type>, T > {};
 
 } // Rapicorn
 
