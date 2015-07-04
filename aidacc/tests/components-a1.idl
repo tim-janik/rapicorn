@@ -102,6 +102,21 @@ interface Derived : Base {
   signal void           self_args        (Derived self_);
 };
 
+interface Richie : Derived, Base, Other {
+  bool      vbool;
+  int32     vi32;
+  int64     vi64t;
+  float64   vf64;
+  String    vstr;
+  CountEnum count;
+  Location  location;
+  StringSeq strings;
+  Any       any1;
+  AnySeq    anys;
+  Derived   derived;
+  BaseSeq   objects;
+};
+
 interface MiniServer {
   void message (String blurb);
   void quit    ();
