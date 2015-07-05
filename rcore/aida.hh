@@ -338,6 +338,8 @@ public:
   template<typename T, REQUIRES< std::is_base_of<Any, T>::value > = true>              void set (const T &v) { return set_any (&v); }
   template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      void set (const T &v) { hold (new Holder<T> (v)); }
   // convenience
+  static Any                any_from_strings (const std::vector<std::string> &string_container);
+  std::vector<std::string>  any_to_strings   () const;
   String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
   const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.

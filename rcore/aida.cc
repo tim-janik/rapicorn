@@ -385,6 +385,32 @@ Any::rekind (TypeKind _kind)
     }
 }
 
+Any
+Any::any_from_strings (const std::vector<std::string> &string_container)
+{
+  AnyVector av;
+  av.resize (string_container.size());
+  for (size_t i = 0; i < av.size(); i++)
+    av[i].set (string_container[i]);
+  Any any;
+  any.set (av);
+  return any;
+}
+
+std::vector<std::string>
+Any::any_to_strings () const
+{
+  const AnyVector *av = get<const AnyVector*>();
+  std::vector<std::string> sv;
+  if (av)
+    {
+      sv.resize (av->size());
+      for (size_t i = 0; i < av->size(); i++)
+        sv[i] = (*av)[i].get<std::string>();
+    }
+  return sv;
+}
+
 template<class T> String any_field_name (const T          &);
 template<>        String any_field_name (const Any        &any) { return ""; }
 template<>        String any_field_name (const Any::Field &any) { return any.name; }
