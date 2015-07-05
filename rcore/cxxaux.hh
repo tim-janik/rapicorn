@@ -324,6 +324,9 @@ template<bool value> using REQUIRES = typename ::std::enable_if<value, bool>::ty
 /// IsBool<T> - Check if @a T is of type 'bool'.
 template<class T> using IsBool = ::std::is_same<bool, typename ::std::remove_cv<T>::type>;
 
+/// IsInteger<T> - Check if @a T is of integral type (except bool).
+template<class T> using IsInteger = ::std::integral_constant<bool, !IsBool<T>::value && ::std::is_integral<T>::value>;
+
 /// DerivesString<T> - Check if @a T is of type 'std::string'.
 template<class T> using DerivesString = typename std::is_base_of<::std::string, T>;
 
@@ -333,7 +336,7 @@ template<class T, typename = void> struct DerivesVector : std::false_type {};
 template<class T> struct DerivesVector<T, void_t< typename T::value_type, typename T::allocator_type > > :
 std::is_base_of< std::vector<typename T::value_type, typename T::allocator_type>, T > {};
 
-/// IsComparable<T> - Check if a type is comparable for equality.
+/// IsComparable<T> - Check if type @a T is comparable for equality.
 /// If @a T is a type that can be compared with operator==, provide the member constant @a value equal true, otherwise false.
 template<class, class = void> struct IsComparable : std::false_type {}; // IsComparable false case, picked if operator== is missing.
 template<class T> struct IsComparable<T, void_t< decltype (std::declval<T>() == std::declval<T>()) >> : std::true_type {};
