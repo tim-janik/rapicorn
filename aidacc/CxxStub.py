@@ -296,6 +296,10 @@ class Generator:
       s += ' }\n'
     s += '  ' + self.F ('std::string') + '  __aida_type_name__ () const\t{ return "%s"; }\n' % classFull
     s += '  ' + self.F ('const std::vector<const char*>&') + '__aida_aux_data__ () const;\n'
+    if type_info.storage == Decls.SEQUENCE:
+      s += '  ' + self.F ('Rapicorn::Aida::Any') + '__aida_to_any__ () { return Rapicorn::any_from_sequence (*this); }\n'
+    if type_info.storage == Decls.RECORD:
+      s += '  ' + self.F ('Rapicorn::Aida::Any') + '__aida_to_any__ () { return Rapicorn::any_from_visitable (*this); }\n'
     if type_info.storage == Decls.RECORD:
       s += '  ' + self.F ('bool') + 'operator==  (const %s &other) const;\n' % self.C (type_info)
       s += '  ' + self.F ('bool') + 'operator!=  (const %s &other) const { return !operator== (other); }\n' % self.C (type_info)
