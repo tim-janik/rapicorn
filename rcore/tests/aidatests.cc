@@ -61,6 +61,7 @@ any_test_set (Any &a, int what)
     case 13: a <<= EnumValue (-0xc0ffeec0ffeeLL); break;
 #define ANY_TEST_COUNT    14
     }
+  // printerr ("SET: %d) Any=%p %i %s: %u\n", what, &a, a.kind(), type_kind_name(a.kind()), a.get<int64>());
 }
 
 static bool
@@ -68,6 +69,7 @@ any_test_get (const Any &a, int what)
 {
   std::string s;
   EnumValue e;
+  // printerr ("GET: %d) Any=%p %i %s: %u\n", what, &a, a.kind(), type_kind_name(a.kind()), a.get<int64>());
   switch (what)
     {
       typedef unsigned char uchar;
@@ -90,9 +92,17 @@ any_test_get (const Any &a, int what)
   return true;
 }
 
+static Any any5 () { return Any(5); }
+
 static void
 test_any()
 {
+  {
+    Any ax1 = any5();
+    TASSERT (ax1 == any5());
+    Any ax2 = std::move (any5());
+    TASSERT (ax2 == any5());
+  }
   if (true) // basics
     {
       Any a;
@@ -103,10 +113,11 @@ test_any()
         ;
       }
       Any f7 (Foo { 7 });
-      Any b (Bar { "BAR" });
       TASSERT (f7 == f7);
+      TASSERT (Foo { 7 } == *f7.get<Foo*>());
+      Any b (Bar { "BAR" });
       TASSERT (f7 != b);
-      TASSERT (b != b);     // always fails, beause B is not comparable
+      TASSERT (b != b);     // always unequal, beause B is not comparable
       TASSERT (any_cast<Foo> (f7).i == 7);
       TASSERT (any_cast<Bar> (&b)->s == "BAR");
       Any f3 (Foo { 3 });
@@ -114,10 +125,12 @@ test_any()
       TASSERT (f3 != f7);
       any_cast<Foo> (&f3)->i += 4;
       TASSERT (f3 == f7);
-      std::swap (f7, b);
+      f7.swap (b);
       TASSERT (f3 != f7);
-      TASSERT (any_cast<Foo> (b).i == 7);
-      TASSERT (any_cast<Bar> (f7).s == "BAR");
+      std::swap (f7, b); // uses move assignment
+      TASSERT (f3 == f7);
+      TASSERT (any_cast<Foo> (f7).i == 7);
+      TASSERT (any_cast<Bar> (b).s == "BAR");
       const Any c (Foo { 5 });
       TASSERT (any_cast<Foo> (c) == Foo { 5 });
       TASSERT (*any_cast<Foo> (&c) == Foo { 5 });
@@ -136,6 +149,7 @@ test_any()
             const bool any_getter_successfull = any_test_get (a, cs[cc]);
             assert (any_getter_successfull == true);
             Any a2 (a);
+            TASSERT (a2.kind() == a.kind());
             const bool any_copy_successfull = any_test_get (a2, cs[cc]);
             assert (any_copy_successfull == true);
             Any a3;
@@ -180,31 +194,43 @@ static void
 test_dynamics()
 {
   // -- FieldVector --
+  Any any1 ("any1"), any2;
+  any2 <<= any1;
   Any::FieldVector fv;
   fv.push_back (Any::Field ("otto", 7.7));
   fv.push_back (Any::Field ("anna", 3));
   fv.push_back (Any::Field ("ida", "ida"));
+  fv.push_back (Any::Field ("any2", any2));
   assert (fv[0].name == "otto" && fv[0].as_float() == 7.7);
   assert (fv[1].name == "anna" && fv[1].as_int() == 3);
   assert (fv[2].name == "ida" && fv[2].as_string() == "ida");
+  assert (fv[3].name == "any2" && fv[3].get<Any>().get<String>() == "any1");
   Any::FieldVector gv = fv;
   assert (fv == gv);
   gv[1] <<= 5;
   assert (fv != gv);
-  gv[1] <<= 3;
+  gv[1] <<= int64 (3);
   assert (fv == gv);
   // -- AnyVector --
   Any::AnyVector av;
   av.push_back (Any (7.7));
   av.push_back (Any (3));
   av.push_back (Any ("ida"));
+  av.push_back (any2);
   assert (av[0].as_float() == 7.7);
   assert (av[1].as_int() == 3);
   assert (av[2].as_string() == "ida");
+  assert (av[3].kind() == ANY);
   Any::AnyVector bv;
   assert (av != bv);
   for (auto const &f : fv)
     bv.push_back (f);
+  if (0)
+    for (size_t i = 0; i < av.size(); i++)
+      printerr ("%s: av[%d]==bv[%d]) %p %p | %s %s | %d %d\n", __func__, i, i,
+                &av[i], &bv[i],
+                type_kind_name(av[i].kind()), type_kind_name(bv[i].kind()),
+                av[i].get<int64>(), bv[i].get<int64>());
   assert (av == bv);
   // -- FieldVector & AnyVector --
   if (0)        // compare av (DynamicSequence) with fv (DynamicRecord)
