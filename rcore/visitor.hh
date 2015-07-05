@@ -14,10 +14,6 @@ class VisitorDispatcher {
   ~VisitorDispatcher() {} // private dtor prevents undesirable inheritance
   friend DerivedVisitor;  // allow inheritance for DerivedVisitor only (CRTP)
   DerivedVisitor* derived () { return static_cast<DerivedVisitor*> (this); }
-  // has__accept__
-  template<class, class, class = void> struct has__accept__ : std::false_type {};
-  template<class T, class V>
-  struct has__accept__<T, V, void_t< decltype (std::declval<T>().template __accept__<V> (std::declval<V>())) >> : std::true_type {};
 protected:
   typedef const char* Name; ///< Member name argument type for visit() methods.
 public:
@@ -47,24 +43,24 @@ public:
   { return derived()->visit_enum (a, n); }
 
   template<class A,
-           REQUIRES< (!has__accept__<A, VisitorDispatcher>::value &&
+           REQUIRES< (!Has__accept__<A, DerivedVisitor>::value &&
                       DerivesString<A>::value) > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_string (a, n); }
 
   template<class A,
-           REQUIRES< (!has__accept__<A, VisitorDispatcher>::value &&
+           REQUIRES< (!Has__accept__<A, DerivedVisitor>::value &&
                       DerivesVector<A>::value) > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_vector (a, n); }
 
   template<class A,
-           REQUIRES< has__accept__<A, VisitorDispatcher>::value > = true> void
+           REQUIRES< Has__accept__<A, DerivedVisitor>::value > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_visitable (a, n); }
 
   template<class A,
-           REQUIRES< (!has__accept__<A, VisitorDispatcher>::value &&
+           REQUIRES< (!Has__accept__<A, DerivedVisitor>::value &&
                       !DerivesString<A>::value &&
                       !DerivesVector<A>::value &&
                       std::is_class<A>::value) > = true> void
