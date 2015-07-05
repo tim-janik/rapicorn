@@ -123,7 +123,6 @@ enum TypeKind {
   RECORD         = 'R', ///< Record type containing named fields.
   INSTANCE       = 'C', ///< Interface instance type.
   FUNC           = 'F', ///< Type of methods or signals.
-  TYPE_REFERENCE = 'T', ///< Type reference for record fields.
   LOCAL          = 'L', ///< Local object type.
   REMOTE         = 'r', ///< Remote object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
