@@ -274,7 +274,8 @@ public:
   bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
   bool operator>>= (RemoteHandle       &v);
 private:
-  template<class A, class B> using IsConvertible         = ::std::is_convertible<A, B>;
+  template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
+    ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
   template<class T>          using IsCStr                = ::std::is_same<const char*, typename ::std::decay<T>::type>;
   template<class T>          using IsLocalClass          =
     ::std::integral_constant<bool, (::std::is_class<T>::value && !DerivesString<T>::value && !IsConvertible<T, RemoteHandle>::value &&
