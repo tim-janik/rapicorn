@@ -299,6 +299,28 @@ ImplicitBase::~ImplicitBase()
 // == Any ==
 RAPICORN_STATIC_ASSERT (sizeof (std::string) <= sizeof (Any)); // assert big enough Any impl
 
+Any::Any (const Any &clone) :
+  type_kind_ (UNTYPED), u_ {0}
+{
+  this->operator= (clone);
+}
+
+Any::Any (Any &&other) :
+  type_kind_ (UNTYPED), u_ {0}
+{
+  this->swap (other);
+}
+
+Any&
+Any::operator= (Any &&other)
+{
+  if (this == &other)
+    return *this;
+  reset();
+  this->swap (other);
+  return *this;
+}
+
 Any&
 Any::operator= (const Any &clone)
 {
@@ -317,6 +339,17 @@ Any::operator= (const Any &clone)
     default:            u_ = clone.u_;                                    break;
     }
   return *this;
+}
+
+void
+Any::swap (Any &other)
+{
+  constexpr size_t USIZE = sizeof (this->u_);
+  uint64 buffer[(USIZE + 7) / 8];
+  memcpy (buffer, &other.u_, USIZE);
+  memcpy (&other.u_, &this->u_, USIZE);
+  memcpy (&this->u_, buffer, USIZE);
+  std::swap (type_kind_, other.type_kind_);
 }
 
 void
@@ -432,21 +465,172 @@ Any::operator!= (const Any &clone) const
 }
 
 void
-Any::swap (Any &other)
-{
-  constexpr size_t USIZE = sizeof (this->u_);
-  uint64 buffer[(USIZE + 7) / 8];
-  memcpy (buffer, &other.u_, USIZE);
-  memcpy (&other.u_, &this->u_, USIZE);
-  memcpy (&this->u_, buffer, USIZE);
-  std::swap (type_kind_, other.type_kind_);
-}
-
-void
 Any::hold (PlaceHolder *ph)
 {
   ensure (LOCAL);
   u_.pholder = ph;
+}
+
+bool
+Any::get_bool () const
+{
+  switch (kind())
+    {
+    case BOOL: case ENUM: case INT32:
+    case INT64:         return u_.vint64 != 0;
+    case STRING:        return !u_.vstring().empty();
+    case SEQUENCE:      return !u_.vanys->empty();
+    case RECORD:        return !u_.vfields->empty();
+    case INSTANCE:      return u_.shandle && u_.shandle->__aida_orbid__();
+    default: ;
+    }
+  return 0;
+}
+
+void
+Any::set_bool (bool value)
+{
+  ensure (BOOL);
+  u_.vint64 = value;
+}
+
+int64
+Any::get_int64 () const
+{
+  switch (kind())
+    {
+    case BOOL: case ENUM: case INT32:
+    case INT64:         return u_.vint64;
+    case FLOAT64:       return u_.vdouble;
+    default: ;
+    }
+  return 0;
+}
+
+void
+Any::set_int64 (int64 value)
+{
+  ensure (INT64);
+  u_.vint64 = value;
+}
+
+double
+Any::get_double () const
+{
+  return kind() == FLOAT64 ? u_.vdouble : get_int64();
+}
+
+void
+Any::set_double (double value)
+{
+  ensure (FLOAT64);
+  u_.vdouble = value;
+}
+
+std::string
+Any::get_string () const
+{
+  switch (kind())
+    {
+    case BOOL:          return u_.vint64 ? "true" : "false";
+    case ENUM: case INT32:
+    case INT64:         return string_format ("%i", u_.vint64);
+    case FLOAT64:       return string_from_double (u_.vdouble);
+    case STRING:        return u_.vstring();
+    default: ;
+    }
+  return "";
+}
+
+void
+Any::set_string (const std::string &value)
+{
+  ensure (STRING);
+  u_.vstring().assign (value);
+}
+
+const Any::AnyVector*
+Any::get_seq () const
+{
+  if (kind() == SEQUENCE && u_.vanys)
+    return u_.vanys;
+  static const AnyVector empty;
+  return &empty;
+}
+
+void
+Any::set_seq (const AnyVector *seq)
+{
+  ensure (SEQUENCE);
+  if (u_.vanys != seq)
+    {
+      AnyVector *old = u_.vanys;
+      u_.vanys = seq ? new AnyVector (*seq) : NULL;
+      if (old)
+        delete old;
+    }
+}
+
+const Any::FieldVector*
+Any::get_rec () const
+{
+  if (kind() == RECORD && u_.vfields)
+    return u_.vfields;
+  static const FieldVector empty;
+  return &empty;
+}
+
+void
+Any::set_rec (const FieldVector *rec)
+{
+  ensure (RECORD);
+  if (u_.vfields != rec)
+    {
+      FieldVector *old = u_.vfields;
+      u_.vfields = rec ? new FieldVector (*rec) : NULL;
+      if (old)
+        delete old;
+    }
+}
+
+RemoteHandle
+Any::get_handle () const
+{
+  return kind() == INSTANCE && u_.shandle ? *u_.shandle : RemoteHandle::__aida_null_handle__();
+}
+
+void
+Any::take_handle (RemoteHandle *handle)
+{
+  ensure (INSTANCE);
+  if (handle)
+    assert_return (handle != u_.shandle);
+  RemoteHandle *old = u_.shandle;
+  u_.shandle = handle;
+  if (old)
+    delete old;
+}
+
+const Any*
+Any::get_any () const
+{
+  if (kind() == ANY && u_.vany)
+    return u_.vany;
+  static const Any empty;
+  return &empty;
+}
+
+void
+Any::set_any (const Any *value)
+{
+  ensure (ANY);
+  if (u_.vany != value)
+    {
+      Any *old = u_.vany;
+      u_.vany = value && value->kind() != UNTYPED ? new Any (*value) : NULL;
+      if (old)
+        delete old;
+    }
 }
 
 bool
