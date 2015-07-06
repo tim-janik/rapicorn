@@ -354,6 +354,13 @@ template<class T, typename = void> struct DerivesSharedPtr : std::false_type {};
 template<class T> struct DerivesSharedPtr<T, Rapicorn::void_t< typename T::element_type > > :
 std::is_base_of< std::shared_ptr<typename T::element_type>, T > {};
 
+/// Provide the member typedef type which is the element_type of the shared_ptr type @a T.
+template<typename T> struct RemoveSharedPtr                                             { typedef T type; };
+template<typename T> struct RemoveSharedPtr<::std::shared_ptr<T>>                       { typedef T type; };
+template<typename T> struct RemoveSharedPtr<const ::std::shared_ptr<T>>                 { typedef T type; };
+template<typename T> struct RemoveSharedPtr<volatile ::std::shared_ptr<T>>              { typedef T type; };
+template<typename T> struct RemoveSharedPtr<const volatile ::std::shared_ptr<T>>        { typedef T type; };
+
 /// Has__accept__<T,Visitor> - Check if @a T provides a member template __accept__<>(Visitor).
 template<class, class, class = void> struct Has__accept__ : std::false_type {};
 template<class T, class V>
