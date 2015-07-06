@@ -226,7 +226,8 @@ private:
   TypeKind type_kind_;
   ///@cond
   union {
-    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields; RemoteHandle *rhandle; PlaceHolder *pholder;
+    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields;
+    ImplicitBaseP *ibase; RemoteHandle *rhandle; PlaceHolder *pholder;
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u_;
@@ -276,13 +277,19 @@ private:
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
   template<class T>          using IsCStr                = ::std::is_same<const char*, typename ::std::decay<T>::type>;
   template<class T>          using IsLocalClass          =
-    ::std::integral_constant<bool, (::std::is_class<T>::value && !DerivesString<T>::value && !IsConvertible<T, RemoteHandle>::value &&
+    ::std::integral_constant<bool, (::std::is_class<T>::value && !DerivesString<T>::value &&
+                                    !IsConvertible<T, ImplicitBase>::value && !IsConvertible<T, RemoteHandle>::value &&
                                     !IsConvertible<T, Any::FieldVector>::value && !IsConvertible<T, Any::AnyVector>::value &&
                                     !IsConvertible<T, Any>::value && !IsConvertible<T, Any::Field>::value)>;
-  template<class T>          using IsLocalClassPtr       = IsLocalClass< typename std::remove_pointer<T>::type >;
+  template<class T>          using IsLocalClassPtr       =
+    ::std::integral_constant<bool, ::std::is_pointer<T>::value && IsLocalClass< typename std::remove_pointer<T>::type >::value>;
   template<class T>          using IsRemoteHandleDerived = ::std::integral_constant<bool,
                                                                                     (::std::is_base_of<RemoteHandle, T>::value &&
                                                                                      !::std::is_same<RemoteHandle,
+                                                                                     typename ::std::decay<T>::type>::value)>;
+  template<class T>          using IsImplicitBaseDerived = ::std::integral_constant<bool,
+                                                                                    (::std::is_base_of<ImplicitBase, T>::value &&
+                                                                                     !::std::is_same<ImplicitBase,
                                                                                      typename ::std::decay<T>::type>::value)>;
   bool               get_bool    () const;
   void               set_bool    (bool value);
@@ -300,6 +307,10 @@ private:
   void               set_seq     (const AnyVector *seq);
   const FieldVector* get_rec     () const;
   void               set_rec     (const FieldVector *rec);
+  ImplicitBase*      get_ibase   () const;
+  void               set_ibase   (ImplicitBase *ibase);
+  template<typename C>
+  C*                 cast_ibase  () const               { return dynamic_cast<C*> (get_ibase()); }
   RemoteHandle       get_handle  () const;
   void               take_handle (RemoteHandle *handle);
   template<typename H>
@@ -319,6 +330,7 @@ public:
   template<typename T, REQUIRES< IsConvertible<const AnyVector, T>::value > = true>    T    get () const { return *get_seq(); }
   template<typename T, REQUIRES< IsConvertible<const FieldVector*, T>::value > = true> T    get () const { return get_rec(); }
   template<typename T, REQUIRES< IsConvertible<const FieldVector, T>::value > = true>  T    get () const { return *get_rec(); }
+  template<typename T, REQUIRES< IsImplicitBaseDerived<T>::value > = true>             T&   get () const { return *cast_ibase<T>(); }
   template<typename T, REQUIRES< IsRemoteHandleDerived<T>::value > = true>             T    get () const { return cast_handle<T>(); }
   template<typename T, REQUIRES< IsConvertible<const Any, T>::value > = true>          T    get () const { return *get_any(); }
   template<typename T, REQUIRES< IsLocalClassPtr<T>::value > = true>                   T    get () const { return cast<T>(); }
@@ -333,6 +345,7 @@ public:
   template<typename T, REQUIRES< std::is_same<AnyVector, T>::value > = true>           void set (const T *v) { return set_seq (v); }
   template<typename T, REQUIRES< std::is_same<FieldVector, T>::value > = true>         void set (const T &v) { return set_rec (&v); }
   template<typename T, REQUIRES< std::is_same<FieldVector, T>::value > = true>         void set (const T *v) { return set_rec (v); }
+  template<typename T, REQUIRES< IsImplicitBaseDerived<T>::value > = true>             void set (T &v) { return set_ibase (&v); }
   template<typename T, REQUIRES< IsRemoteHandleDerived<T>::value > = true>             void set (T v) { return set_handle<T> (v); }
   template<typename T, REQUIRES< std::is_base_of<Any, T>::value > = true>              void set (const T &v) { return set_any (&v); }
   template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      void set (const T &v) { hold (new Holder<T> (v)); }

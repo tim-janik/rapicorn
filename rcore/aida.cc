@@ -332,6 +332,7 @@ Any::operator= (const Any &clone)
     case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
     case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
     case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
+    case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL; break;
     case REMOTE:        u_.rhandle = new RemoteHandle (*clone.u_.rhandle); break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
     default:            u_ = clone.u_;                                    break;
@@ -359,6 +360,7 @@ Any::reset()
     case ANY:           delete u_.vany;                         break;
     case SEQUENCE:      delete u_.vanys;                        break;
     case RECORD:        delete u_.vfields;                      break;
+    case INSTANCE:      delete u_.ibase;                        break;
     case REMOTE:        delete u_.rhandle;                      break;
     case LOCAL:         delete u_.pholder;                      break;
     default: ;
@@ -445,6 +447,7 @@ Any::to_string (const String &field_name) const
     case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());            break;
     case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);       break;
     case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
+    case INSTANCE:      s += string_format (", value=%p", u_.ibase ? u_.ibase->get() : NULL);   break;
     case REMOTE:        s += string_format (", value=#%08x", u_.rhandle->__aida_orbid__());     break;
     default:            ;
     case UNTYPED:       break;
@@ -470,6 +473,12 @@ Any::operator== (const Any &clone) const
     case SEQUENCE:    if (*u_.vanys != *clone.u_.vanys) return false;                     break;
     case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
     case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
+    case INSTANCE:
+      if (!u_.ibase || !clone.u_.ibase)
+        return u_.ibase == clone.u_.ibase;
+      else
+        return u_.ibase->get() == clone.u_.ibase->get();
+      break;
     case REMOTE:
       if ((u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) != (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0))
         return false;
@@ -506,8 +515,9 @@ Any::get_bool () const
     case BOOL: case ENUM: case INT32:
     case INT64:         return u_.vint64 != 0;
     case STRING:        return !u_.vstring().empty();
-    case SEQUENCE:      return !u_.vanys->empty();
-    case RECORD:        return !u_.vfields->empty();
+    case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
+    case RECORD:        return u_.vfields && !u_.vfields->empty();
+    case INSTANCE:      return u_.ibase && u_.ibase->get();
     case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
     default: ;
     }
@@ -593,8 +603,7 @@ Any::set_seq (const AnyVector *seq)
     {
       AnyVector *old = u_.vanys;
       u_.vanys = seq ? new AnyVector (*seq) : NULL;
-      if (old)
-        delete old;
+      delete old;
     }
 }
 
@@ -615,8 +624,31 @@ Any::set_rec (const FieldVector *rec)
     {
       FieldVector *old = u_.vfields;
       u_.vfields = rec ? new FieldVector (*rec) : NULL;
-      if (old)
-        delete old;
+      delete old;
+    }
+}
+
+ImplicitBase*
+Any::get_ibase () const
+{
+  return kind() == INSTANCE && u_.ibase ? u_.ibase->get() : NULL;
+}
+
+void
+Any::set_ibase (ImplicitBase *ibase)
+{
+  ensure (INSTANCE);
+  if (!u_.ibase || u_.ibase->get() != ibase)
+    {
+      ImplicitBaseP *old = u_.ibase;
+      if (ibase)
+        {
+          ImplicitBaseP next = shared_ptr_cast<ImplicitBase> (ibase);
+          u_.ibase = new ImplicitBaseP (next);
+        }
+      else
+        u_.ibase = NULL;
+      delete old;
     }
 }
 
@@ -634,8 +666,7 @@ Any::take_handle (RemoteHandle *handle)
     assert_return (handle != u_.rhandle);
   RemoteHandle *old = u_.rhandle;
   u_.rhandle = handle;
-  if (old)
-    delete old;
+  delete old;
 }
 
 const Any*
@@ -655,8 +686,7 @@ Any::set_any (const Any *value)
     {
       Any *old = u_.vany;
       u_.vany = value && value->kind() != UNTYPED ? new Any (*value) : NULL;
-      if (old)
-        delete old;
+      delete old;
     }
 }
 
@@ -695,6 +725,7 @@ Any::as_int () const
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return !u_.vanys->empty();
     case RECORD:        return !u_.vfields->empty();
+    case INSTANCE:      return u_.ibase && u_.ibase->get();
     case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
     default:            return 0;
     }
@@ -844,8 +875,7 @@ Any::operator<<= (const Any &v)
     {
       Any *old = u_.vany;
       u_.vany = new Any (v);
-      if (old)
-        delete old;
+      delete old;
     }
 }
 
@@ -857,8 +887,7 @@ Any::operator<<= (const AnyVector &v)
     {
       AnyVector *old = u_.vanys;
       u_.vanys = new AnyVector (v);
-      if (old)
-        delete old;
+      delete old;
     }
 }
 
@@ -870,8 +899,7 @@ Any::operator<<= (const FieldVector &v)
     {
       FieldVector *old = u_.vfields;
       u_.vfields = new FieldVector (v);
-      if (old)
-        delete old;
+      delete old;
     }
 }
 
@@ -881,8 +909,7 @@ Any::operator<<= (const RemoteHandle &v)
   ensure (REMOTE);
   RemoteHandle *old = u_.rhandle;
   u_.rhandle = new RemoteHandle (v);
-  if (old)
-    delete old;
+  delete old;
 }
 
 // == OrbObject ==
