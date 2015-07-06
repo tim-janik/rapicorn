@@ -332,7 +332,7 @@ Any::operator= (const Any &clone)
     case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
     case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
     case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
-    case INSTANCE:      u_.shandle = new RemoteHandle (*clone.u_.shandle); break;
+    case REMOTE:        u_.rhandle = new RemoteHandle (*clone.u_.rhandle); break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
     default:            u_ = clone.u_;                                    break;
     }
@@ -359,7 +359,7 @@ Any::reset()
     case ANY:           delete u_.vany;                         break;
     case SEQUENCE:      delete u_.vanys;                        break;
     case RECORD:        delete u_.vfields;                      break;
-    case INSTANCE:      delete u_.shandle;                      break;
+    case REMOTE:        delete u_.rhandle;                      break;
     case LOCAL:         delete u_.pholder;                      break;
     default: ;
     }
@@ -378,7 +378,7 @@ Any::rekind (TypeKind _kind)
     case ANY:      u_.vany = new Any();                                        break;
     case SEQUENCE: u_.vanys = new AnyVector();                                 break;
     case RECORD:   u_.vfields = new FieldVector();                             break;
-    case INSTANCE: u_.shandle = new RemoteHandle (RemoteHandle::__aida_null_handle__()); break;
+    case REMOTE:   u_.rhandle = new RemoteHandle (RemoteHandle::__aida_null_handle__()); break;
     default:       break;
     }
 }
@@ -445,7 +445,7 @@ Any::to_string (const String &field_name) const
     case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());            break;
     case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);       break;
     case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
-    case INSTANCE:      s += string_format (", value=#%08x", u_.shandle->__aida_orbid__());     break;
+    case REMOTE:        s += string_format (", value=#%08x", u_.rhandle->__aida_orbid__());     break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -469,8 +469,11 @@ Any::operator== (const Any &clone) const
     case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
     case SEQUENCE:    if (*u_.vanys != *clone.u_.vanys) return false;                     break;
     case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
-    case INSTANCE:    if ((u_.shandle ? u_.shandle->__aida_orbid__() : 0) != (clone.u_.shandle ? clone.u_.shandle->__aida_orbid__() : 0)) return false; break;
     case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
+    case REMOTE:
+      if ((u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) != (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0))
+        return false;
+      break;
     case LOCAL:
       if (u_.pholder)
         return u_.pholder->operator== (clone.u_.pholder);
@@ -505,7 +508,7 @@ Any::get_bool () const
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return !u_.vanys->empty();
     case RECORD:        return !u_.vfields->empty();
-    case INSTANCE:      return u_.shandle && u_.shandle->__aida_orbid__();
+    case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
     default: ;
     }
   return 0;
@@ -620,17 +623,17 @@ Any::set_rec (const FieldVector *rec)
 RemoteHandle
 Any::get_handle () const
 {
-  return kind() == INSTANCE && u_.shandle ? *u_.shandle : RemoteHandle::__aida_null_handle__();
+  return kind() == REMOTE && u_.rhandle ? *u_.rhandle : RemoteHandle::__aida_null_handle__();
 }
 
 void
 Any::take_handle (RemoteHandle *handle)
 {
-  ensure (INSTANCE);
+  ensure (REMOTE);
   if (handle)
-    assert_return (handle != u_.shandle);
-  RemoteHandle *old = u_.shandle;
-  u_.shandle = handle;
+    assert_return (handle != u_.rhandle);
+  RemoteHandle *old = u_.rhandle;
+  u_.rhandle = handle;
   if (old)
     delete old;
 }
@@ -692,7 +695,7 @@ Any::as_int () const
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return !u_.vanys->empty();
     case RECORD:        return !u_.vfields->empty();
-    case INSTANCE:      return u_.shandle && u_.shandle->__aida_orbid__();
+    case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
     default:            return 0;
     }
 }
@@ -778,9 +781,9 @@ Any::operator>>= (const FieldVector *&v) const
 bool
 Any::operator>>= (RemoteHandle &v)
 {
-  if (kind() != INSTANCE)
+  if (kind() != REMOTE)
     return false;
-  v = u_.shandle ? *u_.shandle : RemoteHandle::__aida_null_handle__();
+  v = u_.rhandle ? *u_.rhandle : RemoteHandle::__aida_null_handle__();
   return true;
 }
 
@@ -875,9 +878,9 @@ Any::operator<<= (const FieldVector &v)
 void
 Any::operator<<= (const RemoteHandle &v)
 {
-  ensure (INSTANCE);
-  RemoteHandle *old = u_.shandle;
-  u_.shandle = new RemoteHandle (v);
+  ensure (REMOTE);
+  RemoteHandle *old = u_.rhandle;
+  u_.rhandle = new RemoteHandle (v);
   if (old)
     delete old;
 }
@@ -1040,6 +1043,7 @@ FieldBuffer::to_string() const
         case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
         case RECORD:    s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
         case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
+        case REMOTE:    s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
         case ANY:       s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
         default:        s += string_format (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }
