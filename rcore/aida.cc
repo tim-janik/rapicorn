@@ -189,7 +189,6 @@ enum_info<TypeKind> ()
     { SEQUENCE,         "SEQUENCE",             NULL, NULL },
     { RECORD,           "RECORD",               NULL, NULL },
     { INSTANCE,         "INSTANCE",             NULL, NULL },
-    { FUNC,             "FUNC",                 NULL, NULL },
     { LOCAL,            "LOCAL",                NULL, NULL },
     { REMOTE,           "REMOTE",               NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
@@ -1031,7 +1030,6 @@ FieldBuffer::to_string() const
       switch (fbr.get_type())
         {
         case UNTYPED:
-        case FUNC:
         case VOID:      s += string_format (", %s", tn); fbr.skip();                               break;
         case BOOL:      s += string_format (", %s: 0x%x", tn, fbr.pop_bool());                     break;
         case ENUM:      s += string_format (", %s: 0x%x", tn, fbr.pop_evalue());                   break;

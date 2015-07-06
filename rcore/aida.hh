@@ -122,7 +122,6 @@ enum TypeKind {
   SEQUENCE       = 'Q', ///< Type to form sequences of an other type.
   RECORD         = 'R', ///< Record type containing named fields.
   INSTANCE       = 'C', ///< Interface instance type.
-  FUNC           = 'F', ///< Type of methods or signals.
   LOCAL          = 'L', ///< Local object type.
   REMOTE         = 'r', ///< Remote object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
