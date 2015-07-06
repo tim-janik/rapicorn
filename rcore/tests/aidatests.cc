@@ -8,6 +8,40 @@ using namespace Rapicorn::Aida;
 
 struct Foo { int i; bool operator== (const Foo &o) const { return i == o.i; } };
 struct Bar { String s; };       // uncomparable
+// Dummy handles for test purposes
+struct TestOrbObject : OrbObject {
+  TestOrbObject (ptrdiff_t x) : OrbObject (x) {}
+};
+struct OneHandle : RemoteHandle {
+  OneHandle (OrbObjectP orbo) : RemoteHandle (orbo) {}
+  static OneHandle down_cast (RemoteHandle smh) { return make_handle (smh.__aida_orbid__()); }
+  static OneHandle make_handle (ptrdiff_t id)
+  {
+    std::shared_ptr<TestOrbObject> torbo = std::make_shared<TestOrbObject> (id);
+    return OneHandle (torbo);
+  }
+};
+class OneIface : public virtual ImplicitBase {
+  int64 testid_;
+public:
+  virtual /*Des*/ ~OneIface () override     {}
+  explicit         OneIface (int64 id) : testid_ (id) {}
+  typedef std::shared_ptr<OneIface> OneIfaceP;
+  // static Rapicorn::Aida::BaseConnection* __aida_connection__();
+  virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override   { return TypeHashList(); }
+  virtual std::string                    __aida_type_name__ () const override   { return "Rapicorn::OneIface"; }
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override   { return *(PropertyList*) NULL; }
+  int64 test_id() const { return testid_; }
+  static OneIfaceP make_one_iface (int64 id)
+  {
+    typedef std::shared_ptr<OneIface> OneIfaceP;
+    OneIfaceP oiface = std::make_shared<OneIface> (id);
+    static std::vector<OneIfaceP> statics;
+    statics.push_back (oiface);
+    return oiface;
+  }
+};
+typedef OneIface::OneIfaceP OneIfaceP;
 
 static void
 test_basics()
@@ -25,8 +59,6 @@ test_basics()
   assert (RemoteHandle::__aida_null_handle__() == NULL);
   assert (!RemoteHandle::__aida_null_handle__());
   assert (RemoteHandle::__aida_null_handle__().__aida_orbid__() == 0);
-  struct TestOrbObject : OrbObject { TestOrbObject (ptrdiff_t x) : OrbObject (x) {} };
-  struct OneHandle : RemoteHandle { OneHandle (OrbObjectP orbo) : RemoteHandle (orbo) {} };
   std::shared_ptr<TestOrbObject> torbo = std::make_shared<TestOrbObject> (1);
   assert (OneHandle (torbo) != NULL);
   assert (OneHandle (torbo));
@@ -59,7 +91,9 @@ any_test_set (Any &a, int what)
     case 11: a <<= test_double_value;   break;
     case 12: { Any a2; a2 <<= "SecondAny"; a <<= a2; }  break;
     case 13: a <<= EnumValue (-0xc0ffeec0ffeeLL); break;
-#define ANY_TEST_COUNT    14
+    case 14: a.set (OneHandle::make_handle (0x1f1f0c0c)); break;
+    case 15: a.set (*OneIface::make_one_iface (0x2eeeabcd).get()); break;
+#define ANY_TEST_COUNT    16
     }
   // printerr ("SET: %d) Any=%p %i %s: %u\n", what, &a, a.kind(), type_kind_name(a.kind()), a.get<int64>());
 }
@@ -70,6 +104,7 @@ any_test_get (const Any &a, int what)
   std::string s;
   EnumValue e;
   // printerr ("GET: %d) Any=%p %i %s: %u\n", what, &a, a.kind(), type_kind_name(a.kind()), a.get<int64>());
+  OneHandle thandle (0);
   switch (what)
     {
       typedef unsigned char uchar;
@@ -88,6 +123,18 @@ any_test_get (const Any &a, int what)
     case 11: assert (a >>= d);  assert (d = test_double_value); break;
     case 12: assert (a >>= p);  assert (*p >>= s);       assert (s == "SecondAny"); break;
     case 13: assert (a >>= e);  assert (e.value == -0xc0ffeec0ffeeLL); break;
+    case 14:
+      assert (a.kind() == REMOTE);
+      thandle = a.get<OneHandle>();
+      assert (thandle.__aida_orbid__() == 0x1f1f0c0c);
+      break;
+    case 15:
+      {
+        assert (a.kind() == INSTANCE);
+        OneIface &oiface = a.get<OneIface>();
+        assert (oiface.test_id() == 0x2eeeabcd);
+      }
+      break;
     }
   return true;
 }
