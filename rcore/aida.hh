@@ -122,8 +122,8 @@ enum TypeKind {
   SEQUENCE       = 'Q', ///< Type to form sequences of an other type.
   RECORD         = 'R', ///< Record type containing named fields.
   INSTANCE       = 'C', ///< Interface instance type.
+  REMOTE         = 'r', ///< RemoteHandle type.
   LOCAL          = 'L', ///< Local object type.
-  REMOTE         = 'r', ///< Remote object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
 template<> EnumInfo enum_info<TypeKind> ();
@@ -769,7 +769,7 @@ Any::plain_zero_type (TypeKind kind)
     {
     case UNTYPED: case BOOL: case INT32: case INT64: case FLOAT64: case ENUM:
       return true;      // simple, properly initialized with u {0}
-    case STRING: case ANY: case SEQUENCE: case RECORD: case INSTANCE:
+    case STRING: case ANY: case SEQUENCE: case RECORD: case INSTANCE: case REMOTE:
     default:
       return false;     // complex types, needing special initializations
     }

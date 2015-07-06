@@ -189,8 +189,8 @@ enum_info<TypeKind> ()
     { SEQUENCE,         "SEQUENCE",             NULL, NULL },
     { RECORD,           "RECORD",               NULL, NULL },
     { INSTANCE,         "INSTANCE",             NULL, NULL },
-    { LOCAL,            "LOCAL",                NULL, NULL },
     { REMOTE,           "REMOTE",               NULL, NULL },
+    { LOCAL,            "LOCAL",                NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo ("Rapicorn::Aida::TypeKind", values, false);

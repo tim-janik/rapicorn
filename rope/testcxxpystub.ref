@@ -155,6 +155,7 @@ __AIDA_pyconvert__pyany_from_any (const Rapicorn::Aida::Any &any)
     case SEQUENCE:      break;
     case RECORD:        break;
     case INSTANCE:      break;
+    case REMOTE:        break;
     case ANY:           break;
     default:            break;
     }
