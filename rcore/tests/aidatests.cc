@@ -93,7 +93,8 @@ any_test_set (Any &a, int what)
     case 13: a <<= EnumValue (-0xc0ffeec0ffeeLL); break;
     case 14: a.set (OneHandle::make_handle (0x1f1f0c0c)); break;
     case 15: a.set (*OneIface::make_one_iface (0x2eeeabcd).get()); break;
-#define ANY_TEST_COUNT    16
+    case 16: a.set (OneIface::make_one_iface (0x37afafaf)); break;
+#define ANY_TEST_COUNT    17
     }
   // printerr ("SET: %d) Any=%p %i %s: %u\n", what, &a, a.kind(), type_kind_name(a.kind()), a.get<int64>());
 }
@@ -133,6 +134,13 @@ any_test_get (const Any &a, int what)
         assert (a.kind() == INSTANCE);
         OneIface &oiface = a.get<OneIface>();
         assert (oiface.test_id() == 0x2eeeabcd);
+      }
+      break;
+    case 16:
+      {
+        assert (a.kind() == INSTANCE);
+        OneIfaceP oiface = a.get<OneIfaceP>();
+        assert (oiface && oiface->test_id() == 0x37afafaf);
       }
       break;
     }
@@ -185,13 +193,13 @@ test_any()
     }
   String s;
   const size_t cases = ANY_TEST_COUNT;
-  Any a;
   for (size_t j = 0; j <= cases; j++)
     for (size_t k = 0; k <= cases; k++)
       {
         size_t cs[2] = { j, k };
         for (size_t cc = 0; cc < 2; cc++)
           {
+            Any a;
             any_test_set (a, cs[cc]);
             const bool any_getter_successfull = any_test_get (a, cs[cc]);
             assert (any_getter_successfull == true);
@@ -206,6 +214,7 @@ test_any()
           }
       }
   printf ("  TEST   Aida Any storage                                                OK\n");
+  Any a;
   a <<= bool (0);       assert (a.kind() == BOOL && a.as_int() == 0);
   a <<= bool (1);       assert (a.kind() == BOOL && a.as_int() == 1);
   a <<= 1.;             assert (a.kind() == FLOAT64 && a.as_float() == +1.0);
