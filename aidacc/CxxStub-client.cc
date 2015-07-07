@@ -14,8 +14,8 @@ static Rapicorn::Aida::ClientConnection *client_connection = NULL;
 
 // helper
 
-static AIDA_UNUSED FieldBuffer*
-invoke (FieldBuffer *fb)                // async remote call, transfers memory
+static AIDA_UNUSED ProtoMsg*
+invoke (ProtoMsg *fb)                // async remote call, transfers memory
 {
   return client_connection->call_remote (fb);
 }
@@ -33,22 +33,22 @@ signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandle
 }
 
 static inline void
-add_header2_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
+add_header2_call (ProtoMsg &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
   fb.add_header2 (Rapicorn::Aida::MSGID_CALL_TWOWAY, ObjectBroker::connection_id_from_handle (sh),
                   client_connection->connection_id(), h, l);
 }
 
 static inline void
-add_header1_call (FieldBuffer &fb, const RemoteHandle &sh, uint64 h, uint64 l)
+add_header1_call (ProtoMsg &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
   fb.add_header1 (Rapicorn::Aida::MSGID_CALL_ONEWAY, ObjectBroker::connection_id_from_handle (sh), h, l);
 }
 
-static inline FieldBuffer*
-new_emit_result (const FieldBuffer *fb, uint64 h, uint64 l, uint32 n)
+static inline ProtoMsg*
+new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 {
-  return FieldBuffer::renew_into_result (const_cast<FieldBuffer*> (fb),
+  return ProtoMsg::renew_into_result (const_cast<ProtoMsg*> (fb),
                                          Rapicorn::Aida::MSGID_EMIT_RESULT,
                                          ObjectBroker::sender_connection_id (fb->first_id()),
                                          h, l, n);
@@ -60,10 +60,10 @@ namespace Rapicorn { namespace Aida {
 #ifndef RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 #define RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 // namespace Rapicorn::Aida needed for argument dependent lookups of the operators
-static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
+static void operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void
-operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
+operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Any &v)
 {
   fb.add_any (v, *__AIDA_Local__::client_connection);
 }

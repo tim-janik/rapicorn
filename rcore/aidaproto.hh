@@ -2,9 +2,9 @@
 namespace Rapicorn { namespace Aida {
 
 /// @ingroup AidaManifoldTypes
-/// Unpack FieldBuffer as signal arguments and emit() the signal.
+/// Unpack ProtoMsg as signal arguments and emit() the signal.
 template<class R, class A1, class A2> static inline R
-field_buffer_emit_signal (const Aida::FieldBuffer &fb, const std::function<R (A1, A2)> &func, uint64 &emit_result_id)
+field_buffer_emit_signal (const Aida::ProtoMsg &fb, const std::function<R (A1, A2)> &func, uint64 &emit_result_id)
 {
   const bool async = !std::is_void<R>::value;
   const size_t NARGS = 2;

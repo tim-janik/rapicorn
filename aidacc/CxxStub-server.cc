@@ -28,7 +28,7 @@ static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 
 // objects
 template<class Target> static inline void
-field_buffer_add_interface (Rapicorn::Aida::FieldBuffer &fb, Target *instance)
+field_buffer_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
 {
   server_connection->add_interface (fb, instance ? instance->shared_from_this() : ImplicitBaseP());
 }
@@ -41,40 +41,40 @@ field_reader_pop_interface (Rapicorn::Aida::FieldReader &fr)
 
 // messages
 static inline void
-post_msg (FieldBuffer *fb)
+post_msg (ProtoMsg *fb)
 {
   ObjectBroker::post_msg (fb);
 }
 
 static inline void
-add_header1_discon (FieldBuffer &fb, size_t signal_handler_id, uint64 h, uint64 l)
+add_header1_discon (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
 {
   fb.add_header1 (Rapicorn::Aida::MSGID_DISCONNECT, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l);
 }
 
 static inline void
-add_header1_emit (FieldBuffer &fb, size_t signal_handler_id, uint64 h, uint64 l)
+add_header1_emit (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
 {
   fb.add_header1 (Rapicorn::Aida::MSGID_EMIT_ONEWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l);
 }
 
 static inline void
-add_header2_emit (FieldBuffer &fb, size_t signal_handler_id, uint64 h, uint64 l)
+add_header2_emit (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
 {
   fb.add_header2 (Rapicorn::Aida::MSGID_EMIT_TWOWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id),
                   server_connection->connection_id(), h, l);
 }
 
-static inline FieldBuffer*
+static inline ProtoMsg*
 new_call_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return FieldBuffer::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
 }
 
-static inline FieldBuffer*
+static inline ProtoMsg*
 new_connect_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return FieldBuffer::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
 }
 
 // slot
@@ -90,10 +90,10 @@ namespace Rapicorn { namespace Aida {
 #ifndef RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 #define RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 // namespace Rapicorn::Aida needed for argument dependent lookups of the operators
-static void operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
+static void operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void
-operator<<= (Rapicorn::Aida::FieldBuffer &fb, const Rapicorn::Any &v)
+operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Any &v)
 {
   fb.add_any (v, *__AIDA_Local__::server_connection);
 }
