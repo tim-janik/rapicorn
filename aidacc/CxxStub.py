@@ -304,7 +304,7 @@ class Generator:
     s += '};\n'
     if type_info.storage in (Decls.RECORD, Decls.SEQUENCE):
       s += 'void operator<<= (Rapicorn::Aida::ProtoMsg&, const %s&);\n' % self.C (type_info)
-      s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s&);\n' % self.C (type_info)
+      s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %s&);\n' % self.C (type_info)
     #s += '/// @endcond\n'
     self.aliases += 'typedef %s %s;\n' % (self.C (type_info), type_info.name)
     if not type_info.namespace in self.aliases_namespaces:
@@ -363,8 +363,8 @@ class Generator:
     s += self.generate_proto_add_args ('fb', type_info, 'self.', type_info.fields, '')
     s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
-    s += 'operator>>= (Rapicorn::Aida::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
-    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_rec());\n'
+    s += 'operator>>= (Rapicorn::Aida::ProtoReader &src, %s &self)\n{\n' % self.C (type_info)
+    s += '  Rapicorn::Aida::ProtoReader fbr (src.pop_rec());\n'
     s += '  if (fbr.remaining() < %u) return;\n' % len (type_info.fields)
     s += self.generate_proto_pop_args ('fbr', type_info, 'self.', type_info.fields)
     s += '}\n'
@@ -384,8 +384,8 @@ class Generator:
     s += '  }\n'
     s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
-    s += 'operator>>= (Rapicorn::Aida::FieldReader &src, %s &self)\n{\n' % self.C (type_info)
-    s += '  Rapicorn::Aida::FieldReader fbr (src.pop_seq());\n'
+    s += 'operator>>= (Rapicorn::Aida::ProtoReader &src, %s &self)\n{\n' % self.C (type_info)
+    s += '  Rapicorn::Aida::ProtoReader fbr (src.pop_seq());\n'
     s += '  const size_t len = fbr.remaining();\n'
     s += '  self.resize (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
@@ -551,11 +551,11 @@ class Generator:
     if self.gen_mode == G4SERVANT:
       s += 'void operator<<= (Rapicorn::Aida::ProtoMsg&, %s*);\n' % self.C (type_info)
       s += 'void operator<<= (Rapicorn::Aida::ProtoMsg&, const %sP&);\n' % self.C (type_info)
-      s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s*&);\n' % self.C (type_info)
-      s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %sP&);\n' % self.C (type_info)
+      s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %s*&);\n' % self.C (type_info)
+      s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %sP&);\n' % self.C (type_info)
     else: # G4STUB
       s += 'void operator<<= (Rapicorn::Aida::ProtoMsg&, const %s&);\n' % self.C (type_info)
-      s += 'void operator>>= (Rapicorn::Aida::FieldReader&, %s&);\n' % self.C (type_info)
+      s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %s&);\n' % self.C (type_info)
     # typedef alias
     if self.gen_mode == G4STUB:
       s += self.generate_shortalias (type_info)
@@ -618,7 +618,7 @@ class Generator:
     s += '  __AIDA_Local__::client_connection->add_handle (fb, handle);\n'
     s += '}\n'
     s += 'void\n'
-    s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s &handle)\n{\n' % classH
+    s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %s &handle)\n{\n' % classH
     s += '  __AIDA_Local__::client_connection->pop_handle (fbr, handle);\n'
     s += '}\n'
     s += 'const Rapicorn::Aida::TypeHash&\n'
@@ -647,7 +647,7 @@ class Generator:
     s += self.generate_proto_add_args ('fb', tp, '', [('*this', tp)], '')
     s += '  Rapicorn::Aida::ProtoMsg *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
-    s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
+    s += '  Rapicorn::Aida::ProtoReader frr (*fr);\n'
     s += '  frr.skip_header();\n'
     s += '  size_t len;\n'
     s += '  frr >>= len;\n'
@@ -679,11 +679,11 @@ class Generator:
     s += '  __AIDA_Local__::proto_msg_add_interface (fb, obj);\n'
     s += '}\n'
     s += 'void\n'
-    s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %sP &obj)\n{\n' % classC
+    s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %sP &obj)\n{\n' % classC
     s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr);\n' % classC
     s += '}\n'
     s += 'void\n'
-    s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %s* &obj)\n{\n' % classC
+    s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %s* &obj)\n{\n' % classC
     s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr).get();\n' % classC
     s += '}\n'
     s += 'Rapicorn::Aida::TypeHashList\n'
@@ -753,7 +753,7 @@ class Generator:
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
-      s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
+      s += '  Rapicorn::Aida::ProtoReader frr (*fr);\n'
       s += '  frr.skip_header();\n'
       s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
       s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
@@ -769,7 +769,7 @@ class Generator:
     dispatcher_name = '__aida_call__%s__%s' % (class_info.name, mtype.name)
     reglines += [ (self.method_digest (mtype), self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
-    s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
+    s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
     s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + %u);\n' % len (mtype.args)
     # fetch self
@@ -831,7 +831,7 @@ class Generator:
     s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
     if 1: # hasret
       rarg = ('retval', ftype)
-      s += '  Rapicorn::Aida::FieldReader frr (*fr);\n'
+      s += '  Rapicorn::Aida::ProtoReader frr (*fr);\n'
       s += '  frr.skip_header();\n'
       s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
       s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
@@ -860,7 +860,7 @@ class Generator:
     setter_hash = self.setter_digest (class_info, fident, ftype)
     reglines += [ (setter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
-    s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
+    s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
     s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);\n'
     # fetch self
@@ -884,7 +884,7 @@ class Generator:
     getter_hash = self.getter_digest (class_info, fident, ftype)
     reglines += [ (getter_hash, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
-    s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
+    s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
     s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
     # fetch self
@@ -911,7 +911,7 @@ class Generator:
     digest = self.list_types_digest (tp)
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
-    s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
+    s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
     s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
@@ -1032,7 +1032,7 @@ class Generator:
       s += '    auto promise = std::make_shared<std::promise<%s>> ();\n' % cpp_rtype
       s += '    auto future = promise->get_future();\n'
       s += '    const size_t lambda_id = 1 + size_t (promise.get());\n' # generate unique (non-pointer) id
-      s += '    auto lambda = [promise] (Rapicorn::Aida::FieldReader &frr) {\n'
+      s += '    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {\n'
       s += '      ' + self.R (stype.rtype) + ' retval;\n'
       s += '    ' + self.generate_proto_pop_args ('frr', class_info, '', [('retval', stype.rtype)], '')
       s += '      promise->set_value (retval);\n'
@@ -1049,7 +1049,7 @@ class Generator:
     s += '  }\n'
     s += '};\n'
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
-    s += dispatcher_name + ' (Rapicorn::Aida::FieldReader &fbr)\n'
+    s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
     s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);\n'
     s += '  %s *self;\n' % self.C (class_info)
@@ -1139,7 +1139,7 @@ class Generator:
     s += '};\n'
     s += 'inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  %s  e) ' % nm
     s += '{ fb <<= Rapicorn::Aida::EnumValue (e); }\n'
-    s += 'inline void operator>>= (Rapicorn::Aida::FieldReader &frr, %s &e) ' % nm
+    s += 'inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, %s &e) ' % nm
     s += '{ e = %s (frr.pop_evalue()); }\n' % nm
     if type_info.combinable: # enum as flags
       s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (s1 & Rapicorn::Aida::uint64 (s2)); }\n' % (nm, nm, nm, nm)

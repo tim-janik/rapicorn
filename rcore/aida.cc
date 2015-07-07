@@ -996,18 +996,18 @@ ProtoMsg::check_internal ()
 }
 
 void
-FieldReader::check_request (int type)
+ProtoReader::check_request (int type)
 {
   if (nth_ >= n_types())
-    fatal_error (string_format ("FieldReader(this=%p): size=%u requested-index=%u", this, n_types(), nth_));
+    fatal_error (string_format ("ProtoReader(this=%p): size=%u requested-index=%u", this, n_types(), nth_));
   if (get_type() != type)
-    fatal_error (string_format ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
+    fatal_error (string_format ("ProtoReader(this=%p): size=%u index=%u type=%s requested-type=%s",
                                 this, n_types(), nth_,
                                 ProtoMsg::type_name (get_type()).c_str(), ProtoMsg::type_name (type).c_str()));
 }
 
 uint64
-FieldReader::debug_bits ()
+ProtoReader::debug_bits ()
 {
   return fb_->upeek (nth_).vint64;
 }
@@ -1052,7 +1052,7 @@ ProtoMsg::to_string() const
 {
   String s = string_format ("Aida::ProtoMsg(%p)={", this);
   s += string_format ("size=%u, capacity=%u", size(), capacity());
-  FieldReader fbr (*this);
+  ProtoReader fbr (*this);
   for (size_t i = 0; i < size(); i++)
     {
       const String tname = type_name (fbr.get_type());
@@ -1114,7 +1114,7 @@ ProtoMsg::renew_into_result (ProtoMsg *fb, MessageId m, uint rconnection, uint64
 }
 
 ProtoMsg*
-ProtoMsg::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
   ProtoMsg *fb = const_cast<ProtoMsg*> (fbr.proto_msg());
   fbr.reset();
@@ -1671,7 +1671,7 @@ public:
   virtual ProtoMsg*  pop               ();
   virtual void          dispatch          ();
   virtual void          add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle);
-  virtual void          pop_handle        (FieldReader &fr, RemoteHandle &rhandle);
+  virtual void          pop_handle        (ProtoReader &fr, RemoteHandle &rhandle);
   virtual void          remote_origin     (ImplicitBaseP rorigin) { fatal ("assert not reached"); }
   virtual RemoteHandle  remote_origin     ();
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
@@ -1724,7 +1724,7 @@ ClientConnectionImpl::remote_origin()
   ProtoMsg *fb = ProtoMsg::_new (3);
   fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
   ProtoMsg *fr = this->call_remote (fb); // takes over fb
-  FieldReader frr (*fr);
+  ProtoReader frr (*fr);
   const MessageId msgid = MessageId (frr.pop_int64());
   frr.skip(); // hashhigh
   frr.skip(); // hashlow
@@ -1743,7 +1743,7 @@ ClientConnectionImpl::add_handle (ProtoMsg &fb, const RemoteHandle &rhandle)
 }
 
 void
-ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
+ClientConnectionImpl::pop_handle (ProtoReader &fr, RemoteHandle &rhandle)
 {
   const uint64 orbid = fr.pop_orbid();
   OrbObjectP orbop = id2orbo_map_[orbid].lock();
@@ -1758,7 +1758,7 @@ ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
 void
 ClientConnectionImpl::gc_sweep (const ProtoMsg *fb)
 {
-  FieldReader fbr (*fb);
+  ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   assert (msgid_is (msgid, MSGID_META_GARBAGE_SWEEP));
   // collect expired object ids and send to server
@@ -1786,7 +1786,7 @@ ClientConnectionImpl::dispatch ()
 {
   ProtoMsg *fb = pop();
   return_if (fb == NULL);
-  FieldReader fbr (*fb);
+  ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64  idmask = msgid_mask (msgid);
   switch (idmask)
@@ -1862,7 +1862,7 @@ ClientConnectionImpl::call_remote (ProtoMsg *fb)
 #if 0
       else if (msgid_is_error (retmask))
         {
-          FieldReader fbr (*fr);
+          ProtoReader fbr (*fr);
           fbr.skip_header();
           std::string msg = fbr.pop_string();
           std::string dom = fbr.pop_string();
@@ -1879,7 +1879,7 @@ ClientConnectionImpl::call_remote (ProtoMsg *fb)
         }
       else
         {
-          FieldReader frr (*fr);
+          ProtoReader frr (*fr);
           const uint64 retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
           print_warning (string_format ("%s: invalid reply: (%016x, %016x%016x)", STRFUNC, retid, rethh, rethl));
         }
@@ -1915,7 +1915,7 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   fb <<= 0;                                     // disconnection request id
   ProtoMsg *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, 0);
-  FieldReader frr (*connection_result);
+  ProtoReader frr (*connection_result);
   frr.skip_header();
   pthread_spin_lock (&signal_spin_);
   frr >>= shandler->cid;
@@ -1944,7 +1944,7 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   fb <<= shandler->cid;                         // disconnection request id
   ProtoMsg *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, false);
-  FieldReader frr (*connection_result);
+  ProtoReader frr (*connection_result);
   frr.skip_header();
   uint64 disconnection_success;
   frr >>= disconnection_success;
@@ -1993,7 +1993,7 @@ public:
   virtual void          remote_origin  (ImplicitBaseP rorigin);
   virtual RemoteHandle  remote_origin  () { fatal ("assert not reached"); }
   virtual void          add_interface  (ProtoMsg &fb, ImplicitBaseP ibase);
-  virtual ImplicitBaseP pop_interface  (FieldReader &fr);
+  virtual ImplicitBaseP pop_interface  (ProtoReader &fr);
   virtual void          send_msg   (ProtoMsg *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
@@ -2058,7 +2058,7 @@ ServerConnectionImpl::add_interface (ProtoMsg &fb, ImplicitBaseP ibase)
 }
 
 ImplicitBaseP
-ServerConnectionImpl::pop_interface (FieldReader &fr)
+ServerConnectionImpl::pop_interface (ProtoReader &fr)
 {
   const uint64 orbid = fr.pop_orbid();
   OrbObjectP orbop = object_map_.orbo_from_orbid (orbid);
@@ -2071,7 +2071,7 @@ ServerConnectionImpl::dispatch ()
   ProtoMsg *fb = transport_channel_.fetch_msg();
   if (!fb)
     return;
-  FieldReader fbr (*fb);
+  ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64  idmask = msgid_mask (msgid);
   switch (idmask)
@@ -2393,7 +2393,7 @@ ObjectBroker::post_msg (ProtoMsg *fb)
     fatal_error (string_format ("mismatch of result flag and sender_connection: %016x", msgid));
   if (AIDA_MESSAGES_ENABLED())
     {
-      FieldReader fbr (*fb);
+      ProtoReader fbr (*fb);
       const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
       AIDA_MESSAGE ("dest=%p msgid=%016x h=%016x l=%016x", bcon, msgid, hashhigh, hashlow);
     }

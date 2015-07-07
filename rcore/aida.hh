@@ -56,12 +56,12 @@ class ClientConnection;
 class ServerConnection;
 union FieldUnion;
 class ProtoMsg;
-class FieldReader;
+class ProtoReader;
 struct PropertyList;
 class Property;
 typedef std::shared_ptr<OrbObject>    OrbObjectP;
 typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
-typedef ProtoMsg* (*DispatchFunc) (FieldReader&);
+typedef ProtoMsg* (*DispatchFunc) (ProtoReader&);
 
 // == EnumValue ==
 /// Aida info for enumeration values.
@@ -587,7 +587,7 @@ union FieldUnion {
 };
 
 class ProtoMsg { // buffer for marshalling procedure calls
-  friend class FieldReader;
+  friend class ProtoReader;
   void               check_internal ();
   inline FieldUnion& upeek (uint32 n) const { return buffermem[offset() + n]; }
 protected:
@@ -625,7 +625,7 @@ public:
   // static ProtoMsg* new_error (const String &msg, const String &domain = "");
   static ProtoMsg* new_result        (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   static ProtoMsg* renew_into_result (ProtoMsg *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  static ProtoMsg* renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static ProtoMsg* renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   inline void operator<<= (uint32 v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (ULongIffy v)       { FieldUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (uint64 v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
@@ -646,7 +646,7 @@ public:
   inline   ProtoMsg8 (uint32 ntypes = 8) : ProtoMsg (ntypes, bmem, sizeof (bmem)) { AIDA_ASSERT (ntypes <= 8); }
 };
 
-class FieldReader { // read ProtoMsg contents
+class ProtoReader { // read ProtoMsg contents
   const ProtoMsg *fb_;
   uint32             nth_;
   void               check_request (int type);
@@ -654,7 +654,7 @@ class FieldReader { // read ProtoMsg contents
   inline FieldUnion& fb_getu (int t) { request (t); return fb_->upeek (nth_); }
   inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = fb_->upeek (nth_++); return u; }
 public:
-  explicit                 FieldReader (const ProtoMsg &fb) : fb_ (&fb), nth_ (0) {}
+  explicit                 ProtoReader (const ProtoMsg &fb) : fb_ (&fb), nth_ (0) {}
   uint64                    debug_bits ();
   inline const ProtoMsg* proto_msg() const { return fb_; }
   inline void               reset      (const ProtoMsg &fb) { fb_ = &fb; nth_ = 0; }
@@ -729,11 +729,11 @@ protected:
   virtual           ~ServerConnection      ();
   virtual void       cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
 public:
-  typedef std::function<void (Rapicorn::Aida::FieldReader&)> EmitResultHandler;
+  typedef std::function<void (Rapicorn::Aida::ProtoReader&)> EmitResultHandler;
   virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
   virtual ImplicitBaseP interface_from_handle   (const RemoteHandle &rhandle) = 0;
   virtual void          add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) = 0;
-  virtual ImplicitBaseP pop_interface           (FieldReader &fr) = 0;
+  virtual ImplicitBaseP pop_interface           (ProtoReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64 hi, uint64 lo); ///< Lookup method in registry.
 public:
@@ -755,7 +755,7 @@ protected:
 public: /// @name API for remote calls.
   virtual ProtoMsg*  call_remote (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   virtual void          add_handle  (ProtoMsg &fb, const RemoteHandle &rhandle) = 0;
-  virtual void          pop_handle  (FieldReader &fr, RemoteHandle &rhandle) = 0;
+  virtual void          pop_handle  (ProtoReader &fr, RemoteHandle &rhandle) = 0;
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
@@ -815,7 +815,7 @@ ProtoMsg::add_any (const Any &vany, BaseConnection &bcon)
 }
 
 inline const Any&
-FieldReader::pop_any (BaseConnection &bcon)
+ProtoReader::pop_any (BaseConnection &bcon)
 {
   FieldUnion &u = fb_popu (ANY);
   bcon.any2local (*u.vany);

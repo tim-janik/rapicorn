@@ -61,14 +61,14 @@ namespace Rapicorn { namespace Aida {
 #define RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 // namespace Rapicorn::Aida needed for argument dependent lookups of the operators
 static void operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
-static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
+static void operator>>= (Rapicorn::Aida::ProtoReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Any &v)
 {
   fb.add_any (v, *__AIDA_Local__::client_connection);
 }
 static void
-operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
+operator>>= (Rapicorn::Aida::ProtoReader &fr, Rapicorn::Any &v)
 {
   v = fr.pop_any (*__AIDA_Local__::client_connection);
 }

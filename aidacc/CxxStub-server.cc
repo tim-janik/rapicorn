@@ -34,7 +34,7 @@ proto_msg_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
 }
 
 template<class Target> static inline std::shared_ptr<Target>
-field_reader_pop_interface (Rapicorn::Aida::FieldReader &fr)
+field_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
 {
   return std::dynamic_pointer_cast<Target> (server_connection->pop_interface (fr));
 }
@@ -66,13 +66,13 @@ add_header2_emit (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
 }
 
 static inline ProtoMsg*
-new_call_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
+new_call_result (ProtoReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
   return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.proto_msg()->first_id()), h, l, n);
 }
 
 static inline ProtoMsg*
-new_connect_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
+new_connect_result (ProtoReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
   return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.proto_msg()->first_id()), h, l, n);
 }
@@ -91,14 +91,14 @@ namespace Rapicorn { namespace Aida {
 #define RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
 // namespace Rapicorn::Aida needed for argument dependent lookups of the operators
 static void operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
-static void operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
+static void operator>>= (Rapicorn::Aida::ProtoReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
 static void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Any &v)
 {
   fb.add_any (v, *__AIDA_Local__::server_connection);
 }
 static void
-operator>>= (Rapicorn::Aida::FieldReader &fr, Rapicorn::Any &v)
+operator>>= (Rapicorn::Aida::ProtoReader &fr, Rapicorn::Any &v)
 {
   v = fr.pop_any (*__AIDA_Local__::server_connection);
 }
