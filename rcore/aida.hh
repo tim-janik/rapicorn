@@ -54,7 +54,7 @@ class ObjectBroker;
 class BaseConnection;
 class ClientConnection;
 class ServerConnection;
-union FieldUnion;
+union ProtoUnion;
 class ProtoMsg;
 class ProtoReader;
 struct PropertyList;
@@ -576,7 +576,7 @@ public:
 };
 
 // == ProtoMsg ==
-union FieldUnion {
+union ProtoUnion {
   int64        vint64;
   double       vdouble;
   Any         *vany;
@@ -589,34 +589,34 @@ union FieldUnion {
 class ProtoMsg { // buffer for marshalling procedure calls
   friend class ProtoReader;
   void               check_internal ();
-  inline FieldUnion& upeek (uint32 n) const { return buffermem[offset() + n]; }
+  inline ProtoUnion& upeek (uint32 n) const { return buffermem[offset() + n]; }
 protected:
-  FieldUnion        *buffermem;
+  ProtoUnion        *buffermem;
   inline void        check ()      { if (AIDA_UNLIKELY (size() > capacity())) check_internal(); }
   inline uint32      offset () const { const uint32 offs = 1 + (capacity() + 7) / 8; return offs; }
   inline TypeKind    type_at  (uint32 n) const { return TypeKind (buffermem[1 + n/8].bytes[n%8]); }
   inline void        set_type (TypeKind ft)  { buffermem[1 + size()/8].bytes[size()%8] = ft; }
-  inline FieldUnion& getu () const           { return buffermem[offset() + size()]; }
-  inline FieldUnion& addu (TypeKind ft) { set_type (ft); FieldUnion &u = getu(); buffermem[0].index++; check(); return u; }
-  inline FieldUnion& uat (uint32 n) const { return AIDA_LIKELY (n < size()) ? upeek (n) : *(FieldUnion*) NULL; }
+  inline ProtoUnion& getu () const           { return buffermem[offset() + size()]; }
+  inline ProtoUnion& addu (TypeKind ft) { set_type (ft); ProtoUnion &u = getu(); buffermem[0].index++; check(); return u; }
+  inline ProtoUnion& uat (uint32 n) const { return AIDA_LIKELY (n < size()) ? upeek (n) : *(ProtoUnion*) NULL; }
   explicit           ProtoMsg (uint32 _ntypes);
-  explicit           ProtoMsg (uint32, FieldUnion*, uint32);
+  explicit           ProtoMsg (uint32, ProtoUnion*, uint32);
 public:
   virtual     ~ProtoMsg();
   inline uint32 size     () const          { return buffermem[0].index; }
   inline uint32 capacity () const          { return buffermem[0].capacity; }
   inline uint64 first_id () const          { return AIDA_LIKELY (buffermem && size() && type_at (0) == INT64) ? upeek (0).vint64 : 0; }
-  inline void add_bool   (bool    vbool)   { FieldUnion &u = addu (BOOL); u.vint64 = vbool; }
-  inline void add_int64  (int64 vint64)    { FieldUnion &u = addu (INT64); u.vint64 = vint64; }
-  inline void add_evalue (int64 vint64)    { FieldUnion &u = addu (ENUM); u.vint64 = vint64; }
-  inline void add_double (double vdouble)  { FieldUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
-  inline void add_string (const String &s) { FieldUnion &u = addu (STRING); new (&u) String (s); }
-  inline void add_orbid  (uint64 objid)    { FieldUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_bool   (bool    vbool)   { ProtoUnion &u = addu (BOOL); u.vint64 = vbool; }
+  inline void add_int64  (int64 vint64)    { ProtoUnion &u = addu (INT64); u.vint64 = vint64; }
+  inline void add_evalue (int64 vint64)    { ProtoUnion &u = addu (ENUM); u.vint64 = vint64; }
+  inline void add_double (double vdouble)  { ProtoUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
+  inline void add_string (const String &s) { ProtoUnion &u = addu (STRING); new (&u) String (s); }
+  inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint d, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, 0).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint d, uint s, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, s).vuint64); add_int64 (h); add_int64 (l); }
-  inline ProtoMsg& add_rec (uint32 nt) { FieldUnion &u = addu (RECORD); return *new (&u) ProtoMsg (nt); }
-  inline ProtoMsg& add_seq (uint32 nt) { FieldUnion &u = addu (SEQUENCE); return *new (&u) ProtoMsg (nt); }
+  inline ProtoMsg& add_rec (uint32 nt) { ProtoUnion &u = addu (RECORD); return *new (&u) ProtoMsg (nt); }
+  inline ProtoMsg& add_seq (uint32 nt) { ProtoUnion &u = addu (SEQUENCE); return *new (&u) ProtoMsg (nt); }
   inline void         reset();
   String              first_id_str() const;
   String              to_string() const;
@@ -626,21 +626,21 @@ public:
   static ProtoMsg* new_result        (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   static ProtoMsg* renew_into_result (ProtoMsg *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   static ProtoMsg* renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  inline void operator<<= (uint32 v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
-  inline void operator<<= (ULongIffy v)       { FieldUnion &u = addu (INT64); u.vint64 = v; }
-  inline void operator<<= (uint64 v)          { FieldUnion &u = addu (INT64); u.vint64 = v; }
-  inline void operator<<= (int32 v)           { FieldUnion &u = addu (INT64); u.vint64 = v; }
-  inline void operator<<= (LongIffy v)        { FieldUnion &u = addu (INT64); u.vint64 = v; }
-  inline void operator<<= (int64 v)           { FieldUnion &u = addu (INT64); u.vint64 = v; }
-  inline void operator<<= (bool   v)          { FieldUnion &u = addu (BOOL); u.vint64 = v; }
-  inline void operator<<= (double v)          { FieldUnion &u = addu (FLOAT64); u.vdouble = v; }
-  inline void operator<<= (EnumValue e)       { FieldUnion &u = addu (ENUM); u.vint64 = e.value; }
-  inline void operator<<= (const String &s)   { FieldUnion &u = addu (STRING); new (&u) String (s); }
+  inline void operator<<= (uint32 v)          { ProtoUnion &u = addu (INT64); u.vint64 = v; }
+  inline void operator<<= (ULongIffy v)       { ProtoUnion &u = addu (INT64); u.vint64 = v; }
+  inline void operator<<= (uint64 v)          { ProtoUnion &u = addu (INT64); u.vint64 = v; }
+  inline void operator<<= (int32 v)           { ProtoUnion &u = addu (INT64); u.vint64 = v; }
+  inline void operator<<= (LongIffy v)        { ProtoUnion &u = addu (INT64); u.vint64 = v; }
+  inline void operator<<= (int64 v)           { ProtoUnion &u = addu (INT64); u.vint64 = v; }
+  inline void operator<<= (bool   v)          { ProtoUnion &u = addu (BOOL); u.vint64 = v; }
+  inline void operator<<= (double v)          { ProtoUnion &u = addu (FLOAT64); u.vdouble = v; }
+  inline void operator<<= (EnumValue e)       { ProtoUnion &u = addu (ENUM); u.vint64 = e.value; }
+  inline void operator<<= (const String &s)   { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
 };
 
 class ProtoMsg8 : public ProtoMsg { // Stack contained buffer for up to 8 fields
-  FieldUnion bmem[1 + 1 + 8];
+  ProtoUnion bmem[1 + 1 + 8];
 public:
   virtual ~ProtoMsg8 () { reset(); buffermem = NULL; }
   inline   ProtoMsg8 (uint32 ntypes = 8) : ProtoMsg (ntypes, bmem, sizeof (bmem)) { AIDA_ASSERT (ntypes <= 8); }
@@ -651,8 +651,8 @@ class ProtoReader { // read ProtoMsg contents
   uint32             nth_;
   void               check_request (int type);
   inline void        request (int t) { if (AIDA_UNLIKELY (nth_ >= n_types() || get_type() != t)) check_request (t); }
-  inline FieldUnion& fb_getu (int t) { request (t); return fb_->upeek (nth_); }
-  inline FieldUnion& fb_popu (int t) { request (t); FieldUnion &u = fb_->upeek (nth_++); return u; }
+  inline ProtoUnion& fb_getu (int t) { request (t); return fb_->upeek (nth_); }
+  inline ProtoUnion& fb_popu (int t) { request (t); ProtoUnion &u = fb_->upeek (nth_++); return u; }
 public:
   explicit                 ProtoReader (const ProtoMsg &fb) : fb_ (&fb), nth_ (0) {}
   uint64                    debug_bits ();
@@ -664,32 +664,32 @@ public:
   inline void               skip_header () { skip(); skip(); skip(); }
   inline uint32             n_types    () { return fb_->size(); }
   inline TypeKind           get_type   () { return fb_->type_at (nth_); }
-  inline int64              get_bool   () { FieldUnion &u = fb_getu (BOOL); return u.vint64; }
-  inline int64              get_int64  () { FieldUnion &u = fb_getu (INT64); return u.vint64; }
-  inline int64              get_evalue () { FieldUnion &u = fb_getu (ENUM); return u.vint64; }
-  inline double             get_double () { FieldUnion &u = fb_getu (FLOAT64); return u.vdouble; }
-  inline const String&      get_string () { FieldUnion &u = fb_getu (STRING); return *(String*) &u; }
-  inline const ProtoMsg& get_rec    () { FieldUnion &u = fb_getu (RECORD); return *(ProtoMsg*) &u; }
-  inline const ProtoMsg& get_seq    () { FieldUnion &u = fb_getu (SEQUENCE); return *(ProtoMsg*) &u; }
-  inline int64              pop_bool   () { FieldUnion &u = fb_popu (BOOL); return u.vint64; }
-  inline int64              pop_int64  () { FieldUnion &u = fb_popu (INT64); return u.vint64; }
-  inline int64              pop_evalue () { FieldUnion &u = fb_popu (ENUM); return u.vint64; }
-  inline double             pop_double () { FieldUnion &u = fb_popu (FLOAT64); return u.vdouble; }
-  inline const String&      pop_string () { FieldUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline uint64             pop_orbid  () { FieldUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline int64              get_bool   () { ProtoUnion &u = fb_getu (BOOL); return u.vint64; }
+  inline int64              get_int64  () { ProtoUnion &u = fb_getu (INT64); return u.vint64; }
+  inline int64              get_evalue () { ProtoUnion &u = fb_getu (ENUM); return u.vint64; }
+  inline double             get_double () { ProtoUnion &u = fb_getu (FLOAT64); return u.vdouble; }
+  inline const String&      get_string () { ProtoUnion &u = fb_getu (STRING); return *(String*) &u; }
+  inline const ProtoMsg& get_rec    () { ProtoUnion &u = fb_getu (RECORD); return *(ProtoMsg*) &u; }
+  inline const ProtoMsg& get_seq    () { ProtoUnion &u = fb_getu (SEQUENCE); return *(ProtoMsg*) &u; }
+  inline int64              pop_bool   () { ProtoUnion &u = fb_popu (BOOL); return u.vint64; }
+  inline int64              pop_int64  () { ProtoUnion &u = fb_popu (INT64); return u.vint64; }
+  inline int64              pop_evalue () { ProtoUnion &u = fb_popu (ENUM); return u.vint64; }
+  inline double             pop_double () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
+  inline const String&      pop_string () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
+  inline uint64             pop_orbid  () { ProtoUnion &u = fb_popu (INSTANCE); return u.vint64; }
   inline const Any&         pop_any    (BaseConnection &bcon);
-  inline const ProtoMsg& pop_rec    () { FieldUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
-  inline const ProtoMsg& pop_seq    () { FieldUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }
-  inline void operator>>= (uint32 &v)          { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
-  inline void operator>>= (ULongIffy &v)       { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
-  inline void operator>>= (uint64 &v)          { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
-  inline void operator>>= (int32 &v)           { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
-  inline void operator>>= (LongIffy &v)        { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
-  inline void operator>>= (int64 &v)           { FieldUnion &u = fb_popu (INT64); v = u.vint64; }
-  inline void operator>>= (bool &v)            { FieldUnion &u = fb_popu (BOOL); v = u.vint64; }
-  inline void operator>>= (double &v)          { FieldUnion &u = fb_popu (FLOAT64); v = u.vdouble; }
-  inline void operator>>= (EnumValue &e)       { FieldUnion &u = fb_popu (ENUM); e.value = u.vint64; }
-  inline void operator>>= (String &s)          { FieldUnion &u = fb_popu (STRING); s = *(String*) &u; }
+  inline const ProtoMsg& pop_rec    () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
+  inline const ProtoMsg& pop_seq    () { ProtoUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }
+  inline void operator>>= (uint32 &v)          { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
+  inline void operator>>= (ULongIffy &v)       { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
+  inline void operator>>= (uint64 &v)          { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
+  inline void operator>>= (int32 &v)           { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
+  inline void operator>>= (LongIffy &v)        { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
+  inline void operator>>= (int64 &v)           { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
+  inline void operator>>= (bool &v)            { ProtoUnion &u = fb_popu (BOOL); v = u.vint64; }
+  inline void operator>>= (double &v)          { ProtoUnion &u = fb_popu (FLOAT64); v = u.vdouble; }
+  inline void operator>>= (EnumValue &e)       { ProtoUnion &u = fb_popu (ENUM); e.value = u.vint64; }
+  inline void operator>>= (String &s)          { ProtoUnion &u = fb_popu (STRING); s = *(String*) &u; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
   inline void operator>>= (std::vector<bool>::reference v) { bool b; *this >>= b; v = b; }
 };
@@ -798,10 +798,10 @@ ProtoMsg::reset()
       buffermem[0].index--; // causes size()--
       switch (type_at (size()))
         {
-        case STRING:    { FieldUnion &u = getu(); ((String*) &u)->~String(); }; break;
-        case ANY:       { FieldUnion &u = getu(); delete u.vany; }; break;
+        case STRING:    { ProtoUnion &u = getu(); ((String*) &u)->~String(); }; break;
+        case ANY:       { ProtoUnion &u = getu(); delete u.vany; }; break;
         case SEQUENCE:
-        case RECORD:    { FieldUnion &u = getu(); ((ProtoMsg*) &u)->~ProtoMsg(); }; break;
+        case RECORD:    { ProtoUnion &u = getu(); ((ProtoMsg*) &u)->~ProtoMsg(); }; break;
         default: ;
         }
     }
@@ -810,14 +810,14 @@ ProtoMsg::reset()
 inline void
 ProtoMsg::add_any (const Any &vany, BaseConnection &bcon)
 {
-  FieldUnion &u = addu (ANY);
+  ProtoUnion &u = addu (ANY);
   u.vany = bcon.any2remote (vany);
 }
 
 inline const Any&
 ProtoReader::pop_any (BaseConnection &bcon)
 {
-  FieldUnion &u = fb_popu (ANY);
+  ProtoUnion &u = fb_popu (ANY);
   bcon.any2local (*u.vany);
   return *u.vany;
 }

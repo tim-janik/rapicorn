@@ -235,9 +235,9 @@ union SignalHandlerIdParts {
   {}
 };
 
-// == FieldUnion ==
-static_assert (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes), "sizeof FieldUnion::smem");
-static_assert (sizeof (ProtoMsg) <= sizeof (FieldUnion), "sizeof ProtoMsg");
+// == ProtoUnion ==
+static_assert (sizeof (ProtoUnion::smem) <= sizeof (ProtoUnion::bytes), "sizeof ProtoUnion::smem");
+static_assert (sizeof (ProtoMsg) <= sizeof (ProtoUnion), "sizeof ProtoMsg");
 
 // === Utilities ===
 void
@@ -960,23 +960,23 @@ RemoteHandle::~RemoteHandle()
 ProtoMsg::ProtoMsg (uint32 _ntypes) :
   buffermem (NULL)
 {
-  static_assert (sizeof (ProtoMsg) <= sizeof (FieldUnion), "sizeof ProtoMsg");
+  static_assert (sizeof (ProtoMsg) <= sizeof (ProtoUnion), "sizeof ProtoMsg");
   // buffermem layout: [{n_types,nth}] [{type nibble} * n_types]... [field]...
   const uint _offs = 1 + (_ntypes + 7) / 8;
-  buffermem = new FieldUnion[_offs + _ntypes];
-  wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
+  buffermem = new ProtoUnion[_offs + _ntypes];
+  wmemset ((wchar_t*) buffermem, 0, sizeof (ProtoUnion[_offs]) / sizeof (wchar_t));
   buffermem[0].capacity = _ntypes;
   buffermem[0].index = 0;
 }
 
 ProtoMsg::ProtoMsg (uint32    _ntypes,
-                          FieldUnion *_bmem,
+                          ProtoUnion *_bmem,
                           uint32    _bmemlen) :
   buffermem (_bmem)
 {
   const uint32 _offs = 1 + (_ntypes + 7) / 8;
-  assert (_bmem && _bmemlen >= sizeof (FieldUnion[_offs + _ntypes]));
-  wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
+  assert (_bmem && _bmemlen >= sizeof (ProtoUnion[_offs + _ntypes]));
+  wmemset ((wchar_t*) buffermem, 0, sizeof (ProtoUnion[_offs]) / sizeof (wchar_t));
   buffermem[0].capacity = _ntypes;
   buffermem[0].index = 0;
 }
@@ -1124,7 +1124,7 @@ ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, ui
 class OneChunkProtoMsg : public ProtoMsg {
   virtual ~OneChunkProtoMsg () { reset(); buffermem = NULL; }
   explicit OneChunkProtoMsg (uint32    _ntypes,
-                                FieldUnion *_bmem,
+                                ProtoUnion *_bmem,
                                 uint32    _bmemlen) :
     ProtoMsg (_ntypes, _bmem, _bmemlen)
   {}
@@ -1133,10 +1133,10 @@ public:
   _new (uint32 _ntypes)
   {
     const uint32 _offs = 1 + (_ntypes + 7) / 8;
-    size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
+    size_t bmemlen = sizeof (ProtoUnion[_offs + _ntypes]);
     size_t objlen = ALIGN4 (sizeof (OneChunkProtoMsg), int64);
     uint8_t *omem = (uint8_t*) operator new (objlen + bmemlen);
-    FieldUnion *bmem = (FieldUnion*) (omem + objlen);
+    ProtoUnion *bmem = (ProtoUnion*) (omem + objlen);
     return new (omem) OneChunkProtoMsg (_ntypes, bmem, bmemlen);
   }
 };
