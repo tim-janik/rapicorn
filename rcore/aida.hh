@@ -559,7 +559,7 @@ class ObjectBroker {
                                                    std::function<BaseConnection*()>   aida_connection,
                                                    std::function<void (RemoteHandle)> origin_cast);
 public:
-  static void              post_msg   (ProtoMsg*); ///< Route message to the appropriate party.
+  static void              post_msg               (ProtoMsg*); ///< Route message to the appropriate party.
   static uint              register_connection    (BaseConnection    &connection);
   static void              unregister_connection  (BaseConnection    &connection);
   static BaseConnection*   connection_from_id     (uint64             connection_id);
@@ -581,9 +581,9 @@ union ProtoUnion {
   double       vdouble;
   Any         *vany;
   uint64       smem[(sizeof (std::string) + 7) / 8];    // String memory
-  void        *pmem[2];                 // equate sizeof (ProtoMsg)
-  uint8        bytes[8];                // ProtoMsg types
-  struct { uint32 index, capacity; }; // ProtoMsg.buffermem[0]
+  void        *pmem[2];                                 // equate sizeof (ProtoMsg)
+  uint8        bytes[8];                                // ProtoMsg types
+  struct { uint32 index, capacity; };                   // ProtoMsg.buffermem[0]
 };
 
 class ProtoMsg { // buffer for marshalling procedure calls
@@ -602,7 +602,7 @@ protected:
   explicit           ProtoMsg (uint32 _ntypes);
   explicit           ProtoMsg (uint32, ProtoUnion*, uint32);
 public:
-  virtual     ~ProtoMsg();
+  virtual      ~ProtoMsg ();
   inline uint32 size     () const          { return buffermem[0].index; }
   inline uint32 capacity () const          { return buffermem[0].capacity; }
   inline uint64 first_id () const          { return AIDA_LIKELY (buffermem && size() && type_at (0) == INT64) ? upeek (0).vint64 : 0; }
@@ -615,13 +615,13 @@ public:
   inline void add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint d, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, 0).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint d, uint s, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, s).vuint64); add_int64 (h); add_int64 (l); }
-  inline ProtoMsg& add_rec (uint32 nt) { ProtoUnion &u = addu (RECORD); return *new (&u) ProtoMsg (nt); }
-  inline ProtoMsg& add_seq (uint32 nt) { ProtoUnion &u = addu (SEQUENCE); return *new (&u) ProtoMsg (nt); }
-  inline void         reset();
-  String              first_id_str() const;
-  String              to_string() const;
-  static String       type_name (int field_type);
-  static ProtoMsg* _new (uint32 _ntypes); // Heap allocated ProtoMsg
+  inline ProtoMsg& add_rec      (uint32 nt) { ProtoUnion &u = addu (RECORD); return *new (&u) ProtoMsg (nt); }
+  inline ProtoMsg& add_seq      (uint32 nt) { ProtoUnion &u = addu (SEQUENCE); return *new (&u) ProtoMsg (nt); }
+  inline void      reset        ();
+  String           first_id_str () const;
+  String           to_string    () const;
+  static String    type_name    (int field_type);
+  static ProtoMsg* _new         (uint32 _ntypes); // Heap allocated ProtoMsg
   // static ProtoMsg* new_error (const String &msg, const String &domain = "");
   static ProtoMsg* new_result        (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
   static ProtoMsg* renew_into_result (ProtoMsg *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
@@ -647,39 +647,39 @@ public:
 };
 
 class ProtoReader { // read ProtoMsg contents
-  const ProtoMsg *fb_;
+  const ProtoMsg    *fb_;
   uint32             nth_;
   void               check_request (int type);
   inline void        request (int t) { if (AIDA_UNLIKELY (nth_ >= n_types() || get_type() != t)) check_request (t); }
   inline ProtoUnion& fb_getu (int t) { request (t); return fb_->upeek (nth_); }
   inline ProtoUnion& fb_popu (int t) { request (t); ProtoUnion &u = fb_->upeek (nth_++); return u; }
 public:
-  explicit                 ProtoReader (const ProtoMsg &fb) : fb_ (&fb), nth_ (0) {}
-  uint64                    debug_bits ();
-  inline const ProtoMsg* proto_msg() const { return fb_; }
-  inline void               reset      (const ProtoMsg &fb) { fb_ = &fb; nth_ = 0; }
-  inline void               reset      () { fb_ = NULL; nth_ = 0; }
-  inline uint32             remaining  () { return n_types() - nth_; }
-  inline void               skip       () { if (AIDA_UNLIKELY (nth_ >= n_types())) check_request (0); nth_++; }
-  inline void               skip_header () { skip(); skip(); skip(); }
-  inline uint32             n_types    () { return fb_->size(); }
-  inline TypeKind           get_type   () { return fb_->type_at (nth_); }
-  inline int64              get_bool   () { ProtoUnion &u = fb_getu (BOOL); return u.vint64; }
-  inline int64              get_int64  () { ProtoUnion &u = fb_getu (INT64); return u.vint64; }
-  inline int64              get_evalue () { ProtoUnion &u = fb_getu (ENUM); return u.vint64; }
-  inline double             get_double () { ProtoUnion &u = fb_getu (FLOAT64); return u.vdouble; }
-  inline const String&      get_string () { ProtoUnion &u = fb_getu (STRING); return *(String*) &u; }
-  inline const ProtoMsg& get_rec    () { ProtoUnion &u = fb_getu (RECORD); return *(ProtoMsg*) &u; }
-  inline const ProtoMsg& get_seq    () { ProtoUnion &u = fb_getu (SEQUENCE); return *(ProtoMsg*) &u; }
-  inline int64              pop_bool   () { ProtoUnion &u = fb_popu (BOOL); return u.vint64; }
-  inline int64              pop_int64  () { ProtoUnion &u = fb_popu (INT64); return u.vint64; }
-  inline int64              pop_evalue () { ProtoUnion &u = fb_popu (ENUM); return u.vint64; }
-  inline double             pop_double () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
-  inline const String&      pop_string () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline uint64             pop_orbid  () { ProtoUnion &u = fb_popu (INSTANCE); return u.vint64; }
-  inline const Any&         pop_any    (BaseConnection &bcon);
-  inline const ProtoMsg& pop_rec    () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
-  inline const ProtoMsg& pop_seq    () { ProtoUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }
+  explicit               ProtoReader (const ProtoMsg &fb) : fb_ (&fb), nth_ (0) {}
+  uint64                 debug_bits  ();
+  inline const ProtoMsg* proto_msg   () const { return fb_; }
+  inline void            reset       (const ProtoMsg &fb) { fb_ = &fb; nth_ = 0; }
+  inline void            reset       () { fb_ = NULL; nth_ = 0; }
+  inline uint32          remaining   () { return n_types() - nth_; }
+  inline void            skip        () { if (AIDA_UNLIKELY (nth_ >= n_types())) check_request (0); nth_++; }
+  inline void            skip_header () { skip(); skip(); skip(); }
+  inline uint32          n_types     () { return fb_->size(); }
+  inline TypeKind        get_type    () { return fb_->type_at (nth_); }
+  inline int64           get_bool    () { ProtoUnion &u = fb_getu (BOOL); return u.vint64; }
+  inline int64           get_int64   () { ProtoUnion &u = fb_getu (INT64); return u.vint64; }
+  inline int64           get_evalue  () { ProtoUnion &u = fb_getu (ENUM); return u.vint64; }
+  inline double          get_double  () { ProtoUnion &u = fb_getu (FLOAT64); return u.vdouble; }
+  inline const String&   get_string  () { ProtoUnion &u = fb_getu (STRING); return *(String*) &u; }
+  inline const ProtoMsg& get_rec     () { ProtoUnion &u = fb_getu (RECORD); return *(ProtoMsg*) &u; }
+  inline const ProtoMsg& get_seq     () { ProtoUnion &u = fb_getu (SEQUENCE); return *(ProtoMsg*) &u; }
+  inline int64           pop_bool    () { ProtoUnion &u = fb_popu (BOOL); return u.vint64; }
+  inline int64           pop_int64   () { ProtoUnion &u = fb_popu (INT64); return u.vint64; }
+  inline int64           pop_evalue  () { ProtoUnion &u = fb_popu (ENUM); return u.vint64; }
+  inline double          pop_double  () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
+  inline const String&   pop_string  () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
+  inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline const Any&      pop_any     (BaseConnection &bcon);
+  inline const ProtoMsg& pop_rec     () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
+  inline const ProtoMsg& pop_seq     () { ProtoUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }
   inline void operator>>= (uint32 &v)          { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
   inline void operator>>= (ULongIffy &v)       { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
   inline void operator>>= (uint64 &v)          { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
@@ -753,7 +753,7 @@ protected:
   explicit              ClientConnection (const std::string &protocol);
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
-  virtual ProtoMsg*  call_remote (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual ProtoMsg*     call_remote (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   virtual void          add_handle  (ProtoMsg &fb, const RemoteHandle &rhandle) = 0;
   virtual void          pop_handle  (ProtoReader &fr, RemoteHandle &rhandle) = 0;
 public: /// @name API for signal event handlers.
