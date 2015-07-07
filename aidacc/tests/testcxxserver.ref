@@ -44,7 +44,7 @@ proto_msg_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
 }
 
 template<class Target> static inline std::shared_ptr<Target>
-field_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
+proto_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
 {
   return std::dynamic_pointer_cast<Target> (server_connection->pop_interface (fr));
 }
@@ -1288,12 +1288,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_FirstInterfaceIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_FirstInterfaceIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_FirstInterfaceIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_FirstInterfaceIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_FirstInterfaceIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_FirstInterfaceIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_FirstInterfaceIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_FirstInterfaceIface::__aida_typelist__ () const
@@ -1930,12 +1930,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_UIWidgetAreaIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_UIWidgetAreaIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_UIWidgetAreaIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_UIWidgetAreaIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_UIWidgetAreaIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_UIWidgetAreaIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_UIWidgetAreaIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_UIWidgetAreaIface::__aida_typelist__ () const
@@ -1977,12 +1977,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ParentIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ParentIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_ParentIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_ParentIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ParentIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_ParentIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_ParentIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_ParentIface::__aida_typelist__ () const
@@ -2017,12 +2017,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ChildIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ChildIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_ChildIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_ChildIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ChildIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_ChildIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_ChildIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_ChildIface::__aida_typelist__ () const
@@ -2058,12 +2058,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_DescendantIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_DescendantIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_DescendantIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_DescendantIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_DescendantIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_DescendantIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_DescendantIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_DescendantIface::__aida_typelist__ () const
@@ -2100,12 +2100,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_GrandChildIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_GrandChildIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_GrandChildIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_GrandChildIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_GrandChildIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_GrandChildIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_GrandChildIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_GrandChildIface::__aida_typelist__ () const
@@ -2207,12 +2207,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_QuickIfaceIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_QuickIfaceIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_QuickIfaceIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_QuickIfaceIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_QuickIfaceIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_QuickIfaceIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_QuickIfaceIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_QuickIfaceIface::__aida_typelist__ () const
@@ -2252,12 +2252,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_MethodTestInterfaceIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_MethodTestInterfaceIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_MethodTestInterfaceIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_MethodTestInterfaceIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_MethodTestInterfaceIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_MethodTestInterfaceIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_MethodTestInterfaceIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_MethodTestInterfaceIface::__aida_typelist__ () const
@@ -2297,12 +2297,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_SignalTestInterfaceIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_SignalTestInterfaceIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_SignalTestInterfaceIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_SignalTestInterfaceIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_SignalTestInterfaceIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_SignalTestInterfaceIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_SignalTestInterfaceIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_SignalTestInterfaceIface::__aida_typelist__ () const
@@ -2337,12 +2337,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ChildInheritingSignalsIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ChildInheritingSignalsIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_ChildInheritingSignalsIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_ChildInheritingSignalsIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ChildInheritingSignalsIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_ChildInheritingSignalsIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_ChildInheritingSignalsIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_ChildInheritingSignalsIface::__aida_typelist__ () const
@@ -2378,12 +2378,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_AnotherChildIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_AnotherChildIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_AnotherChildIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_AnotherChildIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_AnotherChildIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_AnotherChildIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_AnotherChildIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_AnotherChildIface::__aida_typelist__ () const
@@ -2424,12 +2424,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_PropertyTesterIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_PropertyTesterIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_PropertyTesterIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_PropertyTesterIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_PropertyTesterIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_PropertyTesterIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_PropertyTesterIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_PropertyTesterIface::__aida_typelist__ () const
@@ -2483,12 +2483,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ButtonAreaIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ButtonAreaIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_ButtonAreaIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_ButtonAreaIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ButtonAreaIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_ButtonAreaIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_ButtonAreaIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_ButtonAreaIface::__aida_typelist__ () const
@@ -2532,12 +2532,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_PureMethodsIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_PureMethodsIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_PureMethodsIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_PureMethodsIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_PureMethodsIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_PureMethodsIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_PureMethodsIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_PureMethodsIface::__aida_typelist__ () const
@@ -2580,12 +2580,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_NameTestsIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_NameTestsIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_NameTestsIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_NameTestsIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_NameTestsIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_NameTestsIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_NameTestsIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_NameTestsIface::__aida_typelist__ () const
@@ -2628,12 +2628,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_CompressorIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_CompressorIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_CompressorIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_CompressorIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_CompressorIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_CompressorIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_CompressorIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_CompressorIface::__aida_typelist__ () const
@@ -2716,12 +2716,12 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_SoundModuleIface *obj)
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_SoundModuleIfaceP &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_SoundModuleIface> (fbr);
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_SoundModuleIface> (fbr);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_SoundModuleIface* &obj)
 {
-  obj = __AIDA_Local__::field_reader_pop_interface<I_SoundModuleIface> (fbr).get();
+  obj = __AIDA_Local__::proto_reader_pop_interface<I_SoundModuleIface> (fbr).get();
 }
 Rapicorn::Aida::TypeHashList
 I_SoundModuleIface::__aida_typelist__ () const

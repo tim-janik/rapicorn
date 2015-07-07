@@ -34,7 +34,7 @@ proto_msg_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
 }
 
 template<class Target> static inline std::shared_ptr<Target>
-field_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
+proto_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
 {
   return std::dynamic_pointer_cast<Target> (server_connection->pop_interface (fr));
 }

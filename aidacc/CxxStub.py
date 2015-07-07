@@ -680,11 +680,11 @@ class Generator:
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %sP &obj)\n{\n' % classC
-    s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr);\n' % classC
+    s += '  obj = __AIDA_Local__::proto_reader_pop_interface<%s> (fbr);\n' % classC
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %s* &obj)\n{\n' % classC
-    s += '  obj = __AIDA_Local__::field_reader_pop_interface<%s> (fbr).get();\n' % classC
+    s += '  obj = __AIDA_Local__::proto_reader_pop_interface<%s> (fbr).get();\n' % classC
     s += '}\n'
     s += 'Rapicorn::Aida::TypeHashList\n'
     s += '%s::__aida_typelist__ () const\n{\n' % classC
