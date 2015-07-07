@@ -676,7 +676,7 @@ class Generator:
     s += '}\n'
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::ProtoMsg &fb, %s *obj)\n{\n' % classC
-    s += '  __AIDA_Local__::field_buffer_add_interface (fb, obj);\n'
+    s += '  __AIDA_Local__::proto_msg_add_interface (fb, obj);\n'
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::FieldReader &fbr, %sP &obj)\n{\n' % classC
@@ -970,13 +970,13 @@ class Generator:
     s += '  if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }\n'
     s += '  Rapicorn::Aida::uint64 emit_result_id;\n'
     if async:
-      s += '  ' + self.R (stype.rtype) + ' rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);\n'
+      s += '  ' + self.R (stype.rtype) + ' rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);\n'
       s += '  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, %s, 2);\n' % digest # invalidates fbr
       s += '  rb <<= emit_result_id;\n'
       s += self.generate_proto_add_args ('rb', class_info, '', [('rval', stype.rtype)], '')
       s += '  return &rb;\n'
     else:
-      s += '  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);\n'
+      s += '  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);\n'
       s += '  return NULL;\n'
     s += '}\n'
     s += 'size_t\n%s::__aida_connect__%s (size_t signal_handler_id, const std::function<%s %s> &func)\n{\n' % (classH, stype.name, sigret, sigargs)

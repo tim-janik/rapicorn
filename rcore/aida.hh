@@ -656,7 +656,7 @@ class FieldReader { // read ProtoMsg contents
 public:
   explicit                 FieldReader (const ProtoMsg &fb) : fb_ (&fb), nth_ (0) {}
   uint64                    debug_bits ();
-  inline const ProtoMsg* field_buffer() const { return fb_; }
+  inline const ProtoMsg* proto_msg() const { return fb_; }
   inline void               reset      (const ProtoMsg &fb) { fb_ = &fb; nth_ = 0; }
   inline void               reset      () { fb_ = NULL; nth_ = 0; }
   inline uint32             remaining  () { return n_types() - nth_; }

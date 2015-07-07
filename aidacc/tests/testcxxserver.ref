@@ -38,7 +38,7 @@ static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 
 // objects
 template<class Target> static inline void
-field_buffer_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
+proto_msg_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
 {
   server_connection->add_interface (fb, instance ? instance->shared_from_this() : ImplicitBaseP());
 }
@@ -78,13 +78,13 @@ add_header2_emit (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
 static inline ProtoMsg*
 new_call_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.proto_msg()->first_id()), h, l, n);
 }
 
 static inline ProtoMsg*
 new_connect_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.proto_msg()->first_id()), h, l, n);
 }
 
 // slot
@@ -1283,7 +1283,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_FirstInterfaceIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_FirstInterfaceIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_FirstInterfaceIfaceP &obj)
@@ -1925,7 +1925,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_UIWidgetAreaIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_UIWidgetAreaIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_UIWidgetAreaIfaceP &obj)
@@ -1972,7 +1972,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_ParentIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ParentIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ParentIfaceP &obj)
@@ -2012,7 +2012,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_ChildIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ChildIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ChildIfaceP &obj)
@@ -2053,7 +2053,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_DescendantIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_DescendantIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_DescendantIfaceP &obj)
@@ -2095,7 +2095,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_GrandChildIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_GrandChildIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_GrandChildIfaceP &obj)
@@ -2202,7 +2202,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_QuickIfaceIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_QuickIfaceIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_QuickIfaceIfaceP &obj)
@@ -2247,7 +2247,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_MethodTestInterfaceIfaceP &pt
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_MethodTestInterfaceIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_MethodTestInterfaceIfaceP &obj)
@@ -2292,7 +2292,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_SignalTestInterfaceIfaceP &pt
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_SignalTestInterfaceIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SignalTestInterfaceIfaceP &obj)
@@ -2332,7 +2332,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_ChildInheritingSignalsIfaceP 
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ChildInheritingSignalsIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ChildInheritingSignalsIfaceP &obj)
@@ -2373,7 +2373,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_AnotherChildIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_AnotherChildIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_AnotherChildIfaceP &obj)
@@ -2419,7 +2419,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_PropertyTesterIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_PropertyTesterIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PropertyTesterIfaceP &obj)
@@ -2478,7 +2478,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_ButtonAreaIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ButtonAreaIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_ButtonAreaIfaceP &obj)
@@ -2527,7 +2527,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_PureMethodsIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_PureMethodsIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_PureMethodsIfaceP &obj)
@@ -2575,7 +2575,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_NameTestsIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_NameTestsIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_NameTestsIfaceP &obj)
@@ -2623,7 +2623,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_CompressorIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_CompressorIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_CompressorIfaceP &obj)
@@ -2711,7 +2711,7 @@ operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_SoundModuleIfaceP &ptr)
 void
 operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_SoundModuleIface *obj)
 {
-  __AIDA_Local__::field_buffer_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (fb, obj);
 }
 void
 operator>>= (Rapicorn::Aida::FieldReader &fbr, I_SoundModuleIfaceP &obj)

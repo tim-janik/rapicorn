@@ -1116,7 +1116,7 @@ ProtoMsg::renew_into_result (ProtoMsg *fb, MessageId m, uint rconnection, uint64
 ProtoMsg*
 ProtoMsg::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
-  ProtoMsg *fb = const_cast<ProtoMsg*> (fbr.field_buffer());
+  ProtoMsg *fb = const_cast<ProtoMsg*> (fbr.proto_msg());
   fbr.reset();
   return renew_into_result (fb, m, rconnection, h, l, n);
 }

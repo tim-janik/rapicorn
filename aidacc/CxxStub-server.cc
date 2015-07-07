@@ -28,7 +28,7 @@ static inline void erhandler_add (size_t id, const EmitResultHandler &function)
 
 // objects
 template<class Target> static inline void
-field_buffer_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
+proto_msg_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
 {
   server_connection->add_interface (fb, instance ? instance->shared_from_this() : ImplicitBaseP());
 }
@@ -68,13 +68,13 @@ add_header2_emit (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
 static inline ProtoMsg*
 new_call_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.proto_msg()->first_id()), h, l, n);
 }
 
 static inline ProtoMsg*
 new_connect_result (FieldReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.field_buffer()->first_id()), h, l, n);
+  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.proto_msg()->first_id()), h, l, n);
 }
 
 // slot

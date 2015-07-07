@@ -1860,7 +1860,7 @@ __aida_emit1__UIWidgetAreaHandle__void_signal (const Rapicorn::Aida::ProtoMsg *s
   auto fptr = (const std::function<void ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -1877,7 +1877,7 @@ __aida_emit2__UIWidgetAreaHandle__sample_signal (const Rapicorn::Aida::ProtoMsg 
   auto fptr = (const std::function<double (UIWidgetAreaHandle &ba1, int someint)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  double rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  double rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2695,7 +2695,7 @@ __aida_emit1__SignalTestInterfaceHandle__void_result (const Rapicorn::Aida::Prot
   auto fptr = (const std::function<void ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -2712,7 +2712,7 @@ __aida_emit2__SignalTestInterfaceHandle__bool_result (const Rapicorn::Aida::Prot
   auto fptr = (const std::function<bool ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  bool rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  bool rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2732,7 +2732,7 @@ __aida_emit2__SignalTestInterfaceHandle__int32_result (const Rapicorn::Aida::Pro
   auto fptr = (const std::function<int ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  int rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  int rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2752,7 +2752,7 @@ __aida_emit2__SignalTestInterfaceHandle__int64_result (const Rapicorn::Aida::Pro
   auto fptr = (const std::function<int64_t ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  int64_t rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  int64_t rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2772,7 +2772,7 @@ __aida_emit2__SignalTestInterfaceHandle__float64_result (const Rapicorn::Aida::P
   auto fptr = (const std::function<double ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  double rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  double rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2792,7 +2792,7 @@ __aida_emit2__SignalTestInterfaceHandle__string_result (const Rapicorn::Aida::Pr
   auto fptr = (const std::function<std::string ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  std::string rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  std::string rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2812,7 +2812,7 @@ __aida_emit2__SignalTestInterfaceHandle__enum_result (const Rapicorn::Aida::Prot
   auto fptr = (const std::function<QuickEnum ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  QuickEnum rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  QuickEnum rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2832,7 +2832,7 @@ __aida_emit2__SignalTestInterfaceHandle__record_result (const Rapicorn::Aida::Pr
   auto fptr = (const std::function<ClnT_QuickRecord ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  ClnT_QuickRecord rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  ClnT_QuickRecord rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2852,7 +2852,7 @@ __aida_emit2__SignalTestInterfaceHandle__sequence_result (const Rapicorn::Aida::
   auto fptr = (const std::function<ClnT_QuickSequence ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  ClnT_QuickSequence rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  ClnT_QuickSequence rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2872,7 +2872,7 @@ __aida_emit2__SignalTestInterfaceHandle__interface_result (const Rapicorn::Aida:
   auto fptr = (const std::function<GrandChildHandle ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  GrandChildHandle rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  GrandChildHandle rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2892,7 +2892,7 @@ __aida_emit2__SignalTestInterfaceHandle__any_result (const Rapicorn::Aida::Proto
   auto fptr = (const std::function<Rapicorn::Aida::Any ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::Any rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::Any rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x296163d4220985ceULL, 0x40daacab4a841093ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2912,7 +2912,7 @@ __aida_emit2__SignalTestInterfaceHandle__self_result (const Rapicorn::Aida::Prot
   auto fptr = (const std::function<SignalTestInterfaceHandle ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  SignalTestInterfaceHandle rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  SignalTestInterfaceHandle rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x35828273200534f7ULL, 0x72873f1374d6093bULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -2932,7 +2932,7 @@ __aida_emit1__SignalTestInterfaceHandle__void_arg (const Rapicorn::Aida::ProtoMs
   auto fptr = (const std::function<void ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -2949,7 +2949,7 @@ __aida_emit1__SignalTestInterfaceHandle__bool_arg (const Rapicorn::Aida::ProtoMs
   auto fptr = (const std::function<void (bool b)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -2966,7 +2966,7 @@ __aida_emit1__SignalTestInterfaceHandle__int32_arg (const Rapicorn::Aida::ProtoM
   auto fptr = (const std::function<void (int i)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -2983,7 +2983,7 @@ __aida_emit1__SignalTestInterfaceHandle__int64_arg (const Rapicorn::Aida::ProtoM
   auto fptr = (const std::function<void (int64_t i)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3000,7 +3000,7 @@ __aida_emit1__SignalTestInterfaceHandle__float64_arg (const Rapicorn::Aida::Prot
   auto fptr = (const std::function<void (double f)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3017,7 +3017,7 @@ __aida_emit1__SignalTestInterfaceHandle__string_arg (const Rapicorn::Aida::Proto
   auto fptr = (const std::function<void (const std::string &s)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3034,7 +3034,7 @@ __aida_emit1__SignalTestInterfaceHandle__enum_arg (const Rapicorn::Aida::ProtoMs
   auto fptr = (const std::function<void (QuickEnum e)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3051,7 +3051,7 @@ __aida_emit1__SignalTestInterfaceHandle__record_arg (const Rapicorn::Aida::Proto
   auto fptr = (const std::function<void (const ClnT_QuickRecord &r)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3068,7 +3068,7 @@ __aida_emit1__SignalTestInterfaceHandle__sequence_arg (const Rapicorn::Aida::Pro
   auto fptr = (const std::function<void (const ClnT_QuickSequence &s)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3085,7 +3085,7 @@ __aida_emit1__SignalTestInterfaceHandle__interface_arg (const Rapicorn::Aida::Pr
   auto fptr = (const std::function<void (GrandChildHandle &i)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3102,7 +3102,7 @@ __aida_emit1__SignalTestInterfaceHandle__any_arg (const Rapicorn::Aida::ProtoMsg
   auto fptr = (const std::function<void (const Rapicorn::Aida::Any &a)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3119,7 +3119,7 @@ __aida_emit1__SignalTestInterfaceHandle__self_args (const Rapicorn::Aida::ProtoM
   auto fptr = (const std::function<void (SignalTestInterfaceHandle &self_)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3195,7 +3195,7 @@ __aida_emit1__ChildInheritingSignalsHandle__child_signal (const Rapicorn::Aida::
   auto fptr = (const std::function<void (ChildInheritingSignalsHandle &c, SignalTestInterfaceHandle &p, const Rapicorn::Aida::Any &a, int i, const ClnT_QuickRecord &r, const ClnT_QuickSequence &s)>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
@@ -3602,7 +3602,7 @@ __aida_emit2__ButtonAreaHandle__check_activate (const Rapicorn::Aida::ProtoMsg *
   auto fptr = (const std::function<bool ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  bool rval = Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  bool rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, 2);
   rb <<= emit_result_id;
   rb <<= rval;
@@ -3622,7 +3622,7 @@ __aida_emit1__ButtonAreaHandle__activate (const Rapicorn::Aida::ProtoMsg *sfb, v
   auto fptr = (const std::function<void ()>*) data;
   if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }
   Rapicorn::Aida::uint64 emit_result_id;
-  Rapicorn::Aida::field_buffer_emit_signal (*sfb, *fptr, emit_result_id);
+  Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
 size_t
