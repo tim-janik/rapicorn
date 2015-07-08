@@ -1,8 +1,0 @@
-
-==== Programming layers ====
-
-Python & Rapicorn:
-- *.py:		Python user code imports Rapicorn (not included)
-- __init__.py:	Rapicorn module initialization & glue
-- rope:		RPC call implementation, Rapicorn thread
-- cxx-client:	Generated C++ -> rope API
