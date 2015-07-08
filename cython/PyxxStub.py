@@ -80,6 +80,17 @@ def cxx_argtype (tp):
   elif tp.storage == Decls.INTERFACE:
     typename = '%s' % typename
   return typename
+def format_pyarg (argname, argtype, argdefault):
+  if argdefault == None:
+    return argname
+  if argtype.storage == Decls.BOOL:
+    vdefault = True if argdefault else False
+  elif argtype.storage in (Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM, Decls.STRING):
+    vdefault = argdefault # string or number litrals
+  else:
+    defaults = { Decls.RECORD : 'None', Decls.SEQUENCE : '()', Decls.INTERFACE : 'None', Decls.ANY : '()' }
+    vdefault = defaults[argtype.storage]
+  return '%s = %s' % (argname, vdefault)
 
 class Generator:
   def __init__ (self, idl_file, module_name):
@@ -98,18 +109,6 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def zero_value_pyimpl (self, type):
-    return { Decls.BOOL      : '0',
-             Decls.INT32     : '0',
-             Decls.INT64     : '0',
-             Decls.FLOAT64   : '0',
-             Decls.ENUM      : '0',
-             Decls.RECORD    : 'None',
-             Decls.SEQUENCE  : '()',
-             Decls.STRING    : "''",
-             Decls.INTERFACE : "None",
-             Decls.ANY       : '()',
-           }[type.storage]
   def cxx_type (self, type_node):
     tstorage = type_node.storage
     if tstorage == Decls.VOID:          return 'void'
@@ -387,9 +386,8 @@ class Generator:
         # methods
         for mtp in tp.methods:
           rtp, mname = mtp.rtype, mtp.name
-          atypes = [a[1] for a in mtp.args]
-          anames = [a[0] for a in mtp.args]
-          s += '  def %s (%s):\n' % (mname, ', '.join ([ 'self' ] + anames))
+          arglist = [ format_pyarg (*argtuple) for argtuple in mtp.args ]
+          s += '  def %s (%s):\n' % (mname, ', '.join ([ 'self' ] + arglist))
           result = ' _cxxret =' if rtp.storage != Decls.VOID else ''
           s += '   %s %s.%s (' % (result, handle, mname)
           s += ', '.join (self.cxx_unwrap (a[0], a[1]) for a in mtp.args)
