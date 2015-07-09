@@ -740,10 +740,12 @@ class Generator:
     s += q + self.Args (mtype, 'arg_', len (q)) + ') /// %s\n{\n' % copydoc
     # vars, procedure
     s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # header + self + args
-    if hasret:  s += '  __AIDA_Local__::add_header2_call (__p_, *this, %s);\n' % self.method_digest (mtype)
-    else:       s += '  __AIDA_Local__::add_header1_call (__p_, *this, %s);\n' % self.method_digest (mtype)
+    if hasret:
+      s += '  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, %s);\n' % self.method_digest (mtype)
+    else:
+      s += '  __AIDA_Local__::add_header1_call (__p_, *this, %s);\n' % self.method_digest (mtype)
+      s += self.generate_proto_add_args ('__p_', class_info, '', [('*this', class_info)], '')
     # marshal args
-    s += self.generate_proto_add_args ('__p_', class_info, '', [('*this', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
     s += self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
     # call out
@@ -824,8 +826,7 @@ class Generator:
     q = '%s::%s (' % (self.C (class_info), fident)
     s += q + ') const /// %s\n{\n' % copydoc
     s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1), *fr = NULL;\n'
-    s += '  __AIDA_Local__::add_header2_call (__p_, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('__p_', class_info, '', [('*this', class_info)], '')
+    s += '  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
     s += '  fr = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
     if 1: # hasret
       rarg = ('retval', ftype)
