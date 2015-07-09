@@ -553,7 +553,6 @@ class Generator:
       s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %s*&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %sP&);\n' % self.C (type_info)
     else: # G4STUB
-      s += 'void operator<<= (Rapicorn::Aida::ProtoMsg&, const %s&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %s&);\n' % self.C (type_info)
     # typedef alias
     if self.gen_mode == G4STUB:
@@ -612,10 +611,6 @@ class Generator:
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % classH2 # dtor
-    s += 'void\n'
-    s += 'operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const %s &handle)\n{\n' % classH
-    s += '  __AIDA_Local__::client_connection->add_handle (__p_, handle);\n'
-    s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %s &handle)\n{\n' % classH
     s += '  __AIDA_Local__::client_connection->pop_handle (fbr, handle);\n'
