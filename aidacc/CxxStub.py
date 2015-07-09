@@ -359,8 +359,8 @@ class Generator:
     s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator<<= (Rapicorn::Aida::ProtoMsg &dst, const %s &self)\n{\n' % self.C (type_info)
-    s += '  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (%u);\n' % len (type_info.fields)
-    s += self.generate_proto_add_args ('fb', type_info, 'self.', type_info.fields, '')
+    s += '  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (%u);\n' % len (type_info.fields)
+    s += self.generate_proto_add_args ('__p_', type_info, 'self.', type_info.fields, '')
     s += '}\n'
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator>>= (Rapicorn::Aida::ProtoReader &src, %s &self)\n{\n' % self.C (type_info)
@@ -376,9 +376,9 @@ class Generator:
     s += 'inline void __attribute__ ((used))\n'
     s += 'operator<<= (Rapicorn::Aida::ProtoMsg &dst, const %s &self)\n{\n' % self.C (type_info)
     s += '  const size_t len = self.size();\n'
-    s += '  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);\n'
+    s += '  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);\n'
     s += '  for (size_t k = 0; k < len; k++) {\n'
-    s += reindent ('  ', self.generate_proto_add_args ('fb', type_info, '',
+    s += reindent ('  ', self.generate_proto_add_args ('__p_', type_info, '',
                                                        [('self', type_info.elements[1])],
                                                        '[k]')) + '\n'
     s += '  }\n'
@@ -613,8 +613,8 @@ class Generator:
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % classH2 # dtor
     s += 'void\n'
-    s += 'operator<<= (Rapicorn::Aida::ProtoMsg &fb, const %s &handle)\n{\n' % classH
-    s += '  __AIDA_Local__::client_connection->add_handle (fb, handle);\n'
+    s += 'operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const %s &handle)\n{\n' % classH
+    s += '  __AIDA_Local__::client_connection->add_handle (__p_, handle);\n'
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %s &handle)\n{\n' % classH
@@ -669,12 +669,12 @@ class Generator:
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % (classC, classC) # dtor
     s += 'void\n'
-    s += 'operator<<= (Rapicorn::Aida::ProtoMsg &fb, const %sP &ptr)\n{\n' % classC
-    s += '  fb <<= ptr.get();\n'
+    s += 'operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const %sP &ptr)\n{\n' % classC
+    s += '  __p_ <<= ptr.get();\n'
     s += '}\n'
     s += 'void\n'
-    s += 'operator<<= (Rapicorn::Aida::ProtoMsg &fb, %s *obj)\n{\n' % classC
-    s += '  __AIDA_Local__::proto_msg_add_interface (fb, obj);\n'
+    s += 'operator<<= (Rapicorn::Aida::ProtoMsg &__p_, %s *obj)\n{\n' % classC
+    s += '  __AIDA_Local__::proto_msg_add_interface (__p_, obj);\n'
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %sP &obj)\n{\n' % classC
@@ -739,22 +739,22 @@ class Generator:
     q = '%s::%s (' % (self.C (class_info), mtype.name)
     s += q + self.Args (mtype, 'arg_', len (q)) + ') /// %s\n{\n' % copydoc
     # vars, procedure
-    s += '  Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # header + self + args
-    if hasret:  s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.method_digest (mtype)
-    else:       s += '  __AIDA_Local__::add_header1_call (fb, *this, %s);\n' % self.method_digest (mtype)
+    s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + %u), *fr = NULL;\n' % len (mtype.args) # header + self + args
+    if hasret:  s += '  __AIDA_Local__::add_header2_call (__p_, *this, %s);\n' % self.method_digest (mtype)
+    else:       s += '  __AIDA_Local__::add_header1_call (__p_, *this, %s);\n' % self.method_digest (mtype)
     # marshal args
-    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
+    s += self.generate_proto_add_args ('__p_', class_info, '', [('*this', class_info)], '')
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
-    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
+    s += self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
     # call out
-    s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
+    s += '  fr = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
-      s += '  Rapicorn::Aida::ProtoReader frr (*fr);\n'
-      s += '  frr.skip_header();\n'
+      s += '  Rapicorn::Aida::ProtoReader __f_ (*fr);\n'
+      s += '  __f_.skip_header();\n'
       s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-      s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
+      s += self.generate_proto_pop_args ('__f_', class_info, '', [rarg], '')
       s += '  delete fr;\n'
       s += '  return retval;\n'
     else:
@@ -823,16 +823,16 @@ class Generator:
     s += tname + '\n'
     q = '%s::%s (' % (self.C (class_info), fident)
     s += q + ') const /// %s\n{\n' % copydoc
-    s += '  Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1), *fr = NULL;\n'
-    s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
-    s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
+    s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1), *fr = NULL;\n'
+    s += '  __AIDA_Local__::add_header2_call (__p_, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
+    s += self.generate_proto_add_args ('__p_', class_info, '', [('*this', class_info)], '')
+    s += '  fr = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
     if 1: # hasret
       rarg = ('retval', ftype)
-      s += '  Rapicorn::Aida::ProtoReader frr (*fr);\n'
-      s += '  frr.skip_header();\n'
+      s += '  Rapicorn::Aida::ProtoReader __f_ (*fr);\n'
+      s += '  __f_.skip_header();\n'
       s += '  ' + self.V (rarg[0], rarg[1]) + ';\n'
-      s += self.generate_proto_pop_args ('frr', class_info, '', [rarg], '')
+      s += self.generate_proto_pop_args ('__f_', class_info, '', [rarg], '')
       s += '  delete fr;\n'
       s += '  return retval;\n'
     s += '}\n'
@@ -842,12 +842,12 @@ class Generator:
       s += q + 'const ' + tname + ' &value) /// %s\n{\n' % copydoc
     else:
       s += q + tname + ' value) /// %s\n{\n' % copydoc
-    s += '  Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;\n' # header + self + value
-    s += '  __AIDA_Local__::add_header1_call (fb, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('fb', class_info, '', [('*this', class_info)], '')
+    s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;\n' # header + self + value
+    s += '  __AIDA_Local__::add_header1_call (__p_, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
+    s += self.generate_proto_add_args ('__p_', class_info, '', [('*this', class_info)], '')
     ident_type_args = [('value', ftype)]
-    s += self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
-    s += '  fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
+    s += self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
+    s += '  fr = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
     s += '  if (fr) delete fr;\n'
     s += '}\n'
     return s
@@ -1007,10 +1007,10 @@ class Generator:
     s += '  %s (size_t h) : handler_id_ (h) {}\n' % closure_class # ctor
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
-    s += '    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + handler
-    s += '    __AIDA_Local__::add_header1_discon (fb, %s);\n' % digest
-    s += '    fb <<= handler_id_;\n'
-    s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
+    s += '    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + handler
+    s += '    __AIDA_Local__::add_header1_discon (__p_, %s);\n' % digest
+    s += '    __p_ <<= handler_id_;\n'
+    s += '    __AIDA_Local__::post_msg (&__p_);\n' # deletes __p_
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % ('std::future<%s>' % cpp_rtype if async else cpp_rtype)
@@ -1019,29 +1019,29 @@ class Generator:
       s += ',\n' + ' ' * 11
       s += self.Args (stype, 'arg_', 11)
     s += ')\n  {\n'
-    s += '    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + %u + %d);\n' \
+    s += '    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + %u + %d);\n' \
         % (len (stype.args), 1 if async else 0) # header + handler + args
     if not async:
-      s += '    __AIDA_Local__::add_header1_emit (fb, %s);\n' % digest
-      s += '    fb <<= sp->handler_id_;\n'
+      s += '    __AIDA_Local__::add_header1_emit (__p_, %s);\n' % digest
+      s += '    __p_ <<= sp->handler_id_;\n'
     else:
-      s += '    __AIDA_Local__::add_header2_emit (fb, %s);\n' % digest
-      s += '    fb <<= sp->handler_id_;\n'
+      s += '    __AIDA_Local__::add_header2_emit (__p_, %s);\n' % digest
+      s += '    __p_ <<= sp->handler_id_;\n'
       s += '    auto promise = std::make_shared<std::promise<%s>> ();\n' % cpp_rtype
       s += '    auto future = promise->get_future();\n'
       s += '    const size_t lambda_id = 1 + size_t (promise.get());\n' # generate unique (non-pointer) id
-      s += '    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {\n'
+      s += '    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {\n'
       s += '      ' + self.R (stype.rtype) + ' retval;\n'
-      s += '    ' + self.generate_proto_pop_args ('frr', class_info, '', [('retval', stype.rtype)], '')
+      s += '    ' + self.generate_proto_pop_args ('__f_', class_info, '', [('retval', stype.rtype)], '')
       s += '      promise->set_value (retval);\n'
       s += '    };\n'
       s += '    __AIDA_Local__::erhandler_add (lambda_id, lambda);\n'
-      s += '    fb <<= lambda_id;\n'
+      s += '    __p_ <<= lambda_id;\n'
     ident_type_args = [(('&arg_' if a[1].storage == Decls.INTERFACE else 'arg_')+ a[0], a[1]) for a in stype.args] # marshaller args
-    args2fb = self.generate_proto_add_args ('fb', class_info, '', ident_type_args, '')
+    args2fb = self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
-    s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
+    s += '    __AIDA_Local__::post_msg (&__p_);\n' # deletes __p_
     if async:
       s += '    return future;\n'
     s += '  }\n'
@@ -1135,10 +1135,10 @@ class Generator:
         s += ' // %s' % re.sub ('\n', ' ', blurb)
       s += '\n'
     s += '};\n'
-    s += 'inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  %s  e) ' % nm
-    s += '{ fb <<= Rapicorn::Aida::EnumValue (e); }\n'
-    s += 'inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, %s &e) ' % nm
-    s += '{ e = %s (frr.pop_evalue()); }\n' % nm
+    s += 'inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  %s  e) ' % nm
+    s += '{ __p_ <<= Rapicorn::Aida::EnumValue (e); }\n'
+    s += 'inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, %s &e) ' % nm
+    s += '{ e = %s (__f_.pop_evalue()); }\n' % nm
     if type_info.combinable: # enum as flags
       s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (s1 & Rapicorn::Aida::uint64 (s2)); }\n' % (nm, nm, nm, nm)
       s += 'inline %s& operator&= (%s &s1, %s s2) { s1 = s1 & s2; return s1; }\n' % (nm, nm, nm)

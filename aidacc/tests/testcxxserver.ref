@@ -124,16 +124,16 @@ namespace MandatoryNamespace {
 enum Enum1 {
   E1_A = 1,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum1  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum1 &e) { e = Enum1 (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
 enum Enum1c {
   E1C_A = 1,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum1c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum1c &e) { e = Enum1c (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -141,8 +141,8 @@ enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum2  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum2  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum2 &e) { e = Enum2 (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -150,8 +150,8 @@ enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum2c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum2c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum2c &e) { e = Enum2c (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -160,8 +160,8 @@ enum Enum3 {
   E3_B = 2,
   E3_C = 3,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum3  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum3  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum3 &e) { e = Enum3 (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -170,8 +170,8 @@ enum Enum3c {
   E3C_B = 2,
   E3C_C = 3,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum3c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum3c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum3c &e) { e = Enum3c (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -181,8 +181,8 @@ enum Enum4a {
   E4A_C = 3,
   E4A_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4a  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4a  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4a &e) { e = Enum4a (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -192,8 +192,8 @@ enum Enum4b {
   E4B_C = 3,
   E4B_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4b  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4b  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4b &e) { e = Enum4b (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -203,8 +203,8 @@ enum Enum4c {
   E4C_C = 3,
   E4C_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4c &e) { e = Enum4c (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -214,8 +214,8 @@ enum Enum4d {
   E4D_C = 3,
   E4D_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4d  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4d  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4d &e) { e = Enum4d (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -256,8 +256,8 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  ExtensiveEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  ExtensiveEnum  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, ExtensiveEnum &e) { e = ExtensiveEnum (__f_.pop_evalue()); }
 /// @endcond
 } // MandatoryNamespace
 
@@ -267,8 +267,8 @@ namespace InterfaceTests {
 enum QuickEnum {
   ZERO = 0,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  QuickEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  QuickEnum  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, QuickEnum &e) { e = QuickEnum (__f_.pop_evalue()); }
 /// @endcond
 } // InterfaceTests
 
@@ -282,8 +282,8 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  ClickType  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  ClickType  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, ClickType &e) { e = ClickType (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -301,8 +301,8 @@ enum MathExpressions {
   RESULT_77 = 77,
   RESULT_511 = 511,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  MathExpressions  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, MathExpressions &e) { e = MathExpressions (__f_.pop_evalue()); }
 /// @endcond
 } // RapicornAidaTest
 
@@ -1275,14 +1275,14 @@ I_FirstInterfaceIface::I_FirstInterfaceIface ()
 I_FirstInterfaceIface::~I_FirstInterfaceIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_FirstInterfaceIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_FirstInterfaceIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_FirstInterfaceIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_FirstInterfaceIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_FirstInterfaceIfaceP &obj)
@@ -1344,25 +1344,25 @@ SrvT_XFooRecord::operator== (const SrvT_XFooRecord &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_XFooRecord &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (18);
-  fb <<= self.single_bool;
-  fb <<= self.single_num;
-  fb <<= self.num64;
-  fb <<= self.single_float;
-  fb <<= self.single_string;
-  fb <<= self.sibling1;
-  fb <<= self.sibling2;
-  fb <<= self.multi1;
-  fb <<= self.multi2;
-  fb <<= self.multi3;
-  fb <<= self.multi4;
-  fb <<= self.enum_field;
-  fb <<= self.iface1;
-  fb <<= self.iface2;
-  fb <<= self.iface3;
-  fb <<= self.any1;
-  fb <<= self.any2;
-  fb <<= self.any3;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (18);
+  __p_ <<= self.single_bool;
+  __p_ <<= self.single_num;
+  __p_ <<= self.num64;
+  __p_ <<= self.single_float;
+  __p_ <<= self.single_string;
+  __p_ <<= self.sibling1;
+  __p_ <<= self.sibling2;
+  __p_ <<= self.multi1;
+  __p_ <<= self.multi2;
+  __p_ <<= self.multi3;
+  __p_ <<= self.multi4;
+  __p_ <<= self.enum_field;
+  __p_ <<= self.iface1;
+  __p_ <<= self.iface2;
+  __p_ <<= self.iface3;
+  __p_ <<= self.any1;
+  __p_ <<= self.any2;
+  __p_ <<= self.any3;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_XFooRecord &self)
@@ -1401,9 +1401,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_XFooSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1429,9 +1429,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_IntSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1457,9 +1457,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_FloatSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1485,9 +1485,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_StringSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1513,9 +1513,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_ExtensiveEnumSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1541,9 +1541,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_RecordSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1569,9 +1569,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_SequenceSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1597,9 +1597,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_InterfaceSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1625,9 +1625,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_AnySequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1659,9 +1659,9 @@ SrvT_NestedTypesRec::operator== (const SrvT_NestedTypesRec &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_NestedTypesRec &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (2);
-  fb <<= self.rec;
-  fb <<= self.seq;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (2);
+  __p_ <<= self.rec;
+  __p_ <<= self.seq;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_NestedTypesRec &self)
@@ -1684,9 +1684,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_NestedTypesSeq &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -1720,11 +1720,11 @@ SrvT_NewRecord::operator== (const SrvT_NewRecord &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_NewRecord &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (4);
-  fb <<= self.i;
-  fb <<= self.enum1;
-  fb <<= self.xfs;
-  fb <<= self.ntr;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (4);
+  __p_ <<= self.i;
+  __p_ <<= self.enum1;
+  __p_ <<= self.xfs;
+  __p_ <<= self.ntr;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_NewRecord &self)
@@ -1758,10 +1758,10 @@ SrvT_InnerRecord::operator== (const SrvT_InnerRecord &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_InnerRecord &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (3);
-  fb <<= self.x;
-  fb <<= self.y;
-  fb <<= self.rec;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (3);
+  __p_ <<= self.x;
+  __p_ <<= self.y;
+  __p_ <<= self.rec;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_InnerRecord &self)
@@ -1791,8 +1791,8 @@ SrvT_Refer2Inner::operator== (const SrvT_Refer2Inner &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_Refer2Inner &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (1);
-  fb <<= self.r;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (1);
+  __p_ <<= self.r;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_Refer2Inner &self)
@@ -1825,11 +1825,11 @@ SrvT_SomeRecord::operator== (const SrvT_SomeRecord &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_SomeRecord &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (4);
-  fb <<= self.r1;
-  fb <<= self.r2;
-  fb <<= self.r3;
-  fb <<= self.r4;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (4);
+  __p_ <<= self.r1;
+  __p_ <<= self.r2;
+  __p_ <<= self.r3;
+  __p_ <<= self.r4;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_SomeRecord &self)
@@ -1885,12 +1885,12 @@ SrvT_RecordWithAuxdata::operator== (const SrvT_RecordWithAuxdata &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_RecordWithAuxdata &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (5);
-  fb <<= self.aux_bool;
-  fb <<= self.aux32;
-  fb <<= self.aux64;
-  fb <<= self.auxf64;
-  fb <<= self.aux_str;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (5);
+  __p_ <<= self.aux_bool;
+  __p_ <<= self.aux32;
+  __p_ <<= self.aux64;
+  __p_ <<= self.auxf64;
+  __p_ <<= self.aux_str;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_RecordWithAuxdata &self)
@@ -1917,14 +1917,14 @@ I_UIWidgetAreaIface::I_UIWidgetAreaIface ()
 I_UIWidgetAreaIface::~I_UIWidgetAreaIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_UIWidgetAreaIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_UIWidgetAreaIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_UIWidgetAreaIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_UIWidgetAreaIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_UIWidgetAreaIfaceP &obj)
@@ -1964,14 +1964,14 @@ I_ParentIface::I_ParentIface ()
 I_ParentIface::~I_ParentIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_ParentIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_ParentIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ParentIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_ParentIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ParentIfaceP &obj)
@@ -2004,14 +2004,14 @@ I_ChildIface::I_ChildIface ()
 I_ChildIface::~I_ChildIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_ChildIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_ChildIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ChildIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_ChildIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ChildIfaceP &obj)
@@ -2045,14 +2045,14 @@ I_DescendantIface::I_DescendantIface ()
 I_DescendantIface::~I_DescendantIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_DescendantIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_DescendantIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_DescendantIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_DescendantIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_DescendantIfaceP &obj)
@@ -2087,14 +2087,14 @@ I_GrandChildIface::I_GrandChildIface ()
 I_GrandChildIface::~I_GrandChildIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_GrandChildIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_GrandChildIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_GrandChildIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_GrandChildIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_GrandChildIfaceP &obj)
@@ -2143,9 +2143,9 @@ SrvT_QuickRecord::operator== (const SrvT_QuickRecord &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_QuickRecord &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (2);
-  fb <<= self.int1;
-  fb <<= self.int2;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (2);
+  __p_ <<= self.int1;
+  __p_ <<= self.int2;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_QuickRecord &self)
@@ -2168,9 +2168,9 @@ inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_QuickSequence &self)
 {
   const size_t len = self.size();
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_seq (len);
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_seq (len);
   for (size_t k = 0; k < len; k++) {
-    fb <<= self[k];
+    __p_ <<= self[k];
   }
 }
 inline void __attribute__ ((used))
@@ -2194,14 +2194,14 @@ I_QuickIfaceIface::I_QuickIfaceIface ()
 I_QuickIfaceIface::~I_QuickIfaceIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_QuickIfaceIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_QuickIfaceIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_QuickIfaceIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_QuickIfaceIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_QuickIfaceIfaceP &obj)
@@ -2239,14 +2239,14 @@ I_MethodTestInterfaceIface::I_MethodTestInterfaceIface ()
 I_MethodTestInterfaceIface::~I_MethodTestInterfaceIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_MethodTestInterfaceIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_MethodTestInterfaceIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_MethodTestInterfaceIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_MethodTestInterfaceIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_MethodTestInterfaceIfaceP &obj)
@@ -2284,14 +2284,14 @@ I_SignalTestInterfaceIface::I_SignalTestInterfaceIface ()
 I_SignalTestInterfaceIface::~I_SignalTestInterfaceIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_SignalTestInterfaceIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_SignalTestInterfaceIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_SignalTestInterfaceIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_SignalTestInterfaceIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_SignalTestInterfaceIfaceP &obj)
@@ -2324,14 +2324,14 @@ I_ChildInheritingSignalsIface::I_ChildInheritingSignalsIface ()
 I_ChildInheritingSignalsIface::~I_ChildInheritingSignalsIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_ChildInheritingSignalsIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_ChildInheritingSignalsIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ChildInheritingSignalsIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_ChildInheritingSignalsIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ChildInheritingSignalsIfaceP &obj)
@@ -2365,14 +2365,14 @@ I_AnotherChildIface::I_AnotherChildIface ()
 I_AnotherChildIface::~I_AnotherChildIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_AnotherChildIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_AnotherChildIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_AnotherChildIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_AnotherChildIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_AnotherChildIfaceP &obj)
@@ -2411,14 +2411,14 @@ I_PropertyTesterIface::I_PropertyTesterIface ()
 I_PropertyTesterIface::~I_PropertyTesterIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_PropertyTesterIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_PropertyTesterIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_PropertyTesterIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_PropertyTesterIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_PropertyTesterIfaceP &obj)
@@ -2470,14 +2470,14 @@ I_ButtonAreaIface::I_ButtonAreaIface ()
 I_ButtonAreaIface::~I_ButtonAreaIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_ButtonAreaIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_ButtonAreaIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_ButtonAreaIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_ButtonAreaIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_ButtonAreaIfaceP &obj)
@@ -2519,14 +2519,14 @@ I_PureMethodsIface::I_PureMethodsIface ()
 I_PureMethodsIface::~I_PureMethodsIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_PureMethodsIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_PureMethodsIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_PureMethodsIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_PureMethodsIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_PureMethodsIfaceP &obj)
@@ -2567,14 +2567,14 @@ I_NameTestsIface::I_NameTestsIface ()
 I_NameTestsIface::~I_NameTestsIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_NameTestsIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_NameTestsIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_NameTestsIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_NameTestsIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_NameTestsIfaceP &obj)
@@ -2615,14 +2615,14 @@ I_CompressorIface::I_CompressorIface ()
 I_CompressorIface::~I_CompressorIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_CompressorIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_CompressorIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_CompressorIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_CompressorIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_CompressorIfaceP &obj)
@@ -2674,12 +2674,12 @@ SrvT_RecordForGroups::operator== (const SrvT_RecordForGroups &other) const
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const SrvT_RecordForGroups &self)
 {
-  Rapicorn::Aida::ProtoMsg &fb = dst.add_rec (5);
-  fb <<= self.i;
-  fb <<= self.ratio;
-  fb <<= self.ordinary_bool;
-  fb <<= self.threshold1;
-  fb <<= self.threshold2;
+  Rapicorn::Aida::ProtoMsg &__p_ = dst.add_rec (5);
+  __p_ <<= self.i;
+  __p_ <<= self.ratio;
+  __p_ <<= self.ordinary_bool;
+  __p_ <<= self.threshold1;
+  __p_ <<= self.threshold2;
 }
 inline void __attribute__ ((used))
 operator>>= (Rapicorn::Aida::ProtoReader &src, SrvT_RecordForGroups &self)
@@ -2703,14 +2703,14 @@ I_SoundModuleIface::I_SoundModuleIface ()
 I_SoundModuleIface::~I_SoundModuleIface ()
 {} // define empty dtor to emit vtable
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const I_SoundModuleIfaceP &ptr)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const I_SoundModuleIfaceP &ptr)
 {
-  fb <<= ptr.get();
+  __p_ <<= ptr.get();
 }
 void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, I_SoundModuleIface *obj)
+operator<<= (Rapicorn::Aida::ProtoMsg &__p_, I_SoundModuleIface *obj)
 {
-  __AIDA_Local__::proto_msg_add_interface (fb, obj);
+  __AIDA_Local__::proto_msg_add_interface (__p_, obj);
 }
 void
 operator>>= (Rapicorn::Aida::ProtoReader &fbr, I_SoundModuleIfaceP &obj)
@@ -3234,18 +3234,18 @@ public:
   __AIDA_Closure__UIWidgetArea__void_signal (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__UIWidgetArea__void_signal()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
-    fb <<= sp->handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL);
+    __p_ <<= sp->handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -3277,32 +3277,32 @@ public:
   __AIDA_Closure__UIWidgetArea__sample_signal (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__UIWidgetArea__sample_signal()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<double>
   handler (const SharedPtr &sp,
            I_UIWidgetAreaIface &arg_ba1,
            int arg_someint)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 2 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 2 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<double>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       double retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    fb <<= &arg_ba1;
-    fb <<= arg_someint;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __p_ <<= &arg_ba1;
+    __p_ <<= arg_someint;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -3617,18 +3617,18 @@ public:
   __AIDA_Closure__SignalTestInterface__void_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__void_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
-    fb <<= sp->handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL);
+    __p_ <<= sp->handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -3660,28 +3660,28 @@ public:
   __AIDA_Closure__SignalTestInterface__bool_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__bool_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<bool>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<bool>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       bool retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -3714,28 +3714,28 @@ public:
   __AIDA_Closure__SignalTestInterface__int32_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__int32_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<int>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<int>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       int retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -3768,28 +3768,28 @@ public:
   __AIDA_Closure__SignalTestInterface__int64_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__int64_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<int64_t>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<int64_t>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       int64_t retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -3822,28 +3822,28 @@ public:
   __AIDA_Closure__SignalTestInterface__float64_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__float64_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<double>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<double>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       double retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -3876,28 +3876,28 @@ public:
   __AIDA_Closure__SignalTestInterface__string_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__string_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<std::string>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<std::string>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       std::string retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -3930,28 +3930,28 @@ public:
   __AIDA_Closure__SignalTestInterface__enum_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__enum_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<QuickEnum>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<QuickEnum>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       QuickEnum retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -3984,28 +3984,28 @@ public:
   __AIDA_Closure__SignalTestInterface__record_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__record_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<SrvT_QuickRecord>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<SrvT_QuickRecord>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       SrvT_QuickRecord retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -4038,28 +4038,28 @@ public:
   __AIDA_Closure__SignalTestInterface__sequence_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__sequence_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<SrvT_QuickSequence>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<SrvT_QuickSequence>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       SrvT_QuickSequence retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -4092,28 +4092,28 @@ public:
   __AIDA_Closure__SignalTestInterface__interface_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__interface_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<I_GrandChildIfaceP>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<I_GrandChildIfaceP>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       I_GrandChildIfaceP retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -4146,28 +4146,28 @@ public:
   __AIDA_Closure__SignalTestInterface__any_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__any_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<Rapicorn::Aida::Any>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x296163d4220985ceULL, 0x40daacab4a841093ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<Rapicorn::Aida::Any>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       Rapicorn::Aida::Any retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -4200,28 +4200,28 @@ public:
   __AIDA_Closure__SignalTestInterface__self_result (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__self_result()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<I_SignalTestInterfaceIfaceP>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x35828273200534f7ULL, 0x72873f1374d6093bULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<I_SignalTestInterfaceIfaceP>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       I_SignalTestInterfaceIfaceP retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -4254,18 +4254,18 @@ public:
   __AIDA_Closure__SignalTestInterface__void_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__void_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
-    fb <<= sp->handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0xe79b3592345942f6ULL, 0x6818e92df5df5befULL);
+    __p_ <<= sp->handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4297,20 +4297,20 @@ public:
   __AIDA_Closure__SignalTestInterface__bool_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__bool_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            bool arg_b)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_b;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x495e3d2d698caad7ULL, 0xf16b2f75ddaf3220ULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_b;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4342,20 +4342,20 @@ public:
   __AIDA_Closure__SignalTestInterface__int32_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__int32_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            int arg_i)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_i;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x1d335377194859d1ULL, 0xfa00c7fb47bc82e4ULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_i;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4387,20 +4387,20 @@ public:
   __AIDA_Closure__SignalTestInterface__int64_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__int64_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            int64_t arg_i)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_i;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x52b8b36ec08458caULL, 0xeecdb452f6b51528ULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_i;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4432,20 +4432,20 @@ public:
   __AIDA_Closure__SignalTestInterface__float64_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__float64_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            double arg_f)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_f;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0xdcacb20b2d942f30ULL, 0x242d314085f3e44aULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_f;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4477,20 +4477,20 @@ public:
   __AIDA_Closure__SignalTestInterface__string_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__string_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            const std::string &arg_s)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_s;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x9bb22c59672e3921ULL, 0x981c8364b2197db9ULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_s;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4522,20 +4522,20 @@ public:
   __AIDA_Closure__SignalTestInterface__enum_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__enum_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            QuickEnum arg_e)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_e;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x62459d25ac74ebedULL, 0xd598edad744f61b7ULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_e;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4567,20 +4567,20 @@ public:
   __AIDA_Closure__SignalTestInterface__record_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__record_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            const SrvT_QuickRecord &arg_r)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_r;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0xe4c732769519ca6aULL, 0x8cf6e34972e875aaULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_r;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4612,20 +4612,20 @@ public:
   __AIDA_Closure__SignalTestInterface__sequence_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__sequence_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            const SrvT_QuickSequence &arg_s)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_s;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0xeca8cf0dd80dee4aULL, 0x1bb3845a0704c774ULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_s;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4657,20 +4657,20 @@ public:
   __AIDA_Closure__SignalTestInterface__interface_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__interface_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            I_GrandChildIface &arg_i)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
-    fb <<= sp->handler_id_;
-    fb <<= &arg_i;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0xc2562bdab457affdULL, 0x189f1ba486f30579ULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= &arg_i;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4702,20 +4702,20 @@ public:
   __AIDA_Closure__SignalTestInterface__any_arg (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__any_arg()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            const Rapicorn::Aida::Any &arg_a)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
-    fb <<= sp->handler_id_;
-    fb <<= arg_a;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= arg_a;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4747,20 +4747,20 @@ public:
   __AIDA_Closure__SignalTestInterface__self_args (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__SignalTestInterface__self_args()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
            I_SignalTestInterfaceIface &arg_self_)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
-    fb <<= sp->handler_id_;
-    fb <<= &arg_self_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= &arg_self_;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -4793,10 +4793,10 @@ public:
   __AIDA_Closure__ChildInheritingSignals__child_signal (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__ChildInheritingSignals__child_signal()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp,
@@ -4807,16 +4807,16 @@ public:
            const SrvT_QuickRecord &arg_r,
            const SrvT_QuickSequence &arg_s)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 6 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
-    fb <<= sp->handler_id_;
-    fb <<= &arg_c;
-    fb <<= &arg_p;
-    fb <<= arg_a;
-    fb <<= arg_i;
-    fb <<= arg_r;
-    fb <<= arg_s;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 6 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL);
+    __p_ <<= sp->handler_id_;
+    __p_ <<= &arg_c;
+    __p_ <<= &arg_p;
+    __p_ <<= arg_a;
+    __p_ <<= arg_i;
+    __p_ <<= arg_r;
+    __p_ <<= arg_s;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
@@ -5276,28 +5276,28 @@ public:
   __AIDA_Closure__ButtonArea__check_activate (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__ButtonArea__check_activate()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static std::future<bool>
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
-    __AIDA_Local__::add_header2_emit (fb, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
-    fb <<= sp->handler_id_;
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 1);
+    __AIDA_Local__::add_header2_emit (__p_, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL);
+    __p_ <<= sp->handler_id_;
     auto promise = std::make_shared<std::promise<bool>> ();
     auto future = promise->get_future();
     const size_t lambda_id = 1 + size_t (promise.get());
-    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &frr) {
+    auto lambda = [promise] (Rapicorn::Aida::ProtoReader &__f_) {
       bool retval;
-      frr >>= retval;
+      __f_ >>= retval;
       promise->set_value (retval);
     };
     __AIDA_Local__::erhandler_add (lambda_id, lambda);
-    fb <<= lambda_id;
-    __AIDA_Local__::post_msg (&fb);
+    __p_ <<= lambda_id;
+    __AIDA_Local__::post_msg (&__p_);
     return future;
   }
 };
@@ -5330,18 +5330,18 @@ public:
   __AIDA_Closure__ButtonArea__activate (size_t h) : handler_id_ (h) {}
   ~__AIDA_Closure__ButtonArea__activate()
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-    __AIDA_Local__::add_header1_discon (fb, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
-    fb <<= handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
+    __AIDA_Local__::add_header1_discon (__p_, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
+    __p_ <<= handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
   static void
   handler (const SharedPtr &sp)
   {
-    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 0);
-    __AIDA_Local__::add_header1_emit (fb, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
-    fb <<= sp->handler_id_;
-    __AIDA_Local__::post_msg (&fb);
+    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0 + 0);
+    __AIDA_Local__::add_header1_emit (__p_, 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL);
+    __p_ <<= sp->handler_id_;
+    __AIDA_Local__::post_msg (&__p_);
   }
 };
 static Rapicorn::Aida::ProtoMsg*
