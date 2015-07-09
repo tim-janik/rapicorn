@@ -14,12 +14,6 @@ static Rapicorn::Aida::ClientConnection *client_connection = NULL;
 
 // helper
 
-static AIDA_UNUSED ProtoMsg*
-invoke (ProtoMsg *fb)                // async remote call, transfers memory
-{
-  return client_connection->call_remote (fb);
-}
-
 static AIDA_UNUSED bool
 signal_disconnect (size_t signal_handler_id)
 {

@@ -1183,6 +1183,12 @@ ProtoScope::~ProtoScope ()
   current_thread_proto_connections.client_connection = NULL;
 }
 
+ProtoMsg*
+ProtoScope::invoke (ProtoMsg *pm)
+{
+  return current_client_connection().call_remote (pm);
+}
+
 ClientConnection&
 ProtoScope::current_client_connection ()
 {

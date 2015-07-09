@@ -643,7 +643,7 @@ class Generator:
     s += '%s::__aida_typelist__() const\n{\n' % classH
     s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + self
     s += '  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, %s);\n' % self.list_types_digest (tp)
-    s += '  Rapicorn::Aida::ProtoMsg *__r_ = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
+    s += '  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);\n' # deletes __p_
     s += '  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");\n'
     s += '  Rapicorn::Aida::ProtoReader __f_ (*__r_);\n'
     s += '  __f_.skip_header();\n'
@@ -748,7 +748,7 @@ class Generator:
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
     s += self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
     # call out
-    s += '  fr = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
+    s += '  fr = __o_.invoke (&__p_);\n' # deletes __p_
     # unmarshal return
     if hasret:
       rarg = ('retval', mtype.rtype)
@@ -826,7 +826,7 @@ class Generator:
     s += q + ') const /// %s\n{\n' % copydoc
     s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1), *fr = NULL;\n'
     s += '  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, %s);\n' % self.getter_digest (class_info, fident, ftype)
-    s += '  fr = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
+    s += '  fr = __o_.invoke (&__p_);\n' # deletes __p_
     if 1: # hasret
       rarg = ('retval', ftype)
       s += '  Rapicorn::Aida::ProtoReader __f_ (*fr);\n'
@@ -846,7 +846,7 @@ class Generator:
     s += '  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
-    s += '  fr = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
+    s += '  fr = __o_.invoke (&__p_);\n' # deletes __p_
     s += '  if (fr) delete fr;\n'
     s += '}\n'
     return s

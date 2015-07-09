@@ -773,6 +773,7 @@ struct ProtoScope {
   /// Start/create an RPC scope for a connection pair within the current thread.
   explicit                 ProtoScope                (ServerConnection *server_connection, ClientConnection *client_connection);
   /*dtor*/                ~ProtoScope                (); ///< Finish/destroy an RPC scope.
+  ProtoMsg*                invoke                    (ProtoMsg *pm); ///< Carry out a remote call syncronously, transfers memory.
   static ClientConnection& current_client_connection (); ///< Access the client connection of the current thread-specific RPC scope.
   static ServerConnection& current_server_connection (); ///< Access the server connection of the current thread-specific RPC scope.
   RAPICORN_CLASS_NON_COPYABLE (ProtoScope);
