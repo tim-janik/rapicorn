@@ -1507,7 +1507,7 @@ ObjectMap<Instance>::instance_from_orbo (const OrbObjectP &orbo)
 
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &protocol) :
-  protocol_ (protocol), conid_ (0)
+  protocol_ (protocol), conid_ (0), peer_ (NULL)
 {
   AIDA_ASSERT (protocol.size() > 0);
   if (protocol_[0] == ':')
@@ -1524,6 +1524,20 @@ BaseConnection::assign_id (uint connection_id)
 {
   assert_return (conid_ == 0);
   conid_ = connection_id;
+}
+
+BaseConnection&
+BaseConnection::peer_connection () const
+{
+  assert (peer_ != NULL);
+  return *peer_;
+}
+
+void
+BaseConnection::peer_connection (BaseConnection &peer)
+{
+  assert (peer_ == NULL);
+  peer_ = &peer;
 }
 
 /// Provide initial handle for remote connections.
@@ -1585,16 +1599,17 @@ class ClientConnectionImpl : public ClientConnection {
   bool                          seen_garbage_;
   SignalHandler*                signal_lookup (size_t handler_id);
 public:
-  ClientConnectionImpl (const std::string &protocol) :
+  ClientConnectionImpl (const std::string &protocol, ServerConnection &server_connection) :
     ClientConnection (protocol), blocking_for_sem_ (false), seen_garbage_ (false)
   {
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
     sem_init (&transport_sem_, 0 /* unshared */, 0 /* init */);
-    uint realid = ObjectBroker::register_connection (*this);
+    const uint realid = ObjectBroker::register_connection (*this);
     if (!realid)
       fatal_error ("Aida: failed to register ClientConnection");
     assign_id (realid);
+    peer_connection (server_connection);
   }
   ~ClientConnectionImpl ()
   {
@@ -1612,17 +1627,17 @@ public:
   void                 notify_for_result ()             { if (blocking_for_sem_) sem_post (&transport_sem_); }
   void                 block_for_result  ()             { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
   void                 gc_sweep          (const ProtoMsg *fb);
-  virtual int           notify_fd         ()            { return transport_channel_.inputfd(); }
-  virtual bool          pending           ()            { return !event_queue_.empty() || transport_channel_.has_msg(); }
-  virtual ProtoMsg*  call_remote       (ProtoMsg*);
-  virtual ProtoMsg*  pop               ();
-  virtual void          dispatch          ();
-  virtual void          add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle);
-  virtual void          pop_handle        (ProtoReader &fr, RemoteHandle &rhandle);
-  virtual void          remote_origin     (ImplicitBaseP rorigin) { fatal ("assert not reached"); }
-  virtual RemoteHandle  remote_origin     ();
-  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
-  virtual bool          signal_disconnect (size_t signal_handler_id);
+  virtual int          notify_fd         () override    { return transport_channel_.inputfd(); }
+  virtual bool         pending           () override    { return !event_queue_.empty() || transport_channel_.has_msg(); }
+  virtual ProtoMsg*    call_remote       (ProtoMsg*) override;
+  ProtoMsg*            pop               ();
+  virtual void         dispatch          () override;
+  virtual void         add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle) override;
+  virtual void         pop_handle        (ProtoReader &fr, RemoteHandle &rhandle) override;
+  virtual void         remote_origin     (ImplicitBaseP rorigin) override  { assert (!"reached"); }
+  virtual RemoteHandle remote_origin     () override;
+  virtual size_t       signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) override;
+  virtual bool         signal_disconnect (size_t signal_handler_id) override;
   struct ClientOrbObject;
   void
   client_orb_object_deleting (ClientOrbObject &coo)
@@ -1660,15 +1675,15 @@ ClientConnectionImpl::pop ()
 RemoteHandle
 ClientConnectionImpl::remote_origin()
 {
-  const uint connection_id = ObjectBroker::connection_id_from_protocol (protocol());
+  const uint server_connection_id = peer_connection().connection_id();
   RemoteMember<RemoteHandle> rorigin;
-  if (!connection_id)
+  if (!server_connection_id)
     {
       errno = EHOSTUNREACH; // ECONNREFUSED;
       return RemoteHandle::__aida_null_handle__();
     }
   ProtoMsg *fb = ProtoMsg::_new (3);
-  fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
+  fb->add_header2 (MSGID_META_HELLO, server_connection_id, this->connection_id(), 0, 0);
   ProtoMsg *fr = this->call_remote (fb); // takes over fb
   ProtoReader frr (*fr);
   const MessageId msgid = MessageId (frr.pop_int64());
@@ -1925,18 +1940,23 @@ class ServerConnectionImpl : public ServerConnection {
   void                  start_garbage_collection (uint client_connection);
 public:
   explicit              ServerConnectionImpl    (const std::string &protocol);
-  virtual              ~ServerConnectionImpl ()         { ObjectBroker::unregister_connection (*this); }
-  virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
-  virtual bool          pending        ()               { return transport_channel_.has_msg(); }
-  virtual void          dispatch       ();
-  virtual void          remote_origin  (ImplicitBaseP rorigin);
-  virtual RemoteHandle  remote_origin  () { fatal ("assert not reached"); }
-  virtual void          add_interface  (ProtoMsg &fb, ImplicitBaseP ibase);
-  virtual ImplicitBaseP pop_interface  (ProtoReader &fr);
-  virtual void          send_msg   (ProtoMsg *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
-  virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
-  virtual EmitResultHandler emit_result_handler_pop (size_t id);
-  virtual void              cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase);
+  virtual              ~ServerConnectionImpl    () override     { ObjectBroker::unregister_connection (*this); }
+  virtual int           notify_fd               () override     { return transport_channel_.inputfd(); }
+  virtual bool          pending                 () override     { return transport_channel_.has_msg(); }
+  virtual void          dispatch                () override;
+  virtual void          remote_origin           (ImplicitBaseP rorigin) override;
+  virtual RemoteHandle  remote_origin           () override     { fatal ("assert not reached"); }
+  virtual void          add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) override;
+  virtual ImplicitBaseP pop_interface           (ProtoReader &fr) override;
+  virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) override;
+  EmitResultHandler     emit_result_handler_pop (size_t id);
+  virtual void          cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase) override;
+  virtual void
+  send_msg (ProtoMsg *fb) override
+  {
+    assert_return (fb);
+    transport_channel_.send_msg (fb, true);
+  }
 };
 
 void
@@ -2288,7 +2308,17 @@ ObjectBroker::construct_client_connection (ClientConnection *&var)
     fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::connect<>");
   const std::string protocol = call_stack_connection_ctor_protocol;
   call_stack_connection_ctor_protocol = NULL;
-  var = new ClientConnectionImpl (protocol);
+  assert (protocol.empty() == false);
+  const uint server_connection_id = connection_id_from_protocol (protocol);
+  assert (server_connection_id != 0);
+  BaseConnection *server_connection_base = connection_from_id (server_connection_id);
+  assert (server_connection_base != NULL);
+  ServerConnection *server_connection = dynamic_cast<ServerConnection*> (server_connection_base);
+  assert (server_connection != NULL);
+  ClientConnection *client_connection = new ClientConnectionImpl (protocol, *server_connection);
+  assert (client_connection != NULL);
+  server_connection->peer_connection (*client_connection);
+  var = client_connection;
 }
 
 uint

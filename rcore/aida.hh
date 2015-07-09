@@ -555,6 +555,7 @@ class ObjectBroker {
   static void   verify_connection_construction    ();
   static void   construct_server_connection       (ServerConnection *&var);
   static void   construct_client_connection       (ClientConnection *&var);
+  static uint   connection_id_from_protocol       (const std::string &protocol);
   static void   connection_handshake              (const std::string                 &endpoint,
                                                    std::function<BaseConnection*()>   aida_connection,
                                                    std::function<void (RemoteHandle)> origin_cast);
@@ -565,7 +566,6 @@ public:
   static BaseConnection*   connection_from_id     (uint64             connection_id);
   static ClientConnection* get_client_connection  (ClientConnection *&var);
   static ServerConnection* get_server_connection  (ServerConnection *&var);
-  static uint         connection_id_from_protocol (const std::string &protocol);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64 orbid)        { return OrbObject::orbid_connection (orbid); }
   static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh.__aida_orbid__()); }
@@ -699,6 +699,7 @@ public:
 class BaseConnection {
   const std::string protocol_;
   uint              conid_;
+  BaseConnection   *peer_;
   friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
@@ -708,7 +709,9 @@ protected:
   virtual void           send_msg        (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   void                   assign_id       (uint connection_id);
   std::string            protocol        () const       { return protocol_; }
+  void                   peer_connection (BaseConnection &peer);
 public:
+  BaseConnection&        peer_connection () const;
   uint                   connection_id   () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
   virtual int            notify_fd       () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending         () = 0; ///< Indicate whether any incoming events are pending that need to be dispatched.
