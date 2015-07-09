@@ -638,6 +638,7 @@ public:
   inline void operator<<= (EnumValue e)       { ProtoUnion &u = addu (ENUM); u.vint64 = e.value; }
   inline void operator<<= (const String &s)   { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
+  void        operator<<= (const RemoteHandle &rhandle);
 };
 
 class ProtoMsg8 : public ProtoMsg { // Stack contained buffer for up to 8 fields
@@ -775,6 +776,9 @@ struct ProtoScope {
   static ClientConnection& current_client_connection (); ///< Access the client connection of the current thread-specific RPC scope.
   static ServerConnection& current_server_connection (); ///< Access the server connection of the current thread-specific RPC scope.
   RAPICORN_CLASS_NON_COPYABLE (ProtoScope);
+};
+struct ProtoScopeCall2Way : ProtoScope {
+  ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
 };
 
 // == inline implementations ==

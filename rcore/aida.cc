@@ -1001,6 +1001,12 @@ ProtoMsg::check_internal ()
 }
 
 void
+ProtoMsg::operator<<= (const RemoteHandle &rhandle)
+{
+  ProtoScope::current_client_connection().add_handle (*this, rhandle);
+}
+
+void
 ProtoReader::check_request (int type)
 {
   if (nth_ >= n_types())
@@ -1189,6 +1195,13 @@ ProtoScope::current_server_connection ()
 {
   assert (current_thread_proto_connections.server_connection != NULL);
   return *current_thread_proto_connections.server_connection;
+}
+
+ProtoScopeCall2Way::ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
+  ProtoScope (NULL, rhandle.__aida_connection__())
+{
+  pm.add_header2 (MSGID_CALL_TWOWAY, hashi, hashlo);
+  pm <<= rhandle;
 }
 
 // == EventFd ==
