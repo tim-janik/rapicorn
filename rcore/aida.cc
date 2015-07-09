@@ -1150,6 +1150,47 @@ ProtoMsg::_new (uint32 _ntypes)
   return OneChunkProtoMsg::_new (_ntypes);
 }
 
+// == ProtoScope ==
+struct ProtoConnections {
+  ServerConnection *server_connection;
+  ClientConnection *client_connection;
+  constexpr ProtoConnections() : server_connection (NULL), client_connection (NULL) {}
+};
+static __thread ProtoConnections current_thread_proto_connections;
+
+ProtoScope::ProtoScope (ServerConnection *server_connection, ClientConnection *client_connection)
+{
+  assert ((server_connection != NULL) ^ (client_connection != NULL));
+  assert (current_thread_proto_connections.server_connection == NULL);
+  assert (current_thread_proto_connections.client_connection == NULL);
+  current_thread_proto_connections.server_connection = server_connection;
+  current_thread_proto_connections.client_connection = client_connection;
+}
+
+ProtoScope::~ProtoScope ()
+{
+  if (!current_thread_proto_connections.client_connection)
+    assert (current_thread_proto_connections.server_connection != NULL);
+  if (!current_thread_proto_connections.server_connection)
+    assert (current_thread_proto_connections.client_connection != NULL);
+  current_thread_proto_connections.server_connection = NULL;
+  current_thread_proto_connections.client_connection = NULL;
+}
+
+ClientConnection&
+ProtoScope::current_client_connection ()
+{
+  assert (current_thread_proto_connections.client_connection != NULL);
+  return *current_thread_proto_connections.client_connection;
+}
+
+ServerConnection&
+ProtoScope::current_server_connection ()
+{
+  assert (current_thread_proto_connections.server_connection != NULL);
+  return *current_thread_proto_connections.server_connection;
+}
+
 // == EventFd ==
 EventFd::EventFd () :
   fds { -1, -1 }

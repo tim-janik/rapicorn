@@ -766,6 +766,17 @@ public: /// @name API for signal event handlers.
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
 };
 
+// == ProtoScpope ==
+/// ProtoScpope keeps track of the ServerConnection and ClientConnection during RPC marshalling.
+struct ProtoScope {
+  /// Start/create an RPC scope for a connection pair within the current thread.
+  explicit                 ProtoScope                (ServerConnection *server_connection, ClientConnection *client_connection);
+  /*dtor*/                ~ProtoScope                (); ///< Finish/destroy an RPC scope.
+  static ClientConnection& current_client_connection (); ///< Access the client connection of the current thread-specific RPC scope.
+  static ServerConnection& current_server_connection (); ///< Access the server connection of the current thread-specific RPC scope.
+  RAPICORN_CLASS_NON_COPYABLE (ProtoScope);
+};
+
 // == inline implementations ==
 inline
 Any::Any() :
