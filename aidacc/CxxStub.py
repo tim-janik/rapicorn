@@ -641,23 +641,22 @@ class Generator:
     s += self.generate_aida_connection_impl (tp)
     s += 'Rapicorn::Aida::TypeHashList\n'
     s += '%s::__aida_typelist__() const\n{\n' % classH
-    s += '  Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + self
-    s += '  __AIDA_Local__::add_header2_call (fb, *this, %s);\n' % self.list_types_digest (tp)
-    s += self.generate_proto_add_args ('fb', tp, '', [('*this', tp)], '')
-    s += '  Rapicorn::Aida::ProtoMsg *fr = __AIDA_Local__::invoke (&fb);\n' # deletes fb
-    s += '  AIDA_CHECK (fr != NULL, "missing result from 2-way call");\n'
-    s += '  Rapicorn::Aida::ProtoReader frr (*fr);\n'
-    s += '  frr.skip_header();\n'
+    s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + self
+    s += '  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, %s);\n' % self.list_types_digest (tp)
+    s += '  Rapicorn::Aida::ProtoMsg *__r_ = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_
+    s += '  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");\n'
+    s += '  Rapicorn::Aida::ProtoReader __f_ (*__r_);\n'
+    s += '  __f_.skip_header();\n'
     s += '  size_t len;\n'
-    s += '  frr >>= len;\n'
-    s += '  AIDA_CHECK (frr.remaining() == len * 2, "result truncated");\n'
+    s += '  __f_ >>= len;\n'
+    s += '  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");\n'
     s += '  Rapicorn::Aida::TypeHashList thl;\n'
     s += '  Rapicorn::Aida::TypeHash thash;\n'
     s += '  for (size_t i = 0; i < len; i++) {\n'
-    s += '    frr >>= thash;\n'
+    s += '    __f_ >>= thash;\n'
     s += '    thl.push_back (thash);\n'
     s += '  }\n'
-    s += '  delete fr;\n'
+    s += '  delete __r_;\n'
     s += '  return thl;\n'
     s += '}\n'
     return s
