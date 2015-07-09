@@ -1351,16 +1351,15 @@ class TransportChannel : public EventFd { // Channel for cross-thread ProtoMsg I
     return fb; // may be NULL
   }
 public:
-  void
-  send_msg (ProtoMsg *fb, // takes fb ownership
-            bool         may_wakeup)
+  void // takes pm ownership
+  send_msg (ProtoMsg *pm, bool may_wakeup)
   {
-    const bool was_empty = msg_queue.push (fb);
+    const bool was_empty = msg_queue.push (pm);
     if (may_wakeup && was_empty)
       wakeup();                                 // wakeups are needed to catch empty => full transition
   }
   ProtoMsg*  fetch_msg()     { return get_msg (POP); }
-  bool          has_msg()       { return get_msg (PEEK); }
+  bool       has_msg()       { return get_msg (PEEK); }
   ProtoMsg*  pop_msg()       { return get_msg (POP_BLOCKED); }
   ~TransportChannel ()
   {}
@@ -1526,6 +1525,19 @@ BaseConnection::assign_id (uint connection_id)
   conid_ = connection_id;
 }
 
+void
+BaseConnection::post_peer_msg (ProtoMsg *pm)
+{
+  assert_return (pm != NULL);
+  if (AIDA_MESSAGES_ENABLED())
+    {
+      ProtoReader fbr (*pm);
+      const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+      AIDA_MESSAGE ("orig=%x dest=%x msgid=%016x h=%016x l=%016x", connection_id(), peer_connection().connection_id(), msgid, hashhigh, hashlow);
+    }
+  peer_connection().receive_msg (pm);
+}
+
 BaseConnection&
 BaseConnection::peer_connection () const
 {
@@ -1618,7 +1630,7 @@ public:
     pthread_spin_destroy (&signal_spin_);
   }
   virtual void
-  send_msg (ProtoMsg *fb)
+  receive_msg (ProtoMsg *fb) override
   {
     assert_return (fb);
     transport_channel_.send_msg (fb, !blocking_for_sem_);
@@ -1738,7 +1750,7 @@ ClientConnectionImpl::gc_sweep (const ProtoMsg *fb)
   for (auto v : trashids)
     fr->add_int64 (v); // items
   GCLOG ("ClientConnectionImpl: GARBAGE_REPORT: %u trash ids", trashids.size());
-  ObjectBroker::post_msg (fr);
+  post_peer_msg (fr);
   seen_garbage_ = false;
 }
 
@@ -1768,7 +1780,7 @@ ClientConnectionImpl::dispatch ()
         else // MSGID_EMIT_TWOWAY
           {
             AIDA_ASSERT (fr && msgid_is (fr->first_id(), MSGID_EMIT_RESULT));
-            ObjectBroker::post_msg (fr);
+            post_peer_msg (fr);
           }
       }
       break;
@@ -1802,12 +1814,12 @@ ClientConnectionImpl::call_remote (ProtoMsg *fb)
   const bool needsresult = msgid_needs_result (callid);
   if (!needsresult)
     {
-      ObjectBroker::post_msg (fb);
+      post_peer_msg (fb);
       return NULL;
     }
   const MessageId resultid = MessageId (msgid_mask (msgid_as_result (callid)));
   blocking_for_sem_ = true; // results will notify semaphore
-  ObjectBroker::post_msg (fb);
+  post_peer_msg (fb);
   ProtoMsg *fr;
   while (needsresult)
     {
@@ -1952,7 +1964,7 @@ public:
   EmitResultHandler     emit_result_handler_pop (size_t id);
   virtual void          cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase) override;
   virtual void
-  send_msg (ProtoMsg *fb) override
+  receive_msg (ProtoMsg *fb) override
   {
     assert_return (fb);
     transport_channel_.send_msg (fb, true);
@@ -1973,7 +1985,7 @@ ServerConnectionImpl::start_garbage_collection (uint client_connection)
   ProtoMsg *fb = ProtoMsg::_new (3);
   fb->add_header2 (MSGID_META_GARBAGE_SWEEP, client_connection, this->connection_id(), 0, 0);
   GCLOG ("ServerConnectionImpl: GARBAGE_SWEEP: %u candidates", sweep_remotes_->size());
-  ObjectBroker::post_msg (fb);
+  post_peer_msg (fb);
 }
 
 ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
@@ -2040,7 +2052,7 @@ ServerConnectionImpl::dispatch ()
           fb = NULL; // prevent deletion
         const uint64 resultmask = msgid_as_result (MessageId (idmask));
         AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
-        ObjectBroker::post_msg (fr);
+        post_peer_msg (fr);
       }
       break;
     case MSGID_CONNECT:
@@ -2060,7 +2072,7 @@ ServerConnectionImpl::dispatch ()
           {
             const uint64 resultmask = msgid_as_result (MessageId (idmask));
             AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
-            ObjectBroker::post_msg (fr);
+            post_peer_msg (fr);
           }
       }
       break;
@@ -2331,28 +2343,6 @@ ObjectBroker::connection_id_from_protocol (const std::string &protocol)
         return bcon->connection_id();
     }
   return 0;     // unmatched
-}
-
-void
-ObjectBroker::post_msg (ProtoMsg *fb)
-{
-  assert_return (fb);
-  const MessageId msgid = MessageId (fb->first_id());
-  const uint connection_id = ObjectBroker::destination_connection_id (msgid);
-  BaseConnection *bcon = connection_from_id (connection_id);
-  if (!bcon)
-    fatal_error (string_format ("Message ID without valid connection: %016x (connection_id=%u)", msgid, connection_id));
-  const bool needsresult = msgid_needs_result (msgid);
-  const uint sender_connection = ObjectBroker::sender_connection_id (msgid);
-  if (needsresult != (sender_connection > 0)) // FIXME: move downwards
-    fatal_error (string_format ("mismatch of result flag and sender_connection: %016x", msgid));
-  if (AIDA_MESSAGES_ENABLED())
-    {
-      ProtoReader fbr (*fb);
-      const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-      AIDA_MESSAGE ("dest=%p msgid=%016x h=%016x l=%016x", bcon, msgid, hashhigh, hashlow);
-    }
-  bcon->send_msg (fb);
 }
 
 void

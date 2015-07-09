@@ -560,7 +560,6 @@ class ObjectBroker {
                                                    std::function<BaseConnection*()>   aida_connection,
                                                    std::function<void (RemoteHandle)> origin_cast);
 public:
-  static void              post_msg               (ProtoMsg*); ///< Route message to the appropriate party.
   static uint              register_connection    (BaseConnection    &connection);
   static void              unregister_connection  (BaseConnection    &connection);
   static BaseConnection*   connection_from_id     (uint64             connection_id);
@@ -706,7 +705,8 @@ protected:
   explicit               BaseConnection  (const std::string &protocol);
   virtual               ~BaseConnection  ();
   virtual void           remote_origin   (ImplicitBaseP rorigin) = 0;
-  virtual void           send_msg        (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual void           receive_msg     (ProtoMsg*) = 0; ///< Accepts an incoming message, transfers memory.
+  void                   post_peer_msg   (ProtoMsg*);     ///< Send message to peer, transfers memory.
   void                   assign_id       (uint connection_id);
   std::string            protocol        () const       { return protocol_; }
   void                   peer_connection (BaseConnection &peer);
@@ -733,6 +733,7 @@ protected:
   virtual void              cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
 public:
   typedef std::function<void (Rapicorn::Aida::ProtoReader&)> EmitResultHandler;
+  void                      post_peer_msg           (ProtoMsg *pm)      { BaseConnection::post_peer_msg (pm); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
   virtual void              add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) = 0;
   virtual ImplicitBaseP     pop_interface           (ProtoReader &fr) = 0;

@@ -43,7 +43,7 @@ proto_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
 static inline void
 post_msg (ProtoMsg *fb)
 {
-  ObjectBroker::post_msg (fb);
+  server_connection->post_peer_msg (fb);
 }
 
 static inline void
