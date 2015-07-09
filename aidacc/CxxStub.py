@@ -507,9 +507,8 @@ class Generator:
     s += 'public:\n'
     if self.gen_mode == G4STUB:
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () override;\n' % self.C (type_info) # dtor
-    c  = '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
     if ddc:
-      s += c
+      s += '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('Rapicorn::Aida::TypeHashList') + ' __aida_typelist__  () const override;\n'
       s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const override\t{ return "%s"; }\n' % classFull
