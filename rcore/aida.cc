@@ -1373,45 +1373,6 @@ public:
   }
 };
 
-// == TypeNameDB ==
-class TypeNameDB {
-  RWLock                                mutex_;
-  std::vector<std::string>              vector_;
-  std::unordered_map<std::string, uint> map_;
-public:
-  uint
-  index (const std::string &type_name)
-  {
-    mutex_.rdlock();
-    auto it = map_.find (type_name);
-    uint result_type_index = it == map_.end() ? 0 : it->second;
-    mutex_.unlock();
-    if (result_type_index)
-      return result_type_index;
-    mutex_.wrlock();
-    vector_.push_back (type_name);
-    result_type_index = vector_.size();
-    map_[type_name] = result_type_index;
-    mutex_.unlock();
-    assert (result_type_index < 65536); // see IdentifierParts.orbid_type_index
-    return result_type_index;
-  }
-  std::string
-  type_name (const uint type_index)
-  {
-    std::string result;
-    if (type_index > 0)
-      {
-        mutex_.rdlock();
-        if (type_index <= vector_.size())
-          result = vector_[type_index - 1];
-        mutex_.unlock();
-      }
-    return result;
-  }
-};
-static TypeNameDB type_name_db;
-
 // == ObjectMap ==
 template<class Instance>
 class ObjectMap {
@@ -1426,7 +1387,6 @@ private:
   std::vector<Entry>                    entries_;
   std::unordered_map<Instance*, uint64> map_;
   std::vector<uint>                     free_list_;
-  std::function<uint64 (InstanceP)>     orbid_hook_;
   class MappedObject : public virtual OrbObject {
     ObjectMap &omap_;
   public:
@@ -1447,7 +1407,6 @@ public:
   InstanceP  instance_from_orbo (const OrbObjectP &orbo);
   OrbObjectP orbo_from_orbid    (uint64            orbid);
   void       assign_start_id    (uint64 start_id, uint64 mask = 0xffffffffffffffff);
-  void       assign_orbid_hook  (const std::function<uint64 (InstanceP)> &orbid_hook);
 };
 
 template<class Instance> void
@@ -1459,12 +1418,6 @@ ObjectMap<Instance>::assign_start_id (uint64 start_id, uint64 id_mask)
   assert (id_mask > 0);
   id_mask_ = id_mask;
   assert (map_.size() == 0);
-}
-
-template<class Instance> void
-ObjectMap<Instance>::assign_orbid_hook (const std::function<uint64 (InstanceP)> &orbid_hook)
-{
-  orbid_hook_ = orbid_hook;
 }
 
 template<class Instance> void
@@ -1517,13 +1470,7 @@ ObjectMap<Instance>::orbo_from_instance (InstanceP instancep)
       if (AIDA_UNLIKELY (orbid == 0))
         {
           const uint64 index = next_index();
-          uint64 masked_bits = 0;
-          if (orbid_hook_)
-            {
-              masked_bits = orbid_hook_ (instancep);
-              assert ((masked_bits & id_mask_) == 0);
-            }
-          orbid = (start_id_ + index) | masked_bits;
+          orbid = start_id_ + index;
           orbop = std::make_shared<MappedObject> (orbid, *this); // calls delete_orbid from dtor
           Entry e { orbop, instancep };
           entries_[index] = e;
@@ -1676,7 +1623,6 @@ public:
   virtual RemoteHandle  remote_origin     ();
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
-  virtual std::string   type_name_from_handle (const RemoteHandle &rhandle);
   struct ClientOrbObject;
   void
   client_orb_object_deleting (ClientOrbObject &coo)
@@ -1967,13 +1913,6 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
   return shandler;
 }
 
-std::string
-ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
-{
-  const uint type_index = OrbObject::orbid_type_index (rhandle.__aida_orbid__());
-  return type_name_db.type_name (type_index);
-}
-
 // == ServerConnectionImpl ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
 class ServerConnectionImpl : public ServerConnection {
@@ -2025,16 +1964,9 @@ ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
     fatal_error ("Aida: failed to register ServerConnection");
   assign_id (realid);
   const uint64 start_id = OrbObject::orbid_make (realid, // connection_id() must match connection_id_from_orbid()
-                                                 0,      // type_name_db.index, see orbid_hook
+                                                 0,      // unused
                                                  1);     // counter = first object id
   object_map_.assign_start_id (start_id, OrbObject::orbid_make (0xffff, 0x0000, 0xffffffff));
-  auto orbid_hook = [this] (ObjectMap<ImplicitBase>::InstanceP instance) {
-    // hook is needed to determine the type_name index for newly created orbids
-    // embedding the type_name into orbids is a small hack for Python to create the correct Handle type
-    const uint64 type_index = type_name_db.index (instance->__aida_type_name__());
-    return OrbObject::orbid_make (0, type_index, 0);
-  };
-  object_map_.assign_orbid_hook (orbid_hook);
 }
 
 void
