@@ -739,7 +739,7 @@ public:
   struct MethodEntry       { uint64 hashhi, hashlo; DispatchFunc dispatcher; };
   struct MethodRegistry    /// Registry structure for IPC method stubs.
   {
-    template<class T, size_t S> MethodRegistry  (T (&static_const_entries)[S])
+    template<size_t S> MethodRegistry  (const MethodEntry (&static_const_entries)[S])
     { for (size_t i = 0; i < S; i++) register_method (static_const_entries[i]); }
   private: static void register_method  (const MethodEntry &mentry);
   };
