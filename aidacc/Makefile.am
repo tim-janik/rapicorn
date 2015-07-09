@@ -68,10 +68,6 @@ TmplFiles.py: Makefile.am $(template_files)
 	$(Q) mv xgen-$@ $@
 CLEANFILES += TmplFiles.py
 
-# == Install Aida Library Modules ==
-PyAidadir	= ${pythondir}/Aida$(strip @RAPICORN_RELEASE@)
-PyAida_PYTHON	= __init__.py loop.py
-
 # == Basic Aidacc Test ==
 check-aidacc-intern-list-formats:
 	$(Q) ${AIDACC_VDEBUG} -x TypeMap --list-formats | grep -q AidaTypeMap ; eval "$$TSTDIAGNOSE"
