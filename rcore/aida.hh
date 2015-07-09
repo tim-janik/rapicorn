@@ -731,7 +731,6 @@ protected:
 public:
   typedef std::function<void (Rapicorn::Aida::ProtoReader&)> EmitResultHandler;
   virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
-  virtual ImplicitBaseP interface_from_handle   (const RemoteHandle &rhandle) = 0;
   virtual void          add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) = 0;
   virtual ImplicitBaseP pop_interface           (ProtoReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups

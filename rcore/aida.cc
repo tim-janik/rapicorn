@@ -1997,7 +1997,6 @@ public:
   virtual void          send_msg   (ProtoMsg *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
-  virtual ImplicitBaseP     interface_from_handle   (const RemoteHandle &rhandle);
   virtual void              cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase);
 };
 
@@ -2165,12 +2164,6 @@ ServerConnectionImpl::dispatch ()
     }
   if (AIDA_UNLIKELY (fb))
     delete fb;
-}
-
-ImplicitBaseP
-ServerConnectionImpl::interface_from_handle (const RemoteHandle &rhandle)
-{
-  return object_map_.instance_from_orbo ((rhandle.*pmf_peek_orb_object)());
 }
 
 void
