@@ -9,8 +9,9 @@ noinst_PROGRAMS  = # auto-cleaned
 noinst_DATA      =
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS) $(EXAMPLES)
-RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON) # -c "import @RAPICORN_NAMESPACE_NAME@"
-
+RPYTHON          = PYTHONPATH="$(abs_top_builddir)/cython/${objdir}:$$PYTHONPATH" $(PYTHON)
+# Loading newly built Python modules requires accesss to libtool objdir
+objdir           = .libs
 
 EXAMPLES = example-bind.py
 
@@ -19,7 +20,7 @@ TEST_PYPROGS = simple.py loop.py testrapicorn.py chekwidgets.py testgc.py testbi
 
 # === python-call-info ===
 python-call-info:
-	@echo '$(RPYTHON) # -c "import @RAPICORN_NAMESPACE_NAME@"'
+	@echo "$(RPYTHON) # -c 'import Rapicorn'"
 
 
 # === TEST_PYPROGS ===
@@ -34,7 +35,7 @@ check-TEST_PYPROGS:
 	&& [ 0 -lt $(words $(TEST_PYPROGS)) ]                            \
 	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT      \
 	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
-installcheck-local: check-TEST_PYPROGS
+check-local: check-TEST_PYPROGS
 
 # === XML Linting ===
 xmllint-check:
