@@ -1204,6 +1204,13 @@ ProtoScopeCall2Way::ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandl
   pm <<= rhandle;
 }
 
+ProtoScopeCall1Way::ProtoScopeCall1Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
+  ProtoScope (NULL, rhandle.__aida_connection__())
+{
+  pm.add_header2 (MSGID_CALL_ONEWAY, hashi, hashlo);
+  pm <<= rhandle;
+}
+
 // == EventFd ==
 EventFd::EventFd () :
   fds { -1, -1 }

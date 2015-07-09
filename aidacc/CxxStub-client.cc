@@ -32,12 +32,6 @@ signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandle
   return client_connection->signal_connect (hhi, hlo, rh, seh, data);
 }
 
-static inline void
-add_header1_call (ProtoMsg &fb, const RemoteHandle &sh, uint64 h, uint64 l)
-{
-  fb.add_header1 (Rapicorn::Aida::MSGID_CALL_ONEWAY, h, l);
-}
-
 static inline ProtoMsg*
 new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 {

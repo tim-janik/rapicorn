@@ -780,6 +780,9 @@ struct ProtoScope {
 struct ProtoScopeCall2Way : ProtoScope {
   ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
 };
+struct ProtoScopeCall1Way : ProtoScope {
+  ProtoScopeCall1Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
+};
 
 // == inline implementations ==
 inline

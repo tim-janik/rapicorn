@@ -743,8 +743,7 @@ class Generator:
     if hasret:
       s += '  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, %s);\n' % self.method_digest (mtype)
     else:
-      s += '  __AIDA_Local__::add_header1_call (__p_, *this, %s);\n' % self.method_digest (mtype)
-      s += self.generate_proto_add_args ('__p_', class_info, '', [('*this', class_info)], '')
+      s += '  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, %s);\n' % self.method_digest (mtype)
     # marshal args
     ident_type_args = [('arg_' + a[0], a[1]) for a in mtype.args]
     s += self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
@@ -844,8 +843,7 @@ class Generator:
     else:
       s += q + tname + ' value) /// %s\n{\n' % copydoc
     s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;\n' # header + self + value
-    s += '  __AIDA_Local__::add_header1_call (__p_, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
-    s += self.generate_proto_add_args ('__p_', class_info, '', [('*this', class_info)], '')
+    s += '  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, %s);\n' % self.setter_digest (class_info, fident, ftype)
     ident_type_args = [('value', ftype)]
     s += self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
     s += '  fr = __AIDA_Local__::invoke (&__p_);\n' # deletes __p_

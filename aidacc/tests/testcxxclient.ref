@@ -41,18 +41,6 @@ signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandle
   return client_connection->signal_connect (hhi, hlo, rh, seh, data);
 }
 
-static inline void
-add_header2_call (ProtoMsg &fb, const RemoteHandle &sh, uint64 h, uint64 l)
-{
-  fb.add_header2 (Rapicorn::Aida::MSGID_CALL_TWOWAY, h, l);
-}
-
-static inline void
-add_header1_call (ProtoMsg &fb, const RemoteHandle &sh, uint64 h, uint64 l)
-{
-  fb.add_header1 (Rapicorn::Aida::MSGID_CALL_ONEWAY, h, l);
-}
-
 static inline ProtoMsg*
 new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 {
@@ -1247,8 +1235,7 @@ void
 FirstInterfaceHandle::void_func () /// See FirstInterface::void_func()
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL);
   fr = __AIDA_Local__::invoke (&__p_);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
@@ -1961,8 +1948,7 @@ void
 UIWidgetAreaHandle::dummy (bool value) /// See UIWidgetArea::dummy
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -1984,8 +1970,7 @@ void
 UIWidgetAreaHandle::on_click (const std::string &value) /// See UIWidgetArea::on_click
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xf0025ec0fa66e3e2ULL, 0x880c10e8e6b57cfbULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -2107,8 +2092,7 @@ void
 UIWidgetAreaHandle::void_method () /// See UIWidgetArea::void_method()
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xdbb304ad4df15873ULL, 0xca276abf2bb1603cULL);
   fr = __AIDA_Local__::invoke (&__p_);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
@@ -2129,8 +2113,7 @@ void
 UIWidgetAreaHandle::on_click2in (const std::string &arg_command) /// See UIWidgetArea::on_click2in()
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL);
   __p_ <<= arg_command;
   fr = __AIDA_Local__::invoke (&__p_);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
@@ -2410,8 +2393,7 @@ void
 QuickIfaceHandle::simple_function (int arg_i) /// See QuickIface::simple_function()
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL);
   __p_ <<= arg_i;
   fr = __AIDA_Local__::invoke (&__p_);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
@@ -2478,8 +2460,7 @@ void
 MethodTestInterfaceHandle::method_with_void () /// See MethodTestInterface::method_with_void()
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 0), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL);
   fr = __AIDA_Local__::invoke (&__p_);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
@@ -3314,8 +3295,7 @@ void
 PropertyTesterHandle::bool_prop (bool value) /// See PropertyTester::bool_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3337,8 +3317,7 @@ void
 PropertyTesterHandle::int32_prop (int value) /// See PropertyTester::int32_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x7b7b3182160469e4ULL, 0xbd3c44c3a57484ebULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3360,8 +3339,7 @@ void
 PropertyTesterHandle::int64_prop (int64_t value) /// See PropertyTester::int64_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xb33bf89d2259a1dbULL, 0x0154420aebe9a16cULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3383,8 +3361,7 @@ void
 PropertyTesterHandle::float64_prop (double value) /// See PropertyTester::float64_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xf1df5bd296ac78e2ULL, 0xbb263cff89927093ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3406,8 +3383,7 @@ void
 PropertyTesterHandle::string_prop (const std::string &value) /// See PropertyTester::string_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xfadb1eed1d8d358aULL, 0x17cd2ca684080698ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3429,8 +3405,7 @@ void
 PropertyTesterHandle::enum_prop (QuickEnum value) /// See PropertyTester::enum_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x99206fff699c82d6ULL, 0x1dcbc77498569411ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3452,8 +3427,7 @@ void
 PropertyTesterHandle::record_prop (const ClnT_QuickRecord &value) /// See PropertyTester::record_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x55aaf8cee9dd7a46ULL, 0x83d8416416740bf0ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3475,8 +3449,7 @@ void
 PropertyTesterHandle::sequence_prop (const ClnT_QuickSequence &value) /// See PropertyTester::sequence_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xf86952a034b8bc84ULL, 0x3be169a3f0a9a07dULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3498,8 +3471,7 @@ void
 PropertyTesterHandle::interface_prop (GrandChildHandle value) /// See PropertyTester::interface_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xbf62779e2a11aebbULL, 0x95547f4e29ca3814ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3521,8 +3493,7 @@ void
 PropertyTesterHandle::self_prop (PropertyTesterHandle value) /// See PropertyTester::self_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3544,8 +3515,7 @@ void
 PropertyTesterHandle::any_prop (const Rapicorn::Aida::Any &value) /// See PropertyTester::any_prop
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3665,8 +3635,7 @@ void
 ButtonAreaHandle::on_click (const std::string &value) /// See ButtonArea::on_click
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3688,8 +3657,7 @@ void
 ButtonAreaHandle::on_click2 (const std::string &value) /// See ButtonArea::on_click2
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xfc93898ba4104662ULL, 0xc918694fe5c2bfefULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3711,8 +3679,7 @@ void
 ButtonAreaHandle::on_click3 (const std::string &value) /// See ButtonArea::on_click3
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x1c1990dca0fde97cULL, 0x6cc2c7cc49d811f8ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3734,8 +3701,7 @@ void
 ButtonAreaHandle::click_type (ClickType value) /// See ButtonArea::click_type
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3879,8 +3845,7 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::ClnT_QuickReco
                                             const OtherNamespace::ClnT_SomeRecord &arg_sr) /// See NameTests::args_from_other_namespace()
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 3), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL);
   __p_ <<= arg_qr;
   __p_ <<= arg_qe;
   __p_ <<= arg_sr;
@@ -3965,8 +3930,7 @@ void
 CompressorHandle::threshold (double value) /// See Compressor::threshold
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
@@ -3988,8 +3952,7 @@ void
 CompressorHandle::ratio (double value) /// See Compressor::ratio
 {
   Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + 1), *fr = NULL;
-  __AIDA_Local__::add_header1_call (__p_, *this, 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL);
-  __p_ <<= *this;
+  Rapicorn::Aida::ProtoScopeCall1Way __o_ (__p_, *this, 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL);
   __p_ <<= value;
   fr = __AIDA_Local__::invoke (&__p_);
   if (fr) delete fr;
