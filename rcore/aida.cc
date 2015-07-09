@@ -1576,7 +1576,7 @@ class ClientConnectionImpl : public ClientConnection {
   pthread_spinlock_t            signal_spin_;
   TransportChannel              transport_channel_;     // messages arriving at client
   sem_t                         transport_sem_;         // signal incomming results
-  std::deque<ProtoMsg*>      event_queue_;           // messages pending for client
+  std::deque<ProtoMsg*>         event_queue_;           // messages pending for client
   typedef std::map<uint64, OrbObjectW> Id2OrboMap;
   Id2OrboMap                    id2orbo_map_;           // map server orbid -> OrbObjectP
   std::vector<SignalHandler*>   signal_handlers_;
@@ -1609,9 +1609,9 @@ public:
     transport_channel_.send_msg (fb, !blocking_for_sem_);
     notify_for_result();
   }
-  void                  notify_for_result ()            { if (blocking_for_sem_) sem_post (&transport_sem_); }
-  void                  block_for_result  ()            { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
-  void                  gc_sweep          (const ProtoMsg *fb);
+  void                 notify_for_result ()             { if (blocking_for_sem_) sem_post (&transport_sem_); }
+  void                 block_for_result  ()             { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
+  void                 gc_sweep          (const ProtoMsg *fb);
   virtual int           notify_fd         ()            { return transport_channel_.inputfd(); }
   virtual bool          pending           ()            { return !event_queue_.empty() || transport_channel_.has_msg(); }
   virtual ProtoMsg*  call_remote       (ProtoMsg*);
@@ -1924,7 +1924,7 @@ class ServerConnectionImpl : public ServerConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
   void                  start_garbage_collection (uint client_connection);
 public:
-  explicit              ServerConnectionImpl (const std::string &protocol);
+  explicit              ServerConnectionImpl    (const std::string &protocol);
   virtual              ~ServerConnectionImpl ()         { ObjectBroker::unregister_connection (*this); }
   virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
   virtual bool          pending        ()               { return transport_channel_.has_msg(); }

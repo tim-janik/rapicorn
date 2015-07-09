@@ -709,13 +709,13 @@ protected:
   void                   assign_id       (uint connection_id);
   std::string            protocol        () const       { return protocol_; }
 public:
-  uint                   connection_id  () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
-  virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
-  virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
-  virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
-  virtual RemoteHandle   remote_origin  () = 0;
-  virtual Any*           any2remote     (const Any&);
-  virtual void           any2local      (Any&);
+  uint                   connection_id   () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
+  virtual int            notify_fd       () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool           pending         () = 0; ///< Indicate whether any incoming events are pending that need to be dispatched.
+  virtual void           dispatch        () = 0; ///< Dispatch a single event if any is pending.
+  virtual RemoteHandle   remote_origin   () = 0;
+  virtual Any*           any2remote      (const Any&);
+  virtual void           any2local       (Any&);
 };
 
 /// Function typoe for internal signal handling.
@@ -725,14 +725,14 @@ typedef ProtoMsg* SignalEmitHandler (const ProtoMsg*, void*);
 class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 protected:
-  /*ctor*/           ServerConnection      (const std::string &protocol);
-  virtual           ~ServerConnection      ();
-  virtual void       cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
+  /*ctor*/                  ServerConnection      (const std::string &protocol);
+  virtual                  ~ServerConnection      ();
+  virtual void              cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
 public:
   typedef std::function<void (Rapicorn::Aida::ProtoReader&)> EmitResultHandler;
-  virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
-  virtual void          add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) = 0;
-  virtual ImplicitBaseP pop_interface           (ProtoReader &fr) = 0;
+  virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
+  virtual void              add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) = 0;
+  virtual ImplicitBaseP     pop_interface           (ProtoReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64 hi, uint64 lo); ///< Lookup method in registry.
 public:
@@ -752,9 +752,9 @@ protected:
   explicit              ClientConnection (const std::string &protocol);
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
-  virtual ProtoMsg*     call_remote (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
-  virtual void          add_handle  (ProtoMsg &fb, const RemoteHandle &rhandle) = 0;
-  virtual void          pop_handle  (ProtoReader &fr, RemoteHandle &rhandle) = 0;
+  virtual ProtoMsg*         call_remote       (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual void              add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle) = 0;
+  virtual void              pop_handle        (ProtoReader &fr, RemoteHandle &rhandle) = 0;
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
