@@ -481,21 +481,22 @@ union IdentifierParts {
 constexpr uint64 CONNECTION_MASK = 0x0000ffff;
 
 // == OrbObject ==
-/// Internal management structure for objects known to the ORB.
+/// Internal management structure for remote objects.
 class OrbObject {
   const uint64  orbid_;
 protected:
-  explicit      OrbObject         (uint64 orbid);
-  virtual      ~OrbObject         () = 0;
+  explicit                  OrbObject         (uint64 orbid);
+  virtual                  ~OrbObject         ();
 public:
-  uint64        orbid             () const                      { return orbid_; }
-  uint16        connection        () const                      { return orbid_connection (orbid_); }
-  uint16        type_index        () const                      { return orbid_type_index (orbid_); }
-  uint32        counter           () const                      { return orbid_counter (orbid_); }
-  static uint16 orbid_connection  (uint64 orbid)                { return orbid >> 48 /* & 0xffff */; }
-  static uint16 orbid_type_index  (uint64 orbid)                { return orbid >> 32 /* & 0xffff */; }
-  static uint32 orbid_counter     (uint64 orbid)                { return orbid /* & 0xffffffff */; }
-  static uint64 orbid_make        (uint16 connection, uint16 type_index, uint32 counter)
+  uint64                    orbid             () const       { return orbid_; }
+  uint16                    connection        () const       { return orbid_connection (orbid_); }
+  uint16                    type_index        () const       { return orbid_type_index (orbid_); }
+  uint32                    counter           () const       { return orbid_counter (orbid_); }
+  virtual ClientConnection* client_connection ();
+  static uint16             orbid_connection  (uint64 orbid) { return orbid >> 48 /* & 0xffff */; }
+  static uint16             orbid_type_index  (uint64 orbid) { return orbid >> 32 /* & 0xffff */; }
+  static uint32             orbid_counter     (uint64 orbid) { return orbid /* & 0xffffffff */; }
+  static uint64             orbid_make        (uint16 connection, uint16 type_index, uint32 counter)
   { return (uint64 (connection) << 48) | (uint64 (type_index) << 32) | counter; }
 };
 
@@ -517,6 +518,7 @@ protected:
 public:
   /*copy*/                RemoteHandle         (const RemoteHandle &y) : orbop_ (y.orbop_) {}
   virtual                ~RemoteHandle         ();
+  ClientConnection*       __aida_connection__  () const { return orbop_->client_connection(); }
   uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
   static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }
   // Determine if this RemoteHandle contains an object or null handle.

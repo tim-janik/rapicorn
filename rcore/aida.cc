@@ -918,25 +918,30 @@ OrbObject::OrbObject (uint64 orbid) :
 {}
 
 OrbObject::~OrbObject()
-{} // force vtable emission
+{} // keep to force vtable emission
+
+ClientConnection*
+OrbObject::client_connection ()
+{
+  return NULL;
+}
 
 class NullOrbObject : public virtual OrbObject {
+  friend class FriendAllocator<NullOrbObject>;
 public:
-  explicit NullOrbObject() : OrbObject (0) {}
-  virtual ~NullOrbObject()                 {}
+  explicit NullOrbObject  () : OrbObject (0) {}
+  virtual  ~NullOrbObject () override        {}
 };
 
 // == RemoteHandle ==
-static void              (RemoteHandle::*pmf_upgrade_from)  (const OrbObjectP&);
-static const OrbObjectP& (RemoteHandle::*pmf_peek_orb_object) () const;
+static void (RemoteHandle::*pmf_upgrade_from)  (const OrbObjectP&);
 
 OrbObjectP
 RemoteHandle::__aida_null_orb_object__ ()
 {
   static OrbObjectP null_orbo = [] () {                         // use lambda to sneak in extra code
-    pmf_upgrade_from = &RemoteHandle::__aida_upgrade_from__;    // export accessors for internal maintenance
-    pmf_peek_orb_object = &RemoteHandle::__aida_orb_object__;
-    return std::make_shared<NullOrbObject> ();
+    pmf_upgrade_from = &RemoteHandle::__aida_upgrade_from__;    // export accessor for internal maintenance
+    return FriendAllocator<NullOrbObject>::make_shared();
   } ();                                                         // executes lambda atomically
   return null_orbo;
 }
@@ -1385,6 +1390,7 @@ private:
   std::unordered_map<Instance*, uint64> map_;
   std::vector<uint>                     free_list_;
   class MappedObject : public virtual OrbObject {
+    friend class FriendAllocator<MappedObject>;
     ObjectMap &omap_;
   public:
     explicit MappedObject (uint64 orbid, ObjectMap &omap) : OrbObject (orbid), omap_ (omap) { assert (orbid); }
@@ -1468,7 +1474,7 @@ ObjectMap<Instance>::orbo_from_instance (InstanceP instancep)
         {
           const uint64 index = next_index();
           orbid = start_id_ + index;
-          orbop = std::make_shared<MappedObject> (orbid, *this); // calls delete_orbid from dtor
+          orbop = FriendAllocator<MappedObject>::make_shared (orbid, *this); // calls delete_orbid from dtor
           Entry e { orbop, instancep };
           entries_[index] = e;
           map_[instancep.get()] = orbid;
@@ -1662,13 +1668,13 @@ public:
         assert (fr == NULL);
       }
   }
-  struct ClientOrbObject : public OrbObject {
-    ClientOrbObject (uint64 orbid, ClientConnectionImpl &c) : OrbObject (orbid), client_ (c)
-    { assert (orbid); }
-    virtual ~ClientOrbObject () override
-    { client_.client_orb_object_deleting (*this); }
-  private:
-    ClientConnectionImpl &client_;
+  class ClientOrbObject : public OrbObject {
+    friend                class FriendAllocator<ClientOrbObject>;
+    ClientConnectionImpl &client_connection_;
+  public:
+    explicit ClientOrbObject (uint64 orbid, ClientConnectionImpl &c) : OrbObject (orbid), client_connection_ (c) { assert (orbid); }
+    virtual                  ~ClientOrbObject   () override          { client_connection_.client_orb_object_deleting (*this); }
+    virtual ClientConnection* client_connection ()                   { return &client_connection_; }
   };
 };
 
@@ -1720,7 +1726,7 @@ ClientConnectionImpl::pop_handle (ProtoReader &fr, RemoteHandle &rhandle)
   OrbObjectP orbop = id2orbo_map_[orbid].lock();
   if (AIDA_UNLIKELY (!orbop) && orbid)
     {
-      orbop = std::make_shared<ClientOrbObject> (orbid, *this);
+      orbop = FriendAllocator<ClientOrbObject>::make_shared (orbid, *this);
       id2orbo_map_[orbid] = orbop;
     }
   (rhandle.*pmf_upgrade_from) (orbop);
