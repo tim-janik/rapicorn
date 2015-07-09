@@ -1,9 +1,10 @@
 # Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
-from Rapicorn1410 import Rapicorn
+
+import Rapicorn # Load Rapicorn language bindings for Python
 
 # Setup the application object, unsing a unique application name.
-app = Rapicorn.app_init ("Test Rapicorn Bindings")
+app = Rapicorn.init ("Test Rapicorn Bindings")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """
@@ -29,10 +30,12 @@ window.show()
 # sync local state with remote state, because of possible binding
 # notification ping-pong we have to do this in 2 phases
 def sync_remote():
-  for i in range (2):                     # settling bindings may require extra round trips
-    while app.iterate (False, True): pass # process signals and events pending locally
-    app.test_hook()                       # force round trip, ensure we pickup notifications pending remotely
-  while app.iterate (False, True): pass   # process new/remaining batch of signals and events
+  for i in range (2):                   # settling bindings may require extra round trips
+    while app.main_loop().iterate (False):
+      pass                              # process signals and events pending locally
+    app.test_hook()                     # force round trip, ensure we pickup notifications pending remotely
+  while app.main_loop().iterate (False):
+    pass                                # process new/remaining batch of signals and events
 
 import sys
 testwidget = window.query_selector_unique ('#test-widget')

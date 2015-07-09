@@ -5,8 +5,8 @@
 Simple Python test for Rapicorn
 """
 
+import Rapicorn # Load Rapicorn language bindings for Python
 import sys
-from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
 
 # Define main window Widget Tree
 simple_window_widgets = """
@@ -18,7 +18,7 @@ simple_window_widgets = """
 """
 
 # setup application
-app = Rapicorn.app_init ("Simple-Python-Test")  # unique application name
+app = Rapicorn.init ("Simple-Python-Test")      # unique application name
 app.load_string (simple_window_widgets)         # loads widget tree
 window = app.create_window ("simple-window")    # creates main window
 
@@ -34,7 +34,8 @@ disconnected = window.sig_commands.disconnect (cid2)
 assert disconnected == True
 disconnected = window.sig_commands.disconnect (cid2)
 assert disconnected == False
-window.sig_commands -= cid1
+disconnected = window.sig_commands.disconnect (cid1)
+assert disconnected == True
 disconnected = window.sig_commands.disconnect (cid1)
 assert disconnected == False
 
@@ -46,7 +47,7 @@ def command_handler (cmdname, args):
   ## print "in signal handler, args:", cmdname, args
   return True # handled
 # need one signal connection to test for click
-window.sig_commands += command_handler
+window.sig_commands.connect (command_handler)
 
 # show window on screen
 window.show()
@@ -65,7 +66,8 @@ if not max (opt in sys.argv for opt in ('-i','--interactive')):
   assert seen_click_command == False
   window.synthesize_click (button, 1)   # fake "CLICK" command
   window.synthesize_leave()
-  while app.iterate (False, True): pass # process events and signals
+  while app.main_loop().iterate (False):
+    pass # process events and signals
   assert seen_click_command == True     # command_handler should be executed by now
   # delete window
   assert window.closed() == False
@@ -73,5 +75,5 @@ if not max (opt in sys.argv for opt in ('-i','--interactive')):
   assert window.closed() == True
   print " " * max (0, 75 - len (testname)), "OK"
 
-# event loop to process window events (exits when all windows are gone)
-app.loop()
+# run event loop to process window events (exits when all windows are gone)
+app.run()
