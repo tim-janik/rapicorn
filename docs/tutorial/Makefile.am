@@ -13,6 +13,6 @@ RPYTHON         = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON)
 # check tuthello.py by disabling the tutorials main loop and then executing its test code
 check-tuthello.py:
 	$(Q) sed '1,/^app\.run()/s/^\(app\.run()\)/#\1/' < tuthello.py > xtst-tuthello.py
-	$(Q) $(RPYTHON) xtst-tuthello.py --test-123 ; test $$? -eq 123 ; eval "$$TSTDIAGNOSE"
+	$(Q) $(X11TEST_SERVER) && $(RPYTHON) xtst-tuthello.py --test-123 ; test $$? -eq 123 ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f xtst-tuthello.py
 installcheck-local: check-tuthello.py
