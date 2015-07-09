@@ -47,34 +47,33 @@ post_msg (ProtoMsg *fb)
 }
 
 static inline void
-add_header1_discon (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
+add_header1_discon (ProtoMsg &fb, uint64 h, uint64 l)
 {
-  fb.add_header1 (Rapicorn::Aida::MSGID_DISCONNECT, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l);
+  fb.add_header1 (Rapicorn::Aida::MSGID_DISCONNECT, h, l);
 }
 
 static inline void
-add_header1_emit (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
+add_header1_emit (ProtoMsg &fb, uint64 h, uint64 l)
 {
-  fb.add_header1 (Rapicorn::Aida::MSGID_EMIT_ONEWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id), h, l);
+  fb.add_header1 (Rapicorn::Aida::MSGID_EMIT_ONEWAY, h, l);
 }
 
 static inline void
-add_header2_emit (ProtoMsg &fb, size_t signal_handler_id, uint64 h, uint64 l)
+add_header2_emit (ProtoMsg &fb, uint64 h, uint64 l)
 {
-  fb.add_header2 (Rapicorn::Aida::MSGID_EMIT_TWOWAY, ObjectBroker::connection_id_from_signal_handler_id (signal_handler_id),
-                  server_connection->connection_id(), h, l);
+  fb.add_header2 (Rapicorn::Aida::MSGID_EMIT_TWOWAY, h, l);
 }
 
 static inline ProtoMsg*
 new_call_result (ProtoReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, ObjectBroker::sender_connection_id (fbr.proto_msg()->first_id()), h, l, n);
+  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CALL_RESULT, h, l, n);
 }
 
 static inline ProtoMsg*
 new_connect_result (ProtoReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {
-  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, ObjectBroker::sender_connection_id (fbr.proto_msg()->first_id()), h, l, n);
+  return ProtoMsg::renew_into_result (fbr, Rapicorn::Aida::MSGID_CONNECT_RESULT, h, l, n);
 }
 
 // slot

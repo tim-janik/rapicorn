@@ -1010,7 +1010,7 @@ class Generator:
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + handler
-    s += '    __AIDA_Local__::add_header1_discon (fb, handler_id_, %s);\n' % digest
+    s += '    __AIDA_Local__::add_header1_discon (fb, %s);\n' % digest
     s += '    fb <<= handler_id_;\n'
     s += '    __AIDA_Local__::post_msg (&fb);\n' # deletes fb
     s += '  }\n'
@@ -1024,10 +1024,10 @@ class Generator:
     s += '    Rapicorn::Aida::ProtoMsg &fb = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + %u + %d);\n' \
         % (len (stype.args), 1 if async else 0) # header + handler + args
     if not async:
-      s += '    __AIDA_Local__::add_header1_emit (fb, sp->handler_id_, %s);\n' % digest
+      s += '    __AIDA_Local__::add_header1_emit (fb, %s);\n' % digest
       s += '    fb <<= sp->handler_id_;\n'
     else:
-      s += '    __AIDA_Local__::add_header2_emit (fb, sp->handler_id_, %s);\n' % digest
+      s += '    __AIDA_Local__::add_header2_emit (fb, %s);\n' % digest
       s += '    fb <<= sp->handler_id_;\n'
       s += '    auto promise = std::make_shared<std::promise<%s>> ();\n' % cpp_rtype
       s += '    auto future = promise->get_future();\n'

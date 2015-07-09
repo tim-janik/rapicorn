@@ -612,8 +612,8 @@ public:
   inline void add_string (const String &s) { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (INSTANCE); u.vint64 = objid; }
   inline void add_any    (const Any &vany, BaseConnection &bcon);
-  inline void add_header1 (MessageId m, uint d, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, 0).vuint64); add_int64 (h); add_int64 (l); }
-  inline void add_header2 (MessageId m, uint d, uint s, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, s).vuint64); add_int64 (h); add_int64 (l); }
+  inline void add_header1 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
+  inline void add_header2 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
   inline ProtoMsg& add_rec      (uint32 nt) { ProtoUnion &u = addu (RECORD); return *new (&u) ProtoMsg (nt); }
   inline ProtoMsg& add_seq      (uint32 nt) { ProtoUnion &u = addu (SEQUENCE); return *new (&u) ProtoMsg (nt); }
   inline void      reset        ();
@@ -622,9 +622,9 @@ public:
   static String    type_name    (int field_type);
   static ProtoMsg* _new         (uint32 _ntypes); // Heap allocated ProtoMsg
   // static ProtoMsg* new_error (const String &msg, const String &domain = "");
-  static ProtoMsg* new_result        (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  static ProtoMsg* renew_into_result (ProtoMsg *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  static ProtoMsg* renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static ProtoMsg* new_result        (MessageId m, uint64 h, uint64 l, uint32 n = 1);
+  static ProtoMsg* renew_into_result (ProtoMsg *fb, MessageId m, uint64 h, uint64 l, uint32 n = 1);
+  static ProtoMsg* renew_into_result (ProtoReader &fbr, MessageId m, uint64 h, uint64 l, uint32 n = 1);
   inline void operator<<= (uint32 v)          { ProtoUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (ULongIffy v)       { ProtoUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (uint64 v)          { ProtoUnion &u = addu (INT64); u.vint64 = v; }

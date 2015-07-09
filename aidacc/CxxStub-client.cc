@@ -35,23 +35,19 @@ signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandle
 static inline void
 add_header2_call (ProtoMsg &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
-  fb.add_header2 (Rapicorn::Aida::MSGID_CALL_TWOWAY, ObjectBroker::connection_id_from_handle (sh),
-                  client_connection->connection_id(), h, l);
+  fb.add_header2 (Rapicorn::Aida::MSGID_CALL_TWOWAY, h, l);
 }
 
 static inline void
 add_header1_call (ProtoMsg &fb, const RemoteHandle &sh, uint64 h, uint64 l)
 {
-  fb.add_header1 (Rapicorn::Aida::MSGID_CALL_ONEWAY, ObjectBroker::connection_id_from_handle (sh), h, l);
+  fb.add_header1 (Rapicorn::Aida::MSGID_CALL_ONEWAY, h, l);
 }
 
 static inline ProtoMsg*
 new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 {
-  return ProtoMsg::renew_into_result (const_cast<ProtoMsg*> (fb),
-                                         Rapicorn::Aida::MSGID_EMIT_RESULT,
-                                         ObjectBroker::sender_connection_id (fb->first_id()),
-                                         h, l, n);
+  return ProtoMsg::renew_into_result (const_cast<ProtoMsg*> (fb), Rapicorn::Aida::MSGID_EMIT_RESULT, h, l, n);
 }
 
 } } // Anon::__AIDA_Local__

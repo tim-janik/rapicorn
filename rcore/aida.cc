@@ -1085,7 +1085,7 @@ ProtoMsg::new_error (const String &msg,
                         const String &domain)
 {
   ProtoMsg *fr = ProtoMsg::_new (3 + 2);
-  fr->add_header1 (MSGID_ERROR, 0, 0, 0);
+  fr->add_header1 (MSGID_ERROR, 0, 0);
   fr->add_string (msg);
   fr->add_string (domain);
   return fr;
@@ -1093,32 +1093,30 @@ ProtoMsg::new_error (const String &msg,
 #endif
 
 ProtoMsg*
-ProtoMsg::new_result (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg::new_result (MessageId m, uint64 h, uint64 l, uint32 n)
 {
-  assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   ProtoMsg *fr = ProtoMsg::_new (3 + n);
-  fr->add_header1 (m, rconnection, h, l);
+  fr->add_header1 (m, h, l);
   return fr;
 }
 
 ProtoMsg*
-ProtoMsg::renew_into_result (ProtoMsg *fb, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg::renew_into_result (ProtoMsg *fb, MessageId m, uint64 h, uint64 l, uint32 n)
 {
-  assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   if (fb->capacity() < 3 + n)
-    return ProtoMsg::new_result (m, rconnection, h, l, n);
+    return ProtoMsg::new_result (m, h, l, n);
   ProtoMsg *fr = fb;
   fr->reset();
-  fr->add_header1 (m, rconnection, h, l);
+  fr->add_header1 (m, h, l);
   return fr;
 }
 
 ProtoMsg*
-ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint64 h, uint64 l, uint32 n)
 {
   ProtoMsg *fb = const_cast<ProtoMsg*> (fbr.proto_msg());
   fbr.reset();
-  return renew_into_result (fb, m, rconnection, h, l, n);
+  return renew_into_result (fb, m, h, l, n);
 }
 
 class OneChunkProtoMsg : public ProtoMsg {
@@ -1658,7 +1656,7 @@ public:
       {
         seen_garbage_ = true;
         ProtoMsg *fb = ProtoMsg::_new (3);
-        fb->add_header1 (MSGID_META_SEEN_GARBAGE, coo.connection(), this->connection_id(), 0);
+        fb->add_header1 (MSGID_META_SEEN_GARBAGE, 0, 0);
         GCLOG ("ClientConnectionImpl: SEEN_GARBAGE (%016x)", coo.orbid());
         ProtoMsg *fr = this->call_remote (fb); // takes over fb
         assert (fr == NULL);
@@ -1695,7 +1693,7 @@ ClientConnectionImpl::remote_origin()
       return RemoteHandle::__aida_null_handle__();
     }
   ProtoMsg *fb = ProtoMsg::_new (3);
-  fb->add_header2 (MSGID_META_HELLO, server_connection_id, this->connection_id(), 0, 0);
+  fb->add_header2 (MSGID_META_HELLO, 0, 0);
   ProtoMsg *fr = this->call_remote (fb); // takes over fb
   ProtoReader frr (*fr);
   const MessageId msgid = MessageId (frr.pop_int64());
@@ -1745,7 +1743,7 @@ ClientConnectionImpl::gc_sweep (const ProtoMsg *fb)
     else
       ++it;
   ProtoMsg *fr = ProtoMsg::_new (3 + 1 + trashids.size()); // header + length + items
-  fr->add_header1 (MSGID_META_GARBAGE_REPORT, ObjectBroker::sender_connection_id (msgid), 0, 0); // header
+  fr->add_header1 (MSGID_META_GARBAGE_REPORT, 0, 0); // header
   fr->add_int64 (trashids.size()); // length
   for (auto v : trashids)
     fr->add_int64 (v); // items
@@ -1881,8 +1879,7 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   pthread_spin_unlock (&signal_spin_);
   const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
   ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote.__aida_orbid__());
-  fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
+  fb.add_header2 (MSGID_CONNECT, shandler->hhi, shandler->hlo);
   add_handle (fb, rhandle);                     // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
@@ -1910,8 +1907,7 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   pthread_spin_unlock (&signal_spin_);
   return_if (!shandler, false);
   ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote.__aida_orbid__());
-  fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
+  fb.add_header2 (MSGID_CONNECT, shandler->hhi, shandler->hlo);
   add_handle (fb, shandler->remote);            // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
@@ -1949,7 +1945,7 @@ class ServerConnectionImpl : public ServerConnection {
   std::unordered_map<size_t, EmitResultHandler> emit_result_map_;
   std::unordered_set<OrbObjectP> live_remotes_, *sweep_remotes_;
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
-  void                  start_garbage_collection (uint client_connection);
+  void                  start_garbage_collection ();
 public:
   explicit              ServerConnectionImpl    (const std::string &protocol);
   virtual              ~ServerConnectionImpl    () override     { ObjectBroker::unregister_connection (*this); }
@@ -1972,7 +1968,7 @@ public:
 };
 
 void
-ServerConnectionImpl::start_garbage_collection (uint client_connection)
+ServerConnectionImpl::start_garbage_collection()
 {
   if (sweep_remotes_)
     {
@@ -1983,7 +1979,7 @@ ServerConnectionImpl::start_garbage_collection (uint client_connection)
   sweep_remotes_ = new std::unordered_set<OrbObjectP>();
   sweep_remotes_->swap (live_remotes_);
   ProtoMsg *fb = ProtoMsg::_new (3);
-  fb->add_header2 (MSGID_META_GARBAGE_SWEEP, client_connection, this->connection_id(), 0, 0);
+  fb->add_header2 (MSGID_META_GARBAGE_SWEEP, 0, 0);
   GCLOG ("ServerConnectionImpl: GARBAGE_SWEEP: %u candidates", sweep_remotes_->size());
   post_peer_msg (fb);
 }
@@ -2046,7 +2042,7 @@ ServerConnectionImpl::dispatch ()
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
         ImplicitBaseP rorigin = remote_origin_;
-        ProtoMsg *fr = ProtoMsg::renew_into_result (fbr, MSGID_META_WELCOME, ObjectBroker::sender_connection_id (msgid), 0, 0, 1);
+        ProtoMsg *fr = ProtoMsg::renew_into_result (fbr, MSGID_META_WELCOME, 0, 0, 1);
         add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
@@ -2079,11 +2075,8 @@ ServerConnectionImpl::dispatch ()
     case MSGID_META_SEEN_GARBAGE:
       {
         const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-        if (hashhigh && hashlow == 0) // convention, SEEN_GARBAGE sends sender_connection in hashhigh
-          {
-            const uint sender_connection = hashhigh;
-            start_garbage_collection (sender_connection);
-          }
+        if (hashhigh == 0 && hashlow == 0) // convention, hash=(0,0)
+          start_garbage_collection();
       }
       break;
     case MSGID_META_GARBAGE_REPORT:
