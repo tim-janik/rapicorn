@@ -9,13 +9,13 @@ AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
-# Loading Python modules requires accesss to libtool objdir
-objdir = .libs
-RPYTHON      = PYTHONPATH="$(abs_builddir)/$(objdir):$$PYTHONPATH" $(PYTHON)
+RPYTHON      = PYTHONPATH="$(abs_builddir)/${objdir}:$$PYTHONPATH" $(PYTHON)
 XMANIFOLD    = $(top_srcdir)/aidacc/xmanifold.py
+# Loading newly built Python modules requires accesss to libtool objdir
+objdir       = .libs
 
 # Py Rapicorn - installation
-Rapicorndir         	= ${pythondir}/@RAPICORN_NAMESPACE_NAME@
+Rapicorndir         	= ${pythondir}
 Rapicorn_PYTHON 	= # __init__.py
 Rapicorn_LTLIBRARIES	= Rapicorn.la
 # Pyx Rapicorn module
@@ -56,3 +56,7 @@ check-TEST_PYPROGS:
 	&& echo $$MESSAGETEXT | sed 's/./=/g' && echo $$MESSAGETEXT	\
 	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
 check-local: check-TEST_PYPROGS
+
+python-call-info:
+	@echo 'PYTHONPATH="$$PYTHONPATH:${pythondir}" python -ic "import Rapicorn"'
+	@echo '${RPYTHON} -ic "import Rapicorn"'
