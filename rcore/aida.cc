@@ -2143,19 +2143,19 @@ struct HashTypeHash {
 };
 
 typedef std::unordered_map<TypeHash, DispatchFunc, HashTypeHash> DispatcherMap;
-static DispatcherMap                    *dispatcher_map = NULL;
-static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
-static bool                              dispatcher_map_frozen = false;
+static DispatcherMap                    *global_dispatcher_map = NULL;
+static pthread_mutex_t                   global_dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool                              global_dispatcher_map_frozen = false;
 
 static inline void
 ensure_dispatcher_map()
 {
-  if (AIDA_UNLIKELY (dispatcher_map == NULL))
+  if (AIDA_UNLIKELY (global_dispatcher_map == NULL))
     {
-      pthread_mutex_lock (&dispatcher_mutex);
-      if (!dispatcher_map)
-        dispatcher_map = new DispatcherMap();
-      pthread_mutex_unlock (&dispatcher_mutex);
+      pthread_mutex_lock (&global_dispatcher_mutex);
+      if (!global_dispatcher_map)
+        global_dispatcher_map = new DispatcherMap();
+      pthread_mutex_unlock (&global_dispatcher_mutex);
     }
 }
 
@@ -2164,17 +2164,17 @@ ServerConnection::find_method (uint64 hashhi, uint64 hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
 #if 1 // avoid costly mutex locking
-  if (AIDA_UNLIKELY (dispatcher_map_frozen == false))
+  if (AIDA_UNLIKELY (global_dispatcher_map_frozen == false))
     {
       ensure_dispatcher_map();
-      dispatcher_map_frozen = true;
+      global_dispatcher_map_frozen = true;
     }
-  return (*dispatcher_map)[typehash]; // unknown hashes *shouldn't* happen, see assertion in caller
+  return (*global_dispatcher_map)[typehash]; // unknown hashes *shouldn't* happen, see assertion in caller
 #else
   ensure_dispatcher_map();
-  pthread_mutex_lock (&dispatcher_mutex);
-  DispatchFunc dispatcher_func = (*dispatcher_map)[typehash];
-  pthread_mutex_unlock (&dispatcher_mutex);
+  pthread_mutex_lock (&global_dispatcher_mutex);
+  DispatchFunc dispatcher_func = (*global_dispatcher_map)[typehash];
+  pthread_mutex_unlock (&global_dispatcher_mutex);
   return dispatcher_func;
 #endif
 }
@@ -2183,13 +2183,13 @@ void
 ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
   ensure_dispatcher_map();
-  assert_return (dispatcher_map_frozen == false);
-  pthread_mutex_lock (&dispatcher_mutex);
-  DispatcherMap::size_type size_before = dispatcher_map->size();
+  assert_return (global_dispatcher_map_frozen == false);
+  pthread_mutex_lock (&global_dispatcher_mutex);
+  DispatcherMap::size_type size_before = global_dispatcher_map->size();
   TypeHash typehash (mentry.hashhi, mentry.hashlo);
-  (*dispatcher_map)[typehash] = mentry.dispatcher;
-  DispatcherMap::size_type size_after = dispatcher_map->size();
-  pthread_mutex_unlock (&dispatcher_mutex);
+  (*global_dispatcher_map)[typehash] = mentry.dispatcher;
+  DispatcherMap::size_type size_after = global_dispatcher_map->size();
+  pthread_mutex_unlock (&global_dispatcher_mutex);
   // simple hash collision check (sanity check, see below)
   if (AIDA_UNLIKELY (size_before == size_after))
     {
