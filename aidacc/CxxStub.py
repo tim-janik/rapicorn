@@ -948,8 +948,13 @@ class Generator:
     s += 'static Rapicorn::Aida::ProtoMsg*\n%s ' % emitfunc
     s += '(const Rapicorn::Aida::ProtoMsg *sfb, void *data)\n{\n'
     s += '  auto fptr = (const std::function<%s %s>*) data;\n' % (sigret, sigargs)
-    s += '  if (AIDA_UNLIKELY (!sfb)) { delete fptr; return NULL; }\n'
+    s += '  if (AIDA_UNLIKELY (!sfb)) // disconnect signal\n'
+    s += '    {\n'
+    s += '      delete fptr;\n'
+    s += '      return NULL;\n'
+    s += '    }\n'
     s += '  Rapicorn::Aida::uint64 emit_result_id;\n'
+    s += '  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());\n'
     if async:
       s += '  ' + self.R (stype.rtype) + ' rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);\n'
       s += '  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, %s, 2);\n' % digest # invalidates fbr

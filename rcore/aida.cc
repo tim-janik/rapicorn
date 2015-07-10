@@ -1886,6 +1886,7 @@ ClientConnectionImpl::dispatch ()
 {
   ProtoMsg *fb = pop();
   return_if (fb == NULL);
+  ProtoScope client_connection_protocol_scope (*this);
   ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64  idmask = msgid_mask (msgid);
