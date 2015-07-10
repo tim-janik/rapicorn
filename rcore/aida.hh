@@ -134,11 +134,11 @@ const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a
 // == TypeHash ==
 struct TypeHash {
   uint64 typehi, typelo;
-  explicit    TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
-  explicit    TypeHash   () : typehi (0), typelo (0) {}
-  String      to_string  () const;
-  inline bool operator== (const TypeHash &z) const { return typehi == z.typehi && typelo == z.typelo; }
-  friend bool operator<  (const TypeHash &a, const TypeHash &b)
+  constexpr      TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
+  constexpr      TypeHash   () : typehi (0), typelo (0)                       {}
+  String         to_string  () const;
+  constexpr bool operator== (const TypeHash &z) const                         { return typehi == z.typehi && typelo == z.typelo; }
+  friend    bool operator<  (const TypeHash &a, const TypeHash &b)
   {
     return AIDA_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
   }
