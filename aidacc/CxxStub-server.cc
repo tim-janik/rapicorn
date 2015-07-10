@@ -21,12 +21,6 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>:
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 
 // objects
-template<class Target> static inline std::shared_ptr<Target>
-proto_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
-{
-  return std::dynamic_pointer_cast<Target> (server_connection->pop_interface (fr));
-}
-
 static inline void
 add_header1_discon (ProtoMsg &fb, uint64 h, uint64 l)
 {
