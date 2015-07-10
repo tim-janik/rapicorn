@@ -422,6 +422,8 @@ class Generator:
     return self.digest2cbytes (method_info.type_hash())
   def class_digest (self, class_info):
     return self.digest2cbytes (class_info.type_hash())
+  def internal_digest (self, class_info, tag):
+    return self.digest2cbytes (class_info.tag_hash (tag + ' # Rapicorn::Aida:::internal'))
   def list_types_digest (self, class_info):
     return self.digest2cbytes (class_info.twoway_hash ('__aida_typelist__ # internal-method'))
   def setter_digest (self, class_info, fident, ftype):
@@ -1368,9 +1370,31 @@ class Generator:
       s += '#endif // __%s_ALIASES__\n' % self.cppmacro
       s += '\n'
       s += self.insertion_text ('global_scope')
+    # Rapicorn::Aida IDs
+    if self.gen_aidaids:
+      s += self.generate_aida_ids ()
     # CPP guard
     if self.gen_serverhh or self.gen_clienthh:
       s += '#endif /* %s */\n' % (sc_macro_prefix + self.cppmacro)
+    return s
+  def generate_aida_ids (self):
+    defs, checks, nslist = '', '', []
+    nslist += [ Decls.Namespace ('Rapicorn', None, []) ]
+    nslist += [ Decls.Namespace ('Aida', nslist[-1], []) ]
+    iface = Decls.TypeInfo ('ImplicitBase', Decls.INTERFACE, False)
+    nslist[-1].add_type (iface) # iface.full_name() == Rapicorn::Aida::ImplicitBase
+    identifiers = {
+      'test_method'       : 'void %s (void)',
+    }
+    for k,v in identifiers.items():
+      IDENT, digest = k.upper(), self.internal_digest (iface, v % k)
+      defs   += '#define AIDA_HASH_%s        %s\n' % (IDENT, digest)
+      checks += 'static_assert (Rapicorn::Aida::TypeHash { AIDA_HASH_%s } ==\n' % IDENT
+      checks += '               Rapicorn::Aida::TypeHash { %s }, "AIDA_HASH_%s");\n' % (digest, IDENT)
+    s  = '#ifndef AIDA_HASH_%s\n' % identifiers.keys()[0].upper()
+    s += defs
+    s += '#endif // AIDA_HASH_%s\n' % identifiers.keys()[0].upper()
+    s += checks
     return s
 
 def error (msg):
@@ -1388,6 +1412,7 @@ def generate (namespace_list, **args):
     raise RuntimeError ("CxxStub: exactly one IDL input file is required")
   gg = Generator (idlfiles[0])
   all = config['backend-options'] == []
+  gg.gen_aidaids  = all or 'aidaids' in config['backend-options']
   gg.gen_serverhh = all or 'serverhh' in config['backend-options']
   gg.gen_servercc = all or 'servercc' in config['backend-options']
   gg.gen_server_skel = 'server-skel' in config['backend-options']

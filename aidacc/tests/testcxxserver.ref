@@ -5564,4 +5564,9 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
 };
 static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 
+#ifndef AIDA_HASH_TEST_METHOD
+#define AIDA_HASH_TEST_METHOD        0xb26080a2fd86e8afULL, 0x4b90ad88f7021970ULL
+#endif // AIDA_HASH_TEST_METHOD
+static_assert (Rapicorn::Aida::TypeHash { AIDA_HASH_TEST_METHOD } ==
+               Rapicorn::Aida::TypeHash { 0xb26080a2fd86e8afULL, 0x4b90ad88f7021970ULL }, "AIDA_HASH_TEST_METHOD");
 #endif /* __SRVT____testpass_idl */
