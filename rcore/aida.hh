@@ -639,6 +639,7 @@ public:
   inline void operator<<= (const String &s)   { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
   void        operator<<= (const RemoteHandle &rhandle);
+  void        operator<<= (ImplicitBase *instance);
 };
 
 class ProtoMsg8 : public ProtoMsg { // Stack contained buffer for up to 8 fields

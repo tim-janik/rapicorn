@@ -1013,6 +1013,12 @@ ProtoReader::operator>>= (RemoteHandle &rhandle)
 }
 
 void
+ProtoMsg::operator<<= (ImplicitBase *instance)
+{
+  ProtoScope::current_server_connection().add_interface (*this, instance ? instance->shared_from_this() : ImplicitBaseP());
+}
+
+void
 ProtoReader::check_request (int type)
 {
   if (nth_ >= n_types())
