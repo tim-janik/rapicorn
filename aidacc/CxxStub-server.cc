@@ -33,13 +33,6 @@ proto_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
   return std::dynamic_pointer_cast<Target> (server_connection->pop_interface (fr));
 }
 
-// messages
-static inline void
-post_msg (ProtoMsg *fb)
-{
-  server_connection->post_peer_msg (fb);
-}
-
 static inline void
 add_header1_discon (ProtoMsg &fb, uint64 h, uint64 l)
 {

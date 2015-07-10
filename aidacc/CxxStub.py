@@ -1001,7 +1001,7 @@ class Generator:
     s += '    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + handler
     s += '    __AIDA_Local__::add_header1_discon (__p_, %s);\n' % digest
     s += '    __p_ <<= handler_id_;\n'
-    s += '    __AIDA_Local__::post_msg (&__p_);\n' # deletes __p_
+    s += '    server_connection_.post_peer_msg (&__p_);\n' # deletes __p_
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % ('std::future<%s>' % cpp_rtype if async else cpp_rtype)
@@ -1032,7 +1032,7 @@ class Generator:
     args2fb = self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')
     if args2fb:
       s += reindent ('  ', args2fb) + '\n'
-    s += '    __AIDA_Local__::post_msg (&__p_);\n' # deletes __p_
+    s += '    sp->server_connection_.post_peer_msg (&__p_);\n' # deletes __p_
     if async:
       s += '    return future;\n'
     s += '  }\n'
