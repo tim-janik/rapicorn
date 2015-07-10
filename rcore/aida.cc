@@ -915,6 +915,14 @@ Any::operator<<= (const RemoteHandle &v)
   delete old;
 }
 
+void
+Any::to_transition (BaseConnection &base_connection)
+{}
+
+void
+Any::from_transition (BaseConnection &base_connection)
+{}
+
 // == OrbObject ==
 OrbObject::OrbObject (uint64 orbid) :
   orbid_ (orbid)
@@ -1007,15 +1015,17 @@ void
 ProtoMsg::add_any (const Any &vany, BaseConnection &bcon)
 {
   ProtoUnion &u = addu (ANY);
-  u.vany = bcon.any2remote (vany);
+  u.vany = new Any (vany);
+  u.vany->to_transition (bcon);
 }
 
-const Any&
+Any
 ProtoReader::pop_any (BaseConnection &bcon)
 {
   ProtoUnion &u = fb_popu (ANY);
-  bcon.any2local (*u.vany);
-  return *u.vany;
+  Any vany = *u.vany;
+  vany.from_transition (bcon);
+  return vany;
 }
 
 void
@@ -1734,18 +1744,6 @@ RemoteHandle
 BaseConnection::remote_origin()
 {
   AIDA_ASSERT (!"reached");
-}
-
-Any*
-BaseConnection::any2remote (const Any &any)
-{
-  return new Any (any);
-}
-
-void
-BaseConnection::any2local (Any &any)
-{
-  // any = any
 }
 
 // == ClientConnection ==

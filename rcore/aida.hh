@@ -350,8 +350,10 @@ public:
   template<typename T, REQUIRES< std::is_base_of<Any, T>::value > = true>              void set (const T &v) { return set_any (&v); }
   template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      void set (const T &v) { hold (new Holder<T> (v)); }
   // convenience
-  static Any                any_from_strings (const std::vector<std::string> &string_container);
-  std::vector<std::string>  any_to_strings   () const;
+  static Any               any_from_strings (const std::vector<std::string> &string_container);
+  std::vector<std::string> any_to_strings   () const;
+  void                     to_transition    (BaseConnection &base_connection);
+  void                     from_transition  (BaseConnection &base_connection);
   String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
   const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
@@ -682,7 +684,7 @@ public:
   inline double          pop_double  () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&   pop_string  () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
   inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (TRANSITION); return u.vint64; }
-  const Any&             pop_any     (BaseConnection &bcon);
+  Any                    pop_any     (BaseConnection &bcon);
   inline const ProtoMsg& pop_rec     () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
   inline const ProtoMsg& pop_seq     () { ProtoUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }
   inline void operator>>= (uint32 &v)          { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
@@ -726,8 +728,6 @@ public:
   virtual bool           pending         () = 0; ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch        () = 0; ///< Dispatch a single event if any is pending.
   virtual RemoteHandle   remote_origin   () = 0;
-  virtual Any*           any2remote      (const Any&);
-  virtual void           any2local       (Any&);
 };
 
 /// Function typoe for internal signal handling.
