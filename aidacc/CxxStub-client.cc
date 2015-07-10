@@ -20,22 +20,3 @@ new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 }
 
 } } // Anon::__AIDA_Local__
-
-namespace Rapicorn { namespace Aida {
-#ifndef RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
-#define RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
-// namespace Rapicorn::Aida needed for argument dependent lookups of the operators
-static void operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Aida::Any &v) __attribute__ ((unused));
-static void operator>>= (Rapicorn::Aida::ProtoReader &fr, Rapicorn::Aida::Any &v) __attribute__ ((unused));
-static void
-operator<<= (Rapicorn::Aida::ProtoMsg &fb, const Rapicorn::Any &v)
-{
-  fb.add_any (v, *__AIDA_Local__::client_connection);
-}
-static void
-operator>>= (Rapicorn::Aida::ProtoReader &fr, Rapicorn::Any &v)
-{
-  v = fr.pop_any (*__AIDA_Local__::client_connection);
-}
-#endif // RAPICORN_AIDA_OPERATOR_SHLEQ_FB_ANY
-} } // Rapicorn::Aida
