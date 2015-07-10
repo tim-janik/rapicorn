@@ -613,7 +613,7 @@ public:
   inline void add_double (double vdouble)  { ProtoUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (INSTANCE); u.vint64 = objid; }
-  inline void add_any    (const Any &vany, BaseConnection &bcon);
+  void        add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
   inline ProtoMsg& add_rec      (uint32 nt) { ProtoUnion &u = addu (RECORD); return *new (&u) ProtoMsg (nt); }
@@ -638,6 +638,7 @@ public:
   inline void operator<<= (EnumValue e)       { ProtoUnion &u = addu (ENUM); u.vint64 = e.value; }
   inline void operator<<= (const String &s)   { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
+  void        operator<<= (const Any &vany);
   void        operator<<= (const RemoteHandle &rhandle);
   void        operator<<= (ImplicitBase *instance);
 };
@@ -681,7 +682,7 @@ public:
   inline double          pop_double  () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&   pop_string  () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
   inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (INSTANCE); return u.vint64; }
-  inline const Any&      pop_any     (BaseConnection &bcon);
+  const Any&             pop_any     (BaseConnection &bcon);
   inline const ProtoMsg& pop_rec     () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
   inline const ProtoMsg& pop_seq     () { ProtoUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }
   inline void operator>>= (uint32 &v)          { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
@@ -696,6 +697,7 @@ public:
   inline void operator>>= (String &s)          { ProtoUnion &u = fb_popu (STRING); s = *(String*) &u; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
   inline void operator>>= (std::vector<bool>::reference v) { bool b; *this >>= b; v = b; }
+  void        operator>>= (Any &vany);
   void        operator>>= (RemoteHandle &rhandle);
   template<class Target> std::shared_ptr<Target> pop_instance () { return std::dynamic_pointer_cast<Target> (pop_interface()); }
 };
@@ -783,6 +785,7 @@ public:
   ProtoMsg*                invoke                    (ProtoMsg *pm); ///< Carry out a remote call syncronously, transfers memory.
   static ClientConnection& current_client_connection (); ///< Access the client connection of the current thread-specific RPC scope.
   static ServerConnection& current_server_connection (); ///< Access the server connection of the current thread-specific RPC scope.
+  static BaseConnection&   current_base_connection   (); ///< Access the client or server connection of the current thread-specific RPC scope.
   RAPICORN_CLASS_NON_COPYABLE (ProtoScope);
 };
 struct ProtoScopeCall1Way : ProtoScope {
@@ -840,21 +843,6 @@ ProtoMsg::reset()
         default: ;
         }
     }
-}
-
-inline void
-ProtoMsg::add_any (const Any &vany, BaseConnection &bcon)
-{
-  ProtoUnion &u = addu (ANY);
-  u.vany = bcon.any2remote (vany);
-}
-
-inline const Any&
-ProtoReader::pop_any (BaseConnection &bcon)
-{
-  ProtoUnion &u = fb_popu (ANY);
-  bcon.any2local (*u.vany);
-  return *u.vany;
 }
 
 inline ServerConnection*

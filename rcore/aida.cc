@@ -1001,6 +1001,33 @@ ProtoMsg::check_internal ()
 }
 
 void
+ProtoMsg::add_any (const Any &vany, BaseConnection &bcon)
+{
+  ProtoUnion &u = addu (ANY);
+  u.vany = bcon.any2remote (vany);
+}
+
+const Any&
+ProtoReader::pop_any (BaseConnection &bcon)
+{
+  ProtoUnion &u = fb_popu (ANY);
+  bcon.any2local (*u.vany);
+  return *u.vany;
+}
+
+void
+ProtoMsg::operator<<= (const Any &vany)
+{
+  add_any (vany, ProtoScope::current_base_connection());
+}
+
+void
+ProtoReader::operator>>= (Any &vany)
+{
+  vany = pop_any (ProtoScope::current_base_connection());
+}
+
+void
 ProtoMsg::operator<<= (const RemoteHandle &rhandle)
 {
   ProtoScope::current_client_connection().add_handle (*this, rhandle);
@@ -1245,6 +1272,16 @@ ProtoScope::current_server_connection ()
 {
   assert (current_thread_proto_connections.server_connection != NULL);
   return *current_thread_proto_connections.server_connection;
+}
+
+BaseConnection&
+ProtoScope::current_base_connection ()
+{
+  assert (current_thread_proto_connections.server_connection || current_thread_proto_connections.client_connection);
+  if (current_thread_proto_connections.server_connection)
+    return *current_thread_proto_connections.server_connection;
+  else
+    return *current_thread_proto_connections.client_connection;
 }
 
 ProtoScopeCall1Way::ProtoScopeCall1Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
