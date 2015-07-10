@@ -220,7 +220,6 @@ public:
   typedef std::vector<Field> FieldVector; ///< Vector of fields (named Any structures) for use in #RECORD types.
   typedef std::vector<Any> AnyVector;     ///< Vector of Any structures for use in #SEQUENCE types.
 protected:
-  bool  plain_zero_type (TypeKind kind);
   template<class Rec> static void any_from_record (Any &any, const Rec &record);
 private:
   TypeKind type_kind_;
@@ -811,19 +810,6 @@ inline
 Any::~Any ()
 {
   reset();
-}
-
-inline bool
-Any::plain_zero_type (TypeKind kind)
-{
-  switch (kind)
-    {
-    case UNTYPED: case BOOL: case INT32: case INT64: case FLOAT64: case ENUM:
-      return true;      // simple, properly initialized with u {0}
-    case STRING: case ANY: case SEQUENCE: case RECORD: case INSTANCE: case REMOTE:
-    default:
-      return false;     // complex types, needing special initializations
-    }
 }
 
 inline void
