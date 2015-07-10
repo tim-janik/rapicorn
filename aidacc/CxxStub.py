@@ -548,7 +548,6 @@ class Generator:
     s += self.insertion_text ('class_scope:' + type_info.name)
     s += '};\n'
     if self.gen_mode == G4SERVANT:
-      s += 'void operator<<= (Rapicorn::Aida::ProtoMsg&, %s*);\n' % self.C (type_info)
       s += 'void operator<<= (Rapicorn::Aida::ProtoMsg&, const %sP&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %s*&);\n' % self.C (type_info)
       s += 'void operator>>= (Rapicorn::Aida::ProtoReader&, %sP&);\n' % self.C (type_info)
@@ -660,10 +659,6 @@ class Generator:
     s += 'void\n'
     s += 'operator<<= (Rapicorn::Aida::ProtoMsg &__p_, const %sP &ptr)\n{\n' % classC
     s += '  __p_ <<= ptr.get();\n'
-    s += '}\n'
-    s += 'void\n'
-    s += 'operator<<= (Rapicorn::Aida::ProtoMsg &__p_, %s *obj)\n{\n' % classC
-    s += '  __AIDA_Local__::proto_msg_add_interface (__p_, obj);\n'
     s += '}\n'
     s += 'void\n'
     s += 'operator>>= (Rapicorn::Aida::ProtoReader &fbr, %sP &obj)\n{\n' % classC

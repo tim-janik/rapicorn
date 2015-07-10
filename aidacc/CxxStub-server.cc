@@ -21,12 +21,6 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>:
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 
 // objects
-template<class Target> static inline void
-proto_msg_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
-{
-  server_connection->add_interface (fb, instance ? instance->shared_from_this() : ImplicitBaseP());
-}
-
 template<class Target> static inline std::shared_ptr<Target>
 proto_reader_pop_interface (Rapicorn::Aida::ProtoReader &fr)
 {
