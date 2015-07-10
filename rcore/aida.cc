@@ -1007,6 +1007,12 @@ ProtoMsg::operator<<= (const RemoteHandle &rhandle)
 }
 
 void
+ProtoReader::operator>>= (RemoteHandle &rhandle)
+{
+  ProtoScope::current_client_connection().pop_handle (*this, rhandle);
+}
+
+void
 ProtoReader::check_request (int type)
 {
   if (nth_ >= n_types())

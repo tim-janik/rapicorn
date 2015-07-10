@@ -694,6 +694,7 @@ public:
   inline void operator>>= (String &s)          { ProtoUnion &u = fb_popu (STRING); s = *(String*) &u; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
   inline void operator>>= (std::vector<bool>::reference v) { bool b; *this >>= b; v = b; }
+  void        operator>>= (RemoteHandle &rhandle);
 };
 
 // == Connections ==

@@ -298,7 +298,6 @@ public:
   explicit                      FirstInterfaceHandle ();
   void                          void_func            (); 	///< See FirstInterface::void_func()
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, FirstInterfaceHandle&);
 typedef FirstInterfaceHandle FirstInterfaceH; ///< Convenience alias for the IDL type FirstInterface.
 
 struct ClnT_XFooRecord
@@ -657,7 +656,6 @@ public:
   std::string                   on_click2out       (); 	///< See UIWidgetArea::on_click2out()
   void                          on_click2in        (const std::string &command); 	///< See UIWidgetArea::on_click2in()
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, UIWidgetAreaHandle&);
 typedef UIWidgetAreaHandle UIWidgetAreaH; ///< Convenience alias for the IDL type UIWidgetArea.
 
 /** @interface Parent
@@ -676,7 +674,6 @@ public:
   static ParentHandle           down_cast (RemoteHandle smh) { return smh == NULL ? ParentHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ParentHandle ();
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, ParentHandle&);
 typedef ParentHandle ParentH; ///< Convenience alias for the IDL type Parent.
 
 /** @interface Child
@@ -693,7 +690,6 @@ public:
   static ChildHandle            down_cast (RemoteHandle smh) { return smh == NULL ? ChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ChildHandle ();
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, ChildHandle&);
 typedef ChildHandle ChildH; ///< Convenience alias for the IDL type Child.
 
 /** @interface Descendant
@@ -710,7 +706,6 @@ public:
   static DescendantHandle       down_cast (RemoteHandle smh) { return smh == NULL ? DescendantHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      DescendantHandle ();
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, DescendantHandle&);
 typedef DescendantHandle DescendantH; ///< Convenience alias for the IDL type Descendant.
 
 /** @interface GrandChild
@@ -727,7 +722,6 @@ public:
   static GrandChildHandle       down_cast (RemoteHandle smh) { return smh == NULL ? GrandChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      GrandChildHandle ();
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, GrandChildHandle&);
 typedef GrandChildHandle GrandChildH; ///< Convenience alias for the IDL type GrandChild.
 
 struct ClnT_QuickRecord
@@ -778,7 +772,6 @@ public:
   explicit                      QuickIfaceHandle ();
   void                          simple_function  (int i = 9); 	///< See QuickIface::simple_function()
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, QuickIfaceHandle&);
 typedef QuickIfaceHandle QuickIfaceH; ///< Convenience alias for the IDL type QuickIface.
 
 /** @interface MethodTestInterface
@@ -820,7 +813,6 @@ public:
   QuickIfaceHandle              method_with_quickiface    (QuickIfaceHandle &input,
                                                            QuickIfaceHandle &iface0 = *(QuickIfaceHandle*) NULL); 	///< See MethodTestInterface::method_with_quickiface()
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, MethodTestInterfaceHandle&);
 typedef MethodTestInterfaceHandle MethodTestInterfaceH; ///< Convenience alias for the IDL type MethodTestInterface.
 
 /** @interface SignalTestInterface
@@ -911,7 +903,6 @@ public:
   __Aida_Signal__any_arg        sig_any_arg () { return __Aida_Signal__any_arg (*this, &SignalTestInterfaceHandle::__aida_connect__any_arg); }
   __Aida_Signal__self_args      sig_self_args () { return __Aida_Signal__self_args (*this, &SignalTestInterfaceHandle::__aida_connect__self_args); }
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, SignalTestInterfaceHandle&);
 typedef SignalTestInterfaceHandle SignalTestInterfaceH; ///< Convenience alias for the IDL type SignalTestInterface.
 
 /** @interface ChildInheritingSignals
@@ -931,7 +922,6 @@ public:
   explicit                      ChildInheritingSignalsHandle ();
   __Aida_Signal__child_signal   sig_child_signal () { return __Aida_Signal__child_signal (*this, &ChildInheritingSignalsHandle::__aida_connect__child_signal); }
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, ChildInheritingSignalsHandle&);
 typedef ChildInheritingSignalsHandle ChildInheritingSignalsH; ///< Convenience alias for the IDL type ChildInheritingSignals.
 
 /** @interface AnotherChild
@@ -948,7 +938,6 @@ public:
   static AnotherChildHandle     down_cast (RemoteHandle smh) { return smh == NULL ? AnotherChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      AnotherChildHandle ();
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, AnotherChildHandle&);
 typedef AnotherChildHandle AnotherChildH; ///< Convenience alias for the IDL type AnotherChild.
 
 /** @interface PropertyTester
@@ -989,7 +978,6 @@ public:
   Rapicorn::Aida::Any           any_prop       () const; 	///< See PropertyTester::any_prop
   void                          any_prop       (const Rapicorn::Aida::Any&); 	///< See PropertyTester::any_prop
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, PropertyTesterHandle&);
 typedef PropertyTesterHandle PropertyTesterH; ///< Convenience alias for the IDL type PropertyTester.
 } // InterfaceTests
 
@@ -1025,7 +1013,6 @@ public:
   __Aida_Signal__check_activate sig_check_activate () { return __Aida_Signal__check_activate (*this, &ButtonAreaHandle::__aida_connect__check_activate); }
   __Aida_Signal__activate       sig_activate () { return __Aida_Signal__activate (*this, &ButtonAreaHandle::__aida_connect__activate); }
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, ButtonAreaHandle&);
 typedef ButtonAreaHandle ButtonAreaH; ///< Convenience alias for the IDL type ButtonArea.
 
 class PureMethodsHandle;
@@ -1047,7 +1034,6 @@ public:
   explicit                      PureMethodsHandle ();
   int                           pure_method       (double f); 	///< See PureMethods::pure_method()
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, PureMethodsHandle&);
 typedef PureMethodsHandle PureMethodsH; ///< Convenience alias for the IDL type PureMethods.
 } // RapicornAidaTest
 
@@ -1072,7 +1058,6 @@ public:
                                                            RapicornAidaTest::ClickType qe,
                                                            const OtherNamespace::ClnT_SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, NameTestsHandle&);
 typedef NameTestsHandle NameTestsH; ///< Convenience alias for the IDL type NameTests.
 } // Other
 
@@ -1098,7 +1083,6 @@ public:
   double                        ratio     () const; 	///< See Compressor::ratio
   void                          ratio     (double); 	///< See Compressor::ratio
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, CompressorHandle&);
 typedef CompressorHandle CompressorH; ///< Convenience alias for the IDL type Compressor.
 
 struct ClnT_RecordForGroups
@@ -1143,7 +1127,6 @@ public:
   static SoundModuleHandle      down_cast (RemoteHandle smh) { return smh == NULL ? SoundModuleHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      SoundModuleHandle ();
 };
-void operator>>= (Rapicorn::Aida::ProtoReader&, SoundModuleHandle&);
 typedef SoundModuleHandle SoundModuleH; ///< Convenience alias for the IDL type SoundModule.
 } // BseTest
 
@@ -1180,11 +1163,6 @@ FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
 FirstInterfaceHandle::~FirstInterfaceHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, FirstInterfaceHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 FirstInterfaceHandle::__aida_typeid__()
 {
@@ -1875,11 +1853,6 @@ UIWidgetAreaHandle::UIWidgetAreaHandle ()
 {}
 UIWidgetAreaHandle::~UIWidgetAreaHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, UIWidgetAreaHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 UIWidgetAreaHandle::__aida_typeid__()
 {
@@ -2115,11 +2088,6 @@ ParentHandle::ParentHandle ()
 {}
 ParentHandle::~ParentHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, ParentHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 ParentHandle::__aida_typeid__()
 {
@@ -2142,11 +2110,6 @@ ChildHandle::ChildHandle ()
 {}
 ChildHandle::~ChildHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, ChildHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 ChildHandle::__aida_typeid__()
 {
@@ -2169,11 +2132,6 @@ DescendantHandle::DescendantHandle ()
 {}
 DescendantHandle::~DescendantHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, DescendantHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 DescendantHandle::__aida_typeid__()
 {
@@ -2196,11 +2154,6 @@ GrandChildHandle::GrandChildHandle ()
 {}
 GrandChildHandle::~GrandChildHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, GrandChildHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 GrandChildHandle::__aida_typeid__()
 {
@@ -2308,11 +2261,6 @@ QuickIfaceHandle::QuickIfaceHandle ()
 {}
 QuickIfaceHandle::~QuickIfaceHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, QuickIfaceHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 QuickIfaceHandle::__aida_typeid__()
 {
@@ -2370,11 +2318,6 @@ MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
 MethodTestInterfaceHandle::~MethodTestInterfaceHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, MethodTestInterfaceHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 MethodTestInterfaceHandle::__aida_typeid__()
 {
@@ -3048,11 +2991,6 @@ SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 {}
 SignalTestInterfaceHandle::~SignalTestInterfaceHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, SignalTestInterfaceHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 SignalTestInterfaceHandle::__aida_typeid__()
 {
@@ -3092,11 +3030,6 @@ ChildInheritingSignalsHandle::ChildInheritingSignalsHandle ()
 {}
 ChildInheritingSignalsHandle::~ChildInheritingSignalsHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, ChildInheritingSignalsHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 ChildInheritingSignalsHandle::__aida_typeid__()
 {
@@ -3119,11 +3052,6 @@ AnotherChildHandle::AnotherChildHandle ()
 {}
 AnotherChildHandle::~AnotherChildHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, AnotherChildHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 AnotherChildHandle::__aida_typeid__()
 {
@@ -3172,11 +3100,6 @@ PropertyTesterHandle::PropertyTesterHandle ()
 {}
 PropertyTesterHandle::~PropertyTesterHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, PropertyTesterHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 PropertyTesterHandle::__aida_typeid__()
 {
@@ -3507,11 +3430,6 @@ ButtonAreaHandle::ButtonAreaHandle ()
 {}
 ButtonAreaHandle::~ButtonAreaHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, ButtonAreaHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 ButtonAreaHandle::__aida_typeid__()
 {
@@ -3648,11 +3566,6 @@ PureMethodsHandle::PureMethodsHandle ()
 {}
 PureMethodsHandle::~PureMethodsHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, PureMethodsHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 PureMethodsHandle::__aida_typeid__()
 {
@@ -3718,11 +3631,6 @@ NameTestsHandle::NameTestsHandle ()
 {}
 NameTestsHandle::~NameTestsHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, NameTestsHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 NameTestsHandle::__aida_typeid__()
 {
@@ -3787,11 +3695,6 @@ CompressorHandle::CompressorHandle ()
 {}
 CompressorHandle::~CompressorHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, CompressorHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 CompressorHandle::__aida_typeid__()
 {
@@ -3925,11 +3828,6 @@ SoundModuleHandle::SoundModuleHandle ()
 {}
 SoundModuleHandle::~SoundModuleHandle ()
 {} // define empty dtor to emit vtable
-void
-operator>>= (Rapicorn::Aida::ProtoReader &fbr, SoundModuleHandle &handle)
-{
-  __AIDA_Local__::client_connection->pop_handle (fbr, handle);
-}
 const Rapicorn::Aida::TypeHash&
 SoundModuleHandle::__aida_typeid__()
 {
