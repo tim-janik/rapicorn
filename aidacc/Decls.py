@@ -157,6 +157,9 @@ class TypeInfo (BaseDecl):
     sha224.update (hash_feed)
     hash128 = sha224.digest()[3:12] + sha224.digest()[16:23]
     return hash128
+  def tag_hash (self, tag):
+    hbytes = self.hash128digest (tag)
+    return tuple ([ord (c) for c in hbytes])
   def type_hash (self):
     if self.storage == FUNC:
       if self.issignal:
@@ -173,8 +176,7 @@ class TypeInfo (BaseDecl):
   def twoway_hash (self, special = ''):
     tag = "twoway"
     tag = '%s/%s' % (tag, special) if special else tag
-    bytes = self.hash128digest (tag)
-    return tuple ([ord (c) for c in bytes])
+    return self.tag_hash (tag)
   def property_hash (self, field, setter):
     if setter:
       tag = "setter" # oneway
