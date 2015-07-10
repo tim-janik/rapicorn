@@ -989,10 +989,13 @@ class Generator:
     reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
     closure_class = '__AIDA_Closure__%s__%s' % (class_info.name, stype.name)
     s += 'class %s {\n' % closure_class
-    s += '  size_t handler_id_;\n'
+    s += '  Rapicorn::Aida::ServerConnection &server_connection_;\n'
+    s += '  const size_t handler_id_;\n'
     s += 'public:\n'
     s += '  typedef std::shared_ptr<%s> SharedPtr;\n' % closure_class
-    s += '  %s (size_t h) : handler_id_ (h) {}\n' % closure_class # ctor
+    s += '  %s (Rapicorn::Aida::ServerConnection &server_connection, size_t handler_id) :\n' % closure_class # ctor
+    s += '    server_connection_ (server_connection), handler_id_ (handler_id)\n'
+    s += '  {}\n'
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + handler
@@ -1013,7 +1016,7 @@ class Generator:
       s += '    __AIDA_Local__::add_header1_emit (__p_, %s);\n' % digest
       s += '    __p_ <<= sp->handler_id_;\n'
     else:
-      s += '    __AIDA_Local__::add_header2_emit (__p_, %s);\n' % digest
+      s += '    Rapicorn::Aida::ProtoScopeEmit2Way __o_ (__p_, sp->server_connection_, %s);\n' % digest
       s += '    __p_ <<= sp->handler_id_;\n'
       s += '    auto promise = std::make_shared<std::promise<%s>> ();\n' % cpp_rtype
       s += '    auto future = promise->get_future();\n'
@@ -1049,7 +1052,7 @@ class Generator:
     s += '  if (signal_connection)\n'
     s += '    result = self->sig_%s() -= signal_connection;\n' % stype.name
     s += '  if (handler_id) {\n'
-    s += '    %s::SharedPtr sp (new %s (handler_id));\n' % (closure_class, closure_class)
+    s += '    %s::SharedPtr sp (new %s (Rapicorn::Aida::ProtoScope::current_server_connection(), handler_id));\n' % (closure_class, closure_class)
     if async:
       s += '    result = self->sig_%s().connect_future (__AIDA_Local__::slot (sp, sp->handler));\n' % stype.name
     else:
