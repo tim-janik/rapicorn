@@ -1233,6 +1233,12 @@ ProtoScopeCall2Way::ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandl
   pm <<= rhandle;
 }
 
+ProtoScopeEmit1Way::ProtoScopeEmit1Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo) :
+  ProtoScope (&server_connection, NULL)
+{
+  pm.add_header1 (MSGID_EMIT_ONEWAY, hashi, hashlo);
+}
+
 ProtoScopeEmit2Way::ProtoScopeEmit2Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo) :
   ProtoScope (&server_connection, NULL)
 {

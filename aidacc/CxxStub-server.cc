@@ -52,12 +52,6 @@ add_header1_discon (ProtoMsg &fb, uint64 h, uint64 l)
   fb.add_header1 (Rapicorn::Aida::MSGID_DISCONNECT, h, l);
 }
 
-static inline void
-add_header1_emit (ProtoMsg &fb, uint64 h, uint64 l)
-{
-  fb.add_header1 (Rapicorn::Aida::MSGID_EMIT_ONEWAY, h, l);
-}
-
 static inline ProtoMsg*
 new_call_result (ProtoReader &fbr, uint64 h, uint64 l, uint32 n = 1)
 {

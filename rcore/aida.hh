@@ -787,6 +787,9 @@ struct ProtoScopeCall1Way : ProtoScope {
 struct ProtoScopeCall2Way : ProtoScope {
   ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
 };
+struct ProtoScopeEmit1Way : ProtoScope {
+  ProtoScopeEmit1Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo);
+};
 struct ProtoScopeEmit2Way : ProtoScope {
   ProtoScopeEmit2Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo);
 };

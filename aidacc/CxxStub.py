@@ -1013,7 +1013,7 @@ class Generator:
     s += '    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1 + %u + %d);\n' \
         % (len (stype.args), 1 if async else 0) # header + handler + args
     if not async:
-      s += '    __AIDA_Local__::add_header1_emit (__p_, %s);\n' % digest
+      s += '    Rapicorn::Aida::ProtoScopeEmit1Way __o_ (__p_, sp->server_connection_, %s);\n' % digest
       s += '    __p_ <<= sp->handler_id_;\n'
     else:
       s += '    Rapicorn::Aida::ProtoScopeEmit2Way __o_ (__p_, sp->server_connection_, %s);\n' % digest
