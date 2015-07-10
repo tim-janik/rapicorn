@@ -1170,13 +1170,20 @@ struct ProtoConnections {
 };
 static __thread ProtoConnections current_thread_proto_connections;
 
-ProtoScope::ProtoScope (ServerConnection *server_connection, ClientConnection *client_connection)
+ProtoScope::ProtoScope (ServerConnection *server_connection, ClientConnection *client_connection) :
+  nested_ (false)
 {
   assert ((server_connection != NULL) ^ (client_connection != NULL));
-  assert (current_thread_proto_connections.server_connection == NULL);
-  assert (current_thread_proto_connections.client_connection == NULL);
-  current_thread_proto_connections.server_connection = server_connection;
-  current_thread_proto_connections.client_connection = client_connection;
+  if (server_connection == current_thread_proto_connections.server_connection &&
+      client_connection == current_thread_proto_connections.client_connection)
+    nested_ = true;
+  else
+    {
+      assert (current_thread_proto_connections.server_connection == NULL);
+      assert (current_thread_proto_connections.client_connection == NULL);
+      current_thread_proto_connections.server_connection = server_connection;
+      current_thread_proto_connections.client_connection = client_connection;
+    }
 }
 
 ProtoScope::~ProtoScope ()
@@ -1185,8 +1192,11 @@ ProtoScope::~ProtoScope ()
     assert (current_thread_proto_connections.server_connection != NULL);
   if (!current_thread_proto_connections.server_connection)
     assert (current_thread_proto_connections.client_connection != NULL);
-  current_thread_proto_connections.server_connection = NULL;
-  current_thread_proto_connections.client_connection = NULL;
+  if (!nested_)
+    {
+      current_thread_proto_connections.server_connection = NULL;
+      current_thread_proto_connections.client_connection = NULL;
+    }
 }
 
 ProtoMsg*
@@ -1209,17 +1219,17 @@ ProtoScope::current_server_connection ()
   return *current_thread_proto_connections.server_connection;
 }
 
-ProtoScopeCall2Way::ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
-  ProtoScope (NULL, rhandle.__aida_connection__())
-{
-  pm.add_header2 (MSGID_CALL_TWOWAY, hashi, hashlo);
-  pm <<= rhandle;
-}
-
 ProtoScopeCall1Way::ProtoScopeCall1Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
   ProtoScope (NULL, rhandle.__aida_connection__())
 {
   pm.add_header2 (MSGID_CALL_ONEWAY, hashi, hashlo);
+  pm <<= rhandle;
+}
+
+ProtoScopeCall2Way::ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
+  ProtoScope (NULL, rhandle.__aida_connection__())
+{
+  pm.add_header2 (MSGID_CALL_TWOWAY, hashi, hashlo);
   pm <<= rhandle;
 }
 
@@ -2109,6 +2119,7 @@ ServerConnectionImpl::dispatch ()
   ProtoMsg *fb = transport_channel_.fetch_msg();
   if (!fb)
     return;
+  ProtoScope server_connection_protocol_scope (this, NULL);
   ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64  idmask = msgid_mask (msgid);

@@ -770,7 +770,9 @@ public: /// @name API for signal event handlers.
 
 // == ProtoScpope ==
 /// ProtoScpope keeps track of the ServerConnection and ClientConnection during RPC marshalling.
-struct ProtoScope {
+class ProtoScope {
+  bool nested_;
+public:
   /// Start/create an RPC scope for a connection pair within the current thread.
   explicit                 ProtoScope                (ServerConnection *server_connection, ClientConnection *client_connection);
   /*dtor*/                ~ProtoScope                (); ///< Finish/destroy an RPC scope.
@@ -779,11 +781,11 @@ struct ProtoScope {
   static ServerConnection& current_server_connection (); ///< Access the server connection of the current thread-specific RPC scope.
   RAPICORN_CLASS_NON_COPYABLE (ProtoScope);
 };
-struct ProtoScopeCall2Way : ProtoScope {
-  ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
-};
 struct ProtoScopeCall1Way : ProtoScope {
   ProtoScopeCall1Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
+};
+struct ProtoScopeCall2Way : ProtoScope {
+  ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
 };
 
 // == inline implementations ==
