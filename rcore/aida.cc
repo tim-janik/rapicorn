@@ -917,11 +917,127 @@ Any::operator<<= (const RemoteHandle &v)
 
 void
 Any::to_transition (BaseConnection &base_connection)
-{}
+{
+  switch (kind())
+    {
+    case SEQUENCE:
+      if (u_.vanys)
+        for (size_t i = 0; i < u_.vanys->size(); i++)
+          (*u_.vanys)[i].to_transition (base_connection);
+      break;
+    case RECORD:
+      if (u_.vfields)
+        for (size_t i = 0; i < u_.vfields->size(); i++)
+          (*u_.vfields)[i].to_transition (base_connection);
+      break;
+    case ANY:
+      if (u_.vany)
+        u_.vany->to_transition (base_connection);
+      break;
+    case LOCAL: // FIXME: LOCAL::to_transition doesn't really make sense, should we warn?
+      // pass through for now
+      break;
+    case INSTANCE:
+      if (u_.ibase && u_.ibase->get())
+        {
+          ServerConnection *server_connection = dynamic_cast<ServerConnection*> (&base_connection);
+          assert (server_connection);
+          ProtoMsg *pm = ProtoMsg::_new (1);
+          server_connection->add_interface (*pm, *u_.ibase);
+          Rapicorn::Aida::ProtoReader pmr (*pm);
+          rekind (TRANSITION);
+          u_.vint64 = pmr.pop_orbid();
+          delete pm;
+        }
+      else
+        {
+          rekind (TRANSITION);
+          u_.vint64 = 0;
+        }
+      break;
+    case REMOTE:
+      if (u_.rhandle && u_.rhandle->__aida_orbid__())
+        {
+          ClientConnection *client_connection = dynamic_cast<ClientConnection*> (&base_connection);
+          assert (client_connection);
+          ProtoMsg *pm = ProtoMsg::_new (1);
+          client_connection->add_handle (*pm, *u_.rhandle);
+          Rapicorn::Aida::ProtoReader pmr (*pm);
+          rekind (TRANSITION);
+          u_.vint64 = pmr.pop_orbid();
+          delete pm;
+        }
+      else
+        {
+          rekind (TRANSITION);
+          u_.vint64 = 0;
+        }
+      break;
+    case UNTYPED: case BOOL: case ENUM: case INT32: case INT64: case FLOAT64: case STRING:
+      break;            // leave plain values alone
+    case TRANSITION: ;  // conversion must occour only once
+    default:
+      fatal_error (String (__func__) + ": invalid type kind: " + type_kind_name (kind()));
+    }
+}
 
 void
 Any::from_transition (BaseConnection &base_connection)
-{}
+{
+  switch (kind())
+    {
+      ServerConnection *server_connection;
+      ClientConnection *client_connection;
+    case SEQUENCE:
+      if (u_.vanys)
+        for (size_t i = 0; i < u_.vanys->size(); i++)
+          (*u_.vanys)[i].from_transition (base_connection);
+      break;
+    case RECORD:
+      if (u_.vfields)
+        for (size_t i = 0; i < u_.vfields->size(); i++)
+          (*u_.vfields)[i].from_transition (base_connection);
+      break;
+    case ANY:
+      if (u_.vany)
+        u_.vany->from_transition (base_connection);
+      break;
+    case LOCAL: // FIXME: LOCAL::from_transition shouldn't happen, should we warn?
+      // pass through for now
+      break;
+    case TRANSITION:
+      server_connection = dynamic_cast<ServerConnection*> (&base_connection);
+      client_connection = dynamic_cast<ClientConnection*> (&base_connection);
+      assert ((client_connection != NULL) ^ (server_connection != NULL));
+      if (server_connection)
+        {
+          ProtoMsg *pm = ProtoMsg::_new (1);
+          pm->add_orbid (u_.vint64);
+          Rapicorn::Aida::ProtoReader pmr (*pm);
+          ImplicitBaseP ibasep = server_connection->pop_interface (pmr);
+          delete pm;
+          rekind (INSTANCE);
+          u_.ibase = ibasep ? new ImplicitBaseP (ibasep) : NULL;
+        }
+      else // client_connection
+        {
+          ProtoMsg *pm = ProtoMsg::_new (1);
+          pm->add_orbid (u_.vint64);
+          Rapicorn::Aida::ProtoReader pmr (*pm);
+          RemoteMember<RemoteHandle> rmember;
+          client_connection->pop_handle (pmr, rmember);
+          delete pm;
+          rekind (REMOTE);
+          u_.rhandle = new RemoteHandle (rmember);
+        }
+      break;
+    case UNTYPED: case BOOL: case ENUM: case INT32: case INT64: case FLOAT64: case STRING:
+      break;                            // leave plain values alone
+    case INSTANCE: case REMOTE: ;       // conversion must occour only once
+    default:
+      fatal_error (String (__func__) + ": invalid type kind: " + type_kind_name (kind()));
+    }
+}
 
 // == OrbObject ==
 OrbObject::OrbObject (uint64 orbid) :
