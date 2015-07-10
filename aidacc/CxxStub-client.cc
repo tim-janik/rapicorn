@@ -13,13 +13,6 @@ using namespace Rapicorn::Aida;
 static Rapicorn::Aida::ClientConnection *client_connection = NULL;
 
 // helper
-
-static AIDA_UNUSED bool
-signal_disconnect (size_t signal_handler_id)
-{
-  return client_connection->signal_disconnect (signal_handler_id);
-}
-
 static AIDA_UNUSED size_t
 signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandler seh, void *data)
 {
