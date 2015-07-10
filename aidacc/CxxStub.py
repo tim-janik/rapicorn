@@ -1026,7 +1026,7 @@ class Generator:
       s += '    ' + self.generate_proto_pop_args ('__f_', class_info, '', [('retval', stype.rtype)], '')
       s += '      promise->set_value (retval);\n'
       s += '    };\n'
-      s += '    __AIDA_Local__::erhandler_add (lambda_id, lambda);\n'
+      s += '    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);\n'
       s += '    __p_ <<= lambda_id;\n'
     ident_type_args = [(('&arg_' if a[1].storage == Decls.INTERFACE else 'arg_')+ a[0], a[1]) for a in stype.args] # marshaller args
     args2fb = self.generate_proto_add_args ('__p_', class_info, '', ident_type_args, '')

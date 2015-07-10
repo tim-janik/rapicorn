@@ -20,12 +20,6 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>:
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 
-// EmitResultHandler
-static inline void erhandler_add (size_t id, const EmitResultHandler &function)
-{
-  return server_connection->emit_result_handler_add (id, function);
-}
-
 // objects
 template<class Target> static inline void
 proto_msg_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)

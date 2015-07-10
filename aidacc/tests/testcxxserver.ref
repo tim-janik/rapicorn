@@ -30,12 +30,6 @@ static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, Rapicorn::Aida::Imp
 // connection
 static Rapicorn::Aida::ServerConnection *server_connection = NULL;
 
-// EmitResultHandler
-static inline void erhandler_add (size_t id, const EmitResultHandler &function)
-{
-  return server_connection->emit_result_handler_add (id, function);
-}
-
 // objects
 template<class Target> static inline void
 proto_msg_add_interface (Rapicorn::Aida::ProtoMsg &fb, Target *instance)
@@ -3292,7 +3286,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __p_ <<= &arg_ba1;
     __p_ <<= arg_someint;
@@ -3679,7 +3673,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -3736,7 +3730,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -3793,7 +3787,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -3850,7 +3844,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -3907,7 +3901,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -3964,7 +3958,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -4021,7 +4015,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -4078,7 +4072,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -4135,7 +4129,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -4192,7 +4186,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -4249,7 +4243,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
@@ -5367,7 +5361,7 @@ public:
       __f_ >>= retval;
       promise->set_value (retval);
     };
-    __AIDA_Local__::erhandler_add (lambda_id, lambda);
+    sp->server_connection_.emit_result_handler_add (lambda_id, lambda);
     __p_ <<= lambda_id;
     __AIDA_Local__::post_msg (&__p_);
     return future;
