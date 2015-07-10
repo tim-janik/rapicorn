@@ -723,10 +723,13 @@ WidgetImpl::set_user_data (const String &name, const Any &any)
       nav = new NamedAnyVector;
       set_data (&user_data_key, nav);
     }
-  for (auto it : *nav)
-    if (it.name == name)
+  for (size_t i = 0; i < nav->size(); i++)
+    if ((*nav)[i].name == name)
       {
-        it.any = any;
+        if (any.kind() == Aida::UNTYPED)
+          nav->erase (nav->begin() + i);
+        else
+          (*nav)[i].any = any;
         return;
       }
   NamedAny nany;
