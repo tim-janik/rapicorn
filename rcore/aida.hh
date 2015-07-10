@@ -123,6 +123,7 @@ enum TypeKind {
   RECORD         = 'R', ///< Record type containing named fields.
   INSTANCE       = 'C', ///< Interface instance type.
   REMOTE         = 'r', ///< RemoteHandle type.
+  TRANSITION     = 'T', ///< Instance or RemoteHandle in transition between remotes.
   LOCAL          = 'L', ///< Local object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
@@ -611,7 +612,7 @@ public:
   inline void add_evalue (int64 vint64)    { ProtoUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble)  { ProtoUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { ProtoUnion &u = addu (STRING); new (&u) String (s); }
-  inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (TRANSITION); u.vint64 = objid; }
   void        add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
@@ -680,7 +681,7 @@ public:
   inline int64           pop_evalue  () { ProtoUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double          pop_double  () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&   pop_string  () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (INSTANCE); return u.vint64; }
+  inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (TRANSITION); return u.vint64; }
   const Any&             pop_any     (BaseConnection &bcon);
   inline const ProtoMsg& pop_rec     () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
   inline const ProtoMsg& pop_seq     () { ProtoUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }

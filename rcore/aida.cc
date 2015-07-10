@@ -190,6 +190,7 @@ enum_info<TypeKind> ()
     { RECORD,           "RECORD",               NULL, NULL },
     { INSTANCE,         "INSTANCE",             NULL, NULL },
     { REMOTE,           "REMOTE",               NULL, NULL },
+    { TRANSITION,       "TRANSITION",           NULL, NULL },
     { LOCAL,            "LOCAL",                NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
   };
@@ -335,6 +336,7 @@ Any::operator= (const Any &clone)
     case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL; break;
     case REMOTE:        u_.rhandle = new RemoteHandle (*clone.u_.rhandle); break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
+    case TRANSITION:    // u_.vint64 = clone.u_.vint64;
     default:            u_ = clone.u_;                                    break;
     }
   return *this;
@@ -363,6 +365,7 @@ Any::reset()
     case INSTANCE:      delete u_.ibase;                        break;
     case REMOTE:        delete u_.rhandle;                      break;
     case LOCAL:         delete u_.pholder;                      break;
+    case TRANSITION: ;
     default: ;
     }
   type_kind_ = UNTYPED;
@@ -449,6 +452,7 @@ Any::to_string (const String &field_name) const
     case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
     case INSTANCE:      s += string_format (", value=%p", u_.ibase ? u_.ibase->get() : NULL);   break;
     case REMOTE:        s += string_format (", value=#%08x", u_.rhandle->__aida_orbid__());     break;
+    case TRANSITION:    s += string_format (", value=%p", (void*) u_.vint64);                   break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -464,9 +468,7 @@ Any::operator== (const Any &clone) const
   switch (kind())
     {
     case UNTYPED:     break;
-      // case UINT: // chain
-    case BOOL: case ENUM: // chain
-    case INT32:
+    case TRANSITION: case BOOL: case ENUM: case INT32: // chain
     case INT64:       if (u_.vint64 != clone.u_.vint64) return false;                     break;
     case FLOAT64:     if (u_.vdouble != clone.u_.vdouble) return false;                   break;
     case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
@@ -512,7 +514,7 @@ Any::get_bool () const
 {
   switch (kind())
     {
-    case BOOL: case ENUM: case INT32:
+    case TRANSITION: case BOOL: case ENUM: case INT32:
     case INT64:         return u_.vint64 != 0;
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
@@ -727,6 +729,7 @@ Any::as_int () const
     case RECORD:        return !u_.vfields->empty();
     case INSTANCE:      return u_.ibase && u_.ibase->get();
     case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
+    case TRANSITION:    return u_.vint64 != 0;
     default:            return 0;
     }
 }
@@ -1116,19 +1119,18 @@ ProtoMsg::to_string() const
       switch (fbr.get_type())
         {
         case UNTYPED:
-        case VOID:      s += string_format (", %s", tn); fbr.skip();                               break;
-        case BOOL:      s += string_format (", %s: 0x%x", tn, fbr.pop_bool());                     break;
-        case ENUM:      s += string_format (", %s: 0x%x", tn, fbr.pop_evalue());                   break;
-        case INT32:     s += string_format (", %s: 0x%08x", tn, fbr.pop_int64());                  break;
-        case INT64:     s += string_format (", %s: 0x%016x", tn, fbr.pop_int64());                 break;
-        case FLOAT64:   s += string_format (", %s: %.17g", tn, fbr.pop_double());                  break;
-        case STRING:    s += string_format (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
-        case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
-        case RECORD:    s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
-        case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
-        case REMOTE:    s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
-        case ANY:       s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
-        default:        s += string_format (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
+        case VOID:       s += string_format (", %s", tn); fbr.skip();                               break;
+        case BOOL:       s += string_format (", %s: 0x%x", tn, fbr.pop_bool());                     break;
+        case ENUM:       s += string_format (", %s: 0x%x", tn, fbr.pop_evalue());                   break;
+        case INT32:      s += string_format (", %s: 0x%08x", tn, fbr.pop_int64());                  break;
+        case INT64:      s += string_format (", %s: 0x%016x", tn, fbr.pop_int64());                 break;
+        case FLOAT64:    s += string_format (", %s: %.17g", tn, fbr.pop_double());                  break;
+        case STRING:     s += string_format (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
+        case SEQUENCE:   s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
+        case RECORD:     s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
+        case TRANSITION: s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
+        case ANY:        s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
+        default:         s += string_format (", <unknown:%u>: %p", fbr.get_type(), (void*) fbr.debug_bits()); fbr.skip(); break;
         }
     }
   s += '}';
