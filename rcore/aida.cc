@@ -1018,6 +1018,12 @@ ProtoMsg::operator<<= (ImplicitBase *instance)
   ProtoScope::current_server_connection().add_interface (*this, instance ? instance->shared_from_this() : ImplicitBaseP());
 }
 
+ImplicitBaseP
+ProtoReader::pop_interface ()
+{
+  return ProtoScope::current_server_connection().pop_interface (*this);
+}
+
 void
 ProtoReader::check_request (int type)
 {

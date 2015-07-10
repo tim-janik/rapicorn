@@ -653,6 +653,7 @@ class ProtoReader { // read ProtoMsg contents
   const ProtoMsg    *fb_;
   uint32             nth_;
   void               check_request (int type);
+  ImplicitBaseP      pop_interface ();
   inline void        request (int t) { if (AIDA_UNLIKELY (nth_ >= n_types() || get_type() != t)) check_request (t); }
   inline ProtoUnion& fb_getu (int t) { request (t); return fb_->upeek (nth_); }
   inline ProtoUnion& fb_popu (int t) { request (t); ProtoUnion &u = fb_->upeek (nth_++); return u; }
@@ -696,6 +697,7 @@ public:
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
   inline void operator>>= (std::vector<bool>::reference v) { bool b; *this >>= b; v = b; }
   void        operator>>= (RemoteHandle &rhandle);
+  template<class Target> std::shared_ptr<Target> pop_instance () { return std::dynamic_pointer_cast<Target> (pop_interface()); }
 };
 
 // == Connections ==
