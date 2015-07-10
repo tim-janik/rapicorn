@@ -965,7 +965,7 @@ class Generator:
     s += '  if (signal_handler_id)\n'
     s += '    return __o_.current_client_connection().signal_disconnect (signal_handler_id);\n'
     s += '  void *fptr = new std::function<%s %s> (func);\n' % (sigret, sigargs)
-    s += '  return __AIDA_Local__::signal_connect (%s, *this, %s, fptr);\n}\n' % (self.method_digest (stype), emitfunc)
+    s += '  return __o_.current_client_connection().signal_connect (%s, *this, %s, fptr);\n}\n' % (self.method_digest (stype), emitfunc)
     return s
   def generate_server_signal_typedef (self, functype, ctype, prefix = ''):
     s, signame = '', self.generate_signal_typename (functype, ctype)

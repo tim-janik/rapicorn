@@ -13,12 +13,6 @@ using namespace Rapicorn::Aida;
 static Rapicorn::Aida::ClientConnection *client_connection = NULL;
 
 // helper
-static AIDA_UNUSED size_t
-signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle &rh, SignalEmitHandler seh, void *data)
-{
-  return client_connection->signal_connect (hhi, hlo, rh, seh, data);
-}
-
 static inline ProtoMsg*
 new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 {
