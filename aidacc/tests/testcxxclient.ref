@@ -260,7 +260,6 @@ protected:
 public:
   virtual /*Des*/                       ~FirstInterfaceHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static FirstInterfaceHandle   down_cast (RemoteHandle smh) { return smh == NULL ? FirstInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      FirstInterfaceHandle ();
@@ -595,7 +594,6 @@ protected:
 public:
   virtual /*Des*/                       ~UIWidgetAreaHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static UIWidgetAreaHandle     down_cast (RemoteHandle smh) { return smh == NULL ? UIWidgetAreaHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      UIWidgetAreaHandle ();
@@ -637,7 +635,6 @@ protected:
 public:
   virtual /*Des*/                       ~ParentHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static ParentHandle           down_cast (RemoteHandle smh) { return smh == NULL ? ParentHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ParentHandle ();
@@ -734,7 +731,6 @@ protected:
 public:
   virtual /*Des*/                       ~QuickIfaceHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static QuickIfaceHandle       down_cast (RemoteHandle smh) { return smh == NULL ? QuickIfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      QuickIfaceHandle ();
@@ -753,7 +749,6 @@ protected:
 public:
   virtual /*Des*/                       ~MethodTestInterfaceHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static MethodTestInterfaceHandle down_cast (RemoteHandle smh) { return smh == NULL ? MethodTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      MethodTestInterfaceHandle ();
@@ -842,7 +837,6 @@ protected:
 public:
   virtual /*Des*/                       ~SignalTestInterfaceHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static SignalTestInterfaceHandle down_cast (RemoteHandle smh) { return smh == NULL ? SignalTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      SignalTestInterfaceHandle ();
@@ -919,7 +913,6 @@ protected:
 public:
   virtual /*Des*/                       ~PropertyTesterHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static PropertyTesterHandle   down_cast (RemoteHandle smh) { return smh == NULL ? PropertyTesterHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      PropertyTesterHandle ();
@@ -966,7 +959,6 @@ protected:
 public:
   virtual /*Des*/                       ~ButtonAreaHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static ButtonAreaHandle       down_cast (RemoteHandle smh) { return smh == NULL ? ButtonAreaHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ButtonAreaHandle ();
@@ -996,7 +988,6 @@ protected:
 public:
   virtual /*Des*/                       ~PureMethodsHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static PureMethodsHandle      down_cast (RemoteHandle smh) { return smh == NULL ? PureMethodsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      PureMethodsHandle ();
@@ -1018,7 +1009,6 @@ protected:
 public:
   virtual /*Des*/                       ~NameTestsHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static NameTestsHandle        down_cast (RemoteHandle smh) { return smh == NULL ? NameTestsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      NameTestsHandle ();
@@ -1042,7 +1032,6 @@ protected:
 public:
   virtual /*Des*/                       ~CompressorHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static CompressorHandle       down_cast (RemoteHandle smh) { return smh == NULL ? CompressorHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      CompressorHandle ();
@@ -1090,7 +1079,6 @@ protected:
 public:
   virtual /*Des*/                       ~SoundModuleHandle () override;
   static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  Rapicorn::Aida::TypeHashList           __aida_typelist__  () const;
   template<class RemoteHandle>
   static SoundModuleHandle      down_cast (RemoteHandle smh) { return smh == NULL ? SoundModuleHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      SoundModuleHandle ();
@@ -1105,27 +1093,6 @@ Rapicorn::Aida::BaseConnection*
 FirstInterfaceHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-FirstInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
 }
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
@@ -1808,27 +1775,6 @@ UIWidgetAreaHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
-Rapicorn::Aida::TypeHashList
-UIWidgetAreaHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
-}
 UIWidgetAreaHandle::UIWidgetAreaHandle ()
 {}
 UIWidgetAreaHandle::~UIWidgetAreaHandle ()
@@ -2043,27 +1989,6 @@ ParentHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
-Rapicorn::Aida::TypeHashList
-ParentHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
-}
 ParentHandle::ParentHandle ()
 {}
 ParentHandle::~ParentHandle ()
@@ -2216,27 +2141,6 @@ QuickIfaceHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
-Rapicorn::Aida::TypeHashList
-QuickIfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
-}
 QuickIfaceHandle::QuickIfaceHandle ()
 {}
 QuickIfaceHandle::~QuickIfaceHandle ()
@@ -2272,27 +2176,6 @@ Rapicorn::Aida::BaseConnection*
 MethodTestInterfaceHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-MethodTestInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
 }
 MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
@@ -3090,27 +2973,6 @@ SignalTestInterfaceHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
-Rapicorn::Aida::TypeHashList
-SignalTestInterfaceHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
-}
 SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 {}
 SignalTestInterfaceHandle::~SignalTestInterfaceHandle ()
@@ -3204,27 +3066,6 @@ Rapicorn::Aida::BaseConnection*
 PropertyTesterHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-PropertyTesterHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
 }
 PropertyTesterHandle::PropertyTesterHandle ()
 {}
@@ -3547,27 +3388,6 @@ ButtonAreaHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
-Rapicorn::Aida::TypeHashList
-ButtonAreaHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
-}
 ButtonAreaHandle::ButtonAreaHandle ()
 {}
 ButtonAreaHandle::~ButtonAreaHandle ()
@@ -3683,27 +3503,6 @@ PureMethodsHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
-Rapicorn::Aida::TypeHashList
-PureMethodsHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
-}
 PureMethodsHandle::PureMethodsHandle ()
 {}
 PureMethodsHandle::~PureMethodsHandle ()
@@ -3748,27 +3547,6 @@ NameTestsHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
-Rapicorn::Aida::TypeHashList
-NameTestsHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
-}
 NameTestsHandle::NameTestsHandle ()
 {}
 NameTestsHandle::~NameTestsHandle ()
@@ -3811,27 +3589,6 @@ Rapicorn::Aida::BaseConnection*
 CompressorHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-CompressorHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
 }
 CompressorHandle::CompressorHandle ()
 {}
@@ -3944,27 +3701,6 @@ Rapicorn::Aida::BaseConnection*
 SoundModuleHandle::__aida_connection__()
 {
   return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
-Rapicorn::Aida::TypeHashList
-SoundModuleHandle::__aida_typelist__() const
-{
-  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);
-  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL);
-  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);
-  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");
-  Rapicorn::Aida::ProtoReader __f_ (*__r_);
-  __f_.skip_header();
-  size_t len;
-  __f_ >>= len;
-  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");
-  Rapicorn::Aida::TypeHashList thl;
-  Rapicorn::Aida::TypeHash thash;
-  for (size_t i = 0; i < len; i++) {
-    __f_ >>= thash;
-    thl.push_back (thash);
-  }
-  delete __r_;
-  return thl;
 }
 SoundModuleHandle::SoundModuleHandle ()
 {}

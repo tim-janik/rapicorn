@@ -424,8 +424,6 @@ class Generator:
     return self.digest2cbytes (class_info.type_hash())
   def internal_digest (self, class_info, tag):
     return self.digest2cbytes (class_info.tag_hash (tag + ' # Rapicorn::Aida:::internal'))
-  def list_types_digest (self, class_info):
-    return self.digest2cbytes (class_info.twoway_hash ('__aida_typelist__ # internal-method'))
   def setter_digest (self, class_info, fident, ftype):
     setter_hash = class_info.property_hash ((fident, ftype), True)
     return self.digest2cbytes (setter_hash)
@@ -517,8 +515,6 @@ class Generator:
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
-      if not bases (type_info):
-        s += '  ' + self.F ('Rapicorn::Aida::TypeHashList          ') + '__aida_typelist__  () const;\n'
       s += '  template<class RemoteHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (RemoteHandle smh) '
       s += '{ return smh == NULL ? %s() : __aida_cast__ (smh, smh.__aida_typelist__()); }\n' % classH
@@ -629,26 +625,6 @@ class Generator:
   def generate_client_base_class_methods (self, tp):
     s, classH = '', self.C4client (tp)
     s += self.generate_aida_connection_impl (tp)
-    s += 'Rapicorn::Aida::TypeHashList\n'
-    s += '%s::__aida_typelist__() const\n{\n' % classH
-    s += '  Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + self
-    s += '  Rapicorn::Aida::ProtoScopeCall2Way __o_ (__p_, *this, %s);\n' % self.list_types_digest (tp)
-    s += '  Rapicorn::Aida::ProtoMsg *__r_ = __o_.invoke (&__p_);\n' # deletes __p_
-    s += '  AIDA_CHECK (__r_ != NULL, "missing result from 2-way call");\n'
-    s += '  Rapicorn::Aida::ProtoReader __f_ (*__r_);\n'
-    s += '  __f_.skip_header();\n'
-    s += '  size_t len;\n'
-    s += '  __f_ >>= len;\n'
-    s += '  AIDA_CHECK (__f_.remaining() == len * 2, "result truncated");\n'
-    s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    s += '  Rapicorn::Aida::TypeHash thash;\n'
-    s += '  for (size_t i = 0; i < len; i++) {\n'
-    s += '    __f_ >>= thash;\n'
-    s += '    thl.push_back (thash);\n'
-    s += '  }\n'
-    s += '  delete __r_;\n'
-    s += '  return thl;\n'
-    s += '}\n'
     return s
   def generate_server_class_methods (self, tp):
     assert self.gen_mode == G4SERVANT
@@ -890,27 +866,6 @@ class Generator:
   def generate_server_list_types (self, tp, reglines):
     assert self.gen_mode == G4SERVANT
     s = ''
-    dispatcher_name = '__aida_call__%s____aida_typelist__' % tp.name
-    digest = self.list_types_digest (tp)
-    reglines += [ (digest, self.namespaced_identifier (dispatcher_name)) ]
-    s += 'static Rapicorn::Aida::ProtoMsg*\n'
-    s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
-    s += '{\n'
-    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
-    s += '  Rapicorn::Aida::TypeHashList thl;\n'
-    s += '  %s *self;\n' % self.C (tp)  # fetch self
-    s += '  fbr.skip_header();\n'
-    s += self.generate_proto_pop_args ('fbr', tp, '', [('self', tp)])
-    # support self==NULL here, to allow invalid cast handling at the client
-    s += '  if (self) // guard against invalid casts\n'
-    s += '    thl = self->__aida_typelist__();\n'
-    # return: length (typehi, typelo)*length
-    s += '  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, %s, 1 + 2 * thl.size());\n' % digest # invalidates fbr
-    s += '  rb <<= int64_t (thl.size());\n'
-    s += '  for (size_t i = 0; i < thl.size(); i++)\n'
-    s += '    rb <<= thl[i];\n'
-    s += '  return &rb;\n'
-    s += '}\n'
     return s
   def generate_signal_typename (self, functype, ctype, prefix = 'Signal'):
     return '%s_%s' % (prefix, functype.name)
@@ -1378,23 +1333,19 @@ class Generator:
       s += '#endif /* %s */\n' % (sc_macro_prefix + self.cppmacro)
     return s
   def generate_aida_ids (self):
-    defs, checks, nslist = '', '', []
+    s, nslist = '', []
     nslist += [ Decls.Namespace ('Rapicorn', None, []) ]
     nslist += [ Decls.Namespace ('Aida', nslist[-1], []) ]
     iface = Decls.TypeInfo ('ImplicitBase', Decls.INTERFACE, False)
     nslist[-1].add_type (iface) # iface.full_name() == Rapicorn::Aida::ImplicitBase
     identifiers = {
-      'test_method'       : 'void %s (void)',
+      '__aida_typelist__'       : 'Rapicorn::Aida::TypeHashList %s () const',
     }
     for k,v in identifiers.items():
       IDENT, digest = k.upper(), self.internal_digest (iface, v % k)
-      defs   += '#define AIDA_HASH_%s        %s\n' % (IDENT, digest)
-      checks += 'static_assert (Rapicorn::Aida::TypeHash { AIDA_HASH_%s } ==\n' % IDENT
-      checks += '               Rapicorn::Aida::TypeHash { %s }, "AIDA_HASH_%s");\n' % (digest, IDENT)
-    s  = '#ifndef AIDA_HASH_%s\n' % identifiers.keys()[0].upper()
-    s += defs
-    s += '#endif // AIDA_HASH_%s\n' % identifiers.keys()[0].upper()
-    s += checks
+      s += 'static_assert (Rapicorn::Aida::TypeHash { AIDA_HASH_%s } ==\n' % IDENT
+      s += '               Rapicorn::Aida::TypeHash { %s },\n' % digest
+      s += '               "#define AIDA_HASH_%s \t%s");\n' % (IDENT, digest)
     return s
 
 def error (msg):

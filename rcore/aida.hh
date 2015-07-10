@@ -145,6 +145,9 @@ struct TypeHash {
 };
 typedef std::vector<TypeHash> TypeHashList;
 
+// == Internal Type Hashes ==
+#define AIDA_HASH___AIDA_TYPELIST__             0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL
+
 // == ImplicitBase ==
 /// Abstract base interface that all IDL interfaces are implicitely derived from.
 class ImplicitBase : public virtual std::enable_shared_from_this<ImplicitBase> {
@@ -520,6 +523,7 @@ protected:
 public:
   /*copy*/                RemoteHandle         (const RemoteHandle &y) : orbop_ (y.orbop_) {}
   virtual                ~RemoteHandle         ();
+  TypeHashList            __aida_typelist__    () const;
   ClientConnection*       __aida_connection__  () const { return orbop_->client_connection(); }
   uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
   static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }

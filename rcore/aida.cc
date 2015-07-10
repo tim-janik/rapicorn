@@ -2639,4 +2639,50 @@ ObjectBroker::connection_handshake (const std::string                 &endpoint,
   errno = ENOMSG;       // indicates invalid type cast
 }
 
+// == ImplicitBase <-> RemoteHandle RPC ==
+TypeHashList
+RemoteHandle::__aida_typelist__() const
+{
+  TypeHashList thl;
+  return_unless (*this != NULL, thl);
+  ProtoMsg &__p_ = *ProtoMsg::_new (3 + 1);
+  ProtoScopeCall2Way __o_ (__p_, *this, AIDA_HASH___AIDA_TYPELIST__);
+  ProtoMsg *__r_ = __o_.invoke (&__p_);
+  assert_return (__r_ != NULL, thl);
+  ProtoReader __f_ (*__r_);
+  __f_.skip_header();
+  size_t len;
+  __f_ >>= len;
+  assert_return (__f_.remaining() == len * 2, thl);
+  for (size_t i = 0; i < len; i++)
+    {
+      TypeHash thash;
+      __f_ >>= thash;
+      thl.push_back (thash);
+    }
+  delete __r_;
+  return thl;
+}
+
+static ProtoMsg*
+ImplicitBase___aida_typelist__ (ProtoReader &__f_)
+{
+  assert_return (__f_.remaining() == 3 + 1, NULL);
+  __f_.skip_header();
+  ImplicitBase *self = __f_.pop_instance<ImplicitBase>().get();
+  TypeHashList thl;
+  if (self) // allow NULL self to guard against invalid casts
+    thl = self->__aida_typelist__();
+  ProtoMsg &__r_ = *ProtoMsg::renew_into_result (__f_, MSGID_CALL_RESULT, AIDA_HASH___AIDA_TYPELIST__, 1 + 2 * thl.size());
+  __r_ <<= int64_t (thl.size());
+  for (size_t i = 0; i < thl.size(); i++)
+    __r_ <<= thl[i];
+  return &__r_;
+}
+
+static const ServerConnection::MethodEntry implicit_base_methods[] = {
+  { AIDA_HASH___AIDA_TYPELIST__, ImplicitBase___aida_typelist__, },
+};
+static ServerConnection::MethodRegistry implicit_base_method_registry (implicit_base_methods);
+
 } } // Rapicorn::Aida
