@@ -658,13 +658,6 @@ public:
   void        operator<<= (ImplicitBase *instance);
 };
 
-class ProtoMsg8 : public ProtoMsg { // Stack contained buffer for up to 8 fields
-  ProtoUnion bmem[1 + 1 + 8];
-public:
-  virtual ~ProtoMsg8 () { reset(); buffermem = NULL; }
-  inline   ProtoMsg8 (uint32 ntypes = 8) : ProtoMsg (ntypes, bmem, sizeof (bmem)) { AIDA_ASSERT (ntypes <= 8); }
-};
-
 class ProtoReader { // read ProtoMsg contents
   const ProtoMsg    *fb_;
   uint32             nth_;
