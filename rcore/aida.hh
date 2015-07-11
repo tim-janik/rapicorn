@@ -789,6 +789,7 @@ public:
   explicit                 ProtoScope                (ServerConnection &server_connection);
   /*dtor*/                ~ProtoScope                (); ///< Finish/destroy an RPC scope.
   ProtoMsg*                invoke                    (ProtoMsg *pm); ///< Carry out a remote call syncronously, transfers memory.
+  void                     post_peer_msg             (ProtoMsg *pm); ///< Send message to peer, transfers memory.
   static ClientConnection& current_client_connection (); ///< Access the client connection of the current thread-specific RPC scope.
   static ServerConnection& current_server_connection (); ///< Access the server connection of the current thread-specific RPC scope.
   static BaseConnection&   current_base_connection   (); ///< Access the client or server connection of the current thread-specific RPC scope.
@@ -805,6 +806,9 @@ struct ProtoScopeEmit1Way : ProtoScope {
 };
 struct ProtoScopeEmit2Way : ProtoScope {
   ProtoScopeEmit2Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo);
+};
+struct ProtoScopeDisconnect : ProtoScope {
+  ProtoScopeDisconnect (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo);
 };
 
 // == inline implementations ==

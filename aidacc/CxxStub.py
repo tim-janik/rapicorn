@@ -963,9 +963,9 @@ class Generator:
     s += '  ~%s()\n' % closure_class # dtor
     s += '  {\n'
     s += '    Rapicorn::Aida::ProtoMsg &__p_ = *Rapicorn::Aida::ProtoMsg::_new (3 + 1);\n' # header + handler
-    s += '    __AIDA_Local__::add_header1_discon (__p_, %s);\n' % digest
+    s += '    Rapicorn::Aida::ProtoScopeDisconnect __o_ (__p_, server_connection_, %s);\n' % digest
     s += '    __p_ <<= handler_id_;\n'
-    s += '    server_connection_.post_peer_msg (&__p_);\n' # deletes __p_
+    s += '    __o_.post_peer_msg (&__p_);\n' # deletes __p_
     s += '  }\n'
     cpp_rtype = self.R (stype.rtype)
     s += '  static %s\n' % ('std::future<%s>' % cpp_rtype if async else cpp_rtype)

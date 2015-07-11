@@ -1393,6 +1393,12 @@ ProtoScope::invoke (ProtoMsg *pm)
   return current_client_connection().call_remote (pm);
 }
 
+void
+ProtoScope::post_peer_msg (ProtoMsg *pm)
+{
+  return current_server_connection().post_peer_msg (pm);
+}
+
 ClientConnection&
 ProtoScope::current_client_connection ()
 {
@@ -1441,6 +1447,12 @@ ProtoScopeEmit2Way::ProtoScopeEmit2Way (ProtoMsg &pm, ServerConnection &server_c
   ProtoScope (server_connection)
 {
   pm.add_header2 (MSGID_EMIT_TWOWAY, hashi, hashlo);
+}
+
+ProtoScopeDisconnect::ProtoScopeDisconnect (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo) :
+  ProtoScope (server_connection)
+{
+  pm.add_header1 (MSGID_DISCONNECT, hashi, hashlo);
 }
 
 // == EventFd ==
