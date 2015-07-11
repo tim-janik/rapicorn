@@ -1305,30 +1305,33 @@ ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint64 h, uint64 l, 
   return renew_into_result (fb, m, h, l, n);
 }
 
-class OneChunkProtoMsg : public ProtoMsg {
-  virtual ~OneChunkProtoMsg () { reset(); buffermem = NULL; }
-  explicit OneChunkProtoMsg (uint32    _ntypes,
-                                ProtoUnion *_bmem,
-                                uint32    _bmemlen) :
+class ContiguousProtoMsg : public ProtoMsg {
+  virtual
+  ~ContiguousProtoMsg () override
+  {
+    reset();
+    buffermem = NULL;
+  }
+  ContiguousProtoMsg (uint32 _ntypes, ProtoUnion *_bmem, uint32 _bmemlen) :
     ProtoMsg (_ntypes, _bmem, _bmemlen)
   {}
 public:
-  static OneChunkProtoMsg*
+  static ContiguousProtoMsg*
   _new (uint32 _ntypes)
   {
     const uint32 _offs = 1 + (_ntypes + 7) / 8;
-    size_t bmemlen = sizeof (ProtoUnion[_offs + _ntypes]);
-    size_t objlen = ALIGN4 (sizeof (OneChunkProtoMsg), int64);
+    const size_t bmemlen = sizeof (ProtoUnion[_offs + _ntypes]);
+    const size_t objlen = ALIGN4 (sizeof (ContiguousProtoMsg), int64);
     uint8_t *omem = (uint8_t*) operator new (objlen + bmemlen);
     ProtoUnion *bmem = (ProtoUnion*) (omem + objlen);
-    return new (omem) OneChunkProtoMsg (_ntypes, bmem, bmemlen);
+    return new (omem) ContiguousProtoMsg (_ntypes, bmem, bmemlen);
   }
 };
 
 ProtoMsg*
 ProtoMsg::_new (uint32 _ntypes)
 {
-  return OneChunkProtoMsg::_new (_ntypes);
+  return ContiguousProtoMsg::_new (_ntypes);
 }
 
 // == ProtoScope ==
