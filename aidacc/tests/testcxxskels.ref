@@ -239,7 +239,6 @@ protected:
   explicit                               I_FirstInterfaceIface ();
   virtual /*Des*/                       ~I_FirstInterfaceIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "MandatoryNamespace::FirstInterface"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -608,7 +607,6 @@ protected:
   explicit                               I_UIWidgetAreaIface ();
   virtual /*Des*/                       ~I_UIWidgetAreaIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::UIWidgetArea"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -656,7 +654,6 @@ protected:
   explicit                               I_ParentIface ();
   virtual /*Des*/                       ~I_ParentIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Parent"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -776,7 +773,6 @@ protected:
   explicit                               I_QuickIfaceIface ();
   virtual /*Des*/                       ~I_QuickIfaceIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::QuickIface"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -799,7 +795,6 @@ protected:
   explicit                               I_MethodTestInterfaceIface ();
   virtual /*Des*/                       ~I_MethodTestInterfaceIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::MethodTestInterface"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -844,7 +839,6 @@ protected:
   explicit                               I_SignalTestInterfaceIface ();
   virtual /*Des*/                       ~I_SignalTestInterfaceIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::SignalTestInterface"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -958,7 +952,6 @@ protected:
   explicit                               I_PropertyTesterIface ();
   virtual /*Des*/                       ~I_PropertyTesterIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::PropertyTester"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -1005,7 +998,6 @@ protected:
   explicit                               I_ButtonAreaIface ();
   virtual /*Des*/                       ~I_ButtonAreaIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "RapicornAidaTest::ButtonArea"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -1040,7 +1032,6 @@ protected:
   explicit                               I_PureMethodsIface ();
   virtual /*Des*/                       ~I_PureMethodsIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "RapicornAidaTest::PureMethods"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -1066,7 +1057,6 @@ protected:
   explicit                               I_NameTestsIface ();
   virtual /*Des*/                       ~I_NameTestsIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "Other::NameTests"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -1094,7 +1084,6 @@ protected:
   explicit                               I_CompressorIface ();
   virtual /*Des*/                       ~I_CompressorIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "BseTest::Compressor"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
@@ -1148,7 +1137,6 @@ protected:
   explicit                               I_SoundModuleIface ();
   virtual /*Des*/                       ~I_SoundModuleIface () override = 0;
 public:
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "BseTest::SoundModule"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();

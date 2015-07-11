@@ -61,6 +61,7 @@ struct PropertyList;
 class Property;
 typedef std::shared_ptr<OrbObject>    OrbObjectP;
 typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
+typedef std::shared_ptr<BaseConnection> BaseConnectionP;
 typedef ProtoMsg* (*DispatchFunc) (ProtoReader&);
 
 // == EnumValue ==
@@ -562,9 +563,9 @@ public:
 
 // == ObjectBroker ==
 class ObjectBroker {
+  static std::shared_ptr<ServerConnection> make_server_connection (const String &protocol);
   static void   setup_connection_ctor_protocol    (const char *protocol);
   static void   verify_connection_construction    ();
-  static void   construct_server_connection       (ServerConnection *&var);
   static void   construct_client_connection       (ClientConnection *&var);
   static uint   connection_id_from_protocol       (const std::string &protocol);
   static void   connection_handshake              (const std::string                 &endpoint,
@@ -575,8 +576,7 @@ public:
   static uint              register_connection    (BaseConnection    &connection);
   static void              unregister_connection  (BaseConnection    &connection);
   static ClientConnection* get_client_connection  (ClientConnection *&var);
-  static ServerConnection* get_server_connection  (ServerConnection *&var);
-  template<class C> static void bind            (const std::string &protocol, std::shared_ptr<C> object_ptr);
+  template<class C> static BaseConnectionP bind   (const std::string &protocol, std::shared_ptr<C> object_ptr);
   template<class H> static H    connect         (const std::string &endpoint);
 };
 
@@ -831,14 +831,6 @@ ProtoMsg::reset()
     }
 }
 
-inline ServerConnection*
-ObjectBroker::get_server_connection (ServerConnection *&var)
-{
-  if (AIDA_UNLIKELY (var == NULL))
-    construct_server_connection (var);
-  return var;
-}
-
 inline ClientConnection*
 ObjectBroker::get_client_connection (ClientConnection *&var)
 {
@@ -848,16 +840,14 @@ ObjectBroker::get_client_connection (ClientConnection *&var)
 }
 
 /// Initialize the ServerConnection of @a C and accept connections via @a protocol
-template<class C> void
+template<class C> BaseConnectionP
 ObjectBroker::bind (const std::string &protocol, std::shared_ptr<C> object_ptr)
 {
   AIDA_ASSERT (object_ptr != NULL);
-  setup_connection_ctor_protocol (protocol.c_str());
-  BaseConnection *new_connection = C::__aida_connection__();
-  verify_connection_construction();
-  ServerConnection *server_connection = dynamic_cast<ServerConnection*> (new_connection);
-  AIDA_ASSERT (server_connection != NULL);
-  server_connection->remote_origin (object_ptr);
+  auto server_connection = make_server_connection (protocol);
+  if (server_connection)
+    server_connection->remote_origin (object_ptr);
+  return server_connection;
 }
 
 /// Initialize the ClientConnection of @a H and accept connections via @a protocol, assigns errno.

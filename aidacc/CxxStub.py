@@ -513,7 +513,7 @@ class Generator:
     s += 'public:\n'
     if self.gen_mode == G4STUB:
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () override;\n' % self.C (type_info) # dtor
-    if ddc:
+    if ddc and self.gen_mode == G4STUB:
       s += '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('Rapicorn::Aida::TypeHashList') + ' __aida_typelist__  () const override;\n'
@@ -593,6 +593,8 @@ class Generator:
     s += '; \t///< %s\n' % copydoc
     return s
   def generate_aida_connection_impl (self, class_info):
+    if self.gen_mode == G4SERVANT:
+      return ''
     assert not bases (class_info) # must be non-derived type
     s, classC = '', self.C (class_info)
     s += 'Rapicorn::Aida::BaseConnection*\n'

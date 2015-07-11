@@ -2567,6 +2567,13 @@ ObjectBroker::connection_from_id (uint64 conid)
   return conid ? orb_connections[idx].load() : NULL;
 }
 
+std::shared_ptr<ServerConnection>
+ObjectBroker::make_server_connection (const String &protocol)
+{
+  AIDA_ASSERT (ObjectBroker::connection_id_from_protocol (protocol) == 0);
+  return std::make_shared<ServerConnectionImpl> (protocol);
+}
+
 static __thread const char *call_stack_connection_ctor_protocol = NULL;
 
 void
@@ -2584,18 +2591,6 @@ ObjectBroker::verify_connection_construction()
 {
   const bool connection_ctor_consumed_protocol = call_stack_connection_ctor_protocol == NULL;
   AIDA_ASSERT (connection_ctor_consumed_protocol);
-}
-
-void
-ObjectBroker::construct_server_connection (ServerConnection *&var)
-{
-  AIDA_ASSERT (var == NULL);
-  if (call_stack_connection_ctor_protocol == NULL)
-    fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::bind<>");
-  const std::string protocol = call_stack_connection_ctor_protocol;
-  call_stack_connection_ctor_protocol = NULL;
-  AIDA_ASSERT (ObjectBroker::connection_id_from_protocol (protocol) == 0);
-  var = new ServerConnectionImpl (protocol);
 }
 
 void
