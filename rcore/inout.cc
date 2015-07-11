@@ -395,23 +395,28 @@ debug_fassert (const char *file, const int line, const char *message)
   debug_fmessage (file, line, String ("assertion failed: ") + (message ? message : "?"));
 }
 
-static Mutex              dbg_mutex;
-static String             dbg_envvar = "";
-static map<String,String> dbg_map;
+struct DebugMap {
+  Mutex                   mutex; // constexpr - so save to use from any static ctor/dtor
+  String                  envvar;
+  std::map<String,String> map;
+  DebugMap() {}
+  RAPICORN_CLASS_NON_COPYABLE (DebugMap);
+};
+static StaticUndeletable<DebugMap*> dbg; // a static undeletable DebugMap makes dbg available for all other static ctor/dtor calls
 
 /// Parse environment variable @a name for debug configuration.
 void
 debug_envvar (const String &name)
 {
-  ScopedLock<Mutex> locker (dbg_mutex);
-  dbg_envvar = name;
+  ScopedLock<Mutex> locker (dbg->mutex);
+  dbg->envvar = name;
 }
 
 /// Set debug configuration override.
 void
 debug_config_add (const String &option)
 {
-  ScopedLock<Mutex> locker (dbg_mutex);
+  ScopedLock<Mutex> locker (dbg->mutex);
   String key, value;
   const size_t eq = option.find ('=');
   if (eq != std::string::npos)
@@ -425,31 +430,31 @@ debug_config_add (const String &option)
       value = "1";
     }
   if (!key.empty())
-    dbg_map[key] = value;
+    dbg->map[key] = value;
 }
 
 /// Unset debug configuration override.
 void
 debug_config_del (const String &key)
 {
-  ScopedLock<Mutex> locker (dbg_mutex);
-  dbg_map.erase (key);
+  ScopedLock<Mutex> locker (dbg->mutex);
+  dbg->map.erase (key);
 }
 
 /// Query debug configuration for option @a key, defaulting to @a default_value.
 String
 debug_config_get (const String &key, const String &default_value)
 {
-  ScopedLock<Mutex> locker (dbg_mutex);
-  auto pair = dbg_map.find (key);
-  if (pair != dbg_map.end())
+  ScopedLock<Mutex> locker (dbg->mutex);
+  auto pair = dbg->map.find (key);
+  if (pair != dbg->map.end())
     return pair->second;
   auto envstring = [] (const char *name) {
     const char *c = name ? getenv (name) : NULL;
     return c ? c : "";
   };
   const String options[3] = {
-    envstring (dbg_envvar.c_str()), // FIXME: errors in static ctors *might* access dbg_envvar *before* its initialized
+    envstring (dbg->envvar.c_str()),
     envstring ("RAPICORN_DEBUG"),
     string_format ("fatal-syslog=1:devel=%d", RAPICORN_DEVEL_VERSION), // debug config defaults
   };
