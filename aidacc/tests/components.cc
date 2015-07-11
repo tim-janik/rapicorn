@@ -158,7 +158,8 @@ main (int   argc,
     A1::BigDataPack buck;
     buck.__aida_from_any__ (any);
     assert (big == buck);
-    printerr ("Big->Buck via Any:\n%s\n", struct_to_xml (buck, "BigDataPack"));
+    if (0)
+      printerr ("Big->Buck via Any:\n%s\n", struct_to_xml (buck, "BigDataPack"));
   }
 
   // test non-introspectible enums
