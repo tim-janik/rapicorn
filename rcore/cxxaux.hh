@@ -221,10 +221,53 @@ template<class... T0toN > using void_t = typename void_t__voider<T0toN...>::type
   /*copy-ctor*/ ClassName  (const ClassName&) = delete; \
   ClassName&    operator=  (const ClassName&) = delete
 
+// == Forward Declarations ==
+class Mutex;
+template<class> class ScopedLock;
+
 // == C++ Helper Classes ==
 /// Simple helper class to call one-line lambda initializers as static constructor.
 struct Init {
   explicit Init (void (*f) ()) { f(); }
+};
+
+/// StaticUndeletable - @a ClassPtr must be pointer to @a Class. See StaticUndeletable<Class*>.
+template<class ClassPtr> struct StaticUndeletable {
+  static_assert (std::is_pointer<ClassPtr>::value, "StaticUndeletable<Class*> requires class pointer template argument");
+};
+
+/// Create an instance of @a Class that is constructed and never destructed.
+/// StaticUndeletable<Class*> provides the memory for a @a Class instance and calls it's
+/// constructor, but it's destructor is never called (so the memory allocated to the
+/// StaticUndeletable must not be freed). A StaticUndeletable should be used for static
+/// variables that need to persist across all other static ctor/dtor calls.
+template<class Class>
+class StaticUndeletable<Class*> {
+  Class *instance;
+  uint64 memspace[(sizeof (Class) + 7) / 8];
+public:
+  constexpr  StaticUndeletable() : instance (NULL) {}
+  /*dtor*/  ~StaticUndeletable()                   { /* leave instance untouched */ }
+  /// Always return the same @a Class instance, created upon the first call.
+  Class*
+  operator->()
+  {
+    if (RAPICORN_UNLIKELY (!instance))
+      {
+        static Mutex initialisation_mutex;
+        ScopedLock<Mutex> locker (initialisation_mutex);
+        // call new and never delete
+        if (!instance)
+          instance = new (memspace) Class();
+      }
+    return instance;
+  }
+  /// Retrieve reference to @a Class instance.
+  Class&
+  operator*()
+  {
+    return *operator->();
+  }
 };
 
 /**
