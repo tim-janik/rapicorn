@@ -2567,14 +2567,6 @@ ObjectBroker::connection_from_id (uint64 conid)
   return conid ? orb_connections[idx].load() : NULL;
 }
 
-uint
-ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
-{
-  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  const size_t handler_index = handler_id_parts.signal_handler_index;
-  return handler_index ? handler_id_parts.orbid_connection : 0; // FIXME
-}
-
 static __thread const char *call_stack_connection_ctor_protocol = NULL;
 
 void
