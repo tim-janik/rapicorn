@@ -29,6 +29,11 @@ SYMLINK_LATEST = ( L=`/bin/ls $(1) 2>/dev/null | sort -r | head -1` ; if test -n
 		   then echo "  RELINK" $(2) && rm -f $(2) && ln -s "$$L" $(2) ; \
 		   else echo "  UNLINK" $(2) && rm -f $(2) ; fi )
 
+# == Doc Helpers ==
+local-ETAGS:
+	ctags -e --c++-kinds=+p --fields=+iaS --extra=+q -a -f $(top_builddir)/ETAGS $(am__tagged_files)
+.PHONY: local-ETAGS
+
 # == X11 for Unit Tests ==
 x11test_log   = $(abs_top_builddir)/.x11test.log
 DISPLAYHASH   = x11test-$(shell echo "$(PACKAGE) $(abs_top_builddir)" | md5sum | sed 's/\(.\{7\}\).*/\1/')
