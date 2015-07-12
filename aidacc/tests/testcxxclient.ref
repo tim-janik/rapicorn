@@ -18,9 +18,6 @@ using Rapicorn::Aida::uint64;
 namespace __AIDA_Local__ {
 using namespace Rapicorn::Aida;
 
-// connection
-static Rapicorn::Aida::ClientConnection *client_connection = NULL;
-
 // helper
 static inline ProtoMsg*
 new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
@@ -259,7 +256,6 @@ class FirstInterfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~FirstInterfaceHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static FirstInterfaceHandle   down_cast (RemoteHandle smh) { return smh == NULL ? FirstInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      FirstInterfaceHandle ();
@@ -627,7 +623,6 @@ class UIWidgetAreaHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~UIWidgetAreaHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static UIWidgetAreaHandle     down_cast (RemoteHandle smh) { return smh == NULL ? UIWidgetAreaHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      UIWidgetAreaHandle ();
@@ -668,7 +663,6 @@ class ParentHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~ParentHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static ParentHandle           down_cast (RemoteHandle smh) { return smh == NULL ? ParentHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ParentHandle ();
@@ -768,7 +762,6 @@ class QuickIfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~QuickIfaceHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static QuickIfaceHandle       down_cast (RemoteHandle smh) { return smh == NULL ? QuickIfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      QuickIfaceHandle ();
@@ -786,7 +779,6 @@ class MethodTestInterfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~MethodTestInterfaceHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static MethodTestInterfaceHandle down_cast (RemoteHandle smh) { return smh == NULL ? MethodTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      MethodTestInterfaceHandle ();
@@ -874,7 +866,6 @@ class SignalTestInterfaceHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~SignalTestInterfaceHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static SignalTestInterfaceHandle down_cast (RemoteHandle smh) { return smh == NULL ? SignalTestInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      SignalTestInterfaceHandle ();
@@ -950,7 +941,6 @@ class PropertyTesterHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~PropertyTesterHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static PropertyTesterHandle   down_cast (RemoteHandle smh) { return smh == NULL ? PropertyTesterHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      PropertyTesterHandle ();
@@ -996,7 +986,6 @@ class ButtonAreaHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~ButtonAreaHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static ButtonAreaHandle       down_cast (RemoteHandle smh) { return smh == NULL ? ButtonAreaHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ButtonAreaHandle ();
@@ -1025,7 +1014,6 @@ class PureMethodsHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~PureMethodsHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static PureMethodsHandle      down_cast (RemoteHandle smh) { return smh == NULL ? PureMethodsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      PureMethodsHandle ();
@@ -1046,7 +1034,6 @@ class NameTestsHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~NameTestsHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static NameTestsHandle        down_cast (RemoteHandle smh) { return smh == NULL ? NameTestsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      NameTestsHandle ();
@@ -1069,7 +1056,6 @@ class CompressorHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~CompressorHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static CompressorHandle       down_cast (RemoteHandle smh) { return smh == NULL ? CompressorHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      CompressorHandle ();
@@ -1118,7 +1104,6 @@ class SoundModuleHandle : public virtual Rapicorn::Aida::RemoteHandle
 protected:
 public:
   virtual /*Des*/                       ~SoundModuleHandle () override;
-  static Rapicorn::Aida::BaseConnection* __aida_connection__();
   template<class RemoteHandle>
   static SoundModuleHandle      down_cast (RemoteHandle smh) { return smh == NULL ? SoundModuleHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      SoundModuleHandle ();
@@ -1129,11 +1114,6 @@ typedef SoundModuleHandle SoundModuleH; ///< Convenience alias for the IDL type 
 // --- Implementations ---
 
 namespace MandatoryNamespace {
-Rapicorn::Aida::BaseConnection*
-FirstInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 FirstInterfaceHandle::FirstInterfaceHandle ()
 {}
 FirstInterfaceHandle::~FirstInterfaceHandle ()
@@ -1810,11 +1790,6 @@ UIWidgetAreaHandle::__aida_connect__sample_signal (size_t signal_handler_id, con
   void *fptr = new std::function<double (UIWidgetAreaHandle &ba1, int someint)> (func);
   return __o_.current_client_connection().signal_connect (0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, *this, __aida_emit2__UIWidgetAreaHandle__sample_signal, fptr);
 }
-Rapicorn::Aida::BaseConnection*
-UIWidgetAreaHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 UIWidgetAreaHandle::UIWidgetAreaHandle ()
 {}
 UIWidgetAreaHandle::~UIWidgetAreaHandle ()
@@ -2024,11 +1999,6 @@ UIWidgetAreaHandle::on_click2in (const std::string &arg_command) /// See UIWidge
   fr = __o_.invoke (&__p_);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
-Rapicorn::Aida::BaseConnection*
-ParentHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 ParentHandle::ParentHandle ()
 {}
 ParentHandle::~ParentHandle ()
@@ -2176,11 +2146,6 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_QuickSequence &self)
     fbr >>= self[k];
   }
 }
-Rapicorn::Aida::BaseConnection*
-QuickIfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 QuickIfaceHandle::QuickIfaceHandle ()
 {}
 QuickIfaceHandle::~QuickIfaceHandle ()
@@ -2211,11 +2176,6 @@ QuickIfaceHandle::simple_function (int arg_i) /// See QuickIface::simple_functio
   __p_ <<= arg_i;
   fr = __o_.invoke (&__p_);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
-}
-Rapicorn::Aida::BaseConnection*
-MethodTestInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 MethodTestInterfaceHandle::MethodTestInterfaceHandle ()
 {}
@@ -3008,11 +2968,6 @@ SignalTestInterfaceHandle::__aida_connect__self_args (size_t signal_handler_id, 
   void *fptr = new std::function<void (SignalTestInterfaceHandle &self_)> (func);
   return __o_.current_client_connection().signal_connect (0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, *this, __aida_emit1__SignalTestInterfaceHandle__self_args, fptr);
 }
-Rapicorn::Aida::BaseConnection*
-SignalTestInterfaceHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 SignalTestInterfaceHandle::SignalTestInterfaceHandle ()
 {}
 SignalTestInterfaceHandle::~SignalTestInterfaceHandle ()
@@ -3101,11 +3056,6 @@ AnotherChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Ra
       break;
     }
   return target;
-}
-Rapicorn::Aida::BaseConnection*
-PropertyTesterHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 PropertyTesterHandle::PropertyTesterHandle ()
 {}
@@ -3423,11 +3373,6 @@ ButtonAreaHandle::__aida_connect__activate (size_t signal_handler_id, const std:
   void *fptr = new std::function<void ()> (func);
   return __o_.current_client_connection().signal_connect (0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, *this, __aida_emit1__ButtonAreaHandle__activate, fptr);
 }
-Rapicorn::Aida::BaseConnection*
-ButtonAreaHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 ButtonAreaHandle::ButtonAreaHandle ()
 {}
 ButtonAreaHandle::~ButtonAreaHandle ()
@@ -3538,11 +3483,6 @@ ButtonAreaHandle::click_type (ClickType value) /// See ButtonArea::click_type
   fr = __o_.invoke (&__p_);
   if (fr) delete fr;
 }
-Rapicorn::Aida::BaseConnection*
-PureMethodsHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 PureMethodsHandle::PureMethodsHandle ()
 {}
 PureMethodsHandle::~PureMethodsHandle ()
@@ -3582,11 +3522,6 @@ PureMethodsHandle::pure_method (double arg_f) /// See PureMethods::pure_method()
 } // RapicornAidaTest
 
 namespace Other {
-Rapicorn::Aida::BaseConnection*
-NameTestsHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 NameTestsHandle::NameTestsHandle ()
 {}
 NameTestsHandle::~NameTestsHandle ()
@@ -3625,11 +3560,6 @@ NameTestsHandle::args_from_other_namespace (const InterfaceTests::ClnT_QuickReco
 } // Other
 
 namespace BseTest {
-Rapicorn::Aida::BaseConnection*
-CompressorHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
-}
 CompressorHandle::CompressorHandle ()
 {}
 CompressorHandle::~CompressorHandle ()
@@ -3736,11 +3666,6 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_RecordForGroups &self)
   fbr >>= self.ordinary_bool;
   fbr >>= self.threshold1;
   fbr >>= self.threshold2;
-}
-Rapicorn::Aida::BaseConnection*
-SoundModuleHandle::__aida_connection__()
-{
-  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);
 }
 SoundModuleHandle::SoundModuleHandle ()
 {}

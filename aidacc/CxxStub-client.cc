@@ -9,9 +9,6 @@ using Rapicorn::Aida::uint64;
 namespace __AIDA_Local__ {
 using namespace Rapicorn::Aida;
 
-// connection
-static Rapicorn::Aida::ClientConnection *client_connection = NULL;
-
 // helper
 static inline ProtoMsg*
 new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)

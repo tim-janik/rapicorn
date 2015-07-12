@@ -6,7 +6,12 @@
 namespace Rapicorn {
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
-static ApplicationH app_cached;
+
+struct AppData {
+  ApplicationH          app;
+  Aida::BaseConnectionP connection;
+};
+static StaticUndeletable<AppData*> static_appdata; // use StaticUndeletable to ensure app stays around for static dtors
 
 /// Check and return if init_app() or init_test_app() has already been called.
 bool
@@ -30,30 +35,33 @@ init_app_initialized ()
 ApplicationH
 init_app (const String &app_ident, int *argcp, char **argv, const StringVector &args)
 {
-  assert_return (init_app_initialized() == false, app_cached);
+  assert_return (init_app_initialized() == false, static_appdata->app);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
-    fatal ("librapicornui: link error: C++ constructors have not been executed");
+    fatal ("%s: link error: C++ constructors have not been executed", __func__);
   // initialize core
   if (!init_core_initialized())
     init_core (app_ident, argcp, argv, args);
   else if (app_ident != program_ident())
-    fatal ("librapicornui: application identifier changed during ui initialization");
+    fatal ("%s: application identifier changed during ui initialization", __func__);
   // boot up UI thread
   const bool boot_ok = uithread_bootup (argcp, argv, args);
-  assert (boot_ok);
+  if (!boot_ok)
+    fatal ("%s: failed to start Rapicorn UI thread: %s", __func__, strerror (errno));
   // connect to remote UIThread and fetch main handle
-  ApplicationH app = Aida::ObjectBroker::connect<ApplicationHandle> ("inproc://Rapicorn-" RAPICORN_VERSION);
-  assert (app != NULL);
-  // assign global remote handle
-  app_cached = app;
-  return app_cached;
+  static_appdata->connection = Aida::ObjectBroker::connect ("inproc://Rapicorn-" RAPICORN_VERSION);
+  if (!static_appdata->connection)
+    fatal ("%s: failed to connect to Rapicorn UI thread: %s", __func__, strerror (errno));
+  static_appdata->app = static_appdata->connection->remote_origin<ApplicationHandle>();
+  if (!static_appdata->app)
+    fatal ("%s: failed to retrieve Rapicorn::Application object: %s", __func__, strerror (errno));
+  return static_appdata->app;
 }
 
 ApplicationH
 ApplicationH::the ()
 {
-  return app_cached;
+  return static_appdata->app;
 }
 
 /**
@@ -140,12 +148,13 @@ namespace Rapicorn {
 MainLoopP
 ApplicationH::main_loop()
 {
-  assert_return (the() != NULL, NULL);
+  ApplicationH the_app = the();
+  assert_return (the_app != NULL, NULL);
   static MainLoopP app_loop = NULL;
   do_once
     {
       app_loop = MainLoop::create();
-      AppSourceP source = AppSource::create (*ApplicationHandle::__aida_connection__());
+      AppSourceP source = AppSource::create (*the_app.__aida_connection__());
       app_loop->add (source);
       source->queue_check_primaries();
     }

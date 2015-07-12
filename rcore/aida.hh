@@ -62,6 +62,7 @@ class Property;
 typedef std::shared_ptr<OrbObject>    OrbObjectP;
 typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
 typedef std::shared_ptr<BaseConnection> BaseConnectionP;
+typedef std::shared_ptr<ServerConnection> ServerConnectionP;
 typedef ProtoMsg* (*DispatchFunc) (ProtoReader&);
 
 // == EnumValue ==
@@ -549,7 +550,7 @@ private:
     target.__aida_upgrade_from__ (smh);                 // like reinterpret_cast<>
     return TargetHandle::down_cast (target);            // like dynamic_cast<>
   }
-  friend  class ObjectBroker;
+  friend class BaseConnection;
 };
 
 // == RemoteMember ==
@@ -563,21 +564,12 @@ public:
 
 // == ObjectBroker ==
 class ObjectBroker {
-  static std::shared_ptr<ServerConnection> make_server_connection (const String &protocol);
-  static void   setup_connection_ctor_protocol    (const char *protocol);
-  static void   verify_connection_construction    ();
-  static void   construct_client_connection       (ClientConnection *&var);
-  static uint   connection_id_from_protocol       (const std::string &protocol);
-  static void   connection_handshake              (const std::string                 &endpoint,
-                                                   std::function<BaseConnection*()>   aida_connection,
-                                                   std::function<void (RemoteHandle)> origin_cast);
-  static BaseConnection*   connection_from_id     (uint64             connection_id);
+  static ServerConnectionP                 make_server_connection (const String &protocol);
 public:
-  static uint              register_connection    (BaseConnection    &connection);
-  static void              unregister_connection  (BaseConnection    &connection);
-  static ClientConnection* get_client_connection  (ClientConnection *&var);
-  template<class C> static BaseConnectionP bind   (const std::string &protocol, std::shared_ptr<C> object_ptr);
-  template<class H> static H    connect         (const std::string &endpoint);
+  static uint                              register_connection    (BaseConnection    &connection);
+  static void                              unregister_connection  (BaseConnection    &connection);
+  static BaseConnectionP                   connect                (const String &protocol);
+  template<class C> static BaseConnectionP bind                   (const String &protocol, std::shared_ptr<C> object_ptr);
 };
 
 // == ProtoMsg ==
@@ -711,18 +703,20 @@ protected:
   explicit               BaseConnection  (const std::string &protocol);
   virtual               ~BaseConnection  ();
   virtual void           remote_origin   (ImplicitBaseP rorigin) = 0;
+  virtual RemoteHandle   remote_origin   () = 0;
   virtual void           receive_msg     (ProtoMsg*) = 0; ///< Accepts an incoming message, transfers memory.
   void                   post_peer_msg   (ProtoMsg*);     ///< Send message to peer, transfers memory.
   void                   assign_id       (uint connection_id);
-  std::string            protocol        () const       { return protocol_; }
   void                   peer_connection (BaseConnection &peer);
 public:
   BaseConnection&        peer_connection () const;
+  bool                   has_peer        () const;
+  String                 protocol        () const { return protocol_; }
   uint                   connection_id   () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
   virtual int            notify_fd       () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending         () = 0; ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch        () = 0; ///< Dispatch a single event if any is pending.
-  virtual RemoteHandle   remote_origin   () = 0;
+  template<class H> H    remote_origin   ();
 };
 
 /// Function typoe for internal signal handling.
@@ -831,17 +825,9 @@ ProtoMsg::reset()
     }
 }
 
-inline ClientConnection*
-ObjectBroker::get_client_connection (ClientConnection *&var)
-{
-  if (AIDA_UNLIKELY (var == NULL))
-    construct_client_connection (var);
-  return var;
-}
-
 /// Initialize the ServerConnection of @a C and accept connections via @a protocol
 template<class C> BaseConnectionP
-ObjectBroker::bind (const std::string &protocol, std::shared_ptr<C> object_ptr)
+ObjectBroker::bind (const String &protocol, std::shared_ptr<C> object_ptr)
 {
   AIDA_ASSERT (object_ptr != NULL);
   auto server_connection = make_server_connection (protocol);
@@ -850,16 +836,11 @@ ObjectBroker::bind (const std::string &protocol, std::shared_ptr<C> object_ptr)
   return server_connection;
 }
 
-/// Initialize the ClientConnection of @a H and accept connections via @a protocol, assigns errno.
-template<class H> H
-ObjectBroker::connect (const std::string &endpoint)
+/// Retrieve the remote origin of type @a Handle from a connection.
+template<class Handle> Handle
+BaseConnection::remote_origin ()
 {
-  H remote_handle;
-  auto origin_cast = [&remote_handle] (RemoteHandle rh) {
-    remote_handle = RemoteHandle::__aida_reinterpret_down_cast__<H> (rh);
-  };
-  connection_handshake (endpoint, H::__aida_connection__, origin_cast);
-  return remote_handle;
+  return RemoteHandle::__aida_reinterpret_down_cast__<Handle> (remote_origin());
 }
 
 } } // Rapicorn::Aida

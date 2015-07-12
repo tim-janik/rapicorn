@@ -1850,15 +1850,21 @@ BaseConnection::post_peer_msg (ProtoMsg *pm)
 BaseConnection&
 BaseConnection::peer_connection () const
 {
-  assert (peer_ != NULL);
+  assert (has_peer());
   return *peer_;
 }
 
 void
 BaseConnection::peer_connection (BaseConnection &peer)
 {
-  assert (peer_ == NULL);
+  assert (has_peer() == false);
   peer_ = &peer;
+}
+
+bool
+BaseConnection::has_peer () const
+{
+  return peer_ != NULL;
 }
 
 /// Provide initial handle for remote connections.
@@ -1925,6 +1931,7 @@ public:
     ObjectBroker::unregister_connection (*this);
     sem_destroy (&transport_sem_);
     pthread_spin_destroy (&signal_spin_);
+    fatal ("%s: proper ClientConnection is not implemented", __func__);
   }
   virtual void
   receive_msg (ProtoMsg *fb) override
@@ -2531,6 +2538,22 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 #define MAX_CONNECTIONS        7                                             // arbitrary limit that can be extended if needed
 static Atomic<BaseConnection*> orb_connections[MAX_CONNECTIONS] = { NULL, }; // initialization needed to call consexpr ctor
 
+static ServerConnection*
+server_connection_from_protocol (const String &protocol)
+{
+  for (size_t idx = 0; idx < MAX_CONNECTIONS; idx++)
+    {
+      BaseConnection *bcon = orb_connections[idx];
+      if (bcon && protocol == bcon->protocol())
+        {
+          ServerConnection *scon = dynamic_cast<ServerConnection*> (bcon);
+          if (scon)
+            return scon;
+        }
+    }
+  return NULL;  // unmatched
+}
+
 uint
 ObjectBroker::register_connection (BaseConnection &connection)
 {
@@ -2559,88 +2582,35 @@ ObjectBroker::unregister_connection (BaseConnection &connection)
   orb_connections[idx].store (NULL);
 }
 
-///< Connection lookup by id, used for message delivery.
-BaseConnection*
-ObjectBroker::connection_from_id (uint64 conid)
-{
-  const uint64 idx = conid % MAX_CONNECTIONS;
-  return conid ? orb_connections[idx].load() : NULL;
-}
-
-std::shared_ptr<ServerConnection>
+ServerConnectionP
 ObjectBroker::make_server_connection (const String &protocol)
 {
-  AIDA_ASSERT (ObjectBroker::connection_id_from_protocol (protocol) == 0);
+  assert (protocol.empty() == false);
+  AIDA_ASSERT (server_connection_from_protocol (protocol) == NULL);
   return std::make_shared<ServerConnectionImpl> (protocol);
 }
 
-static __thread const char *call_stack_connection_ctor_protocol = NULL;
-
-void
-ObjectBroker::setup_connection_ctor_protocol (const char *protocol)
+/// Initialize the ClientConnection of @a H and accept connections via @a protocol, assigns errno.
+BaseConnectionP
+ObjectBroker::connect (const std::string &protocol)
 {
-  if (protocol)
-    AIDA_ASSERT (call_stack_connection_ctor_protocol == NULL);
-  else
-    AIDA_ASSERT (call_stack_connection_ctor_protocol != NULL);
-  call_stack_connection_ctor_protocol = protocol;
-}
-
-void
-ObjectBroker::verify_connection_construction()
-{
-  const bool connection_ctor_consumed_protocol = call_stack_connection_ctor_protocol == NULL;
-  AIDA_ASSERT (connection_ctor_consumed_protocol);
-}
-
-void
-ObjectBroker::construct_client_connection (ClientConnection *&var)
-{
-  AIDA_ASSERT (var == NULL);
-  if (call_stack_connection_ctor_protocol == NULL)
-    fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::connect<>");
-  const std::string protocol = call_stack_connection_ctor_protocol;
-  call_stack_connection_ctor_protocol = NULL;
-  assert (protocol.empty() == false);
-  const uint server_connection_id = connection_id_from_protocol (protocol);
-  assert (server_connection_id != 0);
-  BaseConnection *server_connection_base = connection_from_id (server_connection_id);
-  assert (server_connection_base != NULL);
-  ServerConnection *server_connection = dynamic_cast<ServerConnection*> (server_connection_base);
-  assert (server_connection != NULL);
-  ClientConnection *client_connection = new ClientConnectionImpl (protocol, *server_connection);
-  assert (client_connection != NULL);
-  server_connection->peer_connection (*client_connection);
-  var = client_connection;
-}
-
-uint
-ObjectBroker::connection_id_from_protocol (const std::string &protocol)
-{
-  for (size_t idx = 0; idx < MAX_CONNECTIONS; idx++)
+  BaseConnectionP connection;
+  ServerConnection *scon = server_connection_from_protocol (protocol);
+  if (!scon)
     {
-      BaseConnection *bcon = orb_connections[idx];
-      if (bcon && protocol == bcon->protocol() && dynamic_cast<ServerConnection*> (bcon))
-        return bcon->connection_id();
+      errno = EHOSTUNREACH; // ECONNREFUSED;
+      return connection;
     }
-  return 0;     // unmatched
-}
-
-void
-ObjectBroker::connection_handshake (const std::string                 &endpoint,
-                                    std::function<BaseConnection* ()>  aida_connection,
-                                    std::function<void (RemoteHandle)> origin_cast)
-{
-  setup_connection_ctor_protocol (endpoint.c_str());
-  BaseConnection *new_connection = aida_connection();
-  verify_connection_construction();
-  ClientConnection *client_connection = dynamic_cast<ClientConnection*> (new_connection);
-  AIDA_ASSERT (client_connection != NULL);
-  RemoteHandle remote = client_connection->remote_origin();
-  if (!remote)
-    return;             // preserve errno
-  origin_cast (remote);
-  errno = ENOMSG;       // indicates invalid type cast
+  if (scon->has_peer())
+    {
+      errno = EBUSY;
+      return connection;
+    }
+  connection = std::make_shared<ClientConnectionImpl> (protocol, *scon);
+  assert (connection != NULL);
+  scon->peer_connection (*connection);
+  errno = 0;
+  return connection;
 }
 
 // == ImplicitBase <-> RemoteHandle RPC ==
