@@ -281,18 +281,11 @@ private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
   template<class T>          using IsCStr                = ::std::is_same<const char*, typename ::std::decay<T>::type>;
-  template<class T>          using IsRemoteHandleDerived = ::std::integral_constant<bool,
-                                                                                    (::std::is_base_of<RemoteHandle, T>::value &&
-                                                                                     !::std::is_same<RemoteHandle,
-                                                                                     typename ::std::decay<T>::type>::value)>;
-  template<class T>          using IsImplicitBaseDerived = ::std::integral_constant<bool,
-                                                                                    (::std::is_base_of<ImplicitBase, T>::value &&
-                                                                                     !::std::is_same<ImplicitBase,
-                                                                                     typename ::std::decay<T>::type>::value)>;
+  template<class T>          using IsRemoteHandleDerived = ::std::integral_constant<bool, ::std::is_base_of<RemoteHandle, T>::value>;
+  template<class T>          using IsImplicitBaseDerived = ::std::integral_constant<bool, ::std::is_base_of<ImplicitBase, T>::value>;
   template<class T>          using IsImplicitBaseDerivedP =
     ::std::integral_constant<bool, (DerivesSharedPtr<T>::value &&
-                                    ::std::is_base_of<ImplicitBase, typename RemoveSharedPtr<T>::type >::value &&
-                                    !::std::is_same<ImplicitBase, typename ::std::decay<T>::type>::value)>;
+                                    ::std::is_base_of<ImplicitBase, typename RemoveSharedPtr<T>::type >::value)>;
   template<class T>          using IsLocalClass          =
     ::std::integral_constant<bool, (::std::is_class<T>::value && !DerivesString<T>::value &&
                                     !IsConvertible<T, ImplicitBase>::value && !IsConvertible<T, RemoteHandle>::value &&
