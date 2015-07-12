@@ -145,8 +145,8 @@ private:
     ApplicationImpl &application = ApplicationImpl::the();
     // setup Aida server connection for RPC calls
     Aida::BaseConnectionP connection =
-      Aida::ObjectBroker::bind<ApplicationIface> ("inproc://Rapicorn-" RAPICORN_VERSION,
-                                                  shared_ptr_cast<ApplicationIface> (&application));
+      Aida::ServerConnection::bind<ApplicationIface> ("inproc://Rapicorn-" RAPICORN_VERSION,
+                                                      shared_ptr_cast<ApplicationIface> (&application));
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)

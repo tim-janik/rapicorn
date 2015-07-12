@@ -50,7 +50,6 @@ typedef std::string String;
 class RemoteHandle;
 class OrbObject;
 class ImplicitBase;
-class ObjectBroker;
 class BaseConnection;
 class ClientConnection;
 class ServerConnection;
@@ -62,6 +61,7 @@ class Property;
 typedef std::shared_ptr<OrbObject>    OrbObjectP;
 typedef std::shared_ptr<ImplicitBase> ImplicitBaseP;
 typedef std::shared_ptr<BaseConnection> BaseConnectionP;
+typedef std::shared_ptr<ClientConnection> ClientConnectionP;
 typedef std::shared_ptr<ServerConnection> ServerConnectionP;
 typedef ProtoMsg* (*DispatchFunc) (ProtoReader&);
 
@@ -562,15 +562,6 @@ public:
   void     operator=   (const RemoteHandle &src) { RemoteHandle::operator= (src); }
 };
 
-// == ObjectBroker ==
-class ObjectBroker {
-  static ServerConnectionP make_server_connection (const String &protocol);
-public:
-  template<class C>
-  static BaseConnectionP   bind                   (const String &protocol, std::shared_ptr<C> object_ptr);
-  static BaseConnectionP   connect                (const String &protocol);
-};
-
 // == ProtoMsg ==
 union ProtoUnion {
   int64        vint64;
@@ -695,7 +686,6 @@ public:
 class BaseConnection {
   const std::string protocol_;
   BaseConnection   *peer_;
-  friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
   explicit               BaseConnection  (const std::string &protocol);
@@ -720,13 +710,17 @@ typedef ProtoMsg* SignalEmitHandler (const ProtoMsg*, void*);
 
 /// Connection context for IPC servers. @nosubgrouping
 class ServerConnection : public BaseConnection {
+  friend  class ClientConnection;
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
+  static ServerConnectionP make_server_connection (const String &protocol);
 protected:
   /*ctor*/                  ServerConnection      (const std::string &protocol);
   virtual                  ~ServerConnection      ();
   virtual void              cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
 public:
   typedef std::function<void (Rapicorn::Aida::ProtoReader&)> EmitResultHandler;
+  template<class C>
+  static ServerConnectionP  bind                    (const String &protocol, std::shared_ptr<C> object_ptr);
   void                      post_peer_msg           (ProtoMsg *pm)      { BaseConnection::post_peer_msg (pm); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
   virtual void              add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) = 0;
@@ -750,6 +744,7 @@ protected:
   explicit              ClientConnection (const std::string &protocol);
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
+  static ClientConnectionP  connect           (const String &protocol);
   virtual ProtoMsg*         call_remote       (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   virtual void              add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle) = 0;
   virtual void              pop_handle        (ProtoReader &fr, RemoteHandle &rhandle) = 0;
@@ -822,8 +817,8 @@ ProtoMsg::reset()
 }
 
 /// Initialize the ServerConnection of @a C and accept connections via @a protocol
-template<class C> BaseConnectionP
-ObjectBroker::bind (const String &protocol, std::shared_ptr<C> object_ptr)
+template<class C> ServerConnectionP
+ServerConnection::bind (const String &protocol, std::shared_ptr<C> object_ptr)
 {
   AIDA_ASSERT (object_ptr != NULL);
   auto server_connection = make_server_connection (protocol);

@@ -49,7 +49,7 @@ init_app (const String &app_ident, int *argcp, char **argv, const StringVector &
   if (!boot_ok)
     fatal ("%s: failed to start Rapicorn UI thread: %s", __func__, strerror (errno));
   // connect to remote UIThread and fetch main handle
-  static_appdata->connection = Aida::ObjectBroker::connect ("inproc://Rapicorn-" RAPICORN_VERSION);
+  static_appdata->connection = Aida::ClientConnection::connect ("inproc://Rapicorn-" RAPICORN_VERSION);
   if (!static_appdata->connection)
     fatal ("%s: failed to connect to Rapicorn UI thread: %s", __func__, strerror (errno));
   static_appdata->app = static_appdata->connection->remote_origin<ApplicationHandle>();

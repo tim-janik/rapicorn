@@ -1915,24 +1915,11 @@ BaseConnection::remote_origin (ImplicitBaseP)
   AIDA_ASSERT (!"reached");
 }
 
-/** Retrieve initial handle after remote connection has been established.
- * The @a feature_key_list contains key=value pairs, where value is assumed to be "1" if
- * omitted and generally treated as a regular expression to match against connection
- * feature keys as registered with the ObjectBroker.
- */
 RemoteHandle
 BaseConnection::remote_origin()
 {
   AIDA_ASSERT (!"reached");
 }
-
-// == ClientConnection ==
-ClientConnection::ClientConnection (const std::string &protocol) :
-  BaseConnection (protocol)
-{}
-
-ClientConnection::~ClientConnection ()
-{}
 
 // == ClientConnectionImpl ==
 class ClientConnectionImpl : public ClientConnection {
@@ -2279,6 +2266,37 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
   return shandler;
 }
 
+// == ClientConnection ==
+ClientConnection::ClientConnection (const std::string &protocol) :
+  BaseConnection (protocol)
+{}
+
+ClientConnection::~ClientConnection ()
+{}
+
+/// Initialize the ClientConnection of @a H and accept connections via @a protocol, assigns errno.
+ClientConnectionP
+ClientConnection::connect (const std::string &protocol)
+{
+  ClientConnectionP connection;
+  ServerConnection *scon = connection_registry->server_connection_from_protocol (protocol);
+  if (!scon)
+    {
+      errno = EHOSTUNREACH; // ECONNREFUSED;
+      return connection;
+    }
+  if (scon->has_peer())
+    {
+      errno = EBUSY;
+      return connection;
+    }
+  connection = std::make_shared<ClientConnectionImpl> (protocol, *scon);
+  assert (connection != NULL);
+  scon->peer_connection (*connection);
+  errno = 0;
+  return connection;
+}
+
 // == ServerConnectionImpl ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
 class ServerConnectionImpl : public ServerConnection {
@@ -2501,6 +2519,14 @@ ServerConnection::ServerConnection (const std::string &protocol) :
 ServerConnection::~ServerConnection()
 {}
 
+ServerConnectionP
+ServerConnection::make_server_connection (const String &protocol)
+{
+  assert (protocol.empty() == false);
+  AIDA_ASSERT (connection_registry->server_connection_from_protocol (protocol) == NULL);
+  return std::make_shared<ServerConnectionImpl> (protocol);
+}
+
 struct HashTypeHash {
   inline size_t operator() (const TypeHash &t) const
   {
@@ -2565,38 +2591,6 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
                              __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }
-}
-
-// == ObjectBroker ==
-ServerConnectionP
-ObjectBroker::make_server_connection (const String &protocol)
-{
-  assert (protocol.empty() == false);
-  AIDA_ASSERT (connection_registry->server_connection_from_protocol (protocol) == NULL);
-  return std::make_shared<ServerConnectionImpl> (protocol);
-}
-
-/// Initialize the ClientConnection of @a H and accept connections via @a protocol, assigns errno.
-BaseConnectionP
-ObjectBroker::connect (const std::string &protocol)
-{
-  BaseConnectionP connection;
-  ServerConnection *scon = connection_registry->server_connection_from_protocol (protocol);
-  if (!scon)
-    {
-      errno = EHOSTUNREACH; // ECONNREFUSED;
-      return connection;
-    }
-  if (scon->has_peer())
-    {
-      errno = EBUSY;
-      return connection;
-    }
-  connection = std::make_shared<ClientConnectionImpl> (protocol, *scon);
-  assert (connection != NULL);
-  scon->peer_connection (*connection);
-  errno = 0;
-  return connection;
 }
 
 // == ImplicitBase <-> RemoteHandle RPC ==
