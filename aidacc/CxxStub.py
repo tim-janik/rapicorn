@@ -918,7 +918,7 @@ class Generator:
       s += '  return NULL;\n'
     s += '}\n'
     s += 'size_t\n%s::__aida_connect__%s (size_t signal_handler_id, const std::function<%s %s> &func)\n{\n' % (classH, stype.name, sigret, sigargs)
-    s += '  Rapicorn::Aida::ProtoScope __o_ (*this->RemoteHandle::__aida_connection__());\n'
+    s += '  Rapicorn::Aida::ProtoScope __o_ (*__aida_connection__());\n'
     s += '  if (signal_handler_id)\n'
     s += '    return __o_.current_client_connection().signal_disconnect (signal_handler_id);\n'
     s += '  void *fptr = new std::function<%s %s> (func);\n' % (sigret, sigargs)
