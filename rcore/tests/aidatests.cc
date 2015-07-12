@@ -161,13 +161,6 @@ test_any()
   }
   if (true) // basics
     {
-      Any a;
-      try {
-        any_cast<int> (a); // throws bad_cast
-        assert_unreached();
-      } catch (const std::bad_cast&) {
-        ;
-      }
       Any f7 (Foo { 7 });
       TASSERT (f7 == f7);
       TASSERT (Foo { 7 } == f7.get<Foo>());

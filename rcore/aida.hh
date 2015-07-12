@@ -198,7 +198,7 @@ class Any /// Generic value type that can hold values of all other types.
     T value_;
   };
   template<class Type> Type
-  cast () const
+  cast_holder () const
   {
     if (kind() == LOCAL)
       {
@@ -323,7 +323,7 @@ public:
   template<typename T, REQUIRES< IsImplicitBaseDerivedP<T>::value > = true>            T    get () const { return cast_ibasep<T>(); }
   template<typename T, REQUIRES< IsRemoteHandleDerived<T>::value > = true>             T    get () const { return cast_handle<T>(); }
   template<typename T, REQUIRES< IsConvertible<const Any, T>::value > = true>          T    get () const { return *get_any(); }
-  template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      T    get () const { return cast<T>(); }
+  template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      T    get () const { return cast_holder<T>(); }
   // void set (const Type&);
   template<typename T, REQUIRES< IsBool<T>::value > = true>                            void set (T v) { return set_bool (v); }
   template<typename T, REQUIRES< IsInteger<T>::value > = true>                         void set (T v) { return set_int64 (v); }
@@ -348,28 +348,6 @@ public:
   String              repr             (const String &field_name = "") const;
   String              to_string        () const; ///< Retrieve string representation of Any for printouts.
   const Any&          as_any           () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
-  template<class T> friend T*
-  any_cast (Any *const any)     ///< Cast Any* into @a T* if possible or return NULL.
-  {
-    return !any ? NULL : any->cast<T*>();
-  }
-  template<class T> friend const T*
-  any_cast (const Any *any)     ///< Cast const Any* into @a const @a T* if possible or return NULL.
-  {
-    return !any ? NULL : any->cast<T*>();
-  }
-  template<class T> friend T
-  any_cast (Any &any)           ///< Cast Any& into @a T if possible or throw a std::bad_cast exception.
-  {
-    const T *result = any.cast<typename std::remove_reference<T>::type*>();
-    return result ? *result : throw std::bad_cast();
-  }
-  template<class T> friend T
-  any_cast (const Any &any)     ///< Cast const Any& into @a const @a T if possible or throw a std::bad_cast exception.
-  {
-    const T *result = any.cast<typename std::add_const<typename std::remove_reference<T>::type>::type*>();
-    return result ? *result : throw std::bad_cast();
-  }
 };
 
 
