@@ -273,9 +273,6 @@ public:
   bool operator>>= (EnumValue          &v) const; ///< Extract the numeric representation of an EnumValue if possible.
   bool operator>>= (const char        *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
   bool operator>>= (std::string        &v) const; ///< Extract a std::string if possible.
-  bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
-  bool operator>>= (const AnyVector   *&v) const; ///< Extract an AnyVector if possible (sequence type).
-  bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
 private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
@@ -380,9 +377,6 @@ public:
   void operator<<= (const char        *v) { operator<<= (std::string (v)); }
   void operator<<= (char              *v) { operator<<= (std::string (v)); }
   void operator<<= (const String      &v); ///< Store a std::string.
-  void operator<<= (const Any         &v); ///< Store an Any.
-  void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
-  void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
   template<class T, typename // SFINAE idiom for operator<<= to match unknown classes
            std::enable_if<(std::is_class<T>::value && !std::is_convertible<T, RemoteHandle>::value)>::type* = nullptr>
   void operator<<= (const T &v)         { hold (new Holder<T> (v)); }   ///< Store arbitrary type class in this Any, see any_cast<>().

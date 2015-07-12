@@ -59,7 +59,7 @@ test_widget_usage()
   widget.set_user_data ("test-string", Any ("Wocks"));
   any1 = widget.get_user_data ("test-string");
   TASSERT (any1 == Any ("Wocks"));
-  any2 <<= any1;
+  any2.set (any1);
   TASSERT (any2.kind() == Aida::ANY);
   widget.set_user_data ("test-any", any2);
   any1 = widget.get_user_data ("test-any");

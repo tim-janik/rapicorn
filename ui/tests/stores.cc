@@ -20,7 +20,7 @@ test_any_seq ()
   int i; aseq[2] >>= i;                 assert (i == 7);
   double d; aseq[3] >>= d;              assert (d > 17.4 && d < 17.6);
   String s; aseq[4] >>= s;              assert (s == "fifth");
-  const Any *a; aseq[5] >>= a;          assert (*a == Any());
+  Any a = aseq[5].get<Any>();           assert (a == Any());
   aseq.clear();                         assert (aseq.size() == 0);
 #if 0 // FIXME: unimplemented
   struct TestObject {};

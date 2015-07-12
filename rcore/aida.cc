@@ -774,33 +774,6 @@ Any::operator>>= (std::string &v) const
   return true;
 }
 
-bool
-Any::operator>>= (const Any *&v) const
-{
-  if (kind() != ANY)
-    return false;
-  v = u_.vany;
-  return true;
-}
-
-bool
-Any::operator>>= (const AnyVector *&v) const
-{
-  if (kind() != SEQUENCE)
-    return false;
-  v = u_.vanys;
-  return true;
-}
-
-bool
-Any::operator>>= (const FieldVector *&v) const
-{
-  if (kind() != RECORD)
-    return false;
-  v = u_.vfields;
-  return true;
-}
-
 void
 Any::operator<<= (bool v)
 {
@@ -848,42 +821,6 @@ Any::operator<<= (const String &v)
 {
   ensure (STRING);
   u_.vstring().assign (v);
-}
-
-void
-Any::operator<<= (const Any &v)
-{
-  ensure (ANY);
-  if (u_.vany != &v)
-    {
-      Any *old = u_.vany;
-      u_.vany = new Any (v);
-      delete old;
-    }
-}
-
-void
-Any::operator<<= (const AnyVector &v)
-{
-  ensure (SEQUENCE);
-  if (u_.vanys != &v)
-    {
-      AnyVector *old = u_.vanys;
-      u_.vanys = new AnyVector (v);
-      delete old;
-    }
-}
-
-void
-Any::operator<<= (const FieldVector &v)
-{
-  ensure (RECORD);
-  if (u_.vfields != &v)
-    {
-      FieldVector *old = u_.vfields;
-      u_.vfields = new FieldVector (v);
-      delete old;
-    }
 }
 
 void

@@ -89,7 +89,7 @@ any_test_set (Any &a, int what)
     case 9:  a <<= uint64_t (0xffffffffffffffffULL);    break;
     case 10: a <<= "Test4test";         break;
     case 11: a <<= test_double_value;   break;
-    case 12: { Any a2; a2 <<= "SecondAny"; a <<= a2; }  break;
+    case 12: { Any a2; a2 <<= "SecondAny"; a.set (a2); }  break;
     case 13: a <<= EnumValue (-0xc0ffeec0ffeeLL); break;
     case 14: a.set (OneHandle::make_handle (0x1f1f0c0c)); break;
     case 15: a.set (*OneIface::make_one_iface (0x2eeeabcd).get()); break;
@@ -109,7 +109,7 @@ any_test_get (const Any &a, int what)
   switch (what)
     {
       typedef unsigned char uchar;
-      bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64_t i6; uint64_t u6; double d; const Any *p;
+      bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64_t i6; uint64_t u6; double d;
     case 0:  assert (a >>= b);  assert (b == 0); break;
     case 1:  assert (a >>= b);  assert (b == true); break;
     case 2:  assert (a >>= c);  assert (c == -117); break;
@@ -122,7 +122,7 @@ any_test_get (const Any &a, int what)
     case 9:  assert (a >>= u6); assert (u6 == 0xffffffffffffffffULL); break;
     case 10: assert (a >>= s);  assert (s == "Test4test"); break;
     case 11: assert (a >>= d);  assert (d = test_double_value); break;
-    case 12: assert (a >>= p);  assert (*p >>= s);       assert (s == "SecondAny"); break;
+    case 12: s = a.get<Any>().get<String>(); assert (s == "SecondAny"); break;
     case 13: assert (a >>= e);  assert (e.value == -0xc0ffeec0ffeeLL); break;
     case 14:
       assert (a.kind() == REMOTE);
@@ -251,7 +251,7 @@ test_dynamics()
 {
   // -- FieldVector --
   Any any1 ("any1"), any2;
-  any2 <<= any1;
+  any2.set (any1);
   Any::FieldVector fv;
   fv.push_back (Any::Field ("otto", 7.7));
   fv.push_back (Any::Field ("anna", 3));
@@ -296,11 +296,9 @@ test_dynamics()
   // -- Any::DynamicSequence & Any::DynamicRecord --
   Any arec (fv), aseq (av);
   assert (arec != aseq);
-  const Any::FieldVector *arv;
-  arec >>= arv;
+  const Any::FieldVector *arv = arec.get<const Any::FieldVector*>();
   assert (*arv == fv);
-  const Any::AnyVector *asv;
-  aseq >>= asv;
+  const Any::AnyVector *asv = aseq.get<const Any::AnyVector*>();
   assert (*asv == av);
   printf ("  TEST   Aida FieldVector & AnyVector                                    OK\n");
 }
