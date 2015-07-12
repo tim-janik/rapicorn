@@ -1818,7 +1818,7 @@ class ConnectionRegistry {
   Mutex                        mutex_;
   std::vector<BaseConnection*> connections_;
 public:
-  uint
+  void
   register_connection (BaseConnection &connection)
   {
     ScopedLock<Mutex> sl (mutex_);
@@ -1829,7 +1829,6 @@ public:
     if (i == connections_.size())
       connections_.resize (i + 1);
     connections_[i] = &connection;
-    return 1 + i;
   }
   void
   unregister_connection (BaseConnection &connection)
@@ -1864,7 +1863,7 @@ static StaticUndeletable<ConnectionRegistry*> connection_registry; // keep Conne
 
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &protocol) :
-  protocol_ (protocol), conid_ (0), peer_ (NULL)
+  protocol_ (protocol), peer_ (NULL)
 {
   AIDA_ASSERT (protocol.size() > 0);
   if (protocol_[0] == ':')
@@ -1877,13 +1876,6 @@ BaseConnection::~BaseConnection ()
 {}
 
 void
-BaseConnection::assign_id (uint connection_id)
-{
-  assert_return (conid_ == 0);
-  conid_ = connection_id;
-}
-
-void
 BaseConnection::post_peer_msg (ProtoMsg *pm)
 {
   assert_return (pm != NULL);
@@ -1891,7 +1883,7 @@ BaseConnection::post_peer_msg (ProtoMsg *pm)
     {
       ProtoReader fbr (*pm);
       const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-      AIDA_MESSAGE ("orig=%x dest=%x msgid=%016x h=%016x l=%016x", connection_id(), peer_connection().connection_id(), msgid, hashhigh, hashlow);
+      AIDA_MESSAGE ("orig=%p dest=%p msgid=%016x h=%016x l=%016x", this, &peer_connection(), msgid, hashhigh, hashlow);
     }
   peer_connection().receive_msg (pm);
 }
@@ -1966,13 +1958,11 @@ public:
   ClientConnectionImpl (const std::string &protocol, ServerConnection &server_connection) :
     ClientConnection (protocol), blocking_for_sem_ (false), seen_garbage_ (false)
   {
+    assert (!server_connection.has_peer());
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
     sem_init (&transport_sem_, 0 /* unshared */, 0 /* init */);
-    const uint realid = connection_registry->register_connection (*this);
-    if (!realid)
-      fatal_error ("Aida: failed to register ClientConnection");
-    assign_id (realid);
+    connection_registry->register_connection (*this);
     peer_connection (server_connection);
   }
   ~ClientConnectionImpl ()
@@ -2040,12 +2030,11 @@ ClientConnectionImpl::pop ()
 RemoteHandle
 ClientConnectionImpl::remote_origin()
 {
-  const uint server_connection_id = peer_connection().connection_id();
   RemoteMember<RemoteHandle> rorigin;
-  if (!server_connection_id)
+  if (!has_peer())
     {
       errno = EHOSTUNREACH; // ECONNREFUSED;
-      return RemoteHandle::__aida_null_handle__();
+      return rorigin;
     }
   ProtoMsg *fb = ProtoMsg::_new (3);
   fb->add_header2 (MSGID_META_HELLO, 0, 0);
@@ -2233,7 +2222,7 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   const uint handler_index = signal_handlers_.size();
   signal_handlers_.push_back (shandler);
   pthread_spin_unlock (&signal_spin_);
-  const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
+  const size_t handler_id = SignalHandlerIdParts (handler_index, 0).vsize;
   ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
   fb.add_header2 (MSGID_CONNECT, shandler->hhi, shandler->hlo);
   add_handle (fb, rhandle);                     // emitting object
@@ -2254,7 +2243,6 @@ bool
 ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
 {
   const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  assert_return (handler_id_parts.orbid_connection == connection_id(), false);
   const uint handler_index = handler_id_parts.signal_handler_index;
   pthread_spin_lock (&signal_spin_);
   SignalHandler *shandler = handler_index < signal_handlers_.size() ? signal_handlers_[handler_index] : NULL;
@@ -2284,7 +2272,6 @@ ClientConnectionImpl::SignalHandler*
 ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 {
   const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  assert_return (handler_id_parts.orbid_connection == connection_id(), NULL);
   const uint handler_index = handler_id_parts.signal_handler_index;
   pthread_spin_lock (&signal_spin_);
   SignalHandler *shandler = handler_index < signal_handlers_.size() ? signal_handlers_[handler_index] : NULL;
@@ -2343,13 +2330,10 @@ ServerConnectionImpl::start_garbage_collection()
 ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
   ServerConnection (protocol), remote_origin_ (NULL), sweep_remotes_ (NULL)
 {
-  const uint realid = connection_registry->register_connection (*this);
-  if (!realid)
-    fatal_error ("Aida: failed to register ServerConnection");
-  assign_id (realid);
-  const uint64 start_id = OrbObject::orbid_make (realid, // connection_id() must match connection_id_from_orbid()
-                                                 0,      // unused
-                                                 1);     // counter = first object id
+  connection_registry->register_connection (*this);
+  const uint64 start_id = OrbObject::orbid_make (0,  // unused
+                                                 0,  // unused
+                                                 1); // counter = first object id
   object_map_.assign_start_id (start_id, OrbObject::orbid_make (0xffff, 0x0000, 0xffffffff));
 }
 

@@ -694,7 +694,6 @@ public:
 /// Base connection context for ORB message exchange.
 class BaseConnection {
   const std::string protocol_;
-  uint              conid_;
   BaseConnection   *peer_;
   friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
@@ -705,13 +704,11 @@ protected:
   virtual RemoteHandle   remote_origin   () = 0;
   virtual void           receive_msg     (ProtoMsg*) = 0; ///< Accepts an incoming message, transfers memory.
   void                   post_peer_msg   (ProtoMsg*);     ///< Send message to peer, transfers memory.
-  void                   assign_id       (uint connection_id);
   void                   peer_connection (BaseConnection &peer);
 public:
   BaseConnection&        peer_connection () const;
   bool                   has_peer        () const;
   String                 protocol        () const { return protocol_; }
-  uint                   connection_id   () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
   virtual int            notify_fd       () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
   virtual bool           pending         () = 0; ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch        () = 0; ///< Dispatch a single event if any is pending.
