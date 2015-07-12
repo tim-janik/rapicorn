@@ -801,15 +801,6 @@ Any::operator>>= (const FieldVector *&v) const
   return true;
 }
 
-bool
-Any::operator>>= (RemoteHandle &v)
-{
-  if (kind() != REMOTE)
-    return false;
-  v = u_.rhandle ? *u_.rhandle : RemoteHandle::__aida_null_handle__();
-  return true;
-}
-
 void
 Any::operator<<= (bool v)
 {
@@ -893,15 +884,6 @@ Any::operator<<= (const FieldVector &v)
       u_.vfields = new FieldVector (v);
       delete old;
     }
-}
-
-void
-Any::operator<<= (const RemoteHandle &v)
-{
-  ensure (REMOTE);
-  RemoteHandle *old = u_.rhandle;
-  u_.rhandle = new RemoteHandle (v);
-  delete old;
 }
 
 void

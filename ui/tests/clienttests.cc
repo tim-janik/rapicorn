@@ -66,12 +66,12 @@ test_widget_usage()
   TASSERT (any1.kind() == Aida::ANY);
   TASSERT (any1.as_any().as_string() == "Wocks");
   // INSTANCE as user_data
-  any1 <<= widget;
+  any1.set (widget);
   widget.set_user_data ("test-user-widget", any1);
   any2 = widget.get_user_data ("test-user-widget");
   TASSERT (any1 == any2);
   WidgetH extracted_widget;
-  any2 >>= extracted_widget;
+  extracted_widget = any2.get<WidgetH>();
   TASSERT (widget == extracted_widget);
   widget.set_user_data ("test-user-widget", Any()); // delete
   any2 = widget.get_user_data ("test-user-widget");
