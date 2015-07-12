@@ -1813,6 +1813,55 @@ ObjectMap<Instance>::instance_from_orbo (const OrbObjectP &orbo)
   return NULL;
 }
 
+// == ConnectionRegistry ==
+class ConnectionRegistry {
+  Mutex                        mutex_;
+  std::vector<BaseConnection*> connections_;
+public:
+  uint
+  register_connection (BaseConnection &connection)
+  {
+    ScopedLock<Mutex> sl (mutex_);
+    size_t i;
+    for (i = 0; i < connections_.size(); i++)
+      if (!connections_[i])
+        break;
+    if (i == connections_.size())
+      connections_.resize (i + 1);
+    connections_[i] = &connection;
+    return 1 + i;
+  }
+  void
+  unregister_connection (BaseConnection &connection)
+  {
+    ScopedLock<Mutex> sl (mutex_);
+    for (size_t i = 0; i < connections_.size(); i++)
+      if (connections_[i] == &connection)
+        {
+          connections_[i] = NULL;
+          return;
+        }
+    print_warning ("unregister_connection(x): x not registered");
+  }
+  ServerConnection*
+  server_connection_from_protocol (const String &protocol)
+  {
+    ScopedLock<Mutex> sl (mutex_);
+    for (size_t i = 0; i < connections_.size(); i++)
+      {
+        BaseConnection *bcon = connections_[i];
+        if (bcon && protocol == bcon->protocol())
+          {
+            ServerConnection *scon = dynamic_cast<ServerConnection*> (bcon);
+            if (scon)
+              return scon;
+          }
+      }
+    return NULL; // unmatched
+  }
+};
+static StaticUndeletable<ConnectionRegistry*> connection_registry; // keep ConnectionRegistry across static dtors
+
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &protocol) :
   protocol_ (protocol), conid_ (0), peer_ (NULL)
@@ -1920,7 +1969,7 @@ public:
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
     sem_init (&transport_sem_, 0 /* unshared */, 0 /* init */);
-    const uint realid = ObjectBroker::register_connection (*this);
+    const uint realid = connection_registry->register_connection (*this);
     if (!realid)
       fatal_error ("Aida: failed to register ClientConnection");
     assign_id (realid);
@@ -1928,7 +1977,7 @@ public:
   }
   ~ClientConnectionImpl ()
   {
-    ObjectBroker::unregister_connection (*this);
+    connection_registry->unregister_connection (*this);
     sem_destroy (&transport_sem_);
     pthread_spin_destroy (&signal_spin_);
     fatal ("%s: proper ClientConnection is not implemented", __func__);
@@ -2255,7 +2304,7 @@ class ServerConnectionImpl : public ServerConnection {
   void                  start_garbage_collection ();
 public:
   explicit              ServerConnectionImpl    (const std::string &protocol);
-  virtual              ~ServerConnectionImpl    () override     { ObjectBroker::unregister_connection (*this); }
+  virtual              ~ServerConnectionImpl    () override     { connection_registry->unregister_connection (*this); }
   virtual int           notify_fd               () override     { return transport_channel_.inputfd(); }
   virtual bool          pending                 () override     { return transport_channel_.has_msg(); }
   virtual void          dispatch                () override;
@@ -2294,7 +2343,7 @@ ServerConnectionImpl::start_garbage_collection()
 ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
   ServerConnection (protocol), remote_origin_ (NULL), sweep_remotes_ (NULL)
 {
-  const uint realid = ObjectBroker::register_connection (*this);
+  const uint realid = connection_registry->register_connection (*this);
   if (!realid)
     fatal_error ("Aida: failed to register ServerConnection");
   assign_id (realid);
@@ -2535,58 +2584,11 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 }
 
 // == ObjectBroker ==
-#define MAX_CONNECTIONS        7                                             // arbitrary limit that can be extended if needed
-static Atomic<BaseConnection*> orb_connections[MAX_CONNECTIONS] = { NULL, }; // initialization needed to call consexpr ctor
-
-static ServerConnection*
-server_connection_from_protocol (const String &protocol)
-{
-  for (size_t idx = 0; idx < MAX_CONNECTIONS; idx++)
-    {
-      BaseConnection *bcon = orb_connections[idx];
-      if (bcon && protocol == bcon->protocol())
-        {
-          ServerConnection *scon = dynamic_cast<ServerConnection*> (bcon);
-          if (scon)
-            return scon;
-        }
-    }
-  return NULL;  // unmatched
-}
-
-uint
-ObjectBroker::register_connection (BaseConnection &connection)
-{
-  const uint first_id = 0xcc11;
-  for (size_t i = 0; i < MAX_CONNECTIONS * 2; i++)
-    {
-      uint next_id;
-      if (i < MAX_CONNECTIONS)  // "nice" id generation
-        next_id = first_id + i * 0x11;
-      else                      // sequential ids
-        next_id = first_id + i;
-      const uint64 idx = next_id % MAX_CONNECTIONS;
-      if (orb_connections[idx] == NULL && orb_connections[idx].cas (NULL, &connection))
-        return next_id;
-    }
-  fatal_error (__FILE__, __LINE__, "maximum number of runtime connections exceeded");
-}
-
-void
-ObjectBroker::unregister_connection (BaseConnection &connection)
-{
-  const uint64 conid = connection.connection_id();
-  assert_return (conid > 0);
-  const uint64 idx = conid % MAX_CONNECTIONS;
-  assert_return (orb_connections[idx] == &connection);
-  orb_connections[idx].store (NULL);
-}
-
 ServerConnectionP
 ObjectBroker::make_server_connection (const String &protocol)
 {
   assert (protocol.empty() == false);
-  AIDA_ASSERT (server_connection_from_protocol (protocol) == NULL);
+  AIDA_ASSERT (connection_registry->server_connection_from_protocol (protocol) == NULL);
   return std::make_shared<ServerConnectionImpl> (protocol);
 }
 
@@ -2595,7 +2597,7 @@ BaseConnectionP
 ObjectBroker::connect (const std::string &protocol)
 {
   BaseConnectionP connection;
-  ServerConnection *scon = server_connection_from_protocol (protocol);
+  ServerConnection *scon = connection_registry->server_connection_from_protocol (protocol);
   if (!scon)
     {
       errno = EHOSTUNREACH; // ECONNREFUSED;

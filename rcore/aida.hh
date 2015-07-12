@@ -564,12 +564,11 @@ public:
 
 // == ObjectBroker ==
 class ObjectBroker {
-  static ServerConnectionP                 make_server_connection (const String &protocol);
+  static ServerConnectionP make_server_connection (const String &protocol);
 public:
-  static uint                              register_connection    (BaseConnection    &connection);
-  static void                              unregister_connection  (BaseConnection    &connection);
-  static BaseConnectionP                   connect                (const String &protocol);
-  template<class C> static BaseConnectionP bind                   (const String &protocol, std::shared_ptr<C> object_ptr);
+  template<class C>
+  static BaseConnectionP   bind                   (const String &protocol, std::shared_ptr<C> object_ptr);
+  static BaseConnectionP   connect                (const String &protocol);
 };
 
 // == ProtoMsg ==
