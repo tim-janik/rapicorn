@@ -354,7 +354,8 @@ public:
   std::vector<std::string> any_to_strings   () const;
   void                     to_transition    (BaseConnection &base_connection);
   void                     from_transition  (BaseConnection &base_connection);
-  String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
+  String    repr      (const String &field_name = "") const;
+  String    to_string () const; ///< Retrieve string representation of Any for printouts.
   const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
   int64      as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).

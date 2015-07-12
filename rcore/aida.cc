@@ -390,51 +390,90 @@ Any::any_to_strings () const
   return sv;
 }
 
-template<class T> String any_field_name (const T          &);
-template<>        String any_field_name (const Any        &any) { return ""; }
-template<>        String any_field_name (const Any::Field &any) { return any.name; }
+template<class T> static String any_vector_to_string (const T *av);
 
-template<class AnyVector> static String
-any_vector_to_string (const AnyVector *av)
+template<> String
+any_vector_to_string (const Any::FieldVector *vec)
 {
-  if (!av)
-    return "NULL";
   String s;
-  for (auto const &any : *av)
-    {
-      if (!s.empty())
-        s += ", ";
-      s += any.to_string (any_field_name (any));
-    }
+  if (vec)
+    for (auto const &any : *vec)
+      {
+        if (!s.empty())
+          s += ", ";
+        s += any.name + ": ";
+        if (any.kind() == STRING)
+          s += Rapicorn::string_to_cquote (any.to_string());
+        else
+          s += any.to_string();
+      }
+  s = s.empty() ? "{}" : "{ " + s + " }";
+  return s;
+}
+
+template<> String
+any_vector_to_string (const Any::AnyVector *vec)
+{
+  String s;
+  if (vec)
+    for (auto const &any : *vec)
+      {
+        if (!s.empty())
+          s += ", ";
+        if (any.kind() == STRING)
+          s += Rapicorn::string_to_cquote (any.to_string());
+        else
+          s += any.to_string();
+      }
   s = s.empty() ? "[]" : "[ " + s + " ]";
   return s;
 }
 
 String
-Any::to_string (const String &field_name) const
+Any::repr (const String &field_name) const
 {
   String s = "{ ";
   s += "type=" + Rapicorn::string_to_cquote (type_kind_name (kind()));
   if (!field_name.empty())
     s += ", name=" + Rapicorn::string_to_cquote (field_name);
+  s += ", value=";
+  if (kind() == ANY)
+    s += u_.vany ? u_.vany->repr() : Any().repr();
+  else if (kind() == STRING)
+    s += Rapicorn::string_to_cquote (u_.vstring());
+  else
+    s += to_string();
+  s += " }";
+  return s;
+}
+
+/// Convert Any to a string, tries to model Python's str().
+String
+Any::to_string() const
+{
+  String s;
   switch (kind())
     {
-    case BOOL:
-    case ENUM:
-    case INT32:
-    case INT64:      s += string_format (", value=%d", u_.vint64);                                        break;
-    case FLOAT64:    s += string_format (", value=%.17g", u_.vdouble);                                    break;
-    case ANY:        s += ", value=" + (u_.vany ? u_.vany->to_string() : "NULL");                         break;
-    case STRING:     s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());                         break;
-    case SEQUENCE:   if (u_.vanys) s += ", value=" + any_vector_to_string (u_.vanys);                     break;
-    case RECORD:     if (u_.vfields) s += ", value=" + any_vector_to_string (u_.vfields);                 break;
-    case INSTANCE:   s += string_format (", value=%p", u_.ibase ? u_.ibase->get() : NULL);                break;
-    case REMOTE:     s += string_format (", value=#%08x", u_.rhandle ? u_.rhandle->__aida_orbid__() : 0); break;
-    case TRANSITION: s += string_format (", value=%p", (void*) u_.vint64);                                break;
+    case BOOL: case ENUM: case INT32:
+    case INT64:      s += string_format ("%d", u_.vint64);                                                                 break;
+    case FLOAT64:    s += string_format ("%.17g", u_.vdouble);                                                             break;
+    case STRING:     s += u_.vstring();                                                                                    break;
+    case SEQUENCE:   s += any_vector_to_string (u_.vanys);                                                                 break;
+    case RECORD:     s += any_vector_to_string (u_.vfields);                                                               break;
+    case INSTANCE:   s += string_format ("((ImplicitBase*) %p)", u_.ibase ? u_.ibase->get() : NULL);                       break;
+    case REMOTE:     s += string_format ("(RemoteHandle (orbid=0x#%08x))", u_.rhandle ? u_.rhandle->__aida_orbid__() : 0); break;
+    case TRANSITION: s += string_format ("(Any (TRANSITION, orbid=0x#%08x))", u_.vint64);                                  break;
+    case ANY:
+      s += "(Any (";
+      if (u_.vany && u_.vany->kind() == STRING)
+        s += Rapicorn::string_to_cquote (u_.vany->to_string());
+      else if (u_.vany && u_.vany->kind() != UNTYPED)
+        s += u_.vany->to_string();
+      s += "))";
+      break;
     default:         ;
     case UNTYPED:    break;
     }
-  s += " }";
   return s;
 }
 
