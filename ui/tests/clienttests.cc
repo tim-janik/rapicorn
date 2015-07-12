@@ -82,7 +82,7 @@ test_widget_usage()
   any1.set (f);
   widget.set_user_data ("test-foo", any1);
   any2 = widget.get_user_data ("test-foo");
-  TASSERT (f.f == any_cast<Foo> (any2).f);
+  TASSERT (f.f == any2.get<Foo>().f);
   TASSERT (any1 != any2); // Foo is not comparable
   // LOCAL as user_data (comparable)
   ExtendedFoo e;
@@ -91,8 +91,9 @@ test_widget_usage()
   widget.set_user_data ("test-efoo", any1);
   any2 = widget.get_user_data ("test-efoo");
   TASSERT (any1 == any2); // ExtendedFoo is comparable
-  TASSERT (any_cast<ExtendedFoo> (any2).f == 1.0);
-  // not working, any_cast<> requires exact type: TASSERT (any_cast<Foo> (any2).f == 1.0);
+  TASSERT (any1.get<ExtendedFoo>().f == 1.0);
+  TASSERT (any2.get<ExtendedFoo>().f == 1.0);
+  TASSERT (any2.get<Foo>().f == 0.0); // invalid type, so Foo() is returned
 }
 REGISTER_TEST ("Client/Basic Widget Usage", test_widget_usage);
 

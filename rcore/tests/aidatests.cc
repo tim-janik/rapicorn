@@ -170,26 +170,31 @@ test_any()
       }
       Any f7 (Foo { 7 });
       TASSERT (f7 == f7);
-      TASSERT (Foo { 7 } == *f7.get<Foo*>());
+      TASSERT (Foo { 7 } == f7.get<Foo>());
       Any b (Bar { "BAR" });
       TASSERT (f7 != b);
       TASSERT (b != b);     // always unequal, beause B is not comparable
-      TASSERT (any_cast<Foo> (f7).i == 7);
-      TASSERT (any_cast<Bar> (&b)->s == "BAR");
+      TASSERT (f7.get<Foo>() == Foo { 7 });
+      TASSERT (f7.get<Foo>().i == 7);
+      TASSERT (b.get<Bar>().s == "BAR");
       Any f3 (Foo { 3 });
       TASSERT (f3 == f3);
       TASSERT (f3 != f7);
-      any_cast<Foo> (&f3)->i += 4;
+      Foo fx = f3.get<Foo>();
+      fx.i += 4;
+      TASSERT (fx == f7.get<Foo>());
+      f3.set (fx);
       TASSERT (f3 == f7);
       f7.swap (b);
       TASSERT (f3 != f7);
       std::swap (f7, b); // uses move assignment
       TASSERT (f3 == f7);
-      TASSERT (any_cast<Foo> (f7).i == 7);
-      TASSERT (any_cast<Bar> (b).s == "BAR");
+      TASSERT (f7.get<Foo>().i == 7);
+      TASSERT (b.get<Bar>().s == "BAR");
+      b.clear();
+      TASSERT (b.get<Bar>().s == ""); // b is cleared, so get() yields a temporary Bar()
       const Any c (Foo { 5 });
-      TASSERT (any_cast<Foo> (c) == Foo { 5 });
-      TASSERT (*any_cast<Foo> (&c) == Foo { 5 });
+      TASSERT (c.get<Foo>() == Foo { 5 });
       printf ("  TEST   Aida basic functions                                            OK\n");
     }
   String s;

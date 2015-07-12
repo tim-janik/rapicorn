@@ -197,18 +197,17 @@ class Any /// Generic value type that can hold values of all other types.
     type eq (const Holder *a, const Holder *b) { return false; }
     T value_;
   };
-  template<class Ptr> Ptr
+  template<class Type> Type
   cast () const
   {
-    static_assert (::std::is_pointer<Ptr>::value, "Ptr is Object*");
-    typedef typename ::std::remove_pointer<Ptr>::type T;
-    if (kind() != LOCAL)
-      return NULL;
-    const std::type_info &tt = typeid (T);
-    const std::type_info &ht = u_.pholder->type_info();
-    if (tt != ht)
-      return NULL;
-    return &static_cast<Holder<T>*> (u_.pholder)->value_;
+    if (kind() == LOCAL)
+      {
+        const std::type_info &tt = typeid (Type);
+        const std::type_info &ht = u_.pholder->type_info();
+        if (tt == ht)
+          return static_cast<Holder<Type>*> (u_.pholder)->value_;
+      }
+    return Type();
   }
   ///@endcond
 public:
@@ -268,10 +267,14 @@ private:
     ::std::integral_constant<bool, (DerivesSharedPtr<T>::value &&
                                     ::std::is_base_of<ImplicitBase, typename RemoveSharedPtr<T>::type >::value)>;
   template<class T>          using IsLocalClass          =
-    ::std::integral_constant<bool, (::std::is_class<T>::value && !DerivesString<T>::value &&
-                                    !IsConvertible<T, ImplicitBase>::value && !IsConvertible<T, RemoteHandle>::value &&
-                                    !IsConvertible<T, Any::FieldVector>::value && !IsConvertible<T, Any::AnyVector>::value &&
-                                    !IsConvertible<T, Any>::value && !IsImplicitBaseDerivedP<T>::value &&
+    ::std::integral_constant<bool, (::std::is_class<T>::value &&
+                                    !DerivesString<T>::value &&
+                                    !IsConvertible<const AnyVector, T>::value &&
+                                    !IsConvertible<const FieldVector, T>::value &&
+                                    !IsImplicitBaseDerived<T>::value &&
+                                    !IsImplicitBaseDerivedP<T>::value &&
+                                    !IsRemoteHandleDerived<T>::value &&
+                                    !IsConvertible<const Any, T>::value &&
                                     !IsConvertible<T, Any::Field>::value)>;
   template<class T>          using IsLocalClassPtr       =
     ::std::integral_constant<bool, ::std::is_pointer<T>::value && IsLocalClass< typename std::remove_pointer<T>::type >::value>;
@@ -320,7 +323,7 @@ public:
   template<typename T, REQUIRES< IsImplicitBaseDerivedP<T>::value > = true>            T    get () const { return cast_ibasep<T>(); }
   template<typename T, REQUIRES< IsRemoteHandleDerived<T>::value > = true>             T    get () const { return cast_handle<T>(); }
   template<typename T, REQUIRES< IsConvertible<const Any, T>::value > = true>          T    get () const { return *get_any(); }
-  template<typename T, REQUIRES< IsLocalClassPtr<T>::value > = true>                   T    get () const { return cast<T>(); }
+  template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      T    get () const { return cast<T>(); }
   // void set (const Type&);
   template<typename T, REQUIRES< IsBool<T>::value > = true>                            void set (T v) { return set_bool (v); }
   template<typename T, REQUIRES< IsInteger<T>::value > = true>                         void set (T v) { return set_int64 (v); }
