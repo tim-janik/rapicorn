@@ -15,7 +15,7 @@ test_any_seq ()
   aseq[2] <<= 7;                        assert (aseq[2].as_int() == 7);  assert (aseq[2].as_string() == "7");
   aseq[3] <<= 17.5;                     TCMP (aseq[3].as_int(), ==, 17); TCMP (aseq[3].as_string(), ==, "17.5");
   aseq[4] <<= "fifth";                  assert (aseq[4].as_string() == "fifth");
-  aseq.append_back() <<= Any();         assert (aseq.size() == 6);
+  aseq.append_back().set (Any());       assert (aseq.size() == 6);
   assert (aseq[1].as_string() == "second");
   int i; aseq[2] >>= i;                 assert (i == 7);
   double d; aseq[3] >>= d;              assert (d > 17.4 && d < 17.6);

@@ -79,7 +79,7 @@ test_widget_usage()
   // LOCAL as user_data (not comparable)
   Foo f;
   f.f = -0.25;
-  any1 <<= f;
+  any1.set (f);
   widget.set_user_data ("test-foo", any1);
   any2 = widget.get_user_data ("test-foo");
   TASSERT (f.f == any_cast<Foo> (any2).f);
@@ -87,7 +87,7 @@ test_widget_usage()
   // LOCAL as user_data (comparable)
   ExtendedFoo e;
   e.f = 1.0;
-  any1 <<= e;
+  any1.set (e);
   widget.set_user_data ("test-efoo", any1);
   any2 = widget.get_user_data ("test-efoo");
   TASSERT (any1 == any2); // ExtendedFoo is comparable

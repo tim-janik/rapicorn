@@ -377,9 +377,6 @@ public:
   void operator<<= (const char        *v) { operator<<= (std::string (v)); }
   void operator<<= (char              *v) { operator<<= (std::string (v)); }
   void operator<<= (const String      &v); ///< Store a std::string.
-  template<class T, typename // SFINAE idiom for operator<<= to match unknown classes
-           std::enable_if<(std::is_class<T>::value && !std::is_convertible<T, RemoteHandle>::value)>::type* = nullptr>
-  void operator<<= (const T &v)         { hold (new Holder<T> (v)); }   ///< Store arbitrary type class in this Any, see any_cast<>().
   template<class T> friend T*
   any_cast (Any *const any)     ///< Cast Any* into @a T* if possible or return NULL.
   {
