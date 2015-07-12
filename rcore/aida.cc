@@ -212,30 +212,6 @@ TypeHash::to_string () const
   return string_format ("(0x%016x,0x%016x)", typehi, typelo);
 }
 
-// == SignalHandlerIdParts ==
-union SignalHandlerIdParts {
-  size_t   vsize;
-  struct { // Bits
-#if __SIZEOF_SIZE_T__ == 8
-    uint   signal_handler_index : 24;
-    uint   unused1 : 8;
-    uint   unused2 : 16;
-    uint   orbid_connection : 16;
-#else // 4
-    uint   signal_handler_index : 16;
-    uint   orbid_connection : 16;
-#endif
-  };
-  SignalHandlerIdParts (size_t handler_id) : vsize (handler_id) {}
-  SignalHandlerIdParts (uint handler_index, uint connection_id) :
-    signal_handler_index (handler_index),
-#if __SIZEOF_SIZE_T__ == 8
-    unused1 (0), unused2 (0),
-#endif
-    orbid_connection (connection_id)
-  {}
-};
-
 // == ProtoUnion ==
 static_assert (sizeof (ProtoUnion::smem) <= sizeof (ProtoUnion::bytes), "sizeof ProtoUnion::smem");
 static_assert (sizeof (ProtoMsg) <= sizeof (ProtoUnion), "sizeof ProtoMsg");
@@ -2206,14 +2182,14 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   shandler->seh = seh;
   shandler->data = data;
   pthread_spin_lock (&signal_spin_);
-  const uint handler_index = signal_handlers_.size();
+  const size_t handler_index = signal_handlers_.size();
   signal_handlers_.push_back (shandler);
   pthread_spin_unlock (&signal_spin_);
-  const size_t handler_id = SignalHandlerIdParts (handler_index, 0).vsize;
+  const size_t signal_handler_id = 1 + handler_index;
   ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
   fb.add_header2 (MSGID_CONNECT, shandler->hhi, shandler->hlo);
   add_handle (fb, rhandle);                     // emitting object
-  fb <<= handler_id;                            // handler connection request id
+  fb <<= signal_handler_id;                     // handler connection request id
   fb <<= 0;                                     // disconnection request id
   ProtoMsg *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, 0);
@@ -2223,14 +2199,13 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   frr >>= shandler->cid;
   pthread_spin_unlock (&signal_spin_);
   delete connection_result;
-  return handler_id;
+  return signal_handler_id;
 }
 
 bool
 ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
 {
-  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  const uint handler_index = handler_id_parts.signal_handler_index;
+  const size_t handler_index = signal_handler_id ? signal_handler_id - 1 : size_t (-1);
   pthread_spin_lock (&signal_spin_);
   SignalHandler *shandler = handler_index < signal_handlers_.size() ? signal_handlers_[handler_index] : NULL;
   if (shandler)
@@ -2258,8 +2233,7 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
 ClientConnectionImpl::SignalHandler*
 ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 {
-  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  const uint handler_index = handler_id_parts.signal_handler_index;
+  const size_t handler_index = signal_handler_id ? signal_handler_id - 1 : size_t (-1);
   pthread_spin_lock (&signal_spin_);
   SignalHandler *shandler = handler_index < signal_handlers_.size() ? signal_handlers_[handler_index] : NULL;
   pthread_spin_unlock (&signal_spin_);
