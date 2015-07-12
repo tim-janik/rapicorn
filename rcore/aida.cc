@@ -305,15 +305,15 @@ Any::operator= (const Any &clone)
   type_kind_ = clone.type_kind_;
   switch (kind())
     {
-    case STRING:        new (&u_.vstring()) String (clone.u_.vstring());  break;
-    case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
-    case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
-    case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
-    case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL; break;
-    case REMOTE:        u_.rhandle = new RemoteHandle (*clone.u_.rhandle); break;
-    case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
+    case STRING:        new (&u_.vstring()) String (clone.u_.vstring());                             break;
+    case ANY:           u_.vany = clone.u_.vany ? new Any (*clone.u_.vany) : NULL;                   break;
+    case SEQUENCE:      u_.vanys = clone.u_.vanys ? new AnyVector (*clone.u_.vanys) : NULL;          break;
+    case RECORD:        u_.vfields = clone.u_.vfields ? new FieldVector (*clone.u_.vfields) : NULL;  break;
+    case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL;      break;
+    case REMOTE:        u_.rhandle = clone.u_.rhandle ? new RemoteHandle (*clone.u_.rhandle) : NULL; break;
+    case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL;            break;
     case TRANSITION:    // u_.vint64 = clone.u_.vint64;
-    default:            u_ = clone.u_;                                    break;
+    default:            u_ = clone.u_;                                                               break;
     }
   return *this;
 }
@@ -355,12 +355,12 @@ Any::rekind (TypeKind _kind)
   type_kind_ = _kind;
   switch (_kind)
     {
-    case STRING:   new (&u_.vstring()) String();                               break;
-    case ANY:      u_.vany = new Any();                                        break;
-    case SEQUENCE: u_.vanys = new AnyVector();                                 break;
-    case RECORD:   u_.vfields = new FieldVector();                             break;
-    case REMOTE:   u_.rhandle = new RemoteHandle (RemoteHandle::__aida_null_handle__()); break;
-    default:       break;
+    case STRING:   new (&u_.vstring()) String(); break;
+    case ANY:      u_.vany = NULL;               break;
+    case SEQUENCE: u_.vanys = NULL;              break;
+    case RECORD:   u_.vfields = NULL;            break;
+    case REMOTE:   u_.rhandle = NULL;            break;
+    default:                                     break;
     }
 }
 
@@ -395,10 +395,12 @@ template<>        String any_field_name (const Any        &any) { return ""; }
 template<>        String any_field_name (const Any::Field &any) { return any.name; }
 
 template<class AnyVector> static String
-any_vector_to_string (const AnyVector &av)
+any_vector_to_string (const AnyVector *av)
 {
+  if (!av)
+    return "NULL";
   String s;
-  for (auto const &any : av)
+  for (auto const &any : *av)
     {
       if (!s.empty())
         s += ", ";
@@ -420,17 +422,17 @@ Any::to_string (const String &field_name) const
     case BOOL:
     case ENUM:
     case INT32:
-    case INT64:         s += string_format (", value=%d", u_.vint64);                           break;
-    case FLOAT64:       s += string_format (", value=%.17g", u_.vdouble);                       break;
-    case ANY:           s += ", value=" + u_.vany->to_string();                                 break;
-    case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());            break;
-    case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);       break;
-    case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
-    case INSTANCE:      s += string_format (", value=%p", u_.ibase ? u_.ibase->get() : NULL);   break;
-    case REMOTE:        s += string_format (", value=#%08x", u_.rhandle->__aida_orbid__());     break;
-    case TRANSITION:    s += string_format (", value=%p", (void*) u_.vint64);                   break;
-    default:            ;
-    case UNTYPED:       break;
+    case INT64:      s += string_format (", value=%d", u_.vint64);                                        break;
+    case FLOAT64:    s += string_format (", value=%.17g", u_.vdouble);                                    break;
+    case ANY:        s += ", value=" + (u_.vany ? u_.vany->to_string() : "NULL");                         break;
+    case STRING:     s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());                         break;
+    case SEQUENCE:   if (u_.vanys) s += ", value=" + any_vector_to_string (u_.vanys);                     break;
+    case RECORD:     if (u_.vfields) s += ", value=" + any_vector_to_string (u_.vfields);                 break;
+    case INSTANCE:   s += string_format (", value=%p", u_.ibase ? u_.ibase->get() : NULL);                break;
+    case REMOTE:     s += string_format (", value=#%08x", u_.rhandle ? u_.rhandle->__aida_orbid__() : 0); break;
+    case TRANSITION: s += string_format (", value=%p", (void*) u_.vint64);                                break;
+    default:         ;
+    case UNTYPED:    break;
     }
   s += " }";
   return s;
@@ -445,27 +447,36 @@ Any::operator== (const Any &clone) const
     {
     case UNTYPED:     break;
     case TRANSITION: case BOOL: case ENUM: case INT32: // chain
-    case INT64:       if (u_.vint64 != clone.u_.vint64) return false;                     break;
-    case FLOAT64:     if (u_.vdouble != clone.u_.vdouble) return false;                   break;
-    case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
-    case SEQUENCE:    if (*u_.vanys != *clone.u_.vanys) return false;                     break;
-    case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
-    case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
+    case INT64:    if (u_.vint64 != clone.u_.vint64) return false;                                       break;
+    case FLOAT64:  if (u_.vdouble != clone.u_.vdouble) return false;                                     break;
+    case STRING:   if (u_.vstring() != clone.u_.vstring()) return false;                                 break;
+    case SEQUENCE:
+      if (!u_.vanys || !clone.u_.vanys)
+        return u_.vanys == clone.u_.vanys;
+      else
+        return *u_.vanys == *clone.u_.vanys;
+    case RECORD:
+      if (!u_.vfields || !clone.u_.vfields)
+        return u_.vfields == clone.u_.vfields;
+      else
+        return *u_.vfields == *clone.u_.vfields;
+    case ANY:
+      if (!u_.vany || !clone.u_.vany)
+        return u_.vany == clone.u_.vany;
+      else
+        return *u_.vany == *clone.u_.vany;
     case INSTANCE:
       if (!u_.ibase || !clone.u_.ibase)
         return u_.ibase == clone.u_.ibase;
       else
         return u_.ibase->get() == clone.u_.ibase->get();
-      break;
     case REMOTE:
-      if ((u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) != (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0))
-        return false;
-      break;
+      return (u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) == (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0);
     case LOCAL:
-      if (u_.pholder)
-        return u_.pholder->operator== (clone.u_.pholder);
+      if (!u_.pholder || !clone.u_.pholder)
+        return u_.pholder == clone.u_.pholder;
       else
-        return !clone.u_.pholder;
+        return *u_.pholder == *clone.u_.pholder;
     default:
       fatal_error (String() + "Aida::Any:operator==: invalid type kind: " + type_kind_name (kind()));
     }
@@ -703,8 +714,8 @@ Any::as_int () const
     case ENUM:          return u_.vint64;
     case FLOAT64:       return u_.vdouble;
     case STRING:        return !u_.vstring().empty();
-    case SEQUENCE:      return !u_.vanys->empty();
-    case RECORD:        return !u_.vfields->empty();
+    case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
+    case RECORD:        return u_.vfields && !u_.vfields->empty();
     case INSTANCE:      return u_.ibase && u_.ibase->get();
     case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
     case TRANSITION:    return u_.vint64 != 0;

@@ -183,14 +183,14 @@ class Any /// Generic value type that can hold values of all other types.
     virtual                      ~PlaceHolder() {}
     virtual PlaceHolder*          clone      () const = 0;
     virtual const std::type_info& type_info  () const = 0;
-    virtual bool                  operator== (const PlaceHolder*) const = 0;
+    virtual bool                  operator== (const PlaceHolder&) const = 0;
   };
   template<class T> struct Holder : PlaceHolder {
     explicit                      Holder    (const T &value) : value_ (value) {}
     virtual PlaceHolder*          clone     () const { return new Holder (value_); }
     virtual const std::type_info& type_info () const { return typeid (T); }
-    virtual bool                  operator== (const PlaceHolder *rhs) const
-    { const Holder *other = dynamic_cast<const Holder*> (rhs); return other ? eq (this, other) : false; }
+    virtual bool                  operator== (const PlaceHolder &rhs) const
+    { const Holder *other = dynamic_cast<const Holder*> (&rhs); return other ? eq (this, other) : false; }
     template<class Q = T> static typename std::enable_if<IsComparable<Q>::value, bool>::
     type eq (const Holder *a, const Holder *b) { return a->value_ == b->value_; }
     template<class Q = T> static typename std::enable_if<!IsComparable<Q>::value, bool>::
