@@ -31,9 +31,9 @@ fill_store (ListStore &lstore, const String &dirname)
       row.append_back() <<= e->d_name;
 #endif
       Any row;
-      row <<= string_format ("%u) %s %s %d %u", i, e->d_name,
-                             i % 10 == 0 ? string_multiply ("<br/>", 1 + i / 10).c_str() : "",
-                             e->d_type, e->d_ino);
+      row.set (string_format ("%u) %s %s %d %u", i, e->d_name,
+                              i % 10 == 0 ? string_multiply ("<br/>", 1 + i / 10).c_str() : "",
+                              e->d_type, e->d_ino));
       lstore.insert (lstore.count(), row);
       e = readdir (d);
       i++;
@@ -122,7 +122,7 @@ fill_test_store (ListStore &lstore)
       else
         s = string_format ("|<br/>| <br/>| %u<br/>|<br/>|", i);
       Any row;
-      row <<= s;
+      row.set (s);
       lstore.insert (lstore.count(), row);
     }
 }

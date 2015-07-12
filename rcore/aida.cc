@@ -738,8 +738,7 @@ Any::as_string() const
 {
   switch (kind())
     {
-    case BOOL: case ENUM:
-    case INT32:
+    case BOOL: case ENUM: case INT32:
     case INT64:         return string_format ("%i", u_.vint64);
     case FLOAT64:       return string_format ("%.17g", u_.vdouble);
     case STRING:        return u_.vstring();
@@ -748,29 +747,11 @@ Any::as_string() const
 }
 
 bool
-Any::operator>>= (EnumValue &v) const
-{
-  if (kind() != ENUM)
-    return false;
-  v = EnumValue (u_.vint64);
-  return true;
-}
-
-bool
 Any::operator>>= (double &v) const
 {
   if (kind() != FLOAT64)
     return false;
   v = u_.vdouble;
-  return true;
-}
-
-bool
-Any::operator>>= (std::string &v) const
-{
-  if (kind() != STRING)
-    return false;
-  v = u_.vstring();
   return true;
 }
 
@@ -803,24 +784,10 @@ Any::operator<<= (uint64 v)
 }
 
 void
-Any::operator<<= (const EnumValue &v)
-{
-  ensure (ENUM);
-  u_.vint64 = v.value;
-}
-
-void
 Any::operator<<= (double v)
 {
   ensure (FLOAT64);
   u_.vdouble = v;
-}
-
-void
-Any::operator<<= (const String &v)
-{
-  ensure (STRING);
-  u_.vstring().assign (v);
 }
 
 void

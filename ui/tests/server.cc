@@ -41,7 +41,7 @@ test_application_list_model_relay()
   TASSERT (model->count() == 0);
   AnySeq aseq;
   TASSERT (aseq.size() == 0);
-  aseq.append_back() <<= "cell";
+  aseq.append_back().set ("cell");
   TASSERT (aseq.size() == 1);
   lmr->update (UpdateRequest (UPDATE_INSERTION, UpdateSpan (0, 1)));
   TASSERT (model->count() == 1);

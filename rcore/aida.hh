@@ -270,9 +270,6 @@ public:
   bool operator>>= (uint64        &v) const { int64 d; const bool r = to_int (d, 64); v = d; return r; }
   bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
   bool operator>>= (double        &v) const; ///< Extract a floating point number as double if possible.
-  bool operator>>= (EnumValue          &v) const; ///< Extract the numeric representation of an EnumValue if possible.
-  bool operator>>= (const char        *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
-  bool operator>>= (std::string        &v) const; ///< Extract a std::string if possible.
 private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
@@ -373,10 +370,6 @@ public:
   void operator<<= (uint64         v); ///< Store a 64bit unsigned integer.
   void operator<<= (float          v) { operator<<= (double (v)); }
   void operator<<= (double         v); ///< Store a double floating point number.
-  void operator<<= (const EnumValue   &v); ///< Store the numeric representation of an EnumValue.
-  void operator<<= (const char        *v) { operator<<= (std::string (v)); }
-  void operator<<= (char              *v) { operator<<= (std::string (v)); }
-  void operator<<= (const String      &v); ///< Store a std::string.
   template<class T> friend T*
   any_cast (Any *const any)     ///< Cast Any* into @a T* if possible or return NULL.
   {
