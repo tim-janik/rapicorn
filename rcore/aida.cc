@@ -291,7 +291,7 @@ Any::operator= (Any &&other)
 {
   if (this == &other)
     return *this;
-  reset();
+  clear();
   this->swap (other);
   return *this;
 }
@@ -301,7 +301,7 @@ Any::operator= (const Any &clone)
 {
   if (this == &clone)
     return *this;
-  reset();
+  clear();
   type_kind_ = clone.type_kind_;
   switch (kind())
     {
@@ -330,7 +330,7 @@ Any::swap (Any &other)
 }
 
 void
-Any::reset()
+Any::clear()
 {
   switch (kind())
     {
@@ -351,7 +351,7 @@ Any::reset()
 void
 Any::rekind (TypeKind _kind)
 {
-  reset();
+  clear();
   type_kind_ = _kind;
   switch (_kind)
     {

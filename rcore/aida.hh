@@ -240,7 +240,6 @@ private:
   void    hold    (PlaceHolder*);
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
-  void    reset   ();
 public:
   /*dtor*/ ~Any    ();                                  ///< Any destructor.
   explicit  Any    ();                                  ///< Default initialize Any with no type.
@@ -258,6 +257,7 @@ public:
   bool operator!=  (const Any &clone) const;            ///< Check if Any is not equal to @a clone, see operator==().
   TypeKind  kind   () const { return type_kind_; }      ///< Obtain the type kind for the contents of this Any.
   void      swap   (Any           &other);              ///< Swap the contents of @a this and @a other in constant time.
+  void      clear  ();                                  ///< Erase Any contents, making it empty like a newly constructed Any().
 private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
@@ -744,7 +744,7 @@ Any::Any() :
 inline
 Any::~Any ()
 {
-  reset();
+  clear();
 }
 
 inline void
