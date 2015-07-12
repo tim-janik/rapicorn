@@ -765,8 +765,8 @@ WidgetListImpl::fill_row (ListRow *lr, int nthrow)
 {
   assert_return (lr->lrow->row_index() == nthrow);
   Any row = model_->row (nthrow);
-  for (uint i = 0; i < lr->cols.size(); i++)
-    lr->cols[i]->set_property ("markup_text", row.as_string());
+  for (size_t i = 0; i < lr->cols.size(); i++)
+    lr->cols[i]->set_property ("markup_text", row.to_string());
   AmbienceIface *ambience = lr->lrow->interface<AmbienceIface*>();
   if (ambience)
     ambience->background (nthrow & 1 ? "background-odd" : "background-even");

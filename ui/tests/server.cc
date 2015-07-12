@@ -49,7 +49,7 @@ test_application_list_model_relay()
   TASSERT (a.kind() == Aida::UNTYPED);
   lmr->fill (0, aseq);
   a = model->row (0);
-  TASSERT (a.as_string() == "cell");
+  TASSERT (a.get<String>() == "cell");
 }
 REGISTER_UITHREAD_TEST ("Server/Application ListModelRelay", test_application_list_model_relay);
 

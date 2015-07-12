@@ -53,9 +53,9 @@ test_widget_usage()
   TASSERT (any1 != any2);
   widget.set_user_data ("test-float", Any (0.75));
   any2 = widget.get_user_data ("test-float");
-  TASSERT (any2.as_float() == 0.75);
+  TASSERT (any2.get<double>() == 0.75);
   any2 = widget.get_user_data ("test-int");
-  TASSERT (any2.as_int() == 7);
+  TASSERT (any2.get<int64>() == 7);
   widget.set_user_data ("test-string", Any ("Wocks"));
   any1 = widget.get_user_data ("test-string");
   TASSERT (any1 == Any ("Wocks"));
@@ -64,7 +64,7 @@ test_widget_usage()
   widget.set_user_data ("test-any", any2);
   any1 = widget.get_user_data ("test-any");
   TASSERT (any1.kind() == Aida::ANY);
-  TASSERT (any1.as_any().as_string() == "Wocks");
+  TASSERT (any1.as_any().to_string() == "Wocks");
   // INSTANCE as user_data
   any1.set (widget);
   widget.set_user_data ("test-user-widget", any1);

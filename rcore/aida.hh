@@ -241,7 +241,6 @@ private:
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
   void    reset   ();
-  bool    to_int  (int64 &v, char b) const;
 public:
   /*dtor*/ ~Any    ();                                  ///< Any destructor.
   explicit  Any    ();                                  ///< Default initialize Any with no type.
@@ -259,17 +258,6 @@ public:
   bool operator!=  (const Any &clone) const;            ///< Check if Any is not equal to @a clone, see operator==().
   TypeKind  kind   () const { return type_kind_; }      ///< Obtain the type kind for the contents of this Any.
   void      swap   (Any           &other);              ///< Swap the contents of @a this and @a other in constant time.
-  bool operator>>= (bool          &v) const { int64 d; const bool r = to_int (d, 1); v = d; return r; }
-  bool operator>>= (char          &v) const { int64 d; const bool r = to_int (d, 7); v = d; return r; }
-  bool operator>>= (unsigned char &v) const { int64 d; const bool r = to_int (d, 8); v = d; return r; }
-  bool operator>>= (int32         &v) const { int64 d; const bool r = to_int (d, 31); v = d; return r; }
-  bool operator>>= (uint32        &v) const { int64 d; const bool r = to_int (d, 32); v = d; return r; }
-  bool operator>>= (LongIffy      &v) const { int64 d; const bool r = to_int (d, 47); v = d; return r; }
-  bool operator>>= (ULongIffy     &v) const { int64 d; const bool r = to_int (d, 48); v = d; return r; }
-  bool operator>>= (int64         &v) const { int64 d; const bool r = to_int (d, 63); v = d; return r; }
-  bool operator>>= (uint64        &v) const { int64 d; const bool r = to_int (d, 64); v = d; return r; }
-  bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (double        &v) const; ///< Extract a floating point number as double if possible.
 private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
@@ -350,27 +338,13 @@ public:
   template<typename T, REQUIRES< std::is_base_of<Any, T>::value > = true>              void set (const T &v) { return set_any (&v); }
   template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      void set (const T &v) { hold (new Holder<T> (v)); }
   // convenience
-  static Any               any_from_strings (const std::vector<std::string> &string_container);
-  std::vector<std::string> any_to_strings   () const;
-  void                     to_transition    (BaseConnection &base_connection);
-  void                     from_transition  (BaseConnection &base_connection);
-  String    repr      (const String &field_name = "") const;
-  String    to_string () const; ///< Retrieve string representation of Any for printouts.
-  const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
-  double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
-  int64      as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
-  String     as_string() const; ///< Obtain BOOL, INT*, FLOAT* or STRING contents as string.
-  void operator<<= (bool           v);
-  void operator<<= (char           v) { operator<<= (int32 (v)); }
-  void operator<<= (unsigned char  v) { operator<<= (int32 (v)); }
-  void operator<<= (int32          v);
-  void operator<<= (uint32         v) { operator<<= (int64 (v)); }
-  void operator<<= (LongIffy       v) { operator<<= (CastIffy (v)); }
-  void operator<<= (ULongIffy      v) { operator<<= (UCastIffy (v)); }
-  void operator<<= (int64          v); ///< Store a 64bit signed integer.
-  void operator<<= (uint64         v); ///< Store a 64bit unsigned integer.
-  void operator<<= (float          v) { operator<<= (double (v)); }
-  void operator<<= (double         v); ///< Store a double floating point number.
+  static Any          any_from_strings (const std::vector<std::string> &string_container);
+  std::vector<String> any_to_strings   () const;
+  void                to_transition    (BaseConnection &base_connection);
+  void                from_transition  (BaseConnection &base_connection);
+  String              repr             (const String &field_name = "") const;
+  String              to_string        () const; ///< Retrieve string representation of Any for printouts.
+  const Any&          as_any           () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   template<class T> friend T*
   any_cast (Any *const any)     ///< Cast Any* into @a T* if possible or return NULL.
   {

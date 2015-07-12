@@ -146,7 +146,7 @@ Binding::bindable_to_object ()
       String stringvalue = ((ObjectIface*) &instance_)->__aida_getter__ (instance_property_);
       o.set (stringvalue);
       if (o != a)
-        ((ObjectIface*) &instance_)->__aida_setter__ (instance_property_, a.as_string());
+        ((ObjectIface*) &instance_)->__aida_setter__ (instance_property_, a.to_string());
     }
 }
 
