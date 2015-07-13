@@ -144,9 +144,9 @@ Binding::bindable_to_object ()
         using Rapicorn::ObjectIface::__aida_setter__;
       };
       String stringvalue = ((ObjectIface*) &instance_)->__aida_getter__ (instance_property_);
-      o <<= stringvalue; // FIXME: Aida needs Any setters/getters
+      o.set (stringvalue);
       if (o != a)
-        ((ObjectIface*) &instance_)->__aida_setter__ (instance_property_, a.as_string());
+        ((ObjectIface*) &instance_)->__aida_setter__ (instance_property_, a.to_string());
     }
 }
 
@@ -156,7 +156,7 @@ Binding::object_to_bindable ()
   struct ObjectIface : Rapicorn::ObjectIface { using Rapicorn::ObjectIface::__aida_getter__; };
   Any a;
   String stringvalue = ((ObjectIface*) &instance_)->__aida_getter__ (instance_property_);
-  a <<= stringvalue; // FIXME: Aida needs Any setters/getters
+  a.set (stringvalue);
   binding_context_->bindable_set (binding_path_, a);
 }
 

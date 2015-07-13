@@ -183,32 +183,31 @@ class Any /// Generic value type that can hold values of all other types.
     virtual                      ~PlaceHolder() {}
     virtual PlaceHolder*          clone      () const = 0;
     virtual const std::type_info& type_info  () const = 0;
-    virtual bool                  operator== (const PlaceHolder*) const = 0;
+    virtual bool                  operator== (const PlaceHolder&) const = 0;
   };
   template<class T> struct Holder : PlaceHolder {
     explicit                      Holder    (const T &value) : value_ (value) {}
     virtual PlaceHolder*          clone     () const { return new Holder (value_); }
     virtual const std::type_info& type_info () const { return typeid (T); }
-    virtual bool                  operator== (const PlaceHolder *rhs) const
-    { const Holder *other = dynamic_cast<const Holder*> (rhs); return other ? eq (this, other) : false; }
+    virtual bool                  operator== (const PlaceHolder &rhs) const
+    { const Holder *other = dynamic_cast<const Holder*> (&rhs); return other ? eq (this, other) : false; }
     template<class Q = T> static typename std::enable_if<IsComparable<Q>::value, bool>::
     type eq (const Holder *a, const Holder *b) { return a->value_ == b->value_; }
     template<class Q = T> static typename std::enable_if<!IsComparable<Q>::value, bool>::
     type eq (const Holder *a, const Holder *b) { return false; }
     T value_;
   };
-  template<class Ptr> Ptr
-  cast () const
+  template<class Type> Type
+  cast_holder () const
   {
-    static_assert (::std::is_pointer<Ptr>::value, "Ptr is Object*");
-    typedef typename ::std::remove_pointer<Ptr>::type T;
-    if (kind() != LOCAL)
-      return NULL;
-    const std::type_info &tt = typeid (T);
-    const std::type_info &ht = u_.pholder->type_info();
-    if (tt != ht)
-      return NULL;
-    return &static_cast<Holder<T>*> (u_.pholder)->value_;
+    if (kind() == LOCAL)
+      {
+        const std::type_info &tt = typeid (Type);
+        const std::type_info &ht = u_.pholder->type_info();
+        if (tt == ht)
+          return static_cast<Holder<Type>*> (u_.pholder)->value_;
+      }
+    return Type();
   }
   ///@endcond
 public:
@@ -240,8 +239,6 @@ private:
   void    hold    (PlaceHolder*);
   void    ensure  (TypeKind _kind) { if (AIDA_LIKELY (kind() == _kind)) return; rekind (_kind); }
   void    rekind  (TypeKind _kind);
-  void    reset   ();
-  bool    to_int  (int64 &v, char b) const;
 public:
   /*dtor*/ ~Any    ();                                  ///< Any destructor.
   explicit  Any    ();                                  ///< Default initialize Any with no type.
@@ -259,45 +256,25 @@ public:
   bool operator!=  (const Any &clone) const;            ///< Check if Any is not equal to @a clone, see operator==().
   TypeKind  kind   () const { return type_kind_; }      ///< Obtain the type kind for the contents of this Any.
   void      swap   (Any           &other);              ///< Swap the contents of @a this and @a other in constant time.
-  bool operator>>= (bool          &v) const { int64 d; const bool r = to_int (d, 1); v = d; return r; }
-  bool operator>>= (char          &v) const { int64 d; const bool r = to_int (d, 7); v = d; return r; }
-  bool operator>>= (unsigned char &v) const { int64 d; const bool r = to_int (d, 8); v = d; return r; }
-  bool operator>>= (int32         &v) const { int64 d; const bool r = to_int (d, 31); v = d; return r; }
-  bool operator>>= (uint32        &v) const { int64 d; const bool r = to_int (d, 32); v = d; return r; }
-  bool operator>>= (LongIffy      &v) const { int64 d; const bool r = to_int (d, 47); v = d; return r; }
-  bool operator>>= (ULongIffy     &v) const { int64 d; const bool r = to_int (d, 48); v = d; return r; }
-  bool operator>>= (int64         &v) const { int64 d; const bool r = to_int (d, 63); v = d; return r; }
-  bool operator>>= (uint64        &v) const { int64 d; const bool r = to_int (d, 64); v = d; return r; }
-  bool operator>>= (float         &v) const { double d; const bool r = operator>>= (d); v = d; return r; }
-  bool operator>>= (double        &v) const; ///< Extract a floating point number as double if possible.
-  bool operator>>= (EnumValue          &v) const; ///< Extract the numeric representation of an EnumValue if possible.
-  bool operator>>= (const char        *&v) const { String s; const bool r = operator>>= (s); v = s.c_str(); return r; }
-  bool operator>>= (std::string        &v) const; ///< Extract a std::string if possible.
-  bool operator>>= (const Any         *&v) const; ///< Extract an Any if possible.
-  bool operator>>= (const AnyVector   *&v) const; ///< Extract an AnyVector if possible (sequence type).
-  bool operator>>= (const FieldVector *&v) const; ///< Extract a FieldVector if possible (record type).
-  bool operator>>= (RemoteHandle       &v);
+  void      clear  ();                                  ///< Erase Any contents, making it empty like a newly constructed Any().
 private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
-  template<class T>          using IsCStr                = ::std::is_same<const char*, typename ::std::decay<T>::type>;
-  template<class T>          using IsRemoteHandleDerived = ::std::integral_constant<bool,
-                                                                                    (::std::is_base_of<RemoteHandle, T>::value &&
-                                                                                     !::std::is_same<RemoteHandle,
-                                                                                     typename ::std::decay<T>::type>::value)>;
-  template<class T>          using IsImplicitBaseDerived = ::std::integral_constant<bool,
-                                                                                    (::std::is_base_of<ImplicitBase, T>::value &&
-                                                                                     !::std::is_same<ImplicitBase,
-                                                                                     typename ::std::decay<T>::type>::value)>;
+  template<class T>          using IsConstCharPtr        = ::std::is_same<const char*, typename ::std::decay<T>::type>;
+  template<class T>          using IsRemoteHandleDerived = ::std::integral_constant<bool, ::std::is_base_of<RemoteHandle, T>::value>;
+  template<class T>          using IsImplicitBaseDerived = ::std::integral_constant<bool, ::std::is_base_of<ImplicitBase, T>::value>;
   template<class T>          using IsImplicitBaseDerivedP =
     ::std::integral_constant<bool, (DerivesSharedPtr<T>::value &&
-                                    ::std::is_base_of<ImplicitBase, typename RemoveSharedPtr<T>::type >::value &&
-                                    !::std::is_same<ImplicitBase, typename ::std::decay<T>::type>::value)>;
+                                    ::std::is_base_of<ImplicitBase, typename RemoveSharedPtr<T>::type >::value)>;
   template<class T>          using IsLocalClass          =
-    ::std::integral_constant<bool, (::std::is_class<T>::value && !DerivesString<T>::value &&
-                                    !IsConvertible<T, ImplicitBase>::value && !IsConvertible<T, RemoteHandle>::value &&
-                                    !IsConvertible<T, Any::FieldVector>::value && !IsConvertible<T, Any::AnyVector>::value &&
-                                    !IsConvertible<T, Any>::value && !IsImplicitBaseDerivedP<T>::value &&
+    ::std::integral_constant<bool, (::std::is_class<T>::value &&
+                                    !DerivesString<T>::value &&
+                                    !IsConvertible<const AnyVector, T>::value &&
+                                    !IsConvertible<const FieldVector, T>::value &&
+                                    !IsImplicitBaseDerived<T>::value &&
+                                    !IsImplicitBaseDerivedP<T>::value &&
+                                    !IsRemoteHandleDerived<T>::value &&
+                                    !IsConvertible<const Any, T>::value &&
                                     !IsConvertible<T, Any::Field>::value)>;
   template<class T>          using IsLocalClassPtr       =
     ::std::integral_constant<bool, ::std::is_pointer<T>::value && IsLocalClass< typename std::remove_pointer<T>::type >::value>;
@@ -346,13 +323,13 @@ public:
   template<typename T, REQUIRES< IsImplicitBaseDerivedP<T>::value > = true>            T    get () const { return cast_ibasep<T>(); }
   template<typename T, REQUIRES< IsRemoteHandleDerived<T>::value > = true>             T    get () const { return cast_handle<T>(); }
   template<typename T, REQUIRES< IsConvertible<const Any, T>::value > = true>          T    get () const { return *get_any(); }
-  template<typename T, REQUIRES< IsLocalClassPtr<T>::value > = true>                   T    get () const { return cast<T>(); }
+  template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      T    get () const { return cast_holder<T>(); }
   // void set (const Type&);
   template<typename T, REQUIRES< IsBool<T>::value > = true>                            void set (T v) { return set_bool (v); }
   template<typename T, REQUIRES< IsInteger<T>::value > = true>                         void set (T v) { return set_int64 (v); }
   template<typename T, REQUIRES< std::is_floating_point<T>::value > = true>            void set (T v) { return set_double (v); }
   template<typename T, REQUIRES< DerivesString<T>::value > = true>                     void set (T v) { return set_string (v); }
-  template<typename T, REQUIRES< IsCStr<T>::value > = true>                            void set (T v) { return set_string (v); }
+  template<typename T, REQUIRES< IsConstCharPtr<T>::value > = true>                    void set (T v) { return set_string (v); }
   template<typename T, REQUIRES< std::is_enum<T>::value > = true>                      void set (T v) { return set_enum<T> (v); }
   template<typename T, REQUIRES< std::is_same<AnyVector, T>::value > = true>           void set (const T &v) { return set_seq (&v); }
   template<typename T, REQUIRES< std::is_same<AnyVector, T>::value > = true>           void set (const T *v) { return set_seq (v); }
@@ -364,59 +341,13 @@ public:
   template<typename T, REQUIRES< std::is_base_of<Any, T>::value > = true>              void set (const T &v) { return set_any (&v); }
   template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      void set (const T &v) { hold (new Holder<T> (v)); }
   // convenience
-  static Any               any_from_strings (const std::vector<std::string> &string_container);
-  std::vector<std::string> any_to_strings   () const;
-  void                     to_transition    (BaseConnection &base_connection);
-  void                     from_transition  (BaseConnection &base_connection);
-  String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
-  const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
-  double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
-  int64      as_int   () const; ///< Obtain BOOL, INT* or FLOAT* contents as integer (yields 1 for non-empty strings).
-  String     as_string() const; ///< Obtain BOOL, INT*, FLOAT* or STRING contents as string.
-  void operator<<= (bool           v);
-  void operator<<= (char           v) { operator<<= (int32 (v)); }
-  void operator<<= (unsigned char  v) { operator<<= (int32 (v)); }
-  void operator<<= (int32          v);
-  void operator<<= (uint32         v) { operator<<= (int64 (v)); }
-  void operator<<= (LongIffy       v) { operator<<= (CastIffy (v)); }
-  void operator<<= (ULongIffy      v) { operator<<= (UCastIffy (v)); }
-  void operator<<= (int64          v); ///< Store a 64bit signed integer.
-  void operator<<= (uint64         v); ///< Store a 64bit unsigned integer.
-  void operator<<= (float          v) { operator<<= (double (v)); }
-  void operator<<= (double         v); ///< Store a double floating point number.
-  void operator<<= (const EnumValue   &v); ///< Store the numeric representation of an EnumValue.
-  void operator<<= (const char        *v) { operator<<= (std::string (v)); }
-  void operator<<= (char              *v) { operator<<= (std::string (v)); }
-  void operator<<= (const String      &v); ///< Store a std::string.
-  void operator<<= (const Any         &v); ///< Store an Any.
-  void operator<<= (const AnyVector   &v); ///< Store a sequence of Any structures (sequence type).
-  void operator<<= (const FieldVector &v); ///< Store a sequence of Any::Field structures (record type).
-  void operator<<= (const RemoteHandle &v);
-  template<class T, typename // SFINAE idiom for operator<<= to match unknown classes
-           std::enable_if<(std::is_class<T>::value && !std::is_convertible<T, RemoteHandle>::value)>::type* = nullptr>
-  void operator<<= (const T &v)         { hold (new Holder<T> (v)); }   ///< Store arbitrary type class in this Any, see any_cast<>().
-  template<class T> friend T*
-  any_cast (Any *const any)     ///< Cast Any* into @a T* if possible or return NULL.
-  {
-    return !any ? NULL : any->cast<T*>();
-  }
-  template<class T> friend const T*
-  any_cast (const Any *any)     ///< Cast const Any* into @a const @a T* if possible or return NULL.
-  {
-    return !any ? NULL : any->cast<T*>();
-  }
-  template<class T> friend T
-  any_cast (Any &any)           ///< Cast Any& into @a T if possible or throw a std::bad_cast exception.
-  {
-    const T *result = any.cast<typename std::remove_reference<T>::type*>();
-    return result ? *result : throw std::bad_cast();
-  }
-  template<class T> friend T
-  any_cast (const Any &any)     ///< Cast const Any& into @a const @a T if possible or throw a std::bad_cast exception.
-  {
-    const T *result = any.cast<typename std::add_const<typename std::remove_reference<T>::type>::type*>();
-    return result ? *result : throw std::bad_cast();
-  }
+  static Any          any_from_strings (const std::vector<std::string> &string_container);
+  std::vector<String> any_to_strings   () const;
+  void                to_transition    (BaseConnection &base_connection);
+  void                from_transition  (BaseConnection &base_connection);
+  String              repr             (const String &field_name = "") const;
+  String              to_string        () const; ///< Retrieve string representation of Any for printouts.
+  const Any&          as_any           () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
 };
 
 
@@ -794,7 +725,7 @@ Any::Any() :
 inline
 Any::~Any ()
 {
-  reset();
+  clear();
 }
 
 inline void

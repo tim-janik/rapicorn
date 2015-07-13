@@ -70,6 +70,7 @@ test_basics()
 REGISTER_TEST ("Aida/Basics", test_basics);
 
 static const double test_double_value = 7.76576e-306;
+enum TestEnum { TEST_COFFEE_COFFEE = -0xc0ffeec0ffeeLL };
 
 static void
 any_test_set (Any &a, int what)
@@ -77,23 +78,23 @@ any_test_set (Any &a, int what)
   switch (what)
     {
       typedef unsigned char uchar;
-    case 0:  a <<= bool (0);            break;
-    case 1:  a <<= bool (true);         break;
-    case 2:  a <<= char (-117);         break;
-    case 3:  a <<= uchar (250);         break;
-    case 4:  a <<= int (-134217728);    break;
-    case 5:  a <<= uint (4294967295U);  break;
-    case 6:  a <<= long (-2147483648);  break;
-    case 7:  a <<= ulong (4294967295U); break;
-    case 8:  a <<= int64_t (-0xc0ffeec0ffeeLL);         break;
-    case 9:  a <<= uint64_t (0xffffffffffffffffULL);    break;
-    case 10: a <<= "Test4test";         break;
-    case 11: a <<= test_double_value;   break;
-    case 12: { Any a2; a2 <<= "SecondAny"; a <<= a2; }  break;
-    case 13: a <<= EnumValue (-0xc0ffeec0ffeeLL); break;
-    case 14: a.set (OneHandle::make_handle (0x1f1f0c0c)); break;
+    case 0:  a.set (bool (0));                                     break;
+    case 1:  a.set (bool (true));                                  break;
+    case 2:  a.set (char (-117));                                  break;
+    case 3:  a.set (uchar (250));                                  break;
+    case 4:  a.set (int (-134217728));                             break;
+    case 5:  a.set (uint (4294967295U));                           break;
+    case 6:  a.set (long (-2147483648));                           break;
+    case 7:  a.set (ulong (4294967295U));                          break;
+    case 8:  a.set (int64_t (-0xc0ffeec0ffeeLL));                  break;
+    case 9:  a.set (uint64_t (0xffffffffffffffffULL));             break;
+    case 10: a.set ("Test4test");                                  break;
+    case 11: a.set (test_double_value);                            break;
+    case 12: { Any a2; a2.set ("SecondAny"); a.set (a2); }         break;
+    case 13: a.set (TEST_COFFEE_COFFEE);                           break;
+    case 14: a.set (OneHandle::make_handle (0x1f1f0c0c));          break;
     case 15: a.set (*OneIface::make_one_iface (0x2eeeabcd).get()); break;
-    case 16: a.set (OneIface::make_one_iface (0x37afafaf)); break;
+    case 16: a.set (OneIface::make_one_iface (0x37afafaf));        break;
 #define ANY_TEST_COUNT    17
     }
   // printerr ("SET: %d) Any=%p %i %s: %u\n", what, &a, a.kind(), type_kind_name(a.kind()), a.get<int64>());
@@ -109,21 +110,21 @@ any_test_get (const Any &a, int what)
   switch (what)
     {
       typedef unsigned char uchar;
-      bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64_t i6; uint64_t u6; double d; const Any *p;
-    case 0:  assert (a >>= b);  assert (b == 0); break;
-    case 1:  assert (a >>= b);  assert (b == true); break;
-    case 2:  assert (a >>= c);  assert (c == -117); break;
-    case 3:  assert (a >>= uc); assert (uc == 250); break;
-    case 4:  assert (a >>= i);  assert (i == -134217728); break;
-    case 5:  assert (a >>= ui); assert (ui == 4294967295U); break;
-    case 6:  assert (a >>= l);  assert (l == -2147483648); break;
-    case 7:  assert (a >>= ul); assert (ul == 4294967295U); break;
-    case 8:  assert (a >>= i6); assert (i6 == -0xc0ffeec0ffeeLL); break;
-    case 9:  assert (a >>= u6); assert (u6 == 0xffffffffffffffffULL); break;
-    case 10: assert (a >>= s);  assert (s == "Test4test"); break;
-    case 11: assert (a >>= d);  assert (d = test_double_value); break;
-    case 12: assert (a >>= p);  assert (*p >>= s);       assert (s == "SecondAny"); break;
-    case 13: assert (a >>= e);  assert (e.value == -0xc0ffeec0ffeeLL); break;
+      bool b; char c; uchar uc; int i; uint ui; long l; ulong ul; int64_t i6; uint64_t u6; double d;
+    case 0:  b  = a.get<bool>();              assert (b == 0);                      break;
+    case 1:  b  = a.get<bool>();              assert (b == true);                   break;
+    case 2:  c  = a.get<char>();              assert (c == -117);                   break;
+    case 3:  uc = a.get<uchar>();             assert (uc == 250);                   break;
+    case 4:  i  = a.get<int>();               assert (i == -134217728);             break;
+    case 5:  ui = a.get<uint>();              assert (ui == 4294967295U);           break;
+    case 6:  l  = a.get<long>();              assert (l == -2147483648);            break;
+    case 7:  ul = a.get<ulong>();             assert (ul == 4294967295U);           break;
+    case 8:  i6 = a.get<int64_t>();           assert (i6 == -0xc0ffeec0ffeeLL);     break;
+    case 9:  u6 = a.get<uint64_t>();          assert (u6 == 0xffffffffffffffffULL); break;
+    case 10: s  = a.get<String>();            assert (s == "Test4test");            break;
+    case 11: d  = a.get<double>();            assert (d = test_double_value);       break;
+    case 12: s  = a.get<Any>().get<String>(); assert (s == "SecondAny");            break;
+    case 13: i6 = a.get<TestEnum>();          assert (i6 == TEST_COFFEE_COFFEE);    break;
     case 14:
       assert (a.kind() == REMOTE);
       thandle = a.get<OneHandle>();
@@ -160,35 +161,33 @@ test_any()
   }
   if (true) // basics
     {
-      Any a;
-      try {
-        any_cast<int> (a); // throws bad_cast
-        assert_unreached();
-      } catch (const std::bad_cast&) {
-        ;
-      }
       Any f7 (Foo { 7 });
       TASSERT (f7 == f7);
-      TASSERT (Foo { 7 } == *f7.get<Foo*>());
+      TASSERT (Foo { 7 } == f7.get<Foo>());
       Any b (Bar { "BAR" });
       TASSERT (f7 != b);
       TASSERT (b != b);     // always unequal, beause B is not comparable
-      TASSERT (any_cast<Foo> (f7).i == 7);
-      TASSERT (any_cast<Bar> (&b)->s == "BAR");
+      TASSERT (f7.get<Foo>() == Foo { 7 });
+      TASSERT (f7.get<Foo>().i == 7);
+      TASSERT (b.get<Bar>().s == "BAR");
       Any f3 (Foo { 3 });
       TASSERT (f3 == f3);
       TASSERT (f3 != f7);
-      any_cast<Foo> (&f3)->i += 4;
+      Foo fx = f3.get<Foo>();
+      fx.i += 4;
+      TASSERT (fx == f7.get<Foo>());
+      f3.set (fx);
       TASSERT (f3 == f7);
       f7.swap (b);
       TASSERT (f3 != f7);
       std::swap (f7, b); // uses move assignment
       TASSERT (f3 == f7);
-      TASSERT (any_cast<Foo> (f7).i == 7);
-      TASSERT (any_cast<Bar> (b).s == "BAR");
+      TASSERT (f7.get<Foo>().i == 7);
+      TASSERT (b.get<Bar>().s == "BAR");
+      b.clear();
+      TASSERT (b.get<Bar>().s == ""); // b is cleared, so get() yields a temporary Bar()
       const Any c (Foo { 5 });
-      TASSERT (any_cast<Foo> (c) == Foo { 5 });
-      TASSERT (*any_cast<Foo> (&c) == Foo { 5 });
+      TASSERT (c.get<Foo>() == Foo { 5 });
       printf ("  TEST   Aida basic functions                                            OK\n");
     }
   String s;
@@ -215,33 +214,33 @@ test_any()
       }
   printf ("  TEST   Aida Any storage                                                OK\n");
   Any a;
-  a <<= bool (0);       assert (a.kind() == BOOL && a.as_int() == 0);
-  a <<= bool (1);       assert (a.kind() == BOOL && a.as_int() == 1);
-  a <<= 1.;             assert (a.kind() == FLOAT64 && a.as_float() == +1.0);
-  a <<= -1.;            assert (a.kind() == FLOAT64 && a.as_float() == -1.0);
-  a <<= 16.5e+6;        assert (a.as_float() > 16000000.0 && a.as_float() < 17000000.0);
-  a <<= 1;              assert (a.kind() == INT32 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
-  a <<= -1;             assert (a.kind() == INT32 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
-  a <<= int64_t (1);    assert (a.kind() == INT64 && a.as_int() == 1 && a.as_float() == 1 && a.as_string() == "1");
-  a <<= int64_t (-1);   assert (a.kind() == INT64 && a.as_int() == -1 && a.as_float() == -1 && a.as_string() == "-1");
-  a <<= 0;              assert (a.kind() == INT32 && a.as_int() == 0 && a.as_float() == 0 && a.as_string() == "0");
-  a <<= 32767199;       assert (a.kind() == INT32 && a.as_int() == 32767199);
-  a <<= "";             assert (a.kind() == STRING && a.as_string() == "" && a.as_int() == 0);
-  a <<= "f";            assert (a.kind() == STRING && a.as_string() == "f" && a.as_int() == 1);
-  a <<= "123456789";    assert (a.kind() == STRING && a.as_string() == "123456789" && a.as_int() == 1);
+  a.set (bool (0));         assert (a.kind() == BOOL && a.get<int64>() == 0);
+  a.set (bool (1));         assert (a.kind() == BOOL && a.get<int64>() == 1);
+  a.set (1.);               assert (a.kind() == FLOAT64 && a.get<double>() == +1.0);
+  a.set (-1.);              assert (a.kind() == FLOAT64 && a.get<double>() == -1.0);
+  a.set (16.5e+6);          assert (a.get<double>() > 16000000.0 && a.get<double>() < 17000000.0);
+  a.set (1);                assert (a.kind() == INT64 && a.get<int64>() == 1 && a.get<double>() == 1);
+  a.set (-1);               assert (a.kind() == INT64 && a.get<int64>() == -1 && a.get<double>() == -1);
+  a.set (int64_t (1));      assert (a.kind() == INT64 && a.get<int64>() == 1 && a.get<double>() == 1);
+  a.set (int64_t (-1));     assert (a.kind() == INT64 && a.get<int64>() == -1 && a.get<double>() == -1);
+  a.set (0);                assert (a.kind() == INT64 && a.get<int64>() == 0 && a.get<double>() == 0);
+  a.set (32767199);         assert (a.kind() == INT64 && a.get<int64>() == 32767199);
+  a.set ("");               assert (a.kind() == STRING && a.get<String>() == "" && a.get<bool>() == 0);
+  a.set ("f");              assert (a.kind() == STRING && a.get<String>() == "f" && a.get<bool>() == 1);
+  a.set ("123456789");      assert (a.kind() == STRING && a.get<String>() == "123456789" && a.get<bool>() == 1);
   printf ("  TEST   Aida Any conversions                                            OK\n");
   Any b, c, d;
-  a <<= -3;              assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
-  a <<= Any();           assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
-  a = Any();             assert (a == b); assert (!(a != b));  c <<= a; d <<= b; assert (c == d); assert (!(c != d));
-  b <<= Any();  assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
-  a <<= Any();           assert (a == b); assert (!(a != b));  c <<= a; d <<= b; assert (c == d); assert (!(c != d));
-  a <<= 13;  b <<= 13;   assert (a == b); assert (!(a != b));  c <<= a; d <<= b; assert (c == d); assert (!(c != d));
-  a <<= 14;  b <<= 15;   assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
-  a <<= "1"; b <<= "1";  assert (a == b); assert (!(a != b));  c <<= a; d <<= b; assert (c == d); assert (!(c != d));
-  a <<= "1"; b <<= 1;    assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
-  a <<= 1.4; b <<= 1.5;  assert (a != b); assert (!(a == b));  c <<= a; d <<= b; assert (c != d); assert (!(c == d));
-  a <<= 1.6; b <<= 1.6;  assert (a == b); assert (!(a != b));  c <<= a; d <<= b; assert (c == d); assert (!(c != d));
+  a.set (-3);               assert (a != b); assert (!(a == b));  c.set (a); d.set (b); assert (c != d); assert (!(c == d));
+  a.set (Any());            assert (a != b); assert (!(a == b));  c.set (a); d.set (b); assert (c != d); assert (!(c == d));
+  a = Any();                assert (a == b); assert (!(a != b));  c.set (a); d.set (b); assert (c == d); assert (!(c != d));
+  b.set (Any());            assert (a != b); assert (!(a == b));  c.set (a); d.set (b); assert (c != d); assert (!(c == d));
+  a.set (Any());            assert (a == b); assert (!(a != b));  c.set (a); d.set (b); assert (c == d); assert (!(c != d));
+  a.set (13);  b.set (13);  assert (a == b); assert (!(a != b));  c.set (a); d.set (b); assert (c == d); assert (!(c != d));
+  a.set (14);  b.set (15);  assert (a != b); assert (!(a == b));  c.set (a); d.set (b); assert (c != d); assert (!(c == d));
+  a.set ("1"); b.set ("1"); assert (a == b); assert (!(a != b));  c.set (a); d.set (b); assert (c == d); assert (!(c != d));
+  a.set ("1"); b.set (1);   assert (a != b); assert (!(a == b));  c.set (a); d.set (b); assert (c != d); assert (!(c == d));
+  a.set (1.4); b.set (1.5); assert (a != b); assert (!(a == b));  c.set (a); d.set (b); assert (c != d); assert (!(c == d));
+  a.set (1.6); b.set (1.6); assert (a == b); assert (!(a != b));  c.set (a); d.set (b); assert (c == d); assert (!(c != d));
   printf ("  TEST   Aida Any equality                                               OK\n");
 }
 REGISTER_TEST ("Aida/Any", test_any);
@@ -251,21 +250,21 @@ test_dynamics()
 {
   // -- FieldVector --
   Any any1 ("any1"), any2;
-  any2 <<= any1;
+  any2.set (any1);
   Any::FieldVector fv;
   fv.push_back (Any::Field ("otto", 7.7));
   fv.push_back (Any::Field ("anna", 3));
   fv.push_back (Any::Field ("ida", "ida"));
   fv.push_back (Any::Field ("any2", any2));
-  assert (fv[0].name == "otto" && fv[0].as_float() == 7.7);
-  assert (fv[1].name == "anna" && fv[1].as_int() == 3);
-  assert (fv[2].name == "ida" && fv[2].as_string() == "ida");
+  assert (fv[0].name == "otto" && fv[0].get<double>() == 7.7);
+  assert (fv[1].name == "anna" && fv[1].get<int64>() == 3);
+  assert (fv[2].name == "ida" && fv[2].get<String>() == "ida");
   assert (fv[3].name == "any2" && fv[3].get<Any>().get<String>() == "any1");
   Any::FieldVector gv = fv;
   assert (fv == gv);
-  gv[1] <<= 5;
+  gv[1].set (5);
   assert (fv != gv);
-  gv[1] <<= int64 (3);
+  gv[1].set (int64 (3));
   assert (fv == gv);
   // -- AnyVector --
   Any::AnyVector av;
@@ -273,9 +272,9 @@ test_dynamics()
   av.push_back (Any (3));
   av.push_back (Any ("ida"));
   av.push_back (any2);
-  assert (av[0].as_float() == 7.7);
-  assert (av[1].as_int() == 3);
-  assert (av[2].as_string() == "ida");
+  assert (av[0].get<double>() == 7.7);
+  assert (av[1].get<int64>() == 3);
+  assert (av[2].get<String>() == "ida");
   assert (av[3].kind() == ANY);
   Any::AnyVector bv;
   assert (av != bv);
@@ -296,11 +295,9 @@ test_dynamics()
   // -- Any::DynamicSequence & Any::DynamicRecord --
   Any arec (fv), aseq (av);
   assert (arec != aseq);
-  const Any::FieldVector *arv;
-  arec >>= arv;
+  const Any::FieldVector *arv = arec.get<const Any::FieldVector*>();
   assert (*arv == fv);
-  const Any::AnyVector *asv;
-  aseq >>= asv;
+  const Any::AnyVector *asv = aseq.get<const Any::AnyVector*>();
   assert (*asv == av);
   printf ("  TEST   Aida FieldVector & AnyVector                                    OK\n");
 }
@@ -349,12 +346,12 @@ protected: // BindableIface methods
   virtual void bindable_get (const String &bpath, Any &any)
   {
     if (bindable_match (bpath, "a"))
-      any <<= a;
+      any.set (a);
   }
   virtual void bindable_set (const String &bpath, const Any &any)
   {
     if (bindable_match (bpath, "a"))
-      any >>= a;
+      a = any.get<int>();
   }
 };
 
@@ -368,13 +365,13 @@ template<> void
 bindable_accessor_get (const BindableIface &bindable, const String &bpath, Any &any, SimpleString &s)
 {
   if (bindable.bindable_match (bpath, "b"))
-    any <<= s.b;
+    any.set (s.b);
 }
 template<> void
 bindable_accessor_set (const BindableIface &bindable, const String &bpath, const Any &any, SimpleString &s)
 {
   if (bindable.bindable_match (bpath, "b"))
-    any >>= s.b;
+    s.b = any.get<String>();
 }
 } // Rapicorn           // for template specialisation
 
@@ -394,12 +391,12 @@ protected: // BindableIface methods
   virtual void bindable_get (const String &bpath, Any &any)
   {
     if (bindable_match (bpath, "d"))
-      any <<= self_.d;
+      any.set (self_.d);
   }
   virtual void bindable_set (const String &bpath, const Any &any)
   {
     if (bindable_match (bpath, "d"))
-      any >>= self_.d;
+      self_.d = any.get<double>();
   }
 };
 } // Rapicorn           // for template specialisation
@@ -414,25 +411,25 @@ test_bindings()
   SimpleInt a { 49 };
   BinadableAccessor ba (a);
   any = ba.get_property ("a");
-  TASSERT (any.as_int() == 49);
+  TASSERT (any.get<int64>() == 49);
 
   // check non-intrusive BindableIface implementation for shared_ptr
   std::shared_ptr<SimpleString> bshared = std::make_shared<SimpleString> (SimpleString { "T2" });
   BinadableAccessor bb (bshared);
   any = bb.get_property ("b");
-  TASSERT (any.as_string() == "T2");
+  TASSERT (any.get<String>() == "T2");
 
   // check non-intrusive BindableIface implementation for weak_ptr
   std::weak_ptr<SimpleString> cweak = bshared;
   BinadableAccessor bc (cweak);
   any = bc.get_property ("b");
-  TASSERT (any.as_string() == "T2");
+  TASSERT (any.get<String>() == "T2");
 
   // check non-intrusive BindableIface implementation via BindableAdaptor<> specialisation
   SimpleDouble d { -0.5 };
   BinadableAccessor bd (d);
   any = bd.get_property ("d");
-  TASSERT (any.as_float() == -0.5);
+  TASSERT (any.get<double>() == -0.5);
 }
 REGISTER_TEST ("Aida/Bindings", test_bindings);
 

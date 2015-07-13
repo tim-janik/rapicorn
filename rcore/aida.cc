@@ -291,7 +291,7 @@ Any::operator= (Any &&other)
 {
   if (this == &other)
     return *this;
-  reset();
+  clear();
   this->swap (other);
   return *this;
 }
@@ -301,19 +301,19 @@ Any::operator= (const Any &clone)
 {
   if (this == &clone)
     return *this;
-  reset();
+  clear();
   type_kind_ = clone.type_kind_;
   switch (kind())
     {
-    case STRING:        new (&u_.vstring()) String (clone.u_.vstring());  break;
-    case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
-    case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
-    case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
-    case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL; break;
-    case REMOTE:        u_.rhandle = new RemoteHandle (*clone.u_.rhandle); break;
-    case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
+    case STRING:        new (&u_.vstring()) String (clone.u_.vstring());                             break;
+    case ANY:           u_.vany = clone.u_.vany ? new Any (*clone.u_.vany) : NULL;                   break;
+    case SEQUENCE:      u_.vanys = clone.u_.vanys ? new AnyVector (*clone.u_.vanys) : NULL;          break;
+    case RECORD:        u_.vfields = clone.u_.vfields ? new FieldVector (*clone.u_.vfields) : NULL;  break;
+    case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL;      break;
+    case REMOTE:        u_.rhandle = clone.u_.rhandle ? new RemoteHandle (*clone.u_.rhandle) : NULL; break;
+    case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL;            break;
     case TRANSITION:    // u_.vint64 = clone.u_.vint64;
-    default:            u_ = clone.u_;                                    break;
+    default:            u_ = clone.u_;                                                               break;
     }
   return *this;
 }
@@ -330,7 +330,7 @@ Any::swap (Any &other)
 }
 
 void
-Any::reset()
+Any::clear()
 {
   switch (kind())
     {
@@ -351,16 +351,16 @@ Any::reset()
 void
 Any::rekind (TypeKind _kind)
 {
-  reset();
+  clear();
   type_kind_ = _kind;
   switch (_kind)
     {
-    case STRING:   new (&u_.vstring()) String();                               break;
-    case ANY:      u_.vany = new Any();                                        break;
-    case SEQUENCE: u_.vanys = new AnyVector();                                 break;
-    case RECORD:   u_.vfields = new FieldVector();                             break;
-    case REMOTE:   u_.rhandle = new RemoteHandle (RemoteHandle::__aida_null_handle__()); break;
-    default:       break;
+    case STRING:   new (&u_.vstring()) String(); break;
+    case ANY:      u_.vany = NULL;               break;
+    case SEQUENCE: u_.vanys = NULL;              break;
+    case RECORD:   u_.vfields = NULL;            break;
+    case REMOTE:   u_.rhandle = NULL;            break;
+    default:                                     break;
     }
 }
 
@@ -390,49 +390,90 @@ Any::any_to_strings () const
   return sv;
 }
 
-template<class T> String any_field_name (const T          &);
-template<>        String any_field_name (const Any        &any) { return ""; }
-template<>        String any_field_name (const Any::Field &any) { return any.name; }
+template<class T> static String any_vector_to_string (const T *av);
 
-template<class AnyVector> static String
-any_vector_to_string (const AnyVector &av)
+template<> String
+any_vector_to_string (const Any::FieldVector *vec)
 {
   String s;
-  for (auto const &any : av)
-    {
-      if (!s.empty())
-        s += ", ";
-      s += any.to_string (any_field_name (any));
-    }
+  if (vec)
+    for (auto const &any : *vec)
+      {
+        if (!s.empty())
+          s += ", ";
+        s += any.name + ": ";
+        if (any.kind() == STRING)
+          s += Rapicorn::string_to_cquote (any.to_string());
+        else
+          s += any.to_string();
+      }
+  s = s.empty() ? "{}" : "{ " + s + " }";
+  return s;
+}
+
+template<> String
+any_vector_to_string (const Any::AnyVector *vec)
+{
+  String s;
+  if (vec)
+    for (auto const &any : *vec)
+      {
+        if (!s.empty())
+          s += ", ";
+        if (any.kind() == STRING)
+          s += Rapicorn::string_to_cquote (any.to_string());
+        else
+          s += any.to_string();
+      }
   s = s.empty() ? "[]" : "[ " + s + " ]";
   return s;
 }
 
 String
-Any::to_string (const String &field_name) const
+Any::repr (const String &field_name) const
 {
   String s = "{ ";
   s += "type=" + Rapicorn::string_to_cquote (type_kind_name (kind()));
   if (!field_name.empty())
     s += ", name=" + Rapicorn::string_to_cquote (field_name);
+  s += ", value=";
+  if (kind() == ANY)
+    s += u_.vany ? u_.vany->repr() : Any().repr();
+  else if (kind() == STRING)
+    s += Rapicorn::string_to_cquote (u_.vstring());
+  else
+    s += to_string();
+  s += " }";
+  return s;
+}
+
+/// Convert Any to a string, tries to model Python's str().
+String
+Any::to_string() const
+{
+  String s;
   switch (kind())
     {
-    case BOOL:
-    case ENUM:
-    case INT32:
-    case INT64:         s += string_format (", value=%d", u_.vint64);                           break;
-    case FLOAT64:       s += string_format (", value=%.17g", u_.vdouble);                       break;
-    case ANY:           s += ", value=" + u_.vany->to_string();                                 break;
-    case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());            break;
-    case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);       break;
-    case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
-    case INSTANCE:      s += string_format (", value=%p", u_.ibase ? u_.ibase->get() : NULL);   break;
-    case REMOTE:        s += string_format (", value=#%08x", u_.rhandle->__aida_orbid__());     break;
-    case TRANSITION:    s += string_format (", value=%p", (void*) u_.vint64);                   break;
-    default:            ;
-    case UNTYPED:       break;
+    case BOOL: case ENUM: case INT32:
+    case INT64:      s += string_format ("%d", u_.vint64);                                                                 break;
+    case FLOAT64:    s += string_format ("%.17g", u_.vdouble);                                                             break;
+    case STRING:     s += u_.vstring();                                                                                    break;
+    case SEQUENCE:   s += any_vector_to_string (u_.vanys);                                                                 break;
+    case RECORD:     s += any_vector_to_string (u_.vfields);                                                               break;
+    case INSTANCE:   s += string_format ("((ImplicitBase*) %p)", u_.ibase ? u_.ibase->get() : NULL);                       break;
+    case REMOTE:     s += string_format ("(RemoteHandle (orbid=0x#%08x))", u_.rhandle ? u_.rhandle->__aida_orbid__() : 0); break;
+    case TRANSITION: s += string_format ("(Any (TRANSITION, orbid=0x#%08x))", u_.vint64);                                  break;
+    case ANY:
+      s += "(Any (";
+      if (u_.vany && u_.vany->kind() == STRING)
+        s += Rapicorn::string_to_cquote (u_.vany->to_string());
+      else if (u_.vany && u_.vany->kind() != UNTYPED)
+        s += u_.vany->to_string();
+      s += "))";
+      break;
+    default:         ;
+    case UNTYPED:    break;
     }
-  s += " }";
   return s;
 }
 
@@ -445,27 +486,36 @@ Any::operator== (const Any &clone) const
     {
     case UNTYPED:     break;
     case TRANSITION: case BOOL: case ENUM: case INT32: // chain
-    case INT64:       if (u_.vint64 != clone.u_.vint64) return false;                     break;
-    case FLOAT64:     if (u_.vdouble != clone.u_.vdouble) return false;                   break;
-    case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
-    case SEQUENCE:    if (*u_.vanys != *clone.u_.vanys) return false;                     break;
-    case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
-    case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
+    case INT64:    if (u_.vint64 != clone.u_.vint64) return false;                                       break;
+    case FLOAT64:  if (u_.vdouble != clone.u_.vdouble) return false;                                     break;
+    case STRING:   if (u_.vstring() != clone.u_.vstring()) return false;                                 break;
+    case SEQUENCE:
+      if (!u_.vanys || !clone.u_.vanys)
+        return u_.vanys == clone.u_.vanys;
+      else
+        return *u_.vanys == *clone.u_.vanys;
+    case RECORD:
+      if (!u_.vfields || !clone.u_.vfields)
+        return u_.vfields == clone.u_.vfields;
+      else
+        return *u_.vfields == *clone.u_.vfields;
+    case ANY:
+      if (!u_.vany || !clone.u_.vany)
+        return u_.vany == clone.u_.vany;
+      else
+        return *u_.vany == *clone.u_.vany;
     case INSTANCE:
       if (!u_.ibase || !clone.u_.ibase)
         return u_.ibase == clone.u_.ibase;
       else
         return u_.ibase->get() == clone.u_.ibase->get();
-      break;
     case REMOTE:
-      if ((u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) != (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0))
-        return false;
-      break;
+      return (u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) == (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0);
     case LOCAL:
-      if (u_.pholder)
-        return u_.pholder->operator== (clone.u_.pholder);
+      if (!u_.pholder || !clone.u_.pholder)
+        return u_.pholder == clone.u_.pholder;
       else
-        return !clone.u_.pholder;
+        return *u_.pholder == *clone.u_.pholder;
     default:
       fatal_error (String() + "Aida::Any:operator==: invalid type kind: " + type_kind_name (kind()));
     }
@@ -668,229 +718,6 @@ Any::set_any (const Any *value)
       u_.vany = value && value->kind() != UNTYPED ? new Any (*value) : NULL;
       delete old;
     }
-}
-
-bool
-Any::to_int (int64 &v, char b) const
-{
-  if (kind() != BOOL && kind() != INT32 && kind() != INT64)
-    return false;
-  bool s = 0;
-  switch (b)
-    {
-    case 1:     s =  u_.vint64 >=         0 &&  u_.vint64 <= 1;        break;
-    case 7:     s =  u_.vint64 >=      -128 &&  u_.vint64 <= 127;      break;
-    case 8:     s =  u_.vint64 >=         0 &&  u_.vint64 <= 256;      break;
-    case 47:    s = sizeof (LongIffy) == sizeof (int64); // chain
-    case 31:    s |= u_.vint64 >=   INT_MIN &&  u_.vint64 <= INT_MAX;  break;
-    case 48:    s = sizeof (ULongIffy) == sizeof (int64); // chain
-    case 32:    s |= u_.vint64 >=         0 &&  u_.vint64 <= UINT_MAX; break;
-    case 63:    s = 1; break;
-    case 64:    s = 1; break;
-    default:    s = 0; break;
-    }
-  if (s)
-    v = u_.vint64;
-  return s;
-}
-
-int64
-Any::as_int () const
-{
-  switch (kind())
-    {
-    case BOOL: case INT32: case INT64:
-    case ENUM:          return u_.vint64;
-    case FLOAT64:       return u_.vdouble;
-    case STRING:        return !u_.vstring().empty();
-    case SEQUENCE:      return !u_.vanys->empty();
-    case RECORD:        return !u_.vfields->empty();
-    case INSTANCE:      return u_.ibase && u_.ibase->get();
-    case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
-    case TRANSITION:    return u_.vint64 != 0;
-    default:            return 0;
-    }
-}
-
-double
-Any::as_float () const
-{
-  switch (kind())
-    {
-    case FLOAT64:       return u_.vdouble;
-    default:            return as_int();
-    }
-}
-
-std::string
-Any::as_string() const
-{
-  switch (kind())
-    {
-    case BOOL: case ENUM:
-    case INT32:
-    case INT64:         return string_format ("%i", u_.vint64);
-    case FLOAT64:       return string_format ("%.17g", u_.vdouble);
-    case STRING:        return u_.vstring();
-    default:            return "";
-    }
-}
-
-bool
-Any::operator>>= (EnumValue &v) const
-{
-  if (kind() != ENUM)
-    return false;
-  v = EnumValue (u_.vint64);
-  return true;
-}
-
-bool
-Any::operator>>= (double &v) const
-{
-  if (kind() != FLOAT64)
-    return false;
-  v = u_.vdouble;
-  return true;
-}
-
-bool
-Any::operator>>= (std::string &v) const
-{
-  if (kind() != STRING)
-    return false;
-  v = u_.vstring();
-  return true;
-}
-
-bool
-Any::operator>>= (const Any *&v) const
-{
-  if (kind() != ANY)
-    return false;
-  v = u_.vany;
-  return true;
-}
-
-bool
-Any::operator>>= (const AnyVector *&v) const
-{
-  if (kind() != SEQUENCE)
-    return false;
-  v = u_.vanys;
-  return true;
-}
-
-bool
-Any::operator>>= (const FieldVector *&v) const
-{
-  if (kind() != RECORD)
-    return false;
-  v = u_.vfields;
-  return true;
-}
-
-bool
-Any::operator>>= (RemoteHandle &v)
-{
-  if (kind() != REMOTE)
-    return false;
-  v = u_.rhandle ? *u_.rhandle : RemoteHandle::__aida_null_handle__();
-  return true;
-}
-
-void
-Any::operator<<= (bool v)
-{
-  ensure (BOOL);
-  u_.vint64 = v;
-}
-
-void
-Any::operator<<= (int32 v)
-{
-  ensure (INT32);
-  u_.vint64 = v;
-}
-
-void
-Any::operator<<= (int64 v)
-{
-  ensure (INT64);
-  u_.vint64 = v;
-}
-
-void
-Any::operator<<= (uint64 v)
-{
-  // ensure (UINT);
-  operator<<= (int64 (v));
-}
-
-void
-Any::operator<<= (const EnumValue &v)
-{
-  ensure (ENUM);
-  u_.vint64 = v.value;
-}
-
-void
-Any::operator<<= (double v)
-{
-  ensure (FLOAT64);
-  u_.vdouble = v;
-}
-
-void
-Any::operator<<= (const String &v)
-{
-  ensure (STRING);
-  u_.vstring().assign (v);
-}
-
-void
-Any::operator<<= (const Any &v)
-{
-  ensure (ANY);
-  if (u_.vany != &v)
-    {
-      Any *old = u_.vany;
-      u_.vany = new Any (v);
-      delete old;
-    }
-}
-
-void
-Any::operator<<= (const AnyVector &v)
-{
-  ensure (SEQUENCE);
-  if (u_.vanys != &v)
-    {
-      AnyVector *old = u_.vanys;
-      u_.vanys = new AnyVector (v);
-      delete old;
-    }
-}
-
-void
-Any::operator<<= (const FieldVector &v)
-{
-  ensure (RECORD);
-  if (u_.vfields != &v)
-    {
-      FieldVector *old = u_.vfields;
-      u_.vfields = new FieldVector (v);
-      delete old;
-    }
-}
-
-void
-Any::operator<<= (const RemoteHandle &v)
-{
-  ensure (REMOTE);
-  RemoteHandle *old = u_.rhandle;
-  u_.rhandle = new RemoteHandle (v);
-  delete old;
 }
 
 void

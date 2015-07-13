@@ -26,7 +26,6 @@ namespace Rapicorn {
 
 // == Convenient Aida Types ==
 using Aida::Any;
-using Aida::any_cast;
 using Aida::Signal;
 using Aida::slot;
 

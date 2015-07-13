@@ -53,25 +53,25 @@ test_widget_usage()
   TASSERT (any1 != any2);
   widget.set_user_data ("test-float", Any (0.75));
   any2 = widget.get_user_data ("test-float");
-  TASSERT (any2.as_float() == 0.75);
+  TASSERT (any2.get<double>() == 0.75);
   any2 = widget.get_user_data ("test-int");
-  TASSERT (any2.as_int() == 7);
+  TASSERT (any2.get<int64>() == 7);
   widget.set_user_data ("test-string", Any ("Wocks"));
   any1 = widget.get_user_data ("test-string");
   TASSERT (any1 == Any ("Wocks"));
-  any2 <<= any1;
+  any2.set (any1);
   TASSERT (any2.kind() == Aida::ANY);
   widget.set_user_data ("test-any", any2);
   any1 = widget.get_user_data ("test-any");
   TASSERT (any1.kind() == Aida::ANY);
-  TASSERT (any1.as_any().as_string() == "Wocks");
+  TASSERT (any1.as_any().to_string() == "Wocks");
   // INSTANCE as user_data
-  any1 <<= widget;
+  any1.set (widget);
   widget.set_user_data ("test-user-widget", any1);
   any2 = widget.get_user_data ("test-user-widget");
   TASSERT (any1 == any2);
   WidgetH extracted_widget;
-  any2 >>= extracted_widget;
+  extracted_widget = any2.get<WidgetH>();
   TASSERT (widget == extracted_widget);
   widget.set_user_data ("test-user-widget", Any()); // delete
   any2 = widget.get_user_data ("test-user-widget");
@@ -79,20 +79,21 @@ test_widget_usage()
   // LOCAL as user_data (not comparable)
   Foo f;
   f.f = -0.25;
-  any1 <<= f;
+  any1.set (f);
   widget.set_user_data ("test-foo", any1);
   any2 = widget.get_user_data ("test-foo");
-  TASSERT (f.f == any_cast<Foo> (any2).f);
+  TASSERT (f.f == any2.get<Foo>().f);
   TASSERT (any1 != any2); // Foo is not comparable
   // LOCAL as user_data (comparable)
   ExtendedFoo e;
   e.f = 1.0;
-  any1 <<= e;
+  any1.set (e);
   widget.set_user_data ("test-efoo", any1);
   any2 = widget.get_user_data ("test-efoo");
   TASSERT (any1 == any2); // ExtendedFoo is comparable
-  TASSERT (any_cast<ExtendedFoo> (any2).f == 1.0);
-  // not working, any_cast<> requires exact type: TASSERT (any_cast<Foo> (any2).f == 1.0);
+  TASSERT (any1.get<ExtendedFoo>().f == 1.0);
+  TASSERT (any2.get<ExtendedFoo>().f == 1.0);
+  TASSERT (any2.get<Foo>().f == 0.0); // invalid type, so Foo() is returned
 }
 REGISTER_TEST ("Client/Basic Widget Usage", test_widget_usage);
 

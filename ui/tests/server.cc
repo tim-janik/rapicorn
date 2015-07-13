@@ -41,7 +41,7 @@ test_application_list_model_relay()
   TASSERT (model->count() == 0);
   AnySeq aseq;
   TASSERT (aseq.size() == 0);
-  aseq.append_back() <<= "cell";
+  aseq.append_back().set ("cell");
   TASSERT (aseq.size() == 1);
   lmr->update (UpdateRequest (UPDATE_INSERTION, UpdateSpan (0, 1)));
   TASSERT (model->count() == 1);
@@ -49,7 +49,7 @@ test_application_list_model_relay()
   TASSERT (a.kind() == Aida::UNTYPED);
   lmr->fill (0, aseq);
   a = model->row (0);
-  TASSERT (a.as_string() == "cell");
+  TASSERT (a.get<String>() == "cell");
 }
 REGISTER_UITHREAD_TEST ("Server/Application ListModelRelay", test_application_list_model_relay);
 
