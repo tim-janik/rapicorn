@@ -123,7 +123,7 @@ main (int   argc,
 {
   bool ok;
 
-  // test rich data type conversion to and from XML and INI
+  // rich data type test setup
   A1::BigDataPack big;
   fill_big_data_pack (big);
   switch (0)
@@ -133,6 +133,7 @@ main (int   argc,
     case 0: ;
     }
 
+  // test rich data type conversion to and from INI
   {
     String iniout = struct_to_ini (big, "BigDataPack");
     A1::BigDataPack b2;
@@ -141,6 +142,8 @@ main (int   argc,
     assert (ok);
     assert (big == b2);
   }
+
+  // test rich data type conversion to and from XML
   {
     String xmlout = struct_to_xml (big, "BigDataPack");
     A1::BigDataPack b2;
@@ -148,6 +151,14 @@ main (int   argc,
     ok = struct_from_xml (b2, xmlout);
     assert (ok);
     assert (big == b2);
+  }
+
+  {
+    Any any = big.__aida_to_any__();
+    A1::BigDataPack buck;
+    buck.__aida_from_any__ (any);
+    assert (big == buck);
+    printerr ("Big->Buck via Any:\n%s\n", struct_to_xml (buck, "BigDataPack"));
   }
 
   // test non-introspectible enums

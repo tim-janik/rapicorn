@@ -410,6 +410,180 @@ public:
   }
 };
 
+
+// == FromAnyVisitors ==
+/// Visitor to construct a visitable class from an Any::FieldVector.
+class FromAnyFieldsVisitor {
+  const Any::FieldVector &fields_;
+public:
+  explicit FromAnyFieldsVisitor (const Any::FieldVector &fields) : fields_ (fields) {}
+
+  template<class A,
+           REQUIRES< !Has__aida_from_any__<A>::value > = true> void
+  operator() (A &a, const char *name)
+  {
+    for (size_t i = 0; i < fields_.size(); i++)
+      if (fields_[i].name == name)
+        {
+          a = fields_[i].get<A>();
+          break;
+        }
+  }
+
+  template<class A,
+           REQUIRES< Has__aida_from_any__<A>::value > = true> void
+  operator() (A &a, const char *name)
+  {
+    for (size_t i = 0; i < fields_.size(); i++)
+      if (fields_[i].name == name)
+        {
+          a.__aida_from_any__ (fields_[i]);
+          break;
+        }
+  }
+};
+
+/// Visitor to construct an Any::AnyVector from a visitable class.
+class FromAnyVectorVisitor {
+  const Any::AnyVector &anys_;
+  size_t                index_;
+public:
+  explicit FromAnyVectorVisitor (const Any::AnyVector &anys) : anys_ (anys), index_ (0) {}
+
+  template<class A,
+           REQUIRES< !Has__aida_from_any__<A>::value > = true> void
+  operator() (A &a, const char *name)
+  {
+    if (index_ < anys_.size())
+      {
+        const size_t i = index_++;
+        a = anys_[i].get<A>();
+      }
+  }
+
+  template<class A,
+           REQUIRES< Has__aida_from_any__<A>::value > = true> void
+  operator() (A &a, const char *name)
+  {
+    if (index_ < anys_.size())
+      {
+        const size_t i = index_++;
+        a.__aida_from_any__ (anys_[i]);
+      }
+  }
+};
+
+
+// == ToAnyVisitors ==
+/// Visitor to construct an Any::FieldVector from a visitable class.
+class ToAnyFieldsVisitor {
+  Any::FieldVector &fields_;
+public:
+  explicit ToAnyFieldsVisitor (Any::FieldVector &fields) : fields_ (fields) {}
+
+  template<class A,
+           REQUIRES< !Has__aida_to_any__<A>::value > = true> void
+  operator() (A &a, const char *name)
+  {
+    Any::Field f (name, Any (a));
+    fields_.push_back (f);
+  }
+
+  template<class A,
+           REQUIRES< Has__aida_to_any__<A>::value > = true> void
+  operator() (A &a, const char *name)
+  {
+    Any::Field f (name, a.__aida_to_any__());
+    fields_.push_back (f);
+  }
+};
+
+/// Visitor to construct an Any::AnyVector from a visitable class.
+class ToAnyVectorVisitor {
+  Any::AnyVector &anys_;
+public:
+  explicit ToAnyVectorVisitor (Any::AnyVector &anys) : anys_ (anys) {}
+
+  template<class A,
+           REQUIRES< !Has__aida_to_any__<A>::value > = true> void
+  operator() (A &a, const char *name)
+  {
+    anys_.push_back (Any (a));
+  }
+
+  template<class A,
+           REQUIRES< Has__aida_to_any__<A>::value > = true> void
+  operator() (A &a, const char *name)
+  {
+    anys_.push_back (a.__aida_to_any__());
+  }
+};
+
+
+// == Any <-> Visitable ==
+template<class Visitable> Any  any_from_visitable (Visitable &visitable);
+template<class Visitable> void any_to_visitable   (const Any &any, Visitable &visitable);
+template<class Vector>    Any  any_from_sequence  (Vector    &vector);
+template<class Vector>    void any_to_sequence    (const Any &any, Vector    &vector);
+
+template<class Visitable> Any
+any_from_visitable (Visitable &visitable)
+{
+  Any::FieldVector fields;
+  ToAnyFieldsVisitor visitor (fields);
+  static_assert (Has__accept__<Visitable, ToAnyFieldsVisitor>::value, "Visitable provies __accept__");
+  visitable.__accept__ (visitor);
+  Any any;
+  any.set (fields);
+  return any;
+}
+
+template<class Visitable> void
+any_to_visitable (const Any &any, Visitable &visitable)
+{
+  const Any::FieldVector &fields = any.get<const Any::FieldVector>();
+  FromAnyFieldsVisitor visitor (fields);
+  static_assert (Has__accept__<Visitable, FromAnyFieldsVisitor>::value, "Visitable provies __accept__");
+  visitable.__accept__ (visitor);
+}
+
+template<class Vector> Any
+any_from_sequence (Vector &vector)
+{
+  static_assert (DerivesVector<Vector>::value, "Vector derives std::vector");
+  Any::AnyVector anys;
+  ToAnyVectorVisitor visitor (anys);
+  for (size_t i = 0; i < vector.size(); i++)
+    {
+      typedef StdVectorValueHandle< typename ::std::vector<typename Vector::value_type> > VectorValueHandle;
+      typename VectorValueHandle::type value_handle = vector[i];
+      visitor (value_handle, "element");
+      if (VectorValueHandle::value) // copy-by-value
+        vector[i] = value_handle;
+    }
+  Any any;
+  any.set (anys);
+  return any;
+}
+
+template<class Vector> void
+any_to_sequence (const Any &any, Vector &vector)
+{
+  static_assert (DerivesVector<Vector>::value, "Vector derives std::vector");
+  const Any::AnyVector &anys = any.get<const Any::AnyVector>();
+  FromAnyVectorVisitor visitor (anys);
+  vector.clear();
+  vector.resize (anys.size());
+  for (size_t i = 0; i < anys.size(); i++)
+    {
+      typedef StdVectorValueHandle< typename ::std::vector<typename Vector::value_type> > VectorValueHandle;
+      typename VectorValueHandle::type value_handle = vector[i];
+      visitor (value_handle, "element");
+      if (VectorValueHandle::value) // copy-by-value
+        vector[i] = value_handle;
+    }
+}
+
 } // Rapicorn
 
 #endif // __RAPICORN_VISITOR_HH__

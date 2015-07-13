@@ -630,10 +630,12 @@ Any::set_rec (const FieldVector *rec)
     }
 }
 
-ImplicitBase*
-Any::get_ibase () const
+ImplicitBaseP
+Any::get_ibasep () const
 {
-  return kind() == INSTANCE && u_.ibase ? u_.ibase->get() : NULL;
+  if (kind() == INSTANCE && u_.ibase)
+    return *u_.ibase;
+  return ImplicitBaseP();
 }
 
 void
