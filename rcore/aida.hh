@@ -134,16 +134,19 @@ const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a
 // == TypeHash ==
 struct TypeHash {
   uint64 typehi, typelo;
-  explicit    TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
-  explicit    TypeHash   () : typehi (0), typelo (0) {}
-  String      to_string  () const;
-  inline bool operator== (const TypeHash &z) const { return typehi == z.typehi && typelo == z.typelo; }
-  friend bool operator<  (const TypeHash &a, const TypeHash &b)
+  constexpr      TypeHash   (uint64 hi, uint64 lo) : typehi (hi), typelo (lo) {}
+  constexpr      TypeHash   () : typehi (0), typelo (0)                       {}
+  String         to_string  () const;
+  constexpr bool operator== (const TypeHash &z) const                         { return typehi == z.typehi && typelo == z.typelo; }
+  friend    bool operator<  (const TypeHash &a, const TypeHash &b)
   {
     return AIDA_UNLIKELY (a.typehi == b.typehi) ? a.typelo < b.typelo : a.typehi < b.typehi;
   }
 };
 typedef std::vector<TypeHash> TypeHashList;
+
+// == Internal Type Hashes ==
+#define AIDA_HASH___AIDA_TYPELIST__             0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL
 
 // == ImplicitBase ==
 /// Abstract base interface that all IDL interfaces are implicitely derived from.
@@ -520,6 +523,7 @@ protected:
 public:
   /*copy*/                RemoteHandle         (const RemoteHandle &y) : orbop_ (y.orbop_) {}
   virtual                ~RemoteHandle         ();
+  TypeHashList            __aida_typelist__    () const;
   ClientConnection*       __aida_connection__  () const { return orbop_->client_connection(); }
   uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
   static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }

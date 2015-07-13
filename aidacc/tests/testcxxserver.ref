@@ -2806,22 +2806,6 @@ template EnumInfo enum_info<RapicornAidaTest::MathExpressions> (); // instantiat
 
 namespace MandatoryNamespace {
 static Rapicorn::Aida::ProtoMsg*
-__aida_call__FirstInterface____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_FirstInterfaceIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
-static Rapicorn::Aida::ProtoMsg*
 __aida_call__FirstInterface__void_func (Rapicorn::Aida::ProtoReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
@@ -2845,22 +2829,6 @@ namespace Auxdata {
 } // Auxdata
 
 namespace InterfaceTests {
-static Rapicorn::Aida::ProtoMsg*
-__aida_call__UIWidgetArea____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_UIWidgetAreaIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__UIWidgetArea__dummy (Rapicorn::Aida::ProtoReader &fbr)
 {
@@ -3177,42 +3145,10 @@ __aida_connect__UIWidgetArea__sample_signal (Rapicorn::Aida::ProtoReader &fbr)
   return &rb;
 }
 
-static Rapicorn::Aida::ProtoMsg*
-__aida_call__Parent____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_ParentIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
 
 
 
-static Rapicorn::Aida::ProtoMsg*
-__aida_call__QuickIface____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_QuickIfaceIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__QuickIface__simple_function (Rapicorn::Aida::ProtoReader &fbr)
 {
@@ -3227,22 +3163,6 @@ __aida_call__QuickIface__simple_function (Rapicorn::Aida::ProtoReader &fbr)
   return NULL;
 }
 
-static Rapicorn::Aida::ProtoMsg*
-__aida_call__MethodTestInterface____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_MethodTestInterfaceIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_void (Rapicorn::Aida::ProtoReader &fbr)
 {
@@ -3442,22 +3362,6 @@ __aida_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::ProtoR
   return &rb;
 }
 
-static Rapicorn::Aida::ProtoMsg*
-__aida_call__SignalTestInterface____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_SignalTestInterfaceIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 class __AIDA_Closure__SignalTestInterface__void_result {
   Rapicorn::Aida::ServerConnection &server_connection_;
   const size_t handler_id_;
@@ -4767,22 +4671,6 @@ __aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::ProtoReade
 
 
 static Rapicorn::Aida::ProtoMsg*
-__aida_call__PropertyTester____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_PropertyTesterIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
-static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__bool_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
@@ -5073,22 +4961,6 @@ __aida_set__PropertyTester__any_prop (Rapicorn::Aida::ProtoReader &fbr)
 
 namespace RapicornAidaTest {
 static Rapicorn::Aida::ProtoMsg*
-__aida_call__ButtonArea____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_ButtonAreaIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
-static Rapicorn::Aida::ProtoMsg*
 __aida_get__ButtonArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1);
@@ -5297,22 +5169,6 @@ __aida_connect__ButtonArea__activate (Rapicorn::Aida::ProtoReader &fbr)
 }
 
 static Rapicorn::Aida::ProtoMsg*
-__aida_call__PureMethods____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_PureMethodsIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
-static Rapicorn::Aida::ProtoMsg*
 __aida_call__PureMethods__pure_method (Rapicorn::Aida::ProtoReader &fbr)
 {
   AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
@@ -5331,22 +5187,6 @@ __aida_call__PureMethods__pure_method (Rapicorn::Aida::ProtoReader &fbr)
 } // RapicornAidaTest
 
 namespace Other {
-static Rapicorn::Aida::ProtoMsg*
-__aida_call__NameTests____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_NameTestsIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__NameTests__args_from_other_namespace (Rapicorn::Aida::ProtoReader &fbr)
 {
@@ -5368,22 +5208,6 @@ __aida_call__NameTests__args_from_other_namespace (Rapicorn::Aida::ProtoReader &
 } // Other
 
 namespace BseTest {
-static Rapicorn::Aida::ProtoMsg*
-__aida_call__Compressor____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_CompressorIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__Compressor__threshold (Rapicorn::Aida::ProtoReader &fbr)
 {
@@ -5437,28 +5261,10 @@ __aida_set__Compressor__ratio (Rapicorn::Aida::ProtoReader &fbr)
   return NULL;
 }
 
-static Rapicorn::Aida::ProtoMsg*
-__aida_call__SoundModule____aida_typelist__ (Rapicorn::Aida::ProtoReader &fbr)
-{
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
-  Rapicorn::Aida::TypeHashList thl;
-  I_SoundModuleIface *self;
-  fbr.skip_header();
-  fbr >>= self;
-  if (self) // guard against invalid casts
-    thl = self->__aida_typelist__();
-  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL, 1 + 2 * thl.size());
-  rb <<= int64_t (thl.size());
-  for (size_t i = 0; i < thl.size(); i++)
-    rb <<= thl[i];
-  return &rb;
-}
 
 } // BseTest
 static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
-  { 0x3080ed132845bb88ULL, 0x1ccc8bdb4dc51a6fULL, MandatoryNamespace::__aida_call__FirstInterface____aida_typelist__, },
   { 0xc3f858f5171056cbULL, 0x394e47a2bcd63e16ULL, MandatoryNamespace::__aida_call__FirstInterface__void_func, },
-  { 0xc7c8bc238ce4501cULL, 0xd5b65cb502c0eb4cULL, InterfaceTests::__aida_call__UIWidgetArea____aida_typelist__, },
   { 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL, InterfaceTests::__aida_get__UIWidgetArea__dummy, },
   { 0x7aaf2f96f3042829ULL, 0x3d0391e5b72e7ba5ULL, InterfaceTests::__aida_set__UIWidgetArea__dummy, },
   { 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL, InterfaceTests::__aida_get__UIWidgetArea__on_click, },
@@ -5475,10 +5281,7 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0x3432c3bb41bc72a0ULL, 0x533bc22135f973bfULL, InterfaceTests::__aida_call__UIWidgetArea__on_click2in, },
   { 0x0774aa0ffbdf5f02ULL, 0x3f1b5247dca90c86ULL, InterfaceTests::__aida_connect__UIWidgetArea__void_signal, },
   { 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, InterfaceTests::__aida_connect__UIWidgetArea__sample_signal, },
-  { 0xf8c38a8ecbaae738ULL, 0xb3e0312627d8c473ULL, InterfaceTests::__aida_call__Parent____aida_typelist__, },
-  { 0x9287bfc16608b62fULL, 0x4d65f47a36af14b6ULL, InterfaceTests::__aida_call__QuickIface____aida_typelist__, },
   { 0x76ac7a704663d246ULL, 0x23abac49621c6802ULL, InterfaceTests::__aida_call__QuickIface__simple_function, },
-  { 0xa580bd43ca21a145ULL, 0x9eefef45f90dbb0bULL, InterfaceTests::__aida_call__MethodTestInterface____aida_typelist__, },
   { 0x1addfccb0a3e01beULL, 0x314f2eb467d7a72bULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_void, },
   { 0x55291a7348d14242ULL, 0x32dac90dde65a764ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_bools, },
   { 0xdc38cf6855c54108ULL, 0x328ddcdcec8f161eULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_ints32, },
@@ -5491,7 +5294,6 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0xfe9af28dc9c5de7dULL, 0x418be0c0e085ea6dULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_interface, },
   { 0x807e5dacf307a277ULL, 0x2b65069e50e63c80ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_anys, },
   { 0xbe67f4e0afeafd68ULL, 0x5cdf24c075b03215ULL, InterfaceTests::__aida_call__MethodTestInterface__method_with_quickiface, },
-  { 0xc00775d36cf38b56ULL, 0xf927beabb9c3e702ULL, InterfaceTests::__aida_call__SignalTestInterface____aida_typelist__, },
   { 0xe2ae7c707a04333cULL, 0x420330b70d64eb5fULL, InterfaceTests::__aida_connect__SignalTestInterface__void_result, },
   { 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, InterfaceTests::__aida_connect__SignalTestInterface__bool_result, },
   { 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, InterfaceTests::__aida_connect__SignalTestInterface__int32_result, },
@@ -5517,7 +5319,6 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0x445abac8fb3999b7ULL, 0x422ee36946f0b021ULL, InterfaceTests::__aida_connect__SignalTestInterface__any_arg, },
   { 0xf62d65c3c8ab76a7ULL, 0x7f95ce585cfc2b0cULL, InterfaceTests::__aida_connect__SignalTestInterface__self_args, },
   { 0x0b181d52b5db5237ULL, 0xd1c6370677791f5aULL, InterfaceTests::__aida_connect__ChildInheritingSignals__child_signal, },
-  { 0x29c1fdbcddc3d3d5ULL, 0xcf3a30b5bf14d1f1ULL, InterfaceTests::__aida_call__PropertyTester____aida_typelist__, },
   { 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL, InterfaceTests::__aida_get__PropertyTester__bool_prop, },
   { 0xa88d7a16adc7ad43ULL, 0x33e7a32598f08880ULL, InterfaceTests::__aida_set__PropertyTester__bool_prop, },
   { 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL, InterfaceTests::__aida_get__PropertyTester__int32_prop, },
@@ -5540,7 +5341,6 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0x1a1ee3ab20ab3c2fULL, 0xeeaf17826dba2891ULL, InterfaceTests::__aida_set__PropertyTester__self_prop, },
   { 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL, InterfaceTests::__aida_get__PropertyTester__any_prop, },
   { 0xe0c7d397e652f3f7ULL, 0xbbdf7826e88f4f42ULL, InterfaceTests::__aida_set__PropertyTester__any_prop, },
-  { 0xf01d6b5002a758fcULL, 0xa481606dbc2f4257ULL, RapicornAidaTest::__aida_call__ButtonArea____aida_typelist__, },
   { 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL, RapicornAidaTest::__aida_get__ButtonArea__on_click, },
   { 0xdb3a24116c653985ULL, 0x2a0576faff45b4b2ULL, RapicornAidaTest::__aida_set__ButtonArea__on_click, },
   { 0x1b448d91990181daULL, 0x9751c08ae956c729ULL, RapicornAidaTest::__aida_get__ButtonArea__on_click2, },
@@ -5551,17 +5351,16 @@ static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {
   { 0x1f5a6d031cb7e104ULL, 0x2d4a207f0842bec8ULL, RapicornAidaTest::__aida_set__ButtonArea__click_type, },
   { 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, RapicornAidaTest::__aida_connect__ButtonArea__check_activate, },
   { 0x0c46b868988bad84ULL, 0xff7acbea142bbcd0ULL, RapicornAidaTest::__aida_connect__ButtonArea__activate, },
-  { 0x95676eb8489beea1ULL, 0xe9444b3b7f24a24dULL, RapicornAidaTest::__aida_call__PureMethods____aida_typelist__, },
   { 0xf196563f00b6d484ULL, 0x88b59c2ed0597dccULL, RapicornAidaTest::__aida_call__PureMethods__pure_method, },
-  { 0x18584b48b3907ce2ULL, 0xab88c262da15a085ULL, Other::__aida_call__NameTests____aida_typelist__, },
   { 0xd471f88e8c15081cULL, 0x963d2094339d0220ULL, Other::__aida_call__NameTests__args_from_other_namespace, },
-  { 0x4d6cadb87efc3ea8ULL, 0x2264b93a5a23a8baULL, BseTest::__aida_call__Compressor____aida_typelist__, },
   { 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL, BseTest::__aida_get__Compressor__threshold, },
   { 0xf40a3fd3d07b3d0bULL, 0xbae97c41e3d6a92bULL, BseTest::__aida_set__Compressor__threshold, },
   { 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL, BseTest::__aida_get__Compressor__ratio, },
   { 0x302f0b5b99a2a6c8ULL, 0xc8b771894ecd9315ULL, BseTest::__aida_set__Compressor__ratio, },
-  { 0x6d65d3efbafc393bULL, 0x3adf67dd71b475a6ULL, BseTest::__aida_call__SoundModule____aida_typelist__, },
 };
 static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 
+static_assert (Rapicorn::Aida::TypeHash { AIDA_HASH___AIDA_TYPELIST__ } ==
+               Rapicorn::Aida::TypeHash { 0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL },
+               "#define AIDA_HASH___AIDA_TYPELIST__ 	0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL");
 #endif /* __SRVT____testpass_idl */
