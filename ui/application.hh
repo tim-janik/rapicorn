@@ -39,6 +39,7 @@ public:
   void                lost_primaries         ();
   static ApplicationImpl& the                ();
 };
+typedef std::shared_ptr<ApplicationImpl> ApplicationImplP;
 
 } // Rapicorn
 

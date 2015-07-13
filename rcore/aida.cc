@@ -212,30 +212,6 @@ TypeHash::to_string () const
   return string_format ("(0x%016x,0x%016x)", typehi, typelo);
 }
 
-// == SignalHandlerIdParts ==
-union SignalHandlerIdParts {
-  size_t   vsize;
-  struct { // Bits
-#if __SIZEOF_SIZE_T__ == 8
-    uint   signal_handler_index : 24;
-    uint   unused1 : 8;
-    uint   unused2 : 16;
-    uint   orbid_connection : 16;
-#else // 4
-    uint   signal_handler_index : 16;
-    uint   orbid_connection : 16;
-#endif
-  };
-  SignalHandlerIdParts (size_t handler_id) : vsize (handler_id) {}
-  SignalHandlerIdParts (uint handler_index, uint connection_id) :
-    signal_handler_index (handler_index),
-#if __SIZEOF_SIZE_T__ == 8
-    unused1 (0), unused2 (0),
-#endif
-    orbid_connection (connection_id)
-  {}
-};
-
 // == ProtoUnion ==
 static_assert (sizeof (ProtoUnion::smem) <= sizeof (ProtoUnion::bytes), "sizeof ProtoUnion::smem");
 static_assert (sizeof (ProtoMsg) <= sizeof (ProtoUnion), "sizeof ProtoMsg");
@@ -1813,9 +1789,57 @@ ObjectMap<Instance>::instance_from_orbo (const OrbObjectP &orbo)
   return NULL;
 }
 
+// == ConnectionRegistry ==
+class ConnectionRegistry {
+  Mutex                        mutex_;
+  std::vector<BaseConnection*> connections_;
+public:
+  void
+  register_connection (BaseConnection &connection)
+  {
+    ScopedLock<Mutex> sl (mutex_);
+    size_t i;
+    for (i = 0; i < connections_.size(); i++)
+      if (!connections_[i])
+        break;
+    if (i == connections_.size())
+      connections_.resize (i + 1);
+    connections_[i] = &connection;
+  }
+  void
+  unregister_connection (BaseConnection &connection)
+  {
+    ScopedLock<Mutex> sl (mutex_);
+    for (size_t i = 0; i < connections_.size(); i++)
+      if (connections_[i] == &connection)
+        {
+          connections_[i] = NULL;
+          return;
+        }
+    print_warning ("unregister_connection(x): x not registered");
+  }
+  ServerConnection*
+  server_connection_from_protocol (const String &protocol)
+  {
+    ScopedLock<Mutex> sl (mutex_);
+    for (size_t i = 0; i < connections_.size(); i++)
+      {
+        BaseConnection *bcon = connections_[i];
+        if (bcon && protocol == bcon->protocol())
+          {
+            ServerConnection *scon = dynamic_cast<ServerConnection*> (bcon);
+            if (scon)
+              return scon;
+          }
+      }
+    return NULL; // unmatched
+  }
+};
+static StaticUndeletable<ConnectionRegistry*> connection_registry; // keep ConnectionRegistry across static dtors
+
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &protocol) :
-  protocol_ (protocol), conid_ (0), peer_ (NULL)
+  protocol_ (protocol), peer_ (NULL)
 {
   AIDA_ASSERT (protocol.size() > 0);
   if (protocol_[0] == ':')
@@ -1828,13 +1852,6 @@ BaseConnection::~BaseConnection ()
 {}
 
 void
-BaseConnection::assign_id (uint connection_id)
-{
-  assert_return (conid_ == 0);
-  conid_ = connection_id;
-}
-
-void
 BaseConnection::post_peer_msg (ProtoMsg *pm)
 {
   assert_return (pm != NULL);
@@ -1842,7 +1859,7 @@ BaseConnection::post_peer_msg (ProtoMsg *pm)
     {
       ProtoReader fbr (*pm);
       const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-      AIDA_MESSAGE ("orig=%x dest=%x msgid=%016x h=%016x l=%016x", connection_id(), peer_connection().connection_id(), msgid, hashhigh, hashlow);
+      AIDA_MESSAGE ("orig=%p dest=%p msgid=%016x h=%016x l=%016x", this, &peer_connection(), msgid, hashhigh, hashlow);
     }
   peer_connection().receive_msg (pm);
 }
@@ -1850,15 +1867,21 @@ BaseConnection::post_peer_msg (ProtoMsg *pm)
 BaseConnection&
 BaseConnection::peer_connection () const
 {
-  assert (peer_ != NULL);
+  assert (has_peer());
   return *peer_;
 }
 
 void
 BaseConnection::peer_connection (BaseConnection &peer)
 {
-  assert (peer_ == NULL);
+  assert (has_peer() == false);
   peer_ = &peer;
+}
+
+bool
+BaseConnection::has_peer () const
+{
+  return peer_ != NULL;
 }
 
 /// Provide initial handle for remote connections.
@@ -1868,24 +1891,11 @@ BaseConnection::remote_origin (ImplicitBaseP)
   AIDA_ASSERT (!"reached");
 }
 
-/** Retrieve initial handle after remote connection has been established.
- * The @a feature_key_list contains key=value pairs, where value is assumed to be "1" if
- * omitted and generally treated as a regular expression to match against connection
- * feature keys as registered with the ObjectBroker.
- */
 RemoteHandle
 BaseConnection::remote_origin()
 {
   AIDA_ASSERT (!"reached");
 }
-
-// == ClientConnection ==
-ClientConnection::ClientConnection (const std::string &protocol) :
-  BaseConnection (protocol)
-{}
-
-ClientConnection::~ClientConnection ()
-{}
 
 // == ClientConnectionImpl ==
 class ClientConnectionImpl : public ClientConnection {
@@ -1911,20 +1921,19 @@ public:
   ClientConnectionImpl (const std::string &protocol, ServerConnection &server_connection) :
     ClientConnection (protocol), blocking_for_sem_ (false), seen_garbage_ (false)
   {
+    assert (!server_connection.has_peer());
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
     sem_init (&transport_sem_, 0 /* unshared */, 0 /* init */);
-    const uint realid = ObjectBroker::register_connection (*this);
-    if (!realid)
-      fatal_error ("Aida: failed to register ClientConnection");
-    assign_id (realid);
+    connection_registry->register_connection (*this);
     peer_connection (server_connection);
   }
   ~ClientConnectionImpl ()
   {
-    ObjectBroker::unregister_connection (*this);
+    connection_registry->unregister_connection (*this);
     sem_destroy (&transport_sem_);
     pthread_spin_destroy (&signal_spin_);
+    fatal ("%s: proper ClientConnection is not implemented", __func__);
   }
   virtual void
   receive_msg (ProtoMsg *fb) override
@@ -1984,12 +1993,11 @@ ClientConnectionImpl::pop ()
 RemoteHandle
 ClientConnectionImpl::remote_origin()
 {
-  const uint server_connection_id = peer_connection().connection_id();
   RemoteMember<RemoteHandle> rorigin;
-  if (!server_connection_id)
+  if (!has_peer())
     {
       errno = EHOSTUNREACH; // ECONNREFUSED;
-      return RemoteHandle::__aida_null_handle__();
+      return rorigin;
     }
   ProtoMsg *fb = ProtoMsg::_new (3);
   fb->add_header2 (MSGID_META_HELLO, 0, 0);
@@ -2174,14 +2182,14 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   shandler->seh = seh;
   shandler->data = data;
   pthread_spin_lock (&signal_spin_);
-  const uint handler_index = signal_handlers_.size();
+  const size_t handler_index = signal_handlers_.size();
   signal_handlers_.push_back (shandler);
   pthread_spin_unlock (&signal_spin_);
-  const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
+  const size_t signal_handler_id = 1 + handler_index;
   ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
   fb.add_header2 (MSGID_CONNECT, shandler->hhi, shandler->hlo);
   add_handle (fb, rhandle);                     // emitting object
-  fb <<= handler_id;                            // handler connection request id
+  fb <<= signal_handler_id;                     // handler connection request id
   fb <<= 0;                                     // disconnection request id
   ProtoMsg *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, 0);
@@ -2191,15 +2199,13 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   frr >>= shandler->cid;
   pthread_spin_unlock (&signal_spin_);
   delete connection_result;
-  return handler_id;
+  return signal_handler_id;
 }
 
 bool
 ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
 {
-  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  assert_return (handler_id_parts.orbid_connection == connection_id(), false);
-  const uint handler_index = handler_id_parts.signal_handler_index;
+  const size_t handler_index = signal_handler_id ? signal_handler_id - 1 : size_t (-1);
   pthread_spin_lock (&signal_spin_);
   SignalHandler *shandler = handler_index < signal_handlers_.size() ? signal_handlers_[handler_index] : NULL;
   if (shandler)
@@ -2227,13 +2233,42 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
 ClientConnectionImpl::SignalHandler*
 ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
 {
-  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  assert_return (handler_id_parts.orbid_connection == connection_id(), NULL);
-  const uint handler_index = handler_id_parts.signal_handler_index;
+  const size_t handler_index = signal_handler_id ? signal_handler_id - 1 : size_t (-1);
   pthread_spin_lock (&signal_spin_);
   SignalHandler *shandler = handler_index < signal_handlers_.size() ? signal_handlers_[handler_index] : NULL;
   pthread_spin_unlock (&signal_spin_);
   return shandler;
+}
+
+// == ClientConnection ==
+ClientConnection::ClientConnection (const std::string &protocol) :
+  BaseConnection (protocol)
+{}
+
+ClientConnection::~ClientConnection ()
+{}
+
+/// Initialize the ClientConnection of @a H and accept connections via @a protocol, assigns errno.
+ClientConnectionP
+ClientConnection::connect (const std::string &protocol)
+{
+  ClientConnectionP connection;
+  ServerConnection *scon = connection_registry->server_connection_from_protocol (protocol);
+  if (!scon)
+    {
+      errno = EHOSTUNREACH; // ECONNREFUSED;
+      return connection;
+    }
+  if (scon->has_peer())
+    {
+      errno = EBUSY;
+      return connection;
+    }
+  connection = std::make_shared<ClientConnectionImpl> (protocol, *scon);
+  assert (connection != NULL);
+  scon->peer_connection (*connection);
+  errno = 0;
+  return connection;
 }
 
 // == ServerConnectionImpl ==
@@ -2248,7 +2283,7 @@ class ServerConnectionImpl : public ServerConnection {
   void                  start_garbage_collection ();
 public:
   explicit              ServerConnectionImpl    (const std::string &protocol);
-  virtual              ~ServerConnectionImpl    () override     { ObjectBroker::unregister_connection (*this); }
+  virtual              ~ServerConnectionImpl    () override     { connection_registry->unregister_connection (*this); }
   virtual int           notify_fd               () override     { return transport_channel_.inputfd(); }
   virtual bool          pending                 () override     { return transport_channel_.has_msg(); }
   virtual void          dispatch                () override;
@@ -2287,13 +2322,10 @@ ServerConnectionImpl::start_garbage_collection()
 ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
   ServerConnection (protocol), remote_origin_ (NULL), sweep_remotes_ (NULL)
 {
-  const uint realid = ObjectBroker::register_connection (*this);
-  if (!realid)
-    fatal_error ("Aida: failed to register ServerConnection");
-  assign_id (realid);
-  const uint64 start_id = OrbObject::orbid_make (realid, // connection_id() must match connection_id_from_orbid()
-                                                 0,      // unused
-                                                 1);     // counter = first object id
+  connection_registry->register_connection (*this);
+  const uint64 start_id = OrbObject::orbid_make (0,  // unused
+                                                 0,  // unused
+                                                 1); // counter = first object id
   object_map_.assign_start_id (start_id, OrbObject::orbid_make (0xffff, 0x0000, 0xffffffff));
 }
 
@@ -2461,6 +2493,14 @@ ServerConnection::ServerConnection (const std::string &protocol) :
 ServerConnection::~ServerConnection()
 {}
 
+ServerConnectionP
+ServerConnection::make_server_connection (const String &protocol)
+{
+  assert (protocol.empty() == false);
+  AIDA_ASSERT (connection_registry->server_connection_from_protocol (protocol) == NULL);
+  return std::make_shared<ServerConnectionImpl> (protocol);
+}
+
 struct HashTypeHash {
   inline size_t operator() (const TypeHash &t) const
   {
@@ -2525,127 +2565,6 @@ ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
                              __FILE__, __LINE__, mentry.hashhi, mentry.hashlo).c_str());
       abort();
     }
-}
-
-// == ObjectBroker ==
-#define MAX_CONNECTIONS        7                                             // arbitrary limit that can be extended if needed
-static Atomic<BaseConnection*> orb_connections[MAX_CONNECTIONS] = { NULL, }; // initialization needed to call consexpr ctor
-
-uint
-ObjectBroker::register_connection (BaseConnection &connection)
-{
-  const uint first_id = 0xcc11;
-  for (size_t i = 0; i < MAX_CONNECTIONS * 2; i++)
-    {
-      uint next_id;
-      if (i < MAX_CONNECTIONS)  // "nice" id generation
-        next_id = first_id + i * 0x11;
-      else                      // sequential ids
-        next_id = first_id + i;
-      const uint64 idx = next_id % MAX_CONNECTIONS;
-      if (orb_connections[idx] == NULL && orb_connections[idx].cas (NULL, &connection))
-        return next_id;
-    }
-  fatal_error (__FILE__, __LINE__, "maximum number of runtime connections exceeded");
-}
-
-void
-ObjectBroker::unregister_connection (BaseConnection &connection)
-{
-  const uint64 conid = connection.connection_id();
-  assert_return (conid > 0);
-  const uint64 idx = conid % MAX_CONNECTIONS;
-  assert_return (orb_connections[idx] == &connection);
-  orb_connections[idx].store (NULL);
-}
-
-///< Connection lookup by id, used for message delivery.
-BaseConnection*
-ObjectBroker::connection_from_id (uint64 conid)
-{
-  const uint64 idx = conid % MAX_CONNECTIONS;
-  return conid ? orb_connections[idx].load() : NULL;
-}
-
-static __thread const char *call_stack_connection_ctor_protocol = NULL;
-
-void
-ObjectBroker::setup_connection_ctor_protocol (const char *protocol)
-{
-  if (protocol)
-    AIDA_ASSERT (call_stack_connection_ctor_protocol == NULL);
-  else
-    AIDA_ASSERT (call_stack_connection_ctor_protocol != NULL);
-  call_stack_connection_ctor_protocol = protocol;
-}
-
-void
-ObjectBroker::verify_connection_construction()
-{
-  const bool connection_ctor_consumed_protocol = call_stack_connection_ctor_protocol == NULL;
-  AIDA_ASSERT (connection_ctor_consumed_protocol);
-}
-
-void
-ObjectBroker::construct_server_connection (ServerConnection *&var)
-{
-  AIDA_ASSERT (var == NULL);
-  if (call_stack_connection_ctor_protocol == NULL)
-    fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::bind<>");
-  const std::string protocol = call_stack_connection_ctor_protocol;
-  call_stack_connection_ctor_protocol = NULL;
-  AIDA_ASSERT (ObjectBroker::connection_id_from_protocol (protocol) == 0);
-  var = new ServerConnectionImpl (protocol);
-}
-
-void
-ObjectBroker::construct_client_connection (ClientConnection *&var)
-{
-  AIDA_ASSERT (var == NULL);
-  if (call_stack_connection_ctor_protocol == NULL)
-    fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::connect<>");
-  const std::string protocol = call_stack_connection_ctor_protocol;
-  call_stack_connection_ctor_protocol = NULL;
-  assert (protocol.empty() == false);
-  const uint server_connection_id = connection_id_from_protocol (protocol);
-  assert (server_connection_id != 0);
-  BaseConnection *server_connection_base = connection_from_id (server_connection_id);
-  assert (server_connection_base != NULL);
-  ServerConnection *server_connection = dynamic_cast<ServerConnection*> (server_connection_base);
-  assert (server_connection != NULL);
-  ClientConnection *client_connection = new ClientConnectionImpl (protocol, *server_connection);
-  assert (client_connection != NULL);
-  server_connection->peer_connection (*client_connection);
-  var = client_connection;
-}
-
-uint
-ObjectBroker::connection_id_from_protocol (const std::string &protocol)
-{
-  for (size_t idx = 0; idx < MAX_CONNECTIONS; idx++)
-    {
-      BaseConnection *bcon = orb_connections[idx];
-      if (bcon && protocol == bcon->protocol() && dynamic_cast<ServerConnection*> (bcon))
-        return bcon->connection_id();
-    }
-  return 0;     // unmatched
-}
-
-void
-ObjectBroker::connection_handshake (const std::string                 &endpoint,
-                                    std::function<BaseConnection* ()>  aida_connection,
-                                    std::function<void (RemoteHandle)> origin_cast)
-{
-  setup_connection_ctor_protocol (endpoint.c_str());
-  BaseConnection *new_connection = aida_connection();
-  verify_connection_construction();
-  ClientConnection *client_connection = dynamic_cast<ClientConnection*> (new_connection);
-  AIDA_ASSERT (client_connection != NULL);
-  RemoteHandle remote = client_connection->remote_origin();
-  if (!remote)
-    return;             // preserve errno
-  origin_cast (remote);
-  errno = ENOMSG;       // indicates invalid type cast
 }
 
 // == ImplicitBase <-> RemoteHandle RPC ==

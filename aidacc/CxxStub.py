@@ -513,8 +513,6 @@ class Generator:
     s += 'public:\n'
     if self.gen_mode == G4STUB:
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () override;\n' % self.C (type_info) # dtor
-    if ddc:
-      s += '  ' + self.F ('static Rapicorn::Aida::BaseConnection*') + '__aida_connection__();\n'
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('Rapicorn::Aida::TypeHashList') + ' __aida_typelist__  () const override;\n'
       s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const override\t{ return "%s"; }\n' % classFull
@@ -593,16 +591,7 @@ class Generator:
     s += '; \t///< %s\n' % copydoc
     return s
   def generate_aida_connection_impl (self, class_info):
-    assert not bases (class_info) # must be non-derived type
-    s, classC = '', self.C (class_info)
-    s += 'Rapicorn::Aida::BaseConnection*\n'
-    s += '%s::__aida_connection__()\n{\n' % classC
-    if self.gen_mode == G4SERVANT:
-      s += '  return ::Rapicorn::Aida::ObjectBroker::get_server_connection (__AIDA_Local__::server_connection);\n'
-    else:
-      s += '  return ::Rapicorn::Aida::ObjectBroker::get_client_connection (__AIDA_Local__::client_connection);\n'
-    s += '}\n'
-    return s
+    return ''
   def generate_client_class_methods (self, class_info):
     s, classH = '', self.C4client (class_info)
     classH2 = (classH, classH)
@@ -929,7 +918,7 @@ class Generator:
       s += '  return NULL;\n'
     s += '}\n'
     s += 'size_t\n%s::__aida_connect__%s (size_t signal_handler_id, const std::function<%s %s> &func)\n{\n' % (classH, stype.name, sigret, sigargs)
-    s += '  Rapicorn::Aida::ProtoScope __o_ (*this->RemoteHandle::__aida_connection__());\n'
+    s += '  Rapicorn::Aida::ProtoScope __o_ (*__aida_connection__());\n'
     s += '  if (signal_handler_id)\n'
     s += '    return __o_.current_client_connection().signal_disconnect (signal_handler_id);\n'
     s += '  void *fptr = new std::function<%s %s> (func);\n' % (sigret, sigargs)

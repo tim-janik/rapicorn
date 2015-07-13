@@ -19,11 +19,12 @@ ApplicationImpl::ApplicationImpl() :
 ApplicationImpl&
 ApplicationImpl::the ()
 {
-  static std::shared_ptr<ApplicationImpl> the_app (new ApplicationImpl());
-  return *the_app;
+  // call new and never delete to keep singelton across static dtors
+  static StaticUndeletable<ApplicationImplP*> singleton;
+  if (!*singleton)
+    *singleton = std::make_shared<ApplicationImpl>();
+  return *singleton->get();
 }
-static InitHook _create_application ("ui-thread/00 Creating Application Singleton",
-                                     [] (const StringVector &args) { ApplicationImpl::the(); });
 
 WindowIfaceP
 ApplicationImpl::create_window (const String &window_identifier, const StringSeq &arguments)

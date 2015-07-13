@@ -12,29 +12,30 @@ namespace Rapicorn {
 class ServerConnectionSource;
 typedef std::shared_ptr<ServerConnectionSource> ServerConnectionSourceP;
 
+static StaticUndeletable<Aida::BaseConnectionP*> global_server_connection; // automatically allocated and never destroyed
+
 class ServerConnectionSource : public virtual EventSource {
-  static Aida::BaseConnection *connection_;
   const char             *WHERE;
   PollFD                  pollfd_;
   bool                    last_seen_primary_, need_check_primary_;
-  ServerConnectionSource (EventLoop &loop) :
+  ServerConnectionSource (EventLoop &loop, Aida::BaseConnectionP connection) :
     WHERE ("Rapicorn::UIThread::ServerConnection"),
     last_seen_primary_ (false), need_check_primary_ (false)
   {
-    assert (connection_ == NULL); // essentially allows only singletons
-    connection_ = ApplicationIface::__aida_connection__();
-    assert (connection_ != NULL); // essentially allows only singletons
+    assert (*global_server_connection == NULL);
+    *global_server_connection = connection;
+    assert (*global_server_connection != NULL);
     primary (false);
-    pollfd_.fd = connection_->notify_fd();
+    pollfd_.fd = global_server_connection->get()->notify_fd();
     pollfd_.events = PollFD::IN;
     pollfd_.revents = 0;
   }
   friend class FriendAllocator<ServerConnectionSource>;
 public:
   static ServerConnectionSourceP
-  create (EventLoop &loop)
+  create (EventLoop &loop, Aida::BaseConnectionP connection)
   {
-    ServerConnectionSourceP self = FriendAllocator<ServerConnectionSource>::make_shared (loop);
+    ServerConnectionSourceP self = FriendAllocator<ServerConnectionSource>::make_shared (loop, connection);
     loop.add (self, EventLoop::PRIORITY_NORMAL);
     self->add_poll (&self->pollfd_);
     return self;
@@ -50,7 +51,7 @@ private:
   {
     if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
       need_check_primary_ = true;
-    return need_check_primary_ || connection_->pending();
+    return need_check_primary_ || global_server_connection->get()->pending();
   }
   virtual bool
   check (const LoopState &state)
@@ -58,12 +59,12 @@ private:
     if (UNLIKELY (last_seen_primary_ && !state.seen_primary))
       need_check_primary_ = true;
     last_seen_primary_ = state.seen_primary;
-    return need_check_primary_ || connection_->pending();
+    return need_check_primary_ || global_server_connection->get()->pending();
   }
   virtual bool
   dispatch (const LoopState &state)
   {
-    connection_->dispatch();
+    global_server_connection->get()->dispatch();
     if (need_check_primary_)
       {
         need_check_primary_ = false;
@@ -80,8 +81,6 @@ private:
       ApplicationImpl::the().lost_primaries();
   }
 };
-
-Aida::BaseConnection *ServerConnectionSource::connection_ = NULL;
 
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
@@ -144,9 +143,10 @@ private:
     ThisThread::affinity (string_to_int (string_vector_find_value (*idata_->args, "cpu-affinity=", "-1")));
     // initialize Application singleton
     ApplicationImpl &application = ApplicationImpl::the();
-    // setup Aida server connection, so application.__aida_connection__() yields non-NULL
-    Aida::ObjectBroker::bind<ApplicationIface> ("inproc://Rapicorn-" RAPICORN_VERSION,
-                                                shared_ptr_cast<ApplicationIface> (&application));
+    // setup Aida server connection for RPC calls
+    Aida::BaseConnectionP connection =
+      Aida::ServerConnection::bind<ApplicationIface> ("inproc://Rapicorn-" RAPICORN_VERSION,
+                                                      shared_ptr_cast<ApplicationIface> (&application));
     // initialize sub systems
     struct InitHookCaller : public InitHook {
       static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
@@ -160,7 +160,7 @@ private:
     // Initializations after Application Singleton
     InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
     // hook up server connection to main loop to process remote calls
-    ServerConnectionSourceP server_source = ServerConnectionSource::create (*main_loop_);
+    ServerConnectionSourceP server_source = ServerConnectionSource::create (*main_loop_, connection);
     // Complete initialization by signalling caller
     idata_->done = true;
     idata_->mutex.lock();
@@ -241,7 +241,7 @@ uithread_uncancelled_atexit()
 
 static void wrap_test_runner (void);
 
-bool
+bool // provide errno on error
 uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.hh
 {
   assert_return (the_uithread == NULL, false);
@@ -261,6 +261,7 @@ uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.
   assert (the_uithread->running());
   // install handler for UIThread test cases
   wrap_test_runner();
+  errno = 0;
   return true;
 }
 

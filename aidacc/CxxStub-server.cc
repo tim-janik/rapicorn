@@ -17,9 +17,6 @@ typedef ServerConnection::MethodEntry       MethodEntry;
 static_assert (std::is_base_of<Rapicorn::Aida::ImplicitBase, $AIDA_iface_base$>::value,
                "IDL interface base '$AIDA_iface_base$' must derive 'Rapicorn::Aida::ImplicitBase'");
 
-// connection
-static Rapicorn::Aida::ServerConnection *server_connection = NULL;
-
 // objects
 static inline ProtoMsg*
 new_call_result (ProtoReader &fbr, uint64 h, uint64 l, uint32 n = 1)
