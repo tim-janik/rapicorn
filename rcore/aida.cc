@@ -1760,7 +1760,7 @@ public:
     connection_registry->unregister_connection (*this);
     sem_destroy (&transport_sem_);
     pthread_spin_destroy (&signal_spin_);
-    fatal ("%s: proper ClientConnection is not implemented", __func__);
+    fatal ("%s: ~ClientConnectionImpl not properly implemented", __func__);
   }
   virtual void
   receive_msg (ProtoMsg *fb) override
@@ -2110,7 +2110,7 @@ class ServerConnectionImpl : public ServerConnection {
   void                  start_garbage_collection ();
 public:
   explicit              ServerConnectionImpl    (const std::string &protocol);
-  virtual              ~ServerConnectionImpl    () override     { connection_registry->unregister_connection (*this); }
+  virtual              ~ServerConnectionImpl    () override;
   virtual int           notify_fd               () override     { return transport_channel_.inputfd(); }
   virtual bool          pending                 () override     { return transport_channel_.has_msg(); }
   virtual void          dispatch                () override;
@@ -2154,6 +2154,12 @@ ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
                                                  0,  // unused
                                                  1); // counter = first object id
   object_map_.assign_start_id (start_id, OrbObject::orbid_make (0xffff, 0x0000, 0xffffffff));
+}
+
+ServerConnectionImpl::~ServerConnectionImpl()
+{
+  connection_registry->unregister_connection (*this);
+  fatal ("%s: ~ServerConnectionImpl not properly implemented", __func__);
 }
 
 void
