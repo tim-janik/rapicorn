@@ -17,16 +17,16 @@ namespace MandatoryNamespace {
 enum Enum1 {
   E1_A = 1,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum1  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum1  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
 enum Enum1c {
   E1C_A = 1,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum1c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum1c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -34,8 +34,8 @@ enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum2  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum2  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -43,8 +43,8 @@ enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum2c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum2c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -53,8 +53,8 @@ enum Enum3 {
   E3_B = 2,
   E3_C = 3,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum3  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum3  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -63,8 +63,8 @@ enum Enum3c {
   E3C_B = 2,
   E3C_C = 3,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum3c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum3c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -74,8 +74,8 @@ enum Enum4a {
   E4A_C = 3,
   E4A_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4a  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4a  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -85,8 +85,8 @@ enum Enum4b {
   E4B_C = 3,
   E4B_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4b  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4b  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -96,8 +96,8 @@ enum Enum4c {
   E4C_C = 3,
   E4C_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -107,8 +107,8 @@ enum Enum4d {
   E4D_C = 3,
   E4D_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  Enum4d  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4d  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -149,8 +149,8 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ExtensiveEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  ExtensiveEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
 /// @endcond
 } // MandatoryNamespace
 
@@ -160,8 +160,8 @@ namespace InterfaceTests {
 enum QuickEnum {
   ZERO = 0,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  QuickEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  QuickEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
 /// @endcond
 } // InterfaceTests
 
@@ -175,8 +175,8 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  ClickType  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  ClickType  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -194,8 +194,8 @@ enum MathExpressions {
   RESULT_77 = 77,
   RESULT_511 = 511,
 };
-inline void operator<<= (Rapicorn::Aida::FieldBuffer &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::FieldReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
 /// @endcond
 } // RapicornAidaTest
 
@@ -245,10 +245,10 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          void_func             () = 0; 	///< See FirstInterface::void_func()
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_FirstInterfaceIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_FirstInterfaceIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_FirstInterfaceIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_FirstInterfaceIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_FirstInterfaceIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_FirstInterfaceIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_FirstInterfaceIfaceP&);
 
 struct SrvT_XFooRecord
 {
@@ -299,8 +299,8 @@ struct SrvT_XFooRecord
     _visitor_ (any3, "any3");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_XFooRecord&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooRecord&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_XFooRecord&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_XFooRecord&);
 
 struct SrvT_XFooSequence : public std::vector<bool>
 {
@@ -310,8 +310,8 @@ struct SrvT_XFooSequence : public std::vector<bool>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_XFooSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_XFooSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_XFooSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_XFooSequence&);
 
 struct SrvT_IntSequence : public std::vector<int>
 {
@@ -321,8 +321,8 @@ struct SrvT_IntSequence : public std::vector<int>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_IntSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_IntSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_IntSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_IntSequence&);
 
 struct SrvT_FloatSequence : public std::vector<double>
 {
@@ -332,8 +332,8 @@ struct SrvT_FloatSequence : public std::vector<double>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_FloatSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_FloatSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_FloatSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_FloatSequence&);
 
 struct SrvT_StringSequence : public std::vector<std::string>
 {
@@ -343,8 +343,8 @@ struct SrvT_StringSequence : public std::vector<std::string>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_StringSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_StringSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_StringSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_StringSequence&);
 
 struct SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
@@ -354,8 +354,8 @@ struct SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_ExtensiveEnumSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_ExtensiveEnumSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_ExtensiveEnumSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_ExtensiveEnumSequence&);
 
 struct SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
 {
@@ -365,8 +365,8 @@ struct SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_RecordSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_RecordSequence&);
 
 struct SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
 {
@@ -376,8 +376,8 @@ struct SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_SequenceSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SequenceSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_SequenceSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_SequenceSequence&);
 
 struct SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
 {
@@ -387,8 +387,8 @@ struct SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_InterfaceSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InterfaceSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_InterfaceSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_InterfaceSequence&);
 
 struct SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
@@ -398,8 +398,8 @@ struct SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_AnySequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_AnySequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_AnySequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_AnySequence&);
 
 class SrvT_NestedTypesRec;
 
@@ -422,8 +422,8 @@ struct SrvT_NestedTypesRec
     _visitor_ (seq, "seq");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NestedTypesRec&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesRec&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_NestedTypesRec&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_NestedTypesRec&);
 
 struct SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
 {
@@ -433,8 +433,8 @@ struct SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
   std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NestedTypesSeq&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NestedTypesSeq&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_NestedTypesSeq&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_NestedTypesSeq&);
 
 struct SrvT_NewRecord
 {
@@ -457,8 +457,8 @@ struct SrvT_NewRecord
     _visitor_ (ntr, "ntr");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_NewRecord&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_NewRecord&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_NewRecord&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_NewRecord&);
 
 namespace Inner {
 
@@ -481,8 +481,8 @@ struct SrvT_InnerRecord
     _visitor_ (rec, "rec");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_InnerRecord&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_InnerRecord&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_InnerRecord&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_InnerRecord&);
 } // Inner
 
 struct SrvT_Refer2Inner
@@ -500,8 +500,8 @@ struct SrvT_Refer2Inner
     _visitor_ (r, "r");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_Refer2Inner&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_Refer2Inner&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_Refer2Inner&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_Refer2Inner&);
 } // MandatoryNamespace
 
 namespace OtherNamespace {
@@ -527,8 +527,8 @@ struct SrvT_SomeRecord
     _visitor_ (r4, "r4");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_SomeRecord&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_SomeRecord&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_SomeRecord&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_SomeRecord&);
 } // OtherNamespace
 
 namespace Auxdata {
@@ -556,8 +556,8 @@ struct SrvT_RecordWithAuxdata
     _visitor_ (aux_str, "aux_str");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordWithAuxdata&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordWithAuxdata&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_RecordWithAuxdata&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_RecordWithAuxdata&);
 } // Auxdata
 
 namespace InterfaceTests {
@@ -606,10 +606,10 @@ public:
   virtual std::string                   on_click2out        () = 0; 	///< See UIWidgetArea::on_click2out()
   virtual void                          on_click2in         (const std::string &command) = 0; 	///< See UIWidgetArea::on_click2in()
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_UIWidgetAreaIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_UIWidgetAreaIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_UIWidgetAreaIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_UIWidgetAreaIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_UIWidgetAreaIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_UIWidgetAreaIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_UIWidgetAreaIfaceP&);
 
 class I_ParentIface;
 typedef std::shared_ptr<I_ParentIface> I_ParentIfaceP;
@@ -629,10 +629,10 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Parent"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ParentIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_ParentIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_ParentIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_ParentIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_ParentIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_ParentIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_ParentIfaceP&);
 
 class I_ChildIface;
 typedef std::shared_ptr<I_ChildIface> I_ChildIfaceP;
@@ -651,10 +651,10 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Child"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_ChildIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_ChildIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_ChildIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_ChildIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_ChildIfaceP&);
 
 class I_DescendantIface;
 typedef std::shared_ptr<I_DescendantIface> I_DescendantIfaceP;
@@ -673,10 +673,10 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Descendant"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_DescendantIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_DescendantIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_DescendantIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_DescendantIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_DescendantIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_DescendantIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_DescendantIfaceP&);
 
 class I_GrandChildIface;
 typedef std::shared_ptr<I_GrandChildIface> I_GrandChildIfaceP;
@@ -695,10 +695,10 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::GrandChild"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_GrandChildIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_GrandChildIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_GrandChildIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_GrandChildIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_GrandChildIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_GrandChildIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_GrandChildIfaceP&);
 
 struct SrvT_QuickRecord
 {
@@ -717,8 +717,8 @@ struct SrvT_QuickRecord
     _visitor_ (int2, "int2");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_QuickRecord&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickRecord&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_QuickRecord&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_QuickRecord&);
 
 struct SrvT_QuickSequence : public std::vector<double>
 {
@@ -728,8 +728,8 @@ struct SrvT_QuickSequence : public std::vector<double>
   std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
   const std::vector<const char*>& __aida_aux_data__ () const;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_QuickSequence&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_QuickSequence&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_QuickSequence&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_QuickSequence&);
 
 class I_QuickIfaceIface;
 typedef std::shared_ptr<I_QuickIfaceIface> I_QuickIfaceIfaceP;
@@ -750,10 +750,10 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          simple_function   (int i = 9) = 0; 	///< See QuickIface::simple_function()
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_QuickIfaceIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_QuickIfaceIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_QuickIfaceIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_QuickIfaceIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_QuickIfaceIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_QuickIfaceIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_QuickIfaceIfaceP&);
 
 class I_MethodTestInterfaceIface;
 typedef std::shared_ptr<I_MethodTestInterfaceIface> I_MethodTestInterfaceIfaceP;
@@ -796,10 +796,10 @@ public:
   virtual I_QuickIfaceIfaceP            method_with_quickiface     (I_QuickIfaceIface &input,
                                                                     I_QuickIfaceIface &iface0 = *(I_QuickIfaceIface*) NULL) = 0; 	///< See MethodTestInterface::method_with_quickiface()
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_MethodTestInterfaceIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_MethodTestInterfaceIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_MethodTestInterfaceIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_MethodTestInterfaceIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_MethodTestInterfaceIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_MethodTestInterfaceIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_MethodTestInterfaceIfaceP&);
 
 class I_SignalTestInterfaceIface;
 typedef std::shared_ptr<I_SignalTestInterfaceIface> I_SignalTestInterfaceIfaceP;
@@ -867,10 +867,10 @@ public:
   Signal_any_arg sig_any_arg;
   Signal_self_args sig_self_args;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SignalTestInterfaceIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_SignalTestInterfaceIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_SignalTestInterfaceIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_SignalTestInterfaceIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_SignalTestInterfaceIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_SignalTestInterfaceIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_SignalTestInterfaceIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_SignalTestInterfaceIfaceP&);
 
 class I_ChildInheritingSignalsIface;
 typedef std::shared_ptr<I_ChildInheritingSignalsIface> I_ChildInheritingSignalsIfaceP;
@@ -891,10 +891,10 @@ public:
   typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const SrvT_QuickRecord &r, const SrvT_QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ChildInheritingSignalsIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_ChildInheritingSignalsIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildInheritingSignalsIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_ChildInheritingSignalsIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_ChildInheritingSignalsIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_ChildInheritingSignalsIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_ChildInheritingSignalsIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_ChildInheritingSignalsIfaceP&);
 
 class I_AnotherChildIface;
 typedef std::shared_ptr<I_AnotherChildIface> I_AnotherChildIfaceP;
@@ -913,10 +913,10 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::AnotherChild"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_AnotherChildIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_AnotherChildIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_AnotherChildIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_AnotherChildIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_AnotherChildIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_AnotherChildIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_AnotherChildIfaceP&);
 
 class I_PropertyTesterIface;
 typedef std::shared_ptr<I_PropertyTesterIface> I_PropertyTesterIfaceP;
@@ -958,10 +958,10 @@ public:
   virtual Rapicorn::Aida::Any           any_prop       () const = 0; 	///< See PropertyTester::any_prop
   virtual void                          any_prop       (const Rapicorn::Aida::Any&) = 0; 	///< See PropertyTester::any_prop
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PropertyTesterIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_PropertyTesterIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_PropertyTesterIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_PropertyTesterIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_PropertyTesterIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_PropertyTesterIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_PropertyTesterIfaceP&);
 } // InterfaceTests
 
 namespace RapicornAidaTest {
@@ -996,10 +996,10 @@ public:
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_ButtonAreaIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_ButtonAreaIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_ButtonAreaIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_ButtonAreaIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_ButtonAreaIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_ButtonAreaIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_ButtonAreaIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_ButtonAreaIfaceP&);
 
 class I_PureMethodsIface;
 typedef std::shared_ptr<I_PureMethodsIface> I_PureMethodsIfaceP;
@@ -1021,10 +1021,10 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual int                           pure_method        (double f) = 0; 	///< See PureMethods::pure_method()
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_PureMethodsIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_PureMethodsIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_PureMethodsIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_PureMethodsIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_PureMethodsIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_PureMethodsIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_PureMethodsIfaceP&);
 } // RapicornAidaTest
 
 namespace Other {
@@ -1050,10 +1050,10 @@ public:
                                                                    RapicornAidaTest::ClickType qe,
                                                                    const OtherNamespace::SrvT_SomeRecord &sr) = 0; 	///< See NameTests::args_from_other_namespace()
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_NameTestsIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_NameTestsIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_NameTestsIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_NameTestsIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_NameTestsIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_NameTestsIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_NameTestsIfaceP&);
 } // Other
 
 namespace BseTest {
@@ -1080,10 +1080,10 @@ public:
   virtual double                        ratio     () const = 0; 	///< See Compressor::ratio
   virtual void                          ratio     (double) = 0; 	///< See Compressor::ratio
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_CompressorIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_CompressorIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_CompressorIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_CompressorIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_CompressorIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_CompressorIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_CompressorIfaceP&);
 
 struct SrvT_RecordForGroups
 {
@@ -1108,8 +1108,8 @@ struct SrvT_RecordForGroups
     _visitor_ (threshold2, "threshold2");
   }
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const SrvT_RecordForGroups&);
-void operator>>= (Rapicorn::Aida::FieldReader&, SrvT_RecordForGroups&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_RecordForGroups&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_RecordForGroups&);
 
 class I_SoundModuleIface;
 typedef std::shared_ptr<I_SoundModuleIface> I_SoundModuleIfaceP;
@@ -1129,10 +1129,10 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "BseTest::SoundModule"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::FieldBuffer&, I_SoundModuleIface*);
-void operator<<= (Rapicorn::Aida::FieldBuffer&, const I_SoundModuleIfaceP&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIface*&);
-void operator>>= (Rapicorn::Aida::FieldReader&, I_SoundModuleIfaceP&);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, I_SoundModuleIface*);
+void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_SoundModuleIfaceP&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_SoundModuleIface*&);
+void operator>>= (Rapicorn::Aida::ProtoReader&, I_SoundModuleIfaceP&);
 } // BseTest
 
 #define __testpass_idl_INTERFACE_LIST \

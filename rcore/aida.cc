@@ -235,9 +235,9 @@ union SignalHandlerIdParts {
   {}
 };
 
-// == FieldUnion ==
-static_assert (sizeof (FieldUnion::smem) <= sizeof (FieldUnion::bytes), "sizeof FieldUnion::smem");
-static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer");
+// == ProtoUnion ==
+static_assert (sizeof (ProtoUnion::smem) <= sizeof (ProtoUnion::bytes), "sizeof ProtoUnion::smem");
+static_assert (sizeof (ProtoMsg) <= sizeof (ProtoUnion), "sizeof ProtoMsg");
 
 // === Utilities ===
 void
@@ -956,32 +956,32 @@ RemoteHandle::__aida_upgrade_from__ (const OrbObjectP &orbop)
 RemoteHandle::~RemoteHandle()
 {}
 
-// == FieldBuffer ==
-FieldBuffer::FieldBuffer (uint32 _ntypes) :
+// == ProtoMsg ==
+ProtoMsg::ProtoMsg (uint32 _ntypes) :
   buffermem (NULL)
 {
-  static_assert (sizeof (FieldBuffer) <= sizeof (FieldUnion), "sizeof FieldBuffer");
+  static_assert (sizeof (ProtoMsg) <= sizeof (ProtoUnion), "sizeof ProtoMsg");
   // buffermem layout: [{n_types,nth}] [{type nibble} * n_types]... [field]...
   const uint _offs = 1 + (_ntypes + 7) / 8;
-  buffermem = new FieldUnion[_offs + _ntypes];
-  wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
+  buffermem = new ProtoUnion[_offs + _ntypes];
+  wmemset ((wchar_t*) buffermem, 0, sizeof (ProtoUnion[_offs]) / sizeof (wchar_t));
   buffermem[0].capacity = _ntypes;
   buffermem[0].index = 0;
 }
 
-FieldBuffer::FieldBuffer (uint32    _ntypes,
-                          FieldUnion *_bmem,
+ProtoMsg::ProtoMsg (uint32    _ntypes,
+                          ProtoUnion *_bmem,
                           uint32    _bmemlen) :
   buffermem (_bmem)
 {
   const uint32 _offs = 1 + (_ntypes + 7) / 8;
-  assert (_bmem && _bmemlen >= sizeof (FieldUnion[_offs + _ntypes]));
-  wmemset ((wchar_t*) buffermem, 0, sizeof (FieldUnion[_offs]) / sizeof (wchar_t));
+  assert (_bmem && _bmemlen >= sizeof (ProtoUnion[_offs + _ntypes]));
+  wmemset ((wchar_t*) buffermem, 0, sizeof (ProtoUnion[_offs]) / sizeof (wchar_t));
   buffermem[0].capacity = _ntypes;
   buffermem[0].index = 0;
 }
 
-FieldBuffer::~FieldBuffer()
+ProtoMsg::~ProtoMsg()
 {
   reset();
   if (buffermem)
@@ -989,31 +989,31 @@ FieldBuffer::~FieldBuffer()
 }
 
 void
-FieldBuffer::check_internal ()
+ProtoMsg::check_internal ()
 {
   if (size() > capacity())
-    fatal_error (string_format ("FieldBuffer(this=%p): capacity=%u size=%u", this, capacity(), size()));
+    fatal_error (string_format ("ProtoMsg(this=%p): capacity=%u size=%u", this, capacity(), size()));
 }
 
 void
-FieldReader::check_request (int type)
+ProtoReader::check_request (int type)
 {
   if (nth_ >= n_types())
-    fatal_error (string_format ("FieldReader(this=%p): size=%u requested-index=%u", this, n_types(), nth_));
+    fatal_error (string_format ("ProtoReader(this=%p): size=%u requested-index=%u", this, n_types(), nth_));
   if (get_type() != type)
-    fatal_error (string_format ("FieldReader(this=%p): size=%u index=%u type=%s requested-type=%s",
+    fatal_error (string_format ("ProtoReader(this=%p): size=%u index=%u type=%s requested-type=%s",
                                 this, n_types(), nth_,
-                                FieldBuffer::type_name (get_type()).c_str(), FieldBuffer::type_name (type).c_str()));
+                                ProtoMsg::type_name (get_type()).c_str(), ProtoMsg::type_name (type).c_str()));
 }
 
 uint64
-FieldReader::debug_bits ()
+ProtoReader::debug_bits ()
 {
   return fb_->upeek (nth_).vint64;
 }
 
 std::string
-FieldBuffer::first_id_str() const
+ProtoMsg::first_id_str() const
 {
   uint64 fid = first_id();
   return string_format ("%016x", fid);
@@ -1039,7 +1039,7 @@ strescape (const std::string &str)
 }
 
 std::string
-FieldBuffer::type_name (int field_type)
+ProtoMsg::type_name (int field_type)
 {
   const char *tkn = type_kind_name (TypeKind (field_type));
   if (tkn)
@@ -1048,11 +1048,11 @@ FieldBuffer::type_name (int field_type)
 }
 
 std::string
-FieldBuffer::to_string() const
+ProtoMsg::to_string() const
 {
-  String s = string_format ("Aida::FieldBuffer(%p)={", this);
+  String s = string_format ("Aida::ProtoMsg(%p)={", this);
   s += string_format ("size=%u, capacity=%u", size(), capacity());
-  FieldReader fbr (*this);
+  ProtoReader fbr (*this);
   for (size_t i = 0; i < size(); i++)
     {
       const String tname = type_name (fbr.get_type());
@@ -1080,11 +1080,11 @@ FieldBuffer::to_string() const
 }
 
 #if 0
-FieldBuffer*
-FieldBuffer::new_error (const String &msg,
+ProtoMsg*
+ProtoMsg::new_error (const String &msg,
                         const String &domain)
 {
-  FieldBuffer *fr = FieldBuffer::_new (3 + 2);
+  ProtoMsg *fr = ProtoMsg::_new (3 + 2);
   fr->add_header1 (MSGID_ERROR, 0, 0, 0);
   fr->add_string (msg);
   fr->add_string (domain);
@@ -1092,59 +1092,59 @@ FieldBuffer::new_error (const String &msg,
 }
 #endif
 
-FieldBuffer*
-FieldBuffer::new_result (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg*
+ProtoMsg::new_result (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
   assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
-  FieldBuffer *fr = FieldBuffer::_new (3 + n);
+  ProtoMsg *fr = ProtoMsg::_new (3 + n);
   fr->add_header1 (m, rconnection, h, l);
   return fr;
 }
 
-FieldBuffer*
-FieldBuffer::renew_into_result (FieldBuffer *fb, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg*
+ProtoMsg::renew_into_result (ProtoMsg *fb, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
   assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   if (fb->capacity() < 3 + n)
-    return FieldBuffer::new_result (m, rconnection, h, l, n);
-  FieldBuffer *fr = fb;
+    return ProtoMsg::new_result (m, rconnection, h, l, n);
+  ProtoMsg *fr = fb;
   fr->reset();
   fr->add_header1 (m, rconnection, h, l);
   return fr;
 }
 
-FieldBuffer*
-FieldBuffer::renew_into_result (FieldReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg*
+ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
 {
-  FieldBuffer *fb = const_cast<FieldBuffer*> (fbr.field_buffer());
+  ProtoMsg *fb = const_cast<ProtoMsg*> (fbr.proto_msg());
   fbr.reset();
   return renew_into_result (fb, m, rconnection, h, l, n);
 }
 
-class OneChunkFieldBuffer : public FieldBuffer {
-  virtual ~OneChunkFieldBuffer () { reset(); buffermem = NULL; }
-  explicit OneChunkFieldBuffer (uint32    _ntypes,
-                                FieldUnion *_bmem,
+class OneChunkProtoMsg : public ProtoMsg {
+  virtual ~OneChunkProtoMsg () { reset(); buffermem = NULL; }
+  explicit OneChunkProtoMsg (uint32    _ntypes,
+                                ProtoUnion *_bmem,
                                 uint32    _bmemlen) :
-    FieldBuffer (_ntypes, _bmem, _bmemlen)
+    ProtoMsg (_ntypes, _bmem, _bmemlen)
   {}
 public:
-  static OneChunkFieldBuffer*
+  static OneChunkProtoMsg*
   _new (uint32 _ntypes)
   {
     const uint32 _offs = 1 + (_ntypes + 7) / 8;
-    size_t bmemlen = sizeof (FieldUnion[_offs + _ntypes]);
-    size_t objlen = ALIGN4 (sizeof (OneChunkFieldBuffer), int64);
+    size_t bmemlen = sizeof (ProtoUnion[_offs + _ntypes]);
+    size_t objlen = ALIGN4 (sizeof (OneChunkProtoMsg), int64);
     uint8_t *omem = (uint8_t*) operator new (objlen + bmemlen);
-    FieldUnion *bmem = (FieldUnion*) (omem + objlen);
-    return new (omem) OneChunkFieldBuffer (_ntypes, bmem, bmemlen);
+    ProtoUnion *bmem = (ProtoUnion*) (omem + objlen);
+    return new (omem) OneChunkProtoMsg (_ntypes, bmem, bmemlen);
   }
 };
 
-FieldBuffer*
-FieldBuffer::_new (uint32 _ntypes)
+ProtoMsg*
+ProtoMsg::_new (uint32 _ntypes)
 {
-  return OneChunkFieldBuffer::_new (_ntypes);
+  return OneChunkProtoMsg::_new (_ntypes);
 }
 
 // == EventFd ==
@@ -1321,11 +1321,11 @@ private:
 
 
 // == TransportChannel ==
-class TransportChannel : public EventFd { // Channel for cross-thread FieldBuffer IO
-  MpScQueueF<FieldBuffer*> msg_queue;
-  FieldBuffer             *last_fb;
+class TransportChannel : public EventFd { // Channel for cross-thread ProtoMsg IO
+  MpScQueueF<ProtoMsg*> msg_queue;
+  ProtoMsg             *last_fb;
   enum Op { PEEK, POP, POP_BLOCKED };
-  FieldBuffer*
+  ProtoMsg*
   get_msg (const Op op)
   {
     if (!last_fb)
@@ -1345,23 +1345,23 @@ class TransportChannel : public EventFd { // Channel for cross-thread FieldBuffe
             pollin();
         }
       while (op == POP_BLOCKED);
-    FieldBuffer *fb = last_fb;
+    ProtoMsg *fb = last_fb;
     if (op != PEEK) // advance
       last_fb = NULL;
     return fb; // may be NULL
   }
 public:
   void
-  send_msg (FieldBuffer *fb, // takes fb ownership
+  send_msg (ProtoMsg *fb, // takes fb ownership
             bool         may_wakeup)
   {
     const bool was_empty = msg_queue.push (fb);
     if (may_wakeup && was_empty)
       wakeup();                                 // wakeups are needed to catch empty => full transition
   }
-  FieldBuffer*  fetch_msg()     { return get_msg (POP); }
+  ProtoMsg*  fetch_msg()     { return get_msg (POP); }
   bool          has_msg()       { return get_msg (PEEK); }
-  FieldBuffer*  pop_msg()       { return get_msg (POP_BLOCKED); }
+  ProtoMsg*  pop_msg()       { return get_msg (POP_BLOCKED); }
   ~TransportChannel ()
   {}
   TransportChannel () :
@@ -1372,45 +1372,6 @@ public:
       fatal_error (string_format ("failed to create wakeup pipe: %s", strerror (-err)));
   }
 };
-
-// == TypeNameDB ==
-class TypeNameDB {
-  RWLock                                mutex_;
-  std::vector<std::string>              vector_;
-  std::unordered_map<std::string, uint> map_;
-public:
-  uint
-  index (const std::string &type_name)
-  {
-    mutex_.rdlock();
-    auto it = map_.find (type_name);
-    uint result_type_index = it == map_.end() ? 0 : it->second;
-    mutex_.unlock();
-    if (result_type_index)
-      return result_type_index;
-    mutex_.wrlock();
-    vector_.push_back (type_name);
-    result_type_index = vector_.size();
-    map_[type_name] = result_type_index;
-    mutex_.unlock();
-    assert (result_type_index < 65536); // see IdentifierParts.orbid_type_index
-    return result_type_index;
-  }
-  std::string
-  type_name (const uint type_index)
-  {
-    std::string result;
-    if (type_index > 0)
-      {
-        mutex_.rdlock();
-        if (type_index <= vector_.size())
-          result = vector_[type_index - 1];
-        mutex_.unlock();
-      }
-    return result;
-  }
-};
-static TypeNameDB type_name_db;
 
 // == ObjectMap ==
 template<class Instance>
@@ -1426,7 +1387,6 @@ private:
   std::vector<Entry>                    entries_;
   std::unordered_map<Instance*, uint64> map_;
   std::vector<uint>                     free_list_;
-  std::function<uint64 (InstanceP)>     orbid_hook_;
   class MappedObject : public virtual OrbObject {
     ObjectMap &omap_;
   public:
@@ -1447,7 +1407,6 @@ public:
   InstanceP  instance_from_orbo (const OrbObjectP &orbo);
   OrbObjectP orbo_from_orbid    (uint64            orbid);
   void       assign_start_id    (uint64 start_id, uint64 mask = 0xffffffffffffffff);
-  void       assign_orbid_hook  (const std::function<uint64 (InstanceP)> &orbid_hook);
 };
 
 template<class Instance> void
@@ -1459,12 +1418,6 @@ ObjectMap<Instance>::assign_start_id (uint64 start_id, uint64 id_mask)
   assert (id_mask > 0);
   id_mask_ = id_mask;
   assert (map_.size() == 0);
-}
-
-template<class Instance> void
-ObjectMap<Instance>::assign_orbid_hook (const std::function<uint64 (InstanceP)> &orbid_hook)
-{
-  orbid_hook_ = orbid_hook;
 }
 
 template<class Instance> void
@@ -1517,13 +1470,7 @@ ObjectMap<Instance>::orbo_from_instance (InstanceP instancep)
       if (AIDA_UNLIKELY (orbid == 0))
         {
           const uint64 index = next_index();
-          uint64 masked_bits = 0;
-          if (orbid_hook_)
-            {
-              masked_bits = orbid_hook_ (instancep);
-              assert ((masked_bits & id_mask_) == 0);
-            }
-          orbid = (start_id_ + index) | masked_bits;
+          orbid = start_id_ + index;
           orbop = std::make_shared<MappedObject> (orbid, *this); // calls delete_orbid from dtor
           Entry e { orbop, instancep };
           entries_[index] = e;
@@ -1629,7 +1576,7 @@ class ClientConnectionImpl : public ClientConnection {
   pthread_spinlock_t            signal_spin_;
   TransportChannel              transport_channel_;     // messages arriving at client
   sem_t                         transport_sem_;         // signal incomming results
-  std::deque<FieldBuffer*>      event_queue_;           // messages pending for client
+  std::deque<ProtoMsg*>      event_queue_;           // messages pending for client
   typedef std::map<uint64, OrbObjectW> Id2OrboMap;
   Id2OrboMap                    id2orbo_map_;           // map server orbid -> OrbObjectP
   std::vector<SignalHandler*>   signal_handlers_;
@@ -1656,7 +1603,7 @@ public:
     pthread_spin_destroy (&signal_spin_);
   }
   virtual void
-  send_msg (FieldBuffer *fb)
+  send_msg (ProtoMsg *fb)
   {
     assert_return (fb);
     transport_channel_.send_msg (fb, !blocking_for_sem_);
@@ -1664,19 +1611,18 @@ public:
   }
   void                  notify_for_result ()            { if (blocking_for_sem_) sem_post (&transport_sem_); }
   void                  block_for_result  ()            { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
-  void                  gc_sweep          (const FieldBuffer *fb);
+  void                  gc_sweep          (const ProtoMsg *fb);
   virtual int           notify_fd         ()            { return transport_channel_.inputfd(); }
   virtual bool          pending           ()            { return !event_queue_.empty() || transport_channel_.has_msg(); }
-  virtual FieldBuffer*  call_remote       (FieldBuffer*);
-  virtual FieldBuffer*  pop               ();
+  virtual ProtoMsg*  call_remote       (ProtoMsg*);
+  virtual ProtoMsg*  pop               ();
   virtual void          dispatch          ();
-  virtual void          add_handle        (FieldBuffer &fb, const RemoteHandle &rhandle);
-  virtual void          pop_handle        (FieldReader &fr, RemoteHandle &rhandle);
+  virtual void          add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle);
+  virtual void          pop_handle        (ProtoReader &fr, RemoteHandle &rhandle);
   virtual void          remote_origin     (ImplicitBaseP rorigin) { fatal ("assert not reached"); }
   virtual RemoteHandle  remote_origin     ();
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
   virtual bool          signal_disconnect (size_t signal_handler_id);
-  virtual std::string   type_name_from_handle (const RemoteHandle &rhandle);
   struct ClientOrbObject;
   void
   client_orb_object_deleting (ClientOrbObject &coo)
@@ -1684,10 +1630,10 @@ public:
     if (!seen_garbage_)
       {
         seen_garbage_ = true;
-        FieldBuffer *fb = FieldBuffer::_new (3);
+        ProtoMsg *fb = ProtoMsg::_new (3);
         fb->add_header1 (MSGID_META_SEEN_GARBAGE, coo.connection(), this->connection_id(), 0);
         GCLOG ("ClientConnectionImpl: SEEN_GARBAGE (%016x)", coo.orbid());
-        FieldBuffer *fr = this->call_remote (fb); // takes over fb
+        ProtoMsg *fr = this->call_remote (fb); // takes over fb
         assert (fr == NULL);
       }
   }
@@ -1701,12 +1647,12 @@ public:
   };
 };
 
-FieldBuffer*
+ProtoMsg*
 ClientConnectionImpl::pop ()
 {
   if (event_queue_.empty())
     return transport_channel_.fetch_msg();
-  FieldBuffer *fb = event_queue_.front();
+  ProtoMsg *fb = event_queue_.front();
   event_queue_.pop_front();
   return fb;
 }
@@ -1721,10 +1667,10 @@ ClientConnectionImpl::remote_origin()
       errno = EHOSTUNREACH; // ECONNREFUSED;
       return RemoteHandle::__aida_null_handle__();
     }
-  FieldBuffer *fb = FieldBuffer::_new (3);
+  ProtoMsg *fb = ProtoMsg::_new (3);
   fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
-  FieldBuffer *fr = this->call_remote (fb); // takes over fb
-  FieldReader frr (*fr);
+  ProtoMsg *fr = this->call_remote (fb); // takes over fb
+  ProtoReader frr (*fr);
   const MessageId msgid = MessageId (frr.pop_int64());
   frr.skip(); // hashhigh
   frr.skip(); // hashlow
@@ -1737,13 +1683,13 @@ ClientConnectionImpl::remote_origin()
 }
 
 void
-ClientConnectionImpl::add_handle (FieldBuffer &fb, const RemoteHandle &rhandle)
+ClientConnectionImpl::add_handle (ProtoMsg &fb, const RemoteHandle &rhandle)
 {
   fb.add_orbid (rhandle.__aida_orbid__());
 }
 
 void
-ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
+ClientConnectionImpl::pop_handle (ProtoReader &fr, RemoteHandle &rhandle)
 {
   const uint64 orbid = fr.pop_orbid();
   OrbObjectP orbop = id2orbo_map_[orbid].lock();
@@ -1756,9 +1702,9 @@ ClientConnectionImpl::pop_handle (FieldReader &fr, RemoteHandle &rhandle)
 }
 
 void
-ClientConnectionImpl::gc_sweep (const FieldBuffer *fb)
+ClientConnectionImpl::gc_sweep (const ProtoMsg *fb)
 {
-  FieldReader fbr (*fb);
+  ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   assert (msgid_is (msgid, MSGID_META_GARBAGE_SWEEP));
   // collect expired object ids and send to server
@@ -1771,7 +1717,7 @@ ClientConnectionImpl::gc_sweep (const FieldBuffer *fb)
       }
     else
       ++it;
-  FieldBuffer *fr = FieldBuffer::_new (3 + 1 + trashids.size()); // header + length + items
+  ProtoMsg *fr = ProtoMsg::_new (3 + 1 + trashids.size()); // header + length + items
   fr->add_header1 (MSGID_META_GARBAGE_REPORT, ObjectBroker::sender_connection_id (msgid), 0, 0); // header
   fr->add_int64 (trashids.size()); // length
   for (auto v : trashids)
@@ -1784,9 +1730,9 @@ ClientConnectionImpl::gc_sweep (const FieldBuffer *fb)
 void
 ClientConnectionImpl::dispatch ()
 {
-  FieldBuffer *fb = pop();
+  ProtoMsg *fb = pop();
   return_if (fb == NULL);
-  FieldReader fbr (*fb);
+  ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64  idmask = msgid_mask (msgid);
   switch (idmask)
@@ -1799,7 +1745,7 @@ ClientConnectionImpl::dispatch ()
         const size_t handler_id = fbr.pop_int64();
         SignalHandler *client_signal_handler = signal_lookup (handler_id);
         AIDA_ASSERT (client_signal_handler != NULL);
-        FieldBuffer *fr = client_signal_handler->seh (fb, client_signal_handler->data);
+        ProtoMsg *fr = client_signal_handler->seh (fb, client_signal_handler->data);
         if (fr == fb)
           fb = NULL; // prevent deletion
         if (idmask == MSGID_EMIT_ONEWAY)
@@ -1832,8 +1778,8 @@ ClientConnectionImpl::dispatch ()
     delete fb;
 }
 
-FieldBuffer*
-ClientConnectionImpl::call_remote (FieldBuffer *fb)
+ProtoMsg*
+ClientConnectionImpl::call_remote (ProtoMsg *fb)
 {
   AIDA_ASSERT (fb != NULL);
   // enqueue method call message
@@ -1847,7 +1793,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
   const MessageId resultid = MessageId (msgid_mask (msgid_as_result (callid)));
   blocking_for_sem_ = true; // results will notify semaphore
   ObjectBroker::post_msg (fb);
-  FieldBuffer *fr;
+  ProtoMsg *fr;
   while (needsresult)
     {
       fr = transport_channel_.fetch_msg();
@@ -1862,7 +1808,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
 #if 0
       else if (msgid_is_error (retmask))
         {
-          FieldReader fbr (*fr);
+          ProtoReader fbr (*fr);
           fbr.skip_header();
           std::string msg = fbr.pop_string();
           std::string dom = fbr.pop_string();
@@ -1879,7 +1825,7 @@ ClientConnectionImpl::call_remote (FieldBuffer *fb)
         }
       else
         {
-          FieldReader frr (*fr);
+          ProtoReader frr (*fr);
           const uint64 retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
           print_warning (string_format ("%s: invalid reply: (%016x, %016x%016x)", STRFUNC, retid, rethh, rethl));
         }
@@ -1907,15 +1853,15 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   signal_handlers_.push_back (shandler);
   pthread_spin_unlock (&signal_spin_);
   const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
-  FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
+  ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote.__aida_orbid__());
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   add_handle (fb, rhandle);                     // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
-  FieldBuffer *connection_result = call_remote (&fb); // deletes fb
+  ProtoMsg *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, 0);
-  FieldReader frr (*connection_result);
+  ProtoReader frr (*connection_result);
   frr.skip_header();
   pthread_spin_lock (&signal_spin_);
   frr >>= shandler->cid;
@@ -1936,15 +1882,15 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
     signal_handlers_[handler_index] = NULL;
   pthread_spin_unlock (&signal_spin_);
   return_if (!shandler, false);
-  FieldBuffer &fb = *FieldBuffer::_new (3 + 1 + 2);
+  ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
   const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote.__aida_orbid__());
   fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
   add_handle (fb, shandler->remote);            // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
-  FieldBuffer *connection_result = call_remote (&fb); // deletes fb
+  ProtoMsg *connection_result = call_remote (&fb); // deletes fb
   assert_return (connection_result != NULL, false);
-  FieldReader frr (*connection_result);
+  ProtoReader frr (*connection_result);
   frr.skip_header();
   uint64 disconnection_success;
   frr >>= disconnection_success;
@@ -1967,13 +1913,6 @@ ClientConnectionImpl::signal_lookup (size_t signal_handler_id)
   return shandler;
 }
 
-std::string
-ClientConnectionImpl::type_name_from_handle (const RemoteHandle &rhandle)
-{
-  const uint type_index = OrbObject::orbid_type_index (rhandle.__aida_orbid__());
-  return type_name_db.type_name (type_index);
-}
-
 // == ServerConnectionImpl ==
 /// Transport and dispatch layer for messages sent between ClientConnection and ServerConnection.
 class ServerConnectionImpl : public ServerConnection {
@@ -1992,12 +1931,11 @@ public:
   virtual void          dispatch       ();
   virtual void          remote_origin  (ImplicitBaseP rorigin);
   virtual RemoteHandle  remote_origin  () { fatal ("assert not reached"); }
-  virtual void          add_interface  (FieldBuffer &fb, ImplicitBaseP ibase);
-  virtual ImplicitBaseP pop_interface  (FieldReader &fr);
-  virtual void          send_msg   (FieldBuffer *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
+  virtual void          add_interface  (ProtoMsg &fb, ImplicitBaseP ibase);
+  virtual ImplicitBaseP pop_interface  (ProtoReader &fr);
+  virtual void          send_msg   (ProtoMsg *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
   virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
   virtual EmitResultHandler emit_result_handler_pop (size_t id);
-  virtual ImplicitBaseP     interface_from_handle   (const RemoteHandle &rhandle);
   virtual void              cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase);
 };
 
@@ -2012,7 +1950,7 @@ ServerConnectionImpl::start_garbage_collection (uint client_connection)
   // GARBAGE_SWEEP
   sweep_remotes_ = new std::unordered_set<OrbObjectP>();
   sweep_remotes_->swap (live_remotes_);
-  FieldBuffer *fb = FieldBuffer::_new (3);
+  ProtoMsg *fb = ProtoMsg::_new (3);
   fb->add_header2 (MSGID_META_GARBAGE_SWEEP, client_connection, this->connection_id(), 0, 0);
   GCLOG ("ServerConnectionImpl: GARBAGE_SWEEP: %u candidates", sweep_remotes_->size());
   ObjectBroker::post_msg (fb);
@@ -2026,16 +1964,9 @@ ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
     fatal_error ("Aida: failed to register ServerConnection");
   assign_id (realid);
   const uint64 start_id = OrbObject::orbid_make (realid, // connection_id() must match connection_id_from_orbid()
-                                                 0,      // type_name_db.index, see orbid_hook
+                                                 0,      // unused
                                                  1);     // counter = first object id
   object_map_.assign_start_id (start_id, OrbObject::orbid_make (0xffff, 0x0000, 0xffffffff));
-  auto orbid_hook = [this] (ObjectMap<ImplicitBase>::InstanceP instance) {
-    // hook is needed to determine the type_name index for newly created orbids
-    // embedding the type_name into orbids is a small hack for Python to create the correct Handle type
-    const uint64 type_index = type_name_db.index (instance->__aida_type_name__());
-    return OrbObject::orbid_make (0, type_index, 0);
-  };
-  object_map_.assign_orbid_hook (orbid_hook);
 }
 
 void
@@ -2049,7 +1980,7 @@ ServerConnectionImpl::remote_origin (ImplicitBaseP rorigin)
 }
 
 void
-ServerConnectionImpl::add_interface (FieldBuffer &fb, ImplicitBaseP ibase)
+ServerConnectionImpl::add_interface (ProtoMsg &fb, ImplicitBaseP ibase)
 {
   OrbObjectP orbop = object_map_.orbo_from_instance (ibase);
   fb.add_orbid (orbop ? orbop->orbid() : 0);
@@ -2058,7 +1989,7 @@ ServerConnectionImpl::add_interface (FieldBuffer &fb, ImplicitBaseP ibase)
 }
 
 ImplicitBaseP
-ServerConnectionImpl::pop_interface (FieldReader &fr)
+ServerConnectionImpl::pop_interface (ProtoReader &fr)
 {
   const uint64 orbid = fr.pop_orbid();
   OrbObjectP orbop = object_map_.orbo_from_orbid (orbid);
@@ -2068,10 +1999,10 @@ ServerConnectionImpl::pop_interface (FieldReader &fr)
 void
 ServerConnectionImpl::dispatch ()
 {
-  FieldBuffer *fb = transport_channel_.fetch_msg();
+  ProtoMsg *fb = transport_channel_.fetch_msg();
   if (!fb)
     return;
-  FieldReader fbr (*fb);
+  ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64  idmask = msgid_mask (msgid);
   switch (idmask)
@@ -2083,7 +2014,7 @@ ServerConnectionImpl::dispatch ()
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
         ImplicitBaseP rorigin = remote_origin_;
-        FieldBuffer *fr = FieldBuffer::renew_into_result (fbr, MSGID_META_WELCOME, ObjectBroker::sender_connection_id (msgid), 0, 0, 1);
+        ProtoMsg *fr = ProtoMsg::renew_into_result (fbr, MSGID_META_WELCOME, ObjectBroker::sender_connection_id (msgid), 0, 0, 1);
         add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
@@ -2100,7 +2031,7 @@ ServerConnectionImpl::dispatch ()
         const DispatchFunc server_method_implementation = find_method (hashhigh, hashlow);
         AIDA_ASSERT (server_method_implementation != NULL);
         fbr.reset (*fb);
-        FieldBuffer *fr = server_method_implementation (fbr);
+        ProtoMsg *fr = server_method_implementation (fbr);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         if (idmask == MSGID_CALL_ONEWAY)
@@ -2167,12 +2098,6 @@ ServerConnectionImpl::dispatch ()
     delete fb;
 }
 
-ImplicitBaseP
-ServerConnectionImpl::interface_from_handle (const RemoteHandle &rhandle)
-{
-  return object_map_.instance_from_orbo ((rhandle.*pmf_peek_orb_object)());
-}
-
 void
 ServerConnectionImpl::cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase)
 {
@@ -2218,19 +2143,19 @@ struct HashTypeHash {
 };
 
 typedef std::unordered_map<TypeHash, DispatchFunc, HashTypeHash> DispatcherMap;
-static DispatcherMap                    *dispatcher_map = NULL;
-static pthread_mutex_t                   dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
-static bool                              dispatcher_map_frozen = false;
+static DispatcherMap                    *global_dispatcher_map = NULL;
+static pthread_mutex_t                   global_dispatcher_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool                              global_dispatcher_map_frozen = false;
 
 static inline void
 ensure_dispatcher_map()
 {
-  if (AIDA_UNLIKELY (dispatcher_map == NULL))
+  if (AIDA_UNLIKELY (global_dispatcher_map == NULL))
     {
-      pthread_mutex_lock (&dispatcher_mutex);
-      if (!dispatcher_map)
-        dispatcher_map = new DispatcherMap();
-      pthread_mutex_unlock (&dispatcher_mutex);
+      pthread_mutex_lock (&global_dispatcher_mutex);
+      if (!global_dispatcher_map)
+        global_dispatcher_map = new DispatcherMap();
+      pthread_mutex_unlock (&global_dispatcher_mutex);
     }
 }
 
@@ -2239,17 +2164,17 @@ ServerConnection::find_method (uint64 hashhi, uint64 hashlo)
 {
   TypeHash typehash (hashhi, hashlo);
 #if 1 // avoid costly mutex locking
-  if (AIDA_UNLIKELY (dispatcher_map_frozen == false))
+  if (AIDA_UNLIKELY (global_dispatcher_map_frozen == false))
     {
       ensure_dispatcher_map();
-      dispatcher_map_frozen = true;
+      global_dispatcher_map_frozen = true;
     }
-  return (*dispatcher_map)[typehash]; // unknown hashes *shouldn't* happen, see assertion in caller
+  return (*global_dispatcher_map)[typehash]; // unknown hashes *shouldn't* happen, see assertion in caller
 #else
   ensure_dispatcher_map();
-  pthread_mutex_lock (&dispatcher_mutex);
-  DispatchFunc dispatcher_func = (*dispatcher_map)[typehash];
-  pthread_mutex_unlock (&dispatcher_mutex);
+  pthread_mutex_lock (&global_dispatcher_mutex);
+  DispatchFunc dispatcher_func = (*global_dispatcher_map)[typehash];
+  pthread_mutex_unlock (&global_dispatcher_mutex);
   return dispatcher_func;
 #endif
 }
@@ -2258,13 +2183,13 @@ void
 ServerConnection::MethodRegistry::register_method (const MethodEntry &mentry)
 {
   ensure_dispatcher_map();
-  assert_return (dispatcher_map_frozen == false);
-  pthread_mutex_lock (&dispatcher_mutex);
-  DispatcherMap::size_type size_before = dispatcher_map->size();
+  assert_return (global_dispatcher_map_frozen == false);
+  pthread_mutex_lock (&global_dispatcher_mutex);
+  DispatcherMap::size_type size_before = global_dispatcher_map->size();
   TypeHash typehash (mentry.hashhi, mentry.hashlo);
-  (*dispatcher_map)[typehash] = mentry.dispatcher;
-  DispatcherMap::size_type size_after = dispatcher_map->size();
-  pthread_mutex_unlock (&dispatcher_mutex);
+  (*global_dispatcher_map)[typehash] = mentry.dispatcher;
+  DispatcherMap::size_type size_after = global_dispatcher_map->size();
+  pthread_mutex_unlock (&global_dispatcher_mutex);
   // simple hash collision check (sanity check, see below)
   if (AIDA_UNLIKELY (size_before == size_after))
     {
@@ -2379,7 +2304,7 @@ ObjectBroker::connection_id_from_protocol (const std::string &protocol)
 }
 
 void
-ObjectBroker::post_msg (FieldBuffer *fb)
+ObjectBroker::post_msg (ProtoMsg *fb)
 {
   assert_return (fb);
   const MessageId msgid = MessageId (fb->first_id());
@@ -2393,7 +2318,7 @@ ObjectBroker::post_msg (FieldBuffer *fb)
     fatal_error (string_format ("mismatch of result flag and sender_connection: %016x", msgid));
   if (AIDA_MESSAGES_ENABLED())
     {
-      FieldReader fbr (*fb);
+      ProtoReader fbr (*fb);
       const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
       AIDA_MESSAGE ("dest=%p msgid=%016x h=%016x l=%016x", bcon, msgid, hashhigh, hashlow);
     }
