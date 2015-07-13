@@ -95,7 +95,6 @@ class Generator:
     self.cppmacro = re.sub (r'(^[^A-Z_a-z])|([^A-Z_a-z0-9])', '_', self.idl_file)
     self.ns_aida = None
     self.gen_inclusions = []
-    self.skip_symbols = set()
     self.iface_base = 'Rapicorn::Aida::ImplicitBase'
     self.property_list = 'Rapicorn::Aida::PropertyList'
     self.gen_mode = None
@@ -1010,35 +1009,6 @@ class Generator:
     s += '};\n'
     s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
-  def generate_virtual_method_skel (self, functype, type_info):
-    assert self.gen_mode == G4SERVANT
-    s = ''
-    if functype.pure:
-      return s
-    absname = self.C (type_info) + '::' + functype.name
-    if absname in self.skip_symbols:
-      return ''
-    sret = self.R (functype.rtype)
-    sret += '\n'
-    absname += ' ('
-    argindent = len (absname)
-    s += '\n' + sret + absname
-    l = []
-    for a in functype.args:
-      l += [ self.A (a[0], a[1]) ]
-    s += (',\n' + argindent * ' ').join (l)
-    s += ')\n{\n'
-    if functype.rtype.storage == Decls.VOID:
-      pass
-    else:
-      s += '  return %s;\n' % self.mkzero (functype.rtype)
-    s += '}\n'
-    return s
-  def generate_interface_skel (self, type_info):
-    s = ''
-    for m in type_info.methods:
-      s += self.generate_virtual_method_skel (m, type_info)
-    return s
   def c_long_postfix (self, number):
     num, minus = (-number, '-') if number < 0 else (number, '')
     if num <= 2147483647:
@@ -1104,13 +1074,6 @@ class Generator:
         block = self.insertions.get (key, '')
         block += line
         self.insertions[key] = block
-  def symbol_file (self, filename):
-    f = open (filename)
-    txt = f.read()
-    f.close()
-    import re
-    w = re.findall (r'(\b[a-zA-Z_][a-zA-Z_0-9$:]*)(?:\()', txt)
-    self.skip_symbols.update (set (w))
   def idl_path (self):
     apath = os.path.abspath (self.idl_file)
     if self.strip_path:
@@ -1275,16 +1238,6 @@ class Generator:
           s += '\n'
       s += self.open_namespace (None)
       s += self.generate_server_method_registry (reglines) + '\n'
-    # generate interface method skeletons
-    if self.gen_server_skel:
-      s += self.open_namespace (None)
-      self.gen_mode = G4SERVANT
-      s += '\n// --- Interface Skeletons ---\n'
-      for tp in types:
-        if tp.is_forward:
-          continue
-        elif tp.storage == Decls.INTERFACE:
-          s += self.generate_interface_skel (tp)
     s += self.open_namespace (None) # close all namespaces
     # Generate Aliases (works for single namespace only)
     if len (self.aliases_namespaces) == 1 and (self.gen_serverhh or self.gen_clienthh):
@@ -1341,7 +1294,6 @@ def generate (namespace_list, **args):
   gg.gen_aidaids  = all or 'aidaids' in config['backend-options']
   gg.gen_serverhh = all or 'serverhh' in config['backend-options']
   gg.gen_servercc = all or 'servercc' in config['backend-options']
-  gg.gen_server_skel = 'server-skel' in config['backend-options']
   gg.gen_clienthh = all or 'clienthh' in config['backend-options']
   gg.gen_clientcc = all or 'clientcc' in config['backend-options']
   gg.gen_inclusions = config['inclusions']
@@ -1358,8 +1310,6 @@ def generate (namespace_list, **args):
       gg.property_list = ""
   for ifile in config['insertions']:
     gg.insertion_file (ifile)
-  for ssfile in config['skip-skels']:
-    gg.symbol_file (ssfile)
   ns_rapicorn = Decls.Namespace ('Rapicorn', None, [])
   gg.ns_aida = ( ns_rapicorn, Decls.Namespace ('Aida', ns_rapicorn, []) ) # Rapicorn::Aida namespace tuple for open_namespace()
   textstring = gg.generate_impl_types (config['implementation_types']) # namespace_list
