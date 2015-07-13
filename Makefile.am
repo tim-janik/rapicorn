@@ -40,6 +40,13 @@ rapicorn@RAPICORN_RELEASE@.pc: $(top_builddir)/config.status rapicorn.pc.in
 CLEANFILES += rapicorn@RAPICORN_RELEASE@.pc
 EXTRA_DIST += rapicorn.pc.in
 
+# == ETAGS ==
+ETAGS:
+	rm -f ETAGS
+	$(MAKE) local-ETAGS -C rcore/
+	$(MAKE) local-ETAGS -C ui/
+.PHONY: ETAGS
+
 # === API version check ===
 MAKE_API_CHECKSUM=$(strip							\
 	( $(MAKE) -C $(top_srcdir)/rcore/ $(AM_MAKEFLAGS) api-content &&		\

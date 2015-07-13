@@ -503,13 +503,7 @@ protected:
   virtual                  ~OrbObject         ();
 public:
   uint64                    orbid             () const       { return orbid_; }
-  uint16                    connection        () const       { return orbid_connection (orbid_); }
-  uint16                    type_index        () const       { return orbid_type_index (orbid_); }
-  uint32                    counter           () const       { return orbid_counter (orbid_); }
   virtual ClientConnection* client_connection ();
-  static uint16             orbid_connection  (uint64 orbid) { return orbid >> 48 /* & 0xffff */; }
-  static uint16             orbid_type_index  (uint64 orbid) { return orbid >> 32 /* & 0xffff */; }
-  static uint32             orbid_counter     (uint64 orbid) { return orbid /* & 0xffffffff */; }
   static uint64             orbid_make        (uint16 connection, uint16 type_index, uint32 counter)
   { return (uint64 (connection) << 48) | (uint64 (type_index) << 32) | counter; }
 };
@@ -576,17 +570,12 @@ class ObjectBroker {
   static void   connection_handshake              (const std::string                 &endpoint,
                                                    std::function<BaseConnection*()>   aida_connection,
                                                    std::function<void (RemoteHandle)> origin_cast);
+  static BaseConnection*   connection_from_id     (uint64             connection_id);
 public:
   static uint              register_connection    (BaseConnection    &connection);
   static void              unregister_connection  (BaseConnection    &connection);
-  static BaseConnection*   connection_from_id     (uint64             connection_id);
   static ClientConnection* get_client_connection  (ClientConnection *&var);
   static ServerConnection* get_server_connection  (ServerConnection *&var);
-  static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
-  static inline uint  connection_id_from_orbid  (uint64 orbid)        { return OrbObject::orbid_connection (orbid); }
-  static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh.__aida_orbid__()); }
-  static inline uint  destination_connection_id (uint64 msgid)        { return IdentifierParts (msgid).destination_connection; }
-  static inline uint  sender_connection_id      (uint64 msgid)        { return IdentifierParts (msgid).sender_connection; }
   template<class C> static void bind            (const std::string &protocol, std::shared_ptr<C> object_ptr);
   template<class H> static H    connect         (const std::string &endpoint);
 };
@@ -656,13 +645,6 @@ public:
   void        operator<<= (const Any &vany);
   void        operator<<= (const RemoteHandle &rhandle);
   void        operator<<= (ImplicitBase *instance);
-};
-
-class ProtoMsg8 : public ProtoMsg { // Stack contained buffer for up to 8 fields
-  ProtoUnion bmem[1 + 1 + 8];
-public:
-  virtual ~ProtoMsg8 () { reset(); buffermem = NULL; }
-  inline   ProtoMsg8 (uint32 ntypes = 8) : ProtoMsg (ntypes, bmem, sizeof (bmem)) { AIDA_ASSERT (ntypes <= 8); }
 };
 
 class ProtoReader { // read ProtoMsg contents
@@ -796,6 +778,7 @@ public:
   explicit                 ProtoScope                (ServerConnection &server_connection);
   /*dtor*/                ~ProtoScope                (); ///< Finish/destroy an RPC scope.
   ProtoMsg*                invoke                    (ProtoMsg *pm); ///< Carry out a remote call syncronously, transfers memory.
+  void                     post_peer_msg             (ProtoMsg *pm); ///< Send message to peer, transfers memory.
   static ClientConnection& current_client_connection (); ///< Access the client connection of the current thread-specific RPC scope.
   static ServerConnection& current_server_connection (); ///< Access the server connection of the current thread-specific RPC scope.
   static BaseConnection&   current_base_connection   (); ///< Access the client or server connection of the current thread-specific RPC scope.
@@ -812,6 +795,9 @@ struct ProtoScopeEmit1Way : ProtoScope {
 };
 struct ProtoScopeEmit2Way : ProtoScope {
   ProtoScopeEmit2Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo);
+};
+struct ProtoScopeDisconnect : ProtoScope {
+  ProtoScopeDisconnect (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo);
 };
 
 // == inline implementations ==

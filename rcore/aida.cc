@@ -1305,30 +1305,33 @@ ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint64 h, uint64 l, 
   return renew_into_result (fb, m, h, l, n);
 }
 
-class OneChunkProtoMsg : public ProtoMsg {
-  virtual ~OneChunkProtoMsg () { reset(); buffermem = NULL; }
-  explicit OneChunkProtoMsg (uint32    _ntypes,
-                                ProtoUnion *_bmem,
-                                uint32    _bmemlen) :
+class ContiguousProtoMsg : public ProtoMsg {
+  virtual
+  ~ContiguousProtoMsg () override
+  {
+    reset();
+    buffermem = NULL;
+  }
+  ContiguousProtoMsg (uint32 _ntypes, ProtoUnion *_bmem, uint32 _bmemlen) :
     ProtoMsg (_ntypes, _bmem, _bmemlen)
   {}
 public:
-  static OneChunkProtoMsg*
+  static ContiguousProtoMsg*
   _new (uint32 _ntypes)
   {
     const uint32 _offs = 1 + (_ntypes + 7) / 8;
-    size_t bmemlen = sizeof (ProtoUnion[_offs + _ntypes]);
-    size_t objlen = ALIGN4 (sizeof (OneChunkProtoMsg), int64);
+    const size_t bmemlen = sizeof (ProtoUnion[_offs + _ntypes]);
+    const size_t objlen = ALIGN4 (sizeof (ContiguousProtoMsg), int64);
     uint8_t *omem = (uint8_t*) operator new (objlen + bmemlen);
     ProtoUnion *bmem = (ProtoUnion*) (omem + objlen);
-    return new (omem) OneChunkProtoMsg (_ntypes, bmem, bmemlen);
+    return new (omem) ContiguousProtoMsg (_ntypes, bmem, bmemlen);
   }
 };
 
 ProtoMsg*
 ProtoMsg::_new (uint32 _ntypes)
 {
-  return OneChunkProtoMsg::_new (_ntypes);
+  return ContiguousProtoMsg::_new (_ntypes);
 }
 
 // == ProtoScope ==
@@ -1390,6 +1393,12 @@ ProtoScope::invoke (ProtoMsg *pm)
   return current_client_connection().call_remote (pm);
 }
 
+void
+ProtoScope::post_peer_msg (ProtoMsg *pm)
+{
+  return current_server_connection().post_peer_msg (pm);
+}
+
 ClientConnection&
 ProtoScope::current_client_connection ()
 {
@@ -1438,6 +1447,12 @@ ProtoScopeEmit2Way::ProtoScopeEmit2Way (ProtoMsg &pm, ServerConnection &server_c
   ProtoScope (server_connection)
 {
   pm.add_header2 (MSGID_EMIT_TWOWAY, hashi, hashlo);
+}
+
+ProtoScopeDisconnect::ProtoScopeDisconnect (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo) :
+  ProtoScope (server_connection)
+{
+  pm.add_header1 (MSGID_DISCONNECT, hashi, hashlo);
 }
 
 // == EventFd ==
@@ -2550,14 +2565,6 @@ ObjectBroker::connection_from_id (uint64 conid)
 {
   const uint64 idx = conid % MAX_CONNECTIONS;
   return conid ? orb_connections[idx].load() : NULL;
-}
-
-uint
-ObjectBroker::connection_id_from_signal_handler_id (size_t signal_handler_id)
-{
-  const SignalHandlerIdParts handler_id_parts (signal_handler_id);
-  const size_t handler_index = handler_id_parts.signal_handler_index;
-  return handler_index ? handler_id_parts.orbid_connection : 0; // FIXME
 }
 
 static __thread const char *call_stack_connection_ctor_protocol = NULL;
