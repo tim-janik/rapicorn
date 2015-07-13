@@ -918,25 +918,30 @@ OrbObject::OrbObject (uint64 orbid) :
 {}
 
 OrbObject::~OrbObject()
-{} // force vtable emission
+{} // keep to force vtable emission
+
+ClientConnection*
+OrbObject::client_connection ()
+{
+  return NULL;
+}
 
 class NullOrbObject : public virtual OrbObject {
+  friend class FriendAllocator<NullOrbObject>;
 public:
-  explicit NullOrbObject() : OrbObject (0) {}
-  virtual ~NullOrbObject()                 {}
+  explicit NullOrbObject  () : OrbObject (0) {}
+  virtual  ~NullOrbObject () override        {}
 };
 
 // == RemoteHandle ==
-static void              (RemoteHandle::*pmf_upgrade_from)  (const OrbObjectP&);
-static const OrbObjectP& (RemoteHandle::*pmf_peek_orb_object) () const;
+static void (RemoteHandle::*pmf_upgrade_from)  (const OrbObjectP&);
 
 OrbObjectP
 RemoteHandle::__aida_null_orb_object__ ()
 {
   static OrbObjectP null_orbo = [] () {                         // use lambda to sneak in extra code
-    pmf_upgrade_from = &RemoteHandle::__aida_upgrade_from__;    // export accessors for internal maintenance
-    pmf_peek_orb_object = &RemoteHandle::__aida_orb_object__;
-    return std::make_shared<NullOrbObject> ();
+    pmf_upgrade_from = &RemoteHandle::__aida_upgrade_from__;    // export accessor for internal maintenance
+    return FriendAllocator<NullOrbObject>::make_shared();
   } ();                                                         // executes lambda atomically
   return null_orbo;
 }
@@ -993,6 +998,57 @@ ProtoMsg::check_internal ()
 {
   if (size() > capacity())
     fatal_error (string_format ("ProtoMsg(this=%p): capacity=%u size=%u", this, capacity(), size()));
+}
+
+void
+ProtoMsg::add_any (const Any &vany, BaseConnection &bcon)
+{
+  ProtoUnion &u = addu (ANY);
+  u.vany = bcon.any2remote (vany);
+}
+
+const Any&
+ProtoReader::pop_any (BaseConnection &bcon)
+{
+  ProtoUnion &u = fb_popu (ANY);
+  bcon.any2local (*u.vany);
+  return *u.vany;
+}
+
+void
+ProtoMsg::operator<<= (const Any &vany)
+{
+  add_any (vany, ProtoScope::current_base_connection());
+}
+
+void
+ProtoReader::operator>>= (Any &vany)
+{
+  vany = pop_any (ProtoScope::current_base_connection());
+}
+
+void
+ProtoMsg::operator<<= (const RemoteHandle &rhandle)
+{
+  ProtoScope::current_client_connection().add_handle (*this, rhandle);
+}
+
+void
+ProtoReader::operator>>= (RemoteHandle &rhandle)
+{
+  ProtoScope::current_client_connection().pop_handle (*this, rhandle);
+}
+
+void
+ProtoMsg::operator<<= (ImplicitBase *instance)
+{
+  ProtoScope::current_server_connection().add_interface (*this, instance ? instance->shared_from_this() : ImplicitBaseP());
+}
+
+ImplicitBaseP
+ProtoReader::pop_interface ()
+{
+  return ProtoScope::current_server_connection().pop_interface (*this);
 }
 
 void
@@ -1085,7 +1141,7 @@ ProtoMsg::new_error (const String &msg,
                         const String &domain)
 {
   ProtoMsg *fr = ProtoMsg::_new (3 + 2);
-  fr->add_header1 (MSGID_ERROR, 0, 0, 0);
+  fr->add_header1 (MSGID_ERROR, 0, 0);
   fr->add_string (msg);
   fr->add_string (domain);
   return fr;
@@ -1093,32 +1149,30 @@ ProtoMsg::new_error (const String &msg,
 #endif
 
 ProtoMsg*
-ProtoMsg::new_result (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg::new_result (MessageId m, uint64 h, uint64 l, uint32 n)
 {
-  assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   ProtoMsg *fr = ProtoMsg::_new (3 + n);
-  fr->add_header1 (m, rconnection, h, l);
+  fr->add_header1 (m, h, l);
   return fr;
 }
 
 ProtoMsg*
-ProtoMsg::renew_into_result (ProtoMsg *fb, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg::renew_into_result (ProtoMsg *fb, MessageId m, uint64 h, uint64 l, uint32 n)
 {
-  assert_return (msgid_is_result (m) && rconnection <= CONNECTION_MASK && rconnection, NULL);
   if (fb->capacity() < 3 + n)
-    return ProtoMsg::new_result (m, rconnection, h, l, n);
+    return ProtoMsg::new_result (m, h, l, n);
   ProtoMsg *fr = fb;
   fr->reset();
-  fr->add_header1 (m, rconnection, h, l);
+  fr->add_header1 (m, h, l);
   return fr;
 }
 
 ProtoMsg*
-ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n)
+ProtoMsg::renew_into_result (ProtoReader &fbr, MessageId m, uint64 h, uint64 l, uint32 n)
 {
   ProtoMsg *fb = const_cast<ProtoMsg*> (fbr.proto_msg());
   fbr.reset();
-  return renew_into_result (fb, m, rconnection, h, l, n);
+  return renew_into_result (fb, m, h, l, n);
 }
 
 class OneChunkProtoMsg : public ProtoMsg {
@@ -1145,6 +1199,115 @@ ProtoMsg*
 ProtoMsg::_new (uint32 _ntypes)
 {
   return OneChunkProtoMsg::_new (_ntypes);
+}
+
+// == ProtoScope ==
+struct ProtoConnections {
+  ServerConnection *server_connection;
+  ClientConnection *client_connection;
+  constexpr ProtoConnections() : server_connection (NULL), client_connection (NULL) {}
+};
+static __thread ProtoConnections current_thread_proto_connections;
+
+ProtoScope::ProtoScope (ClientConnection &client_connection) :
+  nested_ (false)
+{
+  assert (&client_connection);
+  if (&client_connection == current_thread_proto_connections.client_connection &&
+      NULL == current_thread_proto_connections.server_connection)
+    nested_ = true;
+  else
+    {
+      assert (current_thread_proto_connections.server_connection == NULL);
+      assert (current_thread_proto_connections.client_connection == NULL);
+      current_thread_proto_connections.client_connection = &client_connection;
+      current_thread_proto_connections.server_connection = NULL;
+    }
+}
+
+ProtoScope::ProtoScope (ServerConnection &server_connection) :
+  nested_ (false)
+{
+  assert (&server_connection);
+  if (&server_connection == current_thread_proto_connections.server_connection &&
+      NULL == current_thread_proto_connections.client_connection)
+    nested_ = true;
+  else
+    {
+      assert (current_thread_proto_connections.server_connection == NULL);
+      assert (current_thread_proto_connections.client_connection == NULL);
+      current_thread_proto_connections.server_connection = &server_connection;
+      current_thread_proto_connections.client_connection = NULL;
+    }
+}
+
+ProtoScope::~ProtoScope ()
+{
+  if (!current_thread_proto_connections.client_connection)
+    assert (current_thread_proto_connections.server_connection != NULL);
+  if (!current_thread_proto_connections.server_connection)
+    assert (current_thread_proto_connections.client_connection != NULL);
+  if (!nested_)
+    {
+      current_thread_proto_connections.server_connection = NULL;
+      current_thread_proto_connections.client_connection = NULL;
+    }
+}
+
+ProtoMsg*
+ProtoScope::invoke (ProtoMsg *pm)
+{
+  return current_client_connection().call_remote (pm);
+}
+
+ClientConnection&
+ProtoScope::current_client_connection ()
+{
+  assert (current_thread_proto_connections.client_connection != NULL);
+  return *current_thread_proto_connections.client_connection;
+}
+
+ServerConnection&
+ProtoScope::current_server_connection ()
+{
+  assert (current_thread_proto_connections.server_connection != NULL);
+  return *current_thread_proto_connections.server_connection;
+}
+
+BaseConnection&
+ProtoScope::current_base_connection ()
+{
+  assert (current_thread_proto_connections.server_connection || current_thread_proto_connections.client_connection);
+  if (current_thread_proto_connections.server_connection)
+    return *current_thread_proto_connections.server_connection;
+  else
+    return *current_thread_proto_connections.client_connection;
+}
+
+ProtoScopeCall1Way::ProtoScopeCall1Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
+  ProtoScope (*rhandle.__aida_connection__())
+{
+  pm.add_header2 (MSGID_CALL_ONEWAY, hashi, hashlo);
+  pm <<= rhandle;
+}
+
+ProtoScopeCall2Way::ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
+  ProtoScope (*rhandle.__aida_connection__())
+{
+  pm.add_header2 (MSGID_CALL_TWOWAY, hashi, hashlo);
+  pm <<= rhandle;
+}
+
+ProtoScopeEmit1Way::ProtoScopeEmit1Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo) :
+  ProtoScope (server_connection)
+{
+  pm.add_header1 (MSGID_EMIT_ONEWAY, hashi, hashlo);
+}
+
+ProtoScopeEmit2Way::ProtoScopeEmit2Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo) :
+  ProtoScope (server_connection)
+{
+  pm.add_header2 (MSGID_EMIT_TWOWAY, hashi, hashlo);
 }
 
 // == EventFd ==
@@ -1351,16 +1514,15 @@ class TransportChannel : public EventFd { // Channel for cross-thread ProtoMsg I
     return fb; // may be NULL
   }
 public:
-  void
-  send_msg (ProtoMsg *fb, // takes fb ownership
-            bool         may_wakeup)
+  void // takes pm ownership
+  send_msg (ProtoMsg *pm, bool may_wakeup)
   {
-    const bool was_empty = msg_queue.push (fb);
+    const bool was_empty = msg_queue.push (pm);
     if (may_wakeup && was_empty)
       wakeup();                                 // wakeups are needed to catch empty => full transition
   }
   ProtoMsg*  fetch_msg()     { return get_msg (POP); }
-  bool          has_msg()       { return get_msg (PEEK); }
+  bool       has_msg()       { return get_msg (PEEK); }
   ProtoMsg*  pop_msg()       { return get_msg (POP_BLOCKED); }
   ~TransportChannel ()
   {}
@@ -1388,6 +1550,7 @@ private:
   std::unordered_map<Instance*, uint64> map_;
   std::vector<uint>                     free_list_;
   class MappedObject : public virtual OrbObject {
+    friend class FriendAllocator<MappedObject>;
     ObjectMap &omap_;
   public:
     explicit MappedObject (uint64 orbid, ObjectMap &omap) : OrbObject (orbid), omap_ (omap) { assert (orbid); }
@@ -1471,7 +1634,7 @@ ObjectMap<Instance>::orbo_from_instance (InstanceP instancep)
         {
           const uint64 index = next_index();
           orbid = start_id_ + index;
-          orbop = std::make_shared<MappedObject> (orbid, *this); // calls delete_orbid from dtor
+          orbop = FriendAllocator<MappedObject>::make_shared (orbid, *this); // calls delete_orbid from dtor
           Entry e { orbop, instancep };
           entries_[index] = e;
           map_[instancep.get()] = orbid;
@@ -1507,7 +1670,7 @@ ObjectMap<Instance>::instance_from_orbo (const OrbObjectP &orbo)
 
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &protocol) :
-  protocol_ (protocol), conid_ (0)
+  protocol_ (protocol), conid_ (0), peer_ (NULL)
 {
   AIDA_ASSERT (protocol.size() > 0);
   if (protocol_[0] == ':')
@@ -1524,6 +1687,33 @@ BaseConnection::assign_id (uint connection_id)
 {
   assert_return (conid_ == 0);
   conid_ = connection_id;
+}
+
+void
+BaseConnection::post_peer_msg (ProtoMsg *pm)
+{
+  assert_return (pm != NULL);
+  if (AIDA_MESSAGES_ENABLED())
+    {
+      ProtoReader fbr (*pm);
+      const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+      AIDA_MESSAGE ("orig=%x dest=%x msgid=%016x h=%016x l=%016x", connection_id(), peer_connection().connection_id(), msgid, hashhigh, hashlow);
+    }
+  peer_connection().receive_msg (pm);
+}
+
+BaseConnection&
+BaseConnection::peer_connection () const
+{
+  assert (peer_ != NULL);
+  return *peer_;
+}
+
+void
+BaseConnection::peer_connection (BaseConnection &peer)
+{
+  assert (peer_ == NULL);
+  peer_ = &peer;
 }
 
 /// Provide initial handle for remote connections.
@@ -1576,7 +1766,7 @@ class ClientConnectionImpl : public ClientConnection {
   pthread_spinlock_t            signal_spin_;
   TransportChannel              transport_channel_;     // messages arriving at client
   sem_t                         transport_sem_;         // signal incomming results
-  std::deque<ProtoMsg*>      event_queue_;           // messages pending for client
+  std::deque<ProtoMsg*>         event_queue_;           // messages pending for client
   typedef std::map<uint64, OrbObjectW> Id2OrboMap;
   Id2OrboMap                    id2orbo_map_;           // map server orbid -> OrbObjectP
   std::vector<SignalHandler*>   signal_handlers_;
@@ -1585,16 +1775,17 @@ class ClientConnectionImpl : public ClientConnection {
   bool                          seen_garbage_;
   SignalHandler*                signal_lookup (size_t handler_id);
 public:
-  ClientConnectionImpl (const std::string &protocol) :
+  ClientConnectionImpl (const std::string &protocol, ServerConnection &server_connection) :
     ClientConnection (protocol), blocking_for_sem_ (false), seen_garbage_ (false)
   {
     signal_handlers_.push_back (NULL); // reserve 0 for NULL
     pthread_spin_init (&signal_spin_, 0 /* pshared */);
     sem_init (&transport_sem_, 0 /* unshared */, 0 /* init */);
-    uint realid = ObjectBroker::register_connection (*this);
+    const uint realid = ObjectBroker::register_connection (*this);
     if (!realid)
       fatal_error ("Aida: failed to register ClientConnection");
     assign_id (realid);
+    peer_connection (server_connection);
   }
   ~ClientConnectionImpl ()
   {
@@ -1603,26 +1794,26 @@ public:
     pthread_spin_destroy (&signal_spin_);
   }
   virtual void
-  send_msg (ProtoMsg *fb)
+  receive_msg (ProtoMsg *fb) override
   {
     assert_return (fb);
     transport_channel_.send_msg (fb, !blocking_for_sem_);
     notify_for_result();
   }
-  void                  notify_for_result ()            { if (blocking_for_sem_) sem_post (&transport_sem_); }
-  void                  block_for_result  ()            { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
-  void                  gc_sweep          (const ProtoMsg *fb);
-  virtual int           notify_fd         ()            { return transport_channel_.inputfd(); }
-  virtual bool          pending           ()            { return !event_queue_.empty() || transport_channel_.has_msg(); }
-  virtual ProtoMsg*  call_remote       (ProtoMsg*);
-  virtual ProtoMsg*  pop               ();
-  virtual void          dispatch          ();
-  virtual void          add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle);
-  virtual void          pop_handle        (ProtoReader &fr, RemoteHandle &rhandle);
-  virtual void          remote_origin     (ImplicitBaseP rorigin) { fatal ("assert not reached"); }
-  virtual RemoteHandle  remote_origin     ();
-  virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data);
-  virtual bool          signal_disconnect (size_t signal_handler_id);
+  void                 notify_for_result ()             { if (blocking_for_sem_) sem_post (&transport_sem_); }
+  void                 block_for_result  ()             { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
+  void                 gc_sweep          (const ProtoMsg *fb);
+  virtual int          notify_fd         () override    { return transport_channel_.inputfd(); }
+  virtual bool         pending           () override    { return !event_queue_.empty() || transport_channel_.has_msg(); }
+  virtual ProtoMsg*    call_remote       (ProtoMsg*) override;
+  ProtoMsg*            pop               ();
+  virtual void         dispatch          () override;
+  virtual void         add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle) override;
+  virtual void         pop_handle        (ProtoReader &fr, RemoteHandle &rhandle) override;
+  virtual void         remote_origin     (ImplicitBaseP rorigin) override  { assert (!"reached"); }
+  virtual RemoteHandle remote_origin     () override;
+  virtual size_t       signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) override;
+  virtual bool         signal_disconnect (size_t signal_handler_id) override;
   struct ClientOrbObject;
   void
   client_orb_object_deleting (ClientOrbObject &coo)
@@ -1631,19 +1822,19 @@ public:
       {
         seen_garbage_ = true;
         ProtoMsg *fb = ProtoMsg::_new (3);
-        fb->add_header1 (MSGID_META_SEEN_GARBAGE, coo.connection(), this->connection_id(), 0);
+        fb->add_header1 (MSGID_META_SEEN_GARBAGE, 0, 0);
         GCLOG ("ClientConnectionImpl: SEEN_GARBAGE (%016x)", coo.orbid());
         ProtoMsg *fr = this->call_remote (fb); // takes over fb
         assert (fr == NULL);
       }
   }
-  struct ClientOrbObject : public OrbObject {
-    ClientOrbObject (uint64 orbid, ClientConnectionImpl &c) : OrbObject (orbid), client_ (c)
-    { assert (orbid); }
-    virtual ~ClientOrbObject () override
-    { client_.client_orb_object_deleting (*this); }
-  private:
-    ClientConnectionImpl &client_;
+  class ClientOrbObject : public OrbObject {
+    friend                class FriendAllocator<ClientOrbObject>;
+    ClientConnectionImpl &client_connection_;
+  public:
+    explicit ClientOrbObject (uint64 orbid, ClientConnectionImpl &c) : OrbObject (orbid), client_connection_ (c) { assert (orbid); }
+    virtual                  ~ClientOrbObject   () override          { client_connection_.client_orb_object_deleting (*this); }
+    virtual ClientConnection* client_connection ()                   { return &client_connection_; }
   };
 };
 
@@ -1660,15 +1851,15 @@ ClientConnectionImpl::pop ()
 RemoteHandle
 ClientConnectionImpl::remote_origin()
 {
-  const uint connection_id = ObjectBroker::connection_id_from_protocol (protocol());
+  const uint server_connection_id = peer_connection().connection_id();
   RemoteMember<RemoteHandle> rorigin;
-  if (!connection_id)
+  if (!server_connection_id)
     {
       errno = EHOSTUNREACH; // ECONNREFUSED;
       return RemoteHandle::__aida_null_handle__();
     }
   ProtoMsg *fb = ProtoMsg::_new (3);
-  fb->add_header2 (MSGID_META_HELLO, connection_id, this->connection_id(), 0, 0);
+  fb->add_header2 (MSGID_META_HELLO, 0, 0);
   ProtoMsg *fr = this->call_remote (fb); // takes over fb
   ProtoReader frr (*fr);
   const MessageId msgid = MessageId (frr.pop_int64());
@@ -1695,7 +1886,7 @@ ClientConnectionImpl::pop_handle (ProtoReader &fr, RemoteHandle &rhandle)
   OrbObjectP orbop = id2orbo_map_[orbid].lock();
   if (AIDA_UNLIKELY (!orbop) && orbid)
     {
-      orbop = std::make_shared<ClientOrbObject> (orbid, *this);
+      orbop = FriendAllocator<ClientOrbObject>::make_shared (orbid, *this);
       id2orbo_map_[orbid] = orbop;
     }
   (rhandle.*pmf_upgrade_from) (orbop);
@@ -1718,12 +1909,12 @@ ClientConnectionImpl::gc_sweep (const ProtoMsg *fb)
     else
       ++it;
   ProtoMsg *fr = ProtoMsg::_new (3 + 1 + trashids.size()); // header + length + items
-  fr->add_header1 (MSGID_META_GARBAGE_REPORT, ObjectBroker::sender_connection_id (msgid), 0, 0); // header
+  fr->add_header1 (MSGID_META_GARBAGE_REPORT, 0, 0); // header
   fr->add_int64 (trashids.size()); // length
   for (auto v : trashids)
     fr->add_int64 (v); // items
   GCLOG ("ClientConnectionImpl: GARBAGE_REPORT: %u trash ids", trashids.size());
-  ObjectBroker::post_msg (fr);
+  post_peer_msg (fr);
   seen_garbage_ = false;
 }
 
@@ -1732,6 +1923,7 @@ ClientConnectionImpl::dispatch ()
 {
   ProtoMsg *fb = pop();
   return_if (fb == NULL);
+  ProtoScope client_connection_protocol_scope (*this);
   ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64  idmask = msgid_mask (msgid);
@@ -1753,7 +1945,7 @@ ClientConnectionImpl::dispatch ()
         else // MSGID_EMIT_TWOWAY
           {
             AIDA_ASSERT (fr && msgid_is (fr->first_id(), MSGID_EMIT_RESULT));
-            ObjectBroker::post_msg (fr);
+            post_peer_msg (fr);
           }
       }
       break;
@@ -1787,12 +1979,12 @@ ClientConnectionImpl::call_remote (ProtoMsg *fb)
   const bool needsresult = msgid_needs_result (callid);
   if (!needsresult)
     {
-      ObjectBroker::post_msg (fb);
+      post_peer_msg (fb);
       return NULL;
     }
   const MessageId resultid = MessageId (msgid_mask (msgid_as_result (callid)));
   blocking_for_sem_ = true; // results will notify semaphore
-  ObjectBroker::post_msg (fb);
+  post_peer_msg (fb);
   ProtoMsg *fr;
   while (needsresult)
     {
@@ -1854,8 +2046,7 @@ ClientConnectionImpl::signal_connect (uint64 hhi, uint64 hlo, const RemoteHandle
   pthread_spin_unlock (&signal_spin_);
   const size_t handler_id = SignalHandlerIdParts (handler_index, connection_id()).vsize;
   ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote.__aida_orbid__());
-  fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
+  fb.add_header2 (MSGID_CONNECT, shandler->hhi, shandler->hlo);
   add_handle (fb, rhandle);                     // emitting object
   fb <<= handler_id;                            // handler connection request id
   fb <<= 0;                                     // disconnection request id
@@ -1883,8 +2074,7 @@ ClientConnectionImpl::signal_disconnect (size_t signal_handler_id)
   pthread_spin_unlock (&signal_spin_);
   return_if (!shandler, false);
   ProtoMsg &fb = *ProtoMsg::_new (3 + 1 + 2);
-  const uint orbid_connection = ObjectBroker::connection_id_from_orbid (shandler->remote.__aida_orbid__());
-  fb.add_header2 (MSGID_CONNECT, orbid_connection, connection_id(), shandler->hhi, shandler->hlo);
+  fb.add_header2 (MSGID_CONNECT, shandler->hhi, shandler->hlo);
   add_handle (fb, shandler->remote);            // emitting object
   fb <<= 0;                                     // handler connection request id
   fb <<= shandler->cid;                         // disconnection request id
@@ -1922,25 +2112,30 @@ class ServerConnectionImpl : public ServerConnection {
   std::unordered_map<size_t, EmitResultHandler> emit_result_map_;
   std::unordered_set<OrbObjectP> live_remotes_, *sweep_remotes_;
   RAPICORN_CLASS_NON_COPYABLE (ServerConnectionImpl);
-  void                  start_garbage_collection (uint client_connection);
+  void                  start_garbage_collection ();
 public:
-  explicit              ServerConnectionImpl (const std::string &protocol);
-  virtual              ~ServerConnectionImpl ()         { ObjectBroker::unregister_connection (*this); }
-  virtual int           notify_fd      ()               { return transport_channel_.inputfd(); }
-  virtual bool          pending        ()               { return transport_channel_.has_msg(); }
-  virtual void          dispatch       ();
-  virtual void          remote_origin  (ImplicitBaseP rorigin);
-  virtual RemoteHandle  remote_origin  () { fatal ("assert not reached"); }
-  virtual void          add_interface  (ProtoMsg &fb, ImplicitBaseP ibase);
-  virtual ImplicitBaseP pop_interface  (ProtoReader &fr);
-  virtual void          send_msg   (ProtoMsg *fb)    { assert_return (fb); transport_channel_.send_msg (fb, true); }
-  virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler);
-  virtual EmitResultHandler emit_result_handler_pop (size_t id);
-  virtual void              cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase);
+  explicit              ServerConnectionImpl    (const std::string &protocol);
+  virtual              ~ServerConnectionImpl    () override     { ObjectBroker::unregister_connection (*this); }
+  virtual int           notify_fd               () override     { return transport_channel_.inputfd(); }
+  virtual bool          pending                 () override     { return transport_channel_.has_msg(); }
+  virtual void          dispatch                () override;
+  virtual void          remote_origin           (ImplicitBaseP rorigin) override;
+  virtual RemoteHandle  remote_origin           () override     { fatal ("assert not reached"); }
+  virtual void          add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) override;
+  virtual ImplicitBaseP pop_interface           (ProtoReader &fr) override;
+  virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) override;
+  EmitResultHandler     emit_result_handler_pop (size_t id);
+  virtual void          cast_interface_handle   (RemoteHandle &rhandle, ImplicitBaseP ibase) override;
+  virtual void
+  receive_msg (ProtoMsg *fb) override
+  {
+    assert_return (fb);
+    transport_channel_.send_msg (fb, true);
+  }
 };
 
 void
-ServerConnectionImpl::start_garbage_collection (uint client_connection)
+ServerConnectionImpl::start_garbage_collection()
 {
   if (sweep_remotes_)
     {
@@ -1951,9 +2146,9 @@ ServerConnectionImpl::start_garbage_collection (uint client_connection)
   sweep_remotes_ = new std::unordered_set<OrbObjectP>();
   sweep_remotes_->swap (live_remotes_);
   ProtoMsg *fb = ProtoMsg::_new (3);
-  fb->add_header2 (MSGID_META_GARBAGE_SWEEP, client_connection, this->connection_id(), 0, 0);
+  fb->add_header2 (MSGID_META_GARBAGE_SWEEP, 0, 0);
   GCLOG ("ServerConnectionImpl: GARBAGE_SWEEP: %u candidates", sweep_remotes_->size());
-  ObjectBroker::post_msg (fb);
+  post_peer_msg (fb);
 }
 
 ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
@@ -2002,6 +2197,7 @@ ServerConnectionImpl::dispatch ()
   ProtoMsg *fb = transport_channel_.fetch_msg();
   if (!fb)
     return;
+  ProtoScope server_connection_protocol_scope (*this);
   ProtoReader fbr (*fb);
   const MessageId msgid = MessageId (fbr.pop_int64());
   const uint64  idmask = msgid_mask (msgid);
@@ -2014,13 +2210,13 @@ ServerConnectionImpl::dispatch ()
         AIDA_ASSERT (fbr.remaining() == 0);
         fbr.reset (*fb);
         ImplicitBaseP rorigin = remote_origin_;
-        ProtoMsg *fr = ProtoMsg::renew_into_result (fbr, MSGID_META_WELCOME, ObjectBroker::sender_connection_id (msgid), 0, 0, 1);
+        ProtoMsg *fr = ProtoMsg::renew_into_result (fbr, MSGID_META_WELCOME, 0, 0, 1);
         add_interface (*fr, rorigin);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         const uint64 resultmask = msgid_as_result (MessageId (idmask));
         AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
-        ObjectBroker::post_msg (fr);
+        post_peer_msg (fr);
       }
       break;
     case MSGID_CONNECT:
@@ -2040,18 +2236,15 @@ ServerConnectionImpl::dispatch ()
           {
             const uint64 resultmask = msgid_as_result (MessageId (idmask));
             AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
-            ObjectBroker::post_msg (fr);
+            post_peer_msg (fr);
           }
       }
       break;
     case MSGID_META_SEEN_GARBAGE:
       {
         const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-        if (hashhigh && hashlow == 0) // convention, SEEN_GARBAGE sends sender_connection in hashhigh
-          {
-            const uint sender_connection = hashhigh;
-            start_garbage_collection (sender_connection);
-          }
+        if (hashhigh == 0 && hashlow == 0) // convention, hash=(0,0)
+          start_garbage_collection();
       }
       break;
     case MSGID_META_GARBAGE_REPORT:
@@ -2288,7 +2481,17 @@ ObjectBroker::construct_client_connection (ClientConnection *&var)
     fatal_error ("__aida_connection__: uninitilized use before Aida::ObjectBroker::connect<>");
   const std::string protocol = call_stack_connection_ctor_protocol;
   call_stack_connection_ctor_protocol = NULL;
-  var = new ClientConnectionImpl (protocol);
+  assert (protocol.empty() == false);
+  const uint server_connection_id = connection_id_from_protocol (protocol);
+  assert (server_connection_id != 0);
+  BaseConnection *server_connection_base = connection_from_id (server_connection_id);
+  assert (server_connection_base != NULL);
+  ServerConnection *server_connection = dynamic_cast<ServerConnection*> (server_connection_base);
+  assert (server_connection != NULL);
+  ClientConnection *client_connection = new ClientConnectionImpl (protocol, *server_connection);
+  assert (client_connection != NULL);
+  server_connection->peer_connection (*client_connection);
+  var = client_connection;
 }
 
 uint
@@ -2301,28 +2504,6 @@ ObjectBroker::connection_id_from_protocol (const std::string &protocol)
         return bcon->connection_id();
     }
   return 0;     // unmatched
-}
-
-void
-ObjectBroker::post_msg (ProtoMsg *fb)
-{
-  assert_return (fb);
-  const MessageId msgid = MessageId (fb->first_id());
-  const uint connection_id = ObjectBroker::destination_connection_id (msgid);
-  BaseConnection *bcon = connection_from_id (connection_id);
-  if (!bcon)
-    fatal_error (string_format ("Message ID without valid connection: %016x (connection_id=%u)", msgid, connection_id));
-  const bool needsresult = msgid_needs_result (msgid);
-  const uint sender_connection = ObjectBroker::sender_connection_id (msgid);
-  if (needsresult != (sender_connection > 0)) // FIXME: move downwards
-    fatal_error (string_format ("mismatch of result flag and sender_connection: %016x", msgid));
-  if (AIDA_MESSAGES_ENABLED())
-    {
-      ProtoReader fbr (*fb);
-      const uint64 msgid = fbr.pop_int64(), hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-      AIDA_MESSAGE ("dest=%p msgid=%016x h=%016x l=%016x", bcon, msgid, hashhigh, hashlow);
-    }
-  bcon->send_msg (fb);
 }
 
 void

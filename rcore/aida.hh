@@ -481,21 +481,22 @@ union IdentifierParts {
 constexpr uint64 CONNECTION_MASK = 0x0000ffff;
 
 // == OrbObject ==
-/// Internal management structure for objects known to the ORB.
+/// Internal management structure for remote objects.
 class OrbObject {
   const uint64  orbid_;
 protected:
-  explicit      OrbObject         (uint64 orbid);
-  virtual      ~OrbObject         () = 0;
+  explicit                  OrbObject         (uint64 orbid);
+  virtual                  ~OrbObject         ();
 public:
-  uint64        orbid             () const                      { return orbid_; }
-  uint16        connection        () const                      { return orbid_connection (orbid_); }
-  uint16        type_index        () const                      { return orbid_type_index (orbid_); }
-  uint32        counter           () const                      { return orbid_counter (orbid_); }
-  static uint16 orbid_connection  (uint64 orbid)                { return orbid >> 48 /* & 0xffff */; }
-  static uint16 orbid_type_index  (uint64 orbid)                { return orbid >> 32 /* & 0xffff */; }
-  static uint32 orbid_counter     (uint64 orbid)                { return orbid /* & 0xffffffff */; }
-  static uint64 orbid_make        (uint16 connection, uint16 type_index, uint32 counter)
+  uint64                    orbid             () const       { return orbid_; }
+  uint16                    connection        () const       { return orbid_connection (orbid_); }
+  uint16                    type_index        () const       { return orbid_type_index (orbid_); }
+  uint32                    counter           () const       { return orbid_counter (orbid_); }
+  virtual ClientConnection* client_connection ();
+  static uint16             orbid_connection  (uint64 orbid) { return orbid >> 48 /* & 0xffff */; }
+  static uint16             orbid_type_index  (uint64 orbid) { return orbid >> 32 /* & 0xffff */; }
+  static uint32             orbid_counter     (uint64 orbid) { return orbid /* & 0xffffffff */; }
+  static uint64             orbid_make        (uint16 connection, uint16 type_index, uint32 counter)
   { return (uint64 (connection) << 48) | (uint64 (type_index) << 32) | counter; }
 };
 
@@ -517,6 +518,7 @@ protected:
 public:
   /*copy*/                RemoteHandle         (const RemoteHandle &y) : orbop_ (y.orbop_) {}
   virtual                ~RemoteHandle         ();
+  ClientConnection*       __aida_connection__  () const { return orbop_->client_connection(); }
   uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
   static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }
   // Determine if this RemoteHandle contains an object or null handle.
@@ -555,17 +557,16 @@ class ObjectBroker {
   static void   verify_connection_construction    ();
   static void   construct_server_connection       (ServerConnection *&var);
   static void   construct_client_connection       (ClientConnection *&var);
+  static uint   connection_id_from_protocol       (const std::string &protocol);
   static void   connection_handshake              (const std::string                 &endpoint,
                                                    std::function<BaseConnection*()>   aida_connection,
                                                    std::function<void (RemoteHandle)> origin_cast);
 public:
-  static void              post_msg               (ProtoMsg*); ///< Route message to the appropriate party.
   static uint              register_connection    (BaseConnection    &connection);
   static void              unregister_connection  (BaseConnection    &connection);
   static BaseConnection*   connection_from_id     (uint64             connection_id);
   static ClientConnection* get_client_connection  (ClientConnection *&var);
   static ServerConnection* get_server_connection  (ServerConnection *&var);
-  static uint         connection_id_from_protocol (const std::string &protocol);
   static uint         connection_id_from_signal_handler_id (size_t signal_handler_id);
   static inline uint  connection_id_from_orbid  (uint64 orbid)        { return OrbObject::orbid_connection (orbid); }
   static inline uint  connection_id_from_handle (const RemoteHandle &sh) { return connection_id_from_orbid (sh.__aida_orbid__()); }
@@ -612,9 +613,9 @@ public:
   inline void add_double (double vdouble)  { ProtoUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (INSTANCE); u.vint64 = objid; }
-  inline void add_any    (const Any &vany, BaseConnection &bcon);
-  inline void add_header1 (MessageId m, uint d, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, 0).vuint64); add_int64 (h); add_int64 (l); }
-  inline void add_header2 (MessageId m, uint d, uint s, uint64 h, uint64 l) { add_int64 (IdentifierParts (m, d, s).vuint64); add_int64 (h); add_int64 (l); }
+  void        add_any    (const Any &vany, BaseConnection &bcon);
+  inline void add_header1 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
+  inline void add_header2 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
   inline ProtoMsg& add_rec      (uint32 nt) { ProtoUnion &u = addu (RECORD); return *new (&u) ProtoMsg (nt); }
   inline ProtoMsg& add_seq      (uint32 nt) { ProtoUnion &u = addu (SEQUENCE); return *new (&u) ProtoMsg (nt); }
   inline void      reset        ();
@@ -623,9 +624,9 @@ public:
   static String    type_name    (int field_type);
   static ProtoMsg* _new         (uint32 _ntypes); // Heap allocated ProtoMsg
   // static ProtoMsg* new_error (const String &msg, const String &domain = "");
-  static ProtoMsg* new_result        (MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  static ProtoMsg* renew_into_result (ProtoMsg *fb,  MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
-  static ProtoMsg* renew_into_result (ProtoReader &fbr, MessageId m, uint rconnection, uint64 h, uint64 l, uint32 n = 1);
+  static ProtoMsg* new_result        (MessageId m, uint64 h, uint64 l, uint32 n = 1);
+  static ProtoMsg* renew_into_result (ProtoMsg *fb, MessageId m, uint64 h, uint64 l, uint32 n = 1);
+  static ProtoMsg* renew_into_result (ProtoReader &fbr, MessageId m, uint64 h, uint64 l, uint32 n = 1);
   inline void operator<<= (uint32 v)          { ProtoUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (ULongIffy v)       { ProtoUnion &u = addu (INT64); u.vint64 = v; }
   inline void operator<<= (uint64 v)          { ProtoUnion &u = addu (INT64); u.vint64 = v; }
@@ -637,6 +638,9 @@ public:
   inline void operator<<= (EnumValue e)       { ProtoUnion &u = addu (ENUM); u.vint64 = e.value; }
   inline void operator<<= (const String &s)   { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
+  void        operator<<= (const Any &vany);
+  void        operator<<= (const RemoteHandle &rhandle);
+  void        operator<<= (ImplicitBase *instance);
 };
 
 class ProtoMsg8 : public ProtoMsg { // Stack contained buffer for up to 8 fields
@@ -650,6 +654,7 @@ class ProtoReader { // read ProtoMsg contents
   const ProtoMsg    *fb_;
   uint32             nth_;
   void               check_request (int type);
+  ImplicitBaseP      pop_interface ();
   inline void        request (int t) { if (AIDA_UNLIKELY (nth_ >= n_types() || get_type() != t)) check_request (t); }
   inline ProtoUnion& fb_getu (int t) { request (t); return fb_->upeek (nth_); }
   inline ProtoUnion& fb_popu (int t) { request (t); ProtoUnion &u = fb_->upeek (nth_++); return u; }
@@ -677,7 +682,7 @@ public:
   inline double          pop_double  () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&   pop_string  () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
   inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (INSTANCE); return u.vint64; }
-  inline const Any&      pop_any     (BaseConnection &bcon);
+  const Any&             pop_any     (BaseConnection &bcon);
   inline const ProtoMsg& pop_rec     () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
   inline const ProtoMsg& pop_seq     () { ProtoUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }
   inline void operator>>= (uint32 &v)          { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
@@ -692,6 +697,9 @@ public:
   inline void operator>>= (String &s)          { ProtoUnion &u = fb_popu (STRING); s = *(String*) &u; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
   inline void operator>>= (std::vector<bool>::reference v) { bool b; *this >>= b; v = b; }
+  void        operator>>= (Any &vany);
+  void        operator>>= (RemoteHandle &rhandle);
+  template<class Target> std::shared_ptr<Target> pop_instance () { return std::dynamic_pointer_cast<Target> (pop_interface()); }
 };
 
 // == Connections ==
@@ -699,23 +707,27 @@ public:
 class BaseConnection {
   const std::string protocol_;
   uint              conid_;
+  BaseConnection   *peer_;
   friend  class ObjectBroker;
   RAPICORN_CLASS_NON_COPYABLE (BaseConnection);
 protected:
   explicit               BaseConnection  (const std::string &protocol);
   virtual               ~BaseConnection  ();
   virtual void           remote_origin   (ImplicitBaseP rorigin) = 0;
-  virtual void           send_msg        (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual void           receive_msg     (ProtoMsg*) = 0; ///< Accepts an incoming message, transfers memory.
+  void                   post_peer_msg   (ProtoMsg*);     ///< Send message to peer, transfers memory.
   void                   assign_id       (uint connection_id);
   std::string            protocol        () const       { return protocol_; }
+  void                   peer_connection (BaseConnection &peer);
 public:
-  uint                   connection_id  () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
-  virtual int            notify_fd      () = 0;     ///< Returns fd for POLLIN, to wake up on incomming events.
-  virtual bool           pending        () = 0;     ///< Indicate whether any incoming events are pending that need to be dispatched.
-  virtual void           dispatch       () = 0;     ///< Dispatch a single event if any is pending.
-  virtual RemoteHandle   remote_origin  () = 0;
-  virtual Any*           any2remote     (const Any&);
-  virtual void           any2local      (Any&);
+  BaseConnection&        peer_connection () const;
+  uint                   connection_id   () const { return conid_; } ///< Get unique conneciton ID (returns 0 if unregistered).
+  virtual int            notify_fd       () = 0; ///< Returns fd for POLLIN, to wake up on incomming events.
+  virtual bool           pending         () = 0; ///< Indicate whether any incoming events are pending that need to be dispatched.
+  virtual void           dispatch        () = 0; ///< Dispatch a single event if any is pending.
+  virtual RemoteHandle   remote_origin   () = 0;
+  virtual Any*           any2remote      (const Any&);
+  virtual void           any2local       (Any&);
 };
 
 /// Function typoe for internal signal handling.
@@ -725,14 +737,15 @@ typedef ProtoMsg* SignalEmitHandler (const ProtoMsg*, void*);
 class ServerConnection : public BaseConnection {
   RAPICORN_CLASS_NON_COPYABLE (ServerConnection);
 protected:
-  /*ctor*/           ServerConnection      (const std::string &protocol);
-  virtual           ~ServerConnection      ();
-  virtual void       cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
+  /*ctor*/                  ServerConnection      (const std::string &protocol);
+  virtual                  ~ServerConnection      ();
+  virtual void              cast_interface_handle (RemoteHandle &rhandle, ImplicitBaseP ibase) = 0;
 public:
   typedef std::function<void (Rapicorn::Aida::ProtoReader&)> EmitResultHandler;
-  virtual void          emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
-  virtual void          add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) = 0;
-  virtual ImplicitBaseP pop_interface           (ProtoReader &fr) = 0;
+  void                      post_peer_msg           (ProtoMsg *pm)      { BaseConnection::post_peer_msg (pm); }
+  virtual void              emit_result_handler_add (size_t id, const EmitResultHandler &handler) = 0;
+  virtual void              add_interface           (ProtoMsg &fb, ImplicitBaseP ibase) = 0;
+  virtual ImplicitBaseP     pop_interface           (ProtoReader &fr) = 0;
 protected: /// @name Registry for IPC method lookups
   static DispatchFunc find_method (uint64 hi, uint64 lo); ///< Lookup method in registry.
 public:
@@ -752,12 +765,40 @@ protected:
   explicit              ClientConnection (const std::string &protocol);
   virtual              ~ClientConnection ();
 public: /// @name API for remote calls.
-  virtual ProtoMsg*     call_remote (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
-  virtual void          add_handle  (ProtoMsg &fb, const RemoteHandle &rhandle) = 0;
-  virtual void          pop_handle  (ProtoReader &fr, RemoteHandle &rhandle) = 0;
+  virtual ProtoMsg*         call_remote       (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
+  virtual void              add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle) = 0;
+  virtual void              pop_handle        (ProtoReader &fr, RemoteHandle &rhandle) = 0;
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;
+};
+
+// == ProtoScpope ==
+/// ProtoScpope keeps track of the ServerConnection and ClientConnection during RPC marshalling.
+class ProtoScope {
+  bool nested_;
+public:
+  /// Start/create an RPC scope for a connection pair within the current thread.
+  explicit                 ProtoScope                (ClientConnection &client_connection);
+  explicit                 ProtoScope                (ServerConnection &server_connection);
+  /*dtor*/                ~ProtoScope                (); ///< Finish/destroy an RPC scope.
+  ProtoMsg*                invoke                    (ProtoMsg *pm); ///< Carry out a remote call syncronously, transfers memory.
+  static ClientConnection& current_client_connection (); ///< Access the client connection of the current thread-specific RPC scope.
+  static ServerConnection& current_server_connection (); ///< Access the server connection of the current thread-specific RPC scope.
+  static BaseConnection&   current_base_connection   (); ///< Access the client or server connection of the current thread-specific RPC scope.
+  RAPICORN_CLASS_NON_COPYABLE (ProtoScope);
+};
+struct ProtoScopeCall1Way : ProtoScope {
+  ProtoScopeCall1Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
+};
+struct ProtoScopeCall2Way : ProtoScope {
+  ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo);
+};
+struct ProtoScopeEmit1Way : ProtoScope {
+  ProtoScopeEmit1Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo);
+};
+struct ProtoScopeEmit2Way : ProtoScope {
+  ProtoScopeEmit2Way (ProtoMsg &pm, ServerConnection &server_connection, uint64 hashi, uint64 hashlo);
 };
 
 // == inline implementations ==
@@ -802,21 +843,6 @@ ProtoMsg::reset()
         default: ;
         }
     }
-}
-
-inline void
-ProtoMsg::add_any (const Any &vany, BaseConnection &bcon)
-{
-  ProtoUnion &u = addu (ANY);
-  u.vany = bcon.any2remote (vany);
-}
-
-inline const Any&
-ProtoReader::pop_any (BaseConnection &bcon)
-{
-  ProtoUnion &u = fb_popu (ANY);
-  bcon.any2local (*u.vany);
-  return *u.vany;
 }
 
 inline ServerConnection*

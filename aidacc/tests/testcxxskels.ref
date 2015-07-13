@@ -17,16 +17,16 @@ namespace MandatoryNamespace {
 enum Enum1 {
   E1_A = 1,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum1  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum1 &e) { e = Enum1 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum1 &e) { e = Enum1 (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
 enum Enum1c {
   E1C_A = 1,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum1c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum1c &e) { e = Enum1c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum1c &e) { e = Enum1c (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -34,8 +34,8 @@ enum Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum2  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum2 &e) { e = Enum2 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum2  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum2 &e) { e = Enum2 (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -43,8 +43,8 @@ enum Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum2c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum2c &e) { e = Enum2c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum2c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum2c &e) { e = Enum2c (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -53,8 +53,8 @@ enum Enum3 {
   E3_B = 2,
   E3_C = 3,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum3  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum3 &e) { e = Enum3 (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum3  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum3 &e) { e = Enum3 (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -63,8 +63,8 @@ enum Enum3c {
   E3C_B = 2,
   E3C_C = 3,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum3c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum3c &e) { e = Enum3c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum3c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum3c &e) { e = Enum3c (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -74,8 +74,8 @@ enum Enum4a {
   E4A_C = 3,
   E4A_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4a  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4a &e) { e = Enum4a (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4a  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4a &e) { e = Enum4a (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -85,8 +85,8 @@ enum Enum4b {
   E4B_C = 3,
   E4B_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4b  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4b &e) { e = Enum4b (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4b  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4b &e) { e = Enum4b (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -96,8 +96,8 @@ enum Enum4c {
   E4C_C = 3,
   E4C_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4c  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4c &e) { e = Enum4c (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4c &e) { e = Enum4c (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -107,8 +107,8 @@ enum Enum4d {
   E4D_C = 3,
   E4D_D = 4,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  Enum4d  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, Enum4d &e) { e = Enum4d (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4d  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4d &e) { e = Enum4d (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -149,8 +149,8 @@ enum ExtensiveEnum {
   V35 = 42,
   V36 = 42, // "foo""4"
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  ExtensiveEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, ExtensiveEnum &e) { e = ExtensiveEnum (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  ExtensiveEnum  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, ExtensiveEnum &e) { e = ExtensiveEnum (__f_.pop_evalue()); }
 /// @endcond
 } // MandatoryNamespace
 
@@ -160,8 +160,8 @@ namespace InterfaceTests {
 enum QuickEnum {
   ZERO = 0,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  QuickEnum  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, QuickEnum &e) { e = QuickEnum (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  QuickEnum  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, QuickEnum &e) { e = QuickEnum (__f_.pop_evalue()); }
 /// @endcond
 } // InterfaceTests
 
@@ -175,8 +175,8 @@ enum ClickType {
   CLICK_FAST_REPEAT = 4,
   CLICK_KEY_REPEAT = 5,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  ClickType  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, ClickType &e) { e = ClickType (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  ClickType  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, ClickType &e) { e = ClickType (__f_.pop_evalue()); }
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -194,8 +194,8 @@ enum MathExpressions {
   RESULT_77 = 77,
   RESULT_511 = 511,
 };
-inline void operator<<= (Rapicorn::Aida::ProtoMsg &fb,  MathExpressions  e) { fb <<= Rapicorn::Aida::EnumValue (e); }
-inline void operator>>= (Rapicorn::Aida::ProtoReader &frr, MathExpressions &e) { e = MathExpressions (frr.pop_evalue()); }
+inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  MathExpressions  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
+inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, MathExpressions &e) { e = MathExpressions (__f_.pop_evalue()); }
 /// @endcond
 } // RapicornAidaTest
 
@@ -245,7 +245,6 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          void_func             () = 0; 	///< See FirstInterface::void_func()
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_FirstInterfaceIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_FirstInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_FirstInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_FirstInterfaceIfaceP&);
@@ -606,7 +605,6 @@ public:
   virtual std::string                   on_click2out        () = 0; 	///< See UIWidgetArea::on_click2out()
   virtual void                          on_click2in         (const std::string &command) = 0; 	///< See UIWidgetArea::on_click2in()
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_UIWidgetAreaIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_UIWidgetAreaIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_UIWidgetAreaIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_UIWidgetAreaIfaceP&);
@@ -629,7 +627,6 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Parent"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_ParentIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_ParentIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_ParentIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_ParentIfaceP&);
@@ -651,7 +648,6 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Child"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_ChildIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_ChildIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_ChildIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_ChildIfaceP&);
@@ -673,7 +669,6 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Descendant"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_DescendantIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_DescendantIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_DescendantIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_DescendantIfaceP&);
@@ -695,7 +690,6 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::GrandChild"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_GrandChildIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_GrandChildIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_GrandChildIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_GrandChildIfaceP&);
@@ -750,7 +744,6 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          simple_function   (int i = 9) = 0; 	///< See QuickIface::simple_function()
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_QuickIfaceIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_QuickIfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_QuickIfaceIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_QuickIfaceIfaceP&);
@@ -796,7 +789,6 @@ public:
   virtual I_QuickIfaceIfaceP            method_with_quickiface     (I_QuickIfaceIface &input,
                                                                     I_QuickIfaceIface &iface0 = *(I_QuickIfaceIface*) NULL) = 0; 	///< See MethodTestInterface::method_with_quickiface()
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_MethodTestInterfaceIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_MethodTestInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_MethodTestInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_MethodTestInterfaceIfaceP&);
@@ -867,7 +859,6 @@ public:
   Signal_any_arg sig_any_arg;
   Signal_self_args sig_self_args;
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_SignalTestInterfaceIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_SignalTestInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_SignalTestInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_SignalTestInterfaceIfaceP&);
@@ -891,7 +882,6 @@ public:
   typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const SrvT_QuickRecord &r, const SrvT_QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_ChildInheritingSignalsIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_ChildInheritingSignalsIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_ChildInheritingSignalsIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_ChildInheritingSignalsIfaceP&);
@@ -913,7 +903,6 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::AnotherChild"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_AnotherChildIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_AnotherChildIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_AnotherChildIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_AnotherChildIfaceP&);
@@ -958,7 +947,6 @@ public:
   virtual Rapicorn::Aida::Any           any_prop       () const = 0; 	///< See PropertyTester::any_prop
   virtual void                          any_prop       (const Rapicorn::Aida::Any&) = 0; 	///< See PropertyTester::any_prop
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_PropertyTesterIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_PropertyTesterIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_PropertyTesterIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_PropertyTesterIfaceP&);
@@ -996,7 +984,6 @@ public:
   Signal_check_activate sig_check_activate;
   Signal_activate sig_activate;
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_ButtonAreaIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_ButtonAreaIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_ButtonAreaIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_ButtonAreaIfaceP&);
@@ -1021,7 +1008,6 @@ public:
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual int                           pure_method        (double f) = 0; 	///< See PureMethods::pure_method()
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_PureMethodsIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_PureMethodsIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_PureMethodsIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_PureMethodsIfaceP&);
@@ -1050,7 +1036,6 @@ public:
                                                                    RapicornAidaTest::ClickType qe,
                                                                    const OtherNamespace::SrvT_SomeRecord &sr) = 0; 	///< See NameTests::args_from_other_namespace()
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_NameTestsIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_NameTestsIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_NameTestsIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_NameTestsIfaceP&);
@@ -1080,7 +1065,6 @@ public:
   virtual double                        ratio     () const = 0; 	///< See Compressor::ratio
   virtual void                          ratio     (double) = 0; 	///< See Compressor::ratio
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_CompressorIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_CompressorIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_CompressorIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_CompressorIfaceP&);
@@ -1129,7 +1113,6 @@ public:
   virtual std::string                    __aida_type_name__ () const override	{ return "BseTest::SoundModule"; }
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
 };
-void operator<<= (Rapicorn::Aida::ProtoMsg&, I_SoundModuleIface*);
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_SoundModuleIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_SoundModuleIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_SoundModuleIfaceP&);
