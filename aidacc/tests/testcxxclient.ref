@@ -475,6 +475,10 @@ struct ClnT_AnySequence : public std::vector<Rapicorn::Aida::Any>
 void operator<<= (Rapicorn::Aida::FieldBuffer&, const ClnT_AnySequence&);
 void operator>>= (Rapicorn::Aida::FieldReader&, ClnT_AnySequence&);
 
+class ClnT_NestedTypesRec;
+
+class ClnT_NestedTypesSeq;
+
 struct ClnT_NestedTypesRec
 {
   /// @cond GeneratedFields

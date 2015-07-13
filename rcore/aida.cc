@@ -189,10 +189,8 @@ enum_info<TypeKind> ()
     { SEQUENCE,         "SEQUENCE",             NULL, NULL },
     { RECORD,           "RECORD",               NULL, NULL },
     { INSTANCE,         "INSTANCE",             NULL, NULL },
-    { FUNC,             "FUNC",                 NULL, NULL },
-    { TYPE_REFERENCE,   "TYPE_REFERENCE",       NULL, NULL },
-    { LOCAL,            "LOCAL",                NULL, NULL },
     { REMOTE,           "REMOTE",               NULL, NULL },
+    { LOCAL,            "LOCAL",                NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo ("Rapicorn::Aida::TypeKind", values, false);
@@ -299,6 +297,28 @@ ImplicitBase::~ImplicitBase()
 // == Any ==
 RAPICORN_STATIC_ASSERT (sizeof (std::string) <= sizeof (Any)); // assert big enough Any impl
 
+Any::Any (const Any &clone) :
+  type_kind_ (UNTYPED), u_ {0}
+{
+  this->operator= (clone);
+}
+
+Any::Any (Any &&other) :
+  type_kind_ (UNTYPED), u_ {0}
+{
+  this->swap (other);
+}
+
+Any&
+Any::operator= (Any &&other)
+{
+  if (this == &other)
+    return *this;
+  reset();
+  this->swap (other);
+  return *this;
+}
+
 Any&
 Any::operator= (const Any &clone)
 {
@@ -312,11 +332,23 @@ Any::operator= (const Any &clone)
     case ANY:           u_.vany = new Any (*clone.u_.vany);               break;
     case SEQUENCE:      u_.vanys = new AnyVector (*clone.u_.vanys);       break;
     case RECORD:        u_.vfields = new FieldVector (*clone.u_.vfields); break;
-    case INSTANCE:      u_.shandle = new RemoteHandle (*clone.u_.shandle); break;
+    case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL; break;
+    case REMOTE:        u_.rhandle = new RemoteHandle (*clone.u_.rhandle); break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
     default:            u_ = clone.u_;                                    break;
     }
   return *this;
+}
+
+void
+Any::swap (Any &other)
+{
+  constexpr size_t USIZE = sizeof (this->u_);
+  uint64 buffer[(USIZE + 7) / 8];
+  memcpy (buffer, &other.u_, USIZE);
+  memcpy (&other.u_, &this->u_, USIZE);
+  memcpy (&this->u_, buffer, USIZE);
+  std::swap (type_kind_, other.type_kind_);
 }
 
 void
@@ -328,7 +360,8 @@ Any::reset()
     case ANY:           delete u_.vany;                         break;
     case SEQUENCE:      delete u_.vanys;                        break;
     case RECORD:        delete u_.vfields;                      break;
-    case INSTANCE:      delete u_.shandle;                      break;
+    case INSTANCE:      delete u_.ibase;                        break;
+    case REMOTE:        delete u_.rhandle;                      break;
     case LOCAL:         delete u_.pholder;                      break;
     default: ;
     }
@@ -347,9 +380,35 @@ Any::rekind (TypeKind _kind)
     case ANY:      u_.vany = new Any();                                        break;
     case SEQUENCE: u_.vanys = new AnyVector();                                 break;
     case RECORD:   u_.vfields = new FieldVector();                             break;
-    case INSTANCE: u_.shandle = new RemoteHandle (RemoteHandle::__aida_null_handle__()); break;
+    case REMOTE:   u_.rhandle = new RemoteHandle (RemoteHandle::__aida_null_handle__()); break;
     default:       break;
     }
+}
+
+Any
+Any::any_from_strings (const std::vector<std::string> &string_container)
+{
+  AnyVector av;
+  av.resize (string_container.size());
+  for (size_t i = 0; i < av.size(); i++)
+    av[i].set (string_container[i]);
+  Any any;
+  any.set (av);
+  return any;
+}
+
+std::vector<std::string>
+Any::any_to_strings () const
+{
+  const AnyVector *av = get<const AnyVector*>();
+  std::vector<std::string> sv;
+  if (av)
+    {
+      sv.resize (av->size());
+      for (size_t i = 0; i < av->size(); i++)
+        sv[i] = (*av)[i].get<std::string>();
+    }
+  return sv;
 }
 
 template<class T> String any_field_name (const T          &);
@@ -388,7 +447,8 @@ Any::to_string (const String &field_name) const
     case STRING:        s += ", value=" + Rapicorn::string_to_cquote (u_.vstring());            break;
     case SEQUENCE:      if (u_.vanys) s += ", value=" + any_vector_to_string (*u_.vanys);       break;
     case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
-    case INSTANCE:      s += string_format (", value=#%08x", u_.shandle->__aida_orbid__());     break;
+    case INSTANCE:      s += string_format (", value=%p", u_.ibase ? u_.ibase->get() : NULL);   break;
+    case REMOTE:        s += string_format (", value=#%08x", u_.rhandle->__aida_orbid__());     break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -412,8 +472,17 @@ Any::operator== (const Any &clone) const
     case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
     case SEQUENCE:    if (*u_.vanys != *clone.u_.vanys) return false;                     break;
     case RECORD:      if (*u_.vfields != *clone.u_.vfields) return false;                 break;
-    case INSTANCE:    if ((u_.shandle ? u_.shandle->__aida_orbid__() : 0) != (clone.u_.shandle ? clone.u_.shandle->__aida_orbid__() : 0)) return false; break;
     case ANY:         if (*u_.vany != *clone.u_.vany) return false;                       break;
+    case INSTANCE:
+      if (!u_.ibase || !clone.u_.ibase)
+        return u_.ibase == clone.u_.ibase;
+      else
+        return u_.ibase->get() == clone.u_.ibase->get();
+      break;
+    case REMOTE:
+      if ((u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) != (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0))
+        return false;
+      break;
     case LOCAL:
       if (u_.pholder)
         return u_.pholder->operator== (clone.u_.pholder);
@@ -432,21 +501,193 @@ Any::operator!= (const Any &clone) const
 }
 
 void
-Any::swap (Any &other)
-{
-  constexpr size_t USIZE = sizeof (this->u_);
-  uint64 buffer[(USIZE + 7) / 8];
-  memcpy (buffer, &other.u_, USIZE);
-  memcpy (&other.u_, &this->u_, USIZE);
-  memcpy (&this->u_, buffer, USIZE);
-  std::swap (type_kind_, other.type_kind_);
-}
-
-void
 Any::hold (PlaceHolder *ph)
 {
   ensure (LOCAL);
   u_.pholder = ph;
+}
+
+bool
+Any::get_bool () const
+{
+  switch (kind())
+    {
+    case BOOL: case ENUM: case INT32:
+    case INT64:         return u_.vint64 != 0;
+    case STRING:        return !u_.vstring().empty();
+    case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
+    case RECORD:        return u_.vfields && !u_.vfields->empty();
+    case INSTANCE:      return u_.ibase && u_.ibase->get();
+    case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
+    default: ;
+    }
+  return 0;
+}
+
+void
+Any::set_bool (bool value)
+{
+  ensure (BOOL);
+  u_.vint64 = value;
+}
+
+int64
+Any::get_int64 () const
+{
+  switch (kind())
+    {
+    case BOOL: case ENUM: case INT32:
+    case INT64:         return u_.vint64;
+    case FLOAT64:       return u_.vdouble;
+    default: ;
+    }
+  return 0;
+}
+
+void
+Any::set_int64 (int64 value)
+{
+  ensure (INT64);
+  u_.vint64 = value;
+}
+
+double
+Any::get_double () const
+{
+  return kind() == FLOAT64 ? u_.vdouble : get_int64();
+}
+
+void
+Any::set_double (double value)
+{
+  ensure (FLOAT64);
+  u_.vdouble = value;
+}
+
+std::string
+Any::get_string () const
+{
+  switch (kind())
+    {
+    case BOOL:          return u_.vint64 ? "true" : "false";
+    case ENUM: case INT32:
+    case INT64:         return string_format ("%i", u_.vint64);
+    case FLOAT64:       return string_from_double (u_.vdouble);
+    case STRING:        return u_.vstring();
+    default: ;
+    }
+  return "";
+}
+
+void
+Any::set_string (const std::string &value)
+{
+  ensure (STRING);
+  u_.vstring().assign (value);
+}
+
+const Any::AnyVector*
+Any::get_seq () const
+{
+  if (kind() == SEQUENCE && u_.vanys)
+    return u_.vanys;
+  static const AnyVector empty;
+  return &empty;
+}
+
+void
+Any::set_seq (const AnyVector *seq)
+{
+  ensure (SEQUENCE);
+  if (u_.vanys != seq)
+    {
+      AnyVector *old = u_.vanys;
+      u_.vanys = seq ? new AnyVector (*seq) : NULL;
+      delete old;
+    }
+}
+
+const Any::FieldVector*
+Any::get_rec () const
+{
+  if (kind() == RECORD && u_.vfields)
+    return u_.vfields;
+  static const FieldVector empty;
+  return &empty;
+}
+
+void
+Any::set_rec (const FieldVector *rec)
+{
+  ensure (RECORD);
+  if (u_.vfields != rec)
+    {
+      FieldVector *old = u_.vfields;
+      u_.vfields = rec ? new FieldVector (*rec) : NULL;
+      delete old;
+    }
+}
+
+ImplicitBase*
+Any::get_ibase () const
+{
+  return kind() == INSTANCE && u_.ibase ? u_.ibase->get() : NULL;
+}
+
+void
+Any::set_ibase (ImplicitBase *ibase)
+{
+  ensure (INSTANCE);
+  if (!u_.ibase || u_.ibase->get() != ibase)
+    {
+      ImplicitBaseP *old = u_.ibase;
+      if (ibase)
+        {
+          ImplicitBaseP next = shared_ptr_cast<ImplicitBase> (ibase);
+          u_.ibase = new ImplicitBaseP (next);
+        }
+      else
+        u_.ibase = NULL;
+      delete old;
+    }
+}
+
+RemoteHandle
+Any::get_handle () const
+{
+  return kind() == REMOTE && u_.rhandle ? *u_.rhandle : RemoteHandle::__aida_null_handle__();
+}
+
+void
+Any::take_handle (RemoteHandle *handle)
+{
+  ensure (REMOTE);
+  if (handle)
+    assert_return (handle != u_.rhandle);
+  RemoteHandle *old = u_.rhandle;
+  u_.rhandle = handle;
+  delete old;
+}
+
+const Any*
+Any::get_any () const
+{
+  if (kind() == ANY && u_.vany)
+    return u_.vany;
+  static const Any empty;
+  return &empty;
+}
+
+void
+Any::set_any (const Any *value)
+{
+  ensure (ANY);
+  if (u_.vany != value)
+    {
+      Any *old = u_.vany;
+      u_.vany = value && value->kind() != UNTYPED ? new Any (*value) : NULL;
+      delete old;
+    }
 }
 
 bool
@@ -484,7 +725,8 @@ Any::as_int () const
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return !u_.vanys->empty();
     case RECORD:        return !u_.vfields->empty();
-    case INSTANCE:      return u_.shandle && u_.shandle->__aida_orbid__();
+    case INSTANCE:      return u_.ibase && u_.ibase->get();
+    case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
     default:            return 0;
     }
 }
@@ -570,9 +812,9 @@ Any::operator>>= (const FieldVector *&v) const
 bool
 Any::operator>>= (RemoteHandle &v)
 {
-  if (kind() != INSTANCE)
+  if (kind() != REMOTE)
     return false;
-  v = u_.shandle ? *u_.shandle : RemoteHandle::__aida_null_handle__();
+  v = u_.rhandle ? *u_.rhandle : RemoteHandle::__aida_null_handle__();
   return true;
 }
 
@@ -633,8 +875,7 @@ Any::operator<<= (const Any &v)
     {
       Any *old = u_.vany;
       u_.vany = new Any (v);
-      if (old)
-        delete old;
+      delete old;
     }
 }
 
@@ -646,8 +887,7 @@ Any::operator<<= (const AnyVector &v)
     {
       AnyVector *old = u_.vanys;
       u_.vanys = new AnyVector (v);
-      if (old)
-        delete old;
+      delete old;
     }
 }
 
@@ -659,19 +899,17 @@ Any::operator<<= (const FieldVector &v)
     {
       FieldVector *old = u_.vfields;
       u_.vfields = new FieldVector (v);
-      if (old)
-        delete old;
+      delete old;
     }
 }
 
 void
 Any::operator<<= (const RemoteHandle &v)
 {
-  ensure (INSTANCE);
-  RemoteHandle *old = u_.shandle;
-  u_.shandle = new RemoteHandle (v);
-  if (old)
-    delete old;
+  ensure (REMOTE);
+  RemoteHandle *old = u_.rhandle;
+  u_.rhandle = new RemoteHandle (v);
+  delete old;
 }
 
 // == OrbObject ==
@@ -822,8 +1060,6 @@ FieldBuffer::to_string() const
       switch (fbr.get_type())
         {
         case UNTYPED:
-        case FUNC:
-        case TYPE_REFERENCE:
         case VOID:      s += string_format (", %s", tn); fbr.skip();                               break;
         case BOOL:      s += string_format (", %s: 0x%x", tn, fbr.pop_bool());                     break;
         case ENUM:      s += string_format (", %s: 0x%x", tn, fbr.pop_evalue());                   break;
@@ -834,6 +1070,7 @@ FieldBuffer::to_string() const
         case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
         case RECORD:    s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
         case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
+        case REMOTE:    s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
         case ANY:       s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
         default:        s += string_format (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
         }

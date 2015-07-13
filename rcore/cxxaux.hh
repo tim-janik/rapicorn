@@ -318,18 +318,46 @@ shared_ptr_cast (const std::shared_ptr<Source> &sptr)
 }
 
 // == C++ Traits ==
-/** IsComparable - Check if a type is comparable for equality.
- * If @a T is a type that can be compared with operator==, provide the member constant @a value equal true, otherwise false.
- */
+/// REQUIRES<value> - Simplified version of std::enable_if<> to use SFINAE in function templates.
+template<bool value> using REQUIRES = typename ::std::enable_if<value, bool>::type;
+
+/// IsBool<T> - Check if @a T is of type 'bool'.
+template<class T> using IsBool = ::std::is_same<bool, typename ::std::remove_cv<T>::type>;
+
+/// IsInteger<T> - Check if @a T is of integral type (except bool).
+template<class T> using IsInteger = ::std::integral_constant<bool, !IsBool<T>::value && ::std::is_integral<T>::value>;
+
+/// DerivesString<T> - Check if @a T is of type 'std::string'.
+template<class T> using DerivesString = typename std::is_base_of<::std::string, T>;
+
+/// DerivesVector<T> - Check if @a T derives from std::vector<>.
+template<class T, typename = void> struct DerivesVector : std::false_type {};
+// use void_t to prevent errors for T without vector's typedefs
+template<class T> struct DerivesVector<T, void_t< typename T::value_type, typename T::allocator_type > > :
+std::is_base_of< std::vector<typename T::value_type, typename T::allocator_type>, T > {};
+
+/// IsComparable<T> - Check if type @a T is comparable for equality.
+/// If @a T is a type that can be compared with operator==, provide the member constant @a value equal true, otherwise false.
 template<class, class = void> struct IsComparable : std::false_type {}; // IsComparable false case, picked if operator== is missing.
 template<class T> struct IsComparable<T, void_t< decltype (std::declval<T>() == std::declval<T>()) >> : std::true_type {};
 
-/// Check if a type @a T is a std::shared_ptr<T>.
+/// IsSharedPtr<T> - Check if a type @a T is a std::shared_ptr<>.
 template<class T> struct IsSharedPtr                      : std::false_type {};
 template<class T> struct IsSharedPtr<std::shared_ptr<T> > : std::true_type {};
-/// Check if a type @a T is a std::weak_ptr<T>.
+/// IsWeakPtr<T> - Check if a type @a T is a std::weak_ptr<>.
 template<class T> struct IsWeakPtr                        : std::false_type {};
 template<class T> struct IsWeakPtr<std::weak_ptr<T> >     : std::true_type {};
+
+/// DerivesSharedPtr<T> - Check if @a T derives from std::shared_ptr<>.
+template<class T, typename = void> struct DerivesSharedPtr : std::false_type {};
+// use void_t to prevent errors for T without shared_ptr's typedefs
+template<class T> struct DerivesSharedPtr<T, Rapicorn::void_t< typename T::element_type > > :
+std::is_base_of< std::shared_ptr<typename T::element_type>, T > {};
+
+// Has__accept__<T,Visitor> - Check if @a T provides a member template __accept__<>(Visitor).
+template<class, class, class = void> struct Has__accept__ : std::false_type {};
+template<class T, class V>
+struct Has__accept__<T, V, void_t< decltype (std::declval<T>().template __accept__<V> (std::declval<V>())) >> : std::true_type {};
 
 } // Rapicorn
 
