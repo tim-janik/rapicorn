@@ -2,7 +2,7 @@
 """
 Rapicorn test program for Python
 """
-from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
+import Rapicorn
 import sys
 
 # issue test message
@@ -23,9 +23,9 @@ my_window_xml = """
 """
 
 # setup application
-app = Rapicorn.app_init ("testrapicorn.py")     # provide unique application name
+app = Rapicorn.init ('testrapicorn.py')         # provide unique application name
 app.load_string (my_window_xml)                 # load widget tree
-window = app.create_window ("my-window")        # create main window
+window = app.create_window ('my-window')        # create main window
 
 # property testing
 assert window.name == "my-window"

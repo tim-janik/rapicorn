@@ -1,7 +1,7 @@
 # Rapicorn
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS     = . po data res rcore aidacc ui rope cython tools tests pytests examples docs
+SUBDIRS     = . po data res rcore aidacc ui cython tools tests pytests examples docs
 
 docdir      = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
 noinst_DATA =

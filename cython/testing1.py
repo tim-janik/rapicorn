@@ -135,13 +135,13 @@ assert_raises (TypeError, Rapicorn.Application)
 app = Rapicorn.init ('testing1.py')
 
 # Test object handles
-w1 = app.create_window ('Window', '')
+w1 = app.create_window ('Window')
 wl = app.query_windows ("")
 assert wl == []
 wl = app.query_windows ("Window")
 assert len (wl) == 1
 
-w2 = app.create_window ('Window', '')
+w2 = app.create_window ('Window')
 wl = app.query_windows ("Window")
 assert len (wl) == 2
 assert w2 != app and w1 != app

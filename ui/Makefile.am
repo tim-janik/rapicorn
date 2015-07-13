@@ -92,7 +92,6 @@ EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
 # === Rapicorn IDL ===
-ROPE           = $(srcdir)/../rope
 AIDACC         = $(top_builddir)/aidacc/aidacc-intern
 CXXSTUB_PY     = $(top_srcdir)/aidacc/CxxStub.py
 EXTRACTDOCS_PY = $(top_srcdir)/aidacc/ExtractDocs.py

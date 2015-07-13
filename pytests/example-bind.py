@@ -1,9 +1,9 @@
 # Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
-from Rapicorn1410 import Rapicorn
+import Rapicorn # Load Rapicorn language bindings for Python
 
 # Setup the application object, unsing a unique application name.
-app = Rapicorn.app_init ("Test Rapicorn Bindings")
+app = Rapicorn.init ("Test Rapicorn Bindings")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """

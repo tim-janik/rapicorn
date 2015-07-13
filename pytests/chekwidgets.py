@@ -1,8 +1,9 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 
 # setup Rapicorn test
-from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
-app = Rapicorn.app_init()
+import Rapicorn # Load Rapicorn language bindings for Python
+
+app = Rapicorn.init (__file__)
 
 def show_and_display (win): # show and run main loop until the window is fully displayed
   # FIXME: convenience function for app
@@ -14,8 +15,8 @@ def show_and_display (win): # show and run main loop until the window is fully d
   conid = win.sig_displayed.connect (window_displayed)
   win.show()
   while not window_displayed.seen_signal:
-    app.iterate (True, True)
-  win.sig_displayed -= conid
+    app.main_loop().iterate (True)
+  win.sig_displayed.disconnect (conid)
 
 # = SizeGroup Tests =
 # create wide and a tall buttons that are resized via size groups

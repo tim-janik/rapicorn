@@ -53,11 +53,11 @@ GPRINT      = @printf '  %-9s%s\n'
 # == Install aidacc Helper Modules ==
 pyutilsdir      = $(libdir)/$(strip ${AIDACCV})/pyutils
 pyutils_PYTHON  = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
-backendfiles    = PrettyDump.py TypeMap.py CxxStub.py ExtractDocs.py TmplFiles.py PyStub.py
+backendfiles    = PrettyDump.py TypeMap.py CxxStub.py ExtractDocs.py TmplFiles.py
 noinst_SCRIPTS += $(backendfiles)
 
 # == Templates & Copy-Paste Files ==
-template_files = PyStub-glue.py PyStub-glue.cc CxxStub-client.cc CxxStub-server.cc
+template_files = CxxStub-client.cc CxxStub-server.cc
 EXTRA_DIST += $(template_files)
 TmplFiles.py: Makefile.am $(template_files)
 	$(AM_V_GEN)
@@ -67,10 +67,6 @@ TmplFiles.py: Makefile.am $(template_files)
 	    && sed 's/\\/\\\\/g; s/"""/\\"""/g' $$file && echo '"""' || exit $? ; done ) > xgen-$@
 	$(Q) mv xgen-$@ $@
 CLEANFILES += TmplFiles.py
-
-# == Install Aida Library Modules ==
-PyAidadir	= ${pythondir}/Aida$(strip @RAPICORN_RELEASE@)
-PyAida_PYTHON	= __init__.py loop.py
 
 # == Basic Aidacc Test ==
 check-aidacc-intern-list-formats:

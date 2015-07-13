@@ -22,11 +22,10 @@ if not '-i' in sys.argv:
   print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
   sys.exit (0)
 
-# Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
-from Rapicorn1410 import Rapicorn
+import Rapicorn # Load Rapicorn language bindings for Python
 
 # Setup the application object, unsing a unique application name.
-app = Rapicorn.app_init ("Test Rapicorn GC")
+app = Rapicorn.init ("Test Rapicorn GC")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """
@@ -46,10 +45,12 @@ container = window.query_selector_unique ('#container')
 assert container
 
 def sync_remote():
-  for i in range (2):                     # settling bindings may require extra round trips
-    while app.iterate (False, True): pass # process signals and events pending locally
-    app.test_hook()                       # force round trip, ensure we pickup notifications pending remotely
-  while app.iterate (False, True): pass   # process new/remaining batch of signals and events
+  for i in range (2):                   # settling bindings may require extra round trips
+    while app.main_loop().iterate (False):
+      pass                              # process signals and events pending locally
+    app.test_hook()                     # force round trip, ensure we pickup notifications pending remotely
+  while app.main_loop().iterate (False):
+    pass                                # process new/remaining batch of signals and events
 
 def gc_children():
   total, batch = 100, 20

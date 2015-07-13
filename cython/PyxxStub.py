@@ -80,6 +80,17 @@ def cxx_argtype (tp):
   elif tp.storage == Decls.INTERFACE:
     typename = '%s' % typename
   return typename
+def format_pyarg (argname, argtype, argdefault):
+  if argdefault == None:
+    return argname
+  if argtype.storage == Decls.BOOL:
+    vdefault = True if argdefault else False
+  elif argtype.storage in (Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM, Decls.STRING):
+    vdefault = argdefault # string or number litrals
+  else:
+    defaults = { Decls.RECORD : 'None', Decls.SEQUENCE : '()', Decls.INTERFACE : 'None', Decls.ANY : '()' }
+    vdefault = defaults[argtype.storage]
+  return '%s = %s' % (argname, vdefault)
 
 class Generator:
   def __init__ (self, idl_file, module_name):
@@ -98,18 +109,6 @@ class Generator:
     else:
       f = '%%-%ds' % self.ntab  # '%-20s'
       return indent + f % string
-  def zero_value_pyimpl (self, type):
-    return { Decls.BOOL      : '0',
-             Decls.INT32     : '0',
-             Decls.INT64     : '0',
-             Decls.FLOAT64   : '0',
-             Decls.ENUM      : '0',
-             Decls.RECORD    : 'None',
-             Decls.SEQUENCE  : '()',
-             Decls.STRING    : "''",
-             Decls.INTERFACE : "None",
-             Decls.ANY       : '()',
-           }[type.storage]
   def cxx_type (self, type_node):
     tstorage = type_node.storage
     if tstorage == Decls.VOID:          return 'void'
@@ -184,16 +183,65 @@ class Generator:
     # C++ Builtins # FIXME: move elsewhere
     s += '\n'
     s += '# Builtins\n'
-    s += 'cdef extern from * namespace "Rapicorn":\n' # FIXME?
+    s += 'cdef extern from * namespace "Rapicorn":\n'
+    s += '  cdef enum Rapicorn__Aida__TypeKind             "Rapicorn::Aida::TypeKind":\n'
+    s += '    TypeKind__UNTYPED                            "Rapicorn::Aida::UNTYPED"\n'
+    s += '    TypeKind__VOID                               "Rapicorn::Aida::VOID"\n'
+    s += '    TypeKind__BOOL                               "Rapicorn::Aida::BOOL"\n'
+    s += '    TypeKind__INT32                              "Rapicorn::Aida::INT32"\n'
+    s += '    TypeKind__INT64                              "Rapicorn::Aida::INT64"\n'
+    s += '    TypeKind__FLOAT64                            "Rapicorn::Aida::FLOAT64"\n'
+    s += '    TypeKind__STRING                             "Rapicorn::Aida::STRING"\n'
+    s += '    TypeKind__ENUM                               "Rapicorn::Aida::ENUM"\n'
+    s += '    TypeKind__SEQUENCE                           "Rapicorn::Aida::SEQUENCE"\n'
+    s += '    TypeKind__RECORD                             "Rapicorn::Aida::RECORD"\n'
+    s += '    TypeKind__INSTANCE                           "Rapicorn::Aida::INSTANCE"\n'
+    s += '    TypeKind__REMOTE                             "Rapicorn::Aida::REMOTE"\n'
+    s += '    TypeKind__LOCAL                              "Rapicorn::Aida::LOCAL"\n'
+    s += '    TypeKind__ANY                                "Rapicorn::Aida::ANY"\n'
+    s += '  String Rapicorn__Aida__type_kind_name          "Rapicorn::Aida::type_kind_name" (Rapicorn__Aida__TypeKind)\n'
     s += '  cppclass %-40s "%s"\n' % ('Rapicorn__Any', 'Rapicorn::Any')
     s += '  cppclass Rapicorn__Any:\n'
-    s += '    pass\n' # FIXME
-    s += 'cdef Rapicorn__Any Rapicorn__Any__unwrap (object pyo1):\n'
-    s += '  raise NotImplementedError\n' # FIXME
-    s += 'cdef object Rapicorn__Any__wrap (const Rapicorn__Any &cxx1):\n'
-    s += '  raise NotImplementedError\n' # FIXME
-    s += 'cdef int32 int32__unwrap (object pyo1):\n'
-    s += '  cdef int64 v64 = pyo1 # type checks for int-convertible\n'
+    s += '    Rapicorn__Aida__TypeKind kind                                        ()\n'
+    s += '    void                     set__String         "set<Rapicorn::String>" (String)\n'
+    s += '    void                     set__bool           "set<bool>"             (bool)\n'
+    s += '    void                     set__int64          "set<Rapicorn::int64>"  (int64)\n'
+    s += '    void                     set__float64        "set<double>"           (double)\n'
+    s += '    bool                     get__bool           "get<bool>"             ()\n'
+    s += '    int64                    get__int64          "get<Rapicorn::int64>"  ()\n'
+    s += '    float64                  get__float64        "get<double>"           ()\n'
+    s += '    String                   get__String         "get<Rapicorn::String>" ()\n'
+    s += 'cdef Rapicorn__Any Rapicorn__Any__unwrap (object pyo) except *:\n'
+    s += '  cdef Rapicorn__Any vany\n'
+    s += '  if pyo == None:\n'
+    s += '    pass\n'
+    s += '  elif isinstance (pyo, basestring):\n'
+    s += '    vany.set__String (pyo)\n'
+    s += '  elif isinstance (pyo, type (True)):\n' # use 'type (True)' as workaround for 'bool' which Cython-0.20.2 doesn't know
+    s += '    vany.set__bool (pyo)\n'
+    s += '  elif isinstance (pyo, int) or isinstance (pyo, long):\n'
+    s += '    vany.set__int64 (pyo)\n'
+    s += '  elif isinstance (pyo, float):\n'
+    s += '    vany.set__float64 (pyo)\n'
+    s += '  else:\n' # FIXME: Any_unwrap for ENUM, RECORD, SEQUENCE, REMOTE, ANY
+    s += '    raise NotImplementedError ("Any: unable to convert Python value: %s" % repr (pyo))\n'
+    s += '  return vany\n'
+    s += 'cdef object Rapicorn__Any__wrap (const Rapicorn__Any &cany):\n'
+    s += '  cdef Rapicorn__Aida__TypeKind kind = cany.kind()\n'
+    s += '  if kind == TypeKind__UNTYPED:\n'
+    s += '    return None\n'
+    s += '  elif kind == TypeKind__BOOL:\n'
+    s += '    return cany.get__bool()\n'
+    s += '  elif kind == TypeKind__INT32 or kind == TypeKind__INT64:\n'
+    s += '    return cany.get__int64()\n'
+    s += '  elif kind == TypeKind__FLOAT64:\n'
+    s += '    return cany.get__float64()\n'
+    s += '  elif kind == TypeKind__STRING:\n'
+    s += '    return cany.get__String()\n'
+    s += '' # FIXME: Any_wrap for ENUM, RECORD, SEQUENCE, REMOTE, ANY
+    s += '  raise NotImplementedError ("Any: unable to convert contents to Python: %s" % Rapicorn__Aida__type_kind_name (kind))\n'
+    s += 'cdef int32 int32__unwrap (object pyo):\n'
+    s += '  cdef int64 v64 = pyo # type checks for int-convertible\n'
     s += '  return <int32> v64 # silenty "cut" too big numbers\n'
     # C++ Enum Values
     s += '\n'
@@ -387,9 +435,8 @@ class Generator:
         # methods
         for mtp in tp.methods:
           rtp, mname = mtp.rtype, mtp.name
-          atypes = [a[1] for a in mtp.args]
-          anames = [a[0] for a in mtp.args]
-          s += '  def %s (%s):\n' % (mname, ', '.join ([ 'self' ] + anames))
+          arglist = [ format_pyarg (*argtuple) for argtuple in mtp.args ]
+          s += '  def %s (%s):\n' % (mname, ', '.join ([ 'self' ] + arglist))
           result = ' _cxxret =' if rtp.storage != Decls.VOID else ''
           s += '   %s %s.%s (' % (result, handle, mname)
           s += ', '.join (self.cxx_unwrap (a[0], a[1]) for a in mtp.args)

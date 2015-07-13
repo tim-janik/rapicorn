@@ -1,10 +1,9 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 # [HelloRapicorn-EXAMPLE]
-# Load and import a versioned Rapicorn module into the 'Rapicorn' namespace
-from Rapicorn1410 import Rapicorn # Rapicorn modules are versioned
+import Rapicorn # Load Rapicorn language bindings for Python
 
-# Setup the application object, unsing a unique application name.
-app = Rapicorn.app_init ("Hello Rapicorn")
+# Setup the application object, using a unique application name.
+app = Rapicorn.init ("Hello Rapicorn")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """
@@ -41,10 +40,10 @@ window.sig_commands.connect (command_handler)
 window.show()
 
 # Pass control to the event loop, to wait and handle user commands.
-app.loop()
+app.run()
 # [HelloRapicorn-EXAMPLE]
 
-# Test code, run this with above app.loop disabled, exits 123 if OK
+# Test code, run this with above app.run disabled, exits 123 if OK
 import sys
 if '--test-123' in sys.argv:
   button = window.query_selector_unique ('.Button')
@@ -55,5 +54,5 @@ if '--test-123' in sys.argv:
   assert ok
   ok = window.synthesize_leave()
   assert ok
-  app.loop()
+  app.run()
   sys.exit (123)

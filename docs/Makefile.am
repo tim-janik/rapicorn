@@ -39,8 +39,8 @@ html/doc-version: @INGIT@ $(if $(NODOC),, $(git_index_file)) # conditionally reb
 # == Doxygen Build Rules ==
 HTMLMAN_FILES     	= mans/rapidrun.1.html mans/rapidres.1.html
 DOXYGEN_DOC_FILES	= rapicorn-core.hh rapicorn.hh docs/main.dox docs/apps.dox docs/contribute.dox docs/configuration.dox
-DOXYGEN_DOC_DIRS	= rcore/ aidacc/ rope/ tools/ ui/ docs/tutorial/
-DOXYGEN_EXCLUDES	= rope/cpy2rope.cc rope/cxx-client.[hc][hc] rcore/signalvariants.hh ui/sinfeximpl.hh ui/regionimpl.c \
+DOXYGEN_DOC_DIRS	= rcore/ aidacc/ tools/ ui/ docs/tutorial/
+DOXYGEN_EXCLUDES	= rcore/signalvariants.hh ui/sinfeximpl.hh ui/regionimpl.c \
 			  aidacc/CxxStub.py
 DOXYGEN_CHANGELOG       = $(builddir)/devel-changes
 DOXYGEN_CHANGELOG_TITLE	= "Development Changes"
