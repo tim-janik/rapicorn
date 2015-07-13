@@ -65,6 +65,18 @@ test_widget_usage()
   any1 = widget.get_user_data ("test-any");
   TASSERT (any1.kind() == Aida::ANY);
   TASSERT (any1.as_any().as_string() == "Wocks");
+  // INSTANCE as user_data
+  any1 <<= widget;
+  widget.set_user_data ("test-user-widget", any1);
+  any2 = widget.get_user_data ("test-user-widget");
+  TASSERT (any1 == any2);
+  WidgetH extracted_widget;
+  any2 >>= extracted_widget;
+  TASSERT (widget == extracted_widget);
+  widget.set_user_data ("test-user-widget", Any()); // delete
+  any2 = widget.get_user_data ("test-user-widget");
+  TASSERT (any1 != any2);
+  // LOCAL as user_data (not comparable)
   Foo f;
   f.f = -0.25;
   any1 <<= f;
@@ -72,6 +84,7 @@ test_widget_usage()
   any2 = widget.get_user_data ("test-foo");
   TASSERT (f.f == any_cast<Foo> (any2).f);
   TASSERT (any1 != any2); // Foo is not comparable
+  // LOCAL as user_data (comparable)
   ExtendedFoo e;
   e.f = 1.0;
   any1 <<= e;

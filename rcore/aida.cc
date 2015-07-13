@@ -190,6 +190,7 @@ enum_info<TypeKind> ()
     { RECORD,           "RECORD",               NULL, NULL },
     { INSTANCE,         "INSTANCE",             NULL, NULL },
     { REMOTE,           "REMOTE",               NULL, NULL },
+    { TRANSITION,       "TRANSITION",           NULL, NULL },
     { LOCAL,            "LOCAL",                NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
   };
@@ -335,6 +336,7 @@ Any::operator= (const Any &clone)
     case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL; break;
     case REMOTE:        u_.rhandle = new RemoteHandle (*clone.u_.rhandle); break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL; break;
+    case TRANSITION:    // u_.vint64 = clone.u_.vint64;
     default:            u_ = clone.u_;                                    break;
     }
   return *this;
@@ -363,6 +365,7 @@ Any::reset()
     case INSTANCE:      delete u_.ibase;                        break;
     case REMOTE:        delete u_.rhandle;                      break;
     case LOCAL:         delete u_.pholder;                      break;
+    case TRANSITION: ;
     default: ;
     }
   type_kind_ = UNTYPED;
@@ -449,6 +452,7 @@ Any::to_string (const String &field_name) const
     case RECORD:        if (u_.vfields) s += ", value=" + any_vector_to_string (*u_.vfields);   break;
     case INSTANCE:      s += string_format (", value=%p", u_.ibase ? u_.ibase->get() : NULL);   break;
     case REMOTE:        s += string_format (", value=#%08x", u_.rhandle->__aida_orbid__());     break;
+    case TRANSITION:    s += string_format (", value=%p", (void*) u_.vint64);                   break;
     default:            ;
     case UNTYPED:       break;
     }
@@ -464,9 +468,7 @@ Any::operator== (const Any &clone) const
   switch (kind())
     {
     case UNTYPED:     break;
-      // case UINT: // chain
-    case BOOL: case ENUM: // chain
-    case INT32:
+    case TRANSITION: case BOOL: case ENUM: case INT32: // chain
     case INT64:       if (u_.vint64 != clone.u_.vint64) return false;                     break;
     case FLOAT64:     if (u_.vdouble != clone.u_.vdouble) return false;                   break;
     case STRING:      if (u_.vstring() != clone.u_.vstring()) return false;               break;
@@ -512,7 +514,7 @@ Any::get_bool () const
 {
   switch (kind())
     {
-    case BOOL: case ENUM: case INT32:
+    case TRANSITION: case BOOL: case ENUM: case INT32:
     case INT64:         return u_.vint64 != 0;
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
@@ -727,6 +729,7 @@ Any::as_int () const
     case RECORD:        return !u_.vfields->empty();
     case INSTANCE:      return u_.ibase && u_.ibase->get();
     case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
+    case TRANSITION:    return u_.vint64 != 0;
     default:            return 0;
     }
 }
@@ -912,6 +915,130 @@ Any::operator<<= (const RemoteHandle &v)
   delete old;
 }
 
+void
+Any::to_transition (BaseConnection &base_connection)
+{
+  switch (kind())
+    {
+    case SEQUENCE:
+      if (u_.vanys)
+        for (size_t i = 0; i < u_.vanys->size(); i++)
+          (*u_.vanys)[i].to_transition (base_connection);
+      break;
+    case RECORD:
+      if (u_.vfields)
+        for (size_t i = 0; i < u_.vfields->size(); i++)
+          (*u_.vfields)[i].to_transition (base_connection);
+      break;
+    case ANY:
+      if (u_.vany)
+        u_.vany->to_transition (base_connection);
+      break;
+    case LOCAL: // FIXME: LOCAL::to_transition doesn't really make sense, should we warn?
+      // pass through for now
+      break;
+    case INSTANCE:
+      if (u_.ibase && u_.ibase->get())
+        {
+          ServerConnection *server_connection = dynamic_cast<ServerConnection*> (&base_connection);
+          assert (server_connection);
+          ProtoMsg *pm = ProtoMsg::_new (1);
+          server_connection->add_interface (*pm, *u_.ibase);
+          Rapicorn::Aida::ProtoReader pmr (*pm);
+          rekind (TRANSITION);
+          u_.vint64 = pmr.pop_orbid();
+          delete pm;
+        }
+      else
+        {
+          rekind (TRANSITION);
+          u_.vint64 = 0;
+        }
+      break;
+    case REMOTE:
+      if (u_.rhandle && u_.rhandle->__aida_orbid__())
+        {
+          ClientConnection *client_connection = dynamic_cast<ClientConnection*> (&base_connection);
+          assert (client_connection);
+          ProtoMsg *pm = ProtoMsg::_new (1);
+          client_connection->add_handle (*pm, *u_.rhandle);
+          Rapicorn::Aida::ProtoReader pmr (*pm);
+          rekind (TRANSITION);
+          u_.vint64 = pmr.pop_orbid();
+          delete pm;
+        }
+      else
+        {
+          rekind (TRANSITION);
+          u_.vint64 = 0;
+        }
+      break;
+    case UNTYPED: case BOOL: case ENUM: case INT32: case INT64: case FLOAT64: case STRING:
+      break;            // leave plain values alone
+    case TRANSITION: ;  // conversion must occour only once
+    default:
+      fatal_error (String (__func__) + ": invalid type kind: " + type_kind_name (kind()));
+    }
+}
+
+void
+Any::from_transition (BaseConnection &base_connection)
+{
+  switch (kind())
+    {
+      ServerConnection *server_connection;
+      ClientConnection *client_connection;
+    case SEQUENCE:
+      if (u_.vanys)
+        for (size_t i = 0; i < u_.vanys->size(); i++)
+          (*u_.vanys)[i].from_transition (base_connection);
+      break;
+    case RECORD:
+      if (u_.vfields)
+        for (size_t i = 0; i < u_.vfields->size(); i++)
+          (*u_.vfields)[i].from_transition (base_connection);
+      break;
+    case ANY:
+      if (u_.vany)
+        u_.vany->from_transition (base_connection);
+      break;
+    case LOCAL: // FIXME: LOCAL::from_transition shouldn't happen, should we warn?
+      // pass through for now
+      break;
+    case TRANSITION:
+      server_connection = dynamic_cast<ServerConnection*> (&base_connection);
+      client_connection = dynamic_cast<ClientConnection*> (&base_connection);
+      assert ((client_connection != NULL) ^ (server_connection != NULL));
+      if (server_connection)
+        {
+          ProtoMsg *pm = ProtoMsg::_new (1);
+          pm->add_orbid (u_.vint64);
+          Rapicorn::Aida::ProtoReader pmr (*pm);
+          ImplicitBaseP ibasep = server_connection->pop_interface (pmr);
+          delete pm;
+          rekind (INSTANCE);
+          u_.ibase = ibasep ? new ImplicitBaseP (ibasep) : NULL;
+        }
+      else // client_connection
+        {
+          ProtoMsg *pm = ProtoMsg::_new (1);
+          pm->add_orbid (u_.vint64);
+          Rapicorn::Aida::ProtoReader pmr (*pm);
+          RemoteMember<RemoteHandle> rmember;
+          client_connection->pop_handle (pmr, rmember);
+          delete pm;
+          rekind (REMOTE);
+          u_.rhandle = new RemoteHandle (rmember);
+        }
+      break;
+    case UNTYPED: case BOOL: case ENUM: case INT32: case INT64: case FLOAT64: case STRING:
+      break;                            // leave plain values alone
+    case INSTANCE: case REMOTE: ;       // conversion must occour only once
+    default:
+      fatal_error (String (__func__) + ": invalid type kind: " + type_kind_name (kind()));
+    }
+}
+
 // == OrbObject ==
 OrbObject::OrbObject (uint64 orbid) :
   orbid_ (orbid)
@@ -1004,15 +1131,17 @@ void
 ProtoMsg::add_any (const Any &vany, BaseConnection &bcon)
 {
   ProtoUnion &u = addu (ANY);
-  u.vany = bcon.any2remote (vany);
+  u.vany = new Any (vany);
+  u.vany->to_transition (bcon);
 }
 
-const Any&
+Any
 ProtoReader::pop_any (BaseConnection &bcon)
 {
   ProtoUnion &u = fb_popu (ANY);
-  bcon.any2local (*u.vany);
-  return *u.vany;
+  Any vany = *u.vany;
+  vany.from_transition (bcon);
+  return vany;
 }
 
 void
@@ -1116,19 +1245,18 @@ ProtoMsg::to_string() const
       switch (fbr.get_type())
         {
         case UNTYPED:
-        case VOID:      s += string_format (", %s", tn); fbr.skip();                               break;
-        case BOOL:      s += string_format (", %s: 0x%x", tn, fbr.pop_bool());                     break;
-        case ENUM:      s += string_format (", %s: 0x%x", tn, fbr.pop_evalue());                   break;
-        case INT32:     s += string_format (", %s: 0x%08x", tn, fbr.pop_int64());                  break;
-        case INT64:     s += string_format (", %s: 0x%016x", tn, fbr.pop_int64());                 break;
-        case FLOAT64:   s += string_format (", %s: %.17g", tn, fbr.pop_double());                  break;
-        case STRING:    s += string_format (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
-        case SEQUENCE:  s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
-        case RECORD:    s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
-        case INSTANCE:  s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
-        case REMOTE:    s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
-        case ANY:       s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
-        default:        s += string_format (", %u: <unknown>", fbr.get_type()); fbr.skip();        break;
+        case VOID:       s += string_format (", %s", tn); fbr.skip();                               break;
+        case BOOL:       s += string_format (", %s: 0x%x", tn, fbr.pop_bool());                     break;
+        case ENUM:       s += string_format (", %s: 0x%x", tn, fbr.pop_evalue());                   break;
+        case INT32:      s += string_format (", %s: 0x%08x", tn, fbr.pop_int64());                  break;
+        case INT64:      s += string_format (", %s: 0x%016x", tn, fbr.pop_int64());                 break;
+        case FLOAT64:    s += string_format (", %s: %.17g", tn, fbr.pop_double());                  break;
+        case STRING:     s += string_format (", %s: %s", tn, strescape (fbr.pop_string()).c_str()); break;
+        case SEQUENCE:   s += string_format (", %s: %p", tn, &fbr.pop_seq());                       break;
+        case RECORD:     s += string_format (", %s: %p", tn, &fbr.pop_rec());                       break;
+        case TRANSITION: s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
+        case ANY:        s += string_format (", %s: %p", tn, (void*) fbr.debug_bits()); fbr.skip(); break;
+        default:         s += string_format (", <unknown:%u>: %p", fbr.get_type(), (void*) fbr.debug_bits()); fbr.skip(); break;
         }
     }
   s += '}';
@@ -1732,18 +1860,6 @@ RemoteHandle
 BaseConnection::remote_origin()
 {
   AIDA_ASSERT (!"reached");
-}
-
-Any*
-BaseConnection::any2remote (const Any &any)
-{
-  return new Any (any);
-}
-
-void
-BaseConnection::any2local (Any &any)
-{
-  // any = any
 }
 
 // == ClientConnection ==

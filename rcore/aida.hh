@@ -123,6 +123,7 @@ enum TypeKind {
   RECORD         = 'R', ///< Record type containing named fields.
   INSTANCE       = 'C', ///< Interface instance type.
   REMOTE         = 'r', ///< RemoteHandle type.
+  TRANSITION     = 'T', ///< Instance or RemoteHandle in transition between remotes.
   LOCAL          = 'L', ///< Local object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
@@ -220,7 +221,6 @@ public:
   typedef std::vector<Field> FieldVector; ///< Vector of fields (named Any structures) for use in #RECORD types.
   typedef std::vector<Any> AnyVector;     ///< Vector of Any structures for use in #SEQUENCE types.
 protected:
-  bool  plain_zero_type (TypeKind kind);
   template<class Rec> static void any_from_record (Any &any, const Rec &record);
 private:
   TypeKind type_kind_;
@@ -350,8 +350,10 @@ public:
   template<typename T, REQUIRES< std::is_base_of<Any, T>::value > = true>              void set (const T &v) { return set_any (&v); }
   template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      void set (const T &v) { hold (new Holder<T> (v)); }
   // convenience
-  static Any                any_from_strings (const std::vector<std::string> &string_container);
-  std::vector<std::string>  any_to_strings   () const;
+  static Any               any_from_strings (const std::vector<std::string> &string_container);
+  std::vector<std::string> any_to_strings   () const;
+  void                     to_transition    (BaseConnection &base_connection);
+  void                     from_transition  (BaseConnection &base_connection);
   String     to_string (const String &field_name = "") const; ///< Retrieve string representation of Any for printouts.
   const Any& as_any   () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
   double     as_float () const; ///< Obtain BOOL, INT*, or FLOAT* contents as double float.
@@ -612,7 +614,7 @@ public:
   inline void add_evalue (int64 vint64)    { ProtoUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble)  { ProtoUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
   inline void add_string (const String &s) { ProtoUnion &u = addu (STRING); new (&u) String (s); }
-  inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (INSTANCE); u.vint64 = objid; }
+  inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (TRANSITION); u.vint64 = objid; }
   void        add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
@@ -681,8 +683,8 @@ public:
   inline int64           pop_evalue  () { ProtoUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double          pop_double  () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
   inline const String&   pop_string  () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
-  inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (INSTANCE); return u.vint64; }
-  const Any&             pop_any     (BaseConnection &bcon);
+  inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (TRANSITION); return u.vint64; }
+  Any                    pop_any     (BaseConnection &bcon);
   inline const ProtoMsg& pop_rec     () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
   inline const ProtoMsg& pop_seq     () { ProtoUnion &u = fb_popu (SEQUENCE); return *(ProtoMsg*) &u; }
   inline void operator>>= (uint32 &v)          { ProtoUnion &u = fb_popu (INT64); v = u.vint64; }
@@ -726,8 +728,6 @@ public:
   virtual bool           pending         () = 0; ///< Indicate whether any incoming events are pending that need to be dispatched.
   virtual void           dispatch        () = 0; ///< Dispatch a single event if any is pending.
   virtual RemoteHandle   remote_origin   () = 0;
-  virtual Any*           any2remote      (const Any&);
-  virtual void           any2local       (Any&);
 };
 
 /// Function typoe for internal signal handling.
@@ -811,19 +811,6 @@ inline
 Any::~Any ()
 {
   reset();
-}
-
-inline bool
-Any::plain_zero_type (TypeKind kind)
-{
-  switch (kind)
-    {
-    case UNTYPED: case BOOL: case INT32: case INT64: case FLOAT64: case ENUM:
-      return true;      // simple, properly initialized with u {0}
-    case STRING: case ANY: case SEQUENCE: case RECORD: case INSTANCE: case REMOTE:
-    default:
-      return false;     // complex types, needing special initializations
-    }
 }
 
 inline void
