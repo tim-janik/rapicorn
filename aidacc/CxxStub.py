@@ -590,14 +590,10 @@ class Generator:
       s += ' = 0'
     s += '; \t///< %s\n' % copydoc
     return s
-  def generate_aida_connection_impl (self, class_info):
-    return ''
   def generate_client_class_methods (self, class_info):
     s, classH = '', self.C4client (class_info)
     classH2 = (classH, classH)
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
-    if not bases (class_info):
-      s += self.generate_client_base_class_methods (class_info)
     s += '%s::%s ()' % classH2 # ctor
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % classH2 # dtor
@@ -617,15 +613,9 @@ class Generator:
     s += '  return target;\n'
     s += '}\n'
     return s
-  def generate_client_base_class_methods (self, tp):
-    s, classH = '', self.C4client (tp)
-    s += self.generate_aida_connection_impl (tp)
-    return s
   def generate_server_class_methods (self, tp):
     assert self.gen_mode == G4SERVANT
     s, classC, classH = '\n', self.C (tp), self.C4client (tp)
-    if not bases (tp):
-      s += self.generate_server_base_class_methods (tp)
     s += '%s::%s ()' % (classC, classC) # ctor
     s += '\n{}\n'
     s += '%s::~%s ()\n{} // define empty dtor to emit vtable\n' % (classC, classC) # dtor
@@ -649,10 +639,6 @@ class Generator:
       s += '  thl.push_back (Rapicorn::Aida::TypeHash (%s)); // %s\n' % (self.class_digest (an), an.name)
     s += '  return thl;\n'
     s += '}\n'
-    return s
-  def generate_server_base_class_methods (self, tp):
-    s, classC = '', self.C (tp)
-    s += self.generate_aida_connection_impl (tp)
     return s
   def generate_server_list_properties (self, class_info):
     def fill_range (ptype, hints):
@@ -857,10 +843,6 @@ class Generator:
     s += self.generate_proto_add_args ('rb', class_info, '', [(rval, ftype)], '')
     s += '  return &rb;\n'
     s += '}\n'
-    return s
-  def generate_server_list_types (self, tp, reglines):
-    assert self.gen_mode == G4SERVANT
-    s = ''
     return s
   def generate_signal_typename (self, functype, ctype, prefix = 'Signal'):
     return '%s_%s' % (prefix, functype.name)
@@ -1283,8 +1265,6 @@ class Generator:
           continue
         s += self.open_namespace (tp)
         if tp.storage == Decls.INTERFACE:
-          if not bases (tp):
-            s += self.generate_server_list_types (tp, reglines)
           for fl in tp.fields:
             s += self.generate_server_property_getter (tp, fl[0], fl[1], reglines)
             s += self.generate_server_property_setter (tp, fl[0], fl[1], reglines)
