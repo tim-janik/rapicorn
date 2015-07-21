@@ -46,6 +46,11 @@ EXTRA_DIST				+=      \
 	tests/t201-rcore-basics.outref
 t201-rcore-basics-test: tests/t201-rcore-basics tests/t201-rcore-basics.outref
 	$(Q) cd tests && $(TAPTOOL) --test-name t201-rcore-basics -- ./t201-rcore-basics
+	$(Q) rm -f $(TSTOUT)
+	$(Q) cd tests && $(tests_t204_assertions_env) ./t201-rcore-basics --backtrace		2>$(TSTOUT) && \
+	     grep -qi 'Backtrace'			$(TSTOUT) && \
+	     grep -qi 'in my_compare_func'		$(TSTOUT) ; $(TSTRESULT) "check backtrace()"
+	$(Q) cd tests && rm -f $(TSTOUT) && eval "$$TSTDIAGNOSE"
 make_check_targets += t201-rcore-basics-test
 
 # == t202-randomized-hashing ==
