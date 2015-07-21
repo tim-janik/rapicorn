@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "components-a1-server.hh"
 #include "components-a1-client.hh"
+#include "a1-server.cc"
 
 using namespace Rapicorn;
 
@@ -178,6 +179,8 @@ main (int   argc,
     assert (ok);
     assert (s1.i1 == s2.i1 && s1.p2 == s2.p2);
   }
+
+  test_a1_server();
 
   printout ("  %-8s %-60s  %s\n", "TEST", argv[0], "OK");
   return 0;

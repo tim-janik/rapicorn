@@ -102,4 +102,9 @@ interface Derived : Base {
   signal void           self_args        (Derived self_);
 };
 
+interface MiniServer {
+  void message (String blurb);
+  void quit    ();
+};
+
 } // A1
