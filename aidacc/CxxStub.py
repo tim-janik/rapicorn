@@ -3,7 +3,7 @@
 
 More details at http://www.rapicorn.org/
 """
-import Decls, GenUtils, TmplFiles, re, os
+import Decls, GenUtils, TmplFiles, re, os, collections
 
 clienthh_boilerplate = r"""
 // --- ClientHH Boilerplate ---
@@ -330,22 +330,22 @@ class Generator:
       ident = aprefix + ident + apostfix
       s += '  %s >>= %s;\n' % (fbr, ident)
     return s
-  def generate_aux_data_string (self, name, tp):
+  def generate_aux_data_string (self, tp, name = ''):
     s, prefix = '', (name + '.' if name else '')
     for k,v in tp.auxdata.items():
       qvalue = backslash_quote (aux_data_value_string (v))
       if qvalue:
         s += '    "%s%s=%s\\0"\n' % (prefix, k, qvalue)
-    if tp.storage == Decls.SEQUENCE:
-      s += self.generate_aux_data_string (prefix + tp.elements[0], tp.elements[1])
-    if tp.storage == Decls.RECORD:
+    if not name and tp.storage == Decls.SEQUENCE:
+      s += self.generate_aux_data_string (tp.elements[1], prefix + tp.elements[0])
+    if not name and tp.storage in (Decls.RECORD, Decls.INTERFACE):
       for fid, ftp in tp.fields:
-        s += self.generate_aux_data_string (prefix + fid, ftp)
+        s += self.generate_aux_data_string (ftp, prefix + fid)
     return s
   def generate_aux_data (self, type_info):
     s = ''
     s += 'const std::vector<const char*>&\n%s::__aida_aux_data__  () const\n{\n' % self.C (type_info)
-    aux_data_string = self.generate_aux_data_string ('', type_info)
+    aux_data_string = self.generate_aux_data_string (type_info)
     aux_data_string = aux_data_string if aux_data_string else '    ""\n'
     s += '  static const char aux_array[] =\n%s  ;\n' % aux_data_string
     s += '  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));\n'
@@ -429,6 +429,8 @@ class Generator:
     return self.digest2cbytes (class_info.type_hash())
   def internal_digest (self, class_info, tag):
     return self.digest2cbytes (class_info.tag_hash (tag + ' # Rapicorn::Aida:::internal'))
+  def any_method_digest (self, class_info, methodname):
+    return self.digest2cbytes (class_info.twoway_hash ('%s # internal-method' % methodname))
   def setter_digest (self, class_info, fident, ftype):
     setter_hash = class_info.property_hash ((fident, ftype), True)
     return self.digest2cbytes (setter_hash)
@@ -515,6 +517,7 @@ class Generator:
     if self.gen_mode == G4SERVANT:
       s += '  virtual ' + self.F ('Rapicorn::Aida::TypeHashList') + ' __aida_typelist__  () const override;\n'
       s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const override\t{ return "%s"; }\n' % classFull
+      s += self.generate_class_aux_method_decls (type_info)
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
@@ -607,6 +610,29 @@ class Generator:
     for atp in reduced_immediate_ancestors:
       s += '    this->%s::__accept_accessor__ (__visitor_);\n' % self.C (atp)
     s += '  }\n'
+    return s
+  def generate_class_aux_method_decls (self, tp):
+    assert self.gen_mode == G4SERVANT
+    s = ''
+    virtual = 'virtual '
+    s += '  %-38s __aida_aux_data__  (const std::string &name = "") const override;\n' % (virtual + 'std::vector<std::string>')
+    return s
+  def generate_server_class_aux_method_impls (self, tp):
+    assert self.gen_mode == G4SERVANT
+    s, classH = '', self.C (tp)
+    reduced_immediate_ancestors = self.interface_class_ancestors (tp)
+    # __aida_aux_data__
+    s += 'std::vector<std::string>\n%s::__aida_aux_data__ (const std::string &__n_) const\n{\n' % classH
+    aux_data_string = self.generate_aux_data_string (tp)
+    aux_data_string = aux_data_string if aux_data_string else '    ""\n'
+    s += '  static const char __s_[] =\n%s  ;\n' % aux_data_string
+    s += '  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));\n'
+    s += '  std::vector<std::string> __d_ (__c_.begin(), __c_.end());\n'
+    for atp in reduced_immediate_ancestors:
+      s += '  { const std::vector<std::string> &__t_ = this->%s::__aida_aux_data__ (__n_);\n' % self.C (atp)
+      s += '    __d_.insert (__d_.end(), __t_.begin(), __t_.end()); }\n'
+    s += '  return __d_;\n'
+    s += '}\n'
     return s
   def generate_client_class_methods (self, class_info):
     s, classH = '', self.C4client (class_info)
@@ -1206,6 +1232,7 @@ class Generator:
           if self.gen_servercc:
             s += self.open_namespace (tp)
             s += self.generate_server_class_methods (tp)
+            s += self.generate_server_class_aux_method_impls (tp)
             s += self.generate_server_list_properties (tp)
           if self.gen_clientcc:
             s += self.open_namespace (tp)
@@ -1285,9 +1312,10 @@ class Generator:
     nslist += [ Decls.Namespace ('Aida', nslist[-1], []) ]
     iface = Decls.TypeInfo ('ImplicitBase', Decls.INTERFACE, False)
     nslist[-1].add_type (iface) # iface.full_name() == Rapicorn::Aida::ImplicitBase
-    identifiers = {
-      '__aida_typelist__'       : 'Rapicorn::Aida::TypeHashList %s () const',
-    }
+    identifiers = collections.OrderedDict ((
+      ('__aida_typelist__',        'Rapicorn::Aida::TypeHashList %s () const'),
+      ('__aida_aux_data__',        'std::vector<std::string> %s (const std::string& = "") const'),
+    ))
     for k,v in identifiers.items():
       IDENT, digest = k.upper(), self.internal_digest (iface, v % k)
       s += 'static_assert (Rapicorn::Aida::TypeHash { AIDA_HASH_%s } ==\n' % IDENT

@@ -283,6 +283,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "MandatoryNamespace::FirstInterface"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          void_func             () = 0; 	///< See FirstInterface::void_func()
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
@@ -653,6 +654,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::UIWidgetArea"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual bool                          dummy    () const = 0; 	///< See UIWidgetArea::dummy
   virtual void                          dummy    (bool) = 0; 	///< See UIWidgetArea::dummy
@@ -705,6 +707,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Parent"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
   {}
@@ -728,6 +731,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Child"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
   {
@@ -753,6 +757,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::Descendant"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
   {
@@ -778,6 +783,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::GrandChild"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
   {
@@ -838,6 +844,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::QuickIface"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          simple_function   (int i = 9) = 0; 	///< See QuickIface::simple_function()
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
@@ -862,6 +869,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::MethodTestInterface"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          method_with_void           () = 0; 	///< See MethodTestInterface::method_with_void()
   virtual bool                          method_with_bools          (bool input,
@@ -908,6 +916,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::SignalTestInterface"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_result;
   typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_bool_result;
@@ -979,6 +988,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::ChildInheritingSignals"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const SrvT_QuickRecord &r, const SrvT_QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
@@ -1006,6 +1016,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::AnotherChild"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
   {
@@ -1031,6 +1042,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "InterfaceTests::PropertyTester"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual bool                          bool_prop      () const = 0; 	///< See PropertyTester::bool_prop
   virtual void                          bool_prop      (bool) = 0; 	///< See PropertyTester::bool_prop
@@ -1091,6 +1103,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "RapicornAidaTest::ButtonArea"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual std::string                   on_click   () const = 0; 	///< See ButtonArea::on_click
   virtual void                          on_click   (const std::string&) = 0; 	///< See ButtonArea::on_click
@@ -1132,6 +1145,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "RapicornAidaTest::PureMethods"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual int                           pure_method        (double f) = 0; 	///< See PureMethods::pure_method()
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
@@ -1159,6 +1173,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "Other::NameTests"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual void                          args_from_other_namespace (const InterfaceTests::SrvT_QuickRecord &qr,
                                                                    RapicornAidaTest::ClickType qe,
@@ -1188,6 +1203,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "BseTest::Compressor"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   virtual double                        threshold () const = 0; 	///< See Compressor::threshold
   virtual void                          threshold (double) = 0; 	///< See Compressor::threshold
@@ -1246,6 +1262,7 @@ protected:
 public:
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override;
   virtual std::string                    __aida_type_name__ () const override	{ return "BseTest::SoundModule"; }
+  virtual std::vector<std::string>       __aida_aux_data__  (const std::string &name = "") const override;
   virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
   template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
   {}
@@ -1303,6 +1320,16 @@ I_FirstInterfaceIface::__aida_typelist__ () const
   Rapicorn::Aida::TypeHashList thl;
   thl.push_back (Rapicorn::Aida::TypeHash (0x22113f623903ac14ULL, 0x3fe8e50c1a9a78d2ULL)); // FirstInterface
   return thl;
+}
+std::vector<std::string>
+I_FirstInterfaceIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
 }
 const Rapicorn::Aida::PropertyList&
 I_FirstInterfaceIface::__aida_properties__ ()
@@ -1936,6 +1963,16 @@ I_UIWidgetAreaIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0x11db82aaba1ee248ULL, 0xd2359653ff87e972ULL)); // UIWidgetArea
   return thl;
 }
+std::vector<std::string>
+I_UIWidgetAreaIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_UIWidgetAreaIface::__aida_properties__ ()
 {
@@ -1973,6 +2010,16 @@ I_ParentIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
   return thl;
 }
+std::vector<std::string>
+I_ParentIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_ParentIface::__aida_properties__ ()
 {
@@ -2008,6 +2055,18 @@ I_ChildIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
   thl.push_back (Rapicorn::Aida::TypeHash (0xf3967d3ac61708d2ULL, 0x4043a82003ee6f1eULL)); // Parent
   return thl;
+}
+std::vector<std::string>
+I_ChildIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  { const std::vector<std::string> &__t_ = this->I_ParentIface::__aida_aux_data__ (__n_);
+    __d_.insert (__d_.end(), __t_.begin(), __t_.end()); }
+  return __d_;
 }
 const Rapicorn::Aida::PropertyList&
 I_ChildIface::__aida_properties__ ()
@@ -2046,6 +2105,18 @@ I_DescendantIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
   return thl;
 }
+std::vector<std::string>
+I_DescendantIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  { const std::vector<std::string> &__t_ = this->I_ChildIface::__aida_aux_data__ (__n_);
+    __d_.insert (__d_.end(), __t_.begin(), __t_.end()); }
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_DescendantIface::__aida_properties__ ()
 {
@@ -2083,6 +2154,18 @@ I_GrandChildIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0xacf30fad3093ffcdULL, 0x4d8c65c035fba090ULL)); // Child
   thl.push_back (Rapicorn::Aida::TypeHash (0x846a6876889dd896ULL, 0xbe521465806f3d42ULL)); // Descendant
   return thl;
+}
+std::vector<std::string>
+I_GrandChildIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  { const std::vector<std::string> &__t_ = this->I_DescendantIface::__aida_aux_data__ (__n_);
+    __d_.insert (__d_.end(), __t_.begin(), __t_.end()); }
+  return __d_;
 }
 const Rapicorn::Aida::PropertyList&
 I_GrandChildIface::__aida_properties__ ()
@@ -2178,6 +2261,16 @@ I_QuickIfaceIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0x4524ee119d4e454cULL, 0xbeb61f7c3cc04f7dULL)); // QuickIface
   return thl;
 }
+std::vector<std::string>
+I_QuickIfaceIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_QuickIfaceIface::__aida_properties__ ()
 {
@@ -2213,6 +2306,16 @@ I_MethodTestInterfaceIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0x6bf684458ac5f01aULL, 0xf64c02611b807180ULL)); // MethodTestInterface
   return thl;
 }
+std::vector<std::string>
+I_MethodTestInterfaceIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_MethodTestInterfaceIface::__aida_properties__ ()
 {
@@ -2247,6 +2350,16 @@ I_SignalTestInterfaceIface::__aida_typelist__ () const
   Rapicorn::Aida::TypeHashList thl;
   thl.push_back (Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL)); // SignalTestInterface
   return thl;
+}
+std::vector<std::string>
+I_SignalTestInterfaceIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
 }
 const Rapicorn::Aida::PropertyList&
 I_SignalTestInterfaceIface::__aida_properties__ ()
@@ -2284,6 +2397,18 @@ I_ChildInheritingSignalsIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL)); // SignalTestInterface
   return thl;
 }
+std::vector<std::string>
+I_ChildInheritingSignalsIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  { const std::vector<std::string> &__t_ = this->I_SignalTestInterfaceIface::__aida_aux_data__ (__n_);
+    __d_.insert (__d_.end(), __t_.begin(), __t_.end()); }
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_ChildInheritingSignalsIface::__aida_properties__ ()
 {
@@ -2320,6 +2445,18 @@ I_AnotherChildIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0x2873064ee22c0249ULL, 0xd8fae6f300b8e408ULL)); // SignalTestInterface
   return thl;
 }
+std::vector<std::string>
+I_AnotherChildIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  { const std::vector<std::string> &__t_ = this->I_SignalTestInterfaceIface::__aida_aux_data__ (__n_);
+    __d_.insert (__d_.end(), __t_.begin(), __t_.end()); }
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_AnotherChildIface::__aida_properties__ ()
 {
@@ -2354,6 +2491,16 @@ I_PropertyTesterIface::__aida_typelist__ () const
   Rapicorn::Aida::TypeHashList thl;
   thl.push_back (Rapicorn::Aida::TypeHash (0xa37ab462c55a3b3cULL, 0x4f3fd1c9ad9689fbULL)); // PropertyTester
   return thl;
+}
+std::vector<std::string>
+I_PropertyTesterIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
 }
 const Rapicorn::Aida::PropertyList&
 I_PropertyTesterIface::__aida_properties__ ()
@@ -2404,6 +2551,16 @@ I_ButtonAreaIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0xec371b296fa57436ULL, 0x92e4310e386fc92eULL)); // ButtonArea
   return thl;
 }
+std::vector<std::string>
+I_ButtonAreaIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_ButtonAreaIface::__aida_properties__ ()
 {
@@ -2443,6 +2600,16 @@ I_PureMethodsIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0xddc2a514d04d3af5ULL, 0xc0046740434c0486ULL)); // PureMethods
   return thl;
 }
+std::vector<std::string>
+I_PureMethodsIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_PureMethodsIface::__aida_properties__ ()
 {
@@ -2481,6 +2648,16 @@ I_NameTestsIface::__aida_typelist__ () const
   thl.push_back (Rapicorn::Aida::TypeHash (0x542d40cd7d8fcd40ULL, 0x8c1782df29c9b936ULL)); // NameTests
   return thl;
 }
+std::vector<std::string>
+I_NameTestsIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
+}
 const Rapicorn::Aida::PropertyList&
 I_NameTestsIface::__aida_properties__ ()
 {
@@ -2518,6 +2695,16 @@ I_CompressorIface::__aida_typelist__ () const
   Rapicorn::Aida::TypeHashList thl;
   thl.push_back (Rapicorn::Aida::TypeHash (0x42057a05d51182dfULL, 0x6a0d69cda274433eULL)); // Compressor
   return thl;
+}
+std::vector<std::string>
+I_CompressorIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
 }
 const Rapicorn::Aida::PropertyList&
 I_CompressorIface::__aida_properties__ ()
@@ -2596,6 +2783,16 @@ I_SoundModuleIface::__aida_typelist__ () const
   Rapicorn::Aida::TypeHashList thl;
   thl.push_back (Rapicorn::Aida::TypeHash (0x06447b38b51e0198ULL, 0x848669199cc311deULL)); // SoundModule
   return thl;
+}
+std::vector<std::string>
+I_SoundModuleIface::__aida_aux_data__ (const std::string &__n_) const
+{
+  static const char __s_[] =
+    ""
+  ;
+  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
+  std::vector<std::string> __d_ (__c_.begin(), __c_.end());
+  return __d_;
 }
 const Rapicorn::Aida::PropertyList&
 I_SoundModuleIface::__aida_properties__ ()
@@ -5389,4 +5586,7 @@ static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);
 static_assert (Rapicorn::Aida::TypeHash { AIDA_HASH___AIDA_TYPELIST__ } ==
                Rapicorn::Aida::TypeHash { 0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL },
                "#define AIDA_HASH___AIDA_TYPELIST__ 	0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL");
+static_assert (Rapicorn::Aida::TypeHash { AIDA_HASH___AIDA_AUX_DATA__ } ==
+               Rapicorn::Aida::TypeHash { 0xf5eff824e399feadULL, 0x478543a4c99d371cULL },
+               "#define AIDA_HASH___AIDA_AUX_DATA__ 	0xf5eff824e399feadULL, 0x478543a4c99d371cULL");
 #endif /* __SRVT____testpass_idl */
