@@ -116,6 +116,21 @@ struct_from_xml (Struct &s, const String &xmldata)
   return true;
 }
 
+class AccessorVisitor {
+public:
+  // value accessor for Handle and Iface for bool, int
+  template<class Klass, class Value> void
+  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (Value), Value (Klass::*getter) () const)
+  {}
+  // struct value accessor for Handle and Iface for std::string
+  template<class Klass, class Value> void
+  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const)
+  {}
+  // instance value accessor for Iface
+  template<class Klass, class Value> void
+  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (Value*), std::shared_ptr<Value> (Klass::*getter) () const)
+  {}
+};
 
 // == main ==
 int
@@ -179,6 +194,16 @@ main (int   argc,
     assert (ok);
     assert (s1.i1 == s2.i1 && s1.p2 == s2.p2);
   }
+
+  // test compiling property visitor
+  if (0) // code wouldn't work, since there's no remote A1::Richie instance
+    {
+      A1::RichieIface &richie_iface = *(A1::RichieIface*) NULL;
+      AccessorVisitor av;
+      richie_iface.__accept_accessor__ (av);
+      A1::RichieH richie_handle;
+      richie_handle.__accept_accessor__ (av);
+    }
 
   test_a1_server();
 

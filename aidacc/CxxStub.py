@@ -547,6 +547,8 @@ class Generator:
     for m in type_info.methods:
       s += self.generate_method_decl (type_info, m, il)
     s += self.insertion_text ('class_scope:' + type_info.name)
+    # accept
+    s += self.generate_class_accept_accessor (type_info)
     s += '};\n'
     if self.gen_mode == G4SERVANT:
       s += 'void operator<<= (Rapicorn::Aida::ProtoMsg&, const %sP&);\n' % self.C (type_info)
@@ -588,6 +590,23 @@ class Generator:
     if self.gen_mode == G4SERVANT and functype.pure:
       s += ' = 0'
     s += '; \t///< %s\n' % copydoc
+    return s
+  def generate_class_accept_accessor (self, tp):
+    s, classH = '', self.C (tp)
+    reduced_immediate_ancestors = self.interface_class_ancestors (tp)
+    s += '  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)\n'
+    if not tp.fields and not reduced_immediate_ancestors:
+      return s + '  {}\n'
+    s += '  {\n'
+    for fname, ftype in tp.fields:
+      ctype = self.C (ftype)
+      reftype = ctype
+      if ftype.storage in (Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE, Decls.ANY):
+        pass # reftype = 'const %s&' % ctype
+      s += '    __visitor_ (*this, "%s", &%s::%s, &%s::%s);\n' % (fname, classH, fname, classH, fname)
+    for atp in reduced_immediate_ancestors:
+      s += '    this->%s::__accept_accessor__ (__visitor_);\n' % self.C (atp)
+    s += '  }\n'
     return s
   def generate_client_class_methods (self, class_info):
     s, classH = '', self.C4client (class_info)
