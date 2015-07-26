@@ -87,6 +87,38 @@ ImplicitBase::__aida_getter__ (const String &property_name)
   return prop->get_value (*this);
 }
 
+// == Parameter ==
+Parameter::~Parameter()
+{}
+
+void
+Parameter::set (const Any &any)
+{
+  return setter_ (any);
+}
+
+Any
+Parameter::get () const
+{
+  return getter_();
+}
+
+String
+Parameter::field_name () const
+{
+  return field_name_;
+}
+
+String
+Parameter::get_aux (const String &key, const String &fallback)
+{
+  const String name = field_name_ + "." + key + "=";
+  for (const auto &kv : aux_data_)
+    if (name.compare (0, name.size(), kv, 0, name.size()) == 0)
+      return kv.substr (name.size());
+  return fallback;
+}
+
 // == PropertyList ==
 Property::Property (const char *cident, const char *clabel, const char *cblurb, const char *chints) :
   ident (cident),

@@ -117,19 +117,13 @@ struct_from_xml (Struct &s, const String &xmldata)
 }
 
 class AccessorVisitor {
+  std::vector<Parameter> params_;
 public:
-  // value accessor for Handle and Iface for bool, int
-  template<class Klass, class Value> void
-  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (Value), Value (Klass::*getter) () const)
-  {}
-  // struct value accessor for Handle and Iface for std::string
-  template<class Klass, class Value> void
-  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const)
-  {}
-  // instance value accessor for Iface
-  template<class Klass, class Value> void
-  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (Value*), std::shared_ptr<Value> (Klass::*getter) () const)
-  {}
+  template<class Klass, typename SetterType, typename GetterType> void
+  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (SetterType), GetterType (Klass::*getter) () const)
+  {
+    params_.push_back (Parameter (instance, field_name, setter, getter));
+  }
 };
 
 // == main ==

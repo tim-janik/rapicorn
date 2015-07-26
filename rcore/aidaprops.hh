@@ -7,6 +7,45 @@
 
 namespace Rapicorn { namespace Aida {
 
+// == Parameter ==
+class Parameter {
+  const String                           field_name_;
+  const std::function<void (const Any&)> setter_;
+  const std::function<Any ()>            getter_;
+  const std::vector<String>              aux_data_;
+  const Any                              live_instance_; // keep Handle/Iface instance alive
+public:
+  virtual ~Parameter();
+  template<class Klass, class Value> // Handle/Iface accessors for plain value (bool, int, float)
+  Parameter (Klass &instance, const String &field_name, void (Klass::*setter) (Value), Value (Klass::*getter) () const) :
+    field_name_ (field_name),
+    setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
+    getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    aux_data_ (instance.__aida_aux__()),
+    live_instance_ (({ Any a; a.set (instance); a; }))
+  {}
+  template<class Klass, class Value> // Handle/Iface accessors for struct value (std::string, record)
+  Parameter (Klass &instance, const String &field_name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const) :
+    field_name_ (field_name),
+    setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
+    getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    aux_data_ (instance.__aida_aux__()),
+    live_instance_ (({ Any a; a.set (instance); a; }))
+  {}
+  template<class Klass, class Value> // Iface accessors for instance value
+  Parameter (Klass &instance, const String &field_name, void (Klass::*setter) (Value*), std::shared_ptr<Value> (Klass::*getter) () const) :
+    field_name_ (field_name),
+    setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<std::shared_ptr<Value> >().get()); }),
+    getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    aux_data_ (instance.__aida_aux__()),
+    live_instance_ (({ Any a; a.set (instance); a; }))
+  {}
+  void   set        (const Any &any);
+  Any    get        () const;
+  String field_name () const;
+  String get_aux    (const String &key, const String &fallback = "");
+};
+
 // == PropertyHostInterface ==
 typedef ImplicitBase PropertyHostInterface;
 
