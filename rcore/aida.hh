@@ -147,25 +147,29 @@ struct TypeHash {
 };
 typedef std::vector<TypeHash> TypeHashList;
 
+
 // == Internal Type Hashes ==
-#define AIDA_HASH___AIDA_TYPELIST__             0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL
+#define AIDA_HASH___AIDA_TYPELIST__    0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL
+#define AIDA_HASH___AIDA_AUX_DATA__    0xf5eff824e399feadULL, 0x478543a4c99d371cULL
+
 
 // == ImplicitBase ==
 /// Abstract base interface that all IDL interfaces are implicitely derived from.
 class ImplicitBase : public virtual std::enable_shared_from_this<ImplicitBase> {
 protected:
-  virtual                     ~ImplicitBase       () = 0; // abstract class
+  virtual                    ~ImplicitBase        () = 0; // abstract class
   virtual const PropertyList& __aida_properties__ () = 0; ///< Retrieve the list of properties for @a this instance.
   Property*                   __aida_lookup__     (const std::string &property_name);
   bool                        __aida_setter__     (const std::string &property_name, const std::string &value);
   std::string                 __aida_getter__     (const std::string &property_name);
 public:
-  virtual std::string        __aida_type_name__   () const = 0; ///< Retrieve the IDL type name of an instance.
-  virtual TypeHashList       __aida_typelist__    () const = 0;
+  virtual std::string         __aida_type_name__  () const = 0; ///< Retrieve the IDL type name of an instance.
+  virtual TypeHashList        __aida_typelist__   () const = 0;
+  virtual std::vector<String> __aida_aux_data__   (const String &name = "") const = 0;
   std::shared_ptr
-  <const ImplicitBase>       shared_from_this     () const { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
-  ImplicitBaseP              shared_from_this     ()       { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
-  ImplicitBaseP              shared_from_this     (std::nullptr_t);
+  <const ImplicitBase>        shared_from_this    () const { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
+  ImplicitBaseP               shared_from_this    ()       { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
+  ImplicitBaseP               shared_from_this    (std::nullptr_t);
 };
 
 
@@ -460,6 +464,7 @@ public:
   /*copy*/                RemoteHandle         (const RemoteHandle &y) : orbop_ (y.orbop_) {}
   virtual                ~RemoteHandle         ();
   TypeHashList            __aida_typelist__    () const;
+  std::vector<String>     __aida_aux_data__    (const String &name = "") const;
   ClientConnection*       __aida_connection__  () const { return orbop_->client_connection(); }
   uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
   static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }

@@ -21,7 +21,7 @@ public:
     field_name_ (field_name),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    aux_data_ (instance.__aida_aux__()),
+    aux_data_ (instance.__aida_aux_data__()),
     live_instance_ (({ Any a; a.set (instance); a; }))
   {}
   template<class Klass, class Value> // Handle/Iface accessors for struct value (std::string, record)
@@ -29,7 +29,7 @@ public:
     field_name_ (field_name),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    aux_data_ (instance.__aida_aux__()),
+    aux_data_ (instance.__aida_aux_data__()),
     live_instance_ (({ Any a; a.set (instance); a; }))
   {}
   template<class Klass, class Value> // Iface accessors for instance value
@@ -37,7 +37,7 @@ public:
     field_name_ (field_name),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<std::shared_ptr<Value> >().get()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    aux_data_ (instance.__aida_aux__()),
+    aux_data_ (instance.__aida_aux_data__()),
     live_instance_ (({ Any a; a.set (instance); a; }))
   {}
   void   set        (const Any &any);

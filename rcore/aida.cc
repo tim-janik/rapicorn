@@ -2426,7 +2426,7 @@ RemoteHandle::__aida_typelist__() const
 }
 
 static ProtoMsg*
-ImplicitBase___aida_typelist__ (ProtoReader &__f_)
+ImplicitBase____aida_typelist__ (ProtoReader &__f_)
 {
   assert_return (__f_.remaining() == 3 + 1, NULL);
   __f_.skip_header();
@@ -2441,8 +2441,42 @@ ImplicitBase___aida_typelist__ (ProtoReader &__f_)
   return &__r_;
 }
 
+std::vector<String>
+RemoteHandle::__aida_aux_data__ (const String &__n_) const
+{
+  return_unless (*this != NULL, std::vector<String>());
+  ProtoMsg &__b_ = *ProtoMsg::_new (3 + 1 + 1); // header + self + __n_
+  ProtoScopeCall2Way __o_ (__b_, *this, AIDA_HASH___AIDA_AUX_DATA__);
+  __b_ <<= __n_;
+  ProtoMsg *__r_ = __o_.invoke (&__b_);
+  assert_return (__r_ != NULL, std::vector<String>());
+  ProtoReader __f_ (*__r_);
+  __f_.skip_header();
+  Any __v_;
+  __f_ >>= __v_;
+  delete __r_;
+  return __v_.any_to_strings();
+}
+
+static ProtoMsg*
+ImplicitBase____aida_aux_data__ (ProtoReader &__b_)
+{
+  assert_return (__b_.remaining() == 3 + 1 + 1, NULL); // header + self + __n_
+  __b_.skip_header();
+  ImplicitBase *self = __b_.pop_instance<ImplicitBase>().get();
+  assert_return (self, NULL);
+  String __n_;
+  __b_ >>= __n_;
+  std::vector<String> __s_ = self->__aida_aux_data__ (__n_);
+  Any __v_ = Any::any_from_strings (__s_);
+  ProtoMsg &__r_ = *ProtoMsg::renew_into_result (__b_, MSGID_CALL_RESULT, AIDA_HASH___AIDA_AUX_DATA__);
+  __r_ <<= __v_;
+  return &__r_;
+}
+
 static const ServerConnection::MethodEntry implicit_base_methods[] = {
-  { AIDA_HASH___AIDA_TYPELIST__, ImplicitBase___aida_typelist__, },
+  { AIDA_HASH___AIDA_TYPELIST__, ImplicitBase____aida_typelist__, },
+  { AIDA_HASH___AIDA_AUX_DATA__, ImplicitBase____aida_aux_data__, },
 };
 static ServerConnection::MethodRegistry implicit_base_method_registry (implicit_base_methods);
 
