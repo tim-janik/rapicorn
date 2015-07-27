@@ -189,6 +189,9 @@ test_any()
       TASSERT (b.get<Bar>().s == ""); // b is cleared, so get() yields a temporary Bar()
       const Any c (Foo { 5 });
       TASSERT (c.get<Foo>() == Foo { 5 });
+      b.set (TEST_COFFEE_COFFEE);
+      TASSERT (b.kind() == ENUM);
+      TASSERT (b.get<TestEnum>() == TEST_COFFEE_COFFEE);
       printf ("  TEST   Aida basic functions                                            OK\n");
     }
   String s;

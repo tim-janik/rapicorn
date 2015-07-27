@@ -579,6 +579,13 @@ Any::set_int64 (int64 value)
   u_.vint64 = value;
 }
 
+void
+Any::set_enum64 (int64 value)
+{
+  ensure (ENUM);
+  u_.vint64 = value;
+}
+
 double
 Any::get_double () const
 {

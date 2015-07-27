@@ -286,6 +286,7 @@ private:
   void               set_bool    (bool value);
   int64              get_int64   () const;
   void               set_int64   (int64 value);
+  void               set_enum64  (int64 value);
   double             get_double  () const;
   void               set_double  (double value);
   std::string        get_string  () const;
@@ -293,7 +294,7 @@ private:
   template<typename Enum>
   Enum               get_enum    () const               { return Enum (get_int64()); }
   template<typename Enum>
-  void               set_enum    (Enum value)           { return set_int64 (value); }
+  void               set_enum    (Enum value)           { return set_enum64 (value); }
   const AnyVector*   get_seq     () const;
   void               set_seq     (const AnyVector *seq);
   const FieldVector* get_rec     () const;
