@@ -116,16 +116,6 @@ struct_from_xml (Struct &s, const String &xmldata)
   return true;
 }
 
-class AccessorVisitor {
-  std::vector<Parameter> params_;
-public:
-  template<class Klass, typename SetterType, typename GetterType> void
-  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (SetterType), GetterType (Klass::*getter) () const)
-  {
-    params_.push_back (Parameter (instance, field_name, setter, getter));
-  }
-};
-
 // == main ==
 int
 main (int   argc,
@@ -193,7 +183,8 @@ main (int   argc,
   if (0) // code wouldn't work, since there's no remote A1::Richie instance
     {
       A1::RichieIface &richie_iface = *(A1::RichieIface*) NULL;
-      AccessorVisitor av;
+      std::vector<Parameter> params;
+      AccessorVisitor av (params);
       richie_iface.__accept_accessor__ (av);
       A1::RichieH richie_handle;
       richie_handle.__accept_accessor__ (av);

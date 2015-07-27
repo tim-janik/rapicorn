@@ -118,8 +118,11 @@ interface Richie : Derived, Base, Other {
 };
 
 interface MiniServer {
-  void message (String blurb);
-  void quit    ();
+  bool    vbool;
+  float64 vf64;
+  String  vstr;
+  void   message       (String blurb);
+  void   quit          ();
 };
 
 } // A1
