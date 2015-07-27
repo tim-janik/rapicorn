@@ -29,16 +29,19 @@ class MiniServerImpl : public A1::MiniServerIface {
     virtual bool check    (const LoopState &state) override                         { return connection_.pending(); }
     virtual bool dispatch (const LoopState &state) override                         { connection_.dispatch(); return true; }
   };
-  bool   vbool_;
-  double vf64_;
-  String vstr_;
+  bool          vbool_;
+  double        vf64_;
+  String        vstr_;
+  A1::CountEnum count_;
 public:
-  virtual bool   vbool () const          override { return vbool_; }
-  virtual void   vbool (bool b)          override { vbool_ = b; }
-  virtual double vf64  () const          override { return vf64_; }
-  virtual void   vf64  (double f)        override { vf64_ = f; }
-  virtual String vstr  () const          override { return vstr_; }
-  virtual void   vstr  (const String &s) override { vstr_ = s; }
+  virtual bool          vbool () const          override { return vbool_; }
+  virtual void          vbool (bool b)          override { vbool_ = b; }
+  virtual double        vf64  () const          override { return vf64_; }
+  virtual void          vf64  (double f)        override { vf64_ = f; }
+  virtual String        vstr  () const          override { return vstr_; }
+  virtual void          vstr  (const String &s) override { vstr_ = s; }
+  virtual A1::CountEnum count () const          override { return count_; }
+  virtual void          count (A1::CountEnum v) override { count_ = v; }
   MiniServerImpl () : loop_ (MainLoop::create()), vbool_ (false) {}
   bool
   bind (const String &address)
@@ -108,6 +111,8 @@ test_server (A1::MiniServerH server)
   assert (param_vf64 != NULL);
   Parameter *param_vstr = parameter_vector_find (params, "vstr");
   assert (param_vstr != NULL);
+  Parameter *param_count = parameter_vector_find (params, "count");
+  assert (param_count != NULL);
   // vbool
   a = param_vbool->get();
   assert (a.kind() == Aida::BOOL);
@@ -134,6 +139,15 @@ test_server (A1::MiniServerH server)
   a.set ("ZOOT");
   param_vstr->set (a);
   assert (server.vstr() == "ZOOT");
+  // count
+  server.count (A1::TWO);
+  a = param_count->get();
+  assert (a.kind() == Aida::ENUM);
+  assert (a.get<A1::CountEnum>() == A1::TWO);
+  a.set (A1::THREE);
+  assert (a.kind() == Aida::ENUM);
+  param_count->set (a);
+  assert (server.count() == A1::THREE);
   // echo
   server.message ("  CHECK  MiniServer property access                                      OK");
 }

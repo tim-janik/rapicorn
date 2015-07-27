@@ -121,6 +121,7 @@ interface MiniServer {
   bool    vbool;
   float64 vf64;
   String  vstr;
+  CountEnum count;
   void   message       (String blurb);
   void   quit          ();
 };
