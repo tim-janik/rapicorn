@@ -120,6 +120,8 @@ test_server (A1::MiniServerH server)
   a.set (true);
   param_vbool->set (a);
   assert (server.vbool() == true);
+  assert (param_vbool->get_aux ("blurb") == "Just true or false");
+  assert (string_to_bool (param_vbool->get_aux ("default")) == true);
   // vf64
   a = param_vf64->get();
   assert (a.kind() == Aida::FLOAT64);
@@ -129,6 +131,10 @@ test_server (A1::MiniServerH server)
   Any b = param_vf64->get();
   assert (b.get<double>() == -0.75);
   assert (server.vf64() == -0.75);
+  assert (param_vf64->get_aux ("label") == "Float Value");
+  assert (string_to_float (param_vf64->get_aux ("min")) == 0.0);
+  assert (string_to_float (param_vf64->get_aux ("max")) == 1.0);
+  assert (string_to_float (param_vf64->get_aux ("step")) == 0.1);
   // vstr
   a = param_vstr->get();
   assert (a.kind() == Aida::STRING);
@@ -139,6 +145,7 @@ test_server (A1::MiniServerH server)
   a.set ("ZOOT");
   param_vstr->set (a);
   assert (server.vstr() == "ZOOT");
+  assert (param_vstr->get_aux ("default") == "foobar");
   // count
   server.count (A1::TWO);
   a = param_count->get();

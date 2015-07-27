@@ -118,10 +118,10 @@ interface Richie : Derived, Base, Other {
 };
 
 interface MiniServer {
-  bool    vbool;
-  float64 vf64;
-  String  vstr;
-  CountEnum count;
+  bool      vbool = Bool ("Boolean Value", "Just true or false", "rw", true);
+  float64   vf64  = Range ("Float Value", "A 64bit floating point value", "rw", -0.0, +1.0, +0.1, +0.5);
+  String    vstr  = String ("String Value", "Space for words or anything", "rw", "foobar");
+  CountEnum count = Enum ("Count Value", "One of the CountEnum values", "rw", TWO);
   void   message       (String blurb);
   void   quit          ();
 };
