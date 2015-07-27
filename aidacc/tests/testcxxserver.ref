@@ -1967,7 +1967,9 @@ std::vector<std::string>
 I_UIWidgetAreaIface::__aida_aux_data__ (const std::string &__n_) const
 {
   static const char __s_[] =
-    ""
+    "on_click.label=On CLick\0"
+    "on_click.blurb=Command on button1 click\0"
+    "on_click.hints=rw\0"
   ;
   std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
   std::vector<std::string> __d_ (__c_.begin(), __c_.end());
@@ -2700,7 +2702,10 @@ std::vector<std::string>
 I_CompressorIface::__aida_aux_data__ (const std::string &__n_) const
 {
   static const char __s_[] =
-    ""
+    "threshold.hints=w\0"
+    "threshold.default=0\0"
+    "ratio.hints=w\0"
+    "ratio.default=0\0"
   ;
   std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));
   std::vector<std::string> __d_ (__c_.begin(), __c_.end());
