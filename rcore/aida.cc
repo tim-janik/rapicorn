@@ -172,6 +172,33 @@ split_aux_char_array (const char *char_array, size_t length)
   return cv;
 }
 
+std::vector<String>
+combine_aux_vectors (const char *char_array, size_t length, const std::vector<String> &v1, const std::vector<String> &v2,
+                     const std::vector<String> &v3, const std::vector<String> &v4, const std::vector<String> &v5,
+                     const std::vector<String> &v6, const std::vector<String> &v7, const std::vector<String> &v8,
+                     const std::vector<String> &v9, const std::vector<String> &va, const std::vector<String> &vb,
+                     const std::vector<String> &vc, const std::vector<String> &vd, const std::vector<String> &ve,
+                     const std::vector<String> &vf)
+{
+  std::vector<const char*> cv = split_aux_char_array (char_array, length);
+  std::vector<std::string> sv (cv.begin(), cv.end());
+  sv.insert (sv.end(), v1.begin(), v1.end());
+  sv.insert (sv.end(), v2.begin(), v2.end());
+  sv.insert (sv.end(), v3.begin(), v3.end());
+  sv.insert (sv.end(), v4.begin(), v4.end());
+  sv.insert (sv.end(), v5.begin(), v5.end());
+  sv.insert (sv.end(), v6.begin(), v6.end());
+  sv.insert (sv.end(), v7.begin(), v7.end());
+  sv.insert (sv.end(), v8.begin(), v8.end());
+  sv.insert (sv.end(), v9.begin(), v9.end());
+  sv.insert (sv.end(), va.begin(), va.end());
+  sv.insert (sv.end(), vb.begin(), vb.end());
+  sv.insert (sv.end(), vc.begin(), vc.end());
+  sv.insert (sv.end(), vd.begin(), vd.end());
+  sv.insert (sv.end(), ve.begin(), ve.end());
+  sv.insert (sv.end(), vf.begin(), vf.end());
+  return sv;
+}
 
 // == TypeKind ==
 template<> EnumInfo

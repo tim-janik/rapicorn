@@ -109,6 +109,23 @@ enum_value_to_string (EnumType evalue)                  ///< Type-safe variant o
 { return Rapicorn::Aida::enum_info<EnumType>().value_to_string (evalue); }
 
 std::vector<const char*> split_aux_char_array (const char *char_array, size_t length); ///< Split @a char_array at '\\0'.
+///< Split @a char_array at '\\0' and merge with @a v1 .. @a vf.
+std::vector<String>      combine_aux_vectors (const char *char_array, size_t length, // Splits @a char_array at '\\0'
+                                              const std::vector<String> &v1 = std::vector<String>(),
+                                              const std::vector<String> &v2 = std::vector<String>(),
+                                              const std::vector<String> &v3 = std::vector<String>(),
+                                              const std::vector<String> &v4 = std::vector<String>(),
+                                              const std::vector<String> &v5 = std::vector<String>(),
+                                              const std::vector<String> &v6 = std::vector<String>(),
+                                              const std::vector<String> &v7 = std::vector<String>(),
+                                              const std::vector<String> &v8 = std::vector<String>(),
+                                              const std::vector<String> &v9 = std::vector<String>(),
+                                              const std::vector<String> &va = std::vector<String>(),
+                                              const std::vector<String> &vb = std::vector<String>(),
+                                              const std::vector<String> &vc = std::vector<String>(),
+                                              const std::vector<String> &vd = std::vector<String>(),
+                                              const std::vector<String> &ve = std::vector<String>(),
+                                              const std::vector<String> &vf = std::vector<String>());
 
 // == TypeKind ==
 /// Classification enum for the underlying type.
