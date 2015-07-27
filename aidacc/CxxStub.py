@@ -615,22 +615,21 @@ class Generator:
     assert self.gen_mode == G4SERVANT
     s = ''
     virtual = 'virtual '
-    s += '  %-38s __aida_aux_data__  (const std::string &name = "") const override;\n' % (virtual + 'std::vector<std::string>')
+    s += '  %-38s __aida_aux_data__ () const override;\n' % (virtual + 'std::vector<std::string>')
     return s
   def generate_server_class_aux_method_impls (self, tp):
     assert self.gen_mode == G4SERVANT
     s, classH = '', self.C (tp)
     reduced_immediate_ancestors = self.interface_class_ancestors (tp)
     # __aida_aux_data__
-    s += 'std::vector<std::string>\n%s::__aida_aux_data__ (const std::string &__n_) const\n{\n' % classH
+    s += 'std::vector<std::string>\n%s::__aida_aux_data__() const\n{\n' % classH
     aux_data_string = self.generate_aux_data_string (tp)
     aux_data_string = aux_data_string if aux_data_string else '    ""\n'
     s += '  static const char __s_[] =\n%s  ;\n' % aux_data_string
-    s += '  std::vector<const char*> __c_ = ::Rapicorn::Aida::split_aux_char_array (__s_, sizeof (__s_));\n'
-    s += '  std::vector<std::string> __d_ (__c_.begin(), __c_.end());\n'
+    s += '  static const std::vector<std::string> __d_ =\n    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_)'
     for atp in reduced_immediate_ancestors:
-      s += '  { const std::vector<std::string> &__t_ = this->%s::__aida_aux_data__ (__n_);\n' % self.C (atp)
-      s += '    __d_.insert (__d_.end(), __t_.begin(), __t_.end()); }\n'
+      s += ',\n                                           this->%s::__aida_aux_data__()' % self.C (atp)
+    s += ');\n'
     s += '  return __d_;\n'
     s += '}\n'
     return s
@@ -1314,7 +1313,7 @@ class Generator:
     nslist[-1].add_type (iface) # iface.full_name() == Rapicorn::Aida::ImplicitBase
     identifiers = collections.OrderedDict ((
       ('__aida_typelist__',        'Rapicorn::Aida::TypeHashList %s () const'),
-      ('__aida_aux_data__',        'std::vector<std::string> %s (const std::string& = "") const'),
+      ('__aida_aux_data__',        'std::vector<std::string> %s () const'),
     ))
     for k,v in identifiers.items():
       IDENT, digest = k.upper(), self.internal_digest (iface, v % k)

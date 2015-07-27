@@ -28,10 +28,10 @@ public:
   explicit         OneIface (int64 id) : testid_ (id) {}
   typedef std::shared_ptr<OneIface> OneIfaceP;
   // static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override               { return *(PropertyList*) NULL; }
-  virtual std::string                    __aida_type_name__ () const override               { return "Rapicorn::OneIface"; }
-  virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override               { return TypeHashList(); }
-  virtual std::vector<String>            __aida_aux_data__  (const String &name = "") const { return std::vector<String>(); }
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override { return *(PropertyList*) NULL; }
+  virtual std::string                    __aida_type_name__ () const override { return "Rapicorn::OneIface"; }
+  virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override { return TypeHashList(); }
+  virtual std::vector<String>            __aida_aux_data__  () const          { return std::vector<String>(); }
   int64 test_id() const { return testid_; }
   static OneIfaceP make_one_iface (int64 id)
   {
