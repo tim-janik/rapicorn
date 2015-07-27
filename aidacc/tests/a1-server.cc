@@ -30,12 +30,18 @@ class MiniServerImpl : public A1::MiniServerIface {
     virtual bool dispatch (const LoopState &state) override                         { connection_.dispatch(); return true; }
   };
   bool          vbool_;
+  int32         vi32_;
+  int64         vi64t_;
   double        vf64_;
   String        vstr_;
   A1::CountEnum count_;
 public:
   virtual bool          vbool () const          override { return vbool_; }
   virtual void          vbool (bool b)          override { vbool_ = b; }
+  virtual int32         vi32  () const          override { return vi32_; }
+  virtual void          vi32  (int32 i)         override { vi32_ = i; }
+  virtual int64         vi64t () const          override { return vi64t_; }
+  virtual void          vi64t (int64 i)         override { vi64t_ = i; }
   virtual double        vf64  () const          override { return vf64_; }
   virtual void          vf64  (double f)        override { vf64_ = f; }
   virtual String        vstr  () const          override { return vstr_; }
@@ -107,6 +113,10 @@ test_server (A1::MiniServerH server)
   // check known properties
   Parameter *param_vbool = parameter_vector_find (params, "vbool");
   assert (param_vbool != NULL);
+  Parameter *param_vi32 = parameter_vector_find (params, "vi32");
+  assert (param_vi32 != NULL);
+  Parameter *param_vi64t = parameter_vector_find (params, "vi64t");
+  assert (param_vi64t != NULL);
   Parameter *param_vf64 = parameter_vector_find (params, "vf64");
   assert (param_vf64 != NULL);
   Parameter *param_vstr = parameter_vector_find (params, "vstr");
@@ -122,19 +132,51 @@ test_server (A1::MiniServerH server)
   assert (server.vbool() == true);
   assert (param_vbool->get_aux ("blurb") == "Just true or false");
   assert (string_to_bool (param_vbool->get_aux ("default")) == true);
+  assert (param_vbool->get_aux ("hints") == "rw");
+  // vi32
+  a = param_vi32->get();
+  assert (a.kind() == Aida::INT64);
+  assert (a.get<int32>() == 0);
+  a.set (-750);
+  param_vi32->set (a);
+  Any b = param_vi32->get();
+  assert (b.get<double>() == -750);
+  assert (server.vi32() == -750);
+  assert (param_vi32->get_aux ("label") == "Int32 Value");
+  assert (string_to_int (param_vi32->get_aux ("min")) == -2147483648);
+  assert (string_to_int (param_vi32->get_aux ("max")) == 2147483647);
+  assert (string_to_int (param_vi32->get_aux ("step")) == 256);
+  assert (string_to_int (param_vi32->get_aux ("default")) == 32768);
+  assert (param_vi32->get_aux ("hints") == "rw");
+  // vi64t
+  a = param_vi64t->get();
+  assert (a.kind() == Aida::INT64);
+  assert (a.get<int32>() == 0);
+  a.set (-750);
+  param_vi64t->set (a);
+  b = param_vi64t->get();
+  assert (b.get<double>() == -750);
+  assert (server.vi64t() == -750);
+  assert (param_vi64t->get_aux ("label") == "Int64 Value");
+  assert (string_to_int (param_vi64t->get_aux ("min")) == -9223372036854775808ULL);
+  assert (string_to_int (param_vi64t->get_aux ("max")) == 9223372036854775807);
+  assert (string_to_int (param_vi64t->get_aux ("step")) == 65536);
+  assert (string_to_int (param_vi64t->get_aux ("default")) == -65536);
+  assert (param_vi64t->get_aux ("hints") == "rw");
   // vf64
   a = param_vf64->get();
   assert (a.kind() == Aida::FLOAT64);
   assert (a.get<double>() == 0);
   a.set (-0.75);
   param_vf64->set (a);
-  Any b = param_vf64->get();
+  b = param_vf64->get();
   assert (b.get<double>() == -0.75);
   assert (server.vf64() == -0.75);
   assert (param_vf64->get_aux ("label") == "Float Value");
   assert (string_to_float (param_vf64->get_aux ("min")) == 0.0);
   assert (string_to_float (param_vf64->get_aux ("max")) == 1.0);
   assert (string_to_float (param_vf64->get_aux ("step")) == 0.1);
+  assert (param_vf64->get_aux ("hints") == "rw");
   // vstr
   a = param_vstr->get();
   assert (a.kind() == Aida::STRING);
@@ -146,6 +188,7 @@ test_server (A1::MiniServerH server)
   param_vstr->set (a);
   assert (server.vstr() == "ZOOT");
   assert (param_vstr->get_aux ("default") == "foobar");
+  assert (param_vstr->get_aux ("hints") == "rw");
   // count
   server.count (A1::TWO);
   a = param_count->get();
@@ -155,6 +198,8 @@ test_server (A1::MiniServerH server)
   assert (a.kind() == Aida::ENUM);
   param_count->set (a);
   assert (server.count() == A1::THREE);
+  assert (param_count->get_aux ("hints") == "rw");
+  assert (string_to_int (param_count->get_aux ("default")) == 2);
   // echo
   server.message ("  CHECK  MiniServer property access                                      OK");
 }
