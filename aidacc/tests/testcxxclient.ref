@@ -288,8 +288,8 @@ struct ClnT_XFooRecord
   Rapicorn::Aida::Any           any3;
   /// @endcond
   inline                        ClnT_XFooRecord () { single_bool = 0; single_num = 0; num64 = 0; single_float = 0; sibling1 = 0; sibling2 = 0; multi1 = 0; multi2 = 0; multi3 = 0; multi4 = 0; enum_field = ExtensiveEnum (0); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooRecord"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_XFooRecord &other) const;
@@ -324,8 +324,8 @@ struct ClnT_XFooSequence : public std::vector<bool>
   typedef std::vector<bool> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::XFooSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -337,8 +337,8 @@ struct ClnT_IntSequence : public std::vector<int>
   typedef std::vector<int> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::IntSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -350,8 +350,8 @@ struct ClnT_FloatSequence : public std::vector<double>
   typedef std::vector<double> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::FloatSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -363,8 +363,8 @@ struct ClnT_StringSequence : public std::vector<std::string>
   typedef std::vector<std::string> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::StringSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -376,8 +376,8 @@ struct ClnT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::ExtensiveEnumSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -389,8 +389,8 @@ struct ClnT_RecordSequence : public std::vector<ClnT_XFooRecord>
   typedef std::vector<ClnT_XFooRecord> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::RecordSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -402,8 +402,8 @@ struct ClnT_SequenceSequence : public std::vector<ClnT_IntSequence>
   typedef std::vector<ClnT_IntSequence> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::SequenceSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -415,8 +415,8 @@ struct ClnT_InterfaceSequence : public std::vector<Rapicorn::Aida::RemoteMember<
   typedef std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::InterfaceSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -428,8 +428,8 @@ struct ClnT_AnySequence : public std::vector<Rapicorn::Aida::Any>
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::AnySequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -447,8 +447,8 @@ struct ClnT_NestedTypesRec
   ClnT_XFooSequence             seq;
   /// @endcond
   inline                        ClnT_NestedTypesRec () { }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesRec"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_NestedTypesRec &other) const;
@@ -467,8 +467,8 @@ struct ClnT_NestedTypesSeq : public std::vector<ClnT_NestedTypesRec>
   typedef std::vector<ClnT_NestedTypesRec> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NestedTypesSeq"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -484,8 +484,8 @@ struct ClnT_NewRecord
   ClnT_NestedTypesRec           ntr;
   /// @endcond
   inline                        ClnT_NewRecord () { i = 0; enum1 = Enum1 (0); }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::NewRecord"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_NewRecord &other) const;
@@ -511,8 +511,8 @@ struct ClnT_InnerRecord
   ClnT_NewRecord                rec;
   /// @endcond
   inline                        ClnT_InnerRecord () { x = 0; y = 0; }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Inner::InnerRecord"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_InnerRecord &other) const;
@@ -534,8 +534,8 @@ struct ClnT_Refer2Inner
   Inner::ClnT_InnerRecord       r;
   /// @endcond
   inline                        ClnT_Refer2Inner () { }
-  std::string                     __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "MandatoryNamespace::Refer2Inner"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_Refer2Inner &other) const;
@@ -560,8 +560,8 @@ struct ClnT_SomeRecord
   MandatoryNamespace::Inner::ClnT_InnerRecord r4;
   /// @endcond
   inline                        ClnT_SomeRecord () { }
-  std::string                     __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "OtherNamespace::SomeRecord"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_SomeRecord &other) const;
@@ -590,8 +590,8 @@ struct ClnT_RecordWithAuxdata
   std::string                   aux_str;
   /// @endcond
   inline                        ClnT_RecordWithAuxdata () { aux_bool = 0; aux32 = 0; aux64 = 0; auxf64 = 0; }
-  std::string                     __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "Auxdata::RecordWithAuxdata"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_RecordWithAuxdata &other) const;
@@ -745,8 +745,8 @@ struct ClnT_QuickRecord
   int                           int2;
   /// @endcond
   inline                        ClnT_QuickRecord () { int1 = 0; int2 = 0; }
-  std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickRecord"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_QuickRecord &other) const;
@@ -765,8 +765,8 @@ struct ClnT_QuickSequence : public std::vector<double>
   typedef std::vector<double> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
-  std::string                     __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "InterfaceTests::QuickSequence"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }
 };
@@ -1141,8 +1141,8 @@ struct ClnT_RecordForGroups
   double                        threshold2;
   /// @endcond
   inline                        ClnT_RecordForGroups () { i = 0; ratio = 0; ordinary_bool = 0; threshold1 = 0; threshold2 = 0; }
-  std::string                     __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
-  const std::vector<const char*>& __aida_aux_data__ () const;
+  std::string                   __aida_type_name__ () const	{ return "BseTest::RecordForGroups"; }
+  std::vector<std::string>      __aida_aux_data__ () const;
   Rapicorn::Aida::Any           __aida_to_any__   () { return Rapicorn::any_from_visitable (*this); }
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const ClnT_RecordForGroups &other) const;
@@ -1211,14 +1211,15 @@ FirstInterfaceHandle::void_func () /// See FirstInterface::void_func()
   fr = __o_.invoke (&__p_);
   if (AIDA_UNLIKELY (fr != NULL)) delete fr;
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_XFooRecord::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_XFooRecord::operator== (const ClnT_XFooRecord &other) const
@@ -1290,14 +1291,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_XFooRecord &self)
   fbr >>= self.any2;
   fbr >>= self.any3;
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_XFooSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_XFooSequence &self)
@@ -1318,14 +1320,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_XFooSequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_IntSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_IntSequence &self)
@@ -1346,14 +1349,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_IntSequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_FloatSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_FloatSequence &self)
@@ -1374,14 +1378,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_FloatSequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_StringSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_StringSequence &self)
@@ -1402,14 +1407,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_StringSequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_ExtensiveEnumSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_ExtensiveEnumSequence &self)
@@ -1430,14 +1436,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_ExtensiveEnumSequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_RecordSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_RecordSequence &self)
@@ -1458,14 +1465,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_RecordSequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_SequenceSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_SequenceSequence &self)
@@ -1486,14 +1494,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_SequenceSequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_InterfaceSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_InterfaceSequence &self)
@@ -1514,14 +1523,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_InterfaceSequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_AnySequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_AnySequence &self)
@@ -1542,14 +1552,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_AnySequence &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_NestedTypesRec::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_NestedTypesRec::operator== (const ClnT_NestedTypesRec &other) const
@@ -1573,14 +1584,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_NestedTypesRec &self)
   fbr >>= self.rec;
   fbr >>= self.seq;
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_NestedTypesSeq::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_NestedTypesSeq &self)
@@ -1601,14 +1613,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_NestedTypesSeq &self)
     fbr >>= self[k];
   }
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_NewRecord::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_NewRecord::operator== (const ClnT_NewRecord &other) const
@@ -1640,14 +1653,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_NewRecord &self)
 }
 
 namespace Inner {
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_InnerRecord::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_InnerRecord::operator== (const ClnT_InnerRecord &other) const
@@ -1675,14 +1689,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_InnerRecord &self)
   fbr >>= self.rec;
 }
 } // Inner
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_Refer2Inner::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_Refer2Inner::operator== (const ClnT_Refer2Inner &other) const
@@ -1706,14 +1721,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_Refer2Inner &self)
 } // MandatoryNamespace
 
 namespace OtherNamespace {
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_SomeRecord::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_SomeRecord::operator== (const ClnT_SomeRecord &other) const
@@ -1746,10 +1762,10 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_SomeRecord &self)
 } // OtherNamespace
 
 namespace Auxdata {
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_RecordWithAuxdata::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     "aux_bool.label=AuxBool\0"
     "aux_bool.blurb=A Boolean\0"
     "aux_bool.hints=rw\0"
@@ -1771,8 +1787,9 @@ ClnT_RecordWithAuxdata::__aida_aux_data__  () const
     "aux_str.hints=rw\0"
     "aux_str.default=auxtest3\0"
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_RecordWithAuxdata::operator== (const ClnT_RecordWithAuxdata &other) const
@@ -2154,14 +2171,15 @@ GrandChildHandle::__aida_cast__ (Rapicorn::Aida::RemoteHandle &other, const Rapi
     }
   return target;
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_QuickRecord::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_QuickRecord::operator== (const ClnT_QuickRecord &other) const
@@ -2185,14 +2203,15 @@ operator>>= (Rapicorn::Aida::ProtoReader &src, ClnT_QuickRecord &self)
   fbr >>= self.int1;
   fbr >>= self.int2;
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_QuickSequence::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     ""
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 inline void __attribute__ ((used))
 operator<<= (Rapicorn::Aida::ProtoMsg &dst, const ClnT_QuickSequence &self)
@@ -3693,15 +3712,16 @@ CompressorHandle::ratio (double value) /// See Compressor::ratio
   fr = __o_.invoke (&__p_);
   if (fr) delete fr;
 }
-const std::vector<const char*>&
+std::vector<std::string>
 ClnT_RecordForGroups::__aida_aux_data__  () const
 {
-  static const char aux_array[] =
+  static const char __s_[] =
     "ratio.hints=w\0"
     "ratio.default=0\0"
   ;
-  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));
-  return aux_data;
+  static const std::vector<std::string> __d_ =
+    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+  return __d_;
 }
 bool
 ClnT_RecordForGroups::operator== (const ClnT_RecordForGroups &other) const

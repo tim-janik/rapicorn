@@ -293,8 +293,8 @@ class Generator:
         if fl[1].storage in (Decls.BOOL, Decls.INT32, Decls.INT64, Decls.FLOAT64, Decls.ENUM):
           s += " %s = %s;" % (fl[0], self.mkzero (fl[1]))
       s += ' }\n'
-    s += '  ' + self.F ('std::string') + '  __aida_type_name__ () const\t{ return "%s"; }\n' % classFull
-    s += '  ' + self.F ('const std::vector<const char*>&') + '__aida_aux_data__ () const;\n'
+    s += '  ' + self.F ('std::string') + '__aida_type_name__ () const\t{ return "%s"; }\n' % classFull
+    s += '  ' + self.F ('std::vector<std::string>') + '__aida_aux_data__ () const;\n'
     if type_info.storage == Decls.SEQUENCE:
       s += '  ' + self.F ('Rapicorn::Aida::Any') + '__aida_to_any__   () { return Rapicorn::any_from_sequence (*this); }\n'
       s += '  ' + self.F ('void') + '__aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_sequence (any, *this); }\n'
@@ -344,12 +344,13 @@ class Generator:
     return s
   def generate_aux_data (self, type_info):
     s = ''
-    s += 'const std::vector<const char*>&\n%s::__aida_aux_data__  () const\n{\n' % self.C (type_info)
+    # __aida_aux_data__
+    s += 'std::vector<std::string>\n%s::__aida_aux_data__  () const\n{\n' % self.C (type_info)
     aux_data_string = self.generate_aux_data_string (type_info)
     aux_data_string = aux_data_string if aux_data_string else '    ""\n'
-    s += '  static const char aux_array[] =\n%s  ;\n' % aux_data_string
-    s += '  static const std::vector<const char*> aux_data = ::Rapicorn::Aida::split_aux_char_array (aux_array, sizeof (aux_array));\n'
-    s += '  return aux_data;\n'
+    s += '  static const char __s_[] =\n%s  ;\n' % aux_data_string
+    s += '  static const std::vector<std::string> __d_ =\n    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));\n'
+    s += '  return __d_;\n'
     s += '}\n'
     return s
   def generate_record_impl (self, type_info):
@@ -515,8 +516,8 @@ class Generator:
     if self.gen_mode == G4STUB:
       s += '  virtual ' + self.F ('/*Des*/') + '~%s () override;\n' % self.C (type_info) # dtor
     if self.gen_mode == G4SERVANT:
-      s += '  virtual ' + self.F ('Rapicorn::Aida::TypeHashList') + ' __aida_typelist__  () const override;\n'
-      s += '  virtual ' + self.F ('std::string') + ' __aida_type_name__ () const override\t{ return "%s"; }\n' % classFull
+      s += '  virtual ' + self.F ('Rapicorn::Aida::TypeHashList') + '__aida_typelist__  () const override;\n'
+      s += '  virtual ' + self.F ('std::string') + '__aida_type_name__ () const override\t{ return "%s"; }\n' % classFull
       s += self.generate_class_aux_method_decls (type_info)
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
@@ -615,7 +616,7 @@ class Generator:
     assert self.gen_mode == G4SERVANT
     s = ''
     virtual = 'virtual '
-    s += '  %-38s __aida_aux_data__ () const override;\n' % (virtual + 'std::vector<std::string>')
+    s += '  %-37s __aida_aux_data__ () const override;\n' % (virtual + 'std::vector<std::string>')
     return s
   def generate_server_class_aux_method_impls (self, tp):
     assert self.gen_mode == G4SERVANT
