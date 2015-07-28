@@ -131,7 +131,7 @@ test_server (A1::MiniServerH server)
   param_vbool->set (a);
   assert (server.vbool() == true);
   assert (param_vbool->get_aux ("blurb") == "Just true or false");
-  assert (string_to_bool (param_vbool->get_aux ("default")) == true);
+  assert (param_vbool->get_aux<bool> ("default") == true);
   assert (param_vbool->get_aux ("hints") == "rw");
   // vi32
   a = param_vi32->get();
@@ -143,10 +143,10 @@ test_server (A1::MiniServerH server)
   assert (b.get<double>() == -750);
   assert (server.vi32() == -750);
   assert (param_vi32->get_aux ("label") == "Int32 Value");
-  assert (string_to_int (param_vi32->get_aux ("min")) == -2147483648);
-  assert (string_to_int (param_vi32->get_aux ("max")) == 2147483647);
-  assert (string_to_int (param_vi32->get_aux ("step")) == 256);
-  assert (string_to_int (param_vi32->get_aux ("default")) == 32768);
+  assert (param_vi32->get_aux<int64> ("min") == -2147483648);
+  assert (param_vi32->get_aux<uint64> ("max") == 2147483647);
+  assert (param_vi32->get_aux<int64> ("step") == 256);
+  assert (param_vi32->get_aux<int64> ("default") == 32768);
   assert (param_vi32->get_aux ("hints") == "rw");
   // vi64t
   a = param_vi64t->get();
@@ -158,10 +158,10 @@ test_server (A1::MiniServerH server)
   assert (b.get<double>() == -750);
   assert (server.vi64t() == -750);
   assert (param_vi64t->get_aux ("label") == "Int64 Value");
-  assert (string_to_int (param_vi64t->get_aux ("min")) == -9223372036854775808ULL);
-  assert (string_to_int (param_vi64t->get_aux ("max")) == 9223372036854775807);
-  assert (string_to_int (param_vi64t->get_aux ("step")) == 65536);
-  assert (string_to_int (param_vi64t->get_aux ("default")) == -65536);
+  assert (param_vi64t->get_aux<int64> ("min") == -9223372036854775808ULL);
+  assert (param_vi64t->get_aux<uint64> ("max") == 9223372036854775807);
+  assert (param_vi64t->get_aux<int64> ("step") == 65536);
+  assert (param_vi64t->get_aux<int64> ("default") == -65536);
   assert (param_vi64t->get_aux ("hints") == "rw");
   // vf64
   a = param_vf64->get();
@@ -173,9 +173,9 @@ test_server (A1::MiniServerH server)
   assert (b.get<double>() == -0.75);
   assert (server.vf64() == -0.75);
   assert (param_vf64->get_aux ("label") == "Float Value");
-  assert (string_to_float (param_vf64->get_aux ("min")) == 0.0);
-  assert (string_to_float (param_vf64->get_aux ("max")) == 1.0);
-  assert (string_to_float (param_vf64->get_aux ("step")) == 0.1);
+  assert (param_vf64->get_aux<double> ("min") == 0.0);
+  assert (param_vf64->get_aux<double> ("max") == 1.0);
+  assert (param_vf64->get_aux<double> ("step") == 0.1);
   assert (param_vf64->get_aux ("hints") == "rw");
   // vstr
   a = param_vstr->get();
@@ -199,7 +199,7 @@ test_server (A1::MiniServerH server)
   param_count->set (a);
   assert (server.count() == A1::THREE);
   assert (param_count->get_aux ("hints") == "rw");
-  assert (string_to_int (param_count->get_aux ("default")) == 2);
+  assert (param_count->get_aux<int> ("default") == 2);
   // echo
   server.message ("  CHECK  MiniServer property access                                      OK");
 }
