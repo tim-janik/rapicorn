@@ -96,7 +96,7 @@ static Parameter*
 parameter_vector_find (std::vector<Parameter> &params, const String &name)
 {
   for (size_t i = 0; i < params.size(); i++)
-    if (params[i].field_name() == name)
+    if (params[i].name() == name)
       return &params[i];
   return NULL;
 }

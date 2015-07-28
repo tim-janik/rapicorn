@@ -104,16 +104,16 @@ Parameter::get () const
 }
 
 String
-Parameter::field_name () const
+Parameter::name () const
 {
-  return field_name_;
+  return name_;
 }
 
 String
-Parameter::get_aux_string (const String &key, const String &fallback)
+Parameter::find_aux (const std::vector<String> &auxvector, const String &field_name, const String &key, const String &fallback)
 {
-  const String name = field_name_ + "." + key + "=";
-  for (const auto &kv : aux_data_)
+  const String name = field_name + "." + key + "=";
+  for (const auto &kv : auxvector)
     if (name.compare (0, name.size(), kv, 0, name.size()) == 0)
       return kv.substr (name.size());
   return fallback;

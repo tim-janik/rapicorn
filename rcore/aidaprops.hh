@@ -8,44 +8,48 @@
 namespace Rapicorn { namespace Aida {
 
 // == Parameter ==
+/// Parameter encapsulates the logic and data involved in editing an object property.
 class Parameter {
-  const String                           field_name_;
-  const std::function<void (const Any&)> setter_;
-  const std::function<Any ()>            getter_;
-  const std::vector<String>              aux_data_;
-  const Any                              live_instance_; // keep Handle/Iface instance alive
-  String                                 get_aux_string (const String&, const String&);
+  const String                                               name_;
+  const Any                                                  instance_; // keeps Handle/Iface reference count
+  const std::function<void (const Any&)>                     setter_;
+  const std::function<Any ()>                                getter_;
+  const std::function<String (const String&, const String&)> getaux_;
+protected:
+  /// Helper to implement get_aux().
+  static String find_aux (const std::vector<String> &vec, const String &field_name, const String &key, const String &fallback);
 public:
   virtual ~Parameter();
-  template<class Klass, class Value> // Handle/Iface accessors for plain value (bool, int, float)
-  Parameter (Klass &instance, const String &field_name, void (Klass::*setter) (Value), Value (Klass::*getter) () const) :
-    field_name_ (field_name),
+  /// Create a Parameter to wrap (RemoteHandle or ImplicitBase derived) interface accessors for plain values (bool, int, float).
+  template<class Klass, class Value>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (Value), Value (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    aux_data_ (instance.__aida_aux_data__()),
-    live_instance_ (({ Any a; a.set (instance); a; }))
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
   {}
-  template<class Klass, class Value> // Handle/Iface accessors for struct value (std::string, record)
-  Parameter (Klass &instance, const String &field_name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const) :
-    field_name_ (field_name),
+  /// Create a Parameter to wrap (RemoteHandle or ImplicitBase derived) interface accessors for struct values (std::string, record).
+  template<class Klass, class Value>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    aux_data_ (instance.__aida_aux_data__()),
-    live_instance_ (({ Any a; a.set (instance); a; }))
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
   {}
-  template<class Klass, class Value> // Iface accessors for instance value
-  Parameter (Klass &instance, const String &field_name, void (Klass::*setter) (Value*), std::shared_ptr<Value> (Klass::*getter) () const) :
-    field_name_ (field_name),
+  /// Create a Parameter to wrap (ImplicitBase derived) interface accessors for instance/interface values.
+  template<class Klass, class Value>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (Value*), std::shared_ptr<Value> (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<std::shared_ptr<Value> >().get()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    aux_data_ (instance.__aida_aux_data__()),
-    live_instance_ (({ Any a; a.set (instance); a; }))
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
   {}
-  void   set        (const Any &any);
-  Any    get        () const;
-  String field_name () const;
-  template<typename Value = String>
-  Value  get_aux    (const String &key, const String &fallback = "") { return string_to_type<Value> (get_aux_string (key, fallback)); }
+  String                                  name    () const;          ///< Retrieve the wrapped value's field or property name.
+  void                                    set     (const Any &any);  ///< Set the wrapped value to the contents of @a any.
+  Any                                     get     () const;          ///< Retrieve the wrapped value as @a Any.
+  /// Fetch auxillary parameter information.
+  template<typename Value = String> Value get_aux (const String &key, const String &fallback = "")
+  { return string_to_type<Value> (getaux_ (key, fallback)); }
 };
 
 
