@@ -14,6 +14,7 @@ class Parameter {
   const std::function<Any ()>            getter_;
   const std::vector<String>              aux_data_;
   const Any                              live_instance_; // keep Handle/Iface instance alive
+  String                                 get_aux_string (const String&, const String&);
 public:
   virtual ~Parameter();
   template<class Klass, class Value> // Handle/Iface accessors for plain value (bool, int, float)
@@ -43,8 +44,10 @@ public:
   void   set        (const Any &any);
   Any    get        () const;
   String field_name () const;
-  String get_aux    (const String &key, const String &fallback = "");
+  template<typename Value = String>
+  Value  get_aux    (const String &key, const String &fallback = "") { return string_to_type<Value> (get_aux_string (key, fallback)); }
 };
+
 
 // == PropertyHostInterface ==
 typedef ImplicitBase PropertyHostInterface;

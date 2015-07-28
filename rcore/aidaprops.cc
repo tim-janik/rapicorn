@@ -110,7 +110,7 @@ Parameter::field_name () const
 }
 
 String
-Parameter::get_aux (const String &key, const String &fallback)
+Parameter::get_aux_string (const String &key, const String &fallback)
 {
   const String name = field_name_ + "." + key + "=";
   for (const auto &kv : aux_data_)
