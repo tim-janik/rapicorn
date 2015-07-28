@@ -257,7 +257,7 @@ class Generator:
     return '0'
   def generate_recseq_accept (self, type_info):
     s = ''
-    s += '  template<class Visitor> void  __accept__  (Visitor _visitor_)\n'
+    s += '  template<class Visitor> void  __accept__  (Visitor &_visitor_)\n'
     s += '  {\n'
     if type_info.storage == Decls.RECORD:
       for fname, ftype in type_info.fields:

@@ -322,7 +322,7 @@ struct SrvT_XFooRecord
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_XFooRecord &other) const;
   bool                          operator!=  (const SrvT_XFooRecord &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (single_bool, "single_bool");
     _visitor_ (single_num, "single_num");
@@ -481,7 +481,7 @@ struct SrvT_NestedTypesRec
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_NestedTypesRec &other) const;
   bool                          operator!=  (const SrvT_NestedTypesRec &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (rec, "rec");
     _visitor_ (seq, "seq");
@@ -518,7 +518,7 @@ struct SrvT_NewRecord
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_NewRecord &other) const;
   bool                          operator!=  (const SrvT_NewRecord &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (i, "i");
     _visitor_ (enum1, "enum1");
@@ -545,7 +545,7 @@ struct SrvT_InnerRecord
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_InnerRecord &other) const;
   bool                          operator!=  (const SrvT_InnerRecord &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (x, "x");
     _visitor_ (y, "y");
@@ -568,7 +568,7 @@ struct SrvT_Refer2Inner
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_Refer2Inner &other) const;
   bool                          operator!=  (const SrvT_Refer2Inner &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (r, "r");
   }
@@ -594,7 +594,7 @@ struct SrvT_SomeRecord
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_SomeRecord &other) const;
   bool                          operator!=  (const SrvT_SomeRecord &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (r1, "r1");
     _visitor_ (r2, "r2");
@@ -624,7 +624,7 @@ struct SrvT_RecordWithAuxdata
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_RecordWithAuxdata &other) const;
   bool                          operator!=  (const SrvT_RecordWithAuxdata &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (aux_bool, "aux_bool");
     _visitor_ (aux32, "aux32");
@@ -807,7 +807,7 @@ struct SrvT_QuickRecord
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_QuickRecord &other) const;
   bool                          operator!=  (const SrvT_QuickRecord &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (int1, "int1");
     _visitor_ (int2, "int2");
@@ -1235,7 +1235,7 @@ struct SrvT_RecordForGroups
   void                          __aida_from_any__ (const Rapicorn::Aida::Any &any) { return Rapicorn::any_to_visitable (any, *this); }
   bool                          operator==  (const SrvT_RecordForGroups &other) const;
   bool                          operator!=  (const SrvT_RecordForGroups &other) const { return !operator== (other); }
-  template<class Visitor> void  __accept__  (Visitor _visitor_)
+  template<class Visitor> void  __accept__  (Visitor &_visitor_)
   {
     _visitor_ (i, "i");
     _visitor_ (ratio, "ratio");
