@@ -597,7 +597,7 @@ class Generator:
   def generate_class_accept_accessor (self, tp):
     s, classH = '', self.C (tp)
     reduced_immediate_ancestors = self.interface_class_ancestors (tp)
-    s += '  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)\n'
+    s += '  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)\n'
     if not tp.fields and not reduced_immediate_ancestors:
       return s + '  {}\n'
     s += '  {\n'

@@ -260,7 +260,7 @@ public:
   static FirstInterfaceHandle   down_cast (RemoteHandle smh) { return smh == NULL ? FirstInterfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      FirstInterfaceHandle ();
   void                          void_func            (); 	///< See FirstInterface::void_func()
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
 typedef FirstInterfaceHandle FirstInterfaceH; ///< Convenience alias for the IDL type FirstInterface.
@@ -652,7 +652,7 @@ public:
   void                          void_method        (); 	///< See UIWidgetArea::void_method()
   std::string                   on_click2out       (); 	///< See UIWidgetArea::on_click2out()
   void                          on_click2in        (const std::string &command); 	///< See UIWidgetArea::on_click2in()
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     __visitor_ (*this, "dummy", &UIWidgetAreaHandle::dummy, &UIWidgetAreaHandle::dummy);
     __visitor_ (*this, "on_click", &UIWidgetAreaHandle::on_click, &UIWidgetAreaHandle::on_click);
@@ -673,7 +673,7 @@ public:
   template<class RemoteHandle>
   static ParentHandle           down_cast (RemoteHandle smh) { return smh == NULL ? ParentHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ParentHandle ();
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
 typedef ParentHandle ParentH; ///< Convenience alias for the IDL type Parent.
@@ -691,7 +691,7 @@ public:
   template<class RemoteHandle>
   static ChildHandle            down_cast (RemoteHandle smh) { return smh == NULL ? ChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ChildHandle ();
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->ParentHandle::__accept_accessor__ (__visitor_);
   }
@@ -711,7 +711,7 @@ public:
   template<class RemoteHandle>
   static DescendantHandle       down_cast (RemoteHandle smh) { return smh == NULL ? DescendantHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      DescendantHandle ();
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->ChildHandle::__accept_accessor__ (__visitor_);
   }
@@ -731,7 +731,7 @@ public:
   template<class RemoteHandle>
   static GrandChildHandle       down_cast (RemoteHandle smh) { return smh == NULL ? GrandChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      GrandChildHandle ();
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->DescendantHandle::__accept_accessor__ (__visitor_);
   }
@@ -787,7 +787,7 @@ public:
   static QuickIfaceHandle       down_cast (RemoteHandle smh) { return smh == NULL ? QuickIfaceHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      QuickIfaceHandle ();
   void                          simple_function  (int i = 9); 	///< See QuickIface::simple_function()
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
 typedef QuickIfaceHandle QuickIfaceH; ///< Convenience alias for the IDL type QuickIface.
@@ -828,7 +828,7 @@ public:
                                                            const Rapicorn::Aida::Any &optval); 	///< See MethodTestInterface::method_with_anys()
   QuickIfaceHandle              method_with_quickiface    (QuickIfaceHandle &input,
                                                            QuickIfaceHandle &iface0 = *(QuickIfaceHandle*) NULL); 	///< See MethodTestInterface::method_with_quickiface()
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
 typedef MethodTestInterfaceHandle MethodTestInterfaceH; ///< Convenience alias for the IDL type MethodTestInterface.
@@ -918,7 +918,7 @@ public:
   __Aida_Signal__interface_arg  sig_interface_arg () { return __Aida_Signal__interface_arg (*this, &SignalTestInterfaceHandle::__aida_connect__interface_arg); }
   __Aida_Signal__any_arg        sig_any_arg () { return __Aida_Signal__any_arg (*this, &SignalTestInterfaceHandle::__aida_connect__any_arg); }
   __Aida_Signal__self_args      sig_self_args () { return __Aida_Signal__self_args (*this, &SignalTestInterfaceHandle::__aida_connect__self_args); }
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
 typedef SignalTestInterfaceHandle SignalTestInterfaceH; ///< Convenience alias for the IDL type SignalTestInterface.
@@ -939,7 +939,7 @@ public:
   static ChildInheritingSignalsHandle down_cast (RemoteHandle smh) { return smh == NULL ? ChildInheritingSignalsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      ChildInheritingSignalsHandle ();
   __Aida_Signal__child_signal   sig_child_signal () { return __Aida_Signal__child_signal (*this, &ChildInheritingSignalsHandle::__aida_connect__child_signal); }
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->SignalTestInterfaceHandle::__accept_accessor__ (__visitor_);
   }
@@ -959,7 +959,7 @@ public:
   template<class RemoteHandle>
   static AnotherChildHandle     down_cast (RemoteHandle smh) { return smh == NULL ? AnotherChildHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      AnotherChildHandle ();
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->SignalTestInterfaceHandle::__accept_accessor__ (__visitor_);
   }
@@ -1001,7 +1001,7 @@ public:
   void                          self_prop      (PropertyTesterHandle); 	///< See PropertyTester::self_prop
   Rapicorn::Aida::Any           any_prop       () const; 	///< See PropertyTester::any_prop
   void                          any_prop       (const Rapicorn::Aida::Any&); 	///< See PropertyTester::any_prop
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     __visitor_ (*this, "bool_prop", &PropertyTesterHandle::bool_prop, &PropertyTesterHandle::bool_prop);
     __visitor_ (*this, "int32_prop", &PropertyTesterHandle::int32_prop, &PropertyTesterHandle::int32_prop);
@@ -1048,7 +1048,7 @@ public:
   void                          click_type (ClickType); 	///< See ButtonArea::click_type
   __Aida_Signal__check_activate sig_check_activate () { return __Aida_Signal__check_activate (*this, &ButtonAreaHandle::__aida_connect__check_activate); }
   __Aida_Signal__activate       sig_activate () { return __Aida_Signal__activate (*this, &ButtonAreaHandle::__aida_connect__activate); }
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     __visitor_ (*this, "on_click", &ButtonAreaHandle::on_click, &ButtonAreaHandle::on_click);
     __visitor_ (*this, "on_click2", &ButtonAreaHandle::on_click2, &ButtonAreaHandle::on_click2);
@@ -1074,7 +1074,7 @@ public:
   static PureMethodsHandle      down_cast (RemoteHandle smh) { return smh == NULL ? PureMethodsHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      PureMethodsHandle ();
   int                           pure_method       (double f); 	///< See PureMethods::pure_method()
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
 typedef PureMethodsHandle PureMethodsH; ///< Convenience alias for the IDL type PureMethods.
@@ -1098,7 +1098,7 @@ public:
   void                          args_from_other_namespace (const InterfaceTests::ClnT_QuickRecord &qr,
                                                            RapicornAidaTest::ClickType qe,
                                                            const OtherNamespace::ClnT_SomeRecord &sr); 	///< See NameTests::args_from_other_namespace()
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
 typedef NameTestsHandle NameTestsH; ///< Convenience alias for the IDL type NameTests.
@@ -1123,7 +1123,7 @@ public:
   void                          threshold (double); 	///< See Compressor::threshold
   double                        ratio     () const; 	///< See Compressor::ratio
   void                          ratio     (double); 	///< See Compressor::ratio
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     __visitor_ (*this, "threshold", &CompressorHandle::threshold, &CompressorHandle::threshold);
     __visitor_ (*this, "ratio", &CompressorHandle::ratio, &CompressorHandle::ratio);
@@ -1172,7 +1172,7 @@ public:
   template<class RemoteHandle>
   static SoundModuleHandle      down_cast (RemoteHandle smh) { return smh == NULL ? SoundModuleHandle() : __aida_cast__ (smh, smh.__aida_typelist__()); }
   explicit                      SoundModuleHandle ();
-  template<class Visitor> void  __accept_accessor__ (Visitor __visitor_)
+  template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
 typedef SoundModuleHandle SoundModuleH; ///< Convenience alias for the IDL type SoundModule.
