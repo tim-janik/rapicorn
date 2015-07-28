@@ -156,7 +156,7 @@ EnumInfo::value_from_string (const String &valuestring) const
     return string_to_int (valuestring);
 }
 
-std::vector<const char*>
+static std::vector<const char*>
 split_aux_char_array (const char *char_array, size_t length)
 {
   assert (char_array && length >= 1);
