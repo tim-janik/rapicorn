@@ -407,7 +407,7 @@ template<typename T> struct RemoveSharedPtr<const volatile ::std::shared_ptr<T>>
 /// Has__accept__<T,Visitor> - Check if @a T provides a member template __accept__<>(Visitor).
 template<class, class, class = void> struct Has__accept__ : std::false_type {};
 template<class T, class V>
-struct Has__accept__<T, V, void_t< decltype (std::declval<T>().template __accept__<V> (std::declval<V>())) >> : std::true_type {};
+struct Has__accept__<T, V, void_t< decltype (std::declval<T>().template __accept__<V> (*(V*) NULL)) >> : std::true_type {};
 
 namespace Aida { class Any; } // needed for Has__aida_from_any__
 
