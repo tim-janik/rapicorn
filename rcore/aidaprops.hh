@@ -66,6 +66,28 @@ public:
   /// Fetch auxillary parameter information.
   template<typename Value = String> Value get_aux (const String &key, const String &fallback = "")
   { return string_to_type<Value> (getaux_ (key, fallback)); }
+  class ListVisitor;
+};
+
+/// Visitor used in conjunction with __accept_accessor__() to build a Parameter list from instance properties.
+class Parameter::ListVisitor {
+  std::vector<Parameter>  default_vector_;
+  std::vector<Parameter> &parameters_;
+public:
+  /// Construct a parameter list visitor to add parameters to @a parameter_vector.
+  explicit ListVisitor (std::vector<Parameter> &parameter_vector) :
+    parameters_ (parameter_vector)
+  {}
+  /// Construct a parameter list visitor, access the resulting parameter list through parameters().
+  explicit ListVisitor () : parameters_ (default_vector_) {}
+  /// Visitation method called for each @a Klass @a instance property accessors.
+  template<class Klass, typename SetterType, typename GetterType> void
+  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (SetterType), GetterType (Klass::*getter) () const)
+  {
+    parameters_.push_back (Parameter (instance, field_name, setter, getter));
+  }
+  /// Retrieve the resulting parameter list.
+  std::vector<Parameter>& parameters() { return parameters_; }
 };
 
 

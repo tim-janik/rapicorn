@@ -79,19 +79,6 @@ a1_server_thread (AsyncBlockingQueue<String> *notify_queue)
   mini_server->run();
 }
 
-class AccessorVisitor {
-  std::vector<Parameter> &parameters_;
-public:
-  explicit AccessorVisitor (std::vector<Parameter> &parameters) :
-    parameters_ (parameters)
-  {}
-  template<class Klass, typename SetterType, typename GetterType> void
-  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (SetterType), GetterType (Klass::*getter) () const)
-  {
-    parameters_.push_back (Parameter (instance, field_name, setter, getter));
-  }
-};
-
 static Parameter*
 parameter_vector_find (std::vector<Parameter> &params, const String &name)
 {
@@ -106,9 +93,9 @@ test_server (A1::MiniServerH server)
 {
   Any a;
   // create Parameter for the server properties
-  std::vector<Parameter> params;
-  AccessorVisitor av (params);
+  Parameter::ListVisitor av;
   server.__accept_accessor__ (av);
+  std::vector<Parameter> &params = av.parameters();
   assert (params.size() > 0);
   // check known properties
   Parameter *param_vbool = parameter_vector_find (params, "vbool");

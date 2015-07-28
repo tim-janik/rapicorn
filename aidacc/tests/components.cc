@@ -184,7 +184,7 @@ main (int   argc,
     {
       A1::RichieIface &richie_iface = *(A1::RichieIface*) NULL;
       std::vector<Parameter> params;
-      AccessorVisitor av (params);
+      Parameter::ListVisitor av (params);
       richie_iface.__accept_accessor__ (av);
       A1::RichieH richie_handle;
       richie_handle.__accept_accessor__ (av);
