@@ -30,7 +30,7 @@ def auxillary_initializer_dict():
     auxillary_initializer_dict.cached_dict = d
   return auxillary_initializer_dict.cached_dict
 
-def parse2dict (type_info, name, arglist):
+def parse2dict (type_info, name, arglist, field_group):
   # find matching initializer
   adef = auxillary_initializer_dict().get ((type_info.storage, name), None)
   if not adef:
@@ -51,6 +51,9 @@ def parse2dict (type_info, name, arglist):
     eq = arg.find ('=')
     if eq >= 0:
       adict[arg[:eq]] = arg[eq+1:]
+  # assign field_group if any
+  if field_group:
+    adict['group'] = field_group
   return adict
 
 # define module exports

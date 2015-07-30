@@ -3718,6 +3718,7 @@ ClnT_RecordForGroups::__aida_aux_data__  () const
   static const char __s_[] =
     "ratio.hints=w\0"
     "ratio.default=0\0"
+    "ratio.group=Normal\0"
   ;
   static const std::vector<std::string> __d_ =
     ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));

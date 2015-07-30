@@ -166,7 +166,7 @@ class YYGlobals (object):
         continue
       name, typeinfo, (auxident,auxargs), field_group = field
       try:
-        adict = AuxData.parse2dict (typeinfo, auxident, auxargs)
+        adict = AuxData.parse2dict (typeinfo, auxident, auxargs, field_group)
       except AuxData.AuxError, ex:
         raise IdlError ('%s:%d: %s' % (ex.location[0], ex.location[1], str (ex)), '')
       typeinfo.update_auxdata (adict)

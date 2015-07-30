@@ -415,7 +415,7 @@ Const A = 17;    // new identifier in U2!
 
 namespace BseTest {
 interface Compressor {
-  group _("compat") {
+  group _("Compatibility Settings") {
     float64 threshold    = Num ("", "", "w");
     float64 ratio        = Num ("", "", "w", 0);
   };
