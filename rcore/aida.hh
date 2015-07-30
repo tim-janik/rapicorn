@@ -268,10 +268,10 @@ public:
   explicit  Any    ();                                  ///< Default initialize Any with no type.
   /// Initialize Any from a @a anany which is of Any or derived type.
   template<class V, REQUIRES< ::std::is_base_of< Any, typename std::remove_reference<V>::type >::value > = true> inline
-  explicit  Any (V &&anany)     { this->operator= (::std::forward<V> (anany)); }
+  explicit  Any (V &&anany) : Any()     { this->operator= (::std::forward<V> (anany)); }
   /// Initialize Any and set its contents from @a value.
   template<class V, REQUIRES< !::std::is_base_of< Any, typename std::remove_reference<V>::type >::value > = true> inline
-  explicit  Any    (V &&value)     { set (::std::forward<V> (value)); }
+  explicit  Any    (V &&value) : Any()  { set (::std::forward<V> (value)); }
   /*copy*/  Any    (const Any &clone);                  ///< Copy constructor.
   /*move*/  Any    (Any &&other);                       ///< Move constructor.
   Any& operator=   (const Any &clone);                  ///< Set @a this Any to a copy of @a clone.

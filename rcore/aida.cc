@@ -302,13 +302,13 @@ ImplicitBase::~ImplicitBase()
 RAPICORN_STATIC_ASSERT (sizeof (std::string) <= sizeof (Any)); // assert big enough Any impl
 
 Any::Any (const Any &clone) :
-  type_kind_ (UNTYPED), u_ {0}
+  Any()
 {
   this->operator= (clone);
 }
 
 Any::Any (Any &&other) :
-  type_kind_ (UNTYPED), u_ {0}
+  Any()
 {
   this->swap (other);
 }
