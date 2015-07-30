@@ -93,9 +93,14 @@ test_server (A1::MiniServerH server)
 {
   Any a;
   // create Parameter for the server properties
-  Parameter::ListVisitor av;
-  server.__accept_accessor__ (av);
-  std::vector<Parameter> &params = av.parameters();
+  std::vector<Parameter> params;
+  {
+    Parameter::ListVisitor av;
+    server.__accept_accessor__ (av);
+    const std::vector<Parameter> &cparams = av.parameters();
+    for (size_t i = 0; i < cparams.size(); i++)
+      params.push_back (cparams[i]);    // tests Parameter copies
+  }
   assert (params.size() > 0);
   // check known properties
   Parameter *param_vbool = parameter_vector_find (params, "vbool");
