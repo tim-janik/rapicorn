@@ -20,16 +20,32 @@ protected:
   static String find_aux (const std::vector<String> &vec, const String &field_name, const String &key, const String &fallback);
 public:
   virtual ~Parameter();
-  /// Create a Parameter to wrap (RemoteHandle or ImplicitBase derived) interface accessors for plain values (bool, int, float).
-  template<class Klass, class Value>
+  /// Create a Parameter to wrap RemoteHandle accessors for plain values (bool, int, float).
+  template<class Klass, class Value, REQUIRES< IsRemoteHandleDerived<Klass>::value > = true>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (Value), Value (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
+    setter_ ([instance, setter] (const Any &any) -> void { return (Klass (instance) .* setter) (any.get<Value>()); }),
+    getter_ ([instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    getaux_ ([instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+  {}
+  /// Create a Parameter to wrap ImplicitBase accessors for plain values (bool, int, float).
+  template<class Klass, class Value, REQUIRES< IsImplicitBaseDerived<Klass>::value > = true>
   Parameter (Klass &instance, const String &name, void (Klass::*setter) (Value), Value (Klass::*getter) () const) :
     name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
     getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
   {}
-  /// Create a Parameter to wrap (RemoteHandle or ImplicitBase derived) interface accessors for struct values (std::string, record).
-  template<class Klass, class Value>
+  /// Create a Parameter to wrap RemoteHandle accessors for struct values (std::string, record).
+  template<class Klass, class Value, REQUIRES< IsRemoteHandleDerived<Klass>::value > = true>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
+    setter_ ([instance, setter] (const Any &any) -> void { return (Klass (instance) .* setter) (any.get<Value>()); }),
+    getter_ ([instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    getaux_ ([instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+  {}
+  /// Create a Parameter to wrap ImplicitBase accessors for struct values (std::string, record).
+  template<class Klass, class Value, REQUIRES< IsImplicitBaseDerived<Klass>::value > = true>
   Parameter (Klass &instance, const String &name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const) :
     name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),

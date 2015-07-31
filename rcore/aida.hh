@@ -65,6 +65,10 @@ typedef std::shared_ptr<ClientConnection> ClientConnectionP;
 typedef std::shared_ptr<ServerConnection> ServerConnectionP;
 typedef ProtoMsg* (*DispatchFunc) (ProtoReader&);
 
+// == Trait Checks ==
+template<class T> using IsRemoteHandleDerived = ::std::integral_constant<bool, ::std::is_base_of<RemoteHandle, T>::value>;
+template<class T> using IsImplicitBaseDerived = ::std::integral_constant<bool, ::std::is_base_of<ImplicitBase, T>::value>;
+
 // == EnumValue ==
 /// Aida info for enumeration values.
 struct EnumValue {
@@ -282,8 +286,6 @@ private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
   template<class T>          using IsConstCharPtr        = ::std::is_same<const char*, typename ::std::decay<T>::type>;
-  template<class T>          using IsRemoteHandleDerived = ::std::integral_constant<bool, ::std::is_base_of<RemoteHandle, T>::value>;
-  template<class T>          using IsImplicitBaseDerived = ::std::integral_constant<bool, ::std::is_base_of<ImplicitBase, T>::value>;
   template<class T>          using IsImplicitBaseDerivedP =
     ::std::integral_constant<bool, (DerivesSharedPtr<T>::value &&
                                     ::std::is_base_of<ImplicitBase, typename RemoveSharedPtr<T>::type >::value)>;
