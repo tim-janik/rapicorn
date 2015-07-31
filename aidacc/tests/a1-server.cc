@@ -29,25 +29,34 @@ class MiniServerImpl : public A1::MiniServerIface {
     virtual bool check    (const LoopState &state) override                         { return connection_.pending(); }
     virtual bool dispatch (const LoopState &state) override                         { connection_.dispatch(); return true; }
   };
-  bool          vbool_;
-  int32         vi32_;
-  int64         vi64t_;
-  double        vf64_;
-  String        vstr_;
-  A1::CountEnum count_;
+  bool              vbool_;
+  int32             vi32_;
+  int64             vi64t_;
+  double            vf64_;
+  A1::CountEnum     count_;
+  String            vstr_;
+  A1::Location      location_;
+  A1::StringSeq     strings_;
+  A1::DerivedIfaceP derived_;
 public:
-  virtual bool          vbool () const          override { return vbool_; }
-  virtual void          vbool (bool b)          override { vbool_ = b; }
-  virtual int32         vi32  () const          override { return vi32_; }
-  virtual void          vi32  (int32 i)         override { vi32_ = i; }
-  virtual int64         vi64t () const          override { return vi64t_; }
-  virtual void          vi64t (int64 i)         override { vi64t_ = i; }
-  virtual double        vf64  () const          override { return vf64_; }
-  virtual void          vf64  (double f)        override { vf64_ = f; }
-  virtual String        vstr  () const          override { return vstr_; }
-  virtual void          vstr  (const String &s) override { vstr_ = s; }
-  virtual A1::CountEnum count () const          override { return count_; }
-  virtual void          count (A1::CountEnum v) override { count_ = v; }
+  virtual bool              vbool    () const                 override { return vbool_; }
+  virtual void              vbool    (bool b)                 override { vbool_ = b; }
+  virtual int32             vi32     () const                 override { return vi32_; }
+  virtual void              vi32     (int32 i)                override { vi32_ = i; }
+  virtual int64             vi64t    () const                 override { return vi64t_; }
+  virtual void              vi64t    (int64 i)                override { vi64t_ = i; }
+  virtual double            vf64     () const                 override { return vf64_; }
+  virtual void              vf64     (double f)               override { vf64_ = f; }
+  virtual A1::CountEnum     count    () const                 override { return count_; }
+  virtual void              count    (A1::CountEnum v)        override { count_ = v; }
+  virtual String            vstr     () const                 override { return vstr_; }
+  virtual void              vstr     (const String &s)        override { vstr_ = s; }
+  virtual A1::Location      location () const                 override { return location_; }
+  virtual void              location (const A1::Location &l)  override { location_ = l; }
+  virtual A1::StringSeq     strings  () const                 override { return strings_; }
+  virtual void              strings  (const A1::StringSeq &q) override { strings_ = q; }
+  virtual A1::DerivedIfaceP derived  () const                 override { return derived_; }
+  virtual void              derived  (A1::DerivedIface *d)    override { derived_ = shared_ptr_cast<A1::DerivedIface> (d); }
   MiniServerImpl () : loop_ (MainLoop::create()), vbool_ (false) {}
   bool
   bind (const String &address)
@@ -192,6 +201,31 @@ test_server (A1::MiniServerH server)
   assert (server.count() == A1::THREE);
   assert (param_count->get_aux ("hints") == "rw");
   assert (param_count->get_aux<int> ("default") == 2);
+  // XML serialize properties
+  {
+    XmlNodeP xnode = XmlNode::create_parent ("MiniServer", 0, 0, "");
+    ToXmlVisitor toxml_visitor (xnode);
+    server.__accept_accessor__ (toxml_visitor);
+    const String xml_result = xnode->xml_string (0, true);
+    assert (xml_result.find ("ZOOT") != xml_result.npos);
+    server.vstr ("");
+    FromXmlVisitor fromxml_visitor (xnode);
+    server.__accept_accessor__ (fromxml_visitor);
+    assert (server.vstr () == "ZOOT");
+  }
+  // INI serialize properties
+  {
+    IniWriter iniwriter;
+    ToIniVisitor toini_visitor (iniwriter, "MiniServer.");
+    server.__accept_accessor__ (toini_visitor);
+    const String ini_result = iniwriter.output();
+    assert (ini_result.find ("ZOOT") != ini_result.npos);
+    server.vstr ("");
+    IniFile inifile ("-", ini_result);
+    FromIniVisitor fromini_visitor (inifile, "MiniServer.");
+    server.__accept_accessor__ (fromini_visitor);
+    assert (server.vstr () == "ZOOT");
+  }
   // echo
   server.message ("  CHECK  MiniServer property access                                      OK");
 }
