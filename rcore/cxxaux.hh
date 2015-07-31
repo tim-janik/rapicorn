@@ -409,6 +409,11 @@ template<class, class, class = void> struct Has__accept__ : std::false_type {};
 template<class T, class V>
 struct Has__accept__<T, V, void_t< decltype (std::declval<T>().template __accept__<V> (*(V*) NULL)) >> : std::true_type {};
 
+/// Has__accept_accessor__<T,Visitor> - Check if @a T provides a member template __accept_accessor__<>(Visitor).
+template<class, class, class = void> struct Has__accept_accessor__ : std::false_type {};
+template<class T, class V>
+struct Has__accept_accessor__<T, V, void_t< decltype (std::declval<T>().template __accept_accessor__<V> (*(V*) NULL)) >> : std::true_type {};
+
 namespace Aida { class Any; } // needed for Has__aida_from_any__
 
 /// Has__aida_from_any__<T> - Check if @a T provides a member __aida_from_any__(const Any&).

@@ -22,6 +22,8 @@ public:
   template<class A> void        operator() (A &a, Name n);
 #endif // DOXYGEN
 
+  // dispatch for calls like: visitor (field, "field");
+
   template<class A,
            REQUIRES< IsBool<A>::value > = true> void
   operator() (A &a, Name n)
@@ -66,6 +68,103 @@ public:
                       std::is_class<A>::value) > = true> void
   operator() (A &a, Name n)
   { return derived()->visit_class (a, n); }
+
+  // dispatch for calls like: visitor (*this, "property", &set_property, &get_property);
+
+  template<class Klass, class Value,
+           REQUIRES< IsBool<Value>::value > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (Value), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_bool (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
+
+  template<class Klass, class Value,
+           REQUIRES< (std::is_integral<Value>::value && !IsBool<Value>::value) > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (Value), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_integral (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
+
+  template<class Klass, class Value,
+           REQUIRES< std::is_floating_point<Value>::value > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (Value), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_float (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
+
+  template<class Klass, class Value,
+           REQUIRES< std::is_enum<Value>::value > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (Value), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_enum (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
+
+  template<class Klass, class Value,
+           REQUIRES< (!Has__accept_accessor__<Value, DerivedVisitor>::value &&
+                      DerivesString<Value>::value) > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_string (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
+
+  template<class Klass, class Value,
+           REQUIRES< (!Has__accept_accessor__<Value, DerivedVisitor>::value &&
+                      DerivesVector<Value>::value) > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_vector (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
+
+  template<class Klass, class Value, // Value can be RemoteHandle
+           REQUIRES< Has__accept_accessor__<Value, DerivedVisitor>::value > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (Value), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_accessor_visitable (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
+
+  template<class Klass, class Value, // Value can be Record
+           REQUIRES< Has__accept__<Value, DerivedVisitor>::value > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_visitable (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
+
+  template<class Klass, class Value,
+           REQUIRES< (!Has__accept_accessor__<Value, DerivedVisitor>::value &&
+                      !DerivesString<Value>::value &&
+                      !DerivesVector<Value>::value &&
+                      std::is_class<Value>::value) > = true> void
+  operator() (Klass &instance, Name n, void (Klass::*setter) (Value), Value (Klass::*getter) () const)
+  {
+    Value v = (instance .* getter) (), tmp = v;
+    derived()->visit_class (tmp, n);
+    if (tmp != v)
+      (instance .* setter) (tmp);
+  }
 };
 
 
@@ -151,6 +250,12 @@ public:
   {
     ToIniVisitor child_visitor (iwriter_, prefix_ + name + ".");
     a.__accept__ (child_visitor);
+  }
+  template<class A> void
+  visit_accessor_visitable (A &a, Name name)
+  {
+    ToIniVisitor child_visitor (iwriter_, prefix_ + name + ".");
+    a.__accept_accessor__ (child_visitor);
   }
   template<class A> void
   visit_class (A &a, Name name)
@@ -239,6 +344,13 @@ public:
     a.__accept__ (child_visitor);
   }
   template<class A> void
+  visit_accessor_visitable (A &a, Name name)
+  {
+    const String next_prefix = prefix_ + name + ".";
+    FromIniVisitor child_visitor (ifile_, next_prefix);
+    a.__accept_accessor__ (child_visitor);
+  }
+  template<class A> void
   visit_class (A &a, Name name)
   {
     // "[unvisitable-class]"
@@ -312,6 +424,13 @@ public:
     XmlNodeP xchild = xnode_->create_child (name, 0, 0, "");
     ToXmlVisitor child_visitor (xchild);
     a.__accept__ (child_visitor);
+  }
+  template<class A> void
+  visit_accessor_visitable (A &a, Name name)
+  {
+    XmlNodeP xchild = xnode_->create_child (name, 0, 0, "");
+    ToXmlVisitor child_visitor (xchild);
+    a.__accept_accessor__ (child_visitor);
   }
   template<class A> void
   visit_class (A &a, Name name)
@@ -401,6 +520,16 @@ public:
       {
         FromXmlVisitor child_visitor (xchild);
         a.__accept__ (child_visitor);
+      }
+  }
+  template<class A> void
+  visit_accessor_visitable (A &a, Name name)
+  {
+    const XmlNodeP xchild = xnode_->find_child (name);
+    if (xchild)
+      {
+        FromXmlVisitor child_visitor (xchild);
+        a.__accept_accessor__ (child_visitor);
       }
   }
   template<class A> void
