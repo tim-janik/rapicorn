@@ -7,6 +7,90 @@
 
 namespace Rapicorn { namespace Aida {
 
+// == Parameter ==
+/// Parameter encapsulates the logic and data involved in editing an object property.
+class Parameter {
+  const String                                               name_;
+  const Any                                                  instance_; // keeps Handle/Iface reference count
+  const std::function<void (const Any&)>                     setter_;
+  const std::function<Any ()>                                getter_;
+  const std::function<String (const String&, const String&)> getaux_;
+protected:
+  /// Helper to implement get_aux().
+  static String find_aux (const std::vector<String> &vec, const String &field_name, const String &key, const String &fallback);
+public:
+  virtual ~Parameter();
+  /// Create a Parameter to wrap RemoteHandle accessors for plain values (bool, int, float).
+  template<class Klass, class Value, REQUIRES< IsRemoteHandleDerived<Klass>::value > = true>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (Value), Value (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
+    setter_ ([instance, setter] (const Any &any) -> void { return (Klass (instance) .* setter) (any.get<Value>()); }),
+    getter_ ([instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    getaux_ ([instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+  {}
+  /// Create a Parameter to wrap ImplicitBase accessors for plain values (bool, int, float).
+  template<class Klass, class Value, REQUIRES< IsImplicitBaseDerived<Klass>::value > = true>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (Value), Value (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
+    setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
+    getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+  {}
+  /// Create a Parameter to wrap RemoteHandle accessors for struct values (std::string, record).
+  template<class Klass, class Value, REQUIRES< IsRemoteHandleDerived<Klass>::value > = true>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
+    setter_ ([instance, setter] (const Any &any) -> void { return (Klass (instance) .* setter) (any.get<Value>()); }),
+    getter_ ([instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    getaux_ ([instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+  {}
+  /// Create a Parameter to wrap ImplicitBase accessors for struct values (std::string, record).
+  template<class Klass, class Value, REQUIRES< IsImplicitBaseDerived<Klass>::value > = true>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (const Value&), Value (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
+    setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
+    getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+  {}
+  /// Create a Parameter to wrap (ImplicitBase derived) interface accessors for instance/interface values.
+  template<class Klass, class Value>
+  Parameter (Klass &instance, const String &name, void (Klass::*setter) (Value*), std::shared_ptr<Value> (Klass::*getter) () const) :
+    name_ (name), instance_ (({ Any a; a.set (instance); a; })),
+    setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<std::shared_ptr<Value> >().get()); }),
+    getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+  {}
+  String                                  name    () const;          ///< Retrieve the wrapped value's field or property name.
+  void                                    set     (const Any &any);  ///< Set the wrapped value to the contents of @a any.
+  Any                                     get     () const;          ///< Retrieve the wrapped value as @a Any.
+  /// Fetch auxillary parameter information.
+  template<typename Value = String> Value get_aux (const String &key, const String &fallback = "")
+  { return string_to_type<Value> (getaux_ (key, fallback)); }
+  class ListVisitor;
+};
+
+/// Visitor used in conjunction with __accept_accessor__() to build a Parameter list from instance properties.
+class Parameter::ListVisitor {
+  std::vector<Parameter>  default_vector_;
+  std::vector<Parameter> &parameters_;
+public:
+  /// Construct a parameter list visitor to add parameters to @a parameter_vector.
+  explicit ListVisitor (std::vector<Parameter> &parameter_vector) :
+    parameters_ (parameter_vector)
+  {}
+  /// Construct a parameter list visitor, access the resulting parameter list through parameters().
+  explicit ListVisitor () : parameters_ (default_vector_) {}
+  /// Visitation method called for each @a Klass @a instance property accessors.
+  template<class Klass, typename SetterType, typename GetterType> void
+  operator() (Klass &instance, const char *field_name, void (Klass::*setter) (SetterType), GetterType (Klass::*getter) () const)
+  {
+    parameters_.push_back (Parameter (instance, field_name, setter, getter));
+  }
+  /// Retrieve the resulting parameter list.
+  std::vector<Parameter>& parameters() { return parameters_; }
+};
+
+
 // == PropertyHostInterface ==
 typedef ImplicitBase PropertyHostInterface;
 

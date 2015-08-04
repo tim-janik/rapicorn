@@ -164,9 +164,9 @@ class YYGlobals (object):
     for field in fieldlist:
       if not field[2]:
         continue
-      name,typeinfo,(auxident,auxargs) = field
+      name, typeinfo, (auxident,auxargs), field_group = field
       try:
-        adict = AuxData.parse2dict (typeinfo, auxident, auxargs)
+        adict = AuxData.parse2dict (typeinfo, auxident, auxargs, field_group)
       except AuxData.AuxError, ex:
         raise IdlError ('%s:%d: %s' % (ex.location[0], ex.location[1], str (ex)), '')
       typeinfo.update_auxdata (adict)
@@ -529,9 +529,9 @@ rule auxinit:
         '\)'                                    {{ return (tiident, tiargs) }}
 
 rule field_decl:
-        typename IDENT                          {{ ftype = yy.link_type (typename, IDENT); ftuple = (IDENT, ftype, () ) }}
-        [ '=' auxinit                           {{ ftuple = (ftuple[0], ftuple[1], auxinit) }}
-        ] ';'                                   {{ return [ ftuple ] }}
+        typename IDENT                          {{ ftype = yy.link_type (typename, IDENT); fdecl = [ IDENT, ftype, (), None ] }}
+        [ '=' auxinit                           {{ fdecl = [ fdecl[0], fdecl[1], auxinit, None ] }}
+        ] ';'                                   {{ return fdecl }}
 
 rule method_args:
         typename IDENT                          {{ aident = IDENT; adef = None; atype = yy.link_type (typename, IDENT) }}
@@ -561,14 +561,14 @@ rule field_stream_method_signal_decl:
                                                 {{ flags = { 'void' : kind in ('func', 'signal'), 'stream' : kind == 'stream' } }}
                                                 {{ dtype = yy.link_type (dtname, dident, **flags) }}
                                                 {{ if kind == 'signal': dtype.set_collector (coll) }}
-                                                {{ if kind == 'field': return (kind, (dident, dtype, daux)) }}
+                                                {{ if kind == 'field': return (kind, [ dident, dtype, daux, None ]) }}
                                                 {{ return (kind, (dident, dtype, daux, fargs, pure)) }}
 
 rule field_group:
                'group'                          {{ gfields = [] }}
                ('_' '\(' STRING '\)'            {{ gident = STRING }}
                |         STRING                 {{ gident = STRING }}
-               ) '{' ( field_decl               {{ gfields += field_decl }}
+               ) '{' ( field_decl               {{ field_decl[3] = gident ; gfields += [ field_decl ] }}
                  )+ '}' ';'                     {{ return gfields }}
 rule interface:
         'interface'                             {{ ipls = []; ifls = []; prq = [] }}
@@ -594,7 +594,7 @@ rule record:
         ( ';'                                   {{ yy.nsadd_record (rident, rfields, True) }}
         |
           '{'
-            ( field_decl                        {{ rfields = rfields + field_decl }}
+            ( field_decl                        {{ rfields = rfields + [ field_decl ] }}
             | field_group                       {{ rfields = rfields + field_group }}
             | info_assignment                   {{ }}
             )+
@@ -609,7 +609,7 @@ rule sequence:
             ( info_assignment                   {{ }}
             )*
             ( field_decl                        {{ if len (sfields): raise OverflowError ("too many fields in sequence") }}
-                                                {{ sfields = sfields + field_decl }}
+                                                {{ sfields = sfields + [ field_decl ] }}
             )
             ( info_assignment                   {{ }}
             )*

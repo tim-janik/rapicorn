@@ -28,9 +28,10 @@ public:
   explicit         OneIface (int64 id) : testid_ (id) {}
   typedef std::shared_ptr<OneIface> OneIfaceP;
   // static Rapicorn::Aida::BaseConnection* __aida_connection__();
-  virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override   { return TypeHashList(); }
-  virtual std::string                    __aida_type_name__ () const override   { return "Rapicorn::OneIface"; }
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override   { return *(PropertyList*) NULL; }
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override { return *(PropertyList*) NULL; }
+  virtual std::string                    __aida_type_name__ () const override { return "Rapicorn::OneIface"; }
+  virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override { return TypeHashList(); }
+  virtual std::vector<String>            __aida_aux_data__  () const          { return std::vector<String>(); }
   int64 test_id() const { return testid_; }
   static OneIfaceP make_one_iface (int64 id)
   {
@@ -188,6 +189,9 @@ test_any()
       TASSERT (b.get<Bar>().s == ""); // b is cleared, so get() yields a temporary Bar()
       const Any c (Foo { 5 });
       TASSERT (c.get<Foo>() == Foo { 5 });
+      b.set (TEST_COFFEE_COFFEE);
+      TASSERT (b.kind() == ENUM);
+      TASSERT (b.get<TestEnum>() == TEST_COFFEE_COFFEE);
       printf ("  TEST   Aida basic functions                                            OK\n");
     }
   String s;

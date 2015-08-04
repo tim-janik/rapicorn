@@ -74,12 +74,8 @@ check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
 	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) sed -i -e '1i#define _(string) string\' $(TSTOUT)				# '''''
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
-check-CxxStub-skeleton-gen: $(srcdir)/testcxxskels.ref
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G server-skel -G strip-path=$(abs_top_srcdir)/ \
-	  $(srcdir)/testpass.idl -o - > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
-	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxskels.ref'"
-check: check-CxxStub-server-gen check-CxxStub-client-gen check-CxxStub-skeleton-gen
-EXTRA_DIST += testcxxserver.ref testcxxclient.ref testcxxskels.ref
+check: check-CxxStub-server-gen check-CxxStub-client-gen
+EXTRA_DIST += testcxxserver.ref testcxxclient.ref
 
 # == Test CxxStub Code Compilation ==
 check-CxxStub-server-code: $(srcdir)/testcxxserver.ref check-CxxStub-client-gen
@@ -93,14 +89,7 @@ check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) cp $(srcdir)/testcxxclient.ref testcxxclient.cc
 	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxclient.cc testcxxclient.o
-check-CxxStub-skeleton-code: $(srcdir)/testcxxskels.ref
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh \
-	  $(srcdir)/testpass.idl -o testcxxsrvskel-stub.hh
-	$(Q) cat $(srcdir)/testcxxskels.ref		 >testcxxskels.cc
-	$(Q) echo '#include "testcxxsrvskel-stub.hh"'	>>testcxxskels.cc
-	$(Q) $(CXXCOMPILE) testcxxskels.cc -c ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f testcxxskels.cc testcxxskels.o testcxxsrvskel-stub.hh
-check: check-CxxStub-server-code check-CxxStub-client-code check-CxxStub-skeleton-code
+check: check-CxxStub-server-code check-CxxStub-client-code
 
 
 # == components ==

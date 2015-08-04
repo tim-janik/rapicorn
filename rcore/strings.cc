@@ -930,18 +930,35 @@ memset4 (uint32 *mem, uint32 filler, uint length)
 }
 
 /**
- * Search for @a key in @a svector and return reminder of the matching string.
+ * Search for @a prefix in @a svector and return the matching element.
  * If multiple matches are possible, the last one is returned.
  * @returns @a fallback if no match was found.
  */
 String
-string_vector_find_value (const StringVector &svector, const String &key, const String &fallback)
+string_vector_find (const StringVector &svector, const String &prefix, const String &fallback)
 {
   for (size_t i = svector.size(); i > 0; i--)
     {
       const String &s = svector[i-1];
-      if (s.size() >= key.size() && strncmp (s.data(), key.data(), key.size()) == 0)
-        return s.substr (key.size());
+      if (s.size() >= prefix.size() && strncmp (s.data(), prefix.data(), prefix.size()) == 0)
+        return s;
+    }
+  return fallback;
+}
+
+/**
+ * Search for @a prefix in @a svector and return reminder of the matching string.
+ * If multiple matches are possible, the last one is returned.
+ * @returns @a fallback if no match was found.
+ */
+String
+string_vector_find_value (const StringVector &svector, const String &prefix, const String &fallback)
+{
+  for (size_t i = svector.size(); i > 0; i--)
+    {
+      const String &s = svector[i-1];
+      if (s.size() >= prefix.size() && strncmp (s.data(), prefix.data(), prefix.size()) == 0)
+        return s.substr (prefix.size());
     }
   return fallback;
 }

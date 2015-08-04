@@ -59,28 +59,6 @@ double  			string_to_double         (const char *dblstring, const char **endptr)
 String                          string_from_double       (double value);
 inline String                   string_from_float        (double value)         { return string_from_double (value); }
 inline double                   string_to_float          (const String &string) { return string_to_double (string); }
-template<typename Type> Type    string_to_type           (const String &string);
-template<typename Type> String  string_from_type         (Type          value);
-template<> inline double        string_to_type<double>   (const String &string) { return string_to_double (string); }
-template<> inline String        string_from_type<double> (double         value) { return string_from_double (value); }
-template<> inline float         string_to_type<float>    (const String &string) { return string_to_float (string); }
-template<> inline String        string_from_type<float>  (float         value)  { return string_from_float (value); }
-template<> inline bool          string_to_type<bool>     (const String &string) { return string_to_bool (string); }
-template<> inline String        string_from_type<bool>   (bool         value)   { return string_from_bool (value); }
-template<> inline int16         string_to_type<int16>    (const String &string) { return string_to_int (string); }
-template<> inline String        string_from_type<int16>  (int16         value)  { return string_from_int (value); }
-template<> inline uint16        string_to_type<uint16>   (const String &string) { return string_to_uint (string); }
-template<> inline String        string_from_type<uint16> (uint16        value)  { return string_from_uint (value); }
-template<> inline int           string_to_type<int>      (const String &string) { return string_to_int (string); }
-template<> inline String        string_from_type<int>    (int         value)    { return string_from_int (value); }
-template<> inline uint          string_to_type<uint>     (const String &string) { return string_to_uint (string); }
-template<> inline String        string_from_type<uint>   (uint           value) { return string_from_uint (value); }
-template<> inline int64         string_to_type<int64>    (const String &string) { return string_to_int (string); }
-template<> inline String        string_from_type<int64>  (int64         value)  { return string_from_int (value); }
-template<> inline uint64        string_to_type<uint64>   (const String &string) { return string_to_uint (string); }
-template<> inline String        string_from_type<uint64> (uint64         value) { return string_from_uint (value); }
-template<> inline String        string_to_type<String>   (const String &string) { return string; }
-template<> inline String        string_from_type<String> (String         value) { return value; }
 vector<double>                  string_to_double_vector  (const String         &string);
 String                          string_from_double_vector(const vector<double> &dvec,
                                                           const String         &delim = " ");
@@ -105,11 +83,46 @@ void    string_vector_lstrip       (StringVector &svector);
 void    string_vector_rstrip       (StringVector &svector);
 void    string_vector_strip        (StringVector &svector);
 void    string_vector_erase_empty  (StringVector &svector);
-String  string_vector_find_value   (const StringVector &svector, const String &key, const String &fallback);
+String  string_vector_find         (const StringVector &svector, const String &prefix, const String &fallback = "");
+String  string_vector_find_value   (const StringVector &svector, const String &prefix, const String &fallback = "");
 StringVector cstrings_to_vector    (const char*, ...) RAPICORN_SENTINEL;
 void         memset4		   (uint32 *mem, uint32 filler, uint length);
 long double posix_locale_strtold   (const char *nptr, char **endptr);
 long double current_locale_strtold (const char *nptr, char **endptr);
+
+
+// == Templated String Conversions ==
+
+/// Convert a @a string to template argument type, such as bool, int, double.
+template<typename Type> Type    string_to_type           (const String &string)
+{ static_assert (!sizeof (Type), "string_to_type<>: unsupported Type");  __builtin_unreachable(); }
+
+/// Create a @a string from a templated argument value, such as bool, int, double.
+template<typename Type> String  string_from_type         (Type          value)
+{ static_assert (!sizeof (Type), "string_from_type<>: unsupported Type");  __builtin_unreachable(); }
+
+// specialisations for templated string conversions
+template<> inline double        string_to_type<double>   (const String &string) { return string_to_double (string); }
+template<> inline String        string_from_type<double> (double         value) { return string_from_double (value); }
+template<> inline float         string_to_type<float>    (const String &string) { return string_to_float (string); }
+template<> inline String        string_from_type<float>  (float         value)  { return string_from_float (value); }
+template<> inline bool          string_to_type<bool>     (const String &string) { return string_to_bool (string); }
+template<> inline String        string_from_type<bool>   (bool         value)   { return string_from_bool (value); }
+template<> inline int16         string_to_type<int16>    (const String &string) { return string_to_int (string); }
+template<> inline String        string_from_type<int16>  (int16         value)  { return string_from_int (value); }
+template<> inline uint16        string_to_type<uint16>   (const String &string) { return string_to_uint (string); }
+template<> inline String        string_from_type<uint16> (uint16        value)  { return string_from_uint (value); }
+template<> inline int           string_to_type<int>      (const String &string) { return string_to_int (string); }
+template<> inline String        string_from_type<int>    (int         value)    { return string_from_int (value); }
+template<> inline uint          string_to_type<uint>     (const String &string) { return string_to_uint (string); }
+template<> inline String        string_from_type<uint>   (uint           value) { return string_from_uint (value); }
+template<> inline int64         string_to_type<int64>    (const String &string) { return string_to_int (string); }
+template<> inline String        string_from_type<int64>  (int64         value)  { return string_from_int (value); }
+template<> inline uint64        string_to_type<uint64>   (const String &string) { return string_to_uint (string); }
+template<> inline String        string_from_type<uint64> (uint64         value) { return string_from_uint (value); }
+template<> inline String        string_to_type<String>   (const String &string) { return string; }
+template<> inline String        string_from_type<String> (String         value) { return value; }
+
 
 // == String Options ==
 bool    string_option_check     (const String   &option_string,

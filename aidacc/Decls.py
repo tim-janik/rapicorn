@@ -192,6 +192,9 @@ class TypeInfo (BaseDecl):
       origin = origin.__origin__ # resolve links to links
     ti = TypeLink (self)
     ti.isimpl = self.isimpl
+    assert id (ti.__origin__) == id (self)
+    assert id (ti.location) != id (self.location)
+    assert id (ti.auxdata) != id (self.auxdata)
     return ti
   def clone (self, newname, isimpl):
     if newname == None: newname = self.name
@@ -312,5 +315,7 @@ class TypeLink (TypeInfo):
   def __init__ (self, type_info):
     assert issubclass (type_info.__class__, TypeInfo)
     self.__origin__ = type_info
+    self.location = ('', '??', '??')            # links are *not* defined in the same location
+    self.auxdata = collections.OrderedDict()    # links can carry own auxillary data
   def __getattr__ (self, name):
     return getattr (self.__origin__, name)

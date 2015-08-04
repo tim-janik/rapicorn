@@ -156,7 +156,7 @@ EnumInfo::value_from_string (const String &valuestring) const
     return string_to_int (valuestring);
 }
 
-std::vector<const char*>
+static std::vector<const char*>
 split_aux_char_array (const char *char_array, size_t length)
 {
   assert (char_array && length >= 1);
@@ -172,6 +172,33 @@ split_aux_char_array (const char *char_array, size_t length)
   return cv;
 }
 
+std::vector<String>
+combine_aux_vectors (const char *char_array, size_t length, const std::vector<String> &v1, const std::vector<String> &v2,
+                     const std::vector<String> &v3, const std::vector<String> &v4, const std::vector<String> &v5,
+                     const std::vector<String> &v6, const std::vector<String> &v7, const std::vector<String> &v8,
+                     const std::vector<String> &v9, const std::vector<String> &va, const std::vector<String> &vb,
+                     const std::vector<String> &vc, const std::vector<String> &vd, const std::vector<String> &ve,
+                     const std::vector<String> &vf)
+{
+  std::vector<const char*> cv = split_aux_char_array (char_array, length);
+  std::vector<std::string> sv (cv.begin(), cv.end());
+  sv.insert (sv.end(), v1.begin(), v1.end());
+  sv.insert (sv.end(), v2.begin(), v2.end());
+  sv.insert (sv.end(), v3.begin(), v3.end());
+  sv.insert (sv.end(), v4.begin(), v4.end());
+  sv.insert (sv.end(), v5.begin(), v5.end());
+  sv.insert (sv.end(), v6.begin(), v6.end());
+  sv.insert (sv.end(), v7.begin(), v7.end());
+  sv.insert (sv.end(), v8.begin(), v8.end());
+  sv.insert (sv.end(), v9.begin(), v9.end());
+  sv.insert (sv.end(), va.begin(), va.end());
+  sv.insert (sv.end(), vb.begin(), vb.end());
+  sv.insert (sv.end(), vc.begin(), vc.end());
+  sv.insert (sv.end(), vd.begin(), vd.end());
+  sv.insert (sv.end(), ve.begin(), ve.end());
+  sv.insert (sv.end(), vf.begin(), vf.end());
+  return sv;
+}
 
 // == TypeKind ==
 template<> EnumInfo
@@ -275,13 +302,13 @@ ImplicitBase::~ImplicitBase()
 RAPICORN_STATIC_ASSERT (sizeof (std::string) <= sizeof (Any)); // assert big enough Any impl
 
 Any::Any (const Any &clone) :
-  type_kind_ (UNTYPED), u_ {0}
+  Any()
 {
   this->operator= (clone);
 }
 
 Any::Any (Any &&other) :
-  type_kind_ (UNTYPED), u_ {0}
+  Any()
 {
   this->swap (other);
 }
@@ -576,6 +603,13 @@ void
 Any::set_int64 (int64 value)
 {
   ensure (INT64);
+  u_.vint64 = value;
+}
+
+void
+Any::set_enum64 (int64 value)
+{
+  ensure (ENUM);
   u_.vint64 = value;
 }
 
@@ -1760,7 +1794,7 @@ public:
     connection_registry->unregister_connection (*this);
     sem_destroy (&transport_sem_);
     pthread_spin_destroy (&signal_spin_);
-    fatal ("%s: proper ClientConnection is not implemented", __func__);
+    fatal ("%s: ~ClientConnectionImpl not properly implemented", __func__);
   }
   virtual void
   receive_msg (ProtoMsg *fb) override
@@ -2110,7 +2144,7 @@ class ServerConnectionImpl : public ServerConnection {
   void                  start_garbage_collection ();
 public:
   explicit              ServerConnectionImpl    (const std::string &protocol);
-  virtual              ~ServerConnectionImpl    () override     { connection_registry->unregister_connection (*this); }
+  virtual              ~ServerConnectionImpl    () override;
   virtual int           notify_fd               () override     { return transport_channel_.inputfd(); }
   virtual bool          pending                 () override     { return transport_channel_.has_msg(); }
   virtual void          dispatch                () override;
@@ -2154,6 +2188,12 @@ ServerConnectionImpl::ServerConnectionImpl (const std::string &protocol) :
                                                  0,  // unused
                                                  1); // counter = first object id
   object_map_.assign_start_id (start_id, OrbObject::orbid_make (0xffff, 0x0000, 0xffffffff));
+}
+
+ServerConnectionImpl::~ServerConnectionImpl()
+{
+  connection_registry->unregister_connection (*this);
+  fatal ("%s: ~ServerConnectionImpl not properly implemented", __func__);
 }
 
 void
@@ -2420,7 +2460,7 @@ RemoteHandle::__aida_typelist__() const
 }
 
 static ProtoMsg*
-ImplicitBase___aida_typelist__ (ProtoReader &__f_)
+ImplicitBase____aida_typelist__ (ProtoReader &__f_)
 {
   assert_return (__f_.remaining() == 3 + 1, NULL);
   __f_.skip_header();
@@ -2435,8 +2475,39 @@ ImplicitBase___aida_typelist__ (ProtoReader &__f_)
   return &__r_;
 }
 
+std::vector<String>
+RemoteHandle::__aida_aux_data__ () const
+{
+  return_unless (*this != NULL, std::vector<String>());
+  ProtoMsg &__b_ = *ProtoMsg::_new (3 + 1 + 0); // header + self
+  ProtoScopeCall2Way __o_ (__b_, *this, AIDA_HASH___AIDA_AUX_DATA__);
+  ProtoMsg *__r_ = __o_.invoke (&__b_);
+  assert_return (__r_ != NULL, std::vector<String>());
+  ProtoReader __f_ (*__r_);
+  __f_.skip_header();
+  Any __v_;
+  __f_ >>= __v_;
+  delete __r_;
+  return __v_.any_to_strings();
+}
+
+static ProtoMsg*
+ImplicitBase____aida_aux_data__ (ProtoReader &__b_)
+{
+  assert_return (__b_.remaining() == 3 + 1 + 0, NULL); // header + self
+  __b_.skip_header();
+  ImplicitBase *self = __b_.pop_instance<ImplicitBase>().get();
+  assert_return (self, NULL);
+  std::vector<String> __s_ = self->__aida_aux_data__();
+  Any __v_ = Any::any_from_strings (__s_);
+  ProtoMsg &__r_ = *ProtoMsg::renew_into_result (__b_, MSGID_CALL_RESULT, AIDA_HASH___AIDA_AUX_DATA__);
+  __r_ <<= __v_;
+  return &__r_;
+}
+
 static const ServerConnection::MethodEntry implicit_base_methods[] = {
-  { AIDA_HASH___AIDA_TYPELIST__, ImplicitBase___aida_typelist__, },
+  { AIDA_HASH___AIDA_TYPELIST__, ImplicitBase____aida_typelist__, },
+  { AIDA_HASH___AIDA_AUX_DATA__, ImplicitBase____aida_aux_data__, },
 };
 static ServerConnection::MethodRegistry implicit_base_method_registry (implicit_base_methods);
 

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "components-a1-server.hh"
 #include "components-a1-client.hh"
+#include "a1-server.cc"
 
 using namespace Rapicorn;
 
@@ -115,7 +116,6 @@ struct_from_xml (Struct &s, const String &xmldata)
   return true;
 }
 
-
 // == main ==
 int
 main (int   argc,
@@ -178,6 +178,19 @@ main (int   argc,
     assert (ok);
     assert (s1.i1 == s2.i1 && s1.p2 == s2.p2);
   }
+
+  // test compiling property visitor
+  if (0) // code wouldn't work, since there's no remote A1::Richie instance
+    {
+      A1::RichieIface &richie_iface = *(A1::RichieIface*) NULL;
+      std::vector<Parameter> params;
+      Parameter::ListVisitor av (params);
+      richie_iface.__accept_accessor__ (av);
+      A1::RichieH richie_handle;
+      richie_handle.__accept_accessor__ (av);
+    }
+
+  test_a1_server();
 
   printout ("  %-8s %-60s  %s\n", "TEST", argv[0], "OK");
   return 0;

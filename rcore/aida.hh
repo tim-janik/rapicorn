@@ -65,6 +65,10 @@ typedef std::shared_ptr<ClientConnection> ClientConnectionP;
 typedef std::shared_ptr<ServerConnection> ServerConnectionP;
 typedef ProtoMsg* (*DispatchFunc) (ProtoReader&);
 
+// == Trait Checks ==
+template<class T> using IsRemoteHandleDerived = ::std::integral_constant<bool, ::std::is_base_of<RemoteHandle, T>::value>;
+template<class T> using IsImplicitBaseDerived = ::std::integral_constant<bool, ::std::is_base_of<ImplicitBase, T>::value>;
+
 // == EnumValue ==
 /// Aida info for enumeration values.
 struct EnumValue {
@@ -108,7 +112,23 @@ template<typename EnumType> String
 enum_value_to_string (EnumType evalue)                  ///< Type-safe variant of EnumInfo.value_to_string().
 { return Rapicorn::Aida::enum_info<EnumType>().value_to_string (evalue); }
 
-std::vector<const char*> split_aux_char_array (const char *char_array, size_t length); ///< Split @a char_array at '\\0'.
+///< Split @a char_array at '\\0' and merge with @a v1 .. @a vf.
+std::vector<String>      combine_aux_vectors (const char *char_array, size_t length, // Splits @a char_array at '\\0'
+                                              const std::vector<String> &v1 = std::vector<String>(),
+                                              const std::vector<String> &v2 = std::vector<String>(),
+                                              const std::vector<String> &v3 = std::vector<String>(),
+                                              const std::vector<String> &v4 = std::vector<String>(),
+                                              const std::vector<String> &v5 = std::vector<String>(),
+                                              const std::vector<String> &v6 = std::vector<String>(),
+                                              const std::vector<String> &v7 = std::vector<String>(),
+                                              const std::vector<String> &v8 = std::vector<String>(),
+                                              const std::vector<String> &v9 = std::vector<String>(),
+                                              const std::vector<String> &va = std::vector<String>(),
+                                              const std::vector<String> &vb = std::vector<String>(),
+                                              const std::vector<String> &vc = std::vector<String>(),
+                                              const std::vector<String> &vd = std::vector<String>(),
+                                              const std::vector<String> &ve = std::vector<String>(),
+                                              const std::vector<String> &vf = std::vector<String>());
 
 // == TypeKind ==
 /// Classification enum for the underlying type.
@@ -147,25 +167,29 @@ struct TypeHash {
 };
 typedef std::vector<TypeHash> TypeHashList;
 
+
 // == Internal Type Hashes ==
-#define AIDA_HASH___AIDA_TYPELIST__             0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL
+#define AIDA_HASH___AIDA_TYPELIST__    0xcb2b5528f621af7fULL, 0x2bb5872e0c576a11ULL
+#define AIDA_HASH___AIDA_AUX_DATA__    0x2fce580dcb2bc25dULL, 0x09b4b91eed573c19ULL
+
 
 // == ImplicitBase ==
 /// Abstract base interface that all IDL interfaces are implicitely derived from.
 class ImplicitBase : public virtual std::enable_shared_from_this<ImplicitBase> {
 protected:
-  virtual                     ~ImplicitBase       () = 0; // abstract class
+  virtual                    ~ImplicitBase        () = 0; // abstract class
   virtual const PropertyList& __aida_properties__ () = 0; ///< Retrieve the list of properties for @a this instance.
   Property*                   __aida_lookup__     (const std::string &property_name);
   bool                        __aida_setter__     (const std::string &property_name, const std::string &value);
   std::string                 __aida_getter__     (const std::string &property_name);
 public:
-  virtual std::string        __aida_type_name__   () const = 0; ///< Retrieve the IDL type name of an instance.
-  virtual TypeHashList       __aida_typelist__    () const = 0;
+  virtual std::string         __aida_type_name__  () const = 0; ///< Retrieve the IDL type name of an instance.
+  virtual TypeHashList        __aida_typelist__   () const = 0;
+  virtual std::vector<String> __aida_aux_data__   () const = 0;
   std::shared_ptr
-  <const ImplicitBase>       shared_from_this     () const { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
-  ImplicitBaseP              shared_from_this     ()       { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
-  ImplicitBaseP              shared_from_this     (std::nullptr_t);
+  <const ImplicitBase>        shared_from_this    () const { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
+  ImplicitBaseP               shared_from_this    ()       { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
+  ImplicitBaseP               shared_from_this    (std::nullptr_t);
 };
 
 
@@ -244,10 +268,10 @@ public:
   explicit  Any    ();                                  ///< Default initialize Any with no type.
   /// Initialize Any from a @a anany which is of Any or derived type.
   template<class V, REQUIRES< ::std::is_base_of< Any, typename std::remove_reference<V>::type >::value > = true> inline
-  explicit  Any (V &&anany)     { this->operator= (::std::forward<V> (anany)); }
+  explicit  Any (V &&anany) : Any()     { this->operator= (::std::forward<V> (anany)); }
   /// Initialize Any and set its contents from @a value.
   template<class V, REQUIRES< !::std::is_base_of< Any, typename std::remove_reference<V>::type >::value > = true> inline
-  explicit  Any    (V &&value)     { set (::std::forward<V> (value)); }
+  explicit  Any    (V &&value) : Any()  { set (::std::forward<V> (value)); }
   /*copy*/  Any    (const Any &clone);                  ///< Copy constructor.
   /*move*/  Any    (Any &&other);                       ///< Move constructor.
   Any& operator=   (const Any &clone);                  ///< Set @a this Any to a copy of @a clone.
@@ -261,8 +285,6 @@ private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
   template<class T>          using IsConstCharPtr        = ::std::is_same<const char*, typename ::std::decay<T>::type>;
-  template<class T>          using IsRemoteHandleDerived = ::std::integral_constant<bool, ::std::is_base_of<RemoteHandle, T>::value>;
-  template<class T>          using IsImplicitBaseDerived = ::std::integral_constant<bool, ::std::is_base_of<ImplicitBase, T>::value>;
   template<class T>          using IsImplicitBaseDerivedP =
     ::std::integral_constant<bool, (DerivesSharedPtr<T>::value &&
                                     ::std::is_base_of<ImplicitBase, typename RemoveSharedPtr<T>::type >::value)>;
@@ -282,6 +304,7 @@ private:
   void               set_bool    (bool value);
   int64              get_int64   () const;
   void               set_int64   (int64 value);
+  void               set_enum64  (int64 value);
   double             get_double  () const;
   void               set_double  (double value);
   std::string        get_string  () const;
@@ -289,7 +312,7 @@ private:
   template<typename Enum>
   Enum               get_enum    () const               { return Enum (get_int64()); }
   template<typename Enum>
-  void               set_enum    (Enum value)           { return set_int64 (value); }
+  void               set_enum    (Enum value)           { return set_enum64 (value); }
   const AnyVector*   get_seq     () const;
   void               set_seq     (const AnyVector *seq);
   const FieldVector* get_rec     () const;
@@ -460,6 +483,7 @@ public:
   /*copy*/                RemoteHandle         (const RemoteHandle &y) : orbop_ (y.orbop_) {}
   virtual                ~RemoteHandle         ();
   TypeHashList            __aida_typelist__    () const;
+  std::vector<String>     __aida_aux_data__    () const;
   ClientConnection*       __aida_connection__  () const { return orbop_->client_connection(); }
   uint64                  __aida_orbid__       () const { return orbop_->orbid(); }
   static NullRemoteHandle __aida_null_handle__ ()       { return NullRemoteHandle(); }

@@ -102,4 +102,33 @@ interface Derived : Base {
   signal void           self_args        (Derived self_);
 };
 
+interface Richie : Derived, Base, Other {
+  bool      vbool;
+  int32     vi32;
+  int64     vi64t;
+  float64   vf64;
+  String    vstr;
+  CountEnum count;
+  Location  location;
+  StringSeq strings;
+  Any       any1;
+  AnySeq    anys;
+  Derived   derived;
+  BaseSeq   objects;
+};
+
+interface MiniServer {
+  bool      vbool = Bool ("Boolean Value", "Just true or false", "rw", true);
+  int32     vi32  = Range ("Int32 Value", "A 32bit integer value", "rw", -2147483648, 2147483647, 256, 32768);
+  int64     vi64t = Range ("Int64 Value", "A 64bit integer value", "rw", -9223372036854775808, 9223372036854775807, 65536, -65536);
+  float64   vf64  = Range ("Float Value", "A 64bit floating point value", "rw", -0.0, +1.0, +0.1, +0.5);
+  CountEnum count = Enum ("Count Value", "One of the CountEnum values", "rw", TWO);
+  String    vstr  = String ("String Value", "Space for words or anything", "rw", "foobar");
+  Location  location;
+  StringSeq strings;
+  Derived   derived;
+  void   message       (String blurb);
+  void   quit          ();
+};
+
 } // A1
