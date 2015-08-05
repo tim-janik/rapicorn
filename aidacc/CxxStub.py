@@ -519,6 +519,7 @@ class Generator:
       s += '  virtual ' + self.F ('Rapicorn::Aida::TypeHashList') + '__aida_typelist__  () const override;\n'
       s += '  virtual ' + self.F ('std::string') + '__aida_type_name__ () const override\t{ return "%s"; }\n' % classFull
       s += self.generate_class_aux_method_decls (type_info)
+      s += self.generate_class_any_method_decls (type_info)
       if self.property_list:
         s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
     else: # G4STUB
@@ -616,7 +617,7 @@ class Generator:
     assert self.gen_mode == G4SERVANT
     s = ''
     virtual = 'virtual '
-    s += '  %-37s __aida_aux_data__ () const override;\n' % (virtual + 'std::vector<std::string>')
+    s += '  %-37s __aida_aux_data__  () const override;\n' % (virtual + 'std::vector<std::string>')
     return s
   def generate_server_class_aux_method_impls (self, tp):
     assert self.gen_mode == G4SERVANT
@@ -632,6 +633,54 @@ class Generator:
       s += ',\n                                           this->%s::__aida_aux_data__()' % self.C (atp)
     s += ');\n'
     s += '  return __d_;\n'
+    s += '}\n'
+    return s
+  def generate_class_any_method_decls (self, tp):
+    assert self.gen_mode == G4SERVANT
+    s = ''
+    virtual = 'virtual '
+    s += '  %-37s __aida_dir__       () const override;\n' % (virtual + 'std::vector<std::string>')
+    s += '  %-37s __aida_get__       (const std::string &name) const override;\n' % (virtual + 'Rapicorn::Aida::Any')
+    s += '  %-37s __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;\n' % (virtual + 'bool')
+    return s
+  def generate_server_class_any_method_impls (self, tp):
+    assert self.gen_mode == G4SERVANT
+    s, classH = '', self.C (tp)
+    reduced_immediate_ancestors = self.interface_class_ancestors (tp)
+    # __aida_dir__
+    s += 'std::vector<std::string>\n%s::__aida_dir__ () const\n{\n' % classH
+    s += '  std::vector<std::string> __d_;\n'
+    for fname, ftype in tp.fields:
+      ctype = self.C (ftype)
+      s += '  __d_.push_back ("%s");\n' % fname
+    for atp in reduced_immediate_ancestors:
+      s += '  { const std::vector<std::string> &__t_ = this->%s::__aida_dir__();\n' % self.C (atp)
+      s += '    __d_.insert (__d_.end(), __t_.begin(), __t_.end()); }\n'
+    s += '  return __d_;\n'
+    s += '}\n'
+    # __aida_get__
+    s += 'Rapicorn::Aida::Any\n%s::__aida_get__ (const std::string &__n_) const\n{\n' % classH
+    s += '  Rapicorn::Aida::Any __a_;\n'
+    for fname, ftype in tp.fields:
+      ctype = self.C (ftype)
+      cond = 'if (__n_ == "%s")' % fname
+      s += '  %-30s { %s (%s()); return __a_; }\n' % (cond, '__a_.set', fname)
+    for atp in reduced_immediate_ancestors:
+      s += '  __a_ = this->%s::__aida_get__ (__n_); if (__a_.kind()) return __a_;\n' % self.C (atp)
+    s += '  return __a_;\n'
+    s += '}\n'
+    # __aida_set__
+    s += 'bool\n%s::__aida_set__ (const std::string &__n_, const Rapicorn::Aida::Any &__a_)\n{\n' % classH
+    for fname, ftype in tp.fields:
+      ctype = self.C (ftype)
+      cond = 'if (__n_ == "%s")' % fname
+      if ftype.storage == Decls.INTERFACE: # need to deref shared_ptr
+        s += '  %-30s { %s (__a_.get<%sP>().get()); return true; }\n' % (cond, fname, ctype)
+      else:
+        s += '  %-30s { %s (__a_.get<%s>()); return true; }\n' % (cond, fname, ctype)
+    for atp in reduced_immediate_ancestors:
+      s += '  if (this->%s::__aida_set__ (__n_, __a_)) return true;\n' % self.C (atp)
+    s += '  return false;\n'
     s += '}\n'
     return s
   def generate_client_class_methods (self, class_info):
@@ -1233,6 +1282,7 @@ class Generator:
             s += self.open_namespace (tp)
             s += self.generate_server_class_methods (tp)
             s += self.generate_server_class_aux_method_impls (tp)
+            s += self.generate_server_class_any_method_impls (tp)
             s += self.generate_server_list_properties (tp)
           if self.gen_clientcc:
             s += self.open_namespace (tp)
@@ -1315,6 +1365,9 @@ class Generator:
     identifiers = collections.OrderedDict ((
       ('__aida_typelist__',        'Rapicorn::Aida::TypeHashList %s () const'),
       ('__aida_aux_data__',        'std::vector<std::string> %s () const'),
+      ('__aida_dir__',             'std::vector<std::string> %s () const'),
+      ('__aida_get__',             'Rapicorn::Aida::Any %s (const std::string&) const'),
+      ('__aida_set__',             'bool %s (const std::string&, const Rapicorn::Aida::Any&)'),
     ))
     for k,v in identifiers.items():
       IDENT, digest = k.upper(), self.internal_digest (iface, v % k)
