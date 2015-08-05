@@ -188,6 +188,12 @@ main (int   argc,
       richie_iface.__accept_accessor__ (av);
       A1::RichieH richie_handle;
       richie_handle.__accept_accessor__ (av);
+      Rapicorn::Aida::Any any = richie_iface.__aida_get__ ("");
+      bool b2 = richie_iface.__aida_set__ ("", any);
+      std::vector<std::string> aux = richie_iface.__aida_dir__();
+      any = richie_handle.__aida_get__ ("");
+      b2 = richie_handle.__aida_set__ ("", any);
+      aux = richie_handle.__aida_dir__();
     }
 
   test_a1_server();
