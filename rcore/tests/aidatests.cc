@@ -32,6 +32,9 @@ public:
   virtual std::string                    __aida_type_name__ () const override { return "Rapicorn::OneIface"; }
   virtual Rapicorn::Aida::TypeHashList   __aida_typelist__  () const override { return TypeHashList(); }
   virtual std::vector<String>            __aida_aux_data__  () const          { return std::vector<String>(); }
+  virtual std::vector<String>            __aida_dir__       () const override                    { return std::vector<String>(); }
+  virtual Any                            __aida_get__       (const String &name) const           { return Any(); }
+  virtual bool                           __aida_set__       (const String &name, const Any &any) { return false; }
   int64 test_id() const { return testid_; }
   static OneIfaceP make_one_iface (int64 id)
   {
