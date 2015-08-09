@@ -1379,7 +1379,7 @@ I_FirstInterfaceIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -1414,7 +1414,7 @@ SrvT_XFooRecord::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -1494,7 +1494,7 @@ SrvT_XFooSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1523,7 +1523,7 @@ SrvT_IntSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1552,7 +1552,7 @@ SrvT_FloatSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1581,7 +1581,7 @@ SrvT_StringSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1610,7 +1610,7 @@ SrvT_ExtensiveEnumSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1639,7 +1639,7 @@ SrvT_RecordSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1668,7 +1668,7 @@ SrvT_SequenceSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1697,7 +1697,7 @@ SrvT_InterfaceSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1726,7 +1726,7 @@ SrvT_AnySequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1755,7 +1755,7 @@ SrvT_NestedTypesRec::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -1787,7 +1787,7 @@ SrvT_NestedTypesSeq::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -1816,7 +1816,7 @@ SrvT_NewRecord::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -1856,7 +1856,7 @@ SrvT_InnerRecord::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -1892,7 +1892,7 @@ SrvT_Refer2Inner::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -1924,7 +1924,7 @@ SrvT_SomeRecord::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -1984,7 +1984,7 @@ SrvT_RecordWithAuxdata::__aida_aux_data__  () const
     "aux_str.default=auxtest3\0"
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -2057,7 +2057,7 @@ I_UIWidgetAreaIface::__aida_aux_data__() const
     "on_click.hints=rw\0"
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -2127,7 +2127,7 @@ I_ParentIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -2190,7 +2190,7 @@ I_ChildIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_),
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_),
                                            this->I_ParentIface::__aida_aux_data__());
   return __d_;
 }
@@ -2259,7 +2259,7 @@ I_DescendantIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_),
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_),
                                            this->I_ChildIface::__aida_aux_data__());
   return __d_;
 }
@@ -2329,7 +2329,7 @@ I_GrandChildIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_),
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_),
                                            this->I_DescendantIface::__aida_aux_data__());
   return __d_;
 }
@@ -2369,7 +2369,7 @@ SrvT_QuickRecord::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -2401,7 +2401,7 @@ SrvT_QuickSequence::__aida_aux_data__  () const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 inline void __attribute__ ((used))
@@ -2457,7 +2457,7 @@ I_QuickIfaceIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -2519,7 +2519,7 @@ I_MethodTestInterfaceIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -2581,7 +2581,7 @@ I_SignalTestInterfaceIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -2644,7 +2644,7 @@ I_ChildInheritingSignalsIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_),
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_),
                                            this->I_SignalTestInterfaceIface::__aida_aux_data__());
   return __d_;
 }
@@ -2712,7 +2712,7 @@ I_AnotherChildIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_),
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_),
                                            this->I_SignalTestInterfaceIface::__aida_aux_data__());
   return __d_;
 }
@@ -2779,7 +2779,7 @@ I_PropertyTesterIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -2888,7 +2888,7 @@ I_ButtonAreaIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -2966,7 +2966,7 @@ I_PureMethodsIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -3031,7 +3031,7 @@ I_NameTestsIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -3101,7 +3101,7 @@ I_CompressorIface::__aida_aux_data__() const
     "ratio.group=Compatibility Settings\0"
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>
@@ -3146,7 +3146,7 @@ SrvT_RecordForGroups::__aida_aux_data__  () const
     "ratio.group=Normal\0"
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 bool
@@ -3214,7 +3214,7 @@ I_SoundModuleIface::__aida_aux_data__() const
     ""
   ;
   static const std::vector<std::string> __d_ =
-    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));
+    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));
   return __d_;
 }
 std::vector<std::string>

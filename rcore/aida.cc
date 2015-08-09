@@ -173,7 +173,7 @@ split_aux_char_array (const char *char_array, size_t length)
 }
 
 std::vector<String>
-combine_aux_vectors (const char *char_array, size_t length, const std::vector<String> &v1, const std::vector<String> &v2,
+aux_vectors_combine (const char *char_array, size_t length, const std::vector<String> &v1, const std::vector<String> &v2,
                      const std::vector<String> &v3, const std::vector<String> &v4, const std::vector<String> &v5,
                      const std::vector<String> &v6, const std::vector<String> &v7, const std::vector<String> &v8,
                      const std::vector<String> &v9, const std::vector<String> &va, const std::vector<String> &vb,

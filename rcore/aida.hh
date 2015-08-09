@@ -113,7 +113,7 @@ enum_value_to_string (EnumType evalue)                  ///< Type-safe variant o
 { return Rapicorn::Aida::enum_info<EnumType>().value_to_string (evalue); }
 
 ///< Split @a char_array at '\\0' and merge with @a v1 .. @a vf.
-std::vector<String>      combine_aux_vectors (const char *char_array, size_t length, // Splits @a char_array at '\\0'
+std::vector<String>      aux_vectors_combine (const char *char_array, size_t length, // Splits @a char_array at '\\0'
                                               const std::vector<String> &v1 = std::vector<String>(),
                                               const std::vector<String> &v2 = std::vector<String>(),
                                               const std::vector<String> &v3 = std::vector<String>(),
