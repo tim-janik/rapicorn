@@ -112,23 +112,27 @@ template<typename EnumType> String
 enum_value_to_string (EnumType evalue)                  ///< Type-safe variant of EnumInfo.value_to_string().
 { return Rapicorn::Aida::enum_info<EnumType>().value_to_string (evalue); }
 
-///< Split @a char_array at '\\0' and merge with @a v1 .. @a vf.
-std::vector<String>      aux_vectors_combine (const char *char_array, size_t length, // Splits @a char_array at '\\0'
-                                              const std::vector<String> &v1 = std::vector<String>(),
-                                              const std::vector<String> &v2 = std::vector<String>(),
-                                              const std::vector<String> &v3 = std::vector<String>(),
-                                              const std::vector<String> &v4 = std::vector<String>(),
-                                              const std::vector<String> &v5 = std::vector<String>(),
-                                              const std::vector<String> &v6 = std::vector<String>(),
-                                              const std::vector<String> &v7 = std::vector<String>(),
-                                              const std::vector<String> &v8 = std::vector<String>(),
-                                              const std::vector<String> &v9 = std::vector<String>(),
-                                              const std::vector<String> &va = std::vector<String>(),
-                                              const std::vector<String> &vb = std::vector<String>(),
-                                              const std::vector<String> &vc = std::vector<String>(),
-                                              const std::vector<String> &vd = std::vector<String>(),
-                                              const std::vector<String> &ve = std::vector<String>(),
-                                              const std::vector<String> &vf = std::vector<String>());
+/// Split @a char_array at '\\0' and merge with @a v1 .. @a vf.
+std::vector<String> aux_vectors_combine (const char *char_array, size_t length, // Splits @a char_array at '\\0'
+                                         const std::vector<String> &v1 = std::vector<String>(),
+                                         const std::vector<String> &v2 = std::vector<String>(),
+                                         const std::vector<String> &v3 = std::vector<String>(),
+                                         const std::vector<String> &v4 = std::vector<String>(),
+                                         const std::vector<String> &v5 = std::vector<String>(),
+                                         const std::vector<String> &v6 = std::vector<String>(),
+                                         const std::vector<String> &v7 = std::vector<String>(),
+                                         const std::vector<String> &v8 = std::vector<String>(),
+                                         const std::vector<String> &v9 = std::vector<String>(),
+                                         const std::vector<String> &va = std::vector<String>(),
+                                         const std::vector<String> &vb = std::vector<String>(),
+                                         const std::vector<String> &vc = std::vector<String>(),
+                                         const std::vector<String> &vd = std::vector<String>(),
+                                         const std::vector<String> &ve = std::vector<String>(),
+                                         const std::vector<String> &vf = std::vector<String>());
+/// Retrive the value of @a field.key from @a auxvector, or @a fallback if none is found.
+String aux_vector_find (const std::vector<String> &auxvector, const String &field, const String &key, const String &fallback = "");
+/// Split @a options at ':' and check that each option is present (enabled) in @a field.key from @a auxvector.
+bool   aux_vector_check_options (const std::vector<String> &auxvector, const String &field, const String &key, const String &options);
 
 // == TypeKind ==
 /// Classification enum for the underlying type.

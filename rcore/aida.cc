@@ -200,6 +200,26 @@ aux_vectors_combine (const char *char_array, size_t length, const std::vector<St
   return sv;
 }
 
+String
+aux_vector_find (const std::vector<String> &auxvector, const String &field, const String &key, const String &fallback)
+{
+  const String name = field + "." + key + "=";
+  for (const auto &kv : auxvector)
+    if (name.compare (0, name.size(), kv, 0, name.size()) == 0)
+      return kv.substr (name.size());
+  return fallback;
+}
+
+bool
+aux_vector_check_options (const std::vector<String> &auxvector, const String &field, const String &key, const String &options)
+{
+  for (const String &option : Rapicorn::string_split_any (options, ":;"))
+    if (!Rapicorn::string_option_check (aux_vector_find (auxvector, field, key), option))
+      return false;
+  return true;
+}
+
+
 // == TypeKind ==
 template<> EnumInfo
 enum_info<TypeKind> ()
