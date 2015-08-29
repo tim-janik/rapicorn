@@ -1,4 +1,29 @@
-* Added $RAPICORN_THEME environment variable to override theme selection.
+Rapicorn NEXT:
+
+* Added theming support and $RAPICORN_THEME to override theme selection.
+* Update RSVG rendering bits.
+* Added layer and state painting widgets.
+* Provide rapidres(1): A binary resource file to C++ code converter.
+* Added missing manual page documentation.
+* Added ability to render SVG fragments.
+* Added widget for state painting and for stretched SVG painting.
+* Added ElementPainter to render and resize widgets from stretched SVGs.
+* Added FocusPainter for focus state dependent decoration.
+* Added support for attribute="@eval some_variable" syntax.
+* Added example for interactive code editing and execution.
+* Factory cleanups, widget have an 'id', properties have a 'name' attribute.
+* Allow source priorities to affect scheduling across other event loops.
+* Major improvements to the Aida Python bindings by making use of Cython.
+* IDL records and sequences now have different client and server code.
+* Eliminated '=0' syntax for IDL methods.
+* Added C++ visitors to IDL objects, records and sequences for INI and XML.
+* Improved enum introspection and IDL marshalling.
+* Major improvements to type support in Any getters and setters.
+* Provide forward and backward conversion between Any and records/sequences.
+* Added Parameter abstraction to simlify record field and property edits.
+* Display Window code cleanup and optimization.
+* Automate memory bookkeeping with shared_ptr for all objects and widgets.
+* Various improvements to the C++11 support, compilaion and build system.
 
 Rapicorn 14.10.0:	(2014-10-09)
 
