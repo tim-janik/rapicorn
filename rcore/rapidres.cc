@@ -1,6 +1,6 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "cxxaux.hh"
-#include "rapicornconfig.h"
+#include "../configure.h"
 #include "configbits.cc"
 #include <stdio.h>
 #include <string.h>

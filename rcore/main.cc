@@ -1,5 +1,6 @@
 // This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 #include "main.hh"
+#include "../configure.h"
 #include "inout.hh"
 #include "strings.hh"
 #include "thread.hh"
