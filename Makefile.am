@@ -93,7 +93,12 @@ MAINTAINERCLEANFILES += intltool-extract.in  intltool-merge.in  intltool-update.
 
 # == ChangeLog & Release Rules ==
 ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
-	$(srcdir)/mkrelease.sh ChangeLog -R bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD
+	$(AM_V_GEN)
+	$(Q) git log --date=short --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 \
+		bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD	 > xgen-$(@F) # Generate ChangeLog with -prefixed records
+	$(Q) sed 's/^/	/; s/^	// ; s/[[:space:]]\+$$// '	-i xgen-$(@F) # Tab-indent commit bodies, kill trailing whitespaces
+	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'		-i xgen-$(@F) # Compress multiple newlines
+	$(Q) mv xgen-$(@F) $@
 noinst_DATA += ChangeLog
 MAINTAINERCLEANFILES += ChangeLog
 EXTRA_DIST  += ChangeLog mkrelease.sh
