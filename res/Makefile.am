@@ -18,4 +18,4 @@ Makefile.tmp: # MAKE(1) only remakes+rereads Makefiles with prerequisites, see (
 noinst_DATA += Makefile.res
 
 # == Ship Resource Files ==
-EXTRA_DIST += $(RES_FILE_LIST)
+EXTRA_DIST += $(RES_FILE_LIST) Makefile.res
