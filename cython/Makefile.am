@@ -42,6 +42,7 @@ CLEANFILES += pyxxutils-xmany.hh
 
 # === Tests ===
 TEST_PYPROGS = testing1.py
+EXTRA_DIST  += $(TEST_PYPROGS)
 
 # === TEST_PYPROGS ===
 .PHONY: check-TEST_PYPROGS
