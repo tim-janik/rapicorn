@@ -173,7 +173,7 @@ split_aux_char_array (const char *char_array, size_t length)
 }
 
 std::vector<String>
-combine_aux_vectors (const char *char_array, size_t length, const std::vector<String> &v1, const std::vector<String> &v2,
+aux_vectors_combine (const char *char_array, size_t length, const std::vector<String> &v1, const std::vector<String> &v2,
                      const std::vector<String> &v3, const std::vector<String> &v4, const std::vector<String> &v5,
                      const std::vector<String> &v6, const std::vector<String> &v7, const std::vector<String> &v8,
                      const std::vector<String> &v9, const std::vector<String> &va, const std::vector<String> &vb,
@@ -199,6 +199,26 @@ combine_aux_vectors (const char *char_array, size_t length, const std::vector<St
   sv.insert (sv.end(), vf.begin(), vf.end());
   return sv;
 }
+
+String
+aux_vector_find (const std::vector<String> &auxvector, const String &field, const String &key, const String &fallback)
+{
+  const String name = field + "." + key + "=";
+  for (const auto &kv : auxvector)
+    if (name.compare (0, name.size(), kv, 0, name.size()) == 0)
+      return kv.substr (name.size());
+  return fallback;
+}
+
+bool
+aux_vector_check_options (const std::vector<String> &auxvector, const String &field, const String &key, const String &options)
+{
+  for (const String &option : Rapicorn::string_split_any (options, ":;"))
+    if (!Rapicorn::string_option_check (aux_vector_find (auxvector, field, key), option))
+      return false;
+  return true;
+}
+
 
 // == TypeKind ==
 template<> EnumInfo

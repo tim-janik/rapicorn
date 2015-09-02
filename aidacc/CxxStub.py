@@ -349,7 +349,7 @@ class Generator:
     aux_data_string = self.generate_aux_data_string (type_info)
     aux_data_string = aux_data_string if aux_data_string else '    ""\n'
     s += '  static const char __s_[] =\n%s  ;\n' % aux_data_string
-    s += '  static const std::vector<std::string> __d_ =\n    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_));\n'
+    s += '  static const std::vector<std::string> __d_ =\n    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_));\n'
     s += '  return __d_;\n'
     s += '}\n'
     return s
@@ -628,7 +628,7 @@ class Generator:
     aux_data_string = self.generate_aux_data_string (tp)
     aux_data_string = aux_data_string if aux_data_string else '    ""\n'
     s += '  static const char __s_[] =\n%s  ;\n' % aux_data_string
-    s += '  static const std::vector<std::string> __d_ =\n    ::Rapicorn::Aida::combine_aux_vectors (__s_, sizeof (__s_)'
+    s += '  static const std::vector<std::string> __d_ =\n    ::Rapicorn::Aida::aux_vectors_combine (__s_, sizeof (__s_)'
     for atp in reduced_immediate_ancestors:
       s += ',\n                                           this->%s::__aida_aux_data__()' % self.C (atp)
     s += ');\n'
