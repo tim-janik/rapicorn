@@ -2505,9 +2505,109 @@ ImplicitBase____aida_aux_data__ (ProtoReader &__b_)
   return &__r_;
 }
 
+std::vector<String>
+RemoteHandle::__aida_dir__ () const
+{
+  return_unless (*this != NULL, std::vector<String>());
+  ProtoMsg &__b_ = *ProtoMsg::_new (3 + 1 + 0); // header + self + no-args
+  ProtoScopeCall2Way __o_ (__b_, *this, AIDA_HASH___AIDA_DIR__);
+  ProtoMsg *__r_ = __o_.invoke (&__b_);
+  assert_return (__r_ != NULL, std::vector<String>());
+  ProtoReader __f_ (*__r_);
+  __f_.skip_header();
+  Any __v_;
+  __f_ >>= __v_;
+  delete __r_;
+  return __v_.any_to_strings();
+}
+
+static ProtoMsg*
+ImplicitBase____aida_dir__ (ProtoReader &__b_)
+{
+  assert_return (__b_.remaining() == 3 + 1 + 0, NULL); // header + self + no-args
+  __b_.skip_header();
+  ImplicitBase *self = __b_.pop_instance<ImplicitBase>().get();
+  assert_return (self, NULL);
+  std::vector<String> __s_ = self->__aida_dir__();
+  Any __v_ = Any::any_from_strings (__s_);
+  ProtoMsg &__r_ = *ProtoMsg::renew_into_result (__b_, MSGID_CALL_RESULT, AIDA_HASH___AIDA_DIR__);
+  __r_ <<= __v_;
+  return &__r_;
+}
+
+Any
+RemoteHandle::__aida_get__ (const String &__n_) const
+{
+  return_unless (*this != NULL, Any());
+  ProtoMsg &__b_ = *ProtoMsg::_new (3 + 1 + 1); // header + self + __n_
+  ProtoScopeCall2Way __o_ (__b_, *this, AIDA_HASH___AIDA_GET__);
+  __b_ <<= __n_;
+  ProtoMsg *__r_ = __o_.invoke (&__b_);
+  assert_return (__r_ != NULL, Any());
+  ProtoReader __f_ (*__r_);
+  __f_.skip_header();
+  Any __v_;
+  __f_ >>= __v_;
+  delete __r_;
+  return __v_;
+}
+
+static ProtoMsg*
+ImplicitBase____aida_get__ (ProtoReader &__b_)
+{
+  assert_return (__b_.remaining() == 3 + 1 + 1, NULL); // header + self + __n_
+  __b_.skip_header();
+  ImplicitBase *self = __b_.pop_instance<ImplicitBase>().get();
+  assert_return (self, NULL);
+  String __n_;
+  __b_ >>= __n_;
+  Any __v_ = self->__aida_get__ (__n_);
+  ProtoMsg &__r_ = *ProtoMsg::renew_into_result (__b_, MSGID_CALL_RESULT, AIDA_HASH___AIDA_GET__);
+  __r_ <<= __v_;
+  return &__r_;
+}
+
+bool
+RemoteHandle::__aida_set__ (const String &__n_, const Any &__a_)
+{
+  return_unless (*this != NULL, false);
+  ProtoMsg &__b_ = *ProtoMsg::_new (3 + 1 + 2); // header + self + args
+  ProtoScopeCall2Way __o_ (__b_, *this, AIDA_HASH___AIDA_SET__);
+  __b_ <<= __n_;
+  __b_ <<= __a_;
+  ProtoMsg *__r_ = __o_.invoke (&__b_);
+  assert_return (__r_ != NULL, false);
+  ProtoReader __f_ (*__r_);
+  __f_.skip_header();
+  bool __v_;
+  __f_ >>= __v_;
+  delete __r_;
+  return __v_;
+}
+
+static ProtoMsg*
+ImplicitBase____aida_set__ (ProtoReader &__b_)
+{
+  assert_return (__b_.remaining() == 3 + 1 + 2, NULL); // header + self + args
+  __b_.skip_header();
+  ImplicitBase *self = __b_.pop_instance<ImplicitBase>().get();
+  assert_return (self, NULL);
+  String __n_;
+  __b_ >>= __n_;
+  Any __a_;
+  __b_ >>= __a_;
+  bool __v_ = self->__aida_set__ (__n_, __a_);
+  ProtoMsg &__r_ = *ProtoMsg::renew_into_result (__b_, MSGID_CALL_RESULT, AIDA_HASH___AIDA_SET__);
+  __r_ <<= __v_;
+  return &__r_;
+}
+
 static const ServerConnection::MethodEntry implicit_base_methods[] = {
   { AIDA_HASH___AIDA_TYPELIST__, ImplicitBase____aida_typelist__, },
   { AIDA_HASH___AIDA_AUX_DATA__, ImplicitBase____aida_aux_data__, },
+  { AIDA_HASH___AIDA_DIR__,      ImplicitBase____aida_dir__, },
+  { AIDA_HASH___AIDA_SET__,      ImplicitBase____aida_set__, },
+  { AIDA_HASH___AIDA_GET__,      ImplicitBase____aida_get__, },
 };
 static ServerConnection::MethodRegistry implicit_base_method_registry (implicit_base_methods);
 

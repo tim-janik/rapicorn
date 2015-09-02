@@ -100,7 +100,7 @@ parameter_vector_find (std::vector<Parameter> &params, const String &name)
 static void
 test_server (A1::MiniServerH server)
 {
-  Any a;
+  Any a, b;
   // create Parameter for the server properties
   std::vector<Parameter> params;
   {
@@ -124,13 +124,29 @@ test_server (A1::MiniServerH server)
   assert (param_vstr != NULL);
   Parameter *param_count = parameter_vector_find (params, "count");
   assert (param_count != NULL);
+  // __aida_dir__
+  StringVector sv = server.__aida_dir__();
+  assert (string_vector_find (sv, "vbool") == "vbool");
+  assert (string_vector_find (sv, "vi32") == "vi32");
+  assert (string_vector_find (sv, "vi64t") == "vi64t");
+  assert (string_vector_find (sv, "vf64") == "vf64");
+  assert (string_vector_find (sv, "vstr") == "vstr");
+  assert (string_vector_find (sv, "count") == "count");
   // vbool
   a = param_vbool->get();
   assert (a.kind() == Aida::BOOL);
   assert (a.get<bool>() == false);
+  b = server.__aida_get__ ("vbool");
+  assert (a == b);
   a.set (true);
   param_vbool->set (a);
   assert (server.vbool() == true);
+  b = server.__aida_get__ ("vbool");
+  assert (a == b);
+  b.set (false);
+  server.__aida_set__ ("vbool", b);
+  a = param_vbool->get();
+  assert (a == b);
   assert (param_vbool->get_aux ("blurb") == "Just true or false");
   assert (param_vbool->get_aux<bool> ("default") == true);
   assert (param_vbool->get_aux ("hints") == "rw");
@@ -140,7 +156,7 @@ test_server (A1::MiniServerH server)
   assert (a.get<int32>() == 0);
   a.set (-750);
   param_vi32->set (a);
-  Any b = param_vi32->get();
+  b = param_vi32->get();
   assert (b.get<double>() == -750);
   assert (server.vi32() == -750);
   assert (param_vi32->get_aux ("label") == "Int32 Value");
@@ -168,11 +184,19 @@ test_server (A1::MiniServerH server)
   a = param_vf64->get();
   assert (a.kind() == Aida::FLOAT64);
   assert (a.get<double>() == 0);
+  b = server.__aida_get__ ("vf64");
+  assert (a == b);
   a.set (-0.75);
   param_vf64->set (a);
   b = param_vf64->get();
   assert (b.get<double>() == -0.75);
   assert (server.vf64() == -0.75);
+  a = server.__aida_get__ ("vf64");
+  assert (a == b);
+  a.set (+0.25);
+  server.__aida_set__ ("vf64", a);
+  b = server.__aida_get__ ("vf64");
+  assert (b.get<double>() == +0.25);
   assert (param_vf64->get_aux ("label") == "Float Value");
   assert (param_vf64->get_aux<double> ("min") == 0.0);
   assert (param_vf64->get_aux<double> ("max") == 1.0);
@@ -182,12 +206,22 @@ test_server (A1::MiniServerH server)
   a = param_vstr->get();
   assert (a.kind() == Aida::STRING);
   assert (a.get<String>() == "");
+  b = server.__aida_get__ ("vstr");
+  assert (a == b);
   server.vstr ("123");
   a = param_vstr->get();
   assert (a.get<String>() == "123");
+  b = server.__aida_get__ ("vstr");
+  assert (a == b);
+  a.set ("ERPL");
+  server.__aida_set__ ("vstr", a);
+  b = server.__aida_get__ ("vstr");
+  assert (b.get<String>() == "ERPL");
   a.set ("ZOOT");
   param_vstr->set (a);
   assert (server.vstr() == "ZOOT");
+  b = server.__aida_get__ ("vstr");
+  assert (b.get<String>() == "ZOOT");
   assert (param_vstr->get_aux ("default") == "foobar");
   assert (param_vstr->get_aux ("hints") == "rw");
   // count
