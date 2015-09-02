@@ -19,7 +19,7 @@ Rapicorndir         	= ${pythondir}
 Rapicorn_PYTHON 	= # __init__.py
 Rapicorn_LTLIBRARIES	= Rapicorn.la
 # Pyx Rapicorn module
-Rapicorn_la_SOURCES	= Rapicorn.cc
+nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	= $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	= $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	= $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
