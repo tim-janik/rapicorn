@@ -137,7 +137,7 @@ configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Ma
 	&& (cmp -s xgen-$(@F) $@ || cp xgen-$(@F) $@)
 	$(Q) rm -f xgen-$(@F)
 CLEANFILES += xgen-configbits.cc configbits.cc
-$(srcdir)/main.cc: configbits.cc
+$(srcdir)/main.cc $(srcdir)/rapidres.cc: configbits.cc
 .PHONY: PHONY_REBUILDS buildid
 
 # === rapicornconfig.h ===
