@@ -98,7 +98,7 @@ TEST_PROGS	  += components
 components_SOURCES = components.cc
 components_LDADD   = $(LDADDS)
 components_CXXFLAGS = -O0 -g # $(AM_CXXFLAGS) # compile fast
-EXTRA_DIST        += components-a1.idl # components-a2.idl components-b1.idl
+EXTRA_DIST        += components-a1.idl a1-server.cc # components-a2.idl components-b1.idl
 COMPONENT_FILES    = components-a1-client.hh components-a1-client.cc components-a1-server.hh components-a1-server.cc
 CLEANFILES += $(COMPONENT_FILES)
 components.cc: $(COMPONENT_FILES)
