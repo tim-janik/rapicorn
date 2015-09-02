@@ -101,12 +101,4 @@ ChangeLog: $(GITSTAMPS)
 	$(Q) mv xgen-$(@F) $@
 noinst_DATA += ChangeLog
 MAINTAINERCLEANFILES += ChangeLog
-EXTRA_DIST  += ChangeLog mkrelease.sh
-release-news:
-	@$(srcdir)/mkrelease.sh news --first-parent --body
-release-check:
-	@echo "Checking for unlisted contributors..."
-	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw
-release-upload: ChangeLog
-	$(srcdir)/mkrelease.sh upload -U testbit:pub/dists/rapicorn/ -E configure.ac:RAPICORN_REVISION_VERSION
-.PHONY: release-news release-check release-upload
+EXTRA_DIST  += ChangeLog
