@@ -94,7 +94,7 @@ MAINTAINERCLEANFILES += intltool-extract.in  intltool-merge.in  intltool-update.
 # == ChangeLog & Release Rules ==
 ChangeLog: $(GITSTAMPS)
 	$(AM_V_GEN)
-	$(Q) git log --date=short --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 \
+	$(Q) git log --date=short --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 --first-parent \
 		bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD	 > xgen-$(@F) # Generate ChangeLog with -prefixed records
 	$(Q) sed 's/^/	/; s/^	// ; s/[[:space:]]\+$$// '	-i xgen-$(@F) # Tab-indent commit bodies, kill trailing whitespaces
 	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'		-i xgen-$(@F) # Compress multiple newlines
