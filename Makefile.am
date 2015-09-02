@@ -92,7 +92,7 @@ distcleancheck_listfiles = true # find . -type f -print
 MAINTAINERCLEANFILES += intltool-extract.in  intltool-merge.in  intltool-update.in
 
 # == ChangeLog & Release Rules ==
-ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
+ChangeLog: $(GITSTAMPS)
 	$(AM_V_GEN)
 	$(Q) git log --date=short --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 \
 		bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD	 > xgen-$(@F) # Generate ChangeLog with -prefixed records
