@@ -79,7 +79,7 @@ EXTRA_DIST += testcxxserver.ref testcxxclient.ref
 
 # == Test CxxStub Code Compilation ==
 check-CxxStub-server-code: $(srcdir)/testcxxserver.ref check-CxxStub-client-gen
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
 	$(Q) cat $(srcdir)/testcxxserver.ref		 >testcxxserver.cc
 	$(Q) echo '#include "testcxxserver-stub.hh"'	>>testcxxserver.cc
