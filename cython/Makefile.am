@@ -28,7 +28,7 @@ CLEANFILES	       += Rapicorn.cc idlapi.pyx
 
 Rapicorn.cc: Rapicorn.pyx pyxxutils.pyx rcore.pyx idlapi.pyx pyxxutils-xmany.hh
 	@echo "  CYTHON  " $@
-	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail $(srcdir)/Rapicorn.pyx -o $@
+	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. $(srcdir)/Rapicorn.pyx -o $@
 idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
 	@echo "  AIDACC  " $@
 	$(Q) ${AIDACC} -x $(srcdir)/PyxxStub $(RAPICORNIDL) -o $@ -G strip-path=$(abs_top_srcdir)/
