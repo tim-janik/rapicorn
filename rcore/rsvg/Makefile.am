@@ -45,23 +45,6 @@ api-content:
 .PHONY: api-content
 
 # === enum introspection ===
-$(srcdir)/enumdefs.cc: gen-enums.cc
-gen-enums.cc: $(srcdir)/enumdefs.hh Makefile
-	cd . \
-	&& ( cd ${srcdir} && $(GLIB_MKENUMS) \
-	  --fprod "\n/* --- @filename@ --- */\n#include\t\"@filename@\"" \
-	  --vhead "/* @EnumName@\n */\n" \
-	  --vhead "static const @Type@Type<@EnumName@>::Value @EnumName@_value_array[] = {" \
-	  --vprod "  { @VALUENAME@, \"@VALUENAME@\", sizeof (\"@VALUENAME@\") - 1 }," \
-	  --vtail "};\n" \
-	  --vtail "template<> const uint @Type@Type<@EnumName@>::n_values = sizeof (@EnumName@_value_array) / sizeof (@EnumName@_value_array[0]);\n" \
-	  --vtail "template<> const @Type@Type@EnumName@::Value *const @Type@Type@EnumName@::values = @EnumName@_value_array;\n" \
-	  --vtail "template<> const char *@Type@Type@EnumName@::ename = \"@EnumName@\";" \
-	    $^ ) > xgen-enu \
-	&& cp xgen-enu $@ \
-	&& rm -f xgen-enu
-CLEANFILES += xgen-enu gen-enums.cc
-
 librsvg-enum-types.h: $(rcore_rsvg_headers) Makefile
 	$(AM_V_GEN) ( cd $(srcdir) && $(GLIB_MKENUMS) \
 		--fhead "#ifndef __LIBRSVG_ENUM_TYPES_H__\n#define __LIBRSVG_ENUM_TYPES_H__\n\n#include <glib-object.h>\n\nG_BEGIN_DECLS\n" \
@@ -81,3 +64,5 @@ librsvg-enum-types.c: librsvg-enum-types.h $(rcore_rsvg_headers) Makefile
 	  $(rcore_rsvg_headers) ) > tmp-librsvg-enum-types.c \
 	&& cp tmp-librsvg-enum-types.c librsvg-enum-types.c \
 	&& rm -f tmp-librsvg-enum-types.c
+EXTRA_DIST += librsvg-enum-types.h librsvg-enum-types.c
+CLEANFILES += @INGIT@ librsvg-enum-types.h librsvg-enum-types.c
