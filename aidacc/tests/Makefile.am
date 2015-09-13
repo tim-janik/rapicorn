@@ -79,7 +79,7 @@ EXTRA_DIST += testcxxserver.ref testcxxclient.ref
 
 # == Test CxxStub Code Compilation ==
 check-CxxStub-server-code: $(srcdir)/testcxxserver.ref check-CxxStub-client-gen
-	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh \
+	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G strip-path=$(abs_top_srcdir)/ \
 	  $(srcdir)/testpass.idl -o testcxxserver-stub.hh
 	$(Q) cat $(srcdir)/testcxxserver.ref		 >testcxxserver.cc
 	$(Q) echo '#include "testcxxserver-stub.hh"'	>>testcxxserver.cc
@@ -98,7 +98,7 @@ TEST_PROGS	  += components
 components_SOURCES = components.cc
 components_LDADD   = $(LDADDS)
 components_CXXFLAGS = -O0 -g # $(AM_CXXFLAGS) # compile fast
-EXTRA_DIST        += components-a1.idl # components-a2.idl components-b1.idl
+EXTRA_DIST        += components-a1.idl a1-server.cc # components-a2.idl components-b1.idl
 COMPONENT_FILES    = components-a1-client.hh components-a1-client.cc components-a1-server.hh components-a1-server.cc
 CLEANFILES += $(COMPONENT_FILES)
 components.cc: $(COMPONENT_FILES)

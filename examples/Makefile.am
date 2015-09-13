@@ -5,6 +5,8 @@ AM_CPPFLAGS += -I$(top_srcdir)
 DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
+export VPATH # point builddir executables at srcdir to find their corresponding .xml files
+
 # example programs
 noinst_PROGRAMS	 = $(EXAMPLES)
 noinst_DATA	 =

@@ -53,11 +53,11 @@ DOXYGEN_TAGFILES        = $(strip \
 )
 DOXYGEN_STYLESHEET	= extrastyles.css
 SED_DELETE_ATFILE_LINE1	= '1s,/\*\*\s*@file.*\*/\s*,,'
-html-docs: doxygen-check
+html-docs: doxygen-check $(top_srcdir)/ChangeLog
 	$(AM_V_GEN)
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-clean
 	$(QPRINT) "GEN" "Documentation Sources"
-	$(Q) $(top_srcdir)/mkrelease.sh ChangeLog --first-parent -R a1e8017768fd935908a415e90c8137ccb8eaeda8..HEAD -o $(DOXYGEN_CHANGELOG)
+	$(Q) sed -e '/# d1941418d18/Q' < $(top_srcdir)/ChangeLog > $(DOXYGEN_CHANGELOG) # cut log length to stay web-browsable
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-srctree
 	$(Q) rm -f $(DOXYGEN_CHANGELOG)
 	$(QPRINT) "MERGE" "ui/interfaces.dox"

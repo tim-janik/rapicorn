@@ -92,16 +92,13 @@ distcleancheck_listfiles = true # find . -type f -print
 MAINTAINERCLEANFILES += intltool-extract.in  intltool-merge.in  intltool-update.in
 
 # == ChangeLog & Release Rules ==
-ChangeLog:	$(shell $(srcdir)/mkrelease.sh commit-stamps)
-	$(srcdir)/mkrelease.sh ChangeLog -R bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD
+ChangeLog: $(GITSTAMPS)
+	$(AM_V_GEN)
+	$(Q) git log --date=short --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 --first-parent \
+		bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD	 > xgen-$(@F) # Generate ChangeLog with -prefixed records
+	$(Q) sed 's/^/	/; s/^	// ; s/[[:space:]]\+$$// '	-i xgen-$(@F) # Tab-indent commit bodies, kill trailing whitespaces
+	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'		-i xgen-$(@F) # Compress multiple newlines
+	$(Q) mv xgen-$(@F) $@
 noinst_DATA += ChangeLog
 MAINTAINERCLEANFILES += ChangeLog
-EXTRA_DIST  += ChangeLog mkrelease.sh
-release-news:
-	@$(srcdir)/mkrelease.sh news --first-parent --body
-release-check:
-	@echo "Checking for unlisted contributors..."
-	@$(srcdir)/mkrelease.sh contributors -X -B timj,stw
-release-upload: ChangeLog
-	$(srcdir)/mkrelease.sh upload -U testbit:pub/dists/rapicorn/ -E configure.ac:RAPICORN_REVISION_VERSION
-.PHONY: release-news release-check release-upload
+EXTRA_DIST  += ChangeLog

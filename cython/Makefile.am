@@ -19,7 +19,7 @@ Rapicorndir         	= ${pythondir}
 Rapicorn_PYTHON 	= # __init__.py
 Rapicorn_LTLIBRARIES	= Rapicorn.la
 # Pyx Rapicorn module
-Rapicorn_la_SOURCES	= Rapicorn.cc
+nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	= $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	= $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	= $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
@@ -28,7 +28,7 @@ CLEANFILES	       += Rapicorn.cc idlapi.pyx
 
 Rapicorn.cc: Rapicorn.pyx pyxxutils.pyx rcore.pyx idlapi.pyx pyxxutils-xmany.hh
 	@echo "  CYTHON  " $@
-	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail Rapicorn.pyx -o $@
+	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. $(srcdir)/Rapicorn.pyx -o $@
 idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
 	@echo "  AIDACC  " $@
 	$(Q) ${AIDACC} -x $(srcdir)/PyxxStub $(RAPICORNIDL) -o $@ -G strip-path=$(abs_top_srcdir)/
@@ -42,6 +42,7 @@ CLEANFILES += pyxxutils-xmany.hh
 
 # === Tests ===
 TEST_PYPROGS = testing1.py
+EXTRA_DIST  += $(TEST_PYPROGS)
 
 # === TEST_PYPROGS ===
 .PHONY: check-TEST_PYPROGS
