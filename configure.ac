@@ -8,7 +8,7 @@ AC_PREREQ(2.57)
 # * YEAR, MONTH: increment on ABI/API changes
 # * REVISION: ABI compatible increments, devel versions are odd
 # * -RC: release candidate, may contain -rc[0-9]+ or nothing
-AC_INIT([rapicorn], [14.10.1])
+AC_INIT([rapicorn], [15.09.0])
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information

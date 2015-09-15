@@ -1,4 +1,4 @@
-Rapicorn NEXT:
+Rapicorn 15.09.0:	(2015-09-16)
 
 * Added theming support and $RAPICORN_THEME to override theme selection.
 * Update RSVG rendering bits.
