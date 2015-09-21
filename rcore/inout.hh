@@ -5,10 +5,13 @@
 #include <rcore/strings.hh>
 
 // For convenience, redefine assert() to get backtraces, logging, etc.
-#if !defined (assert) && defined (RAPICORN_CONVENIENCE) // dont redefine an existing custom macro
-#include <assert.h>                                     // import definition of assert() from libc
-#undef  assert
-#define assert  RAPICORN_ASSERT                         ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#if defined (RAPICORN_CONVENIENCE)
+#define ASSERT  RAPICORN_ASSERT                 ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#  if !defined (assert)                         // dont redefine an existing custom macro
+#  include <assert.h>                           // import definition of assert() from libc
+#  undef  assert
+#  define assert  RAPICORN_ASSERT               ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#  endif
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
