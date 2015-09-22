@@ -94,6 +94,7 @@ static void docextract_definition = RAPICORN_DEBUG_OPTION ("all", "Enable all av
 static DebugOption dbe_syslog = RAPICORN_DEBUG_OPTION ("syslog", "Enable logging of general purpose messages through syslog(3).");
 static DebugOption dbe_fatal_syslog = RAPICORN_DEBUG_OPTION ("fatal-syslog", "Enable logging of fatal conditions through syslog(3).");
 static DebugOption dbe_fatal_warnings = RAPICORN_DEBUG_OPTION ("fatal-warnings", "Cast all warning messages into fatal errors.");
+static DebugOption dbe_backtrace_warnings = RAPICORN_DEBUG_OPTION ("backtrace-warnings", "Generate a backtrace for all warning messages.");
 
 static void
 debug_handler (const char dkind, const char *const file, const int line, const String &message,
@@ -359,14 +360,22 @@ envkey_debug_message (const char *env_var, const char *key, const char *file, co
 void
 debug_message (char kind, const char *file, int line, const String &message)
 {
+  String btmsg;
   if (kind == 'F' || kind == 'C' || kind == 'G')
-    debug_handler (kind, file, line, message);
+    {
+      if (kind != 'G' && dbe_backtrace_warnings)
+        {
+          void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
+          btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), file, line, NULL);
+        }
+      debug_handler (kind, file, line, message, NULL, btmsg);
+    }
 }
 
 void
 debug_fatal_message (const char *file, int line, const String &message)
 {
-  void *__p_[RAPICORN_BACKTRACE_MAXDEPTH];
+  void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
   const String btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), file, line, NULL);
   debug_handler ('F', file, line, message, NULL, btmsg);
   ::abort();
@@ -375,14 +384,20 @@ debug_fatal_message (const char *file, int line, const String &message)
 void
 debug_assert (const char *file, const int line, const char *message)
 {
-  debug_message ('C', file, line, String ("assertion failed: ") + (message ? message : "?"));
+  String btmsg;
+  if (dbe_backtrace_warnings)
+    {
+      void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
+      btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), file, line, NULL);
+    }
+  debug_handler ('C', file, line, String ("assertion failed: ") + (message ? message : "?"), NULL, btmsg);
 }
 
 void
 debug_fatal_assert (const char *file, const int line, const char *message)
 {
   const String assert_message = String ("assertion failed: ") + (message ? message : "?");
-  void *__p_[RAPICORN_BACKTRACE_MAXDEPTH];
+  void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
   const String btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), file, line, NULL);
   debug_handler ('F', file, line, assert_message, NULL, btmsg);
   ::abort();
