@@ -582,7 +582,7 @@ int (*backtrace_pointers) (void **buffer, int size) = &dummy_backtrace;
 #endif // !_EXECINFO_H
 
 String
-pretty_backtrace (void **ptrs, size_t nptrs, const char *file, int line, const char *func)
+pretty_backtrace (void **ptrs, ssize_t nptrs, const char *file, int line, const char *func)
 {
   void *fallback = __builtin_return_address (0);
   if (nptrs < 0)
