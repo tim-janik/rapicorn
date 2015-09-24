@@ -5,12 +5,9 @@ SUBDIRS = mans examples imports tutorial
 
 QPRINT = @printf '  %-9s%s\n'
 
-# Describe source tree version (release tag relative, e.g. yy.mm.z-nnn-gHEXHEX)
-DSC_VERSION = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null)
-# Release version, shows last tag reachable
-REL_VERSION = $(shell git describe --always --abbrev=0 HEAD 2>/dev/null)
-# Detailed documentation version, falls back to package version for tarballs
-DOC_VERSION = $(or $(DSC_VERSION), $(VERSION))
+# Describe documentation version by real version number and git relative
+DSC_VERSION = $(shell git describe --always --match '[0-9]*' HEAD 2>/dev/null || echo tarball)
+DOC_VERSION = $(VERSION): $(DSC_VERSION)
 
 # == Extra Tarball Files ==
 EXTRA_DIST += ChangeLog-2009 references.bib doxygen_footer.html
@@ -127,14 +124,14 @@ clean-local: clean-coverage
 
 # == Upload Rule ==
 CHECK_RSYNC = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
-# Upload release versions as $DOC_VERSION, otherwise upload as latest/
+# Upload stable versions as $RAPICORN_RELEASE_YEAR.$RAPICORN_RELEASE_MONTH, otherwise upload as latest/
 upload-docs: html/doc-version
 	$(AM_V_GEN)
 	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
-	$(Q) test "${REL_VERSION}" != "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "html/"   "testbit:pub/docs/rapicorn/${DOC_VERSION}/" ; }
-	$(Q) test "${REL_VERSION}"  = "${DSC_VERSION}" || { set -x ; \
-	  rsync -zaHP --del "html/"  "testbit:pub/docs/rapicorn/latest/" ; }
+	$(Q) docdir=latest && test "@ENABLE_DEVEL_MODE_TRUE@" != "#" || \
+	  docdir="${RAPICORN_RELEASE_YEAR}.${RAPICORN_RELEASE_MONTH}" && \
+	  set -x && rsync -zaHP --del "html/" "testbit:pub/docs/rapicorn/$$docdir"
+
 upload-coverage: coverage
 	$(AM_V_GEN)
 	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }

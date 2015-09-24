@@ -68,7 +68,7 @@ mk= ; AC_SUBST([mk]) # workaround for Automake abusing MAKE(1) keywords
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes] turn on debugging, default=yes],,enable_debug=yes)
-AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=[no/yes]    turn on development mode, default=no],,enable_devel_mode=no)
+AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=no/yes    turn on development mode, default=auto],,enable_devel_mode=auto)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -203,9 +203,14 @@ MC_CC_TRY_OPTION(OPTIMIZE_FAST, -finline-functions)
 MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
 AC_SUBST(OPTIMIZE_FAST)
 
-# --enable-devel-mode: check for development build rules, i.e. autogen.sh
-# based builds with rapicorn.git repository; these enable additional build
-# rules for files that are pre-packaged in tarballs.
+# == ENABLE_DEVEL_MODE ==
+# check for development build rules, these usually require acess to .git/
+# if 'auto', enable devel mode for odd (development) versions
+AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
+[test x"$enable_devel_mode" = xauto && { echo " $RAPICORN_REVISION_VERSION" | grep -q '[13579]$' ; } && enable_devel_mode=yes]
+test x"$enable_devel_mode" = xyes || enable_devel_mode=no
+AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
+AC_MSG_RESULT([$enable_devel_mode])
 if test x"$enable_devel_mode" = xyes ; then
   TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
   TEST_BUILDDIR=$(cd . ; /bin/pwd)
