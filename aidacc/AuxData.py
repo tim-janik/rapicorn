@@ -13,6 +13,8 @@ auxillary_initializers = {
   (Decls.FLOAT64,   'Range')    : ('label', 'blurb', 'hints', 'min', 'max', 'step', 'default=0'),
   (Decls.STRING,    'String')   : ('label', 'blurb', 'hints', 'default'),
   (Decls.ENUM,      'Enum')     : ('label', 'blurb', 'hints', 'default'),
+  (Decls.RECORD,    'Record')   : ('label', 'blurb', 'hints'),
+  (Decls.SEQUENCE,  'Sequence') : ('label', 'blurb', 'hints'),
   (Decls.STREAM,    'Stream')   : ('label', 'blurb', 'hints'),
 }
 

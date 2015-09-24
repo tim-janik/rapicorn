@@ -757,8 +757,8 @@ class Generator:
       hints = fl[1].auxdata.get ('hints', default_flags)
       s += '    ' + cmmt + 'RAPICORN_AIDA_PROPERTY (%s, %s, %s, %s, %s),\n' % (classC, fl[0], label, blurb, fill_range (fl[1], hints))
       if cmmt:
-        self.warning ('%s::%s: property type not supported: %s' %
-                      (self.namespaced_identifier (classC), fl[0], self.type2cpp (fl[1])), *fl[1].location)
+        self.warning ('%s::__aida_properties__: property type not supported: %s %s' %
+                      (self.namespaced_identifier (classC), self.type2cpp (fl[1]), fl[0]), *fl[1].location)
     s += '  };\n'
     precls, heritage, cl, ddc = self.interface_class_inheritance (class_info)
     calls = [cl + '::__aida_properties__()' for cl in precls]

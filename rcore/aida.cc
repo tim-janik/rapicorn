@@ -1280,15 +1280,23 @@ ProtoScope::current_base_connection ()
     return *current_thread_proto_connections.client_connection;
 }
 
+// for debugging purposes, assert early that RemoteHandle is non-NULL
+static inline const RemoteHandle&
+assert_remote_handle (const RemoteHandle &remote_handle)
+{
+  assert (remote_handle != NULL);
+  return remote_handle;
+}
+
 ProtoScopeCall1Way::ProtoScopeCall1Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
-  ProtoScope (*rhandle.__aida_connection__())
+  ProtoScope (*assert_remote_handle (rhandle).__aida_connection__())
 {
   pm.add_header2 (MSGID_CALL_ONEWAY, hashi, hashlo);
   pm <<= rhandle;
 }
 
 ProtoScopeCall2Way::ProtoScopeCall2Way (ProtoMsg &pm, const RemoteHandle &rhandle, uint64 hashi, uint64 hashlo) :
-  ProtoScope (*rhandle.__aida_connection__())
+  ProtoScope (*assert_remote_handle (rhandle).__aida_connection__())
 {
   pm.add_header2 (MSGID_CALL_TWOWAY, hashi, hashlo);
   pm <<= rhandle;
