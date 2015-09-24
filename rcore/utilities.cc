@@ -186,12 +186,13 @@ struct PExec {
   String data_in, data_out, data_err;
   uint64 usec_timeout; // max child runtime
   StringVector args;
+  StringVector evars;
 public:
   inline int  execute (); // returns -errno
 };
 
 static String
-exec_cmd (const String &cmd, bool witherr, uint64 usec_timeout = 1000000 / 2)
+exec_cmd (const String &cmd, bool witherr, StringVector fix_env, uint64 usec_timeout = 1000000 / 2)
 {
   String btout;
   PExec sub;
@@ -200,6 +201,7 @@ exec_cmd (const String &cmd, bool witherr, uint64 usec_timeout = 1000000 / 2)
   sub.args = string_split (cmd, " ");
   if (sub.args.size() < 1)
     sub.args.push_back ("");
+  sub.evars = fix_env;
   int eret = sub.execute();
   if (eret < 0)
     critical ("executing '%s' failed: %s\n", sub.args[0].c_str(), strerror (-eret));
@@ -315,6 +317,16 @@ PExec::execute ()
     goto return_errno;
   if (fork_pid == 0)    // child
     {
+      for (const String &evar : evars)
+        {
+          const char *var = evar.c_str(), *eq = strchr (var, '=');
+          if (!eq)
+            {
+              unsetenv (var);
+              continue;
+            }
+          setenv (evar.substr (0, eq - var).c_str(), eq + 1, true);
+        }
       close (stdin_pipe[1]);
       close (stdout_pipe[0]);
       close (stderr_pipe[0]);
@@ -525,7 +537,8 @@ pretty_backtrace_symbols (void **pointers, const int nptrs)
         {
           // resolve to code location *before* return address
           const size_t caller_addr = dso_offset - 1;
-          entry = exec_cmd (string_format ("%s -C -f -s -i -p -e %s 0x%zx", addr2line, dso.c_str(), caller_addr), true);
+          entry = exec_cmd (string_format ("%s -C -f -s -i -p -e %s 0x%zx", addr2line, dso.c_str(), caller_addr), true,
+                            cstrings_to_vector ("LC_ALL=C", "LANGUAGE", NULL));
         }
       // polish entry
       while (entry.size() && strchr ("\n \t\r", entry[entry.size() - 1]))
