@@ -275,7 +275,7 @@ private:
   void    rekind  (TypeKind _kind);
 public:
   /*dtor*/ ~Any    ();                                  ///< Any destructor.
-  explicit  Any    ();                                  ///< Default initialize Any with no type.
+  /*ctor*/  Any    ();                                  ///< Default initialize Any with no type.
   /// Initialize Any from a @a anany which is of Any or derived type.
   template<class V, REQUIRES< ::std::is_base_of< Any, typename std::remove_reference<V>::type >::value > = true> inline
   explicit  Any (V &&anany) : Any()     { this->operator= (::std::forward<V> (anany)); }
