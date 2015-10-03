@@ -205,11 +205,10 @@ public:
   template<class A> void
   visit_integral (A &a, Name name)
   {
-    ssize_t v = a;
-    if (v >= 65536)
-      iwriter_.set (key (name), string_format ("0x%zx", v));
+    if (a >= 65536)
+      iwriter_.set (key (name), string_format ("0x%x", a));
     else
-      iwriter_.set (key (name), string_format ("%zd", v));
+      iwriter_.set (key (name), string_format ("%d", a));
   }
   template<class A> void
   visit_float (A &a, Name name)
@@ -237,7 +236,7 @@ public:
     RAPICORN_RETURN_UNLESS (name);
     for (size_t i = 0; i < a.size(); i++)
       {
-        const String nth = string_format ("%c%zu", name[0], i);
+        const String nth = string_format ("%c%u", name[0], i);
         ToIniVisitor child_visitor (iwriter_, prefix_ + name + ".");
         typename StdVectorValueHandle<::std::vector<A>>::type value_handle = a[i];
         child_visitor (value_handle, nth.c_str());
@@ -323,7 +322,7 @@ public:
     a.resize (0);
     for (size_t i = 0; ; i++)
       {
-        const String nth = string_format ("%c%zu", name[0], i);
+        const String nth = string_format ("%c%u", name[0], i);
         const String next_prefix = prefix_ + name + ".";
         const String next_element = next_prefix + nth;
         if (!ifile_.has_section (next_element) and !ifile_.has_value (next_element))
@@ -372,7 +371,7 @@ public:
   template<class A> void
   visit_integral (A &a, Name name)
   {
-    xnode_->set_attribute (name, string_format ("%zd", ssize_t (a)));
+    xnode_->set_attribute (name, string_format ("%d", a));
   }
   template<class A> void
   visit_float (A &a, Name name)
@@ -410,7 +409,7 @@ public:
     XmlNodeP xseq = xnode_->create_child (name, 0, 0, "");
     for (size_t i = 0; i < a.size(); i++)
       {
-        const String nth = string_format ("%c%zu", name[0], i);
+        const String nth = string_format ("%c%u", name[0], i);
         ToXmlVisitor child_visitor (xseq);
         typename StdVectorValueHandle<::std::vector<A>>::type value_handle = a[i];
         child_visitor (value_handle, nth.c_str());
@@ -500,7 +499,7 @@ public:
     a.resize (0);
     for (size_t i = 0; ; i++)
       {
-        const String nth = string_format ("%c%zu", name[0], i);
+        const String nth = string_format ("%c%u", name[0], i);
         if (xseq->has_attribute (nth, false) || xseq->find_child (nth))
           a.resize (i + 1);
         else
