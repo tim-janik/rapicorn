@@ -545,7 +545,7 @@ dnl # RAPICORN_CYTHON_REQUIREMENTS() - rapicorn cython binding checks
 AC_DEFUN([RAPICORN_CYTHON_REQUIREMENTS],
 [
   # cython
-  CYTHON_REQUIRED=0.20.2
+  CYTHON_REQUIRED=0.20.1
   MC_ASSERT_PROG(CYTHON, cython, [cython can be found at http://cython.org/])
   CYTHON_VERSION=[$($CYTHON --version 2>&1 | sed 's/[^0-9]*\(.*\)$/\1/g')]
   AS_ECHO("checking cython version... $CYTHON_VERSION")
