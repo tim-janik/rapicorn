@@ -562,7 +562,9 @@ Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode
   // collect properties from XML attributes
   StringVector prop_names = wnode->list_attributes(), prop_values = wnode->list_values();
   // collect properties from XML property element syntax
-  bool skip_child[std::max (size_t (1), wnode->children().size())] = { 0, };
+  const size_t chsize = std::max (size_t (1), wnode->children().size());
+  bool skip_child[chsize];
+  std::fill (skip_child, skip_child + chsize, 0);
   size_t ski = 0; // skip child index
   for (const XmlNodeP cnode : wnode->children())
     {
