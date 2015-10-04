@@ -91,6 +91,10 @@ EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 # -- Build OBJECTS alphabetically --
 librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
+install-exec-ldconfig: # libtool >= 1.5.2 doesn't always set rpath, requiring ldconfig
+	test `id -u` != 0 -o ! -x /sbin/ldconfig || /sbin/ldconfig $(DESTDIR)$(libdir)
+install-exec-hook: install-exec-ldconfig
+
 # === Rapicorn IDL ===
 AIDACC         = $(top_builddir)/aidacc/aidacc-intern
 CXXSTUB_PY     = $(top_srcdir)/aidacc/CxxStub.py
