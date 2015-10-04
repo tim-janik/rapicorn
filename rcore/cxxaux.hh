@@ -27,6 +27,7 @@
 #define RAPICORN_MAX(a,b)                       ((a) >= (b) ? (a) : (b))
 #define RAPICORN_CLAMP(v,mi,ma)                 ((v) < (mi) ? (mi) : ((v) > (ma) ? (ma) : (v)))
 #define RAPICORN_ARRAY_SIZE(array)		(sizeof (array) / sizeof ((array)[0]))
+#define RAPICORN_ALIGN(size, base)		((base) * (((size) + (base) - 1) / (base)))
 #undef ABS
 #define ABS                                     RAPICORN_ABS
 #undef MIN
