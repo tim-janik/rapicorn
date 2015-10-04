@@ -356,7 +356,7 @@ Any::operator= (const Any &clone)
     case ANY:           u_.vany = clone.u_.vany ? new Any (*clone.u_.vany) : NULL;                   break;
     case SEQUENCE:      u_.vanys = clone.u_.vanys ? new AnyVector (*clone.u_.vanys) : NULL;          break;
     case RECORD:        new (&u_.vfields()) FieldVector (clone.u_.vfields());                        break;
-    case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL;      break;
+    case INSTANCE:      new (&u_.ibase()) ImplicitBaseP (clone.u_.ibase());                          break;
     case REMOTE:        u_.rhandle = clone.u_.rhandle ? new RemoteHandle (*clone.u_.rhandle) : NULL; break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL;            break;
     case TRANSITION:    // u_.vint64 = clone.u_.vint64;
@@ -385,7 +385,7 @@ Any::clear()
     case ANY:           delete u_.vany;                         break;
     case SEQUENCE:      delete u_.vanys;                        break;
     case RECORD:        u_.vfields().~FieldVector();            break;
-    case INSTANCE:      delete u_.ibase;                        break;
+    case INSTANCE:      u_.ibase().~ImplicitBaseP();            break;
     case REMOTE:        delete u_.rhandle;                      break;
     case LOCAL:         delete u_.pholder;                      break;
     case TRANSITION: ;
@@ -507,7 +507,7 @@ Any::to_string() const
     case STRING:     s += u_.vstring();                                                                                    break;
     case SEQUENCE:   s += any_vector_to_string (u_.vanys);                                                                 break;
     case RECORD:     s += any_vector_to_string (&u_.vfields());                                                            break;
-    case INSTANCE:   s += string_format ("((ImplicitBase*) %p)", u_.ibase ? u_.ibase->get() : NULL);                       break;
+    case INSTANCE:   s += string_format ("((ImplicitBase*) %p)", u_.ibase().get());                                        break;
     case REMOTE:     s += string_format ("(RemoteHandle (orbid=0x#%08x))", u_.rhandle ? u_.rhandle->__aida_orbid__() : 0); break;
     case TRANSITION: s += string_format ("(Any (TRANSITION, orbid=0x#%08x))", u_.vint64);                                  break;
     case ANY:
@@ -549,10 +549,7 @@ Any::operator== (const Any &clone) const
       else
         return *u_.vany == *clone.u_.vany;
     case INSTANCE:
-      if (!u_.ibase || !clone.u_.ibase)
-        return u_.ibase == clone.u_.ibase;
-      else
-        return u_.ibase->get() == clone.u_.ibase->get();
+      return u_.ibase().get() == clone.u_.ibase().get();
     case REMOTE:
       return (u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) == (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0);
     case LOCAL:
@@ -589,7 +586,7 @@ Any::get_bool () const
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
     case RECORD:        return !u_.vfields().empty();
-    case INSTANCE:      return u_.ibase && u_.ibase->get();
+    case INSTANCE:      return u_.ibase().get() != NULL;
     case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
     default: ;
     }
@@ -701,7 +698,7 @@ Any::set_rec (const FieldVector *rec)
   ensure (RECORD);
   if (rec != &u_.vfields())
     {
-      FieldVector tmp (*rec); // copy rec
+      FieldVector tmp (*rec); // beware of internal references, copy before freeing
       std::swap (tmp, u_.vfields());
     }
 }
@@ -709,8 +706,8 @@ Any::set_rec (const FieldVector *rec)
 ImplicitBaseP
 Any::get_ibasep () const
 {
-  if (kind() == INSTANCE && u_.ibase)
-    return *u_.ibase;
+  if (kind() == INSTANCE)
+    return u_.ibase();
   return ImplicitBaseP();
 }
 
@@ -718,17 +715,10 @@ void
 Any::set_ibase (ImplicitBase *ibase)
 {
   ensure (INSTANCE);
-  if (!u_.ibase || u_.ibase->get() != ibase)
+  if (u_.ibase().get() != ibase)
     {
-      ImplicitBaseP *old = u_.ibase;
-      if (ibase)
-        {
-          ImplicitBaseP next = shared_ptr_cast<ImplicitBase> (ibase);
-          u_.ibase = new ImplicitBaseP (next);
-        }
-      else
-        u_.ibase = NULL;
-      delete old;
+      ImplicitBaseP next = shared_ptr_cast<ImplicitBase> (ibase); // beware of internal references, copy before freeing
+      std::swap (u_.ibase(), next);
     }
 }
 
@@ -792,12 +782,12 @@ Any::to_transition (BaseConnection &base_connection)
       // pass through for now
       break;
     case INSTANCE:
-      if (u_.ibase && u_.ibase->get())
+      if (u_.ibase().get())
         {
           ServerConnection *server_connection = dynamic_cast<ServerConnection*> (&base_connection);
           assert (server_connection);
           ProtoMsg *pm = ProtoMsg::_new (1);
-          server_connection->add_interface (*pm, *u_.ibase);
+          server_connection->add_interface (*pm, u_.ibase());
           Rapicorn::Aida::ProtoReader pmr (*pm);
           rekind (TRANSITION);
           u_.vint64 = pmr.pop_orbid();
@@ -870,7 +860,7 @@ Any::from_transition (BaseConnection &base_connection)
           ImplicitBaseP ibasep = server_connection->pop_interface (pmr);
           delete pm;
           rekind (INSTANCE);
-          u_.ibase = ibasep ? new ImplicitBaseP (ibasep) : NULL;
+          std::swap (u_.ibase(), ibasep);
         }
       else // client_connection
         {

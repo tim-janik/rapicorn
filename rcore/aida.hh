@@ -266,12 +266,15 @@ private:
   ///@cond
   union {
     uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys;
-    ImplicitBaseP *ibase; RemoteHandle *rhandle; PlaceHolder *pholder;
+    RemoteHandle *rhandle; PlaceHolder *pholder;
     int64 sdummy_[AIDA_I64ELEMENTS (sizeof (String))], vdummy_[AIDA_I64ELEMENTS (sizeof (std::vector<void*>))];
-    FieldVector&       vfields () { return *(FieldVector*) this; static_assert (sizeof (FieldVector) <= sizeof (*this), ""); }
-    const FieldVector& vfields () const { return *(const FieldVector*) this; }
-    String&            vstring () { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), ""); }
-    const String&      vstring () const { return *(const String*) this; }
+    int64 bdummy_[AIDA_I64ELEMENTS (sizeof (ImplicitBaseP))];
+    FieldVector&         vfields () { return *(FieldVector*) this; static_assert (sizeof (FieldVector) <= sizeof (*this), ""); }
+    const FieldVector&   vfields () const { return *(const FieldVector*) this; }
+    String&              vstring () { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), ""); }
+    const String&        vstring () const { return *(const String*) this; }
+    ImplicitBaseP&       ibase   () { return *(ImplicitBaseP*) this; static_assert (sizeof (ImplicitBaseP) <= sizeof (*this), ""); }
+    const ImplicitBaseP& ibase   () const { return *(const ImplicitBaseP*) this; }
   } u_;
   ///@endcond
   void    hold    (PlaceHolder*);
