@@ -17,6 +17,7 @@ namespace Rapicorn { namespace Aida {
 // == Auxillary macros ==
 #define AIDA_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
 #define AIDA_CPP_STRINGIFY(s)   AIDA_CPP_STRINGIFYi (s)
+#define AIDA_I64ELEMENTS(size)  (((size) + sizeof (int64) - 1) / sizeof (int64)) ///< Length of int64[] array to hold @a size.
 #if     __GNUC__ >= 4
 #define AIDA_UNUSED             __attribute__ ((__unused__))
 #define AIDA_DEPRECATED         __attribute__ ((__deprecated__))
@@ -266,6 +267,7 @@ private:
   union {
     uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; FieldVector *vfields;
     ImplicitBaseP *ibase; RemoteHandle *rhandle; PlaceHolder *pholder;
+    int64 sdummy_[AIDA_I64ELEMENTS (sizeof (String))];
     String&       vstring() { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), "union size"); }
     const String& vstring() const { return *(const String*) this; }
   } u_;
