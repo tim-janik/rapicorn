@@ -355,7 +355,7 @@ Any::operator= (const Any &clone)
     case STRING:        new (&u_.vstring()) String (clone.u_.vstring());                             break;
     case ANY:           u_.vany = clone.u_.vany ? new Any (*clone.u_.vany) : NULL;                   break;
     case SEQUENCE:      u_.vanys = clone.u_.vanys ? new AnyVector (*clone.u_.vanys) : NULL;          break;
-    case RECORD:        u_.vfields = clone.u_.vfields ? new FieldVector (*clone.u_.vfields) : NULL;  break;
+    case RECORD:        new (&u_.vfields()) FieldVector (clone.u_.vfields());                        break;
     case INSTANCE:      u_.ibase = clone.u_.ibase ? new ImplicitBaseP (*clone.u_.ibase) : NULL;      break;
     case REMOTE:        u_.rhandle = clone.u_.rhandle ? new RemoteHandle (*clone.u_.rhandle) : NULL; break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL;            break;
@@ -384,7 +384,7 @@ Any::clear()
     case STRING:        u_.vstring().~String();                 break;
     case ANY:           delete u_.vany;                         break;
     case SEQUENCE:      delete u_.vanys;                        break;
-    case RECORD:        delete u_.vfields;                      break;
+    case RECORD:        u_.vfields().~FieldVector();            break;
     case INSTANCE:      delete u_.ibase;                        break;
     case REMOTE:        delete u_.rhandle;                      break;
     case LOCAL:         delete u_.pholder;                      break;
@@ -402,12 +402,12 @@ Any::rekind (TypeKind _kind)
   type_kind_ = _kind;
   switch (_kind)
     {
-    case STRING:   new (&u_.vstring()) String(); break;
-    case ANY:      u_.vany = NULL;               break;
-    case SEQUENCE: u_.vanys = NULL;              break;
-    case RECORD:   u_.vfields = NULL;            break;
-    case REMOTE:   u_.rhandle = NULL;            break;
-    default:                                     break;
+    case STRING:   new (&u_.vstring()) String();      break;
+    case ANY:      u_.vany = NULL;                    break;
+    case SEQUENCE: u_.vanys = NULL;                   break;
+    case RECORD:   new (&u_.vfields()) FieldVector(); break;
+    case REMOTE:   u_.rhandle = NULL;                 break;
+    default:                                          break;
     }
 }
 
@@ -506,7 +506,7 @@ Any::to_string() const
     case FLOAT64:    s += string_format ("%.17g", u_.vdouble);                                                             break;
     case STRING:     s += u_.vstring();                                                                                    break;
     case SEQUENCE:   s += any_vector_to_string (u_.vanys);                                                                 break;
-    case RECORD:     s += any_vector_to_string (u_.vfields);                                                               break;
+    case RECORD:     s += any_vector_to_string (&u_.vfields());                                                            break;
     case INSTANCE:   s += string_format ("((ImplicitBase*) %p)", u_.ibase ? u_.ibase->get() : NULL);                       break;
     case REMOTE:     s += string_format ("(RemoteHandle (orbid=0x#%08x))", u_.rhandle ? u_.rhandle->__aida_orbid__() : 0); break;
     case TRANSITION: s += string_format ("(Any (TRANSITION, orbid=0x#%08x))", u_.vint64);                                  break;
@@ -542,10 +542,7 @@ Any::operator== (const Any &clone) const
       else
         return *u_.vanys == *clone.u_.vanys;
     case RECORD:
-      if (!u_.vfields || !clone.u_.vfields)
-        return u_.vfields == clone.u_.vfields;
-      else
-        return *u_.vfields == *clone.u_.vfields;
+      return u_.vfields() == clone.u_.vfields();
     case ANY:
       if (!u_.vany || !clone.u_.vany)
         return u_.vany == clone.u_.vany;
@@ -591,7 +588,7 @@ Any::get_bool () const
     case INT64:         return u_.vint64 != 0;
     case STRING:        return !u_.vstring().empty();
     case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
-    case RECORD:        return u_.vfields && !u_.vfields->empty();
+    case RECORD:        return !u_.vfields().empty();
     case INSTANCE:      return u_.ibase && u_.ibase->get();
     case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
     default: ;
@@ -692,8 +689,8 @@ Any::set_seq (const AnyVector *seq)
 const Any::FieldVector*
 Any::get_rec () const
 {
-  if (kind() == RECORD && u_.vfields)
-    return u_.vfields;
+  if (kind() == RECORD && !u_.vfields().empty())
+    return &u_.vfields();
   static const FieldVector empty;
   return &empty;
 }
@@ -702,11 +699,10 @@ void
 Any::set_rec (const FieldVector *rec)
 {
   ensure (RECORD);
-  if (u_.vfields != rec)
+  if (rec != &u_.vfields())
     {
-      FieldVector *old = u_.vfields;
-      u_.vfields = rec ? new FieldVector (*rec) : NULL;
-      delete old;
+      FieldVector tmp (*rec); // copy rec
+      std::swap (tmp, u_.vfields());
     }
 }
 
@@ -785,9 +781,8 @@ Any::to_transition (BaseConnection &base_connection)
           (*u_.vanys)[i].to_transition (base_connection);
       break;
     case RECORD:
-      if (u_.vfields)
-        for (size_t i = 0; i < u_.vfields->size(); i++)
-          (*u_.vfields)[i].to_transition (base_connection);
+      for (size_t i = 0; i < u_.vfields().size(); i++)
+        u_.vfields()[i].to_transition (base_connection);
       break;
     case ANY:
       if (u_.vany)
@@ -853,9 +848,8 @@ Any::from_transition (BaseConnection &base_connection)
           (*u_.vanys)[i].from_transition (base_connection);
       break;
     case RECORD:
-      if (u_.vfields)
-        for (size_t i = 0; i < u_.vfields->size(); i++)
-          (*u_.vfields)[i].from_transition (base_connection);
+      for (size_t i = 0; i < u_.vfields().size(); i++)
+        u_.vfields()[i].from_transition (base_connection);
       break;
     case ANY:
       if (u_.vany)
