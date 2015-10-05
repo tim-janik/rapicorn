@@ -413,8 +413,8 @@ private:
   typedef RemoteMember<RemoteHandle> ARemoteHandle;
   union {
     uint64 vuint64; int64 vint64; double vdouble; Any *vany; PlaceHolder *pholder;
-    int64 sdummy_[AIDA_I64ELEMENTS (sizeof (String))], vdummy_[AIDA_I64ELEMENTS (sizeof (std::vector<void*>))];
-    int64 bdummy_[AIDA_I64ELEMENTS (sizeof (ImplicitBaseP))], rdummy_[AIDA_I64ELEMENTS (sizeof (ARemoteHandle))];
+    int64 dummy_[AIDA_I64ELEMENTS (MAX (MAX (sizeof (String), sizeof (std::vector<void*>)),
+                                        MAX (sizeof (ImplicitBaseP), sizeof (ARemoteHandle))))];
     FieldVector&         vfields () { return *(FieldVector*) this; static_assert (sizeof (FieldVector) <= sizeof (*this), ""); }
     const FieldVector&   vfields () const { return *(const FieldVector*) this; }
     AnyVector&           vanys   () { return *(AnyVector*) this; static_assert (sizeof (AnyVector) <= sizeof (*this), ""); }
