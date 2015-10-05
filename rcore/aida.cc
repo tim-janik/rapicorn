@@ -354,7 +354,7 @@ Any::operator= (const Any &clone)
     {
     case STRING:        new (&u_.vstring()) String (clone.u_.vstring());                             break;
     case ANY:           u_.vany = clone.u_.vany ? new Any (*clone.u_.vany) : NULL;                   break;
-    case SEQUENCE:      u_.vanys = clone.u_.vanys ? new AnyVector (*clone.u_.vanys) : NULL;          break;
+    case SEQUENCE:      new (&u_.vanys()) AnyVector (clone.u_.vanys());                              break;
     case RECORD:        new (&u_.vfields()) FieldVector (clone.u_.vfields());                        break;
     case INSTANCE:      new (&u_.ibase()) ImplicitBaseP (clone.u_.ibase());                          break;
     case REMOTE:        new (&u_.rhandle()) ARemoteHandle (clone.u_.rhandle());                      break;
@@ -383,7 +383,7 @@ Any::clear()
     {
     case STRING:        u_.vstring().~String();                 break;
     case ANY:           delete u_.vany;                         break;
-    case SEQUENCE:      delete u_.vanys;                        break;
+    case SEQUENCE:      u_.vanys().~AnyVector();                break;
     case RECORD:        u_.vfields().~FieldVector();            break;
     case INSTANCE:      u_.ibase().~ImplicitBaseP();            break;
     case REMOTE:        u_.rhandle().~ARemoteHandle();          break;
@@ -404,7 +404,7 @@ Any::rekind (TypeKind _kind)
     {
     case STRING:   new (&u_.vstring()) String();        break;
     case ANY:      u_.vany = NULL;                      break;
-    case SEQUENCE: u_.vanys = NULL;                     break;
+    case SEQUENCE: new (&u_.vanys()) AnyVector();       break;
     case RECORD:   new (&u_.vfields()) FieldVector();   break;
     case INSTANCE: new (&u_.ibase()) ImplicitBaseP();   break;
     case REMOTE:   new (&u_.rhandle()) ARemoteHandle(); break;
@@ -506,7 +506,7 @@ Any::to_string() const
     case INT64:      s += string_format ("%d", u_.vint64);                                                      break;
     case FLOAT64:    s += string_format ("%.17g", u_.vdouble);                                                  break;
     case STRING:     s += u_.vstring();                                                                         break;
-    case SEQUENCE:   s += any_vector_to_string (u_.vanys);                                                      break;
+    case SEQUENCE:   s += any_vector_to_string (&u_.vanys());                                                   break;
     case RECORD:     s += any_vector_to_string (&u_.vfields());                                                 break;
     case INSTANCE:   s += string_format ("((ImplicitBase*) %p)", u_.ibase().get());                             break;
     case REMOTE:     s += string_format ("(RemoteHandle (orbid=0x#%08x))", u_.rhandle().__aida_orbid__());      break;
@@ -538,10 +538,7 @@ Any::operator== (const Any &clone) const
     case FLOAT64:  if (u_.vdouble != clone.u_.vdouble) return false;                                     break;
     case STRING:   if (u_.vstring() != clone.u_.vstring()) return false;                                 break;
     case SEQUENCE:
-      if (!u_.vanys || !clone.u_.vanys)
-        return u_.vanys == clone.u_.vanys;
-      else
-        return *u_.vanys == *clone.u_.vanys;
+      return u_.vanys() == clone.u_.vanys();
     case RECORD:
       return u_.vfields() == clone.u_.vfields();
     case ANY:
@@ -585,7 +582,7 @@ Any::get_bool () const
     case TRANSITION: case BOOL: case ENUM: case INT32:
     case INT64:         return u_.vint64 != 0;
     case STRING:        return !u_.vstring().empty();
-    case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
+    case SEQUENCE:      return !u_.vanys().empty();
     case RECORD:        return !u_.vfields().empty();
     case INSTANCE:      return u_.ibase().get() != NULL;
     case REMOTE:        return u_.rhandle().__aida_orbid__() != 0;
@@ -666,8 +663,8 @@ Any::set_string (const std::string &value)
 const Any::AnyVector*
 Any::get_seq () const
 {
-  if (kind() == SEQUENCE && u_.vanys)
-    return u_.vanys;
+  if (kind() == SEQUENCE)
+    return &u_.vanys();
   static const AnyVector empty;
   return &empty;
 }
@@ -676,11 +673,10 @@ void
 Any::set_seq (const AnyVector *seq)
 {
   ensure (SEQUENCE);
-  if (u_.vanys != seq)
+  if (seq != &u_.vanys())
     {
-      AnyVector *old = u_.vanys;
-      u_.vanys = seq ? new AnyVector (*seq) : NULL;
-      delete old;
+      AnyVector tmp (*seq); // beware of internal references, copy before freeing
+      std::swap (tmp, u_.vanys());
     }
 }
 
@@ -763,9 +759,8 @@ Any::to_transition (BaseConnection &base_connection)
   switch (kind())
     {
     case SEQUENCE:
-      if (u_.vanys)
-        for (size_t i = 0; i < u_.vanys->size(); i++)
-          (*u_.vanys)[i].to_transition (base_connection);
+      for (size_t i = 0; i < u_.vanys().size(); i++)
+        u_.vanys()[i].to_transition (base_connection);
       break;
     case RECORD:
       for (size_t i = 0; i < u_.vfields().size(); i++)
@@ -830,9 +825,8 @@ Any::from_transition (BaseConnection &base_connection)
       ServerConnection *server_connection;
       ClientConnection *client_connection;
     case SEQUENCE:
-      if (u_.vanys)
-        for (size_t i = 0; i < u_.vanys->size(); i++)
-          (*u_.vanys)[i].from_transition (base_connection);
+      for (size_t i = 0; i < u_.vanys().size(); i++)
+        u_.vanys()[i].from_transition (base_connection);
       break;
     case RECORD:
       for (size_t i = 0; i < u_.vfields().size(); i++)
