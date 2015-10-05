@@ -39,11 +39,11 @@ RAPICORN_STATIC_ASSERT (offsetof (PollFD, revents)      == offsetof (struct poll
 RAPICORN_STATIC_ASSERT (sizeof (((PollFD*) 0)->revents) == sizeof (((struct pollfd*) 0)->revents));
 
 // === Stupid ID allocator ===
-static Atomic<uint> static_id_counter = 65536;
+static volatile int global_id_counter = 65536;
 static uint
 alloc_id ()
 {
-  uint id = static_id_counter++;
+  uint id = atomic_fetch_add (&global_id_counter, +1);
   if (!id)
     fatal ("EventLoop: id counter overflow, please report"); // FIXME
   return id;
