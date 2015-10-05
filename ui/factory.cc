@@ -730,6 +730,7 @@ create_ui_child (ContainerImpl &container, const String &widget_identifier, cons
 {
   // figure XML context
   FactoryContext &fc = container.factory_context();
+  assert (NULL != &fc);
   // create child within parent namespace
   //local_namespace_list.push_back (namespace_domain);
   WidgetImplP widget = create_ui_widget (widget_identifier, arguments);
