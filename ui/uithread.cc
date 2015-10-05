@@ -87,7 +87,7 @@ struct Initializer {
   Mutex mutex; Cond cond; bool done;
 };
 
-static Atomic<ThreadInfo*> uithread_threadinfo = NULL;
+static ThreadInfo *volatile uithread_threadinfo = NULL;
 
 class UIThread {
   std::thread             thread_;
@@ -172,8 +172,8 @@ public:
   void
   operator() ()
   {
-    assert (uithread_threadinfo == NULL);
-    uithread_threadinfo = &ThreadInfo::self();
+    assert (atomic_load (&uithread_threadinfo) == NULL);
+    atomic_store (&uithread_threadinfo, &ThreadInfo::self());
     ThreadInfo::self().name ("RapicornUIThread");
     const bool running_twice = __sync_fetch_and_add (&running_, +1);
     assert (running_twice == false);
@@ -193,8 +193,8 @@ public:
     assert (stopped_twice == false);
 
     assert (running_ == false);
-    assert (uithread_threadinfo == &ThreadInfo::self());
-    uithread_threadinfo = NULL;
+    ThreadInfo *last_threadinfo = atomic_swap (&uithread_threadinfo, (ThreadInfo*) NULL);
+    assert (last_threadinfo == &ThreadInfo::self());
   }
 };
 static UIThread *the_uithread = NULL;
@@ -208,7 +208,7 @@ uithread_main_loop ()
 bool
 uithread_is_current ()
 {
-  return uithread_threadinfo == &ThreadInfo::self();
+  return atomic_load (&uithread_threadinfo) == &ThreadInfo::self();
 }
 
 void
