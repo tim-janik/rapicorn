@@ -253,7 +253,7 @@ add (const String &testname,
   add (testname, (void(*)(void*)) test_func, (void*) 0);
 }
 
-static Atomic<TestEntry*> test_entry_list = NULL;
+static TestEntry *volatile test_entry_list = NULL;
 
 void
 RegisterTest::add_test (char kind, const String &testname, void (*test_func) (void*), void *data)
@@ -264,8 +264,8 @@ RegisterTest::add_test (char kind, const String &testname, void (*test_func) (vo
   te->name = testname;
   te->kind = kind;
   do
-    te->next = test_entry_list;
-  while (!test_entry_list.cas (te->next, te));
+    te->next = atomic_load (&test_entry_list);
+  while (!atomic_bool_cas (&test_entry_list, te->next, te));
 }
 
 static bool flag_test_ui = false;
@@ -313,7 +313,7 @@ static void
 run_tests (void)
 {
   vector<TestEntry*> entries;
-  for (TestEntry *node = test_entry_list; node; node = node->next)
+  for (TestEntry *node = atomic_load (&test_entry_list); node; node = node->next)
     entries.push_back (node);
   stable_sort (entries.begin(), entries.end(), test_entry_cmp);
   char ftype = logging() ? 'l' : (slow() ? 's' : 't');
