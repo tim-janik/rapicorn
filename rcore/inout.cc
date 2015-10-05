@@ -477,15 +477,16 @@ debug_config_bool (const String &key, bool default_value)
   return string_to_bool (debug_config_get (key, string_from_int (default_value)));
 }
 
-static Atomic<int> debug_development_features = UNCHECKED;      // cached, checked only once after startup
+static volatile int debug_development_features = UNCHECKED;      // cached, checked only once after startup
 
 /// Check if debugging features for development versions should be enabled, see also #$RAPICORN_DEBUG.
 bool
 debug_devel_check ()
 {
-  if (debug_development_features == UNCHECKED)
-    debug_development_features = RAPICORN_DEBUG_OPTION ("devel", "Enable debugging features for development versions.");
-  return debug_development_features;
+  if (atomic_load (&debug_development_features) == UNCHECKED)
+    atomic_store (&debug_development_features,
+                  int (RAPICORN_DEBUG_OPTION ("devel", "Enable debugging features for development versions.")));
+  return atomic_load (&debug_development_features);
 }
 
 bool volatile _rapicorn_debug_check_cache = true; // initially enable debugging
@@ -639,7 +640,7 @@ struct EnvKey {
   EnvKey() : var (""), key ("") {}
 };
 
-static Atomic<int>       colorize_stdout = UNCHECKED;   // cache stdout colorization check
+static volatile int      colorize_stdout = UNCHECKED;   // cache stdout colorization check
 static Exclusive<EnvKey> env_key;
 
 /// Configure the environment variable that always/never/automatically allows colorization.
@@ -650,7 +651,7 @@ color_envkey (const String &env_var, const String &key)
   ekey.var = env_var;
   ekey.key = key;
   env_key = ekey; // Atomic access
-  colorize_stdout = UNCHECKED; // Atomic access
+  atomic_store (&colorize_stdout, UNCHECKED);
 }
 
 /// Check whether the tty @a fd should use colorization.
@@ -698,9 +699,9 @@ colorize_tty (int fd)
 const char*
 color (Colors acolor)
 {
-  if (colorize_stdout == UNCHECKED)
-    colorize_stdout = colorize_tty();
-  if (!colorize_stdout)
+  if (atomic_load (&colorize_stdout) == UNCHECKED)
+    atomic_store (&colorize_stdout, int (colorize_tty()));
+  if (!atomic_load (&colorize_stdout))
     return "";
   return color_code (acolor);
 }
