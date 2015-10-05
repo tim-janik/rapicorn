@@ -364,15 +364,43 @@ Any::operator= (const Any &clone)
   return *this;
 }
 
+template<typename U> static inline void
+swap_any_unions (TypeKind kind, U &u, U &v)
+{
+  switch (kind)
+    {
+    case UNTYPED: case BOOL: case ENUM: case INT32: case INT64: case FLOAT64:
+    case TRANSITION:    std::swap (u, v);                     break;
+    case STRING:        std::swap (u.vstring(), v.vstring()); break;
+    case SEQUENCE:      std::swap (u.vanys(), v.vanys());     break;
+    case RECORD:        std::swap (u.vfields(), v.vfields()); break;
+    case INSTANCE:      std::swap (u.ibase(), v.ibase());     break;
+    case REMOTE:        std::swap (u.rhandle(), v.rhandle()); break;
+    case LOCAL:         std::swap (u.pholder, v.pholder);     break;
+    case ANY:           std::swap (u.vany, v.vany);           break;
+    default:            AIDA_ASSERT (!"reached");             break;
+    }
+}
+
 void
 Any::swap (Any &other)
 {
-  constexpr size_t USIZE = sizeof (this->u_);
-  uint64 buffer[(USIZE + 7) / 8];
-  memcpy (buffer, &other.u_, USIZE);
-  memcpy (&other.u_, &this->u_, USIZE);
-  memcpy (&this->u_, buffer, USIZE);
-  std::swap (type_kind_, other.type_kind_);
+  if (kind() == other.kind())
+    {
+      if (this != &other)
+        swap_any_unions (kind(), u_, other.u_);
+      return;
+    }
+  Any tmp;
+  // this <--> tmp
+  tmp.rekind (kind());
+  swap_any_unions (tmp.kind(), tmp.u_, u_);
+  // this <--> other
+  rekind (other.kind());
+  swap_any_unions (kind(), u_, other.u_);
+  // tmp <--> other
+  other.rekind (tmp.kind());
+  swap_any_unions (other.kind(), other.u_, tmp.u_);
 }
 
 void
