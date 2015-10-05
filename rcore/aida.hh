@@ -544,7 +544,7 @@ union ProtoUnion {
   int64        vint64;
   double       vdouble;
   Any         *vany;
-  uint64       smem[(sizeof (std::string) + 7) / 8];    // String memory
+  String      *vstr;
   void        *pmem[2];                                 // equate sizeof (ProtoMsg)
   uint8        bytes[8];                                // ProtoMsg types
   struct { uint32 index, capacity; };                   // ProtoMsg.buffermem[0]
@@ -574,8 +574,8 @@ public:
   inline void add_int64  (int64 vint64)    { ProtoUnion &u = addu (INT64); u.vint64 = vint64; }
   inline void add_evalue (int64 vint64)    { ProtoUnion &u = addu (ENUM); u.vint64 = vint64; }
   inline void add_double (double vdouble)  { ProtoUnion &u = addu (FLOAT64); u.vdouble = vdouble; }
-  inline void add_string (const String &s) { ProtoUnion &u = addu (STRING); new (&u) String (s); }
   inline void add_orbid  (uint64 objid)    { ProtoUnion &u = addu (TRANSITION); u.vint64 = objid; }
+  void        add_string (const String &s);
   void        add_any    (const Any &vany, BaseConnection &bcon);
   inline void add_header1 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
   inline void add_header2 (MessageId m, uint64 h, uint64 l) { add_int64 (IdentifierParts (m).vuint64); add_int64 (h); add_int64 (l); }
@@ -599,7 +599,7 @@ public:
   inline void operator<<= (bool   v)          { ProtoUnion &u = addu (BOOL); u.vint64 = v; }
   inline void operator<<= (double v)          { ProtoUnion &u = addu (FLOAT64); u.vdouble = v; }
   inline void operator<<= (EnumValue e)       { ProtoUnion &u = addu (ENUM); u.vint64 = e.value; }
-  inline void operator<<= (const String &s)   { ProtoUnion &u = addu (STRING); new (&u) String (s); }
+  inline void operator<<= (const String &s)   { add_string (s); }
   inline void operator<<= (const TypeHash &h) { *this <<= h.typehi; *this <<= h.typelo; }
   void        operator<<= (const Any &vany);
   void        operator<<= (const RemoteHandle &rhandle);
@@ -629,14 +629,14 @@ public:
   inline int64           get_int64   () { ProtoUnion &u = fb_getu (INT64); return u.vint64; }
   inline int64           get_evalue  () { ProtoUnion &u = fb_getu (ENUM); return u.vint64; }
   inline double          get_double  () { ProtoUnion &u = fb_getu (FLOAT64); return u.vdouble; }
-  inline const String&   get_string  () { ProtoUnion &u = fb_getu (STRING); return *(String*) &u; }
+  inline const String&   get_string  () { ProtoUnion &u = fb_getu (STRING); return *u.vstr; }
   inline const ProtoMsg& get_rec     () { ProtoUnion &u = fb_getu (RECORD); return *(ProtoMsg*) &u; }
   inline const ProtoMsg& get_seq     () { ProtoUnion &u = fb_getu (SEQUENCE); return *(ProtoMsg*) &u; }
   inline int64           pop_bool    () { ProtoUnion &u = fb_popu (BOOL); return u.vint64; }
   inline int64           pop_int64   () { ProtoUnion &u = fb_popu (INT64); return u.vint64; }
   inline int64           pop_evalue  () { ProtoUnion &u = fb_popu (ENUM); return u.vint64; }
   inline double          pop_double  () { ProtoUnion &u = fb_popu (FLOAT64); return u.vdouble; }
-  inline const String&   pop_string  () { ProtoUnion &u = fb_popu (STRING); return *(String*) &u; }
+  inline const String&   pop_string  () { ProtoUnion &u = fb_popu (STRING); return *u.vstr; }
   inline uint64          pop_orbid   () { ProtoUnion &u = fb_popu (TRANSITION); return u.vint64; }
   Any                    pop_any     (BaseConnection &bcon);
   inline const ProtoMsg& pop_rec     () { ProtoUnion &u = fb_popu (RECORD); return *(ProtoMsg*) &u; }
@@ -650,7 +650,7 @@ public:
   inline void operator>>= (bool &v)            { ProtoUnion &u = fb_popu (BOOL); v = u.vint64; }
   inline void operator>>= (double &v)          { ProtoUnion &u = fb_popu (FLOAT64); v = u.vdouble; }
   inline void operator>>= (EnumValue &e)       { ProtoUnion &u = fb_popu (ENUM); e.value = u.vint64; }
-  inline void operator>>= (String &s)          { ProtoUnion &u = fb_popu (STRING); s = *(String*) &u; }
+  inline void operator>>= (String &s)          { ProtoUnion &u = fb_popu (STRING); s = *u.vstr; }
   inline void operator>>= (TypeHash &h)        { *this >>= h.typehi; *this >>= h.typelo; }
   inline void operator>>= (std::vector<bool>::reference v) { bool b; *this >>= b; v = b; }
   void        operator>>= (Any &vany);
@@ -787,7 +787,7 @@ ProtoMsg::reset()
       buffermem[0].index--; // causes size()--
       switch (type_at (size()))
         {
-        case STRING:    { ProtoUnion &u = getu(); ((String*) &u)->~String(); }; break;
+        case STRING:    { ProtoUnion &u = getu(); delete u.vstr; }; break;
         case ANY:       { ProtoUnion &u = getu(); delete u.vany; }; break;
         case SEQUENCE:
         case RECORD:    { ProtoUnion &u = getu(); ((ProtoMsg*) &u)->~ProtoMsg(); }; break;

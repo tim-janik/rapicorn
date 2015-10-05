@@ -260,7 +260,6 @@ TypeHash::to_string () const
 }
 
 // == ProtoUnion ==
-static_assert (sizeof (ProtoUnion::smem) <= sizeof (ProtoUnion::bytes), "sizeof ProtoUnion::smem");
 static_assert (sizeof (ProtoMsg) <= sizeof (ProtoUnion), "sizeof ProtoMsg");
 
 // === Utilities ===
@@ -935,9 +934,7 @@ ProtoMsg::ProtoMsg (uint32 _ntypes) :
   buffermem[0].index = 0;
 }
 
-ProtoMsg::ProtoMsg (uint32    _ntypes,
-                          ProtoUnion *_bmem,
-                          uint32    _bmemlen) :
+ProtoMsg::ProtoMsg (uint32 _ntypes, ProtoUnion *_bmem, uint32 _bmemlen) :
   buffermem (_bmem)
 {
   const uint32 _offs = 1 + (_ntypes + 7) / 8;
@@ -959,6 +956,13 @@ ProtoMsg::check_internal ()
 {
   if (size() > capacity())
     fatal_error (string_format ("ProtoMsg(this=%p): capacity=%u size=%u", this, capacity(), size()));
+}
+
+void
+ProtoMsg::add_string (const String &s)
+{
+  ProtoUnion &u = addu (STRING);
+  u.vstr = new String (s);
 }
 
 void
