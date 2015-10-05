@@ -322,7 +322,7 @@ public:
 template<typename T>
 class AsyncRingBuffer {
   const uint    size_;
-  Atomic<uint>  wmark_, rmark_;
+  volatile uint wmark_, rmark_;
   T            *buffer_;
   RAPICORN_CLASS_NON_COPYABLE (AsyncRingBuffer);
 public:
@@ -354,8 +354,8 @@ AsyncRingBuffer<T>::~AsyncRingBuffer()
 template<typename T> uint
 AsyncRingBuffer<T>::n_writable() const
 {
-  const uint rm = rmark_.load();
-  const uint wm = wmark_.load();
+  const uint rm = atomic_load (&rmark_);
+  const uint wm = atomic_load (&wmark_);
   const uint space = (size_ - 1 + rm - wm) % size_;
   return space;
 }
@@ -364,8 +364,8 @@ template<typename T> uint
 AsyncRingBuffer<T>::write (uint length, const T *data, bool partial)
 {
   const uint orig_length = length;
-  const uint rm = rmark_.load();
-  uint wm = wmark_.load();
+  const uint rm = atomic_load (&rmark_);
+  uint wm = atomic_load (&wmark_);
   uint space = (size_ - 1 + rm - wm) % size_;
   if (!partial && length > space)
     return 0;
@@ -384,15 +384,15 @@ AsyncRingBuffer<T>::write (uint length, const T *data, bool partial)
       length -= space;
     }
   RAPICORN_SFENCE; // wmb ensures buffer_ writes are made visible before the wmark_ update
-  wmark_.store (wm);
+  atomic_store (&wmark_, wm);
   return orig_length - length;
 }
 
 template<typename T> uint
 AsyncRingBuffer<T>::n_readable() const
 {
-  const uint wm = wmark_.load();
-  const uint rm = rmark_.load();
+  const uint wm = atomic_load (&wmark_);
+  const uint rm = atomic_load (&rmark_);
   const uint space = (size_ + wm - rm) % size_;
   return space;
 }
@@ -402,8 +402,8 @@ AsyncRingBuffer<T>::read (uint length, T *data, bool partial)
 {
   const uint orig_length = length;
   RAPICORN_LFENCE; // rmb ensures buffer_ contents are seen before wmark_ updates
-  const uint wm = wmark_.load();
-  uint rm = rmark_.load();
+  const uint wm = atomic_load (&wmark_);
+  uint rm = atomic_load (&rmark_);
   uint space = (size_ + wm - rm) % size_;
   if (!partial && length > space)
     return 0;
@@ -421,7 +421,7 @@ AsyncRingBuffer<T>::read (uint length, T *data, bool partial)
       data += space;
       length -= space;
     }
-  rmark_.store (rm);
+  atomic_store (&rmark_, rm);
   return orig_length - length;
 }
 
