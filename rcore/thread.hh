@@ -58,7 +58,7 @@ class RWLock {
   pthread_rwlock_t rwlock_;
   char             initialized_;
   void             real_init ();
-  inline void      fixinit   () { if (RAPICORN_UNLIKELY (!Lib::atomic_load (&initialized_))) real_init(); }
+  inline void      fixinit   () { if (RAPICORN_UNLIKELY (!atomic_load (&initialized_))) real_init(); }
 public:
   constexpr RWLock      () : rwlock_ (), initialized_ (0) {}
   void      rdlock      ()      { fixinit(); while (pthread_rwlock_rdlock (&rwlock_) == EAGAIN); }

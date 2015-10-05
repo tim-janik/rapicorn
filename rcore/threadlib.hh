@@ -6,10 +6,8 @@
 #include <rcore/cpuasm.hh>
 
 namespace Rapicorn {
-namespace Lib { // Namespace for implementation internals
 
-template<typename T> T    atomic_load  (T volatile *p)      { RAPICORN_CFENCE; T t = *p; RAPICORN_LFENCE; return t; }
-template<typename T> void atomic_store (T volatile *p, T i) { RAPICORN_SFENCE; *p = i;  RAPICORN_CFENCE; }
+namespace Lib { // Namespace for implementation internals
 
 template<typename T>
 class Atomic {
