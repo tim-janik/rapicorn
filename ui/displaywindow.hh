@@ -162,7 +162,7 @@ public:
 /// Template for factory registration of DisplayDriver implementations.
 template<class DriverImpl>
 struct DisplayDriverFactory : public DisplayDriver {
-  Atomic<int> running;
+  std::atomic<int> running;
   DisplayDriverFactory (const String &name, int priority = 0) :
     DisplayDriver (name, priority), running (false)
   {}
