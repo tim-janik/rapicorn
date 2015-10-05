@@ -67,11 +67,13 @@ test_widget_usage()
   TASSERT (any1.as_any().to_string() == "Wocks");
   // INSTANCE as user_data
   any1.set (widget);
+  TASSERT (widget.__aida_orbid__() == any1.get<WidgetH>().__aida_orbid__());
   widget.set_user_data ("test-user-widget", any1);
   any2 = widget.get_user_data ("test-user-widget");
   TASSERT (any1 == any2);
   WidgetH extracted_widget;
   extracted_widget = any2.get<WidgetH>();
+  TASSERT (extracted_widget.__aida_orbid__() == any2.get<WidgetH>().__aida_orbid__());
   TASSERT (widget == extracted_widget);
   widget.set_user_data ("test-user-widget", Any()); // delete
   any2 = widget.get_user_data ("test-user-widget");
