@@ -252,9 +252,9 @@ public:
   struct Field : Any    /// Any::Field is an Any with a std::string @a name attached.
   {
     String name;        ///< The @a name of this Any::Field, as used in e.g. #RECORD types.
-    AnyField();         ///< Default initialize Any::Field.
-    AnyField (const String &name, const Any &any);                   ///< Initialize Any::Field with @a name and an @a any value.
-    template<class V> AnyField (const String &name, const V &value); ///< Initialize Any::Field with a @a value convertible to an Any.
+    Field();            ///< Default initialize Any::Field.
+    template<class V>
+    Field (const String &name, V &&value); ///< Initialize Any::Field with a @a name and an Any initialization @a value.
   };
 #endif // DOXYGEN
   typedef std::vector<Field> FieldVector; ///< Vector of fields (named Any structures) for use in #RECORD types.
