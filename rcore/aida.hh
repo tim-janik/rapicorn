@@ -410,17 +410,19 @@ protected:
 private:
   TypeKind type_kind_;
   ///@cond
+  typedef RemoteMember<RemoteHandle> ARemoteHandle;
   union {
-    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys;
-    RemoteHandle *rhandle; PlaceHolder *pholder;
+    uint64 vuint64; int64 vint64; double vdouble; Any *vany; AnyVector *vanys; PlaceHolder *pholder;
     int64 sdummy_[AIDA_I64ELEMENTS (sizeof (String))], vdummy_[AIDA_I64ELEMENTS (sizeof (std::vector<void*>))];
-    int64 bdummy_[AIDA_I64ELEMENTS (sizeof (ImplicitBaseP))];
+    int64 bdummy_[AIDA_I64ELEMENTS (sizeof (ImplicitBaseP))], rdummy_[AIDA_I64ELEMENTS (sizeof (ARemoteHandle))];
     FieldVector&         vfields () { return *(FieldVector*) this; static_assert (sizeof (FieldVector) <= sizeof (*this), ""); }
     const FieldVector&   vfields () const { return *(const FieldVector*) this; }
     String&              vstring () { return *(String*) this; static_assert (sizeof (String) <= sizeof (*this), ""); }
     const String&        vstring () const { return *(const String*) this; }
     ImplicitBaseP&       ibase   () { return *(ImplicitBaseP*) this; static_assert (sizeof (ImplicitBaseP) <= sizeof (*this), ""); }
     const ImplicitBaseP& ibase   () const { return *(const ImplicitBaseP*) this; }
+    ARemoteHandle&       rhandle () { return *(ARemoteHandle*) this; static_assert (sizeof (ARemoteHandle) <= sizeof (*this), ""); }
+    const ARemoteHandle& rhandle () const { return *(const ARemoteHandle*) this; }
   } u_;
   ///@endcond
   void    hold    (PlaceHolder*);
@@ -487,11 +489,9 @@ private:
   template<typename SP>
   SP                 cast_ibasep () const               { return std::dynamic_pointer_cast<typename SP::element_type> (get_ibasep()); }
   RemoteHandle       get_handle  () const;
-  void               take_handle (RemoteHandle *handle);
   template<typename H>
   H                  cast_handle () const               { return H::down_cast (get_handle()); }
-  template<typename Handle>
-  void               set_handle  (Handle object)        { return take_handle (new Handle (object)); }
+  void               set_handle  (const RemoteHandle &handle);
   const Any*         get_any     () const;
   void               set_any     (const Any *value);
 public:
@@ -523,7 +523,7 @@ public:
   template<typename T, REQUIRES< std::is_same<FieldVector, T>::value > = true>         void set (const T *v) { return set_rec (v); }
   template<typename T, REQUIRES< IsImplicitBaseDerived<T>::value > = true>             void set (T &v) { return set_ibase (&v); }
   template<typename T, REQUIRES< IsImplicitBaseDerivedP<T>::value > = true>            void set (T v) { return set_ibase (v.get()); }
-  template<typename T, REQUIRES< IsRemoteHandleDerived<T>::value > = true>             void set (T v) { return set_handle<T> (v); }
+  template<typename T, REQUIRES< IsRemoteHandleDerived<T>::value > = true>             void set (T v) { return set_handle (v); }
   template<typename T, REQUIRES< std::is_base_of<Any, T>::value > = true>              void set (const T &v) { return set_any (&v); }
   template<typename T, REQUIRES< IsLocalClass<T>::value > = true>                      void set (const T &v) { hold (new Holder<T> (v)); }
   // convenience

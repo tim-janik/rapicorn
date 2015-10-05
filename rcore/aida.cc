@@ -357,7 +357,7 @@ Any::operator= (const Any &clone)
     case SEQUENCE:      u_.vanys = clone.u_.vanys ? new AnyVector (*clone.u_.vanys) : NULL;          break;
     case RECORD:        new (&u_.vfields()) FieldVector (clone.u_.vfields());                        break;
     case INSTANCE:      new (&u_.ibase()) ImplicitBaseP (clone.u_.ibase());                          break;
-    case REMOTE:        u_.rhandle = clone.u_.rhandle ? new RemoteHandle (*clone.u_.rhandle) : NULL; break;
+    case REMOTE:        new (&u_.rhandle()) ARemoteHandle (clone.u_.rhandle());                      break;
     case LOCAL:         u_.pholder = clone.u_.pholder ? clone.u_.pholder->clone() : NULL;            break;
     case TRANSITION:    // u_.vint64 = clone.u_.vint64;
     default:            u_ = clone.u_;                                                               break;
@@ -386,7 +386,7 @@ Any::clear()
     case SEQUENCE:      delete u_.vanys;                        break;
     case RECORD:        u_.vfields().~FieldVector();            break;
     case INSTANCE:      u_.ibase().~ImplicitBaseP();            break;
-    case REMOTE:        delete u_.rhandle;                      break;
+    case REMOTE:        u_.rhandle().~ARemoteHandle();          break;
     case LOCAL:         delete u_.pholder;                      break;
     case TRANSITION: ;
     default: ;
@@ -402,12 +402,13 @@ Any::rekind (TypeKind _kind)
   type_kind_ = _kind;
   switch (_kind)
     {
-    case STRING:   new (&u_.vstring()) String();      break;
-    case ANY:      u_.vany = NULL;                    break;
-    case SEQUENCE: u_.vanys = NULL;                   break;
-    case RECORD:   new (&u_.vfields()) FieldVector(); break;
-    case REMOTE:   u_.rhandle = NULL;                 break;
-    default:                                          break;
+    case STRING:   new (&u_.vstring()) String();        break;
+    case ANY:      u_.vany = NULL;                      break;
+    case SEQUENCE: u_.vanys = NULL;                     break;
+    case RECORD:   new (&u_.vfields()) FieldVector();   break;
+    case INSTANCE: new (&u_.ibase()) ImplicitBaseP();   break;
+    case REMOTE:   new (&u_.rhandle()) ARemoteHandle(); break;
+    default:                                            break;
     }
 }
 
@@ -502,14 +503,14 @@ Any::to_string() const
   switch (kind())
     {
     case BOOL: case ENUM: case INT32:
-    case INT64:      s += string_format ("%d", u_.vint64);                                                                 break;
-    case FLOAT64:    s += string_format ("%.17g", u_.vdouble);                                                             break;
-    case STRING:     s += u_.vstring();                                                                                    break;
-    case SEQUENCE:   s += any_vector_to_string (u_.vanys);                                                                 break;
-    case RECORD:     s += any_vector_to_string (&u_.vfields());                                                            break;
-    case INSTANCE:   s += string_format ("((ImplicitBase*) %p)", u_.ibase().get());                                        break;
-    case REMOTE:     s += string_format ("(RemoteHandle (orbid=0x#%08x))", u_.rhandle ? u_.rhandle->__aida_orbid__() : 0); break;
-    case TRANSITION: s += string_format ("(Any (TRANSITION, orbid=0x#%08x))", u_.vint64);                                  break;
+    case INT64:      s += string_format ("%d", u_.vint64);                                                      break;
+    case FLOAT64:    s += string_format ("%.17g", u_.vdouble);                                                  break;
+    case STRING:     s += u_.vstring();                                                                         break;
+    case SEQUENCE:   s += any_vector_to_string (u_.vanys);                                                      break;
+    case RECORD:     s += any_vector_to_string (&u_.vfields());                                                 break;
+    case INSTANCE:   s += string_format ("((ImplicitBase*) %p)", u_.ibase().get());                             break;
+    case REMOTE:     s += string_format ("(RemoteHandle (orbid=0x#%08x))", u_.rhandle().__aida_orbid__());      break;
+    case TRANSITION: s += string_format ("(Any (TRANSITION, orbid=0x#%08x))", u_.vint64);                       break;
     case ANY:
       s += "(Any (";
       if (u_.vany && u_.vany->kind() == STRING)
@@ -551,7 +552,7 @@ Any::operator== (const Any &clone) const
     case INSTANCE:
       return u_.ibase().get() == clone.u_.ibase().get();
     case REMOTE:
-      return (u_.rhandle ? u_.rhandle->__aida_orbid__() : 0) == (clone.u_.rhandle ? clone.u_.rhandle->__aida_orbid__() : 0);
+      return u_.rhandle().__aida_orbid__() == clone.u_.rhandle().__aida_orbid__();
     case LOCAL:
       if (!u_.pholder || !clone.u_.pholder)
         return u_.pholder == clone.u_.pholder;
@@ -587,7 +588,7 @@ Any::get_bool () const
     case SEQUENCE:      return u_.vanys && !u_.vanys->empty();
     case RECORD:        return !u_.vfields().empty();
     case INSTANCE:      return u_.ibase().get() != NULL;
-    case REMOTE:        return u_.rhandle && u_.rhandle->__aida_orbid__();
+    case REMOTE:        return u_.rhandle().__aida_orbid__() != 0;
     default: ;
     }
   return 0;
@@ -725,18 +726,14 @@ Any::set_ibase (ImplicitBase *ibase)
 RemoteHandle
 Any::get_handle () const
 {
-  return kind() == REMOTE && u_.rhandle ? *u_.rhandle : RemoteHandle::__aida_null_handle__();
+  return kind() == REMOTE ? u_.rhandle() : RemoteHandle::__aida_null_handle__();
 }
 
 void
-Any::take_handle (RemoteHandle *handle)
+Any::set_handle (const RemoteHandle &handle)
 {
   ensure (REMOTE);
-  if (handle)
-    assert_return (handle != u_.rhandle);
-  RemoteHandle *old = u_.rhandle;
-  u_.rhandle = handle;
-  delete old;
+  u_.rhandle() = handle;
 }
 
 const Any*
@@ -800,12 +797,12 @@ Any::to_transition (BaseConnection &base_connection)
         }
       break;
     case REMOTE:
-      if (u_.rhandle && u_.rhandle->__aida_orbid__())
+      if (u_.rhandle().__aida_orbid__())
         {
           ClientConnection *client_connection = dynamic_cast<ClientConnection*> (&base_connection);
           assert (client_connection);
           ProtoMsg *pm = ProtoMsg::_new (1);
-          client_connection->add_handle (*pm, *u_.rhandle);
+          client_connection->add_handle (*pm, u_.rhandle());
           Rapicorn::Aida::ProtoReader pmr (*pm);
           rekind (TRANSITION);
           u_.vint64 = pmr.pop_orbid();
@@ -867,11 +864,11 @@ Any::from_transition (BaseConnection &base_connection)
           ProtoMsg *pm = ProtoMsg::_new (1);
           pm->add_orbid (u_.vint64);
           Rapicorn::Aida::ProtoReader pmr (*pm);
-          RemoteMember<RemoteHandle> rmember;
-          client_connection->pop_handle (pmr, rmember);
+          ARemoteHandle next_handle;
+          client_connection->pop_handle (pmr, next_handle);
           delete pm;
           rekind (REMOTE);
-          u_.rhandle = new RemoteHandle (rmember);
+          u_.rhandle() = next_handle;
         }
       break;
     case UNTYPED: case BOOL: case ENUM: case INT32: case INT64: case FLOAT64: case STRING:
