@@ -5,15 +5,6 @@
 #include <unistd.h>
 #include <thread>
 
-#if     __SIZEOF_POINTER__ == 8
-namespace Rapicorn {
-template<> struct Atomic<__int128> : Lib::Atomic<__int128> {
-  Atomic<__int128> (__int128 i = 0) : Lib::Atomic<__int128> (i) {}
-  using Lib::Atomic<__int128>::operator=;
-};
-} // Rapicorn
-#endif
-
 namespace {
 using namespace Rapicorn;
 
@@ -120,16 +111,16 @@ static Init         complex_int_assert_0 ([]() { QUICK_ASSERT (read_complex_int(
 static ComplexType  complex_int          (1337);                                                // second ctor, assigns non-0
 static ptrdiff_t    read_complex_int     () { return complex_int.v.size() ? complex_int.a : 0; }
 static Init         complex_int_assert_1 ([]() { QUICK_ASSERT (read_complex_int() == 1337); }); // third ctor, checks non-0
-// check for constexpr ctor Atomic<int*>
+// check for constexpr ctor atomic<int*>
 static ptrdiff_t    read_atomic_ptr     ();
 static Init         atomic_ptr_assert_0 ([]() { QUICK_ASSERT (read_atomic_ptr() == 17); });     // first ctor, check constexpr mem
-static Atomic<int*> atomic_ptr          ((int*) 17);    // second ctor, constexpr affects static mem initialization
+static std::atomic<int*> atomic_ptr     ((int*) 17);    // second ctor, constexpr affects static mem initialization
 static ptrdiff_t    read_atomic_ptr     () { return ptrdiff_t (atomic_ptr.load()); }
 static Init         atomic_ptr_assert_1 ([]() { QUICK_ASSERT (read_atomic_ptr() == 17); });     // third ctor, runs last
-// check for constexpr ctor Atomic<ptrdiff_t>
+// check for constexpr ctor atomic<ptrdiff_t>
 static ptrdiff_t    read_atomic_pdt     ();
 static Init         atomic_pdt_assert_0 ([]() { QUICK_ASSERT (read_atomic_pdt() == 879); });    // first ctor, check constexpr mem
-static Atomic<int*> atomic_pdt          ((int*) 879);   // second ctor, constexpr affects static mem initialization
+static std::atomic<int*> atomic_pdt     ((int*) 879);   // second ctor, constexpr affects static mem initialization
 static ptrdiff_t    read_atomic_pdt     () { return ptrdiff_t (atomic_pdt.load()); }
 static Init         atomic_pdt_assert_1 ([]() { QUICK_ASSERT (read_atomic_pdt() == 879); });    // third ctor, runs last
 
@@ -144,11 +135,11 @@ REGISTER_TEST ("Threads/Constexpr Constructors", test_constexpr_ctors);
 
 // == atomicity tests ==
 template<typename V> static void
-atomic_counter_func (Atomic<V> &ai, int niters, V d)
+atomic_counter_func (std::atomic<V> &ai, int niters, V d)
 {
   if (d < 0)
     for (int i = 0; i < niters; i++)
-      ai -= -d;
+      ai.fetch_sub (-d);
   else
     for (int i = 0; i < niters; i++)
       ai += d;
@@ -159,7 +150,7 @@ test_atomic_counter (const int nthreads, int niters, V a, V b)
 {
   assert (0 == (nthreads & 1));
   std::thread threads[nthreads];
-  Atomic<V> atomic_counter = 0;
+  std::atomic<V> atomic_counter { 0 };
   for (int i = 0; i < nthreads; i++)
     {
       if (i & 1)
@@ -192,7 +183,7 @@ test_atomic ()
   test_atomic_counter<int64> (52, 125, -50, +37);
   test_atomic_counter<int64> (52, 125, +42, +77);
 #if     __SIZEOF_POINTER__ == 8
-  test_atomic_counter<__int128> (68, 12500, +4200, +77000);
+  // test_atomic_counter<__int128> (68, 12500, +4200, +77000);
 #endif
   Exclusive<ComplexStruct> excs;
   ComplexStruct copy = excs;    // atomic access
@@ -232,13 +223,13 @@ do_once_example_test()
 }
 REGISTER_TEST ("Examples/do_once", do_once_example_test);
 
-static Atomic<uint>    runonce_threadcount = 0;
+static volatile int    runonce_threadcount = 0;
 static Mutex           runonce_mutex;
 static Cond            runonce_cond;
 static volatile size_t runonce_value = 0;
 
 static void
-runonce_thread (Atomic<uint> &runonce_counter)
+runonce_thread (std::atomic<uint> &runonce_counter)
 {
   runonce_mutex.lock(); // syncronize
   runonce_mutex.unlock();
@@ -254,7 +245,7 @@ runonce_thread (Atomic<uint> &runonce_counter)
     }
   TCMP (runonce_counter, ==, 1);
   TCMP (runonce_value, ==, 42);
-  --runonce_threadcount;        // sinal thread end
+  atomic_fetch_add (&runonce_threadcount, -1); // signal thread end
   runonce_mutex.lock();
   runonce_cond.signal();
   runonce_mutex.unlock();
@@ -265,8 +256,8 @@ test_runonce()
 {
   const int count = 44;
   std::thread threads[count];
-  Atomic<uint> runonce_counter = 0;
-  runonce_threadcount.store (count);
+  std::atomic<uint> runonce_counter { 0 };
+  atomic_store (&runonce_threadcount, count);
   runonce_mutex.lock();
   for (int i = 0; i < count; i++)
     {
@@ -276,7 +267,7 @@ test_runonce()
   TCMP (runonce_value, ==, 0);
   runonce_mutex.unlock(); // syncronized thread start
   runonce_mutex.lock();
-  while (runonce_threadcount.load() > 0)
+  while (atomic_load (&runonce_threadcount) > 0)
     {
       TOK();
       runonce_cond.wait (runonce_mutex);
@@ -501,7 +492,7 @@ static void
 test_thread_atomic_cxx (void)
 {
   /* integer functions */
-  Atomic<int> ai;
+  std::atomic<int> ai { 0 };
   int r;
   ai.store (17);
   TCMP (ai, ==, 17);
@@ -520,12 +511,15 @@ test_thread_atomic_cxx (void)
   ai += -20;
   r = ai.load();
   TCMP (r, ==, -1147483659);
-  r = ai.cas (17, 19);
+  int ex = 17;
+  r = ai.compare_exchange_weak (ex, 19, std::memory_order_seq_cst, std::memory_order_seq_cst);
   TCMP (r, ==, false);
   r = ai.load();
   TCMP (r, ==, -1147483659);
-  r = ai.cas (-1147483659, 19);
+  ex = -1147483659;
+  r = ai.compare_exchange_weak (ex, 19, std::memory_order_seq_cst, std::memory_order_seq_cst);
   TCMP (r, ==, true);
+  TCMP (ex, ==, -1147483659);
   r = ai.load();
   TCMP (r, ==, 19);
   r = ai++;
@@ -545,17 +539,19 @@ test_thread_atomic_cxx (void)
   r = ai.load();
   TCMP (r, ==, 0);
   /* pointer functions */
-  Atomic<void*> ap;
+  std::atomic<void*> ap;
   void *p;
   ap = (void*) 119;
   TCMP (ap, ==, (void*) 119);
   p = ap;
   TCMP (p, ==, (void*) 119);
-  r = ap.cas ((void*) 17, (void*) -42);
+  void *vex = (void*) 17;
+  r = ap.compare_exchange_weak (vex, (void*) -42, std::memory_order_seq_cst, std::memory_order_seq_cst);
   TCMP (r, ==, false);
   p = ap.load();
   TCMP (p, ==, (void*) 119);
-  r = ap.cas ((void*) 119, (void*) 4294967279U);
+  vex = (void*) 119;
+  r = ap.compare_exchange_weak (vex, (void*) 4294967279U, std::memory_order_seq_cst, std::memory_order_seq_cst);
   TCMP (r, ==, true);
   p = ap;
   TCMP (p, ==, (void*) 4294967279U);
