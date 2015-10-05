@@ -23,16 +23,16 @@ inline bool is_combinator           (Kind kind) { return kind >= DESCENDANT && k
 class CustomPseudoRegistry {
   CustomPseudoRegistry                 *next_;
   String                                ident_, blurb_;
-  static Atomic<CustomPseudoRegistry*>  stack_head;
+  static CustomPseudoRegistry* volatile stack_head;
   RAPICORN_CLASS_NON_COPYABLE (CustomPseudoRegistry);
 public:
   const String& ident                () const { return ident_; }
   const String& blurb                () const { return blurb_; }
   explicit      CustomPseudoRegistry (const String &id, const String &b = "") :
     next_ (NULL), ident_ (string_tolower (id)), blurb_ (b)
-  { stack_head.push_link (&next_, this); }
+  { atomic_push_link (&stack_head, &next_, this); }
   CustomPseudoRegistry*         next () const { return next_; }
-  static CustomPseudoRegistry*  head ()       { return stack_head; }
+  static CustomPseudoRegistry*  head ()       { return atomic_load (&stack_head); }
 };
 
 bool    parse_spaces            (const char **stringp, int min_spaces = 1);
