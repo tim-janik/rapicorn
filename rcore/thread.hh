@@ -58,7 +58,7 @@ class RWLock {
   pthread_rwlock_t rwlock_;
   char             initialized_;
   void             real_init ();
-  inline void      fixinit   () { if (RAPICORN_UNLIKELY (!Lib::atomic_load (&initialized_))) real_init(); }
+  inline void      fixinit   () { if (RAPICORN_UNLIKELY (!atomic_load (&initialized_))) real_init(); }
 public:
   constexpr RWLock      () : rwlock_ (), initialized_ (0) {}
   void      rdlock      ()      { fixinit(); while (pthread_rwlock_rdlock (&rwlock_) == EAGAIN); }
@@ -197,67 +197,6 @@ using namespace std::this_thread;
 
 #endif  // RAPICORN_CONVENIENCE
 
-/// Atomic types are race free integer and pointer types, similar to std::atomic.
-/// All atomic types support load(), store(), cas() and additional type specific accessors.
-template<typename T> class Atomic;
-
-/// Atomic char type.
-template<> struct Atomic<char> : Lib::Atomic<char> {
-  constexpr Atomic<char> (char i = 0) : Lib::Atomic<char> (i) {}
-  using Lib::Atomic<char>::operator=;
-};
-
-/// Atomic int8 type.
-template<> struct Atomic<int8> : Lib::Atomic<int8> {
-  constexpr Atomic<int8> (int8 i = 0) : Lib::Atomic<int8> (i) {}
-  using Lib::Atomic<int8>::operator=;
-};
-
-/// Atomic uint8 type.
-template<> struct Atomic<uint8> : Lib::Atomic<uint8> {
-  constexpr Atomic<uint8> (uint8 i = 0) : Lib::Atomic<uint8> (i) {}
-  using Lib::Atomic<uint8>::operator=;
-};
-
-/// Atomic int32 type.
-template<> struct Atomic<int32> : Lib::Atomic<int32> {
-  constexpr Atomic<int32> (int32 i = 0) : Lib::Atomic<int32> (i) {}
-  using Lib::Atomic<int32>::operator=;
-};
-
-/// Atomic uint32 type.
-template<> struct Atomic<uint32> : Lib::Atomic<uint32> {
-  constexpr Atomic<uint32> (uint32 i = 0) : Lib::Atomic<uint32> (i) {}
-  using Lib::Atomic<uint32>::operator=;
-};
-
-/// Atomic int64 type.
-template<> struct Atomic<int64> : Lib::Atomic<int64> {
-  constexpr Atomic<int64> (int64 i = 0) : Lib::Atomic<int64> (i) {}
-  using Lib::Atomic<int64>::operator=;
-};
-
-/// Atomic uint64 type.
-template<> struct Atomic<uint64> : Lib::Atomic<uint64> {
-  constexpr Atomic<uint64> (uint64 i = 0) : Lib::Atomic<uint64> (i) {}
-  using Lib::Atomic<uint64>::operator=;
-};
-
-/// Atomic pointer type.
-template<typename V> class Atomic<V*> : protected Lib::Atomic<V*> {
-  typedef Lib::Atomic<V*> A;
-public:
-  constexpr Atomic    (V *p = nullptr) : A (p) {}
-  using A::store;
-  using A::load;
-  using A::cas;
-  using A::operator=;
-  V*       operator+= (ptrdiff_t d) volatile { return A::operator+= ((V*) d); }
-  V*       operator-= (ptrdiff_t d) volatile { return A::operator-= ((V*) d); }
-  operator V* () const volatile { return load(); }
-  void     push_link (V*volatile *nextp, V *newv) { do { *nextp = load(); } while (!cas (*nextp, newv)); }
-};
-
 /// Exclusive<> is a type wrapper that provides non-racy atomic access to a copyable @a Type.
 template<class Type>
 class Exclusive {
@@ -322,7 +261,7 @@ public:
 template<typename T>
 class AsyncRingBuffer {
   const uint    size_;
-  Atomic<uint>  wmark_, rmark_;
+  volatile uint wmark_, rmark_;
   T            *buffer_;
   RAPICORN_CLASS_NON_COPYABLE (AsyncRingBuffer);
 public:
@@ -354,8 +293,8 @@ AsyncRingBuffer<T>::~AsyncRingBuffer()
 template<typename T> uint
 AsyncRingBuffer<T>::n_writable() const
 {
-  const uint rm = rmark_.load();
-  const uint wm = wmark_.load();
+  const uint rm = atomic_load (&rmark_);
+  const uint wm = atomic_load (&wmark_);
   const uint space = (size_ - 1 + rm - wm) % size_;
   return space;
 }
@@ -364,8 +303,8 @@ template<typename T> uint
 AsyncRingBuffer<T>::write (uint length, const T *data, bool partial)
 {
   const uint orig_length = length;
-  const uint rm = rmark_.load();
-  uint wm = wmark_.load();
+  const uint rm = atomic_load (&rmark_);
+  uint wm = atomic_load (&wmark_);
   uint space = (size_ - 1 + rm - wm) % size_;
   if (!partial && length > space)
     return 0;
@@ -384,15 +323,15 @@ AsyncRingBuffer<T>::write (uint length, const T *data, bool partial)
       length -= space;
     }
   RAPICORN_SFENCE; // wmb ensures buffer_ writes are made visible before the wmark_ update
-  wmark_.store (wm);
+  atomic_store (&wmark_, wm);
   return orig_length - length;
 }
 
 template<typename T> uint
 AsyncRingBuffer<T>::n_readable() const
 {
-  const uint wm = wmark_.load();
-  const uint rm = rmark_.load();
+  const uint wm = atomic_load (&wmark_);
+  const uint rm = atomic_load (&rmark_);
   const uint space = (size_ + wm - rm) % size_;
   return space;
 }
@@ -402,8 +341,8 @@ AsyncRingBuffer<T>::read (uint length, T *data, bool partial)
 {
   const uint orig_length = length;
   RAPICORN_LFENCE; // rmb ensures buffer_ contents are seen before wmark_ updates
-  const uint wm = wmark_.load();
-  uint rm = rmark_.load();
+  const uint wm = atomic_load (&wmark_);
+  uint rm = atomic_load (&rmark_);
   uint space = (size_ + wm - rm) % size_;
   if (!partial && length > space)
     return 0;
@@ -421,7 +360,7 @@ AsyncRingBuffer<T>::read (uint length, T *data, bool partial)
       data += space;
       length -= space;
     }
-  rmark_.store (rm);
+  atomic_store (&rmark_, rm);
   return orig_length - length;
 }
 

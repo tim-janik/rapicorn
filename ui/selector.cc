@@ -35,7 +35,7 @@ strcasestr (const char *haystack, const char *needle)
 }
 #endif // UNOPTIMIZE
 
-Atomic<CustomPseudoRegistry*> CustomPseudoRegistry::stack_head = NULL;
+CustomPseudoRegistry* volatile CustomPseudoRegistry::stack_head = NULL;
 
 bool
 parse_spaces (const char **stringp, int min_spaces)

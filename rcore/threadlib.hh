@@ -6,36 +6,8 @@
 #include <rcore/cpuasm.hh>
 
 namespace Rapicorn {
+
 namespace Lib { // Namespace for implementation internals
-
-template<typename T> T    atomic_load  (T volatile *p)      { RAPICORN_CFENCE; T t = *p; RAPICORN_LFENCE; return t; }
-template<typename T> void atomic_store (T volatile *p, T i) { RAPICORN_SFENCE; *p = i;  RAPICORN_CFENCE; }
-
-template<typename T>
-class Atomic {
-  T volatile v;
-  /*ctor*/  Atomic    () = delete;
-  /*ctor*/  Atomic    (T&&) = delete;
-protected:
-  constexpr Atomic    (T i) : v (i) {}
-  Atomic<T>& operator=(Atomic<T> &o) { store (o.load()); return *this; }
-  Atomic<T> volatile& operator=(Atomic<T> &o) volatile { store (o.load()); return *this; }
-public:
-  T         load      () const volatile { return atomic_load (&v); }
-  void      store     (T i)    volatile { atomic_store (&v, i); }
-  bool      cas  (T o, T n)    volatile { return __sync_bool_compare_and_swap (&v, o, n); }
-  T         operator+=(T i)    volatile { return __sync_add_and_fetch (&v, i); }
-  T         operator-=(T i)    volatile { return __sync_sub_and_fetch (&v, i); }
-  T         operator&=(T i)    volatile { return __sync_and_and_fetch (&v, i); }
-  T         operator^=(T i)    volatile { return __sync_xor_and_fetch (&v, i); }
-  T         operator|=(T i)    volatile { return __sync_or_and_fetch  (&v, i); }
-  T         operator++()       volatile { return __sync_add_and_fetch (&v, 1); }
-  T         operator++(int)    volatile { return __sync_fetch_and_add (&v, 1); }
-  T         operator--()       volatile { return __sync_sub_and_fetch (&v, 1); }
-  T         operator--(int)    volatile { return __sync_fetch_and_sub (&v, 1); }
-  void      operator= (T i)    volatile { store (i); }
-  operator  T         () const volatile { return load(); }
-};
 
 // == Once Scope ==
 void once_list_enter  ();

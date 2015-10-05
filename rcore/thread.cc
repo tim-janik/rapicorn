@@ -309,20 +309,26 @@ struct OnceData {
 
 } // Lib
 
-static Atomic<Lib::OnceData*> static_once_data = NULL;
-
 namespace Lib {
 
 static inline OnceData&
 atomic_once_data ()
 {
-  OnceData *od = static_once_data.load();
+  static Lib::OnceData *volatile static_once_data = NULL;
+  OnceData *od = static_once_data;
   if (LIKELY (od != NULL))
     return *od;
-  od = new OnceData;
-  if (!static_once_data.cas (NULL, od))
-    delete od;
-  return *static_once_data.load();
+
+  od = atomic_load (&static_once_data);
+  if (!od)
+    {
+      od = new OnceData;
+      if (!atomic_bool_cas (&static_once_data, (OnceData*) NULL, od))
+        delete od; // another thread won the race
+      od = atomic_load (&static_once_data);
+      assert (od != NULL);
+    }
+  return *od;
 }
 
 void
