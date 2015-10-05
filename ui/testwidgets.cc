@@ -13,7 +13,7 @@ namespace Rapicorn {
 #define DFLTEPS (1e-8)
 
 // == TestContainerImpl ==
-static Atomic<uint> test_containers_rendered = 0;
+static volatile int test_containers_rendered = 0;
 
 TestContainerImpl::TestContainerImpl () :
   value_ (""), assert_value_ (""),
@@ -28,7 +28,7 @@ TestContainerImpl::TestContainerImpl () :
 uint
 TestContainerImpl::seen_test_widgets ()
 {
-  return test_containers_rendered;
+  return atomic_load (&test_containers_rendered);
 }
 
 String
@@ -273,7 +273,7 @@ TestContainerImpl::render (RenderContext &rcontext, const Rect &rect)
   if (!test_container_counted_)
     {
       test_container_counted_ = true;
-      test_containers_rendered++;
+      atomic_fetch_add (&test_containers_rendered, +1);
     }
 }
 
