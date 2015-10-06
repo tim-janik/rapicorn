@@ -32,7 +32,7 @@ addons:
       # Rapicorn1509 dependencies
       cython, libcroco3-dev,
       # devel-mode dependencies
-      intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz ]
+      intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz, texlive-binaries ]
 
 before_install:
   - uname -a
@@ -46,6 +46,7 @@ before_install:
   - flex --version
   - bison --version
   - which doxygen && doxygen --version
+  - which bibtex && bibtex --version
   - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
   - $CXX --version
 
