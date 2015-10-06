@@ -47,6 +47,7 @@ before_install:
   - $CXX --version
 
 install:
+  - sudo ln -s /usr/lib/x86_64-linux-gnu/libXext.so.6 /usr/lib/x86_64-linux-gnu/libXext.so
   - travis_retry sudo apt-get install -y libcroco3-dev
   - travis_retry sudo pip install 'cython>=0.20.2'
   - git clean -f
