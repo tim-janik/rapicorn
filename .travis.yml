@@ -8,8 +8,7 @@ language: cpp
 os:
   - linux
 
-dist:
-  - trusty
+dist: trusty
 
 compiler:
   - gcc
@@ -37,6 +36,7 @@ addons:
 
 before_install:
   - uname -a
+  - cat /etc/lsb-release
   - pwd
   - free -tm
   - make --version
