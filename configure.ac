@@ -217,7 +217,7 @@ if test x"$enable_devel_mode" = xyes ; then
   test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
     AC_MSG_ERROR([development build rules require srcdir == builddir])
   }
-  git show HEAD:configure.ac 2>&1 | grep -q 'AC_INIT.*\brapicorn\b.*,' || {
+  git show HEAD:configure.ac 2>&1 | grep -q 'AC'_'INIT.*\brapicorn\b.*,' || {
     AC_MSG_ERROR([development build rules require a rapicorn.git repository])
   }
   DEVELMODE="" ; NOTDEVELMODE="#"
