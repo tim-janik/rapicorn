@@ -69,6 +69,8 @@ notifications:
   irc:
     channels:
       - "irc.gimp.org#beast"
-  email:
-    recipients:
-      - rapicorn@googlegroups.com
+  email: false
+    #recipients:
+    #  - rapicorn@googlegroups.com
+    #on_success: change
+    #on_failure: change
