@@ -30,7 +30,7 @@ addons:
       # Rapicorn1509 dependencies
       cython, libcroco3-dev,
       # devel-mode dependencies
-      bison, flex, pandoc, doxygen, graphviz ]
+      intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz ]
 
 install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
