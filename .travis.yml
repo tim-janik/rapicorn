@@ -15,7 +15,8 @@ compiler:
 matrix:
   fast_finish: true
 
-sudo: false # http://docs.travis-ci.com/user/workers/container-based-infrastructure/
+#sudo: false   # http://docs.travis-ci.com/user/workers/container-based-infrastructure/
+sudo: required # needed to install cython and libcroco3-dev
 
 addons:
   apt:
