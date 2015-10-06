@@ -32,15 +32,10 @@ addons:
       # devel-mode dependencies
       intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz ]
 
-install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
-  - sudo pip install 'cython>=0.20.2'
-  - travis_retry sudo apt-get install -y libcroco3-dev
-
-script:
+before_install:
   - uname -a
   - pwd
-  - $CXX --version
+  - free -tm
   - make --version
   - autoconf --version
   - automake --version
@@ -48,10 +43,19 @@ script:
   - flex --version
   - bison --version
   - which doxygen && doxygen --version
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
+  - $CXX --version
+
+install:
+  - sudo pip install 'cython>=0.20.2'
+  - travis_retry sudo apt-get install -y libcroco3-dev
   - git clean -f
   - ./autogen.sh
-  - ./configure
+
+before_script:
   - make V=1
+
+script:
   - make check V=1
   - make install V=1
   - make installcheck
