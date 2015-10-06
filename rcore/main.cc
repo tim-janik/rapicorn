@@ -481,7 +481,7 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
   if (__staticctortest.v != 0x12affe17)                 // check global_ctors work
     {
       errno = ENOTSUP;
-      perror ("librapicorncore: link error: C++ constructors have not been executed");
+      perror ("librapicorncore: runtime error: C++ constructors have not been executed");
       _exit (127);
     }
   static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");

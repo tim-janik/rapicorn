@@ -268,7 +268,7 @@ REGISTER_TEST ("General/ZIntern", test_zintern);
 static void
 test_files (void)
 {
-  const char *argv0 = program_file().c_str();
+  const String argv0 = program_file();
   TCMP (Path::equals ("/bin", "/../bin"), ==, TRUE);
   TCMP (Path::equals ("/bin", "/sbin"), ==, FALSE);
   TCMP (Path::check (argv0, "e"), ==, TRUE);
