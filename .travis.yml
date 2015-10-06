@@ -15,15 +15,24 @@ compiler:
 matrix:
   fast_finish: true
 
-before_install:
-  - travis_retry sudo apt-get update -y
-  # Rapicorn1410 packages
-  - travis_retry sudo apt-get install -y libcairo2-dev libpango1.0-dev python2.7-dev libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev
-    # Xvfb is preinstalled # Xvfb x11-xserver-utils
-  # Rapicorn1509 packages
-  - travis_retry sudo apt-get install -y cython libcroco3-dev
-  # Rapicorn devel-mode tools
-  - travis_retry sudo apt-get install -y bison flex pandoc doxygen graphviz
+sudo: false # http://docs.travis-ci.com/user/workers/container-based-infrastructure/
+
+addons:
+  apt:
+    sources: # https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json
+      - ubuntu-toolchain-r-test
+    packages: [
+      # g++ >= 4.8 is required for -std=c++11
+      gcc-5, g++-5,
+      # Rapicorn1410 dependencies
+      libcairo2-dev, libpango1.0-dev, python2.7-dev, libxml2-dev, libgdk-pixbuf2.0-dev, libreadline6-dev,
+      # Rapicorn1509 dependencies
+      cython, libcroco3-dev,
+      # devel-mode dependencies
+      bison, flex, pandoc, doxygen, graphviz ]
+
+install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
 
 script:
   - uname -a
@@ -41,7 +50,7 @@ script:
   - ./configure
   - make V=1
   - make check V=1
-  - sudo make install V=1
+  - make install V=1
   - make installcheck
   - make dist V=1
   - make clean
