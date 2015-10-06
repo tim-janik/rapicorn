@@ -19,7 +19,7 @@ before_install:
   - travis_retry sudo apt-get update -y
   # Rapicorn1410 packages
   - travis_retry sudo apt-get install -y libcairo2-dev libpango1.0-dev python2.7-dev libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev
-  - travis_retry sudo apt-get install -y intltool Xvfb x11-xserver-utils
+    # Xvfb is preinstalled # Xvfb x11-xserver-utils
   # Rapicorn1509 packages
   - travis_retry sudo apt-get install -y cython libcroco3-dev
   # Rapicorn devel-mode tools
