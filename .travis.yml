@@ -1,0 +1,56 @@
+# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+#
+# http://docs.travis-ci.com/user/customizing-the-build/
+# http://lint.travis-ci.org/
+
+language: cpp
+
+os:
+  - linux
+
+compiler:
+  - gcc
+  - clang
+
+matrix:
+  fast_finish: true
+
+before_install:
+  - travis_retry sudo apt-get update -y
+  # Rapicorn1410 packages
+  - travis_retry sudo apt-get install -y libcairo2-dev libpango1.0-dev python2.7-dev libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev
+  - travis_retry sudo apt-get install -y intltool Xvfb x11-xserver-utils
+  # Rapicorn1509 packages
+  - travis_retry sudo apt-get install -y cython libcroco3-dev
+  # Rapicorn devel-mode tools
+  - travis_retry sudo apt-get install -y bison flex pandoc doxygen graphviz
+
+script:
+  - uname -a
+  - pwd
+  - $CXX --version
+  - make --version
+  - autoconf --version
+  - automake --version
+  - python --version
+  - flex --version
+  - bison --version
+  - which doxygen && doxygen --version
+  - git clean -f
+  - ./autogen.sh
+  - ./configure
+  - make V=1
+  - make check V=1
+  - sudo make install V=1
+  - make installcheck
+  - make dist V=1
+  - make clean
+  - echo "Done, build OK!"
+
+notifications:
+  irc:
+    channels:
+      - "irc.gimp.org#beast"
+  email:
+    recipients:
+      - rapicorn@googlegroups.com
