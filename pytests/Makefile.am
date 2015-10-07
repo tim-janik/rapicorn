@@ -26,10 +26,10 @@ python-call-info:
 # === TEST_PYPROGS ===
 .PHONY: check-TEST_PYPROGS
 check-TEST_PYPROGS:
-	$(Q) $(X11TEST_SERVER) && \
+	$(Q) \
 	  for tst in $(TEST_PYPROGS) ; do \
-	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;   \
-	    $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ; 		 \
+	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;		\
+	    $(X11_ENV) $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ;	\
 	  done
 	@MESSAGETEXT="All $(words $(TEST_PYPROGS)) Python tests passed"	 \
 	&& [ 0 -lt $(words $(TEST_PYPROGS)) ]                            \

@@ -14,7 +14,7 @@ EXTRA_DIST      += $(XML_FILES)
 LDADDS   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
 RAPIDRUN = $(top_builddir)/tools/rapidrun-@RAPICORN_RELEASE@
 IMGCHECK = $(top_builddir)/ui/tests/imgcheck
-X11TEST_RAPIDRUN = $(X11TEST_SERVER) && rrun() { $(RAPIDRUN) --fatal-warnings "$$@" $(XLIBSTDERREXTFIX) ; } && rrun
+X11TEST_RAPIDRUN = $(X11_ENV) $(RAPIDRUN) --fatal-warnings "$$@"
 
 # == benchaida ==
 benchaida_SOURCES  = benchaida.cc

@@ -22,20 +22,20 @@ XML_FILES   += $(TEST_XMLUIS)
 # === TEST_XMLUIS ===
 .PHONY: check-TEST_XMLUIS
 check-TEST_XMLUIS: $(RAPIDRUN)
-	$(Q) $(X11TEST_SERVER) && \
+	$(Q) \
 	  for tst in $(TEST_XMLUIS) ; do \
-	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;	\
-	    $(RAPIDRUN) -x $$rt && echo "PASS: $$tst" || exit 1 ;	\
+	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;		\
+	    $(X11_ENV) $(RAPIDRUN) -x $$rt && echo "PASS: $$tst" || exit 1 ;	\
 	  done
 check-am: check-TEST_XMLUIS
 
 # === TEST_PYPROGS ===
 .PHONY: check-TEST_PYPROGS
 check-TEST_PYPROGS:
-	$(Q) $(X11TEST_SERVER) && \
+	$(Q) \
 	  for tst in $(TEST_PYPROGS) ; do \
-	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;   \
-	    $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ; 		 \
+	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;		\
+	    $(X11_ENV) $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ;	\
 	  done
 	@MESSAGETEXT="All $(words $(TEST_PYPROGS)) Python tests passed"	 \
 	&& [ 0 -lt $(words $(TEST_PYPROGS)) ]                            \

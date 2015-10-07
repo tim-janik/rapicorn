@@ -41,47 +41,15 @@ local-ETAGS:
 .PHONY: local-ETAGS
 
 # == X11 for Unit Tests ==
-x11test_log   = $(abs_top_builddir)/.x11test.log
-DISPLAYHASH   = x11test-$(shell echo "$(PACKAGE) $(abs_top_builddir)" | md5sum | sed 's/\(.\{7\}\).*/\1/')
-X11TEST_FIND  = \
-  for F in $$(ps -eo pid,args | \
-    sed -n '{s/^\s*\([0-9]\+\)\s\+Xephyr :\([0-9]\+\) -displayID $(DISPLAYHASH)\b.*/\1:\2/; Tdone; p; :done }') nil ; do \
-    X11TEST_PID=$${F/:*/} ; X11TEST_DISPLAY=$${F/*:/} ; \
-    xset -display :$$X11TEST_DISPLAY q >/dev/null 2>&1 && break ; done
-x11test-find:
-	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no X11 test server, issue: make x11test-start" ; exit 1 ; } \
-	&& echo "DISPLAY=:$$X11TEST_DISPLAY # x11test: Xephyr: pid=$$X11TEST_PID"
-x11test-start:
-	@$(X11TEST_FIND) || { \
-	  Xephyr -help 2>&1 | grep -q display || { echo "$(MAKECMDGOALS): failed to start Xephyr"; exit 1 ; } \
-	  && for idoffs in `seq 1001 1500` ; do X11TEST_DISPLAY=$$(($$idoffs + $$RANDOM % 500)) \
-	  && test ! -e /tmp/.X$$X11TEST_DISPLAY-lock && break ; done \
-	  || { echo "$(MAKECMDGOALS): out of available X11 Display IDs"; exit 1 ; }; \
-	  Xephyr :$$X11TEST_DISPLAY -displayID $(DISPLAYHASH) -screen 800x600x32 -nolisten tcp -keybd ephyr \
-	         -auth /dev/null -noreset -retro >$(x11test_log) 2>&1 & X11TEST_PID="$$!" \
-	  && { [ -z "$$DISPLAY" ] || { sleep 1; setxkbmap -print | xkbcomp - :$$X11TEST_DISPLAY 2>/dev/null ; }; }; } \
-	&& echo "DISPLAY=:$$X11TEST_DISPLAY # x11test: Xephyr: pid=$$X11TEST_PID"
-# -host-cursor
-x11test-stop:
-	@$(X11TEST_FIND) || { echo "$(MAKECMDGOALS): no x11test running" ; exit 0 ; } \
-	&& kill -SIGTERM $$X11TEST_PID \
-	&& test -z `ps -o pid=  $$X11TEST_PID` || { sleep 1 ; kill -SIGKILL $$X11TEST_PID 2>/dev/null ; } \
-	|| true
-export X11TEST_DISPLAY ?= $(shell $(X11TEST_FIND) && echo ":$$X11TEST_DISPLAY")
-# use: $(X11TEST_SERVER) && someprogram # sets $DISPLAY
-X11TEST_SERVER := \
-  if [ -z "$$X11TEST_DISPLAY" ] ; then \
-    Xvfb -help 2>&1 | grep -q display || { echo "$(MAKECMDGOALS): failed to start Xvfb" ; exit -2 ; } \
-    && xset -help 2>&1 | grep -q display || { echo "$(MAKECMDGOALS): failed to start xset" ; exit -2 ; } \
-    && for idoffs in `seq 1001 1500` ; do D=$$(($$idoffs + $$RANDOM % 500)) \
-    && test ! -e /tmp/.X$$D-lock && break ; done \
-    || { echo "$(MAKECMDGOALS): out of available X11 Display IDs" ; exit -2 ; } \
-    && { Xvfb :$$D -screen 0 800x600x24 -nolisten tcp -auth /dev/null -noreset -retro >>$(x11test_log) 2>&1 & } \
-    && trap "set +x; kill -15 $$!" 0 HUP INT QUIT TRAP ILL ABRT FPE SEGV PIPE ALRM TERM BUS SYS XCPU XFSZ USR1 \
-    && until xset -display :$$D q >/dev/null 2>&1 ; do sleep 0.1 ; done && DISPLAY=:$$D ; \
-  else DISPLAY="$$X11TEST_DISPLAY" ; \
-  fi && export DISPLAY
-CLEANFILES += $(if $(filter $(top_builddir), . ), $(x11test_log))
+# Provide X11_ENV to execute commands within an X11 context. There are 3 possible cases here:
+# - DISPLAY is unset, no X11 server is running yet, we need to proivde Xvfb;
+# - DISPLAY is set because we're already running with an Xvfb instance, usually the display number is >= 99;
+# - DISPLAY is set by a normal login session, we assume the display number is < 99 in this case,
+#   and in order to not disturb the existing session, we need to start Xvfb.
+XVFB_MISSING = $(shell test `echo $${DISPLAY:-:0} | sed 's/^[^:]*:\([0-9]\+\).*/\1/'` -ge 99 || echo missingxvfb)
+X11_ENV = $(if $(XVFB_MISSING), xvfb-run -a -s "-screen 0 800x600x24") /usr/bin/env
+testx:
+	echo $(X11_ENV) xlogo
 
 # == Error Filter ==
 FIX_STDERR_FILTER = grep -v -E \
@@ -125,8 +93,7 @@ slowcheck-recursive:		# rule to run slowcheck recursively in subdirs
 define slowcheck_parallel_TEMPLATE
 .PHONY: slowcheck_parallel--$(1)
 slowcheck_parallel--$(1): $(1)
-	$$(Q) $$(X11TEST_SERVER) \
-	&& RAPICORN_TEST="$$(TSTV$$(V)):test-slow" ./$(1) ; _e=$$$$?; \
+	$$(Q) $$(X11_ENV) RAPICORN_TEST="$$(TSTV$$(V)):test-slow" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 slowcheck: slowcheck_parallel--$(1)
 check: @NOTDEVELMODE@ slowcheck_parallel--$(1)
@@ -138,8 +105,7 @@ TEST_PROGS =
 define check_parallel_TEMPLATE
 .PHONY: check_parallel--$(1)
 check_parallel--$(1): $(1)
-	$$(Q) $$(X11TEST_SERVER) \
-	&& RAPICORN_TEST="$$(TSTV$$(V))" ./$(1) ; _e=$$$$?; \
+	$$(Q) $$(X11_ENV) RAPICORN_TEST="$$(TSTV$$(V))" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 check: check_parallel--$(1)
 endef
@@ -150,9 +116,8 @@ LOGTEST_PROGS =
 define check_readout_TEMPLATE
 .PHONY: check_readout--$(1)
 check_readout--$(1): $(1)
-	$$(Q) $$(X11TEST_SERVER) \
-	&& tstout="$(1).log" \
-	&& RAPICORN_TEST="$$(TSTV$$(V)):test-readout" ./$(1) 2>&1 \
+	$$(Q) tstout="$(1).log" && \
+	  $$(X11_ENV) RAPICORN_TEST="$$(TSTV$$(V)):test-readout" ./$(1) 2>&1 \
 	| $(FIX_STDERR_FILTER) >"$$$$tstout" \
 	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
 	; eval "$$$$TSTDIFF" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"

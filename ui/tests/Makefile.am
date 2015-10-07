@@ -37,10 +37,9 @@ EXTRA_DIST          += testpixs.c testpixs.png
 SINFEX_SHELL=./servertests --shell
 check: sinfex-expressions
 sinfex-expressions: $(srcdir)/expressions.ref ./servertests
-	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP) \
-	&& $(X11TEST_SERVER) && \
-	  COLUMNS=9999 $(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) \
-	                 $(XLIBSTDERREXTFIX) \
+	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP)
+	$(Q) $(X11_ENV) COLUMNS=9999 \
+		$(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) \
 	; eval "$$TSTDIAGNOSE_LOGTEST"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"
 	$(Q) rm -f $(TSTTMP)
