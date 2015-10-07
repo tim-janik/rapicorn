@@ -12,7 +12,7 @@ dist: trusty
 
 compiler:
   - gcc
-  - clang
+  #- clang
 
 matrix:
   fast_finish: true
