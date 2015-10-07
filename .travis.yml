@@ -32,7 +32,7 @@ addons:
       # Rapicorn1509 dependencies
       cython, libcroco3-dev,
       # devel-mode dependencies
-      intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz, texlive-binaries ]
+      intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz, texlive-binaries, xvfb ]
 
 before_install:
   - uname -a
