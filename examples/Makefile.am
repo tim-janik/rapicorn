@@ -40,7 +40,7 @@ EXTRA_DIST	+= testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-
 
 # tests
 tour-test: tour
-	$(Q) $(X11TEST_SERVER) && ./tour --test-automation > $(TSTOUT) \
+	$(Q) $(X11_ENV) ./tour --test-automation > $(TSTOUT) \
 	&& fgrep -q "Rapicorn Tour" $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f $(TSTOUT)
 check: tour-test
