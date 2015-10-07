@@ -84,9 +84,9 @@ PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
 	glib-2.0	>= 2.32.0
 	gio-2.0		>= 2.30.0
 	gthread-2.0	>= 2.30.0
-	pango		>= 1.29.0
-	pangoft2	>= 1.29.0
-	pangocairo	>= 1.29.0
+	pango		>= 1.30.0
+	pangoft2	>= 1.30.0
+	pangocairo	>= 1.30.0
 ])
 
 # compiler, linker & libtool
@@ -217,7 +217,7 @@ if test x"$enable_devel_mode" = xyes ; then
   test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
     AC_MSG_ERROR([development build rules require srcdir == builddir])
   }
-  git cat-file commit 9ebb1801f1d0f90b 2>&1 | fgrep -q 8892df8dece73be5 || { # 12.08.0
+  git show HEAD:configure.ac 2>&1 | grep -q 'AC'_'INIT.*\brapicorn\b.*,' || {
     AC_MSG_ERROR([development build rules require a rapicorn.git repository])
   }
   DEVELMODE="" ; NOTDEVELMODE="#"
@@ -288,7 +288,7 @@ AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
     PKG_CHECK_MODULES(CAIRO,		[ cairo			>= 1.2.4  ])
     PKG_CHECK_MODULES(GIO,		[ gio-2.0		>= 2.24.0 ])
     PKG_CHECK_MODULES(GDKPIXBUF,	[ gdk-pixbuf-2.0	>= 2.22.0 ])
-    PKG_CHECK_MODULES(PANGOCAIRO,	[ pangocairo		>= 1.32.6 ])
+    PKG_CHECK_MODULES(PANGOCAIRO,	[ pangocairo		>= 1.30.0 ])
     RAPICORN_RSVG_CFLAGS="$LIBXML_CFLAGS $LIBCROCO_CFLAGS $CAIRO_CFLAGS $GIO_CFLAGS $GDKPIXBUF_CFLAGS $PANGOCAIRO_CFLAGS"
     RAPICORN_RSVG_LIBS="$LIBXML_LIBS $LIBCROCO_LIBS $CAIRO_LIBS $GIO_LIBS $GDKPIXBUF_LIBS $PANGOCAIRO_LIBS -lm"
     AC_SUBST(RAPICORN_RSVG_CFLAGS)

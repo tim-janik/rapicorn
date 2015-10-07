@@ -92,10 +92,12 @@ distcleancheck_listfiles = true # find . -type f -print
 MAINTAINERCLEANFILES += intltool-extract.in  intltool-merge.in  intltool-update.in
 
 # == ChangeLog & Release Rules ==
+CHANGELOG_RANGE = $(shell git cat-file -e bb02c8c92f88a091ca8ca2002a5800c2102e5e1d && \
+                    echo bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD || echo HEAD)
 ChangeLog: $(GITSTAMPS)
 	$(AM_V_GEN)
-	$(Q) git log --date=short --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 --first-parent \
-		bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD	 > xgen-$(@F) # Generate ChangeLog with -prefixed records
+	$(Q) git log --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 \
+		--date=short --first-parent $(CHANGELOG_RANGE)	 > xgen-$(@F) # Generate ChangeLog with -prefixed records
 	$(Q) sed 's/^/	/; s/^	// ; s/[[:space:]]\+$$// '	-i xgen-$(@F) # Tab-indent commit bodies, kill trailing whitespaces
 	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'		-i xgen-$(@F) # Compress multiple newlines
 	$(Q) mv xgen-$(@F) $@
