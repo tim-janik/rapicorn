@@ -6,9 +6,6 @@ SUBDIRS     = . po data res rcore aidacc ui cython tools tests pytests examples 
 docdir      = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
 noinst_DATA =
 
-# === setup ===
-AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
-
 # === web site ===
 site site-preview site-update:
 	@$(MAKE) -C web/ $(AM_MAKEFLAGS) $@

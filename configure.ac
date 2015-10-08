@@ -12,7 +12,7 @@ AC_INIT([rapicorn], [15.09.1])
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information
-AM_INIT_AUTOMAKE(tar-pax no-define -Wno-portability)	# don't define PACKAGE and VERSION
+AM_INIT_AUTOMAKE(1.9 dist-xz tar-pax no-dist-gzip no-define foreign)
 # version handling
 RAPICORN_VERSION="$PACKAGE_VERSION"
 [RAPICORN_RELEASE_YEAR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
