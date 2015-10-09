@@ -92,7 +92,7 @@ EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
 install-exec-ldconfig: # libtool >= 1.5.2 doesn't always set rpath, requiring ldconfig
-	test `id -u` != 0 -o ! -x /sbin/ldconfig || /sbin/ldconfig $(DESTDIR)$(libdir)
+	test ! -x /sbin/ldconfig -o ! -w /etc/ld.so.cache || /sbin/ldconfig $(DESTDIR)$(libdir)
 install-exec-hook: install-exec-ldconfig
 
 # === Rapicorn IDL ===
