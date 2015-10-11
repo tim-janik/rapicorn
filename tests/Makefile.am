@@ -11,8 +11,8 @@ XML_FILES        =
 EXAMPLES         =
 EXTRA_DIST      += $(XML_FILES)
 
-LDADDS   = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_DEP_LIBS)
-RAPIDRUN = $(top_builddir)/tools/rapidrun-@RAPICORN_RELEASE@
+LDADDS   = $(top_builddir)/ui/librapicorn-@MAJOR@.@MINOR@.la $(RAPICORN_DEP_LIBS)
+RAPIDRUN = $(top_builddir)/tools/rapidrun-@MAJOR@.@MINOR@
 IMGCHECK = $(top_builddir)/ui/tests/imgcheck
 X11TEST_RAPIDRUN = $(X11_ENV) $(RAPIDRUN) --fatal-warnings "$$@"
 

@@ -38,6 +38,10 @@ lt_age=$RAPICORN_REVISION_VERSION
 lt_revision=$RAPICORN_REVISION_VERSION
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
+# For automake, we need to easily provide MAJOR.MINOR and MAJOR_MINOR:
+MAJOR="$RAPICORN_RELEASE_YEAR" ; MINOR="$RAPICORN_RELEASE_MONTH"
+AC_SUBST(MAJOR)
+AC_SUBST(MINOR)
 if test 1 = $(($RAPICORN_REVISION_VERSION & 1)) ; then
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
 else

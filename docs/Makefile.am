@@ -129,7 +129,7 @@ upload-docs: html/doc-version
 	$(AM_V_GEN)
 	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
 	$(Q) docdir=latest && test "@ENABLE_DEVEL_MODE_TRUE@" != "#" || \
-	  docdir="${RAPICORN_RELEASE_YEAR}.${RAPICORN_RELEASE_MONTH}" && \
+	  docdir="@MAJOR@.@MINOR@" && \
 	  set -x && rsync -zaHP --del "html/" "testbit:pub/docs/rapicorn/$$docdir"
 
 upload-coverage: coverage
