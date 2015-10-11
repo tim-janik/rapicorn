@@ -26,14 +26,16 @@ AC_SUBST(RAPICORN_REVISION_VERSION)
 AC_SUBST(RAPICORN_RELEASE)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
 AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
-
-# libtool versioning
-LT_CURRENT=$RAPICORN_REVISION_VERSION
-LT_REVISION=0
-LT_AGE=$RAPICORN_REVISION_VERSION
-AC_SUBST(LT_CURRENT)
-AC_SUBST(LT_REVISION)
-AC_SUBST(LT_AGE)
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# Note, rapicorn provides backwards binary compatibility within
+# RAPICORN_REVISION_VERSION increments only, and interface additions
+# occour with pretty much every release. For libtool this means:
+# lt_current=REVISION; lt_revision=0; lt_age=LT_CURRENT-0
+lt_current=$RAPICORN_REVISION_VERSION
+lt_revision=0
+lt_age=$RAPICORN_REVISION_VERSION
+LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
+AC_SUBST(LT_VERSION_INFO)
 if test 1 = $(($RAPICORN_REVISION_VERSION & 1)) ; then
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
 else

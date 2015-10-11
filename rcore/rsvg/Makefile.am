@@ -35,7 +35,7 @@ librcore_rsvg@RAPICORN_RELEASE@_la_DEPENDENCIES =
 librcore_rsvg@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_RSVG_LIBS) $(RAPICORN_CORE_LIBS) -lm
 librcore_rsvg@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
 	$(AM_LDFLAGS) -no-undefined				\
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
+	-version-info $(LT_VERSION_INFO) 			\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rcore_rsvg_private_files) $(rcore_rsvg_headers)
 

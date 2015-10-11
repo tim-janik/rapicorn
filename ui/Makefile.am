@@ -79,7 +79,7 @@ librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicor
 librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
 	$(AM_LDFLAGS) -no-undefined				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
+	-version-info $(LT_VERSION_INFO) 			\
 ) # set libtool version and export symbols for resolving
 librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
 	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la \
