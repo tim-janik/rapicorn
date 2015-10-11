@@ -30,10 +30,12 @@ AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 # Note, rapicorn provides backwards binary compatibility within
 # RAPICORN_REVISION_VERSION increments only, and interface additions
 # occour with pretty much every release. For libtool this means:
-# lt_current=REVISION; lt_revision=0; lt_age=LT_CURRENT-0
+# - versions are: lt_current=REVISION; lt_age=LT_CURRENT-0
+# - lt_revision=REVISION; see: https://autotools.io/libtool/version.html
+# - libtools's '-release X.Y' is not used, b/c it's ignored for .a, .la, .so.
 lt_current=$RAPICORN_REVISION_VERSION
-lt_revision=0
 lt_age=$RAPICORN_REVISION_VERSION
+lt_revision=$RAPICORN_REVISION_VERSION
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 if test 1 = $(($RAPICORN_REVISION_VERSION & 1)) ; then
