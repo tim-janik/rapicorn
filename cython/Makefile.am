@@ -71,6 +71,14 @@ check-TEST_PYPROGS:
 	&& echo $$MESSAGETEXT | sed 's/./=/g' || true
 check-local: check-TEST_PYPROGS
 
+testing1-installcheck:
+	@ # Patch testing1.py to use the installed versioned Rapicorn.so module
+	$(Q) sed 's/.*@LINE_REWRITTEN_FOR_INSTALLCHECK@.*/import Rapicorn_@MAJOR@_@MINOR@ as Rapicorn/' \
+	       < $(srcdir)/testing1.py > x-testing1.py && ! cmp -s $(srcdir)/testing1.py x-testing1.py
+	$(Q) PYTHONPATH="$$PYTHONPATH:${pythondir}" python x-testing1.py
+	$(Q) rm -f x-testing1.py
+installcheck-local: testing1-installcheck
+
 python-call-info:
 	@echo 'PYTHONPATH="$$PYTHONPATH:${pythondir}" python -ic "import Rapicorn"'
 	@echo '${RPYTHON} -ic "import Rapicorn"'
