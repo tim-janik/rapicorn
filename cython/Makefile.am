@@ -17,7 +17,6 @@ objdir       = .libs
 # Py Rapicorn - installation
 # pythondir = ${prefix}/lib/pythonX.Y/site-packages
 Rapicorndir                = ${pythondir}/Rapicorn_@MAJOR@_@MINOR@
-Rapicorn_PYTHON            = __init__.py
 Rapicorn_LTLIBRARIES	   = Rapicorn.la
 # Pyx Rapicorn module
 nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
@@ -39,6 +38,25 @@ pyxxutils-xmany.hh: $(srcdir)/pyxxutils.hh $(XMANIFOLD)
 	$(Q) $(XMANIFOLD) -S $(srcdir)/pyxxutils.hh 18 >xtmp-$(@F) \
 	&& mv xtmp-$(@F) $@
 CLEANFILES += pyxxutils-xmany.hh
+
+# install-hook for __init__.py
+# cython gets confused about having an __init__.py in builddir, so we
+# keep it around under a different name.
+rapicornmodule-install-initpy:
+	$(INSTALL_DATA) __init__.py.in "$(DESTDIR)$(Rapicorndir)"/__init__.py
+	$(am__py_compile) --destdir "$(DESTDIR)" --basedir "$(Rapicorndir)" __init__.py
+install-data-hook: rapicornmodule-install-initpy
+rapicornmodule-uninstall-initpy: # see PEP-3147 for __pycache__
+	@RMPY=__init__.py && \
+	RMPYC=`echo "$$RMPY" | sed 's/$$/c/'` && \
+	RMPYO=`echo "$$RMPY" | sed 's/$$/o/'` && \
+	RMCHC=`echo "$$RMPY" | sed -e 's|\.py$$|| ; s|[^/]*$$|__pycache__/&.*.pyc|'` && \
+	RMCHO=`echo "$$RMPY" | sed -e 's|\.py$$|| ; s|[^/]*$$|__pycache__/&.*.pyo|'` && \
+	PS4= && set -x && \
+	cd "$(DESTDIR)$(Rapicorndir)" && \
+	rm -f "$$RMPY" "$$RMPYC" "$$RMPYO" $$RMCHC $$RMCHO
+uninstall-hook: rapicornmodule-uninstall-initpy
+EXTRA_DIST += __init__.py.in
 
 # install-hook to pick version
 rapicornmodule-install-hook:	# runs after install-data
