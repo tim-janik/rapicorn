@@ -308,9 +308,11 @@ AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rapicornconfig.h
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 [
-    # --- Rapicorn paths ---
-    docdir='${datarootdir}/doc/rapicorn'"$RAPICORN_RELEASE"	# docdir='${datarootdir}/doc/${PACKAGE}'
-    AC_SUBST(docdir)
+  # === docdir ===
+  # AM default: docdir = ${datarootdir}/doc/${PACKAGE_TARNAME} # == ${prefix}/share/doc/rapicorn
+  # We need a properly versioned path: ${prefix}/share/doc/rapicorn-MAJOR.MINOR
+  docdir="${datarootdir}/doc/rapicorn-$MAJOR.$MINOR"
+  AC_SUBST(docdir)
 
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
