@@ -677,9 +677,10 @@ Autoconfiguration complete.
 	Binaries:			`printexpandvar ${bindir}`
 	Libraries:			`printexpandvar ${libdir}`
 	Locales:			`printexpandvar ${pkglocaledir}`
-	Includes:			`printexpandvar ${includedir}/rapicorn$RAPICORN_RELEASE`
+	Includes:			`printexpandvar ${includedir}/rapicorn-$MAJOR.$MINOR`
 	Data:				`printexpandvar ${datadir}`
 	Documents:			`printexpandvar ${docdir}`
-	PyRapicorn:			`printexpandvar ${pythondir}/$RAPICORN_NAMESPACE_NAME`
+	PyRapicorn:			`printexpandvar ${pythondir}/Rapicorn_${MAJOR}_${MINOR}`
+	Python module:			import Rapicorn_${MAJOR}_${MINOR} as Rapicorn
 
 EOF
