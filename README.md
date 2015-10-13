@@ -1,62 +1,73 @@
 The Rapicorn Toolkit
 ====================
 
-Rapicorn is a toolkit for rapid development of user interfaces in C++ and
-Python. The user interface (UI) is designed in a declarative markup language
-and is connected to the programming logic using data bindings and commands.
-
-New project releases can be found at the project website:
-    http://rapicorn.org
-
-At the moment, Rapicorn is in the "prototype" phase so some features are
-still under heavy development. You can refer to the roadmap for details:
-    http://rapicorn.org/wiki/Rapicorn_Task_List#Roadmap
+[![License MPL2](http://testbit.eu/~timj/pics/license-mpl-2.svg)](https://github.com/tim-janik/beast/blob/master/COPYING.MPL)
+[![Build Status](https://travis-ci.org/tim-janik/rapicorn.svg)](https://travis-ci.org/tim-janik/rapicorn)
 
 
-Building and Installation
-=========================
+# DESCRIPTION
 
-Rapicorn has been successfully build under 32bit, 64bit and Ubuntu versions
-13.10, 14.04 and 14.10. A number of dependency packages need to be installed:
+Rapicorn is a graphical user interface (UI) toolkit for rapid development
+of user interfaces in C++ and Python. The user interface (UI) is designed
+in declarative markup language and is connected to the programming logic
+using data bindings and commands.
 
-    apt-get install libcairo2-dev libpango1.0-dev intltool python2.7-dev \
-      libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev Xvfb x11-xserver-utils
+*   For a full description, visit the project website:
+	http://rapicorn.org
 
-Building and testing a build is accomplished as follows:
+*   To submit bug reports and feature requests, visit:
+	https://github.com/tim-janik/rapicorn/issues
 
-    ./configure && make -j`nproc` && make install
-    make -j`nproc` check installcheck
-
-Building the Rapicorn git repository uses autogen.sh instead of configure and
-needs additional packages:
-    autoconf libtool automake intltool dot doxygen bison flex
+*   Rapicorn is currently in the "prototype" phase. Features are still
+	under heavy development. Details are provided in the roadmap:
+	http://rapicorn.org/wiki/Rapicorn_Task_List#Roadmap
 
 
-Support and Examples
-====================
+# REQUIREMENTS
+
+Rapicorn has been successfully build on Ubuntu x86-32 and x86-64.
+A number of dependency packages need to be installed:
+
+	apt-get install intltool libcairo2-dev libpango1.0-dev python2.7-dev \
+	  libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev libcroco3-dev \
+	  xvfb cython
+
+
+# INSTALLATION
+
+In short, Rapicorn needs to be built and installed with:
+
+	./configure
+	make -j`nproc`
+	make -j`nproc` check		# run simple unit tests
+	make install
+	make -j`nproc` installcheck	# run module tests
+
+Note that Rapicorn has to be fully installed to function properly.
+For non-standard prefixes, Python module imports need proper search
+path setups. The following commands shows two examples:
+
+	make python-call-info -C cython/
+
+
+# SUPPORT
+
+If you have any issues, please let us know in the issue tracker or
+the mailing list / web forum:
+
+	https://groups.google.com/d/forum/rapicorn
+	rapicorn@googlegroups.com
+
+The developers can often be found chatting on IRC:
+
+	#beast IRC channel on GimpNet: irc.gimp.org
 
 The distribution tarball includes Python and C++ examples directories:
-    examples/  pytests/
 
-Also documentation is provided with the distribution and online:
-    $prefix/share/doc/rapicorn1410/html/apps.html
-    https://testbit.eu/pub/docs/rapicorn/latest/
+	examples/  pytests/
 
-For help, questions and feedback, an online forum is provided:
-    https://groups.google.com/d/forum/rapicorn
+And documentation is provided with the distribution and online:
 
-To get support, send email to the mailing list (forum):
-    rapicorn@googlegroups.com
+*   https://testbit.eu/pub/docs/rapicorn/latest/
 
-Also developers can sometimes be found chatting on IRC:
-    #beast IRC channel on GimpNet: irc.gimp.org
-
-Bugs can be filed and discussed in the Github issue tracker:
-    https://github.com/tim-janik/rapicorn/issues
-
-
-License
-=======
-
-This Source Code Form is subject to the terms of the Mozilla Public
-License Version 2.0. See the file COPYING.MPL for rights and limitations.
+*   $prefix/share/doc/rapicorn-VERSION/html/apps.html
