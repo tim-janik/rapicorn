@@ -5,10 +5,12 @@ builtin(include, ld-symbolic.m4)dnl # include special macros
 
 AC_PREREQ(2.57)
 # VERSION: YEAR.MONTH.REVISION-RC:
-# * YEAR, MONTH: increment on ABI/API changes
-# * REVISION: ABI compatible increments, devel versions are odd
-# * -RC: release candidate, may contain -rc[0-9]+ or nothing
+# * REVISION:        increment with every release, devel versions are odd
+# * API/ABI changes: reset RAPICORN_VERSION_ABI to the current VERSION
+# * YEAR, MONTH:     increments: enforce API/ABI breaks, reset REVISION and RAPICORN_VERSION_ABI
+# * -RC:             release candidate, may contain -rc[0-9]+ or nothing
 AC_INIT([rapicorn], [15.09.1])
+RAPICORN_ABI_VERSION=15.09.0
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information
@@ -23,23 +25,34 @@ AC_SUBST(RAPICORN_VERSION)
 AC_SUBST(RAPICORN_RELEASE)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
 AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
-# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-# Note, rapicorn provides backwards binary compatibility within
-# RAPICORN_VERSION_MICRO increments only, and interface additions
-# occour with pretty much every release. For libtool this means:
-# - versions are: lt_current=REVISION; lt_age=LT_CURRENT-0
-# - lt_revision=REVISION; see: https://autotools.io/libtool/version.html
-# - libtools's '-release X.Y' is not used, b/c it's ignored for .a, .la, .so.
-lt_current=$RAPICORN_VERSION_MICRO
-lt_age=$RAPICORN_VERSION_MICRO
-lt_revision=$RAPICORN_VERSION_MICRO
-LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
-AC_SUBST(LT_VERSION_INFO)
-# For automake, we need to easily provide MAJOR.MINOR and MAJOR_MINOR:
+# For automake, we need to easily provide MAJOR.MINOR.MICRO and MAJOR_MINOR_MICRO:
 MAJOR="$RAPICORN_VERSION_YEAR" ; MINOR="$RAPICORN_VERSION_MONTH" ; MICRO="$RAPICORN_VERSION_MICRO"
 AC_SUBST(MAJOR)
 AC_SUBST(MINOR)
 AC_SUBST(MICRO)
+# calculate ABI age
+ABI_STEM=[`echo "$RAPICORN_ABI_VERSION" | sed 's/\.[0-9]\+$//'`]  # MAJOR.MINOR
+ABIMICRO=[`echo "$RAPICORN_ABI_VERSION" | sed 's/^.*\.//'     `]  # MICRO
+test "$ABI_STEM" = "$MAJOR.$MINOR" || {
+  AC_MSG_ERROR([RAPICORN_ABI_VERSION must match MAJOR.MINOR version: $ABI_STEM == $MAJOR.$MINOR])
+}
+test "$ABIMICRO" -le "$MICRO" || {
+  AC_MSG_ERROR([RAPICORN_ABI_VERSION must not be greater than VERSION: $ABIMICRO <= $MICRO])
+}
+ABI_AGE=$(($MICRO - $ABIMICRO))
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# Note, rapicorn provides backwards binary compatibility within
+# RAPICORN_VERSION_MICRO increments only, and only since
+# RAPICORN_ABI_VERSION. Interface additions occour with pretty much every release.
+# For libtool this means:
+# - lt_current=MICRO  # no forward compatible builds, i.e. enforce runtime-lib >= build-time-lib
+# - lt_age=ABI_AGE    # allow backward compatibility between RAPICORN_ABI_VERSION .. VERSION
+# - lt_revision=MICRO # reflect MICRO in SO name, see: https://autotools.io/libtool/version.html
+# - the '-release X.Y' option cannot be used, because it's ignored for naming .a, .la, .so files.
+lt_current=$MICRO ; lt_age=$ABI_AGE ; lt_revision=$MICRO
+LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
+AC_SUBST(LT_VERSION_INFO)
+# define debugging paths for devel-mode
 if test 1 = $(($RAPICORN_VERSION_MICRO & 1)) ; then
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
 else
