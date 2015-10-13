@@ -71,14 +71,15 @@ AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@ @SSEAVX_FLAGS@, $(findstring -mmx.c
 # === Libraries ===
 # librapicorn
 lib_LTLIBRARIES                             = librapicorn-@MAJOR@.@MINOR@.la
+LDSCRIPT_MAP                                = $(top_srcdir)/rcore/ldscript.map
 librapicorn_@MAJOR@_@MINOR@includedir       = $(includedir)/rapicorn-@MAJOR@.@MINOR@/ui
 librapicorn_@MAJOR@_@MINOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn_@MAJOR@_@MINOR@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn_@MAJOR@_@MINOR@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore-@MAJOR@.@MINOR@.la ldscript.map \
+librapicorn_@MAJOR@_@MINOR@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore-@MAJOR@.@MINOR@.la ${LDSCRIPT_MAP} \
 					    $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.@MINOR@.la
 librapicorn_@MAJOR@_@MINOR@_la_LDFLAGS      = $(strip		\
 	$(AM_LDFLAGS) -no-undefined				\
-	-Wl,--version-script=$(srcdir)/ldscript.map		\
+	-Wl,--version-script=${LDSCRIPT_MAP}			\
 	-version-info $(LT_VERSION_INFO) 			\
 ) # set libtool version and export symbols for resolving
 librapicorn_@MAJOR@_@MINOR@_la_LIBADD       = $(strip		\
@@ -87,7 +88,7 @@ librapicorn_@MAJOR@_@MINOR@_la_LIBADD       = $(strip		\
 	$(LIBXML_LIBS) \
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_files) ldscript.map
+EXTRA_DIST += $(rapicorn_private_files)
 # -- Build OBJECTS alphabetically --
 librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
