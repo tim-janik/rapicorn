@@ -167,8 +167,8 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
 	&& echo "#define RAPICORN_CHECK_VERSION(year,month,revv) \\"				>> xgen-$(@F) \
-	&& echo "  (@RAPICORN_RELEASE_YEAR@ > (year) || \\"					>> xgen-$(@F) \
-	&& echo "    (@RAPICORN_RELEASE_YEAR@ == (year) && \\"					>> xgen-$(@F) \
+	&& echo "  (@MAJOR@ > (year) || \\"							>> xgen-$(@F) \
+	&& echo "    (@MAJOR@ == (year) && \\"							>> xgen-$(@F) \
 	&& echo "      (13@RAPICORN_RELEASE_MONTH@%13 > (month) || \\"				>> xgen-$(@F) \
 	&& echo "        (13@RAPICORN_RELEASE_MONTH@%13 == (month) && \\"			>> xgen-$(@F) \
 	&& echo "          (@MICRO@ >= (revv))))))"						>> xgen-$(@F) \
