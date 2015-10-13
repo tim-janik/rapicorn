@@ -169,8 +169,8 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define RAPICORN_CHECK_VERSION(year,month,revv) \\"				>> xgen-$(@F) \
 	&& echo "  (@MAJOR@ > (year) || \\"							>> xgen-$(@F) \
 	&& echo "    (@MAJOR@ == (year) && \\"							>> xgen-$(@F) \
-	&& echo "      (13@RAPICORN_RELEASE_MONTH@%13 > (month) || \\"				>> xgen-$(@F) \
-	&& echo "        (13@RAPICORN_RELEASE_MONTH@%13 == (month) && \\"			>> xgen-$(@F) \
+	&& echo "      (13@MINOR@%13 > (month) || \\"						>> xgen-$(@F) \
+	&& echo "        (13@MINOR@%13 == (month) && \\"					>> xgen-$(@F) \
 	&& echo "          (@MICRO@ >= (revv))))))"						>> xgen-$(@F) \
 	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @MICRO@)'					>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
