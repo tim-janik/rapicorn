@@ -17,7 +17,12 @@ test:
 
 # === doc/ files ===
 maindocsdir   = $(docdir)/
-maindocs_DATA = README.md NEWS COPYING.MPL
+maindocs_DATA = README NEWS COPYING.MPL
+README: README.md
+	$(AM_V_GEN)
+	$(Q) rm -f $@      # work around read-only target files
+	$(Q) $(PANDOC) -S -f markdown_github+pandoc_title_block-hard_line_breaks -t plain $< -o $@
+	$(Q) chmod a-w $@  # prevent accidental target file edits
 EXTRA_DIST   += $(maindocs_DATA)
 
 # === i18n tool files ===
