@@ -20,9 +20,7 @@ RAPICORN_VERSION="$PACKAGE_VERSION"
 [MAJOR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
 [MINOR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
 [MICRO=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
-[RAPICORN_RELEASE=`printf %02u%02u $MAJOR $(expr 0 + $MINOR)`]
 AC_SUBST(RAPICORN_VERSION)
-AC_SUBST(RAPICORN_RELEASE)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
 AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 # For automake, we need to easily provide MAJOR.MINOR.MICRO and MAJOR_MINOR_MICRO:
@@ -69,9 +67,7 @@ AC_MSG_RESULT($result)
 
 # Rapicorn namespace
 AC_MSG_CHECKING([for Rapicorn namespace])
-test -z "$RAPICORN_NAMESPACE_NAME" && RAPICORN_NAMESPACE_NAME="Rapicorn$RAPICORN_RELEASE"
-xtmp=$(echo "$RAPICORN_NAMESPACE_NAME")  # expand shell variables
-RAPICORN_NAMESPACE_NAME="$xtmp"
+RAPICORN_NAMESPACE_NAME="Rapicorn_$MAJOR"_"$MINOR"
 if test -z "$RAPICORN_NAMESPACE_NAME" || test "$RAPICORN_NAMESPACE_NAME" = "Rapicorn" ; then
     AC_MSG_RESULT(["$RAPICORN_NAMESPACE_NAME"])
     AC_MSG_ERROR([RAPICORN_NAMESPACE_NAME must be specified distinctly to build Rapicorn])
