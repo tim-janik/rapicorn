@@ -1,7 +1,7 @@
 The Rapicorn Toolkit
 ====================
 
-[![License MPL2](http://testbit.eu/~timj/pics/license-mpl-2.svg)](https://github.com/tim-janik/beast/blob/master/COPYING.MPL)
+[![License MPL2](http://testbit.eu/~timj/pics/license-mpl-2.svg)](https://github.com/tim-janik/rapicorn/blob/master/COPYING.MPL)
 [![Build Status](https://travis-ci.org/tim-janik/rapicorn.svg)](https://travis-ci.org/tim-janik/rapicorn)
 
 
