@@ -15,10 +15,10 @@ AC_CANONICAL_TARGET                                     # architecture informati
 AM_INIT_AUTOMAKE(1.9 dist-xz tar-pax no-dist-gzip no-define foreign)
 # version handling
 RAPICORN_VERSION="$PACKAGE_VERSION"
-[RAPICORN_RELEASE_YEAR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
-[RAPICORN_RELEASE_MONTH=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
+[RAPICORN_VERSION_YEAR=` echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
+[RAPICORN_VERSION_MONTH=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
 [RAPICORN_VERSION_MICRO=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
-[RAPICORN_RELEASE=`printf %02u%02u $RAPICORN_RELEASE_YEAR $(expr 0 + $RAPICORN_RELEASE_MONTH)`]
+[RAPICORN_RELEASE=`printf %02u%02u $RAPICORN_VERSION_YEAR $(expr 0 + $RAPICORN_VERSION_MONTH)`]
 AC_SUBST(RAPICORN_VERSION)
 AC_SUBST(RAPICORN_RELEASE)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
@@ -36,7 +36,7 @@ lt_revision=$RAPICORN_VERSION_MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 # For automake, we need to easily provide MAJOR.MINOR and MAJOR_MINOR:
-MAJOR="$RAPICORN_RELEASE_YEAR" ; MINOR="$RAPICORN_RELEASE_MONTH" ; MICRO="$RAPICORN_VERSION_MICRO"
+MAJOR="$RAPICORN_VERSION_YEAR" ; MINOR="$RAPICORN_VERSION_MONTH" ; MICRO="$RAPICORN_VERSION_MICRO"
 AC_SUBST(MAJOR)
 AC_SUBST(MINOR)
 AC_SUBST(MICRO)
