@@ -171,8 +171,8 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "    (@RAPICORN_RELEASE_YEAR@ == (year) && \\"					>> xgen-$(@F) \
 	&& echo "      (13@RAPICORN_RELEASE_MONTH@%13 > (month) || \\"				>> xgen-$(@F) \
 	&& echo "        (13@RAPICORN_RELEASE_MONTH@%13 == (month) && \\"			>> xgen-$(@F) \
-	&& echo "          (@RAPICORN_REVISION_VERSION@ >= (revv))))))"				>> xgen-$(@F) \
-	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @RAPICORN_REVISION_VERSION@)' 		>> xgen-$(@F) \
+	&& echo "          (@MICRO@ >= (revv))))))"						>> xgen-$(@F) \
+	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @MICRO@)'					>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- i18n domain --- */"							>> xgen-$(@F) \

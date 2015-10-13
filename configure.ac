@@ -17,32 +17,32 @@ AM_INIT_AUTOMAKE(1.9 dist-xz tar-pax no-dist-gzip no-define foreign)
 RAPICORN_VERSION="$PACKAGE_VERSION"
 [RAPICORN_RELEASE_YEAR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
 [RAPICORN_RELEASE_MONTH=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
-[RAPICORN_REVISION_VERSION=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
+[RAPICORN_VERSION_MICRO=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
 [RAPICORN_RELEASE=`printf %02u%02u $RAPICORN_RELEASE_YEAR $(expr 0 + $RAPICORN_RELEASE_MONTH)`]
 AC_SUBST(RAPICORN_VERSION)
 AC_SUBST(RAPICORN_RELEASE_YEAR)
 AC_SUBST(RAPICORN_RELEASE_MONTH)
-AC_SUBST(RAPICORN_REVISION_VERSION)
 AC_SUBST(RAPICORN_RELEASE)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
 AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 # Note, rapicorn provides backwards binary compatibility within
-# RAPICORN_REVISION_VERSION increments only, and interface additions
+# RAPICORN_VERSION_MICRO increments only, and interface additions
 # occour with pretty much every release. For libtool this means:
 # - versions are: lt_current=REVISION; lt_age=LT_CURRENT-0
 # - lt_revision=REVISION; see: https://autotools.io/libtool/version.html
 # - libtools's '-release X.Y' is not used, b/c it's ignored for .a, .la, .so.
-lt_current=$RAPICORN_REVISION_VERSION
-lt_age=$RAPICORN_REVISION_VERSION
-lt_revision=$RAPICORN_REVISION_VERSION
+lt_current=$RAPICORN_VERSION_MICRO
+lt_age=$RAPICORN_VERSION_MICRO
+lt_revision=$RAPICORN_VERSION_MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 # For automake, we need to easily provide MAJOR.MINOR and MAJOR_MINOR:
-MAJOR="$RAPICORN_RELEASE_YEAR" ; MINOR="$RAPICORN_RELEASE_MONTH"
+MAJOR="$RAPICORN_RELEASE_YEAR" ; MINOR="$RAPICORN_RELEASE_MONTH" ; MICRO="$RAPICORN_VERSION_MICRO"
 AC_SUBST(MAJOR)
 AC_SUBST(MINOR)
-if test 1 = $(($RAPICORN_REVISION_VERSION & 1)) ; then
+AC_SUBST(MICRO)
+if test 1 = $(($RAPICORN_VERSION_MICRO & 1)) ; then
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
 else
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
@@ -216,7 +216,7 @@ AC_SUBST(OPTIMIZE_FAST)
 # if 'auto', enable devel mode for odd (development) versions
 AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
 [test x"$enable_devel_mode" = xauto -a -d "$srcdir/.git/" &&
-      { echo " $RAPICORN_REVISION_VERSION" | grep -q '[13579]$' ; } && enable_devel_mode=yes]
+      { echo " $RAPICORN_VERSION_MICRO" | grep -q '[13579]$' ; } && enable_devel_mode=yes]
 test x"$enable_devel_mode" = xyes || enable_devel_mode=no
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
 AC_MSG_RESULT([$enable_devel_mode])
