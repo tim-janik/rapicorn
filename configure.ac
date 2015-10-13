@@ -4,37 +4,54 @@ builtin(include, acrapicorn.m4)dnl # include special macros
 builtin(include, ld-symbolic.m4)dnl # include special macros
 
 AC_PREREQ(2.57)
-# VERSION: YEAR.MONTH.REVISION-RC:
-# * YEAR, MONTH: increment on ABI/API changes
-# * REVISION: ABI compatible increments, devel versions are odd
-# * -RC: release candidate, may contain -rc[0-9]+ or nothing
+# VERSION: MAJOR.MINOR.MICRO-RC:
+# * MICRO:           increment with every release, devel versions are odd
+# * API/ABI changes: reset RAPICORN_VERSION_ABI to the current VERSION
+# * MAJOR, MINOR:    increments: enforce API/ABI breaks, reset MICRO and RAPICORN_VERSION_ABI
+# * -RC:             release candidate, may contain -rc[0-9]+ or nothing
 AC_INIT([rapicorn], [15.09.1])
+LATEST_ABI_VERSION_=[15.09.1]
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information
-AM_INIT_AUTOMAKE(tar-pax no-define -Wno-portability)	# don't define PACKAGE and VERSION
+AM_INIT_AUTOMAKE(1.9 dist-xz tar-pax no-dist-gzip no-define foreign)
 # version handling
 RAPICORN_VERSION="$PACKAGE_VERSION"
-[RAPICORN_RELEASE_YEAR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
-[RAPICORN_RELEASE_MONTH=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
-[RAPICORN_REVISION_VERSION=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
-[RAPICORN_RELEASE=`printf %02u%02u $RAPICORN_RELEASE_YEAR $(expr 0 + $RAPICORN_RELEASE_MONTH)`]
+[MAJOR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
+[MINOR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
+[MICRO=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
 AC_SUBST(RAPICORN_VERSION)
-AC_SUBST(RAPICORN_RELEASE_YEAR)
-AC_SUBST(RAPICORN_RELEASE_MONTH)
-AC_SUBST(RAPICORN_REVISION_VERSION)
-AC_SUBST(RAPICORN_RELEASE)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
 AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
-
-# libtool versioning
-LT_CURRENT=$RAPICORN_REVISION_VERSION
-LT_REVISION=0
-LT_AGE=$RAPICORN_REVISION_VERSION
-AC_SUBST(LT_CURRENT)
-AC_SUBST(LT_REVISION)
-AC_SUBST(LT_AGE)
-if test 1 = $(($RAPICORN_REVISION_VERSION & 1)) ; then
+# For automake, we need to easily provide MAJOR.MINOR.MICRO and MAJOR_MINOR_MICRO:
+AC_SUBST(MAJOR)
+AC_SUBST(MINOR)
+AC_SUBST(MICRO)
+# calculate ABI age
+ABI_STEM_=[`echo "$LATEST_ABI_VERSION_" | sed 's/\.[0-9]\+$//'`]  # MAJOR.MINOR
+ABI_MICRO=[`echo "$LATEST_ABI_VERSION_" | sed 's/^.*\.//'     `]  # MICRO
+test "$ABI_STEM_" = "$MAJOR.$MINOR" || {
+  AC_MSG_ERROR([LATEST_ABI_VERSION_ must match MAJOR.MINOR version: $ABI_STEM_ == $MAJOR.$MINOR])
+}
+test "$ABI_MICRO" -le "$MICRO" || {
+  AC_MSG_ERROR([LATEST_ABI_VERSION_ must not be greater than VERSION: $ABI_MICRO <= $MICRO])
+}
+ABI_AGE=$(($MICRO - $ABI_MICRO))
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# Note, rapicorn provides backwards binary compatibility within
+# MICRO increments only, and only since LATEST_ABI_VERSION_.
+# Interface additions occour with pretty much every release.
+# For libtool this means:
+# - the '-release X.Y' option cannot be used, because it's ignored for naming .a, .la, .so files.
+# - lt_current=MICRO  # disallow forward compatible builds, i.e. enforce runtime-lib >= build-time-lib
+# - lt_age=ABI_AGE    # allow backward compatibility between LATEST_ABI_VERSION_ .. VERSION
+# - lt_revision=MICRO # always pick the latest SO even in the absence of interface/ABI increments,
+#                     # see also: https://autotools.io/libtool/version.html
+lt_current=$MICRO ; lt_age=$ABI_AGE ; lt_revision=$MICRO
+LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
+AC_SUBST(LT_VERSION_INFO)
+# define debugging paths for devel-mode
+if test 1 = $(($MICRO & 1)) ; then
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
 else
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
@@ -50,9 +67,7 @@ AC_MSG_RESULT($result)
 
 # Rapicorn namespace
 AC_MSG_CHECKING([for Rapicorn namespace])
-test -z "$RAPICORN_NAMESPACE_NAME" && RAPICORN_NAMESPACE_NAME="Rapicorn$RAPICORN_RELEASE"
-xtmp=$(echo "$RAPICORN_NAMESPACE_NAME")  # expand shell variables
-RAPICORN_NAMESPACE_NAME="$xtmp"
+RAPICORN_NAMESPACE_NAME="Rapicorn_$MAJOR"_"$MINOR"
 if test -z "$RAPICORN_NAMESPACE_NAME" || test "$RAPICORN_NAMESPACE_NAME" = "Rapicorn" ; then
     AC_MSG_RESULT(["$RAPICORN_NAMESPACE_NAME"])
     AC_MSG_ERROR([RAPICORN_NAMESPACE_NAME must be specified distinctly to build Rapicorn])
@@ -207,7 +222,8 @@ AC_SUBST(OPTIMIZE_FAST)
 # check for development build rules, these usually require acess to .git/
 # if 'auto', enable devel mode for odd (development) versions
 AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
-[test x"$enable_devel_mode" = xauto && { echo " $RAPICORN_REVISION_VERSION" | grep -q '[13579]$' ; } && enable_devel_mode=yes]
+[test x"$enable_devel_mode" = xauto -a -d "$srcdir/.git/" &&
+      { echo " $MICRO" | grep -q '[13579]$' ; } && enable_devel_mode=yes]
 test x"$enable_devel_mode" = xyes || enable_devel_mode=no
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
 AC_MSG_RESULT([$enable_devel_mode])
@@ -299,11 +315,11 @@ AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rapicornconfig.h
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 [
-    # --- Rapicorn paths ---
-    docdir='${datarootdir}/doc/rapicorn'"$RAPICORN_RELEASE"	# docdir='${datarootdir}/doc/${PACKAGE}'
-    rapicorndatadir='${datadir}/rapicorn'"$RAPICORN_RELEASE"	# datadir = ${datarootdir}
-    AC_SUBST(docdir)
-    AC_SUBST(rapicorndatadir)
+  # === docdir ===
+  # AM default: docdir = ${datarootdir}/doc/${PACKAGE_TARNAME} # == ${prefix}/share/doc/rapicorn
+  # We need a properly versioned path: ${prefix}/share/doc/rapicorn-MAJOR.MINOR
+  docdir="${datarootdir}/doc/rapicorn-$MAJOR.$MINOR"
+  AC_SUBST(docdir)
 
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
@@ -474,7 +490,7 @@ AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
     AC_SUBST(ALL_LINGUAS)
 
     dnl # versioned Rapicorn gettext domain (po/)
-    RAPICORN_GETTEXT_DOMAIN=rapicorn$RAPICORN_RELEASE    # version without -rcZ
+    RAPICORN_GETTEXT_DOMAIN="rapicorn-$MAJOR.$MINOR"
     AC_SUBST(RAPICORN_GETTEXT_DOMAIN)
     AC_DEFINE_UNQUOTED(RAPICORN_GETTEXT_DOMAIN, "$RAPICORN_GETTEXT_DOMAIN", [Versioned Rapicorn gettext domain])
     GETTEXT_PACKAGE=$RAPICORN_GETTEXT_DOMAIN
@@ -661,9 +677,10 @@ Autoconfiguration complete.
 	Binaries:			`printexpandvar ${bindir}`
 	Libraries:			`printexpandvar ${libdir}`
 	Locales:			`printexpandvar ${pkglocaledir}`
-	Includes:			`printexpandvar ${includedir}/rapicorn$RAPICORN_RELEASE`
+	Includes:			`printexpandvar ${includedir}/rapicorn-$MAJOR.$MINOR`
 	Data:				`printexpandvar ${datadir}`
 	Documents:			`printexpandvar ${docdir}`
-	PyRapicorn:			`printexpandvar ${pythondir}/$RAPICORN_NAMESPACE_NAME`
+	PyRapicorn:			`printexpandvar ${pythondir}/Rapicorn_${MAJOR}_${MINOR}`
+	Python module:			import Rapicorn_${MAJOR}_${MINOR} as Rapicorn
 
 EOF

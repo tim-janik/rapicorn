@@ -1,5 +1,6 @@
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
-import Rapicorn, collections
+import Rapicorn # @LINE_REWRITTEN_FOR_INSTALLCHECK@
+import collections
 
 # verify that pycallable() raises Exception
 def assert_raises (Exception, pycallable, *args, **kwds):

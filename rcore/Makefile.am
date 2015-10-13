@@ -48,16 +48,16 @@ rapicorn_generated_files = $(strip    	\
 
 # === libraries ===
 # librapicorn-core
-noinst_LTLIBRARIES = librapicorncore@RAPICORN_RELEASE@.la # hardcoded -release $(RAPICORN_RELEASE)
-librapicorncore@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/rcore
-librapicorncore@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorncore@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorncore@RAPICORN_RELEASE@_la_DEPENDENCIES = ldscript.map
-librapicorncore@RAPICORN_RELEASE@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
-librapicorncore@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip	\
+noinst_LTLIBRARIES                              = librapicorncore-@MAJOR@.@MINOR@.la
+librapicorncore_@MAJOR@_@MINOR@includedir       = $(includedir)/rapicorn-@MAJOR@.@MINOR@/rcore
+librapicorncore_@MAJOR@_@MINOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorncore_@MAJOR@_@MINOR@_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorncore_@MAJOR@_@MINOR@_la_DEPENDENCIES = ldscript.map
+librapicorncore_@MAJOR@_@MINOR@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
+librapicorncore_@MAJOR@_@MINOR@_la_LDFLAGS      = $(strip	\
 	$(AM_LDFLAGS) -no-undefined				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
+	-version-info $(LT_VERSION_INFO) 			\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rapicorn_private_files) ldscript.map
 
@@ -82,22 +82,22 @@ api-content:
 # === programs (not installed) ===
 bin_PROGRAMS	= $(BIN_PROGS)
 noinst_PROGRAMS	= $(ALLTESTS)
-progs_ldadd	= librapicorncore@RAPICORN_RELEASE@.la $(RAPICORN_CORE_LIBS) -lm
+progs_ldadd	= librapicorncore-@MAJOR@.@MINOR@.la $(RAPICORN_CORE_LIBS) -lm
 BIN_PROGS	=
 
 # == rapidres ==
-RAPIDRESV                           = rapidres-@RAPICORN_RELEASE@
+RAPIDRESV                           = rapidres-@MAJOR@.@MINOR@
 BIN_PROGS                          += $(RAPIDRESV)
-rapidres_@RAPICORN_RELEASE@_SOURCES = rapidres.cc
-rapidres_@RAPICORN_RELEASE@_LDADD   = $(LIBZ) # $(progs_ldadd)
+rapidres_@MAJOR@_@MINOR@_SOURCES = rapidres.cc
+rapidres_@MAJOR@_@MINOR@_LDADD   = $(LIBZ) # $(progs_ldadd)
 rapidres-install-hook:  # run after ${RAPIDRESV} was installed
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9][0-9][0-9], rapidres) && \
+	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9].[0-9][0-9], rapidres) && \
 	  test -x rapidres -a -L rapidres
 install-exec-hook: rapidres-install-hook
 rapidres-uninstall-hook: # run after ${RAPIDRESV} was uninstalled
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9][0-9][0-9], rapidres) && \
+	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9].[0-9][0-9], rapidres) && \
 	  test -x rapidres -o ! -e rapidres
 uninstall-hook: rapidres-uninstall-hook
 
@@ -165,14 +165,13 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
+	&& XMINOR=`echo @MINOR@ | sed 's/^0\+//'`						>> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_CHECK_VERSION(year,month,revv) \\"				>> xgen-$(@F) \
-	&& echo "  (@RAPICORN_RELEASE_YEAR@ > (year) || \\"					>> xgen-$(@F) \
-	&& echo "    (@RAPICORN_RELEASE_YEAR@ == (year) && \\"					>> xgen-$(@F) \
-	&& echo "      (13@RAPICORN_RELEASE_MONTH@%13 > (month) || \\"				>> xgen-$(@F) \
-	&& echo "        (13@RAPICORN_RELEASE_MONTH@%13 == (month) && \\"			>> xgen-$(@F) \
-	&& echo "          (@RAPICORN_REVISION_VERSION@ >= (revv))))))"				>> xgen-$(@F) \
-	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @RAPICORN_REVISION_VERSION@)' 		>> xgen-$(@F) \
+	&& echo "#define RAPICORN_CHECK_VERSION(major,minor,micro) \\"				>> xgen-$(@F) \
+	&& echo "  (@MAJOR@ > (major) || (@MAJOR@ == (major) && \\"				>> xgen-$(@F) \
+	&& echo "    ($$XMINOR > (minor) || ($$XMINOR == (minor) && \\"				>> xgen-$(@F) \
+	&& echo "      @MICRO@ >= (micro)))))"							>> xgen-$(@F) \
+	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @MICRO@)'					>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- i18n domain --- */"							>> xgen-$(@F) \
@@ -181,7 +180,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- resource paths --- */"							>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \
-	&& echo	'#define RAPICORN_DATADIR       	"${rapicorndatadir}"'			>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- backend configuration --- */"						>> xgen-$(@F) \
@@ -215,7 +213,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
 CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
-$(librapicorncore@RAPICORN_RELEASE@_la_OBJECTS): rapicornconfig.h
+$(librapicorncore_@MAJOR@_@MINOR@_la_OBJECTS): rapicornconfig.h
 
 
 # === aidavariants.hh ===

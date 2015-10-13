@@ -124,12 +124,12 @@ clean-local: clean-coverage
 
 # == Upload Rule ==
 CHECK_RSYNC = { command -v rsync >/dev/null && { echo "3.0.0" ; rsync --version 2>&1 | sed 's/[^0-9]*// ; 1q' ; } | sort -VC ; }
-# Upload stable versions as $RAPICORN_RELEASE_YEAR.$RAPICORN_RELEASE_MONTH, otherwise upload as latest/
+# Upload stable versions as $MAJOR.$MINOR, otherwise upload as latest/
 upload-docs: html/doc-version
 	$(AM_V_GEN)
 	$(Q) ${CHECK_RSYNC} || { echo "$@: failed to detect recent version: rsync"; exit 1; }
 	$(Q) docdir=latest && test "@ENABLE_DEVEL_MODE_TRUE@" != "#" || \
-	  docdir="${RAPICORN_RELEASE_YEAR}.${RAPICORN_RELEASE_MONTH}" && \
+	  docdir="@MAJOR@.@MINOR@" && \
 	  set -x && rsync -zaHP --del "html/" "testbit:pub/docs/rapicorn/$$docdir"
 
 upload-coverage: coverage

@@ -2,5 +2,6 @@
 /docs/doxygen-srctree/ui/sinfex.cc:.*: warning: include file sinfex..gen not found, perhaps you forgot to add its directory to INCLUDE_PATH?
 /docs/doxygen-srctree/rcore/aidasignal.hh:.*: warning: explicit link request to 'future' could not be resolved
 /docs/doxygen-srctree/changelog.dox:.*: warning: explicit link request to '.*' could not be resolved
+/docs/doxygen-srctree/changelog.dox:.*: warning: Found unknown command `\\\.'
 citelist:3: warning: expected <dt> tag but found <dl> instead!
 citelist:4: warning: unexpected end of comment while looking for a html description title

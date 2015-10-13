@@ -70,29 +70,30 @@ AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@ @SSEAVX_FLAGS@, $(findstring -mmx.c
 
 # === Libraries ===
 # librapicorn
-lib_LTLIBRARIES = librapicorn@RAPICORN_RELEASE@.la	# hardcoded -release $(RAPICORN_RELEASE)
-librapicorn@RAPICORN_RELEASE@includedir       = $(includedir)/rapicorn@RAPICORN_RELEASE@/ui
-librapicorn@RAPICORN_RELEASE@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorn@RAPICORN_RELEASE@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn@RAPICORN_RELEASE@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la ldscript.map \
-						$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.la
-librapicorn@RAPICORN_RELEASE@_la_LDFLAGS      = $(strip		\
+lib_LTLIBRARIES                             = librapicorn-@MAJOR@.@MINOR@.la
+LDSCRIPT_MAP                                = $(top_srcdir)/rcore/ldscript.map
+librapicorn_@MAJOR@_@MINOR@includedir       = $(includedir)/rapicorn-@MAJOR@.@MINOR@/ui
+librapicorn_@MAJOR@_@MINOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorn_@MAJOR@_@MINOR@_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorn_@MAJOR@_@MINOR@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore-@MAJOR@.@MINOR@.la ${LDSCRIPT_MAP} \
+					    $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.@MINOR@.la
+librapicorn_@MAJOR@_@MINOR@_la_LDFLAGS      = $(strip		\
 	$(AM_LDFLAGS) -no-undefined				\
-	-Wl,--version-script=$(srcdir)/ldscript.map		\
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) 	\
+	-Wl,--version-script=${LDSCRIPT_MAP}			\
+	-version-info $(LT_VERSION_INFO) 			\
 ) # set libtool version and export symbols for resolving
-librapicorn@RAPICORN_RELEASE@_la_LIBADD       = $(strip		\
-	$(top_builddir)/rcore/librapicorncore@RAPICORN_RELEASE@.la \
-	$(top_builddir)/rcore/rsvg/librcore_rsvg@RAPICORN_RELEASE@.la \
+librapicorn_@MAJOR@_@MINOR@_la_LIBADD       = $(strip		\
+	$(top_builddir)/rcore/librapicorncore-@MAJOR@.@MINOR@.la \
+	$(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.@MINOR@.la \
 	$(LIBXML_LIBS) \
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig
-EXTRA_DIST += $(rapicorn_private_files) ldscript.map
+EXTRA_DIST += $(rapicorn_private_files)
 # -- Build OBJECTS alphabetically --
 librapicorn1008_la_OBJECTS := $(sort $(librapicorn1008_la_OBJECTS))
 
 install-exec-ldconfig: # libtool >= 1.5.2 doesn't always set rpath, requiring ldconfig
-	test `id -u` != 0 -o ! -x /sbin/ldconfig || /sbin/ldconfig $(DESTDIR)$(libdir)
+	test ! -x /sbin/ldconfig -o ! -w /etc/ld.so.cache || /sbin/ldconfig $(DESTDIR)$(libdir)
 install-exec-hook: install-exec-ldconfig
 
 # === Rapicorn IDL ===
@@ -150,7 +151,7 @@ sinfex.cc: sinfex.lgen sinfex.ygen
 
 # === Programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorn@RAPICORN_RELEASE@.la $(RAPICORN_GUI_LIBS) -lm
+progs_ldadd            = librapicorn-@MAJOR@.@MINOR@.la $(RAPICORN_GUI_LIBS) -lm
 
 # === XML Files ===
 XML_FILES = $(top_srcdir)/res/Rapicorn/foundation.xml $(top_srcdir)/res/Rapicorn/standard.xml

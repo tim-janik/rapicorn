@@ -27,9 +27,9 @@ addons:
     packages: [
       # g++ >= 4.8 is required for -std=c++11
       gcc-5, g++-5,
-      # Rapicorn1410 dependencies
+      # Rapicorn-14.10 dependencies
       libcairo2-dev, libpango1.0-dev, python2.7-dev, libxml2-dev, libgdk-pixbuf2.0-dev, libreadline6-dev,
-      # Rapicorn1509 dependencies
+      # Rapicorn-15.09 dependencies
       cython, libcroco3-dev,
       # devel-mode dependencies
       intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz, texlive-binaries, xvfb ]

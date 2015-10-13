@@ -8,7 +8,7 @@ AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 # == Build Classes ==
 noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS) $(NOINSTPRGS)
 noinst_DATA	 =
-LDADDS		 = $(top_builddir)/ui/librapicorn@RAPICORN_RELEASE@.la
+LDADDS		 = $(top_builddir)/ui/librapicorn-@MAJOR@.@MINOR@.la
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 NOINSTPRGS =

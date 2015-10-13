@@ -10,7 +10,7 @@ noinst_DATA      =
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS) $(EXAMPLES)
 RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON)
-RAPIDRUN         = $(top_builddir)/tools/rapidrun-@RAPICORN_RELEASE@
+RAPIDRUN         = $(top_builddir)/tools/rapidrun-@MAJOR@.@MINOR@
 
 EXAMPLES = sample.xml
 

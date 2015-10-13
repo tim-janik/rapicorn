@@ -3,11 +3,8 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS     = . po data res rcore aidacc ui cython tools tests pytests examples docs
 
-docdir      = ${datarootdir}/doc/rapicorn@RAPICORN_RELEASE@
+docdir      = ${datarootdir}/doc/rapicorn-@MAJOR@.@MINOR@
 noinst_DATA =
-
-# === setup ===
-AUTOMAKE_OPTIONS = 1.9 dist-bzip2 no-dist-gzip
 
 # === web site ===
 site site-preview site-update:
@@ -20,7 +17,13 @@ test:
 
 # === doc/ files ===
 maindocsdir   = $(docdir)/
-maindocs_DATA = README NEWS
+maindocs_DATA = README NEWS COPYING.MPL
+README: README.md
+	$(AM_V_GEN)
+	$(Q) rm -f $@      # work around read-only target files
+	$(Q) $(PANDOC) -S -f markdown_github+pandoc_title_block-hard_line_breaks -t plain $< -o $@
+	$(Q) chmod a-w $@  # prevent accidental target file edits
+.SECONDARY: README.md # pacify make(1) when shipping README without README.md
 EXTRA_DIST   += $(maindocs_DATA)
 
 # === i18n tool files ===
@@ -28,16 +31,16 @@ CLEANFILES += intltool-extract intltool-merge intltool-update
 EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
 
 # === rapicorn toplevel include file ===
-toprapicorn_includedir      = $(includedir)/rapicorn@RAPICORN_RELEASE@/
+toprapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@.@MINOR@/
 toprapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
 EXTRA_DIST += $(toprapicorn_include_HEADERS)
 
 # === rapicorn*.pc ===
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = rapicorn@RAPICORN_RELEASE@.pc
-rapicorn@RAPICORN_RELEASE@.pc: $(top_builddir)/config.status rapicorn.pc.in
+pkgconfig_DATA = rapicorn-@MAJOR@.@MINOR@.pc
+rapicorn-@MAJOR@.@MINOR@.pc: $(top_builddir)/config.status rapicorn.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status --file=$@:rapicorn.pc.in
-CLEANFILES += rapicorn@RAPICORN_RELEASE@.pc
+CLEANFILES += rapicorn-@MAJOR@.@MINOR@.pc
 EXTRA_DIST += rapicorn.pc.in
 
 # == ETAGS ==
@@ -69,9 +72,9 @@ installcheck-local:
 	&& echo 'Blob blob = Blob::load (".");'				>> tmpx.cc \
 	&& echo 'return app.run_and_exit(); }'				>> tmpx.cc \
 		; eval "$$TSTDIAGNOSE" "'Create  rapicorn sample program'"
-	$(Q) $(CXX) -Werror tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn@RAPICORN_RELEASE@` \
+	$(Q) $(CXX) -Werror tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn-@MAJOR@.@MINOR@` \
 		; eval "$$TSTDIAGNOSE" "'Compile rapicorn sample program'"
-	$(Q) $(CXX) -Werror tmpx.o -o tmpx `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn@RAPICORN_RELEASE@` \
+	$(Q) $(CXX) -Werror tmpx.o -o tmpx `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn-@MAJOR@.@MINOR@` \
 		; eval "$$TSTDIAGNOSE" "'Link    rapicorn sample program'"
 	$(Q) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx \
 		; eval "$$TSTDIAGNOSE" "'Execute rapicorn sample program'"
