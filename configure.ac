@@ -10,7 +10,7 @@ AC_PREREQ(2.57)
 # * YEAR, MONTH:     increments: enforce API/ABI breaks, reset REVISION and RAPICORN_VERSION_ABI
 # * -RC:             release candidate, may contain -rc[0-9]+ or nothing
 AC_INIT([rapicorn], [15.09.1])
-RAPICORN_ABI_VERSION=15.09.0
+RAPICORN_ABI_VERSION=15.09.1
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information
