@@ -4,56 +4,56 @@ builtin(include, acrapicorn.m4)dnl # include special macros
 builtin(include, ld-symbolic.m4)dnl # include special macros
 
 AC_PREREQ(2.57)
-# VERSION: YEAR.MONTH.REVISION-RC:
-# * REVISION:        increment with every release, devel versions are odd
+# VERSION: MAJOR.MINOR.MICRO-RC:
+# * MICRO:           increment with every release, devel versions are odd
 # * API/ABI changes: reset RAPICORN_VERSION_ABI to the current VERSION
-# * YEAR, MONTH:     increments: enforce API/ABI breaks, reset REVISION and RAPICORN_VERSION_ABI
+# * MAJOR, MINOR:    increments: enforce API/ABI breaks, reset MICRO and RAPICORN_VERSION_ABI
 # * -RC:             release candidate, may contain -rc[0-9]+ or nothing
 AC_INIT([rapicorn], [15.09.1])
-RAPICORN_ABI_VERSION=15.09.1
+LATEST_ABI_VERSION_=[15.09.1]
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information
 AM_INIT_AUTOMAKE(1.9 dist-xz tar-pax no-dist-gzip no-define foreign)
 # version handling
 RAPICORN_VERSION="$PACKAGE_VERSION"
-[RAPICORN_VERSION_YEAR=` echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
-[RAPICORN_VERSION_MONTH=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
-[RAPICORN_VERSION_MICRO=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
-[RAPICORN_RELEASE=`printf %02u%02u $RAPICORN_VERSION_YEAR $(expr 0 + $RAPICORN_VERSION_MONTH)`]
+[MAJOR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
+[MINOR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
+[MICRO=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
+[RAPICORN_RELEASE=`printf %02u%02u $MAJOR $(expr 0 + $MINOR)`]
 AC_SUBST(RAPICORN_VERSION)
 AC_SUBST(RAPICORN_RELEASE)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
 AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 # For automake, we need to easily provide MAJOR.MINOR.MICRO and MAJOR_MINOR_MICRO:
-MAJOR="$RAPICORN_VERSION_YEAR" ; MINOR="$RAPICORN_VERSION_MONTH" ; MICRO="$RAPICORN_VERSION_MICRO"
 AC_SUBST(MAJOR)
 AC_SUBST(MINOR)
 AC_SUBST(MICRO)
 # calculate ABI age
-ABI_STEM=[`echo "$RAPICORN_ABI_VERSION" | sed 's/\.[0-9]\+$//'`]  # MAJOR.MINOR
-ABIMICRO=[`echo "$RAPICORN_ABI_VERSION" | sed 's/^.*\.//'     `]  # MICRO
-test "$ABI_STEM" = "$MAJOR.$MINOR" || {
-  AC_MSG_ERROR([RAPICORN_ABI_VERSION must match MAJOR.MINOR version: $ABI_STEM == $MAJOR.$MINOR])
+ABI_STEM_=[`echo "$LATEST_ABI_VERSION_" | sed 's/\.[0-9]\+$//'`]  # MAJOR.MINOR
+ABI_MICRO=[`echo "$LATEST_ABI_VERSION_" | sed 's/^.*\.//'     `]  # MICRO
+test "$ABI_STEM_" = "$MAJOR.$MINOR" || {
+  AC_MSG_ERROR([LATEST_ABI_VERSION_ must match MAJOR.MINOR version: $ABI_STEM_ == $MAJOR.$MINOR])
 }
-test "$ABIMICRO" -le "$MICRO" || {
-  AC_MSG_ERROR([RAPICORN_ABI_VERSION must not be greater than VERSION: $ABIMICRO <= $MICRO])
+test "$ABI_MICRO" -le "$MICRO" || {
+  AC_MSG_ERROR([LATEST_ABI_VERSION_ must not be greater than VERSION: $ABI_MICRO <= $MICRO])
 }
-ABI_AGE=$(($MICRO - $ABIMICRO))
+ABI_AGE=$(($MICRO - $ABI_MICRO))
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 # Note, rapicorn provides backwards binary compatibility within
-# RAPICORN_VERSION_MICRO increments only, and only since
-# RAPICORN_ABI_VERSION. Interface additions occour with pretty much every release.
+# MICRO increments only, and only since LATEST_ABI_VERSION_.
+# Interface additions occour with pretty much every release.
 # For libtool this means:
-# - lt_current=MICRO  # no forward compatible builds, i.e. enforce runtime-lib >= build-time-lib
-# - lt_age=ABI_AGE    # allow backward compatibility between RAPICORN_ABI_VERSION .. VERSION
-# - lt_revision=MICRO # reflect MICRO in SO name, see: https://autotools.io/libtool/version.html
 # - the '-release X.Y' option cannot be used, because it's ignored for naming .a, .la, .so files.
+# - lt_current=MICRO  # disallow forward compatible builds, i.e. enforce runtime-lib >= build-time-lib
+# - lt_age=ABI_AGE    # allow backward compatibility between LATEST_ABI_VERSION_ .. VERSION
+# - lt_revision=MICRO # always pick the latest SO even in the absence of interface/ABI increments,
+#                     # see also: https://autotools.io/libtool/version.html
 lt_current=$MICRO ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 # define debugging paths for devel-mode
-if test 1 = $(($RAPICORN_VERSION_MICRO & 1)) ; then
+if test 1 = $(($MICRO & 1)) ; then
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
 else
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
@@ -227,7 +227,7 @@ AC_SUBST(OPTIMIZE_FAST)
 # if 'auto', enable devel mode for odd (development) versions
 AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
 [test x"$enable_devel_mode" = xauto -a -d "$srcdir/.git/" &&
-      { echo " $RAPICORN_VERSION_MICRO" | grep -q '[13579]$' ; } && enable_devel_mode=yes]
+      { echo " $MICRO" | grep -q '[13579]$' ; } && enable_devel_mode=yes]
 test x"$enable_devel_mode" = xyes || enable_devel_mode=no
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
 AC_MSG_RESULT([$enable_devel_mode])
