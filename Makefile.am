@@ -17,7 +17,7 @@ test:
 
 # === doc/ files ===
 maindocsdir   = $(docdir)/
-maindocs_DATA = README.md NEWS
+maindocs_DATA = README.md NEWS COPYING.MPL
 EXTRA_DIST   += $(maindocs_DATA)
 
 # === i18n tool files ===

@@ -59,4 +59,4 @@ License
 =======
 
 This Source Code Form is subject to the terms of the Mozilla Public
-License 2.0. See the LICENSE file for license rights and limitations.
+License Version 2.0. See the file COPYING.MPL for rights and limitations.
