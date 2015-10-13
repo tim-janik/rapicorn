@@ -165,13 +165,12 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
+	&& XMINOR=`echo @MINOR@ | sed 's/^0\+//'`						>> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_CHECK_VERSION(year,month,revv) \\"				>> xgen-$(@F) \
-	&& echo "  (@MAJOR@ > (year) || \\"							>> xgen-$(@F) \
-	&& echo "    (@MAJOR@ == (year) && \\"							>> xgen-$(@F) \
-	&& echo "      (13@MINOR@%13 > (month) || \\"						>> xgen-$(@F) \
-	&& echo "        (13@MINOR@%13 == (month) && \\"					>> xgen-$(@F) \
-	&& echo "          (@MICRO@ >= (revv))))))"						>> xgen-$(@F) \
+	&& echo "#define RAPICORN_CHECK_VERSION(major,minor,micro) \\"				>> xgen-$(@F) \
+	&& echo "  (@MAJOR@ > (major) || (@MAJOR@ == (major) && \\"				>> xgen-$(@F) \
+	&& echo "    ($$XMINOR > (minor) || ($$XMINOR == (minor) && \\"				>> xgen-$(@F) \
+	&& echo "      @MICRO@ >= (micro)))))"							>> xgen-$(@F) \
 	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @MICRO@)'					>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
