@@ -51,8 +51,7 @@ before_install:
   - $CXX --version
 
 install:
-  - travis_retry sudo apt-get install -y libcroco3-dev
-  - travis_retry sudo pip install 'cython>=0.20.2'
+  - travis_retry sudo apt-get install -y libcroco3-dev cython
   - git clean -f
   - ./autogen.sh
 
