@@ -9,7 +9,7 @@ noinst_PROGRAMS  = # auto-cleaned
 noinst_DATA      =
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS) $(EXAMPLES)
-RPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON)
+FPYTHON          = PYTHONPATH="$$PYTHONPATH:$(pythondir)" $(PYTHON)
 RAPIDRUN         = $(top_builddir)/tools/rapidrun-@MAJOR@.@MINOR@
 
 EXAMPLES = sample.xml
@@ -35,7 +35,7 @@ check-TEST_PYPROGS:
 	$(Q) \
 	  for tst in $(TEST_PYPROGS) ; do \
 	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;		\
-	    $(X11_ENV) $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ;	\
+	    $(X11_ENV) $(FPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ;	\
 	  done
 	@MESSAGETEXT="All $(words $(TEST_PYPROGS)) Python tests passed"	 \
 	&& [ 0 -lt $(words $(TEST_PYPROGS)) ]                            \

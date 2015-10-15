@@ -9,7 +9,7 @@ noinst_PROGRAMS  = # auto-cleaned
 noinst_DATA      =
 XML_FILES        =
 EXTRA_DIST      += $(XML_FILES) $(TEST_PYPROGS) $(EXAMPLES)
-RPYTHON          = PYTHONPATH="$(abs_top_builddir)/cython/${objdir}:$$PYTHONPATH" $(PYTHON)
+FPYTHON          = PYTHONPATH="$(abs_top_builddir)/cython/${objdir}:$$PYTHONPATH" $(PYTHON)
 # Loading newly built Python modules requires accesss to libtool objdir
 objdir           = .libs
 
@@ -20,7 +20,7 @@ TEST_PYPROGS = simple.py loop.py testrapicorn.py chekwidgets.py testgc.py testbi
 
 # === python-call-info ===
 python-call-info:
-	@echo "$(RPYTHON) # -c 'import Rapicorn'"
+	@echo "$(FPYTHON) # -c 'import Rapicorn'"
 
 
 # === TEST_PYPROGS ===
@@ -29,7 +29,7 @@ check-TEST_PYPROGS:
 	$(Q) \
 	  for tst in $(TEST_PYPROGS) ; do \
 	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;		\
-	    $(X11_ENV) $(RPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ;	\
+	    $(X11_ENV) $(FPYTHON) $$rt && echo "PASS: $$tst" || exit 1 ;	\
 	  done
 	@MESSAGETEXT="All $(words $(TEST_PYPROGS)) Python tests passed"	 \
 	&& [ 0 -lt $(words $(TEST_PYPROGS)) ]                            \
