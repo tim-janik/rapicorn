@@ -1,0 +1,51 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: rapicorn
+Source: https://github.com/tim-janik/rapicorn/
+
+Comment:
+ This package was debianized by Tim Janik <timj@gnu.org> on
+ Fri, 09 Oct 2015 11:29:46 +0200
+ .
+ The source tarball is an aggregate of several different works in which
+ the main one is Rapicorn. Other works include librsvg, X11 region code
+ and files from GLib and Gtk+.
+ .
+ Overall, the rapicorn project is licensed under the terms of the
+ Mozilla Public License Version 2.0.
+ .
+ The complete text of the Mozilla Public License can be found in the
+ LICENSE file in the same directory as this file or provided by the
+ Mozilla Foundation: https://www.mozilla.org/en-US/MPL/2.0/
+
+
+Files: *
+License: MPL-2.0
+Copyright:
+  Copyright (C) 2002-2015 Tim Janik
+  Copyright (C) 2003-2006, 2015 Stefan Westerfeld
+
+Files: rcore/markup.cc
+License: LGPL-2+
+Copyright:
+  Copyright (C) 2000-2005, the GLib Project
+
+Files: ui/table.cc
+License: LGPL-2+
+Copyright:
+  Copyright (C) 1996-2002, the GTK+ Project
+
+Files: rcore/rsvg/*
+License: LGPL-2+
+Copyright:
+  Copyright (C) 1996-2002, the RSVG Project
+Comment:
+  The librsvg sources have been retrieved from:
+    git://git.gnome.org/librsvg
+  The sources can be browsed at:
+    https://git.gnome.org/browse/librsvg
+
+Files: aidacc/yapps2runtime.py yapps2_deb/*
+License: MIT
+Copyright:
+  Copyright (C) 1999-2003 Amit J. Patel
+  Copyright (C) 2003-2004 Matthias Urlichs

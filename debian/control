@@ -1,0 +1,22 @@
+Source: rapicorn-15.09
+Section: x11
+Priority: optional
+Maintainer: Tim Janik <timj@gnu.org>
+Build-Depends: debhelper (>= 9), autotools-dev, intltool,
+ libcairo2-dev, libcroco3-dev, libpango1.0-dev, libgdk-pixbuf2.0-dev, libreadline-dev,
+ python, python-all-dev, cython, xvfb
+Standards-Version: 3.9.5
+Homepage: http://rapicorn.org/
+Vcs-Browser: https://github.com/tim-janik/rapicorn/tree/master/debian
+
+Package: rapicorn-15.09
+Architecture: any
+Depends: ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Description: Rapicorn git snapshot of upstream master
+ Rapicorn is a toolkit for rapid UI construction and SVG-based theming.
+ It's primary focus is on flexible development of user interfaces in C++
+ and Python, by allowing quick design iterations through decoupling
+ of the UI declarations from data bindings and programming logic.
+ .
+ This package is an automatic git snapshot build, created from the HEAD of
+ https://github.com/tim-janik/rapicorn/.

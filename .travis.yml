@@ -32,7 +32,8 @@ addons:
       # Rapicorn-15.09 dependencies
       cython, libcroco3-dev,
       # devel-mode dependencies
-      intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz, texlive-binaries, xvfb ]
+      intltool, autoconf-archive, bison, flex, pandoc, doxygen, graphviz, texlive-binaries, xvfb,
+      pbuilder, debootstrap, devscripts, debhelper ]
 
 before_install:
   - uname -a
@@ -52,20 +53,31 @@ before_install:
 
 install:
   - travis_retry sudo apt-get install -y libcroco3-dev cython
-  - git clean -f
+  - travis_retry git fetch --unshallow && git clean -f && ls -al
   - ./autogen.sh
-
-before_script:
   - make -j`nproc` V=1
-
-script:
   - make -j`nproc` check V=1
   - sudo make -j`nproc` install V=1
   - make -j`nproc` installcheck V=1
   - make dist V=1
   - sudo make -j`nproc` uninstall V=1
-  - make -j`nproc` clean
-  - ls rapicorn-*.tar.xz | tee /dev/stderr | wc -l
+  - make -j`nproc` clean V=1
+  - ls rapicorn-*.tar.xz | tee /dev/stderr | test 1 -eq `wc -l` # assert *ONE* tarball
+  - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
+  # - travis_retry sudo pbuilder update
+  - VCSREVISION=t`debian/git-revision.sh` && echo "$VCSREVISION"
+  - LOGMESSAGE="git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
+  - debian/mkdeb.sh debian/ rapicorn-*.tar.xz "$VCSREVISION" "$LOGMESSAGE"
+  - ls -al
+
+before_script:
+  - true
+
+script:
+  - F=`ls ./rapicorn-*_*-1_amd64.deb` && test `wc -w <<<$F` -eq 1 &&
+    URL="https://api.bintray.com/content/beast-team/deb/rapicorn/snapshot/$F" &&
+    OPTS="deb_distribution=vivid;deb_component=main;deb_architecture=amd64;override=0;publish=1" &&
+    curl -f -T "$F" "-ubeast-team:$BINTRAY_APITOKEN" "$URL;$OPTS"
 
 after_success:
   - echo "Done, build OK!"
@@ -74,6 +86,7 @@ notifications:
   irc:
     channels:
       - "irc.gimp.org#beast"
+    on_failure: change
   email: false
     #recipients:
     #  - rapicorn@googlegroups.com
