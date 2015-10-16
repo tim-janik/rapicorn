@@ -62,6 +62,9 @@ install:
   - sudo make -j`nproc` uninstall V=1
   - make -j`nproc` clean V=1
   - ls rapicorn-*.tar.xz | tee /dev/stderr | test 1 -eq `wc -l` # assert *ONE* tarball
+  - VCSREVISION=t`debian/git-revision.sh` && echo "$VCSREVISION"
+  - LOGMESSAGE="git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
+  - debian/mkdeb.sh debian/ rapicorn-*.tar.xz "$VCSREVISION" "$LOGMESSAGE"
 
 before_script:
   - true
