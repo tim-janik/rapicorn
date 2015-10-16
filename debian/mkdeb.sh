@@ -7,7 +7,7 @@ set -ex
 SCRIPTNAME=`basename $0`
 function die  { e="$1"; shift; [ -n "$*" ] && echo "$SCRIPTNAME: $*" >&2; exit "$e" ; }
 
-test "$#" -ge 2 || die 11 "Usage: $0 debiandir/ pathto/upstream-version.tar.xz revision [message]"
+test "$#" -ge 2 -a "$#" -le 4 || die 11 "Usage: $0 debiandir/ pathto/upstream-version.tar.xz revision [message]"
 ARG_DEBIANDIR="$1" ; ARG_TARBALL="$2" ; ARG_REVISION="${3:-rev00}" ; ARG_MESSAGE="$4"
 
 # Construct package configuration
