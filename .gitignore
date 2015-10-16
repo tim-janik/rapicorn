@@ -5,12 +5,14 @@ Makefile
 *.o
 *.lo
 *.pyc
-/rnd-files/
+/autogen.log
+/autotools/*.m4
 /.x11test.log
 /ChangeLog
 /INSTALL
 /aclocal.m4
 /autom4te.cache
+/compile
 /config.guess
 /config.log
 /config.status
@@ -18,6 +20,7 @@ Makefile
 /configure
 /configure.h
 /configure.h.in
+/configure.h.in~
 /depcomp
 /install-sh
 /intltool-extract.in
@@ -30,5 +33,7 @@ Makefile
 /mkinstalldirs
 /po-helper.sh
 /py-compile
-/rapicorn[0-9][0-9][0-9][0-9].pc
+/rapicorn-[0-9][0-9].[0-9][0-9].pc
+/rnd-files/
+/README
 /stamp-h1

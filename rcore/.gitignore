@@ -1,4 +1,5 @@
-/librapicorncore[0-9][0-9][0-9][0-9].la
+/librapicorncore-[0-9][0-9].[0-9][0-9].la
+/aidavariants.hh
 /configbits.cc
 /rapicornconfig.h
 /rapicornsignalvariants.hh
@@ -6,4 +7,5 @@
 /types-zgen.c
 /gen-enums.cc
 /stamp-autochecks
-/rapidres
+/rapidres-[0-9][0-9].[0-9][0-9]
+/zres.cc
