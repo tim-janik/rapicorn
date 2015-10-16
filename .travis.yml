@@ -53,8 +53,6 @@ before_install:
 
 install:
   - travis_retry sudo apt-get install -y libcroco3-dev cython
-  - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
-  # - travis_retry sudo pbuilder update
   - travis_retry git fetch --unshallow && git clean -f && ls -al
   - ./autogen.sh
   - make -j`nproc` V=1
@@ -65,9 +63,12 @@ install:
   - sudo make -j`nproc` uninstall V=1
   - make -j`nproc` clean V=1
   - ls rapicorn-*.tar.xz | tee /dev/stderr | test 1 -eq `wc -l` # assert *ONE* tarball
+  - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
+  # - travis_retry sudo pbuilder update
   - VCSREVISION=t`debian/git-revision.sh` && echo "$VCSREVISION"
   - LOGMESSAGE="git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
   - debian/mkdeb.sh debian/ rapicorn-*.tar.xz "$VCSREVISION" "$LOGMESSAGE"
+  - ls -al
 
 before_script:
   - true
