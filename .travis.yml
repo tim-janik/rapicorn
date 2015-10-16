@@ -74,7 +74,10 @@ before_script:
   - true
 
 script:
-  - true
+  - F=`ls ./rapicorn-*_*-1_amd64.deb` && test `wc -w <<<$F` -eq 1 &&
+    URL="https://api.bintray.com/content/beast-team/deb/rapicorn/snapshot/$F" &&
+    OPTS="deb_distribution=vivid;deb_component=main;deb_architecture=amd64;override=0;publish=1" &&
+    curl -f -T "$F" "-ubeast-team:$BINTRAY_APITOKEN" "$URL;$OPTS"
 
 after_success:
   - echo "Done, build OK!"
@@ -83,6 +86,7 @@ notifications:
   irc:
     channels:
       - "irc.gimp.org#beast"
+    on_failure: change
   email: false
     #recipients:
     #  - rapicorn@googlegroups.com
