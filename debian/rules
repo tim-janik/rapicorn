@@ -1,4 +1,7 @@
 #!/usr/bin/make -f
+
+# https://www.debian.org/doc/manuals/maint-guide/dreq.html#customrules
+
 # See debhelper(7) (uncomment to enable)
 # output every command that modifies files on the build system.
 #DH_VERBOSE = 1
@@ -19,7 +22,7 @@ include /usr/share/dpkg/default.mk
 
 # main packaging script based on dh7 syntax
 %:
-	dh $@  --with autotools-dev
+	dh $@  --with autotools-dev --with python2
 
 # debmake generated override targets
 # This is example for Cmake (See http://bugs.debian.org/641051 )
