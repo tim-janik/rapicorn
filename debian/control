@@ -12,7 +12,11 @@ Vcs-Browser: https://github.com/tim-janik/rapicorn/tree/master/debian
 Package: rapicorn-15.09
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Rapicorn is a toolkit for declarative UI construction and SVG-based theming
- Rapicorn is a toolkit for rapid development of user interfaces in C++ and
- Python. The user interface (UI) is designed in a declarative markup language
- and is connected to the programming logic using data bindings and commands.
+Description: Rapicorn git snapshot of upstream master
+ Rapicorn is a toolkit for rapid UI construction and SVG-based theming.
+ It's primary focus is on flexible development of user interfaces in C++
+ and Python, by allowing quick design iterations through decoupling
+ of the UI declarations from data bindings and programming logic.
+ .
+ This package is an automatic git snapshot build, created from the HEAD of
+ https://github.com/tim-janik/rapicorn/.
