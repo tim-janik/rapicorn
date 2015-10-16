@@ -53,7 +53,9 @@ before_install:
 
 install:
   - travis_retry sudo apt-get install -y libcroco3-dev cython
-  - git fetch --unshallow && git clean -f && ls -al
+  - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
+  # - travis_retry sudo pbuilder update
+  - travis_retry git fetch --unshallow && git clean -f && ls -al
   - ./autogen.sh
   - make -j`nproc` V=1
   - make -j`nproc` check V=1
