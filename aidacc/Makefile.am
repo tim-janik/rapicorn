@@ -77,6 +77,7 @@ check-local: check-aidacc-intern-list-formats
 test-aidacc-installation:
 	$(Q) PATH="$(bindir):$$PATH" ${AIDACCV} -x CxxStub -x ExtractDocs -x TypeMap --list-formats >$(TSTOUT) && \
 	  fgrep -q CxxStub $(TSTOUT) && fgrep -q TypeMap $(TSTOUT) && fgrep -q ExtractDocs $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f $(TSTOUT)
 installcheck-local: test-aidacc-installation
 
 # == 'aidacc' executable link ==
