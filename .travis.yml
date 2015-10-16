@@ -52,20 +52,22 @@ before_install:
 
 install:
   - travis_retry sudo apt-get install -y libcroco3-dev cython
-  - git clean -f
+  - git clean -f && ls -al
   - ./autogen.sh
-
-before_script:
   - make -j`nproc` V=1
-
-script:
   - make -j`nproc` check V=1
   - sudo make -j`nproc` install V=1
   - make -j`nproc` installcheck V=1
   - make dist V=1
   - sudo make -j`nproc` uninstall V=1
-  - make -j`nproc` clean
-  - ls rapicorn-*.tar.xz | tee /dev/stderr | wc -l
+  - make -j`nproc` clean V=1
+  - ls rapicorn-*.tar.xz | tee /dev/stderr | test 1 -eq `wc -l` # assert *ONE* tarball
+
+before_script:
+  - true
+
+script:
+  - true
 
 after_success:
   - echo "Done, build OK!"
