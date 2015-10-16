@@ -9,10 +9,12 @@ AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
-RPYTHON      = PYTHONPATH="$(abs_builddir)/${objdir}:$$PYTHONPATH" $(PYTHON)
 XMANIFOLD    = $(top_srcdir)/aidacc/xmanifold.py
 # Loading newly built Python modules requires accesss to libtool objdir
 objdir       = .libs
+# call python with uninstalled or fully installed modules
+UPYTHON      = PYTHONPATH="$(abs_builddir)/${objdir}:$$PYTHONPATH" $(PYTHON)
+FPYTHON      = PYTHONPATH="$$PYTHONPATH:${pythondir}" $(PYTHON)
 
 # Py Rapicorn - installation
 # pythondir = ${prefix}/lib/pythonX.Y/site-packages
@@ -81,7 +83,7 @@ check-TEST_PYPROGS:
 	$(Q) \
 	  for tst in $(TEST_PYPROGS) ; do					\
 	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;		\
-	    $(X11_ENV) $(RPYTHON) $$rt && echo "PASS: $$tst" || exit $? ;	\
+	    $(X11_ENV) $(UPYTHON) $$rt && echo "PASS: $$tst" || exit $? ;	\
 	  done
 	@MESSAGETEXT="All $(words $(TEST_PYPROGS)) Python tests passed"	\
 	&& [ 0 -lt $(words $(TEST_PYPROGS)) ]				\
@@ -93,10 +95,10 @@ testing1-installcheck:
 	@ # Patch testing1.py to use the installed versioned Rapicorn.so module
 	$(Q) sed 's/.*@LINE_REWRITTEN_FOR_INSTALLCHECK@.*/import Rapicorn_@MAJOR@_@MINOR@ as Rapicorn/' \
 	       < $(srcdir)/testing1.py > x-testing1.py && ! cmp -s $(srcdir)/testing1.py x-testing1.py
-	$(Q) PYTHONPATH="$$PYTHONPATH:${pythondir}" python x-testing1.py
+	$(Q) $(X11_ENV) $(FPYTHON) x-testing1.py
 	$(Q) rm -f x-testing1.py
 installcheck-local: testing1-installcheck
 
 python-call-info:
-	@echo 'PYTHONPATH="$$PYTHONPATH:${pythondir}" python -ic "import Rapicorn"'
-	@echo '${RPYTHON} -ic "import Rapicorn"'
+	@echo '${FPYTHON} -ic "import Rapicorn"'
+	@echo '${UPYTHON} -ic "import Rapicorn"'

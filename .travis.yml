@@ -51,21 +51,21 @@ before_install:
   - $CXX --version
 
 install:
-  - travis_retry sudo apt-get install -y libcroco3-dev
-  - travis_retry sudo pip install 'cython>=0.20.2'
+  - travis_retry sudo apt-get install -y libcroco3-dev cython
   - git clean -f
   - ./autogen.sh
 
 before_script:
-  - make V=1
+  - make -j`nproc` V=1
 
 script:
-  - make check V=1
-  - sudo make install V=1
-  - make installcheck V=1
+  - make -j`nproc` check V=1
+  - sudo make -j`nproc` install V=1
+  - make -j`nproc` installcheck V=1
   - make dist V=1
-  - sudo make uninstall V=1
-  - make clean
+  - sudo make -j`nproc` uninstall V=1
+  - make -j`nproc` clean
+  - ls rapicorn-*.tar.xz | tee /dev/stderr | wc -l
 
 after_success:
   - echo "Done, build OK!"
