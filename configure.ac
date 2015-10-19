@@ -5,12 +5,14 @@ builtin(include, ld-symbolic.m4)dnl # include special macros
 
 AC_PREREQ(2.57)
 # VERSION: MAJOR.MINOR.MICRO-RC:
-# * MICRO:           increment with every release, devel versions are odd
-# * API/ABI changes: reset RAPICORN_VERSION_ABI to the current VERSION
-# * MAJOR, MINOR:    increments: enforce API/ABI breaks, reset MICRO and RAPICORN_VERSION_ABI
-# * -RC:             release candidate, may contain -rc[0-9]+ or nothing
-AC_INIT([rapicorn], [15.09.1])
-LATEST_ABI_VERSION_=[15.09.1]
+# * MICRO:           Increment with every release
+# * MINOR:           Increment for significant changes or ABI breaks, reset MICRO on increments
+# * ABI_VERSION:     Record the latest version since ABI compatibility has been kept
+# * MAJOR:           Increment on major API breaks, enforces ABI breaks, reset MINOR, MICRO and ABI_VERSION
+# * ABI changes:     Reset ABI_VERSION to the current VERSION
+# * -RC:             Release candidate, may contain -rc[0-9]+ or nothing
+AC_INIT([rapicorn], [15.9.1])
+:;      ABI_VERSION=[15.9.1]
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information
@@ -28,26 +30,31 @@ AC_SUBST(MAJOR)
 AC_SUBST(MINOR)
 AC_SUBST(MICRO)
 # calculate ABI age
-ABI_STEM_=[`echo "$LATEST_ABI_VERSION_" | sed 's/\.[0-9]\+$//'`]  # MAJOR.MINOR
-ABI_MICRO=[`echo "$LATEST_ABI_VERSION_" | sed 's/^.*\.//'     `]  # MICRO
-test "$ABI_STEM_" = "$MAJOR.$MINOR" || {
-  AC_MSG_ERROR([LATEST_ABI_VERSION_ must match MAJOR.MINOR version: $ABI_STEM_ == $MAJOR.$MINOR])
+ABI_MAJOR=[`echo "$ABI_VERSION" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
+ABI_MINOR=[`echo "$ABI_VERSION" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\2/'`]
+ABI_MICRO=[`echo "$ABI_VERSION" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
+test "$ABI_MAJOR" = "$MAJOR" || {
+  AC_MSG_ERROR([ABI_VERSION must match MAJOR version: $ABI_MAJOR == $MAJOR])
 }
-test "$ABI_MICRO" -le "$MICRO" || {
-  AC_MSG_ERROR([LATEST_ABI_VERSION_ must not be greater than VERSION: $ABI_MICRO <= $MICRO])
+test "$ABI_MINOR" -le "$MINOR" || {
+  AC_MSG_ERROR([ABI_VERSION must predate MINOR version: $ABI_MINOR <= $MINOR])
 }
-ABI_AGE=$(($MICRO - $ABI_MICRO))
+test "$ABI_MICRO" -le "$MICRO" -o "$ABI_MINOR" -lt "$MINOR" || {
+  AC_MSG_ERROR([ABI_VERSION must predate MINOR.MICRO version: $ABI_MINOR.$ABI_MICRO <= $MINOR.$MICRO])
+}
+ABI_AGE=$(($MINOR - $ABI_MINOR))
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-# Note, rapicorn provides backwards binary compatibility within
-# MICRO increments only, and only since LATEST_ABI_VERSION_.
+# Note, rapicorn provides backwards binary compatibility only within
+# MINOR.MICRO increments, and only since ABI_VERSION.
 # Interface additions occour with pretty much every release.
 # For libtool this means:
+# - the library name needs to encode MAJOR
 # - the '-release X.Y' option cannot be used, because it's ignored for naming .a, .la, .so files.
-# - lt_current=MICRO  # disallow forward compatible builds, i.e. enforce runtime-lib >= build-time-lib
-# - lt_age=ABI_AGE    # allow backward compatibility between LATEST_ABI_VERSION_ .. VERSION
-# - lt_revision=MICRO # always pick the latest SO even in the absence of interface/ABI increments,
+# - lt_current=MINOR  # disallow forward compatible builds, i.e. enforce runtime-lib >= build-time-lib
+# - lt_age=ABI_AGE    # allow backward compatibility between ABI_VERSION .. VERSION
+# - lt_revision=MICRO # pick the latest SO revision for unchanged MAJOR.MINOR,
 #                     # see also: https://autotools.io/libtool/version.html
-lt_current=$MICRO ; lt_age=$ABI_AGE ; lt_revision=$MICRO
+lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 # define debugging paths for devel-mode
@@ -67,7 +74,7 @@ AC_MSG_RESULT($result)
 
 # Rapicorn namespace
 AC_MSG_CHECKING([for Rapicorn namespace])
-RAPICORN_NAMESPACE_NAME="Rapicorn_$MAJOR"_"$MINOR"
+RAPICORN_NAMESPACE_NAME="Rapicorn_$MAJOR"
 if test -z "$RAPICORN_NAMESPACE_NAME" || test "$RAPICORN_NAMESPACE_NAME" = "Rapicorn" ; then
     AC_MSG_RESULT(["$RAPICORN_NAMESPACE_NAME"])
     AC_MSG_ERROR([RAPICORN_NAMESPACE_NAME must be specified distinctly to build Rapicorn])
@@ -317,8 +324,8 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 [
   # === docdir ===
   # AM default: docdir = ${datarootdir}/doc/${PACKAGE_TARNAME} # == ${prefix}/share/doc/rapicorn
-  # We need a properly versioned path: ${prefix}/share/doc/rapicorn-MAJOR.MINOR
-  docdir="${datarootdir}/doc/rapicorn-$MAJOR.$MINOR"
+  # We need a properly versioned path: ${prefix}/share/doc/rapicorn-MAJOR
+  docdir="${datarootdir}/doc/rapicorn-$MAJOR"
   AC_SUBST(docdir)
 
     # --- sizeof and presence of uint ---
@@ -490,7 +497,7 @@ AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
     AC_SUBST(ALL_LINGUAS)
 
     dnl # versioned Rapicorn gettext domain (po/)
-    RAPICORN_GETTEXT_DOMAIN="rapicorn-$MAJOR.$MINOR"
+    RAPICORN_GETTEXT_DOMAIN="rapicorn-$MAJOR"
     AC_SUBST(RAPICORN_GETTEXT_DOMAIN)
     AC_DEFINE_UNQUOTED(RAPICORN_GETTEXT_DOMAIN, "$RAPICORN_GETTEXT_DOMAIN", [Versioned Rapicorn gettext domain])
     GETTEXT_PACKAGE=$RAPICORN_GETTEXT_DOMAIN
@@ -677,10 +684,10 @@ Autoconfiguration complete.
 	Binaries:			`printexpandvar ${bindir}`
 	Libraries:			`printexpandvar ${libdir}`
 	Locales:			`printexpandvar ${pkglocaledir}`
-	Includes:			`printexpandvar ${includedir}/rapicorn-$MAJOR.$MINOR`
+	Includes:			`printexpandvar ${includedir}/rapicorn-$MAJOR`
 	Data:				`printexpandvar ${datadir}`
 	Documents:			`printexpandvar ${docdir}`
-	PyRapicorn:			`printexpandvar ${pythondir}/Rapicorn_${MAJOR}_${MINOR}`
-	Python module:			import Rapicorn_${MAJOR}_${MINOR} as Rapicorn
+	PyRapicorn:			`printexpandvar ${pythondir}/Rapicorn_${MAJOR}`
+	Python module:			import Rapicorn_${MAJOR} as Rapicorn
 
 EOF
