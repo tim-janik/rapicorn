@@ -3,7 +3,7 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS     = . po data res rcore aidacc ui cython tools tests pytests examples docs
 
-docdir      = ${datarootdir}/doc/rapicorn-@MAJOR@.@MINOR@
+docdir      = ${datarootdir}/doc/rapicorn-@MAJOR@
 noinst_DATA =
 
 # === web site ===
@@ -31,16 +31,16 @@ CLEANFILES += intltool-extract intltool-merge intltool-update
 EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
 
 # === rapicorn toplevel include file ===
-toprapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@.@MINOR@/
+toprapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@/
 toprapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
 EXTRA_DIST += $(toprapicorn_include_HEADERS)
 
 # === rapicorn*.pc ===
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = rapicorn-@MAJOR@.@MINOR@.pc
-rapicorn-@MAJOR@.@MINOR@.pc: $(top_builddir)/config.status rapicorn.pc.in
+pkgconfig_DATA = rapicorn-@MAJOR@.pc
+rapicorn-@MAJOR@.pc: $(top_builddir)/config.status rapicorn.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status --file=$@:rapicorn.pc.in
-CLEANFILES += rapicorn-@MAJOR@.@MINOR@.pc
+CLEANFILES += rapicorn-@MAJOR@.pc
 EXTRA_DIST += rapicorn.pc.in
 
 # == ETAGS ==
@@ -72,9 +72,9 @@ installcheck-local:
 	&& echo 'Blob blob = Blob::load (".");'				>> tmpx.cc \
 	&& echo 'return app.run_and_exit(); }'				>> tmpx.cc \
 		; eval "$$TSTDIAGNOSE" "'Create  rapicorn sample program'"
-	$(Q) $(CXX) -Werror tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn-@MAJOR@.@MINOR@` \
+	$(Q) $(CXX) -Werror tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn-@MAJOR@` \
 		; eval "$$TSTDIAGNOSE" "'Compile rapicorn sample program'"
-	$(Q) $(CXX) -Werror tmpx.o -o tmpx `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn-@MAJOR@.@MINOR@` \
+	$(Q) $(CXX) -Werror tmpx.o -o tmpx `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn-@MAJOR@` \
 		; eval "$$TSTDIAGNOSE" "'Link    rapicorn sample program'"
 	$(Q) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx \
 		; eval "$$TSTDIAGNOSE" "'Execute rapicorn sample program'"

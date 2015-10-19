@@ -6,9 +6,9 @@ SUBDIRS = . tests
 
 bin_SCRIPTS         = ${AIDACCV}
 noinst_SCRIPTS      = ${AIDACC_INTERN}
-AIDACCLNK	    = aidacc			## user visible excutable name
-AIDACCV	            = aidacc-@MAJOR@.@MINOR@	## installed executable name
-AIDACC_INTERN	    = ./aidacc-intern		## internal version used during build time
+AIDACCLNK	    = aidacc			# user visible excutable name
+AIDACCV	            = aidacc-@MAJOR@		# installed executable name
+AIDACC_INTERN	    = ./aidacc-intern		# internal version used during build time
 AIDACC_VDEBUG	    = $(AIDACC_INTERN) $(if $(findstring 1, $(V)), --aida-debug)
 
 CLEANFILES         += ${AIDACC_INTERN} ${AIDACCV}
@@ -83,11 +83,11 @@ installcheck-local: test-aidacc-installation
 # == 'aidacc' executable link ==
 install-exec-hook: # runs after ${AIDACCV} was installed
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9].[0-9][0-9], $(strip $(AIDACCLNK))) && \
+	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9], $(strip $(AIDACCLNK))) && \
 	  test -x $(AIDACCLNK) -a -L $(AIDACCLNK)
 uninstall-hook:	# runs after ${AIDACCV} was uninstalled
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9].[0-9][0-9], $(strip $(AIDACCLNK))) && \
+	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9], $(strip $(AIDACCLNK))) && \
 	  test -x $(AIDACCLNK) -o ! -e $(AIDACCLNK)
 
 clean-local:

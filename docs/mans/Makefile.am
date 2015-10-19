@@ -11,8 +11,8 @@ SED_MANINPUT  = "s/@""RAPICORN_VERSION@/$(RAPICORN_VERSION)/; s/@""FILE_REVISION
 
 # == Manual Pages man1 ==
 man1_stems = $(man1_sources:%.1.md=%)
-man1_MANS  = $(man1_stems:%=%-@MAJOR@.@MINOR@.1)
-%-@MAJOR@.@MINOR@.1: @INGIT@ %.1.md
+man1_MANS  = $(man1_stems:%=%-@MAJOR@.1)
+%-@MAJOR@.1: @INGIT@ %.1.md
 	$(AM_V_GEN)
 	$(Q) sed $(SED_MANINPUT) > xgen-$(<F)
 	$(Q) $(PANDOC) -s -t man xgen-$(<F) -o $@
@@ -20,13 +20,13 @@ man1_MANS  = $(man1_stems:%=%-@MAJOR@.@MINOR@.1)
 man1-install-hook:
 	$(Q) cd $(DESTDIR)$(man1dir) && \
 	  for page in $(man1_stems) ; do \
-	    $(call SYMLINK_LATEST, $$page-[0-9][0-9].[0-9][0-9].1, $$page.1) && \
+	    $(call SYMLINK_LATEST, $$page-[0-9][0-9].1, $$page.1) && \
 	  test -r $$page.1 -a -L $$page.1 || exit $$? ; done
 install-data-hook: man1-install-hook
 man1-uninstall-hook:
 	$(Q) cd $(DESTDIR)$(man1dir) && \
 	  for page in $(man1_stems) ; do \
-	    $(call SYMLINK_LATEST, $$page-[0-9][0-9].[0-9][0-9].1, $$page.1) && \
+	    $(call SYMLINK_LATEST, $$page-[0-9][0-9].1, $$page.1) && \
 	  test -r $$page.1 -o ! -e $$page.1 || exit $$? ; done
 uninstall-hook: man1-uninstall-hook
 CLEANFILES += @INGIT@ $(man1_MANS)

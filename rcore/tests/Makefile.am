@@ -7,7 +7,7 @@ AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
 
 # test programs
 noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS)
-LDADDS		 = $(top_builddir)/rcore/librapicorncore-@MAJOR@.@MINOR@.la
+LDADDS		 = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la
 
 # == test programs ==
 LOGTEST_PROGS     += testrcore1
@@ -19,7 +19,7 @@ EXTRA_DIST        += data.cc testrcore1.ref
 LOGTEST_PROGS     += testrcore2
 TEST_PROGS        += testrcore2
 testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
-testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.@MINOR@.la \
+testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.la \
 		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
 testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) $(AM_CXXFLAGS) # FIXME
 EXTRA_DIST        += testrcore2.ref
@@ -27,7 +27,7 @@ EXTRA_DIST        += testrcore2.ref
 export VPATH	# needed by test programs to find builddir relative input files
 
 # == test resources ==
-RAPIDRES    = $(abs_builddir)/../rapidres-@MAJOR@.@MINOR@
+RAPIDRES    = $(abs_builddir)/../rapidres-@MAJOR@
 RES_FILES   = sample1.svg
 EXTRA_DIST += $(RES_FILES)
 resources.cc: $(RES_FILES) $(RAPIDRES) Makefile.am

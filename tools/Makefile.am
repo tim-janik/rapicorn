@@ -7,21 +7,21 @@ AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
 bin_PROGRAMS	 = $(BIN_PROGS)
 BIN_PROGS	 =
-LDADDS		 = $(top_builddir)/ui/librapicorn-@MAJOR@.@MINOR@.la
+LDADDS		 = $(top_builddir)/ui/librapicorn-@MAJOR@.la
 
 # == rapidrun ==
-RAPIDRUNV                        = rapidrun-@MAJOR@.@MINOR@
-BIN_PROGS	                += $(RAPIDRUNV)
-rapidrun_@MAJOR@_@MINOR@_SOURCES = rapidrun.cc
-rapidrun_@MAJOR@_@MINOR@_LDADD   = $(LDADDS)
+RAPIDRUNV                = rapidrun-@MAJOR@
+BIN_PROGS	        += $(RAPIDRUNV)
+rapidrun_@MAJOR@_SOURCES = rapidrun.cc
+rapidrun_@MAJOR@_LDADD   = $(LDADDS)
 rapidrun-install-hook:	 # run after ${RAPIDRUNV} was installed
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidrun-[0-9][0-9].[0-9][0-9], rapidrun) && \
+	  $(call SYMLINK_LATEST, rapidrun-[0-9][0-9], rapidrun) && \
           test -x rapidrun -a -L rapidrun
 install-exec-hook: rapidrun-install-hook
 rapidrun-uninstall-hook: # run after ${RAPIDRUNV} was uninstalled
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidrun-[0-9][0-9].[0-9][0-9], rapidrun) && \
+	  $(call SYMLINK_LATEST, rapidrun-[0-9][0-9], rapidrun) && \
 	  test -x rapidrun -o ! -e rapidrun
 uninstall-hook: rapidrun-uninstall-hook
 
