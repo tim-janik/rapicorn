@@ -151,10 +151,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define _GNU_SOURCE"								>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- unique namespace for all symbols --- */"				>> xgen-$(@F) \
-	&& echo "#define Rapicorn			@RAPICORN_NAMESPACE_NAME@"		>> xgen-$(@F) \
-	&& echo '#define RAPICORN_NAMESPACE_NAME	"@RAPICORN_NAMESPACE_NAME@"'		>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- standard C code wrappers --- */"					>> xgen-$(@F) \
 	&& echo "#ifdef  __cplusplus"								>> xgen-$(@F) \
 	&& echo '#define RAPICORN_EXTERN_C_BEGIN()	extern "C" {'				>> xgen-$(@F) \

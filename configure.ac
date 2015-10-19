@@ -72,17 +72,6 @@ AC_SUBST(INGIT)
 result=$(test -z "$INGIT" && echo yes || echo no)
 AC_MSG_RESULT($result)
 
-# Rapicorn namespace
-AC_MSG_CHECKING([for Rapicorn namespace])
-RAPICORN_NAMESPACE_NAME="Rapicorn_$MAJOR"
-if test -z "$RAPICORN_NAMESPACE_NAME" || test "$RAPICORN_NAMESPACE_NAME" = "Rapicorn" ; then
-    AC_MSG_RESULT(["$RAPICORN_NAMESPACE_NAME"])
-    AC_MSG_ERROR([RAPICORN_NAMESPACE_NAME must be specified distinctly to build Rapicorn])
-else
-    AC_MSG_RESULT([$RAPICORN_NAMESPACE_NAME])
-fi
-AC_SUBST(RAPICORN_NAMESPACE_NAME)
-
 # prepare automake and make
 AC_PROG_MAKE_SET        dnl # support subdirectories.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -672,7 +661,7 @@ cat <<EOF
 Autoconfiguration complete.
 
 	Building package:		$PACKAGE-$VERSION
-	C++ Namespace:			$RAPICORN_NAMESPACE_NAME
+	C++ Namespace:			Rapicorn
 	Operating System:		$RAPICORN_OS
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
