@@ -57,13 +57,6 @@ ABI_AGE=$(($MINOR - $ABI_MINOR))
 lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
-# define debugging paths for devel-mode
-if test 1 = $(($MICRO & 1)) ; then
-  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"'
-else
-  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
-fi
-AC_SUBST(DEFINE__FILE_DIR__)
 
 # Build tree checks
 AC_MSG_CHECKING([for git repository])
@@ -215,14 +208,12 @@ MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
 AC_SUBST(OPTIMIZE_FAST)
 
 # == ENABLE_DEVEL_MODE ==
-# check for development build rules, these usually require acess to .git/
-# if 'auto', enable devel mode for odd (development) versions
+# check for development build rules, which require acess to .git/
 AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
-[test x"$enable_devel_mode" = xauto -a -d "$srcdir/.git/" &&
-      { echo " $MICRO" | grep -q '[13579]$' ; } && enable_devel_mode=yes]
+[test x"$enable_devel_mode" = xauto -a -d "$srcdir/.git/" && enable_devel_mode=yes]
 test x"$enable_devel_mode" = xyes || enable_devel_mode=no
-AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
 AC_MSG_RESULT([$enable_devel_mode])
+AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
 if test x"$enable_devel_mode" = xyes ; then
   TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
   TEST_BUILDDIR=$(cd . ; /bin/pwd)
@@ -239,6 +230,7 @@ if test x"$enable_devel_mode" = xyes ; then
   MC_ASSERT_PROG(PANDOC, pandoc, [See: http://johnmacfarlane.net/pandoc/])
   MC_ASSERT_PROG(DOXYGEN, doxygen, [See: http://www.stack.nl/~dimitri/doxygen/])
   MC_ASSERT_PROG(DOT, dot, [See: http://www.graphviz.org/])
+  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"' # full debugging paths for devel-mode
 else # provide sane defaults for meaningful makefiles & errors
   DEVELMODE="#"; NOTDEVELMODE=""
   BISON=bison; AC_SUBST(BISON)
@@ -246,9 +238,11 @@ else # provide sane defaults for meaningful makefiles & errors
   PANDOC=pandoc; AC_SUBST(PANDOC)
   DOXYGEN=doxygen; AC_SUBST(DOXYGEN)
   DOT=dot; AC_SUBST(DOT)
+  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
 fi
 AC_SUBST(DEVELMODE)
 AC_SUBST(NOTDEVELMODE)
+AC_SUBST(DEFINE__FILE_DIR__)
 
 # C & C++ idioms
 AC_C_CONST
