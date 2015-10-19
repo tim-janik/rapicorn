@@ -7,7 +7,7 @@ EXTRA_DIST  += $(man1_sources)
 # Find the latest revision (authoring) date for a file tracked in git
 FILE_REVISION = $$(git log --format=%ai -n 99 -- $(1) | sort -rn | sed -n 's/ .*//; p; q')
 # Substitute variables used in manual pages, use extra quotes to prevent Makefile.in substitutions
-SED_MANINPUT  = "s/@""RAPICORN_VERSION@/$(RAPICORN_VERSION)/; s/@""FILE_REVISION@/$(call FILE_REVISION, $(<))/" $<
+SED_MANINPUT  = "s/@""RAPICORN_VERSION@/Rapicorn-$(RAPICORN_VERSION)/; s/@""FILE_REVISION@/$(call FILE_REVISION, $(<))/" $<
 
 # == Manual Pages man1 ==
 man1_stems = $(man1_sources:%.1.md=%)
