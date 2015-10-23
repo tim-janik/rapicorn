@@ -56,4 +56,4 @@ dpkg-source -b $PACKAGEDIR/
 #( cd $PACKAGEDIR/ && debuild -uc -tc -rfakeroot )
 
 # Build pristine binary package
-( cd $PACKAGEDIR/ && sudo pdebuild --buildresult ./.. )
+( cd $PACKAGEDIR/ && sudo pdebuild --buildresult ./.. --debbuildopts -j$(nproc) )
