@@ -37,7 +37,7 @@ rm -rf $PACKAGEDIR $UPSTREAMTARDIR
 cp $ARG_TARBALL $DEBTARBALL
 # Unpack the upstream tarball
 tar xf $DEBTARBALL # -> $UPSTREAMTARDIR/
-mv $UPSTREAMTARDIR $PACKAGEDIR
+test "$UPSTREAMTARDIR" = "$PACKAGEDIR" || mv $UPSTREAMTARDIR $PACKAGEDIR
 # Add Debian files: debian/
 cp -a $ARG_DEBIANDIR $PACKAGEDIR/debian
 # Log to debian/changelog
