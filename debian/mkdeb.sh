@@ -2,6 +2,8 @@
 # This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
 
 # Build Debian package from debiandir, tarball and revision
+
+echo "$@"
 set -ex
 
 SCRIPTNAME=`basename $0`
