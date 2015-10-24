@@ -52,8 +52,12 @@ cat $PACKAGEDIR/debian/changelog
 # Build source package
 dpkg-source -b $PACKAGEDIR/
 
-# Build binary package
-#( cd $PACKAGEDIR/ && debuild -uc -tc -rfakeroot )
-
-# Build pristine binary package
-( cd $PACKAGEDIR/ && sudo pdebuild --buildresult ./.. --debbuildopts -j$(nproc) )
+# Build binary package, using pbuilder if requested
+if test "$USE_PBUILDER" = true ; then
+  ( cd $PACKAGEDIR/ && sudo pdebuild --buildresult ./.. --debbuildopts -j$(nproc) )
+else
+  # enable ccache if possible
+  ENABLE_CCACHE=
+  test -d /usr/lib/ccache/ && ENABLE_CCACHE='--prepend-path=/usr/lib/ccache/ -eCCACHE_*'
+  ( cd $PACKAGEDIR/ && debuild $ENABLE_CCACHE -j$(nproc) )
+fi
