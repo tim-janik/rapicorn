@@ -65,8 +65,8 @@ install:
   - TARBALL=`ls rapicorn-[0-9]*[0-9].tar.xz` && ls -dl $TARBALL | tee /dev/stderr | test 1 -eq `wc -l` # force uniq
   - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
   # - travis_retry sudo pbuilder update
-  - VCSREVISION=t`debian/git-revision.sh` && echo "$VCSREVISION"
-  - LOGMESSAGE="git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
+  - VCSREVISION=`debian/git-revision.sh 0travis$TRAVIS_JOB_NUMBER` && echo "$VCSREVISION"
+  - LOGMESSAGE="Automatic travis-ci snapshot, git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
   - USE_PBUILDER=true debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
   - ls -al
 
