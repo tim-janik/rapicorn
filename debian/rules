@@ -4,7 +4,7 @@
 
 # See debhelper(7) (uncomment to enable)
 # output every command that modifies files on the build system.
-#DH_VERBOSE = 1
+DH_VERBOSE = 1
 
 # see EXAMPLES in dpkg-buildflags(1) and read /usr/share/dpkg/*
 DPKG_EXPORT_BUILDFLAGS = 1
@@ -19,17 +19,22 @@ include /usr/share/dpkg/default.mk
 # package maintainers to append LDFLAGS
 #export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
-
 # main packaging script based on dh7 syntax
 %:
 	dh $@ --parallel --with autotools-dev --with python2
 
 # debmake generated override targets
-# This is example for Cmake (See http://bugs.debian.org/641051 )
-#override_dh_auto_configure:
-#	dh_auto_configure -- \
-#	-DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
-
-
-
-
+override_dh_auto_configure:
+	dh_auto_configure -- --disable-static
+override_dh_install:
+	dh_install --fail-missing
+override_dh_auto_install:
+	dh_auto_install
+	: # https://wiki.debian.org/ReleaseGoals/LAFileRemoval
+	find debian/tmp -name '*.la' -delete
+	: # files packaged as uninstalled docs
+	rm debian/tmp/usr/share/doc/rapicorn/NEWS \
+	   debian/tmp/usr/share/doc/rapicorn/README
+	: # remove unpackaged files
+	rm debian/tmp/usr/share/doc/rapicorn/COPYING.MPL
+	find debian/tmp -name '*.py[co]' -delete
