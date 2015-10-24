@@ -36,16 +36,28 @@ Timer::bench_time ()
 }
 
 int64
-Timer::loops_needed () const
+Timer::loops_needed ()
 {
   if (samples_.size() < 7)
-    return n_runs_ + 1;        // force significant number of test runs
+    {
+      n_runs_ += 1;
+      return n_runs_;           // force significant number of test runs
+    }
   double resolution = timestamp_resolution() / 1000000000.0;
   const double deadline = MAX (deadline_ == 0.0 ? 0.005 : deadline_, resolution * 10000.0);
-  if (test_duration_ > deadline * 0.5)
-    return 0;                   // time for testing exceeded
-  // we double the number of tests per run, to gain more accuracy: 0+1, 1+1, 3+1, 7+1, ...
-  return n_runs_ + 1;
+  if (test_duration_ < deadline * 0.1)
+    {
+      // we double the number of tests per run to gain more accuracy
+      n_runs_ += n_runs_;
+      return n_runs_;
+    }
+  if (test_duration_ < deadline)
+    {
+      // we increase the number of tests per run to gain more accuracy
+      n_runs_ += 1;
+      return n_runs_;
+    }
+  return 0; // time for testing exceeded
 }
 
 void
@@ -57,14 +69,14 @@ Timer::reset()
 }
 
 void
-Timer::submit (double elapsed,
-               int64  repetitions)
+Timer::submit (double elapsed, int64 repetitions)
 {
   test_duration_ += elapsed;
-  n_runs_ += repetitions;
   double resolution = timestamp_resolution() / 1000000000.0;
   if (elapsed >= resolution * 100.0) // force error below 1%
     samples_.push_back (elapsed / repetitions);
+  else
+    n_runs_ += repetitions; // double n_runs_ to yield significant times
 }
 
 double
