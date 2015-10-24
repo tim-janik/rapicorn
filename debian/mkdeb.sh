@@ -56,8 +56,13 @@ dpkg-source -b $PACKAGEDIR/
 if test "$USE_PBUILDER" = true ; then
   ( cd $PACKAGEDIR/ && sudo pdebuild --buildresult ./.. --debbuildopts -j$(nproc) )
 else
-  # enable ccache if possible
-  ENABLE_CCACHE=
-  test -d /usr/lib/ccache/ && ENABLE_CCACHE='--prepend-path=/usr/lib/ccache/ -eCCACHE_*'
-  ( cd $PACKAGEDIR/ && debuild $ENABLE_CCACHE -j$(nproc) )
+  ( cd $PACKAGEDIR/
+    unset ENABLE_CCACHE NOSIGN
+    # enable ccache if possible
+    test -d /usr/lib/ccache/ && ENABLE_CCACHE='--prepend-path=/usr/lib/ccache/ -eCCACHE_*'
+    # skip signing for non-maintainers
+    dpkg-parsechangelog --show-field Maintainer | fgrep -q "<$EMAIL>" || NOSIGN='-us -uc'
+    # build with debuild which passes options to dpkg-buildpackage
+    debuild $ENABLE_CCACHE -rfakeroot -j$(nproc) $NOSIGN
+  )
 fi
