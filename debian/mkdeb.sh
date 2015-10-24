@@ -42,10 +42,16 @@ tar xf $DEBTARBALL # -> $UPSTREAMTARDIR/
 test "$UPSTREAMTARDIR" = "$PACKAGEDIR" || mv $UPSTREAMTARDIR $PACKAGEDIR
 # Add Debian files: debian/
 cp -a $ARG_DEBIANDIR $PACKAGEDIR/debian
+# is this a maintainer build?
+MAINTAINER_BUILD=true
+pushd $PACKAGEDIR/
+dpkg-parsechangelog --show-field Maintainer | fgrep -q "<$EMAIL>" || MAINTAINER_BUILD=false
+popd
 # Log to debian/changelog
 ( cd $PACKAGEDIR/
   dch -v "$DEBVERSION-1" "${ARG_MESSAGE:-Build $DEBVERSION}"
-  dch -r "" -D experimental
+  ! $MAINTAINER_BUILD ||
+    dch -r "" -D experimental
 )
 cat $PACKAGEDIR/debian/changelog
 
@@ -61,7 +67,7 @@ else
     # enable ccache if possible
     test -d /usr/lib/ccache/ && ENABLE_CCACHE='--prepend-path=/usr/lib/ccache/ -eCCACHE_*'
     # skip signing for non-maintainers
-    dpkg-parsechangelog --show-field Maintainer | fgrep -q "<$EMAIL>" || NOSIGN='-us -uc'
+    $MAINTAINER_BUILD || NOSIGN='-us -uc'
     # build with debuild which passes options to dpkg-buildpackage
     debuild $ENABLE_CCACHE -rfakeroot -j$(nproc) $NOSIGN
   )
