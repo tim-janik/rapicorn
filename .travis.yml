@@ -62,12 +62,12 @@ install:
   - make dist V=1
   - sudo make -j`nproc` uninstall V=1
   - make -j`nproc` clean V=1
-  - ls rapicorn-*.tar.xz | tee /dev/stderr | test 1 -eq `wc -l` # assert *ONE* tarball
+  - TARBALL=`ls rapicorn-[0-9]*[0-9].tar.xz` && ls -dl $TARBALL | tee /dev/stderr | test 1 -eq `wc -l` # force uniq
   - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
   # - travis_retry sudo pbuilder update
   - VCSREVISION=t`debian/git-revision.sh` && echo "$VCSREVISION"
   - LOGMESSAGE="git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
-  - debian/mkdeb.sh debian/ rapicorn-*.tar.xz "$VCSREVISION" "$LOGMESSAGE"
+  - USE_PBUILDER=true debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
   - ls -al
 
 before_script:
