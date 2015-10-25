@@ -1,9 +1,18 @@
 #!/bin/bash
 
-set -ex
+set -e
 
-# Ensure we're in the Rapicorn repository
-git rev-list --quiet bfe04a96a143db73181805241f5df28330e175aa
+SUFFIX=1
+test "$#" -gt 0 && SUFFIX="$1"
+
+# Require complete (unshallow) repository
+test ! -s `git rev-parse --git-dir`/shallow || {
+  echo "$0: fatal: complete commit count requires unshallow repository" >&2
+  exit 77
+  # fix: git fetch --unshallow
+}
 
 # Count commits to provide a monotonically increasing revision
-git rev-list --count HEAD bfe04a96a143db73181805241f5df28330e175aa
+TOTAL_COMMITS=`git rev-list --count HEAD`
+
+echo "+git$TOTAL_COMMITS-$SUFFIX"
