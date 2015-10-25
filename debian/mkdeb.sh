@@ -72,3 +72,6 @@ else
     debuild $ENABLE_CCACHE -rfakeroot -j$(nproc) $NOSIGN
   )
 fi
+# Build package index for apt
+dpkg-scanpackages . > Packages	# apt-ftparchive packages . > Packages
+# echo "deb [trusted=yes] file:///"`pwd`" ./" > /etc/apt/sources.list.d/localfiles.list
