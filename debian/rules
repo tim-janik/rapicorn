@@ -41,3 +41,8 @@ override_dh_auto_install:
 	: # remove unpackaged files
 	rm debian/tmp/usr/share/doc/rapicorn/COPYING.MPL
 	find debian/tmp -name '*.py[co]' -delete
+	: # dh-python/dhpython/fs.py:share_files leaves symlinks dangling on multiarch renames
+	test -L debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.so
+	rm -f   debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.so
+	ln -s Rapicorn_${MAJOR}/Rapicorn.$(DEB_HOST_MULTIARCH).so \
+	        debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.$(DEB_HOST_MULTIARCH).so
