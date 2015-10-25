@@ -9,7 +9,7 @@ set -ex
 SCRIPTNAME=`basename $0`
 function die  { e="$1"; shift; [ -n "$*" ] && echo "$SCRIPTNAME: $*" >&2; exit "$e" ; }
 
-test "$#" -ge 2 -a "$#" -le 4 || die 11 "Usage: $0 debiandir/ pathto/upstream-version.tar.xz revision [message]"
+test "$#" -ge 2 -a "$#" -le 4 || die 11 "Usage: $0 debiandir/ pathto/upstream-version.tar.xz revision [release_message]"
 ARG_DEBIANDIR="$1" ; ARG_TARBALL="$2" ; ARG_REVISION="${3:--00unrevisioned}" ; ARG_MESSAGE="$4"
 
 # Construct package configuration
@@ -49,9 +49,12 @@ dpkg-parsechangelog --show-field Maintainer | fgrep -q "<$EMAIL>" || MAINTAINER_
 popd
 # Log to debian/changelog
 ( cd $PACKAGEDIR/
-  dch -v "$DEBVERSION" "${ARG_MESSAGE:-Build $DEBVERSION}"
-  ! $MAINTAINER_BUILD ||
-    dch -r "" -D experimental
+  if test -z "$ARG_MESSAGE" ; then
+    dch -v "$DEBVERSION" "Build $DEBVERSION"
+  else
+    dch -v "$DEBVERSION" "$ARG_MESSAGE"
+    dch -r "" # -D experimental
+  fi
 )
 cat $PACKAGEDIR/debian/changelog
 
