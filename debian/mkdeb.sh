@@ -10,7 +10,7 @@ SCRIPTNAME=`basename $0`
 function die  { e="$1"; shift; [ -n "$*" ] && echo "$SCRIPTNAME: $*" >&2; exit "$e" ; }
 
 test "$#" -ge 2 -a "$#" -le 4 || die 11 "Usage: $0 debiandir/ pathto/upstream-version.tar.xz revision [message]"
-ARG_DEBIANDIR="$1" ; ARG_TARBALL="$2" ; ARG_REVISION="${3:-rev00}" ; ARG_MESSAGE="$4"
+ARG_DEBIANDIR="$1" ; ARG_TARBALL="$2" ; ARG_REVISION="${3:--00unrevisioned}" ; ARG_MESSAGE="$4"
 
 # Construct package configuration
 TARBALLNAME=`basename $ARG_TARBALL`
@@ -18,8 +18,8 @@ UPSTREAMTARDIR=${TARBALLNAME%.tar*}
 UPSTREAMVERSION=${UPSTREAMTARDIR#*-}
 PACKAGE=`dpkg-parsechangelog -l$ARG_DEBIANDIR/changelog --show-field Source`
 PACKAGEDIR=$PACKAGE-$UPSTREAMVERSION
-DEBVERSION="$UPSTREAMVERSION-$ARG_REVISION"
-DEBTARBALL=$PACKAGE'_'$DEBVERSION.orig.tar.xz
+DEBVERSION="$UPSTREAMVERSION$ARG_REVISION"
+DEBTARBALL=$PACKAGE'_'${DEBVERSION%-*}.orig.tar.xz
 cat <<__EOF
 ARG_DEBIANDIR=$ARG_DEBIANDIR
 ARG_TARBALL=$ARG_TARBALL
@@ -49,7 +49,7 @@ dpkg-parsechangelog --show-field Maintainer | fgrep -q "<$EMAIL>" || MAINTAINER_
 popd
 # Log to debian/changelog
 ( cd $PACKAGEDIR/
-  dch -v "$DEBVERSION-1" "${ARG_MESSAGE:-Build $DEBVERSION}"
+  dch -v "$DEBVERSION" "${ARG_MESSAGE:-Build $DEBVERSION}"
   ! $MAINTAINER_BUILD ||
     dch -r "" -D experimental
 )
