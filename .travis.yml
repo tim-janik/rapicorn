@@ -67,7 +67,8 @@ install:
   # - travis_retry sudo pbuilder update
   - VCSREVISION=`debian/git-revision.sh 0travis$TRAVIS_JOB_NUMBER` && echo "$VCSREVISION"
   - LOGMESSAGE="Automatic travis-ci snapshot, git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
-  - USE_PBUILDER=true debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
+  - USE_PBUILDER=true EMAIL=rapicorn@googlegroups.com
+    debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
   - ls -al
 
 before_script:
