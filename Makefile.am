@@ -3,7 +3,6 @@ include $(top_srcdir)/Makefile.decl
 
 SUBDIRS     = . po data res rcore aidacc ui cython tools tests pytests examples docs
 
-docdir      = ${datarootdir}/doc/rapicorn-@MAJOR@
 noinst_DATA =
 
 # === web site ===
