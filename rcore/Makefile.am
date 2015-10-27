@@ -86,21 +86,10 @@ progs_ldadd	= librapicorncore-@MAJOR@.la $(RAPICORN_CORE_LIBS) -lm
 BIN_PROGS	=
 
 # == rapidres ==
-RAPIDRESV                = rapidres-@MAJOR@
+RAPIDRESV                = rapidres # rapidres-@MAJOR@
 BIN_PROGS               += $(RAPIDRESV)
-rapidres_@MAJOR@_SOURCES = rapidres.cc
-rapidres_@MAJOR@_LDADD   = $(LIBZ) # $(progs_ldadd)
-rapidres-install-hook:  # run after ${RAPIDRESV} was installed
-	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9], rapidres) && \
-	  test -x rapidres -a -L rapidres
-install-exec-hook: rapidres-install-hook
-rapidres-uninstall-hook: # run after ${RAPIDRESV} was uninstalled
-	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9], rapidres) && \
-	  test -x rapidres -o ! -e rapidres
-uninstall-hook: rapidres-uninstall-hook
-
+rapidres_SOURCES = rapidres.cc
+rapidres_LDADD   = $(LIBZ) # $(progs_ldadd)
 
 rapidres-installcheck:
 	$(Q) cd . \

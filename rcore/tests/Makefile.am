@@ -27,7 +27,7 @@ EXTRA_DIST        += testrcore2.ref
 export VPATH	# needed by test programs to find builddir relative input files
 
 # == test resources ==
-RAPIDRES    = $(abs_builddir)/../rapidres-@MAJOR@
+RAPIDRES    = $(abs_builddir)/../rapidres
 RES_FILES   = sample1.svg
 EXTRA_DIST += $(RES_FILES)
 resources.cc: $(RES_FILES) $(RAPIDRES) Makefile.am
