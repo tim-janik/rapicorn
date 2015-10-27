@@ -4,14 +4,13 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS = . tests
 
 
-bin_SCRIPTS         = ${AIDACCV}
+bin_SCRIPTS         = ${AIDACC}
 noinst_SCRIPTS      = ${AIDACC_INTERN}
-AIDACCLNK	    = aidacc			# user visible excutable name
-AIDACCV	            = aidacc-@MAJOR@		# installed executable name
+AIDACC	            = aidacc # aidacc-@MAJOR@	# installed executable name
 AIDACC_INTERN	    = ./aidacc-intern		# internal version used during build time
 AIDACC_VDEBUG	    = $(AIDACC_INTERN) $(if $(findstring 1, $(V)), --aida-debug)
 
-CLEANFILES         += ${AIDACC_INTERN} ${AIDACCV}
+CLEANFILES         += ${AIDACC_INTERN} ${AIDACC}
 YAPPS 		    = ${PYTHON} ${top_srcdir}/yapps2_deb/yapps2.py
 
 # extra docs
@@ -38,7 +37,7 @@ ${AIDACC_INTERN}: plic.py Parser.py
 	$(Q) chmod +x xgen-$(@F)
 	$(Q) cp -p xgen-$(@F) $@
 	$(Q) rm -f xgen-$(@F) xgen-$(@F).errors
-${AIDACCV}: plic.py Parser.py
+${AIDACC}: plic.py Parser.py
 	$(AM_V_GEN)
 	$(Q) sed <$< >xgen-$(@F)			\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
@@ -75,20 +74,10 @@ check-local: check-aidacc-intern-list-formats
 
 # == Post-Installation Test ==
 test-aidacc-installation:
-	$(Q) PATH="$(bindir):$$PATH" ${AIDACCV} -x CxxStub -x ExtractDocs -x TypeMap --list-formats >$(TSTOUT) && \
+	$(Q) PATH="$(bindir):$$PATH" ${AIDACC} -x CxxStub -x ExtractDocs -x TypeMap --list-formats >$(TSTOUT) && \
 	  fgrep -q CxxStub $(TSTOUT) && fgrep -q TypeMap $(TSTOUT) && fgrep -q ExtractDocs $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f $(TSTOUT)
 installcheck-local: test-aidacc-installation
-
-# == 'aidacc' executable link ==
-install-exec-hook: # runs after ${AIDACCV} was installed
-	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9], $(strip $(AIDACCLNK))) && \
-	  test -x $(AIDACCLNK) -a -L $(AIDACCLNK)
-uninstall-hook:	# runs after ${AIDACCV} was uninstalled
-	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9], $(strip $(AIDACCLNK))) && \
-	  test -x $(AIDACCLNK) -o ! -e $(AIDACCLNK)
 
 clean-local:
 	rm -f *.pyc

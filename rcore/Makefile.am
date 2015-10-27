@@ -86,21 +86,10 @@ progs_ldadd	= librapicorncore-@MAJOR@.la $(RAPICORN_CORE_LIBS) -lm
 BIN_PROGS	=
 
 # == rapidres ==
-RAPIDRESV                = rapidres-@MAJOR@
+RAPIDRESV                = rapidres # rapidres-@MAJOR@
 BIN_PROGS               += $(RAPIDRESV)
-rapidres_@MAJOR@_SOURCES = rapidres.cc
-rapidres_@MAJOR@_LDADD   = $(LIBZ) # $(progs_ldadd)
-rapidres-install-hook:  # run after ${RAPIDRESV} was installed
-	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9], rapidres) && \
-	  test -x rapidres -a -L rapidres
-install-exec-hook: rapidres-install-hook
-rapidres-uninstall-hook: # run after ${RAPIDRESV} was uninstalled
-	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9], rapidres) && \
-	  test -x rapidres -o ! -e rapidres
-uninstall-hook: rapidres-uninstall-hook
-
+rapidres_SOURCES = rapidres.cc
+rapidres_LDADD   = $(LIBZ) # $(progs_ldadd)
 
 rapidres-installcheck:
 	$(Q) cd . \
@@ -169,10 +158,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "      @MICRO@ >= (micro)))))"							>> xgen-$(@F) \
 	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @MICRO@)'					>> xgen-$(@F) \
 	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- i18n domain --- */"							>> xgen-$(@F) \
-	&& echo '#define RAPICORN_I18N_DOMAIN    "rapicorn"'					>> xgen-$(@F) \
-	&& echo "/* make sure to call bindtextdomain (RAPICORN_I18N_DOMAIN, i18ndir_path); */"	>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- resource paths --- */"							>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \

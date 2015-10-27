@@ -308,7 +308,7 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
   # === docdir ===
   # AM default: docdir = ${datarootdir}/doc/${PACKAGE_TARNAME} # == ${prefix}/share/doc/rapicorn
   # We need a properly versioned path: ${prefix}/share/doc/rapicorn-MAJOR
-  docdir="${datarootdir}/doc/rapicorn-$MAJOR"
+  docdir="${datarootdir}/doc/rapicorn" # "rapicorn-$MAJOR"
   AC_SUBST(docdir)
 
     # --- sizeof and presence of uint ---

@@ -10,26 +10,27 @@
 #include <libintl.h>
 #include <iconv.h>
 #include <errno.h>
+#include "../configure.h" // RAPICORN_GETTEXT_DOMAIN
 
 namespace Rapicorn {
 
 // === i18n ===
-static const char *rapicorn_i18n_domain = NULL;
+static const char *rapicorn_gettext_domain = NULL;
 
 const char*
 rapicorn_gettext (const char *text)
 {
-  assert (rapicorn_i18n_domain != NULL);
-  return dgettext (rapicorn_i18n_domain, text);
+  assert (rapicorn_gettext_domain != NULL);
+  return dgettext (rapicorn_gettext_domain, text);
 }
 
 static void
 init_gettext (const StringVector &args)
 {
   // initialize i18n functions
-  rapicorn_i18n_domain = RAPICORN_I18N_DOMAIN;
-  // bindtextdomain (rapicorn_i18n_domain, package_dirname);
-  bind_textdomain_codeset (rapicorn_i18n_domain, "UTF-8");
+  rapicorn_gettext_domain = RAPICORN_GETTEXT_DOMAIN;
+  // bindtextdomain (rapicorn_gettext_domain, package_dirname);
+  bind_textdomain_codeset (rapicorn_gettext_domain, "UTF-8");
 }
 static InitHook _init_gettext ("core/10 Init i18n Translation Domain", init_gettext);
 
