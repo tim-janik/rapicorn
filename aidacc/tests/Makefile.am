@@ -6,7 +6,7 @@ DEFS        += -DRAPICORN_CONVENIENCE
 
 AIDACC = $(AIDACC_NODEBUG) $(if $(findstring 1, $(V)), --aida-debug)
 AIDACC_NODEBUG = ../aidacc-intern
-AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@MAJOR@
+AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc
 CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
 TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
 
