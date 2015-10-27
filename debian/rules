@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 
+MAJOR=$(shell dpkg-parsechangelog --show-field Version | cut -d. -f1)
+MINOR=$(shell dpkg-parsechangelog --show-field Version | cut -d. -f2)
+
 # https://www.debian.org/doc/manuals/maint-guide/dreq.html#customrules
 
 # See debhelper(7) (uncomment to enable)
