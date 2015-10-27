@@ -36,11 +36,11 @@ EXTRA_DIST += $(toprapicorn_include_HEADERS)
 
 # === rapicorn*.pc ===
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = rapicorn-@MAJOR@.pc
-rapicorn-@MAJOR@.pc: $(top_builddir)/config.status rapicorn.pc.in
+pkgconfig_DATA = rapicorn.pc # rapicorn-@MAJOR@.pc
+rapicorn.pc: $(top_builddir)/config.status rapicorn.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status --file=$@:rapicorn.pc.in
-CLEANFILES += rapicorn-@MAJOR@.pc
 EXTRA_DIST += rapicorn.pc.in
+CLEANFILES += rapicorn.pc
 
 # == ETAGS ==
 ETAGS:
@@ -71,9 +71,9 @@ installcheck-local:
 	&& echo 'Blob blob = Blob::load (".");'				>> tmpx.cc \
 	&& echo 'return app.run_and_exit(); }'				>> tmpx.cc \
 		; eval "$$TSTDIAGNOSE" "'Create  rapicorn sample program'"
-	$(Q) $(CXX) -Werror tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn-@MAJOR@` \
+	$(Q) $(CXX) -Werror tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn` \
 		; eval "$$TSTDIAGNOSE" "'Compile rapicorn sample program'"
-	$(Q) $(CXX) -Werror tmpx.o -o tmpx `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn-@MAJOR@` \
+	$(Q) $(CXX) -Werror tmpx.o -o tmpx `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn` \
 		; eval "$$TSTDIAGNOSE" "'Link    rapicorn sample program'"
 	$(Q) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx \
 		; eval "$$TSTDIAGNOSE" "'Execute rapicorn sample program'"
