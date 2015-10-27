@@ -18,13 +18,13 @@ FPYTHON      = PYTHONPATH="$$PYTHONPATH:${pythondir}" $(PYTHON)
 
 # Py Rapicorn - installation
 # pythondir = ${prefix}/lib/pythonX.Y/site-packages
-Rapicorndir                = ${pythondir}/Rapicorn_@MAJOR@_@MINOR@
+Rapicorndir                = ${pythondir}/Rapicorn_@MAJOR@
 Rapicorn_LTLIBRARIES	   = Rapicorn.la
 # Pyx Rapicorn module
 nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	   = $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	   = $(AM_LDFLAGS) -no-undefined -module -avoid-version
-Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.@MINOR@.la
+Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
 EXTRA_DIST	          += Rapicorn.pyx pyxxutils.hh pyxxutils.pyx rcore.pyx PyxxStub.py
 CLEANFILES	          += Rapicorn.cc idlapi.pyx
 
@@ -63,12 +63,12 @@ EXTRA_DIST += __init__.py.in
 # install-hook to pick version
 rapicornmodule-install-hook:	# runs after install-data
 	$(Q) cd $(DESTDIR)$(Rapicorndir)/.. && \
-	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
+	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
 	  test -x Rapicorn.so -a -L Rapicorn.so
 install-data-hook: rapicornmodule-install-hook
 rapicornmodule-uninstall-hook: # runs after uninstall
 	$(Q) cd $(DESTDIR)$(Rapicorndir)/.. && \
-	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
+	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
 	  test -x Rapicorn.so -o ! -e Rapicorn.so
 uninstall-hook: rapicornmodule-uninstall-hook
 
@@ -93,7 +93,7 @@ check-local: check-TEST_PYPROGS
 
 testing1-installcheck:
 	@ # Patch testing1.py to use the installed versioned Rapicorn.so module
-	$(Q) sed 's/.*@LINE_REWRITTEN_FOR_INSTALLCHECK@.*/import Rapicorn_@MAJOR@_@MINOR@ as Rapicorn/' \
+	$(Q) sed 's/.*@LINE_REWRITTEN_FOR_INSTALLCHECK@.*/import Rapicorn_@MAJOR@ as Rapicorn/' \
 	       < $(srcdir)/testing1.py > x-testing1.py && ! cmp -s $(srcdir)/testing1.py x-testing1.py
 	$(Q) $(X11_ENV) $(FPYTHON) x-testing1.py
 	$(Q) rm -f x-testing1.py

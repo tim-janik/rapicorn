@@ -48,13 +48,13 @@ rapicorn_generated_files = $(strip    	\
 
 # === libraries ===
 # librapicorn-core
-noinst_LTLIBRARIES                              = librapicorncore-@MAJOR@.@MINOR@.la
-librapicorncore_@MAJOR@_@MINOR@includedir       = $(includedir)/rapicorn-@MAJOR@.@MINOR@/rcore
-librapicorncore_@MAJOR@_@MINOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorncore_@MAJOR@_@MINOR@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorncore_@MAJOR@_@MINOR@_la_DEPENDENCIES = ldscript.map
-librapicorncore_@MAJOR@_@MINOR@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
-librapicorncore_@MAJOR@_@MINOR@_la_LDFLAGS      = $(strip	\
+noinst_LTLIBRARIES                      = librapicorncore-@MAJOR@.la
+librapicorncore_@MAJOR@includedir       = $(includedir)/rapicorn-@MAJOR@/rcore
+librapicorncore_@MAJOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorncore_@MAJOR@_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorncore_@MAJOR@_la_DEPENDENCIES = ldscript.map
+librapicorncore_@MAJOR@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
+librapicorncore_@MAJOR@_la_LDFLAGS      = $(strip	\
 	$(AM_LDFLAGS) -no-undefined				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
 	-version-info $(LT_VERSION_INFO) 			\
@@ -82,22 +82,22 @@ api-content:
 # === programs (not installed) ===
 bin_PROGRAMS	= $(BIN_PROGS)
 noinst_PROGRAMS	= $(ALLTESTS)
-progs_ldadd	= librapicorncore-@MAJOR@.@MINOR@.la $(RAPICORN_CORE_LIBS) -lm
+progs_ldadd	= librapicorncore-@MAJOR@.la $(RAPICORN_CORE_LIBS) -lm
 BIN_PROGS	=
 
 # == rapidres ==
-RAPIDRESV                           = rapidres-@MAJOR@.@MINOR@
-BIN_PROGS                          += $(RAPIDRESV)
-rapidres_@MAJOR@_@MINOR@_SOURCES = rapidres.cc
-rapidres_@MAJOR@_@MINOR@_LDADD   = $(LIBZ) # $(progs_ldadd)
+RAPIDRESV                = rapidres-@MAJOR@
+BIN_PROGS               += $(RAPIDRESV)
+rapidres_@MAJOR@_SOURCES = rapidres.cc
+rapidres_@MAJOR@_LDADD   = $(LIBZ) # $(progs_ldadd)
 rapidres-install-hook:  # run after ${RAPIDRESV} was installed
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9].[0-9][0-9], rapidres) && \
+	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9], rapidres) && \
 	  test -x rapidres -a -L rapidres
 install-exec-hook: rapidres-install-hook
 rapidres-uninstall-hook: # run after ${RAPIDRESV} was uninstalled
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9].[0-9][0-9], rapidres) && \
+	  $(call SYMLINK_LATEST, rapidres-[0-9][0-9], rapidres) && \
 	  test -x rapidres -o ! -e rapidres
 uninstall-hook: rapidres-uninstall-hook
 
@@ -150,10 +150,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#ifndef _GNU_SOURCE"								>> xgen-$(@F) \
 	&& echo "#define _GNU_SOURCE"								>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- unique namespace for all symbols --- */"				>> xgen-$(@F) \
-	&& echo "#define Rapicorn			@RAPICORN_NAMESPACE_NAME@"		>> xgen-$(@F) \
-	&& echo '#define RAPICORN_NAMESPACE_NAME	"@RAPICORN_NAMESPACE_NAME@"'		>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- standard C code wrappers --- */"					>> xgen-$(@F) \
 	&& echo "#ifdef  __cplusplus"								>> xgen-$(@F) \
@@ -213,7 +209,7 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
 CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
-$(librapicorncore_@MAJOR@_@MINOR@_la_OBJECTS): rapicornconfig.h
+$(librapicorncore_@MAJOR@_la_OBJECTS): rapicornconfig.h
 
 
 # === aidavariants.hh ===

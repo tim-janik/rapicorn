@@ -11,7 +11,7 @@ export VPATH # point builddir executables at srcdir to find their corresponding 
 noinst_PROGRAMS	 = $(EXAMPLES)
 noinst_DATA	 =
 EXAMPLES	 =
-LDADDS		 = $(top_builddir)/ui/librapicorn-@MAJOR@.@MINOR@.la
+LDADDS		 = $(top_builddir)/ui/librapicorn-@MAJOR@.la
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 

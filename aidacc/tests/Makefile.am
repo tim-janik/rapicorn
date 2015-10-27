@@ -6,12 +6,12 @@ DEFS        += -DRAPICORN_CONVENIENCE
 
 AIDACC = $(AIDACC_NODEBUG) $(if $(findstring 1, $(V)), --aida-debug)
 AIDACC_NODEBUG = ../aidacc-intern
-AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@MAJOR@.@MINOR@
+AIDACC_INSTALLED = PATH="$(bindir):$$PATH" aidacc-@MAJOR@
 CXXSTUB_PY  = $(top_srcdir)/aidacc/CxxStub.py
 TYPEMAP_PY  = $(top_srcdir)/aidacc/TypeMap.py
 
 noinst_PROGRAMS  = $(TEST_PROGS)
-LDADDS           = $(top_builddir)/rcore/librapicorncore-@MAJOR@.@MINOR@.la
+LDADDS           = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la
 
 # automake doesn't always emit CXXCOMPILE
 CXXCOMPILE ?= $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)

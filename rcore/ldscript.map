@@ -1,11 +1,11 @@
 {
   global:
     extern "C++" {
-               Rapicorn_[0-9][0-9]_[0-9][0-9]::*;
-        vtable*Rapicorn_[0-9][0-9]_[0-9][0-9]::*;
-      typeinfo*Rapicorn_[0-9][0-9]_[0-9][0-9]::*;
-       virtual*Rapicorn_[0-9][0-9]_[0-9][0-9]::*;
-           VTT*Rapicorn_[0-9][0-9]_[0-9][0-9]::*;
+               Rapicorn::*;
+        vtable*Rapicorn::*;
+      typeinfo*Rapicorn::*;
+       virtual*Rapicorn::*;
+           VTT*Rapicorn::*;
     };
   local: *;
 };

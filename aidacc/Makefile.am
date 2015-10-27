@@ -6,9 +6,9 @@ SUBDIRS = . tests
 
 bin_SCRIPTS         = ${AIDACCV}
 noinst_SCRIPTS      = ${AIDACC_INTERN}
-AIDACCLNK	    = aidacc			## user visible excutable name
-AIDACCV	            = aidacc-@MAJOR@.@MINOR@	## installed executable name
-AIDACC_INTERN	    = ./aidacc-intern		## internal version used during build time
+AIDACCLNK	    = aidacc			# user visible excutable name
+AIDACCV	            = aidacc-@MAJOR@		# installed executable name
+AIDACC_INTERN	    = ./aidacc-intern		# internal version used during build time
 AIDACC_VDEBUG	    = $(AIDACC_INTERN) $(if $(findstring 1, $(V)), --aida-debug)
 
 CLEANFILES         += ${AIDACC_INTERN} ${AIDACCV}
@@ -51,7 +51,7 @@ EXTRA_DIST += plic.py
 GPRINT      = @printf '  %-9s%s\n'
 
 # == Install aidacc Helper Modules ==
-pyutilsdir      = $(libdir)/$(strip ${AIDACCV})/pyutils
+pyutilsdir      = $(libdir)/rapicorn-@MAJOR@/aida
 pyutils_PYTHON  = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
 backendfiles    = PrettyDump.py TypeMap.py CxxStub.py ExtractDocs.py TmplFiles.py
 noinst_SCRIPTS += $(backendfiles)
@@ -83,11 +83,11 @@ installcheck-local: test-aidacc-installation
 # == 'aidacc' executable link ==
 install-exec-hook: # runs after ${AIDACCV} was installed
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9].[0-9][0-9], $(strip $(AIDACCLNK))) && \
+	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9], $(strip $(AIDACCLNK))) && \
 	  test -x $(AIDACCLNK) -a -L $(AIDACCLNK)
 uninstall-hook:	# runs after ${AIDACCV} was uninstalled
 	$(Q) cd $(DESTDIR)$(bindir) && \
-	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9].[0-9][0-9], $(strip $(AIDACCLNK))) && \
+	  $(call SYMLINK_LATEST, $(strip $(AIDACCLNK))-[0-9][0-9], $(strip $(AIDACCLNK))) && \
 	  test -x $(AIDACCLNK) -o ! -e $(AIDACCLNK)
 
 clean-local:

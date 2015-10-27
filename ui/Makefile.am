@@ -70,21 +70,21 @@ AM_CXXFLAGS += $(patsubst %, @OPTIMIZE_FAST@ @SSEAVX_FLAGS@, $(findstring -mmx.c
 
 # === Libraries ===
 # librapicorn
-lib_LTLIBRARIES                             = librapicorn-@MAJOR@.@MINOR@.la
-LDSCRIPT_MAP                                = $(top_srcdir)/rcore/ldscript.map
-librapicorn_@MAJOR@_@MINOR@includedir       = $(includedir)/rapicorn-@MAJOR@.@MINOR@/ui
-librapicorn_@MAJOR@_@MINOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
-librapicorn_@MAJOR@_@MINOR@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn_@MAJOR@_@MINOR@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore-@MAJOR@.@MINOR@.la ${LDSCRIPT_MAP} \
-					    $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.@MINOR@.la
-librapicorn_@MAJOR@_@MINOR@_la_LDFLAGS      = $(strip		\
-	$(AM_LDFLAGS) -no-undefined				\
-	-Wl,--version-script=${LDSCRIPT_MAP}			\
-	-version-info $(LT_VERSION_INFO) 			\
+lib_LTLIBRARIES                     = librapicorn-@MAJOR@.la
+LDSCRIPT_MAP                        = $(top_srcdir)/rcore/ldscript.map
+librapicorn_@MAJOR@includedir       = $(includedir)/rapicorn-@MAJOR@/ui
+librapicorn_@MAJOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
+librapicorn_@MAJOR@_la_SOURCES      = $(rapicorn_cc_sources)
+librapicorn_@MAJOR@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la ${LDSCRIPT_MAP} \
+					    $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.la
+librapicorn_@MAJOR@_la_LDFLAGS      = $(strip		\
+	$(AM_LDFLAGS) -no-undefined			\
+	-Wl,--version-script=${LDSCRIPT_MAP}		\
+	-version-info $(LT_VERSION_INFO) 		\
 ) # set libtool version and export symbols for resolving
-librapicorn_@MAJOR@_@MINOR@_la_LIBADD       = $(strip		\
-	$(top_builddir)/rcore/librapicorncore-@MAJOR@.@MINOR@.la \
-	$(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.@MINOR@.la \
+librapicorn_@MAJOR@_la_LIBADD       = $(strip			\
+	$(top_builddir)/rcore/librapicorncore-@MAJOR@.la	\
+	$(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.la	\
 	$(LIBXML_LIBS) \
 	$(RAPICORN_GUI_LIBS) -lm \
 ) # -lfreetype -lfontconfig
@@ -151,7 +151,7 @@ sinfex.cc: sinfex.lgen sinfex.ygen
 
 # === Programs (not installed) ===
 noinst_PROGRAMS        = $(ALLTESTS)
-progs_ldadd            = librapicorn-@MAJOR@.@MINOR@.la $(RAPICORN_GUI_LIBS) -lm
+progs_ldadd            = librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS) -lm
 
 # === XML Files ===
 XML_FILES = $(top_srcdir)/res/Rapicorn/foundation.xml $(top_srcdir)/res/Rapicorn/standard.xml

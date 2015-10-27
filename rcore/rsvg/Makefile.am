@@ -29,13 +29,13 @@ rcore_rsvg_private_files = $(strip	\
 
 # === libraries ===
 # librapicorn-core
-noinst_LTLIBRARIES                               = librapicorn-rsvg-@MAJOR@.@MINOR@.la
-librapicorn_rsvg_@MAJOR@_@MINOR@_la_SOURCES      = $(rcore_rsvg_sources)
-librapicorn_rsvg_@MAJOR@_@MINOR@_la_DEPENDENCIES =
-librapicorn_rsvg_@MAJOR@_@MINOR@_la_LIBADD       = $(RAPICORN_RSVG_LIBS) $(RAPICORN_CORE_LIBS) -lm
-librapicorn_rsvg_@MAJOR@_@MINOR@_la_LDFLAGS      = $(strip	\
-	$(AM_LDFLAGS) -no-undefined				\
-	-version-info $(LT_VERSION_INFO) 			\
+noinst_LTLIBRARIES                       = librapicorn-rsvg-@MAJOR@.la
+librapicorn_rsvg_@MAJOR@_la_SOURCES      = $(rcore_rsvg_sources)
+librapicorn_rsvg_@MAJOR@_la_DEPENDENCIES =
+librapicorn_rsvg_@MAJOR@_la_LIBADD       = $(RAPICORN_RSVG_LIBS) $(RAPICORN_CORE_LIBS) -lm
+librapicorn_rsvg_@MAJOR@_la_LDFLAGS      = $(strip	\
+	$(AM_LDFLAGS) -no-undefined			\
+	-version-info $(LT_VERSION_INFO) 		\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rcore_rsvg_private_files) $(rcore_rsvg_headers)
 
@@ -64,6 +64,6 @@ librsvg-enum-types.c: librsvg-enum-types.h $(rcore_rsvg_headers) Makefile
 	  $(rcore_rsvg_headers) ) > tmp-librsvg-enum-types.c \
 	&& cp tmp-librsvg-enum-types.c librsvg-enum-types.c \
 	&& rm -f tmp-librsvg-enum-types.c
-$(librapicorn_rsvg_@MAJOR@_@MINOR@_la_SOURCES): librsvg-enum-types.h
+$(librapicorn_rsvg_@MAJOR@_la_SOURCES): librsvg-enum-types.h
 EXTRA_DIST += librsvg-enum-types.h librsvg-enum-types.c
 CLEANFILES += @INGIT@ librsvg-enum-types.h librsvg-enum-types.c

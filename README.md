@@ -70,4 +70,4 @@ And documentation is provided with the distribution and online:
 
 *   https://testbit.eu/pub/docs/rapicorn/latest/
 
-*   $prefix/share/doc/rapicorn-VERSION/html/apps.html
+*   $prefix/share/doc/rapicorn-<VERSION>/html/apps.html

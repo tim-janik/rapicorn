@@ -1,4 +1,4 @@
-Source: rapicorn-15.09
+Source: rapicorn-15
 Section: x11
 Priority: optional
 Maintainer: Tim Janik <timj@gnu.org>
@@ -9,7 +9,7 @@ Standards-Version: 3.9.5
 Homepage: http://rapicorn.org/
 Vcs-Browser: https://github.com/tim-janik/rapicorn/tree/master/debian
 
-Package: rapicorn-15.09
+Package: rapicorn-15
 Architecture: any
 Depends: ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
 Description: Rapicorn git snapshot of upstream master
