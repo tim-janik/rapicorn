@@ -44,7 +44,7 @@ class Timer {
   vector<double> samples_;
   double         test_duration_;
   int64          n_runs_;
-  int64          loops_needed () const;
+  int64          loops_needed ();
   void           reset        ();
   void           submit       (double elapsed, int64 repetitions);
   static double  bench_time   ();

@@ -792,7 +792,7 @@ REGISTER_TEST ("RandomHash/Random Numbers", test_random_numbers);
 template<class Gen>
 struct GeneratorBench64 {
   enum {
-    N_RUNS = 10000,
+    N_RUNS = 1000,
     BLOCK_NUMS = 128,
   };
   Gen gen_;
@@ -823,7 +823,7 @@ struct Gen_minstd  {
 static void
 random_hash_benchmarks()
 {
-  Test::Timer timer;
+  Test::Timer timer (1); // 1 second maximum
   GeneratorBench64<std::mt19937_64> mb; // core-i7: 1415.3MB/s
   double bench_time = timer.benchmark (mb);
   TMSG ("mt19937_64: timing results: fastest=%fs prng=%.1fMB/s\n", bench_time, mb.bytes_per_run() / bench_time / 1048576.);
@@ -837,7 +837,7 @@ random_hash_benchmarks()
   bench_time = timer.benchmark (kb);
   TMSG ("KeccakPRNG: timing results: fastest=%fs prng=%.1fMB/s\n", bench_time, kb.bytes_per_run() / bench_time / 1048576.);
 }
-REGISTER_SLOWTEST ("RandomHash/~ Benchmarks", random_hash_benchmarks);
+REGISTER_TEST ("RandomHash/~ Benchmarks", random_hash_benchmarks);
 
 static void
 test_keccak_prng()

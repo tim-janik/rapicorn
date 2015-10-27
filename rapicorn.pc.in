@@ -6,7 +6,7 @@ includedir=@includedir@/rapicorn-@MAJOR@.@MINOR@
 
 Name: Rapicorn
 Description: Rapicorn (experimental UI toolkit)
-Requires: glib-2.0
+Requires: pangocairo pangoft2 gdk-pixbuf-2.0 libcroco-0.6 libxml-2.0
 Version: @VERSION@
 Libs: -L${libdir} -lrapicorn-@MAJOR@.@MINOR@ @RAPICORN_GUI_LIBS@ @LIBXML_LIBS@
 Cflags: -I${includedir} @RAPICORN_GUI_CFLAGS@ -std=gnu++0x
