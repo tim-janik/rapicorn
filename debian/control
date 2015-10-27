@@ -1,22 +1,54 @@
-Source: rapicorn-15
+Source: rapicorn
 Section: x11
 Priority: optional
 Maintainer: Tim Janik <timj@gnu.org>
-Build-Depends: debhelper (>= 9), dh-python, autotools-dev, intltool,
+Build-Depends: debhelper (>= 9), autotools-dev, dh-python, intltool,
  libcairo2-dev, libcroco3-dev, libpango1.0-dev, libgdk-pixbuf2.0-dev, libreadline-dev,
  python, python-all-dev, cython, xvfb
 Standards-Version: 3.9.5
 Homepage: http://rapicorn.org/
 Vcs-Browser: https://github.com/tim-janik/rapicorn/tree/master/debian
 
-Package: rapicorn-15
+Package: rapicorn
+Section: utils
 Architecture: any
-Depends: ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
-Description: Rapicorn git snapshot of upstream master
- Rapicorn is a toolkit for rapid UI construction and SVG-based theming.
- It's primary focus is on flexible development of user interfaces in C++
- and Python, by allowing quick design iterations through decoupling
- of the UI declarations from data bindings and programming logic.
+Depends: python-rapicorn (= ${binary:Version}),
+ librapicorn-dev (= ${binary:Version}), librapicorn-doc (= ${source:Version}),
+ ${shlibs:Depends}, ${misc:Depends}
+Description: UI toolkit for declarative user interface construction and SVG-based theming
+ This package installs all rapicorn packages and provides the cli tool rapidrun.
+
+Package: librapicorn-15-9
+Section: libs
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: UI toolkit for declarative user interface construction and SVG-based theming
+ Rapicorn is a graphical user interface (UI) toolkit for rapid
+ development of user interfaces in C++ and Python. The user interface
+ (UI) is designed in declarative markup language and is connected to the
+ programming logic using data bindings and commands.
  .
- This package is an automatic git snapshot build, created from the HEAD of
- https://github.com/tim-janik/rapicorn/.
+ This package contains the Rapicorn library.
+
+Package: librapicorn-dev
+Section: libdevel
+Architecture: any
+Depends: librapicorn-15-9 (= ${binary:Version}), ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Description: UI toolkit for declarative user interface construction and SVG-based theming
+ This package contains the Rapicorn include files.
+
+Package: librapicorn-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: UI toolkit for declarative user interface construction and SVG-based theming
+ This package contains the reference documentation and user manual.
+
+Package: python-rapicorn
+Section: python
+Architecture: any
+Depends: librapicorn-15-9 (= ${binary:Version}), ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Provides: ${python:Provides}
+Description: UI toolkit for declarative user interface construction and SVG-based theming
+ This package contains the Rapicorn Python module.
