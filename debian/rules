@@ -49,3 +49,7 @@ override_dh_auto_install:
 	@ # provide changelog as per Debian Policy Manual section 12.7 Changelog files
 	mkdir -p debian/tmp/usr/share/doc/rapicorn/
 	install -c -m 644 ChangeLog debian/tmp/usr/share/doc/rapicorn/changelog
+override_dh_installdocs-indep:
+	dh_installdocs --indep
+	@ # remove unused doxygen files
+	dh_doxygen --indep
