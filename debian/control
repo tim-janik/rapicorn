@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9), autotools-dev, dh-python, intltool,
  libcairo2-dev, libcroco3-dev, libpango1.0-dev, libgdk-pixbuf2.0-dev, libreadline-dev,
  python, python-all-dev, cython, xvfb
 Build-Depends-Indep: doxygen
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://rapicorn.org/
 Vcs-Browser: https://github.com/tim-janik/rapicorn/tree/master/debian
 
