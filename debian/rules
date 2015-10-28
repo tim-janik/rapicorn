@@ -33,19 +33,19 @@ override_dh_install:
 	dh_install --fail-missing
 override_dh_auto_install:
 	dh_auto_install
-	: # https://wiki.debian.org/ReleaseGoals/LAFileRemoval
+	@ # https://wiki.debian.org/ReleaseGoals/LAFileRemoval
 	find debian/tmp -name '*.la' -delete
-	: # files packaged as uninstalled docs
+	@ # files packaged as uninstalled docs
 	rm debian/tmp/usr/share/doc/rapicorn/NEWS \
 	   debian/tmp/usr/share/doc/rapicorn/README
-	: # remove unpackaged files
+	@ # remove unpackaged files
 	rm debian/tmp/usr/share/doc/rapicorn/COPYING.MPL
 	find debian/tmp -name '*.py[co]' -delete
-	: # dh-python/dhpython/fs.py:share_files leaves symlinks dangling on multiarch renames
+	@ # dh-python/dhpython/fs.py:share_files leaves symlinks dangling on multiarch renames
 	test -L debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.so
 	rm -f   debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.so
 	ln -s Rapicorn_${MAJOR}/Rapicorn.$(DEB_HOST_MULTIARCH).so \
 	        debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.$(DEB_HOST_MULTIARCH).so
-	: # provide changelog as per Debian Policy Manual section 12.7 Changelog files
+	@ # provide changelog as per Debian Policy Manual section 12.7 Changelog files
 	mkdir -p debian/tmp/usr/share/doc/rapicorn/
 	install -c -m 644 ChangeLog debian/tmp/usr/share/doc/rapicorn/changelog
