@@ -79,10 +79,16 @@ before_script:
       -H "Content-Type: application/json" -f ; true
 
 script:
-  - F=`ls ./rapicorn-*_*-1_amd64.deb` && test `wc -w <<<$F` -eq 1 &&
-    URL="https://api.bintray.com/content/beast-team/deb/rapicorn/snapshot/$F" &&
-    OPTS="deb_distribution=vivid;deb_component=main;deb_architecture=amd64;override=0;publish=1" &&
-    curl -f -T "$F" "-ubeast-team:$BINTRAY_APITOKEN" "$URL;$OPTS"
+  - DEBS=`ls *.deb` && ls -l $DEBS &&
+    REPOVERSION=`debian/git-revision.sh "" &&
+    URL="https://api.bintray.com/content/beast-team/deb/rapicorn/$REPOVERSION" &&
+    OPTS="deb_distribution=vivid;deb_component=main;override=0;publish=1" &&
+    ( for F in $DEBS ; do
+        S="${F%.deb}" && A="${S##*_}" &&
+        echo $F : $A : &&
+        curl -T "$F" -u"beast-team:$BINTRAY_APITOKEN" "$URL/$F;$OPTS;deb_architecture=$A" -f || exit $? ;
+        echo ;
+      done )
 
 after_success:
   - echo "Done, build OK!"
