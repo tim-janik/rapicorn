@@ -1,43 +1,40 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: rapicorn
+Upstream-Contact: Tim Janik <timj@gnu.org>
 Source: https://github.com/tim-janik/rapicorn/
 
-Comment:
- This package was debianized by Tim Janik <timj@gnu.org> on
- Fri, 09 Oct 2015 11:29:46 +0200
- .
- The source tarball is an aggregate of several different works in which
- the main one is Rapicorn. Other works include librsvg, X11 region code
- and files from GLib and Gtk+.
- .
- Overall, the rapicorn project is licensed under the terms of the
- Mozilla Public License Version 2.0.
- .
- The complete text of the Mozilla Public License can be found in the
- LICENSE file in the same directory as this file or provided by the
- Mozilla Foundation: https://www.mozilla.org/en-US/MPL/2.0/
-
-
 Files: *
-License: MPL-2.0
 Copyright:
   Copyright (C) 2002-2015 Tim Janik
   Copyright (C) 2003-2006, 2015 Stefan Westerfeld
+License: MPL-2.0
+
+Files: debian/*
+Copyright:
+ Copyright (C) 2015 Tim Janik
+License: MPL-2.0
+
+Files: ui/regionimpl.c ui/keysymbols.hh ui/key2ucs4.cc
+Copyright:
+ Copyright (C) 1987 by Digital Equipment Corporation, Maynard
+ Copyright (C) 1987, 1988, 1989, 1994, 1998  The Open Group
+ Copyright (C) 1994-2003 The XFree86 Project, Inc. All Rights Reserved.
+License: MIT-License
 
 Files: rcore/markup.cc
-License: LGPL-2+
 Copyright:
   Copyright (C) 2000-2005, the GLib Project
+License: LGPL-2+
 
 Files: ui/table.cc
-License: LGPL-2+
 Copyright:
   Copyright (C) 1996-2002, the GTK+ Project
+License: LGPL-2+
 
 Files: rcore/rsvg/*
-License: LGPL-2+
 Copyright:
   Copyright (C) 1996-2002, the RSVG Project
+License: LGPL-2+
 Comment:
   The librsvg sources have been retrieved from:
     git://git.gnome.org/librsvg
@@ -45,7 +42,79 @@ Comment:
     https://git.gnome.org/browse/librsvg
 
 Files: aidacc/yapps2runtime.py yapps2_deb/*
-License: MIT
 Copyright:
   Copyright (C) 1999-2003 Amit J. Patel
   Copyright (C) 2003-2004 Matthias Urlichs
+License: MIT-License
+
+Files: *tests/*
+Copyright:
+  Copyright (C) 2002-2015 Tim Janik
+License: cc0-public-domain
+
+License: LGPL-2+
+ This library is free software: you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation, either
+ version 2 of the License, or (at your option) any later version.
+ .
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Lesser General Public License for more details.
+ .
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library.  If not, see:
+   http://www.gnu.org/licenses/.
+ .
+ On Debian systems, the complete text of the GNU Lesser General
+ Public License version 2 can be found in:
+   /usr/share/common-licenses/LGPL-2
+
+License: MPL-2.0
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License Version 2.0. If a copy of the MPL was not distributed with
+ this file, You can obtain one at:
+   https://mozilla.org/MPL/2.0/.
+
+License: MIT-License
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+
+License: cc0-public-domain
+ Public Domain Dedication - No Copyright
+ .
+ The person who associated a work with this deed has dedicated the work
+ to the public domain by waiving all of his or her rights to the work
+ worldwide under copyright law, including all related and neighboring
+ rights, to the extent allowed by law.
+ You can copy, modify, distribute and perform the work, even for
+ commercial purposes, all without asking permission.
+ .
+ In no way are the patent or trademark rights of any person affected
+ by CC0, nor are the rights that other persons may have in the work
+ or in how the work is used, such as publicity or privacy rights.
+ Unless expressly stated otherwise, the person who associated a work
+ with this deed makes no warranties about the work, and disclaims
+ liability for all uses of the work, to the fullest extent permitted
+ by applicable law.
+ When using or citing the work, you should not imply endorsement by
+ the author or the affirmer.
+ .
+ The complete text of the CC0 Public Domain License is provided here:
+   http://creativecommons.org/publicdomain/zero/1.0/

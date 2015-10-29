@@ -1,10 +1,13 @@
 #!/usr/bin/make -f
 
+MAJOR=$(shell dpkg-parsechangelog --show-field Version | cut -d. -f1)
+MINOR=$(shell dpkg-parsechangelog --show-field Version | cut -d. -f2)
+
 # https://www.debian.org/doc/manuals/maint-guide/dreq.html#customrules
 
 # See debhelper(7) (uncomment to enable)
 # output every command that modifies files on the build system.
-#DH_VERBOSE = 1
+DH_VERBOSE = 1
 
 # see EXAMPLES in dpkg-buildflags(1) and read /usr/share/dpkg/*
 DPKG_EXPORT_BUILDFLAGS = 1
@@ -19,17 +22,34 @@ include /usr/share/dpkg/default.mk
 # package maintainers to append LDFLAGS
 #export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
-
 # main packaging script based on dh7 syntax
 %:
-	dh $@  --with autotools-dev --with python2
+	dh $@ --parallel --with autotools-dev --with python2
 
 # debmake generated override targets
-# This is example for Cmake (See http://bugs.debian.org/641051 )
-#override_dh_auto_configure:
-#	dh_auto_configure -- \
-#	-DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
-
-
-
-
+override_dh_auto_configure:
+	dh_auto_configure -- --disable-static
+override_dh_install:
+	dh_install --fail-missing
+override_dh_auto_install:
+	dh_auto_install
+	@ # https://wiki.debian.org/ReleaseGoals/LAFileRemoval
+	find debian/tmp -name '*.la' -delete
+	@ # files packaged as uninstalled docs
+	rm debian/tmp/usr/share/doc/rapicorn/NEWS \
+	   debian/tmp/usr/share/doc/rapicorn/README
+	@ # remove unpackaged files
+	rm debian/tmp/usr/share/doc/rapicorn/COPYING.MPL
+	find debian/tmp -name '*.py[co]' -delete
+	@ # dh-python/dhpython/fs.py:share_files leaves symlinks dangling on multiarch renames
+	test -L debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.so
+	rm -f   debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.so
+	ln -s Rapicorn_${MAJOR}/Rapicorn.$(DEB_HOST_MULTIARCH).so \
+	        debian/tmp/usr/lib/python2.7/dist-packages/Rapicorn.$(DEB_HOST_MULTIARCH).so
+	@ # provide changelog as per Debian Policy Manual section 12.7 Changelog files
+	mkdir -p debian/tmp/usr/share/doc/rapicorn/
+	install -c -m 644 ChangeLog debian/tmp/usr/share/doc/rapicorn/changelog
+override_dh_installdocs-indep:
+	dh_installdocs --indep
+	@ # remove unused doxygen files
+	dh_doxygen --indep

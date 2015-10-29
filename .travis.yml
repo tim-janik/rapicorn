@@ -62,22 +62,33 @@ install:
   - make dist V=1
   - sudo make -j`nproc` uninstall V=1
   - make -j`nproc` clean V=1
-  - ls rapicorn-*.tar.xz | tee /dev/stderr | test 1 -eq `wc -l` # assert *ONE* tarball
+  - TARBALL=`ls rapicorn-[0-9]*[0-9].tar.xz` && ls -dl $TARBALL | tee /dev/stderr | test 1 -eq `wc -l` # force uniq
   - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
   # - travis_retry sudo pbuilder update
-  - VCSREVISION=t`debian/git-revision.sh` && echo "$VCSREVISION"
-  - LOGMESSAGE="git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
-  - debian/mkdeb.sh debian/ rapicorn-*.tar.xz "$VCSREVISION" "$LOGMESSAGE"
+  - VCSREVISION=`debian/git-revision.sh 0travis$TRAVIS_JOB_NUMBER` && echo "$VCSREVISION"
+  - LOGMESSAGE="Automatic travis-ci snapshot, git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
+  - USE_PBUILDER=true EMAIL=rapicorn@googlegroups.com
+    debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
+  - echo "Running lintian..." && lintian *dsc *deb || true
   - ls -al
 
 before_script:
-  - true
+  - REPOVERSION=`debian/git-revision.sh ""` && echo "REPOVERSION=$REPOVERSION" &&
+    curl -d '{ "name": "'$REPOVERSION'", "released": "'`date -I`'", "desc": "Travis CI Build" }'
+      -u"beast-team:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/beast-team/deb/rapicorn/versions"
+      -H "Content-Type: application/json" -f ; true
 
 script:
-  - F=`ls ./rapicorn-*_*-1_amd64.deb` && test `wc -w <<<$F` -eq 1 &&
-    URL="https://api.bintray.com/content/beast-team/deb/rapicorn/snapshot/$F" &&
-    OPTS="deb_distribution=vivid;deb_component=main;deb_architecture=amd64;override=0;publish=1" &&
-    curl -f -T "$F" "-ubeast-team:$BINTRAY_APITOKEN" "$URL;$OPTS"
+  - DEBS=`ls *.deb` && ls -l $DEBS &&
+    REPOVERSION=`debian/git-revision.sh "" &&
+    URL="https://api.bintray.com/content/beast-team/deb/rapicorn/$REPOVERSION" &&
+    OPTS="deb_distribution=vivid;deb_component=main;override=0;publish=1" &&
+    ( for F in $DEBS ; do
+        S="${F%.deb}" && A="${S##*_}" &&
+        echo $F : $A : &&
+        curl -T "$F" -u"beast-team:$BINTRAY_APITOKEN" "$URL/$F;$OPTS;deb_architecture=$A" -f || exit $? ;
+        echo ;
+      done )
 
 after_success:
   - echo "Done, build OK!"
