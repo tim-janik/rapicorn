@@ -74,9 +74,9 @@ install:
 
 before_script:
   - REPOVERSION=`debian/git-revision.sh ""` && echo "REPOVERSION=$REPOVERSION" &&
-    curl -d '{ "name": "'$REPOVERSION'", "released": "'`date -I`'", "desc": "Travis CI Build" }'
+    curl -d '{ "name":"'$REPOVERSION'", "released":"'`date -I`'", "desc":"Travis CI Build" }'
       -u"beast-team:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/beast-team/deb/rapicorn/versions"
-      -H "Content-Type: application/json" -f ; true
+      -HContent-Type:" application/json" -f ; true
 
 script:
   - DEBS=`ls *.deb` && ls -l $DEBS &&
@@ -85,7 +85,7 @@ script:
     OPTS="deb_distribution=vivid;deb_component=main;override=0;publish=1" &&
     ( for F in $DEBS ; do
         S="${F%.deb}" && A="${S##*_}" &&
-        echo $F : $A : &&
+        echo "$F :"" $A :" &&
         curl -T "$F" -u"beast-team:$BINTRAY_APITOKEN" "$URL/$F;$OPTS;deb_architecture=$A" -f || exit $? ;
         echo ;
       done )
