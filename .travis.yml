@@ -65,7 +65,7 @@ install:
   - TARBALL=`ls rapicorn-[0-9]*[0-9].tar.xz` && ls -dl $TARBALL | tee /dev/stderr | test 1 -eq `wc -l` # force uniq
   - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
   # - travis_retry sudo pbuilder update
-  - VCSREVISION=`debian/git-revision.sh 0travis$TRAVIS_JOB_NUMBER` && echo "$VCSREVISION"
+  - VCSREVISION=`debian/git-revision.sh +git%r-0travis$TRAVIS_JOB_NUMBER` && echo "$VCSREVISION"
   - LOGMESSAGE="Automatic travis-ci snapshot, git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
   - USE_PBUILDER=true EMAIL=rapicorn@googlegroups.com
     debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
@@ -73,14 +73,14 @@ install:
   - ls -al
 
 before_script:
-  - REPOVERSION=`debian/git-revision.sh ""` && echo "REPOVERSION=$REPOVERSION" &&
+  - REPOVERSION=`debian/git-revision.sh "CI-git%r"` && echo "REPOVERSION=$REPOVERSION" &&
     curl -d '{ "name":"'$REPOVERSION'", "released":"'`date -I`'", "desc":"Travis CI Build" }'
       -u"beast-team:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/beast-team/deb/rapicorn/versions"
       -HContent-Type:" application/json" -f ; true
 
 script:
   - DEBS=`ls *.deb` && ls -l $DEBS &&
-    REPOVERSION=`debian/git-revision.sh "" &&
+    REPOVERSION=`debian/git-revision.sh "CI-git%r" &&
     URL="https://api.bintray.com/content/beast-team/deb/rapicorn/$REPOVERSION" &&
     OPTS="deb_distribution=vivid;deb_component=main;override=0;publish=1" &&
     ( for F in $DEBS ; do
