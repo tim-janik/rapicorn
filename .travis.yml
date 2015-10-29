@@ -73,7 +73,10 @@ install:
   - ls -al
 
 before_script:
-  - true
+  - REPOVERSION=`debian/git-revision.sh ""` && echo "REPOVERSION=$REPOVERSION" &&
+    curl -d '{ "name": "'$REPOVERSION'", "released": "'`date -I`'", "desc": "Travis CI Build" }'
+      -u"beast-team:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/beast-team/deb/rapicorn/versions"
+      -H "Content-Type: application/json" -f ; true
 
 script:
   - F=`ls ./rapicorn-*_*-1_amd64.deb` && test `wc -w <<<$F` -eq 1 &&
