@@ -80,7 +80,7 @@ before_script:
 
 script:
   - DEBS=`ls *.deb` && ls -l $DEBS &&
-    REPOVERSION=`debian/git-revision.sh "CI-git%r" &&
+    REPOVERSION=`debian/git-revision.sh "CI-git%r"` &&
     URL="https://api.bintray.com/content/beast-team/deb/rapicorn/$REPOVERSION" &&
     OPTS="deb_distribution=vivid;deb_component=main;override=0;publish=1" &&
     ( for F in $DEBS ; do
