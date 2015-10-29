@@ -15,4 +15,6 @@ test ! -s `git rev-parse --git-dir`/shallow || {
 # Count commits to provide a monotonically increasing revision
 TOTAL_COMMITS=`git rev-list --count HEAD`
 
-echo "+git$TOTAL_COMMITS-$SUFFIX"
+DASH="" ; test -z "$SUFFIX" -o "${SUFFIX:0:1}" = '-' || DASH='-'
+
+echo "+git$TOTAL_COMMITS$DASH$SUFFIX"
