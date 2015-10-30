@@ -69,7 +69,7 @@ install:
   - LOGMESSAGE="Automatic travis-ci snapshot, git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
   - USE_PBUILDER=true EMAIL=rapicorn@googlegroups.com
     debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
-  - echo "Running lintian..." && lintian *dsc *deb || true
+  - echo "Running lintian..." && lintian *.dsc *.deb || true
   - ls -al
 
 before_script:
