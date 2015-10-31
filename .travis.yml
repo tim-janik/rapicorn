@@ -78,11 +78,12 @@ before_script:
       -HContent-Type:" application/json" -f ; true
 
 script:
-  - DEBS=`ls *.deb` && ls -l $DEBS &&
+  - SP=`ls rapicorn_[0-9]*-[0-9]*.dsc` && ls -dl $SP | tee /dev/stderr | test 1 -eq `wc -l` &&
+    FILES=`ls *.deb` && FILES="$FILES $SP ${SP/.dsc/.debian.tar.xz} ${SP%-*}.orig.tar.xz" && ls -l $FILES &&
     REPOVERSION=`debian/git-revision.sh "CI-git%r"` &&
     URL="https://api.bintray.com/content/beast-team/deb/rapicorn/$REPOVERSION" &&
     OPTS="deb_distribution=vivid;deb_component=main;override=0;publish=1" &&
-    ( for F in $DEBS ; do
+    ( for F in $FILES ; do
         S="${F%.deb}" && A="${S##*_}" &&
         echo "$F :"" $A :" &&
         curl -T "$F" -u"beast-team:$BINTRAY_APITOKEN" "$URL/$F;$OPTS;deb_architecture=$A" -f || exit $? ;
