@@ -68,7 +68,7 @@ install:
   - VCSREVISION=`debian/git-revision.sh +git%r-0travis$TRAVIS_JOB_NUMBER` && echo "$VCSREVISION"
   - LOGMESSAGE="Automatic travis-ci snapshot, git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
   - USE_PBUILDER=true EMAIL=rapicorn@googlegroups.com
-    debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
+    sudo debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
   - ls -al
 
 before_script:

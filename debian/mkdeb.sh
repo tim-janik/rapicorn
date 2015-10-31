@@ -76,7 +76,7 @@ if test "$USE_PBUILDER" = true ; then
 	su -c "lintian -I --show-overrides /tmp/buildd/*.changes; :" - pbuilder
 	__EOF
   chmod +x $TMPDIR/phooks/B90lintian
-  ( cd $PACKAGEDIR/ && sudo pdebuild --buildresult ./.. --debbuildopts -j$(nproc) -- --hookdir $TMPDIR/phooks )
+  ( cd $PACKAGEDIR/ && pdebuild --buildresult ./.. --debbuildopts -j$(nproc) -- --hookdir $TMPDIR/phooks )
 else
   ( cd $PACKAGEDIR/
     unset ENABLE_CCACHE NOSIGN
