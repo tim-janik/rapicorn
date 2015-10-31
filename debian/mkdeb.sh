@@ -71,7 +71,7 @@ if test "$USE_PBUILDER" = true ; then
 	#!/bin/bash
 	set -e
 	test -x /usr/bin/lintian ||
-	  apt-get -y "${APTGETOPT[@]}" install lintian
+	  apt-get -y install lintian
 	echo "Running lintian..."
 	su -c "lintian -I --show-overrides /tmp/buildd/*.changes; :" - pbuilder
 	__EOF
