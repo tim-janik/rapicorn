@@ -35,7 +35,7 @@ pcreate() {
   CIDIR=`pwd`/cidir/ ; mkdir -p "$CIDIR"			########## cidir ##########
   DIST="$1"; SOURCES="$2"
   test -n "$1" || die "missing tarball"
-  pbuilder create --distribution $DIST --debootstrapopts --variant=buildd
+  sudo pbuilder create --distribution $DIST --debootstrapopts --variant=buildd
   cat > $CIDIR/pcreate-cmds <<-__EOF
 	apt-get -y install apt-transport-https ca-certificates &&
 	  { ! fgrep -q 'NAME="Ubuntu"' /etc/os-release ||
@@ -90,7 +90,7 @@ pbuild() {
   # build source package
   dpkg-source -b .
   # pbuilder debuild
-  sudo pdebuild --buildresult ./.. --debbuildopts -j`nproc` -- --hookdir $CIDIR/.hooks
+  sudo EMAIL="$EMAIL" pdebuild --buildresult ./.. --debbuildopts -j`nproc` -- --hookdir $CIDIR/.hooks
   cd $CIDIR 							########## cd ##########
   rm -rf "$CIDIR/.hooks/" "$CIDIR/$TARDIR/"
   pwd
@@ -120,11 +120,11 @@ pdist() {
   cat > cidir/pdist-cmds-user <<-__EOF
 	#!/bin/bash
 	( set -ex
-	  if test -x ./autogen.sh ; then
-	    ./autogen.sh
-	  else
-	    ./configure
-	  fi
+	  # configure with user writable prefix
+	  test ! -x ./autogen.sh ||
+	    ./autogen.sh --prefix=`pwd`/_pdist_inst
+	  test -e ./Makefile ||
+	    ./configure --prefix=`pwd`/_pdist_inst
 	  # figure the name of the dist tarball
 	  ( # sed extracts all Makefile variable assignments (first line suffices)
 	    sed 's/\(^[	 ]*[0-9a-z_A-Z]\+[ 	]*:\?=.*\)\|\(.*\)/\1/' Makefile
@@ -150,7 +150,7 @@ pdist() {
 	__EOF
   # pbuilder executes cmds-root which executes cmds-user
   chmod +x cidir/pdist-cmds-user cidir/pdist-cmds-root
-  nice sudo pbuilder --execute --bindmounts $(readlink -f ./) -- \
+  sudo pbuilder --execute --bindmounts $(readlink -f ./) -- \
     cidir/pdist-cmds-root $PWD $(id -u) $(id -g)
   rm -f cidir/pdist-cmds-user cidir/pdist-cmds-root cidir/citool-pdist.log
   # cmds-user builds dist tarballs and moves those to cidir/

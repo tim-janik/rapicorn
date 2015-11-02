@@ -38,18 +38,18 @@ install:
   # sources for build packages
   - SOURCES=$'deb [trusted=yes] https://dl.bintray.com/beast-team/deb vivid main'
   # setup pbuilder environment
-  - travis_retry sudo ./citool.sh pcreate vivid "$SOURCES"
+  - travis_retry ./citool.sh pcreate vivid "$SOURCES"
   #- echo 'apt-get -y install ccache' | sudo pbuilder --login --save-after-login
   # packages needed for an upstream git build
   - P="build-essential automake autoconf autoconf-archive libtool intltool bison flex"
     P="$P libcairo2-dev libcroco3-dev libpango1.0-dev python2.7-dev libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev"
     P="$P cython doxygen graphviz texlive-binaries xvfb pandoc git"
   # build dist tarball
-  - sudo ./citool.sh pdist $P
+  - ./citool.sh pdist $P
   # check/show single dist tarball
   - TARBALL=`ls cidir/*tar.xz | head -1` && ls -dl $TARBALL | tee /dev/stderr | test 1 -eq `wc -l`
   # build debian packages
-  - EMAIL=rapicorn@googlegroups.com sudo ./citool.sh pbuild $TARBALL debian/
+  - EMAIL=rapicorn@googlegroups.com ./citool.sh pbuild $TARBALL debian/
   - ls -al "cidir/"
 
 before_script:
