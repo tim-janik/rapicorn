@@ -154,20 +154,20 @@ pdist() {
     cidir/pdist-cmds-root $PWD $(id -u) $(id -g)
   rm -f cidir/pdist-cmds-user cidir/pdist-cmds-root cidir/citool-pdist.log
   # cmds-user builds dist tarballs and moves those to cidir/
-  # FIXME: exec bash seems broken
 }
 
 # == bintrayup ==
 bintrayup() {
-  mkconfig # PACKAGE, VERSION, ...
+  set +x # avoid printing authentication secrets
+  mkconfig >/dev/null # PACKAGE, VERSION, ...
   ACCNAME="$1"; PKGDIST="$2"; PKGPATH="$3" # BINTRAY_APITOKEN set by caller
   test -n "$ACCNAME" || die "missing bintray account"
   test -n "$PKGDIST" || die "missing distribution"
   test -n "$PKGPATH" || die "missing package path"
   shift 3
-  set -x
   # create new bintray versoin
-  REPOVERSION="CI-git$TOTAL_COMMITS"; echo "REPOVERSION=$REPOVERSION"
+  REPOVERSION="CI-git$TOTAL_COMMITS" # echo "REPOVERSION=$REPOVERSION"
+  echo "  REMOTE  " "creating new version: $REPOVERSION"
   curl -d "{ \"name\": \"$REPOVERSION\", \"released\": \"`date -I`\", \"desc\": \"Automatic CI Build\" }" \
     -u"$ACCNAME:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/$ACCNAME/$PKGPATH/versions" \
     -H"Content-Type: application/json" -f && EX=$? || EX=$?
@@ -181,12 +181,11 @@ bintrayup() {
   for F in "$@" ; do
     S="${F%.deb}"; A="${S##*_}"
     test ! -z "$A" || continue
-    echo "$F :"" $A :"
+    echo "  REMOTE  " "uploading: $F ($A)"
     curl -T "$F" -u"$ACCNAME:$BINTRAY_APITOKEN" "$URL/`basename $F`;$OPTS;deb_architecture=$A" -f && EX=$? || EX=$?
     ALLOK=$(($ALLOK + $EX))
   done
   test $ALLOK = 0 || die "Some files failed to upload"
-  # FIXME BINTRAY_APITOKEN is exposed by set -x
 }
 
 # == commands ==
