@@ -87,8 +87,6 @@ pbuild() {
   dch -v "$DEBVERSION" "$DCHMESSAGE"
   dch -r "" # release build
   cat debian/changelog
-  # build source package
-  dpkg-source -b .
   # pbuilder debuild
   pdebuild --buildresult ./.. --debbuildopts -j`nproc` -- --hookdir $CIDIR/.hooks
   cd $CIDIR 							########## cd ##########
