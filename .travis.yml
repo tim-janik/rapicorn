@@ -37,7 +37,7 @@ addons:
 
 before_install:
   - uname -a
-  - cat /etc/lsb-release
+  - cat /etc/os-release
   - pwd
   - free -tm
   - make --version
@@ -52,46 +52,37 @@ before_install:
   - $CXX --version
 
 install:
-  - travis_retry sudo apt-get install -y libcroco3-dev cython
-  - travis_retry git fetch --unshallow && git clean -f && ls -al
-  - ./autogen.sh
-  - make -j`nproc` V=1
-  - make -j`nproc` check V=1
-  - sudo make -j`nproc` install V=1
-  - make -j`nproc` installcheck V=1
-  - make dist V=1
-  - sudo make -j`nproc` uninstall V=1
-  - make -j`nproc` clean V=1
-  - TARBALL=`ls rapicorn-[0-9]*[0-9].tar.xz` && ls -dl $TARBALL | tee /dev/stderr | test 1 -eq `wc -l` # force uniq
-  - travis_retry sudo pbuilder create --distribution vivid --debootstrapopts --variant=buildd
-  # - travis_retry sudo pbuilder update
-  - VCSREVISION=`debian/git-revision.sh +git%r-0travis$TRAVIS_JOB_NUMBER` && echo "$VCSREVISION"
-  - LOGMESSAGE="Automatic travis-ci snapshot, git commit "`git rev-parse HEAD` && echo "$LOGMESSAGE"
-  - USE_PBUILDER=true EMAIL=rapicorn@googlegroups.com
-    sudo debian/mkdeb.sh debian/ $TARBALL "$VCSREVISION" "$LOGMESSAGE"
-  - ls -al
+  # a complete repository is required for versioned package builds
+  - travis_retry git fetch --unshallow
+  - git clean -f && pwd
+  # show CI config
+  - ./citool.sh config
+  # sources for build packages
+  - SOURCES=$'deb [trusted=yes] https://dl.bintray.com/beast-team/deb vivid main'
+  # setup pbuilder environment
+  - travis_retry sudo ./citool.sh pcreate vivid "$SOURCES"
+  #- echo 'apt-get -y install ccache' | sudo pbuilder --login --save-after-login
+  # packages needed for an upstream git build
+  - P="build-essential automake autoconf autoconf-archive libtool intltool bison flex"
+    P="$P libcairo2-dev libcroco3-dev libpango1.0-dev python2.7-dev libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev"
+    P="$P cython doxygen graphviz texlive-binaries xvfb pandoc git"
+  # build dist tarball
+  - sudo ./citool.sh pdist $P
+  # check/show single dist tarball
+  - TARBALL=`ls cidir/*tar.xz | head -1` && ls -dl $TARBALL | tee /dev/stderr | test 1 -eq `wc -l`
+  # build debian packages
+  - EMAIL=rapicorn@googlegroups.com sudo ./citool.sh pbuild $TARBALL debian/
+  - ls -al "cidir/"
 
 before_script:
-  - REPOVERSION=`debian/git-revision.sh "CI-git%r"` && echo "REPOVERSION=$REPOVERSION" &&
-    curl -d '{ "name":"'$REPOVERSION'", "released":"'`date -I`'", "desc":"Travis CI Build" }'
-      -u"beast-team:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/beast-team/deb/rapicorn/versions"
-      -HContent-Type:" application/json" -f ; true
+  - true
 
 script:
-  - SP=`ls rapicorn_[0-9]*-[0-9]*.dsc` && ls -dl $SP | tee /dev/stderr | test 1 -eq `wc -l` &&
-    FILES=`ls *.deb` && FILES="$FILES $SP ${SP/.dsc/.debian.tar.xz} ${SP%-*}.orig.tar.xz" && ls -l $FILES &&
-    REPOVERSION=`debian/git-revision.sh "CI-git%r"` &&
-    URL="https://api.bintray.com/content/beast-team/deb/rapicorn/$REPOVERSION" &&
-    OPTS="deb_distribution=vivid;deb_component=main;override=0;publish=1" &&
-    ( for F in $FILES ; do
-        S="${F%.deb}" && A="${S##*_}" &&
-        echo "$F :"" $A :" &&
-        curl -T "$F" -u"beast-team:$BINTRAY_APITOKEN" "$URL/$F;$OPTS;deb_architecture=$A" -f || exit $? ;
-        echo ;
-      done )
+  # upload debian packages
+  - ./citool.sh bintrayup beast-team vivid deb/rapicorn cidir/*.deb
 
 after_success:
-  - echo "Done, build OK!"
+  - echo "Done, all OK!"
 
 notifications:
   irc:
