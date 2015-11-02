@@ -167,7 +167,7 @@ bintrayup() {
   shift 3
   set -x
   # create new bintray versoin
-  REPOVERSION=`debian/git-revision.sh "CI-git$TOTAL_COMMITS"`; echo "REPOVERSION=$REPOVERSION"
+  REPOVERSION="CI-git$TOTAL_COMMITS"; echo "REPOVERSION=$REPOVERSION"
   curl -d "{ \"name\": \"$REPOVERSION\", \"released\": \"`date -I`\", \"desc\": \"Automatic CI Build\" }" \
     -u"$ACCNAME:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/$ACCNAME/$PKGPATH/versions" \
     -H"Content-Type: application/json" -f && EX=$? || EX=$?
