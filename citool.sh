@@ -90,7 +90,7 @@ pbuild() {
   # build source package
   dpkg-source -b .
   # pbuilder debuild
-  sudo pdebuild --buildresult ./.. --debbuildopts -jauto -- --hookdir $CIDIR/.hooks
+  sudo pdebuild --buildresult ./.. --debbuildopts -j`nproc` -- --hookdir $CIDIR/.hooks
   cd $CIDIR 							########## cd ##########
   rm -rf "$CIDIR/.hooks/" "$CIDIR/$TARDIR/"
   pwd
