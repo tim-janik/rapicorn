@@ -120,6 +120,7 @@ doxygen-html: doxygen.cfg doxygen-srctree
 	&& nice $(DOXYGEN) doxygen-tmp/Doxyfile.tmp > error.log 2>&1
 	$(DOXYGEN_Q) test ! -s error.log && rm -f error.log \
 	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <error.log)): $$(pwd)/error.log" ; \
+	     test -z "$$DOXYGEN_WERROR" -o "$$DOXYGEN_WERROR" = 0 || \
 	     ! grep -E -v -f $(srcdir)/error.ign error.log ; }
 	$(DOXYGEN_V) "POLISH" "HTML Files..."
 	$(DOXYGEN_Q) sed -r $(DOXYGEN_SED_ACCESSKEY_AS_F) -i doxygen-tmp/html/*.html

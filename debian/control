@@ -35,7 +35,9 @@ Description: UI toolkit for declarative user interface construction and SVG-base
 Package: librapicorn-dev
 Section: libdevel
 Architecture: any
-Depends: librapicorn-15-9 (= ${binary:Version}), ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Depends: librapicorn-15-9 (= ${binary:Version}),
+ libcroco3-dev, libpango1.0-dev, libgdk-pixbuf2.0-dev,
+ ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
 Description: UI toolkit for declarative user interface construction and SVG-based theming
  This package contains the Rapicorn include files.
 

@@ -6,6 +6,9 @@
 echo "$@"
 set -ex
 
+TMPDIR=`mktemp -d "/tmp/mkdeb$$-XXXXXX"` &&
+  trap 'rm -rf "$TMPDIR"' 0 HUP QUIT TRAP USR1 PIPE TERM
+
 SCRIPTNAME=`basename $0`
 function die  { e="$1"; shift; [ -n "$*" ] && echo "$SCRIPTNAME: $*" >&2; exit "$e" ; }
 
@@ -63,7 +66,17 @@ dpkg-source -b $PACKAGEDIR/
 
 # Build binary package, using pbuilder if requested
 if test "$USE_PBUILDER" = true ; then
-  ( cd $PACKAGEDIR/ && sudo pdebuild --buildresult ./.. --debbuildopts -j$(nproc) )
+  mkdir $TMPDIR/phooks
+  cat > $TMPDIR/phooks/B90lintian <<-__EOF
+	#!/bin/bash
+	set -e
+	test -x /usr/bin/lintian ||
+	  apt-get -y install lintian
+	echo "Running lintian..."
+	su -c "lintian -I --show-overrides /tmp/buildd/*.changes; :" - pbuilder
+	__EOF
+  chmod +x $TMPDIR/phooks/B90lintian
+  ( cd $PACKAGEDIR/ && pdebuild --buildresult ./.. --debbuildopts -j$(nproc) -- --hookdir $TMPDIR/phooks )
 else
   ( cd $PACKAGEDIR/
     unset ENABLE_CCACHE NOSIGN
