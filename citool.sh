@@ -120,6 +120,11 @@ pdist() {
   cat > cidir/pdist-cmds-user <<-__EOF
 	#!/bin/bash
 	( set -ex
+	  if test -x ./autogen.sh ; then
+	    ./autogen.sh
+	  else
+	    ./configure
+	  fi
 	  # figure the name of the dist tarball
 	  ( # sed extracts all Makefile variable assignments (first line suffices)
 	    sed 's/\(^[	 ]*[0-9a-z_A-Z]\+[ 	]*:\?=.*\)\|\(.*\)/\1/' Makefile
@@ -128,11 +133,7 @@ pdist() {
 	  echo DIST_TARBALL=\$DIST_TARBALL
 	  test -n "\$DIST_TARBALL"
 	  rm -f cidir/pdist-tmk
-	  if test -x ./autogen.sh ; then
-	    ./autogen.sh
-	  else
-	    ./configure
-	  fi
+	  # build, check and dist
 	  $MAKE
 	  $MAKE check
 	  $MAKE install
