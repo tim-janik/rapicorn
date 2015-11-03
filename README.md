@@ -3,6 +3,7 @@ The Rapicorn Toolkit
 
 [![License MPL2](http://testbit.eu/~timj/pics/license-mpl-2.svg)](https://github.com/tim-janik/rapicorn/blob/master/COPYING.MPL)
 [![Build Status](https://travis-ci.org/tim-janik/rapicorn.svg)](https://travis-ci.org/tim-janik/rapicorn)
+[![Binary Download](https://api.bintray.com/packages/beast-team/deb/rapicorn/images/download.svg)](https://github.com/tim-janik/rapicorn/#binary-packages)
 
 
 # DESCRIPTION
@@ -71,3 +72,19 @@ And documentation is provided with the distribution and online:
 *   https://testbit.eu/pub/docs/rapicorn/latest/
 
 *   $prefix/share/doc/rapicorn-<VERSION>/html/apps.html
+
+# BINARY PACKAGES
+
+New source code pushed to the Rapicorn repository is automatically built
+and tested through a Travis-CI script. Successful continuous integration
+builds also create binary Debian packages
+([latest version](https://bintray.com/beast-team/deb/rapicorn/_latestVersion))
+which can be installed after adding an apt data source, example:
+
+    # Enable HTTPS transports for apt
+    apt-get -y install apt-transport-https ca-certificates
+    # Add and trust the beast-team packages on bintray.com
+    echo "deb [trusted=yes] https://dl.bintray.com/beast-team/deb vivid main" |
+      sudo tee -a /etc/apt/sources.list.d/beast-team.list
+    # Update package list and install Rapicorn
+    apt-get update && apt-get -y install rapicorn
