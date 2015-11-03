@@ -66,7 +66,9 @@ notifications:
   irc:
     channels:
       - "irc.gimp.org#beast"
-    on_failure: change
+    on_success: change # always / never / change
+    on_failure: change # always / never / change
+    skip_join: true
   email: false
     #recipients:
     #  - rapicorn@googlegroups.com
