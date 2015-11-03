@@ -165,7 +165,7 @@ bintrayup() {
   test -n "$PKGPATH" || die "missing package path"
   shift 3
   # create new bintray versoin
-  REPOVERSION="CI-git$TOTAL_COMMITS" # echo "REPOVERSION=$REPOVERSION"
+  REPOVERSION="$VERSION+git$TOTAL_COMMITS" # echo "REPOVERSION=$REPOVERSION"
   echo "  REMOTE  " "creating new version: $REPOVERSION"
   curl -d "{ \"name\": \"$REPOVERSION\", \"released\": \"`date -I`\", \"desc\": \"Automatic CI Build\" }" \
     -u"$ACCNAME:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/$ACCNAME/$PKGPATH/versions" \
