@@ -1,4 +1,4 @@
-// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+// This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "blitfuncs.hh"
 #ifdef __MMX__
 #include <mmintrin.h>

@@ -1,7 +1,7 @@
 // Licensed GNU LGPLv2+: http://www.gnu.org/licenses/lgpl.html
 // This file is based on glib/gmarkup.c
 // Copyright (C) 2000-2005, GNU LGPLv2+ by the GLib project
-// Copyright (C) 2005-2014, MPLv2 Tim Janik
+// Copyright (C) 2005-2014, MPL-2.0 Tim Janik
 #include "markup.hh"
 #include "unicode.hh"
 #include "strings.hh"

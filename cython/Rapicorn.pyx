@@ -1,4 +1,4 @@
-# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0   -*-mode:python;-*-
+# This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0   -*-mode:python;-*-
 
 # Typedefs, shared_ptr, PyxxCaller, etc
 include "pyxxutils.pyx"

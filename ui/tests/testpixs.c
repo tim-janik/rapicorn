@@ -1,4 +1,4 @@
-// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+// This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 
 /* GdkPixbuf RGBA C-Source image dump 1-byte-run-length-encoded */
 static const uint8 alpha_rle[] __attribute__ ((__aligned__ (4))) = 

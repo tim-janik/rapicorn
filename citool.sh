@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) 2015 Tim Janik / MPL-2.0
 
 set -e
 
