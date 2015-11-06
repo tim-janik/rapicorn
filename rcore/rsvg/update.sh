@@ -1,6 +1,6 @@
 #!/bin/bash
 # Rapicorn - Copyright (C) 2011 Tim Janik
-# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+# This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 
 function die { e="$1"; shift; [ -n "$*" ] && echo "$0: $*"; exit "$e" ; }
 

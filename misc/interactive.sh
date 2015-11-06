@@ -1,5 +1,5 @@
 #!/bin/bash
-# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+# This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 
 # Execute $1 with args, and if any files change under PWD or subdirs re-execute $1
 

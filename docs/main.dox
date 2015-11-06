@@ -1,4 +1,4 @@
-// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+// This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 //						-*- mode:visual-line -*-
 
 /*! @mainpage
@@ -16,7 +16,7 @@
 @copyright
 %Rapicorn is <a href="http://www.gnu.org/philosophy/free-sw.html">Free Software</a>.
 The %Rapicorn Source Code Form, its manual and documentation contents are made available subject to the terms of the
-<a rel="license" href="https://www.mozilla.org/MPL/2.0/">Mozilla Public License version 2.0</a> (MPLv2).
+<a rel="license" href="https://www.mozilla.org/MPL/2.0/">Mozilla Public License version 2.0</a> (MPL-2.0).
 Contributions are welcome from everyone and are protected by its simple Copyleft license
 without the need for copyright assignments, see @ref contribute.
 Example source code is usually dedicated to the Public Domain via

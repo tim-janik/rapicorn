@@ -1,4 +1,4 @@
-// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+// This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 // Author: 2014, Tim Janik, see http://testbit.org/keccak
 #ifndef __RAPICORN_RANDOMHASH_HH__
 #define __RAPICORN_RANDOMHASH_HH__

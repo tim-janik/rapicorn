@@ -1,5 +1,5 @@
 # Makefile.doxygen - Common rules to build Doxygen docs	    -*-mode:makefile;-*-
-# This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+# This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 
 DOXYGEN_PROJECT_NUMBER	= ${VERSION}
 DOXYGEN_DOCU_GLOBS	= *.dox *.py *.idl *.h *.H *.hh

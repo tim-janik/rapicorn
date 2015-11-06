@@ -1,4 +1,4 @@
-// This Source Code Form is licensed MPLv2: http://mozilla.org/MPL/2.0
+// This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #define __RAPICORN_IDL_ALIASES__ 0      // provide no ClnT or SrvT aliases
 #include "serverapi.hh" // to instantiate template class PixmapT<Rapicorn::SrvT_Pixbuf>;
 #include "clientapi.hh" // to instantiate template class PixmapT<Rapicorn::ClnT_Pixbuf>;
