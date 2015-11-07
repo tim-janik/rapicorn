@@ -10,6 +10,10 @@ noinst_PROGRAMS	 = $(TAPTESTS) $(LOGTEST_PROGS)
 LDADDS		 = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la
 
 # == test programs ==
+TAPTESTS	  += benchrcore
+benchrcore_SOURCES = benchrcore.cc
+benchrcore_LDADD   = $(LDADDS)
+
 LOGTEST_PROGS     += testrcore1
 TAPTESTS          += testrcore1
 testrcore1_SOURCES = multitest.cc aidatests.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
@@ -74,12 +78,12 @@ check-unique-process: testrcore1
 check: check-unique-process
 # check startup entropy
 check-startup-entropy:
-	$(Q) A=`./testrcore2 --entropy` ; B=`./testrcore2 --entropy`; \
+	$(Q) A=`./benchrcore --entropy` ; B=`./benchrcore --entropy`; \
 	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
 check-system-entropy:
-	$(Q) A=`./testrcore2 --system-entropy` ; B=`./testrcore2 --system-entropy`; \
+	$(Q) A=`./benchrcore --system-entropy` ; B=`./benchrcore --system-entropy`; \
 	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
 check-runtime-entropy:
-	$(Q) A=`./testrcore2 --runtime-entropy` ; B=`./testrcore2 --runtime-entropy`; \
+	$(Q) A=`./benchrcore --runtime-entropy` ; B=`./benchrcore --runtime-entropy`; \
 	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
 check: check-startup-entropy check-system-entropy check-runtime-entropy
