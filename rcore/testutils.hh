@@ -98,10 +98,6 @@ void    set_assertion_hook (const std::function<void()> &hook);                 
 void    assertion_failed   (const char *file, int line, const char *message);   ///< Internal function for failing assertions.
 
 /// @cond
-void                        add_internal  (const String &testname, void (*test_func) (void*), void *data);
-void                        add           (const String &funcname, void (*test_func) (void));
-template<typename D> void   add           (const String &testname, void (*test_func) (D*), D *data)
-{ add_internal (testname, (void(*)(void*)) test_func, (void*) data); }
 void                        test_output   (int kind, const String &string);
 template<class... Args> RAPICORN_PRINTF (2, 0)
 void                        test_format   (int kind, const char *format, const Args &...args)

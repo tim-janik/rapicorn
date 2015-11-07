@@ -217,10 +217,6 @@ assertion_failed (const char *file, int line, const char *message)
   return Rapicorn::breakpoint();
 }
 
-static vector<void(*)(void*)> testfuncs;
-static vector<void*>          testdatas;
-static vector<String>         testnames;
-
 struct TestEntry {
   void          (*func) (void*);
   void           *data;
@@ -228,23 +224,6 @@ struct TestEntry {
   char            kind;
   TestEntry      *next;
 };
-
-void
-add_internal (const String &testname,
-              void        (*test_func) (void*),
-              void         *data)
-{
-  testnames.push_back (testname);
-  testfuncs.push_back ((void(*)(void*)) test_func);
-  testdatas.push_back ((void*) data);
-}
-
-void
-add (const String &testname,
-     void        (*test_func) (void))
-{
-  add (testname, (void(*)(void*)) test_func, (void*) 0);
-}
 
 static TestEntry *volatile test_entry_list = NULL;
 
@@ -312,7 +291,7 @@ run_tests (void)
   char ftype = logging() ? 'l' : (slow() ? 's' : 't');
   if (ui_test())
     ftype = toupper (ftype);
-  TDEBUG ("running %u + %u tests", entries.size(), testfuncs.size());
+  TDEBUG ("running %u tests", entries.size());
   size_t skipped = 0, passed = 0;
   for (size_t i = 0; i < entries.size(); i++)
     {
@@ -326,13 +305,6 @@ run_tests (void)
         }
       else
         skipped++;
-    }
-  for (uint i = 0; i < testfuncs.size(); i++)
-    {
-      TSTART ("%s", testnames[i].c_str());
-      testfuncs[i] (testdatas[i]);
-      TDONE();
-      passed++;
     }
   TDEBUG ("passed %u tests", passed);
   TDEBUG ("skipped deselected %u tests", skipped);
