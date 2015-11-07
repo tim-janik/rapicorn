@@ -76,9 +76,42 @@ fi
 TMPFILE=`mktemp "/tmp/taptool$$XXXXXX"` || exit 127 # failed to create temporary file?
 trap 'rm -rf "$TMPFILE"' 0 HUP QUIT TRAP USR1 PIPE TERM
 
+# == reference handling ==
+RAPICORN_OUTPUT_TEST_REF=`basename "$1"`.outref
+RAPICORN_OUTPUT_TEST_LOG=`basename "$1"`.output
+check_reference_output() {
+  R="$RAPICORN_OUTPUT_TEST_REF"
+  L="$RAPICORN_OUTPUT_TEST_LOG"
+  check="$TEST_NAME: match output: $RAPICORN_OUTPUT_TEST_REF"
+  test ! \( -s "$L" -o -s "$R" \) || {
+    test -e "$R" && OLD="$R" || OLD=/dev/null
+    test -e "$L" && NEW="$L" || NEW=/dev/null
+    if cmp -s "$OLD" "$NEW" ; then
+      printf "%s  PASS%s     $check\n" "$color_pass" "$color_reset"
+      NP=$[1 + $NP]
+    elif test "$FORCECHECKUPDATE" = true ; then
+      cp "$L" "$R"
+      printf "%s  FORCED   $check%s\n" "$color_warn" "$color_reset"
+      NX=$[1 + $NX]
+    else
+      printf "%s  FAIL     $check%s\n" "$color_fail" "$color_reset"
+      NB=$[1 + $NB]
+      if test -x /usr/bin/git ; then
+	git --no-pager diff -p --no-index --color=$COLOR -- "$OLD" "$NEW"
+      else
+        diff -up "$OLD" "$NEW" || :
+      fi
+      return 1 # keep $L around
+    fi
+  }
+  rm -f "$L"
+}
+export RAPICORN_OUTPUT_TEST_LOG
+
 # == test invocation ==
 test ! -z "$TEST_NAME" || TEST_NAME="${1#./}"
 printf "%s  START%s    $TEST_NAME: testing...\n" "$color_pass" "$color_reset"
+rm -f "$RAPICORN_OUTPUT_TEST_LOG"
 set +e -o pipefail # catch pipeline errors
 "$@" | {
   set -e # catch errors other than the pipeline errors
@@ -121,6 +154,11 @@ set +e -o pipefail # catch pipeline errors
     fi
   done
 
+  # == check output ==
+  check_reference_output || {
+    test $ERROR != 0 || ERROR=4
+  }
+
   # == results ==
   NK=$[$NP + $NS]
   SEEN=$[$NK + $NX + $NB]
@@ -146,7 +184,7 @@ set +e -o pipefail # catch pipeline errors
       echo ":global-test-result: PASS"
     elif test 1 = "$ERROR" ; then
       echo ":global-test-result: FAIL"
-    else #    3 = "$ERROR"
+    else # 3, 4
       echo ":global-test-result: ERROR"
     fi
     for ((i=1; i<=$NP; i++)) ; do echo ":test-result: PASS"; done
