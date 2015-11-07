@@ -7,7 +7,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Test", __VA_ARGS__)
 
@@ -293,6 +295,7 @@ run_tests (void)
     ftype = toupper (ftype);
   TDEBUG ("running %u tests", entries.size());
   size_t skipped = 0, passed = 0;
+  int olog = -1;
   for (size_t i = 0; i < entries.size(); i++)
     {
       const TestEntry *te = entries[i];
@@ -303,11 +306,50 @@ run_tests (void)
           TDONE();
           passed++;
         }
+      else if ((ftype == 't' && te->kind == 'o') ||     // run output tests together with normal tests
+               (ftype == 'T' && te->kind == 'O'))
+        {
+          TSTART ("%s", te->name.c_str());
+          int svdout = -1, svderr = -1;
+          if (olog < 0)
+            {
+              const char *olog_name = getenv ("RAPICORN_OUTPUT_TEST_LOG");
+              if (olog_name)
+                olog = open (olog_name, O_CREAT | O_TRUNC | O_WRONLY | O_CLOEXEC | O_NOCTTY, 0644);
+            }
+          if (olog >= 0)
+            {
+              fflush (stdout);
+              fflush (stderr);
+              svdout = dup (1);
+              svderr = dup (2);
+              dup3 (olog, 1, O_CLOEXEC);
+              dup3 (olog, 2, O_CLOEXEC);
+              String hdr = String() + "\n### ---> " + te->name + " [START] <--- ###\n";
+              fputs (hdr.c_str(), stdout);
+            }
+          te->func (te->data);
+          if (svdout >= 0 || svderr >= 0)
+            {
+              String hdr = String() + "### ---> " + te->name + " [DONE] <--- ###\n\n";
+              fputs (hdr.c_str(), stdout);
+              fflush (stdout);
+              fflush (stderr);
+              dup2 (svdout, 1);
+              dup2 (svderr, 2);
+              close (svdout);
+              close (svderr);
+            }
+          TDONE();
+          passed++;
+        }
       else
         skipped++;
     }
   TDEBUG ("passed %u tests", passed);
   TDEBUG ("skipped deselected %u tests", skipped);
+  if (olog >= 0)
+    close (olog);
 }
 
 void

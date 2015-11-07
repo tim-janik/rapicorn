@@ -160,15 +160,19 @@ String  trap_stderr        ();
 
 /// Register a standard test function for execution as unit test.
 #define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('t', name, __VA_ARGS__)
 
 /// Register a slow test function for execution as during slow unit testing.
 #define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('s', name, __VA_ARGS__)
 
 /// Register a logging test function for output recording and verification.
 #define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('l', name, __VA_ARGS__)
+
+/// Register an output test function for output recording and verification.
+#define REGISTER_OUTPUT_TEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('o', name, __VA_ARGS__)
 
 enum ModeType {
   MODE_TESTING  = 0x1,  ///< Enable execution of test cases.
