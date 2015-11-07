@@ -14,11 +14,10 @@ TAPTESTS	  += benchrcore
 benchrcore_SOURCES = benchrcore.cc
 benchrcore_LDADD   = $(LDADDS)
 
-LOGTEST_PROGS     += testrcore1
 TAPTESTS          += testrcore1
 testrcore1_SOURCES = multitest.cc aidatests.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
 testrcore1_LDADD   = $(LDADDS)
-EXTRA_DIST        += data.cc testrcore1.ref
+EXTRA_DIST        += data.cc testrcore1.outref
 
 LOGTEST_PROGS     += testrcore2
 TAPTESTS          += testrcore2

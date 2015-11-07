@@ -1,29 +1,18 @@
 
-### ** +--------------+ ** ###
-### ** +  testrcore1  + ** ###
-### ** +--------------+ ** ###
-# testing, logging
+### ---> DataList Tests [START] <--- ###
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::MyKey::destroy: delete 9;
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 9;
+### ---> DataList Tests [DONE] <--- ###
 
-# START    DataList/BEGIN
-  PASS     DataList/BEGIN
-# START    DataList/DataList<String>
-::StringKey::destroy: delete "RAPICORN";
-  PASS     DataList/DataList<String>
-# START    DataList/DataList<int>
-::MyKey::destroy: delete 4;
-::MyKey::destroy: delete 8;
-::MyKey::destroy: delete 9;
-  PASS     DataList/DataList<int>
-# START    DataList/Mixed
-::StringKey::destroy: delete "RAPICORN";
-::MyKey::destroy: delete 4;
-::MyKey::destroy: delete 8;
-::StringKey::destroy: delete "RAPICORN";
-::MyKey::destroy: delete 9;
-  PASS     DataList/Mixed
-# START    DataList/END
-  PASS     DataList/END
-# START    IniFiles/Content Check
+
+### ---> IniFiles/Parsing [START] <--- ###
   Section With Spaces And Comment.longvalue1="value contains line continuation"
   Section With Spaces And Comment.longvalue2="value contains line continuation"
   Section With Spaces And Comment.spacings=" \tspacing@start and spacing@end\f\t "
@@ -35,8 +24,10 @@
   simple-section.string-key="string with # Hash"
   simple-section.name[de]="DE localized key"
   simple-section.name["en_US.UTF-8"]="US localized key"
-  PASS     IniFiles/Content Check
-# START    Strings/CxxPrintf Output
+### ---> IniFiles/Parsing [DONE] <--- ###
+
+
+### ---> Strings/CxxPrintf Output [START] <--- ###
 Char 'Y'                  right-adjusted: |                     Y|
 Char 'Y'                   left-adjusted: |Y                     |
 Char 'Y'     positional 0      truncated: |Y|
@@ -160,4 +151,5 @@ max long long: ffffffffffffffff 1777777777777777777777 18446744073709551615 -1 -
 positionals-reorder: |3 2 1|
 positionals-repeat:  |3.141593 == 3.141593|
 positionals-widths:  |  abc|
-  PASS     Strings/CxxPrintf Output
+### ---> Strings/CxxPrintf Output [DONE] <--- ###
+

@@ -101,33 +101,23 @@ data_list_test_ints (DataListContainer &r)
 static void
 data_list_test ()
 {
-  TDONE();
-
-  TSTART ("DataList/DataList<String>");
   {
     DataListContainer r;
     data_list_test_strings (r);
   }
-  TDONE();
 
-  TSTART ("DataList/DataList<int>");
   {
     DataListContainer r;
     data_list_test_ints (r);
   }
-  TDONE();
 
-  TSTART ("DataList/Mixed");
   {
     DataListContainer r;
     data_list_test_strings (r);
     data_list_test_ints (r);
     data_list_test_strings (r);
   }
-  TDONE();
-
-  TSTART ("DataList/END");
 }
-REGISTER_LOGTEST ("DataList/BEGIN", data_list_test);
+REGISTER_OUTPUT_TEST ("DataList Tests", data_list_test);
 
 } // anon

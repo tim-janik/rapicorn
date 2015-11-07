@@ -706,7 +706,7 @@ test_cxxprintf_output()
   cxxoutput_printf ("positionals-repeat:  |%2$f %1$s %2$f|\n", "==", PI);
   cxxoutput_printf ("positionals-widths:  |%3$*1$.*2$s|\n", 5, 3, "abcdefg");
 }
-REGISTER_LOGTEST ("Strings/CxxPrintf Output", test_cxxprintf_output);
+REGISTER_OUTPUT_TEST ("Strings/CxxPrintf Output", test_cxxprintf_output);
 
 struct AAData
 {

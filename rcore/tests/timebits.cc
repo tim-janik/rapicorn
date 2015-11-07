@@ -80,16 +80,13 @@ test_ini_files()
   IniFile inifile (Blob::from (ini_testfile));
   StringVector rv = inifile.raw_values();
   TASSERT (rv.size() == 11);
-  if (Test::logging())
-    for (auto kv : rv)
-      {
-        ssize_t eq = kv.find ('=');
-        assert (eq >= 0);
-        printout ("  %s=%s\n", kv.substr (0, eq).c_str(), CQUOTE (IniFile::cook_string (kv.substr (eq + 1))));
-      }
+  for (auto kv : rv)
+    {
+      ssize_t eq = kv.find ('=');
+      assert (eq >= 0);
+      printout ("  %s=%s\n", kv.substr (0, eq).c_str(), CQUOTE (IniFile::cook_string (kv.substr (eq + 1))));
+    }
 }
-REGISTER_TEST ("IniFiles/Parsing", test_ini_files);
-REGISTER_LOGTEST ("IniFiles/Content Check", test_ini_files);
-
+REGISTER_OUTPUT_TEST ("IniFiles/Parsing", test_ini_files);
 
 } // Anon
