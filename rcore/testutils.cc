@@ -172,11 +172,11 @@ test_output (int kind, const String &msg)
       break;
     default: ;
     }
-  if (!sout.empty())            // actual output to stderr
+  if (!sout.empty())            // test message output
     {
-      fflush (stdout);
-      fputs (sout.c_str(), stderr);
       fflush (stderr);
+      fputs (sout.c_str(), stdout);
+      fflush (stdout);
     }
 }
 
