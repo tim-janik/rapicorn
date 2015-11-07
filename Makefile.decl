@@ -94,6 +94,18 @@ check: @NOTDEVELMODE@ slowcheck_parallel--$(1)
 endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call slowcheck_parallel_TEMPLATE,$(PRG))))
 
+# == TAPTESTS ==
+# tests run through taptool.sh
+TAPTESTS     =
+TAPTEST_RUNS = $(addsuffix .taprun, $(basename $(TAPTESTS)))
+.PHONY: tcheck $(TAPTEST_RUNS)
+tcheck: $(top_srcdir)/taptool.sh
+	$(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(TAPTEST_RUNS)
+$(TAPTEST_RUNS): %.taprun: % # static pattern rule - also works for phony targets
+	$(Q) test "$@" = "$(@F)" || { echo "$@: test program outside CWD" >&2; exit 1; }
+	$(Q) TST="$(@:%.taprun=%)"; $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
+check: tcheck
+
 # === TEST_PROGS ===
 TEST_PROGS =
 define check_parallel_TEMPLATE
@@ -121,7 +133,7 @@ $(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_readout_TEMPLATE,$(PRG))))
 ### Auto-Create refs: 	; $${FORCECHECKUPDATE} || { test -e "$$(srcdir)/$(1).ref" || touch "$$(srcdir)/$(1).ref" ; }
 
 # === ALLTESTS ===
-ALLTESTS = $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) # used in noinst_PROGRAMS
+ALLTESTS = $(TAPTESTS) $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
