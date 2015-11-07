@@ -6,7 +6,7 @@ DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
 
 # test programs
-noinst_PROGRAMS	 = $(TAPTESTS) $(LOGTEST_PROGS)
+noinst_PROGRAMS	 = $(TAPTESTS)
 LDADDS		 = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la
 
 # == test programs ==
@@ -19,13 +19,12 @@ testrcore1_SOURCES = multitest.cc aidatests.cc markup.cc strings.cc timebits.cc 
 testrcore1_LDADD   = $(LDADDS)
 EXTRA_DIST        += data.cc testrcore1.outref
 
-LOGTEST_PROGS     += testrcore2
 TAPTESTS          += testrcore2
 testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
 testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.la \
 		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
 testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) $(AM_CXXFLAGS) # FIXME
-EXTRA_DIST        += testrcore2.ref
+EXTRA_DIST        += testrcore2.outref
 
 export VPATH	# needed by test programs to find builddir relative input files
 

@@ -224,7 +224,7 @@ test_convert_svg2png()
   delete[] pixels;
   unlink ("tmp-testsvg.png");
 }
-REGISTER_LOGTEST ("SVG/svg2png", test_convert_svg2png);
+REGISTER_OUTPUT_TEST ("SVG/svg2png", test_convert_svg2png);
 
 typedef Svg::Span Span;
 
