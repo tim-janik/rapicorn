@@ -114,7 +114,7 @@ struct Gen_minstd  {
 static void
 random_hash_benchmarks()
 {
-  Test::Timer timer (1); // 1 second maximum
+  Test::Timer timer (0.5); // maximum seconds
   GeneratorBench64<std::mt19937_64> mb; // core-i7: 1415.3MB/s
   double bench_time = timer.benchmark (mb);
   TPASS ("mt19937_64 # timing: fastest=%fs prng=%.1fMB/s\n", bench_time, mb.bytes_per_run() / bench_time / 1048576.);
