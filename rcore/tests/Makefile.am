@@ -6,18 +6,18 @@ DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
 
 # test programs
-noinst_PROGRAMS	 = $(TEST_PROGS) $(LOGTEST_PROGS)
+noinst_PROGRAMS	 = $(TAPTESTS) $(LOGTEST_PROGS)
 LDADDS		 = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la
 
 # == test programs ==
 LOGTEST_PROGS     += testrcore1
-TEST_PROGS        += testrcore1
+TAPTESTS          += testrcore1
 testrcore1_SOURCES = multitest.cc aidatests.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
 testrcore1_LDADD   = $(LDADDS)
 EXTRA_DIST        += data.cc testrcore1.ref
 
 LOGTEST_PROGS     += testrcore2
-TEST_PROGS        += testrcore2
+TAPTESTS          += testrcore2
 testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
 testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.la \
 		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
