@@ -17,7 +17,12 @@ namespace Test {
 #define TOUT(...)               Rapicorn::Test::test_format (0, __VA_ARGS__) ///< Test output for verbose mode, like fputs().
 #define TMSG(...)               Rapicorn::Test::test_format (1, __VA_ARGS__) ///< Unconditional test message.
 #define TINFO(...)              Rapicorn::Test::test_format (2, __VA_ARGS__) ///< Conditional test message (for verbose mode).
-#define TWARN(...)              Rapicorn::Test::test_format (6, __VA_ARGS__) ///< Issue a non-fatal test warning.
+#define TPASS(...)              Rapicorn::Test::test_format ('P', __VA_ARGS__) ///< Test case needs work.
+#define TXPASS(...)             Rapicorn::Test::test_format ('U', __VA_ARGS__) ///< Test case needs work.
+#define TFAIL(...)              Rapicorn::Test::test_format ('F', __VA_ARGS__) ///< Test case needs work.
+#define TXFAIL(...)             Rapicorn::Test::test_format ('X', __VA_ARGS__) ///< Test case needs work.
+#define TTODO(...)              Rapicorn::Test::test_format ('T', __VA_ARGS__) ///< Test case needs work.
+#define TSKIP(...)              Rapicorn::Test::test_format ('S', __VA_ARGS__) ///< Test case needs work.
 #define TOK()                   do {} while (0)                 ///< Indicator for successful test progress.
 #define TASSERT(cond)           TASSERT__AT (__LINE__, cond)    ///< Unconditional test assertion, enters breakpoint if not fullfilled.
 #define TASSERT_AT(LINE, cond)  TASSERT__AT (LINE, cond)        ///< Unconditional test assertion for deputy __LINE__.

@@ -1,4 +1,3 @@
-START:   lt-servertests
   'Hello'
 = Hello
   "What's" + ' up?'

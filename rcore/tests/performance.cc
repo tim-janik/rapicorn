@@ -57,7 +57,7 @@ perf_skip_whitespace (void)
   TINFO ("count_whitespace benchmark: timing results: switch=%fµs strchr=%fµs\n",
          switch_time * 1000000.0, strchr_time * 1000000.0);
   if (switch_time > strchr_time)
-    TWARN ("count_whitespace benchmark: unexpected contest: switch=%gs strchr=%gs\n", switch_time, strchr_time);
+    TTODO ("count_whitespace benchmark: unexpected contest: switch=%gs strchr=%gs\n", switch_time, strchr_time);
 }
 REGISTER_TEST ("Performance/Whitespace Skipping", perf_skip_whitespace);
 

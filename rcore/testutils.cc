@@ -105,91 +105,72 @@ ensure_newline (const String &s)
   return s;
 }
 
-static __thread char *test_warning = NULL;
-static __thread char *test_start = NULL;
+static __thread String *thread_test_start = NULL;
 
 void
-test_output (int kind, const String &output_msg)
+test_output (int kind, const String &msg)
 {
-  String msg = output_msg;
-  String sout, bar;
-  constexpr int VERBOSE_TAG = 1000000000;
-  switch (verbose() ? VERBOSE_TAG + kind : kind)
+  if (!thread_test_start)
+    thread_test_start = new String();
+  String &test_start = *thread_test_start;
+  String prefix, sout;
+  switch (kind)
     {
-    default:
-    case 0:                     // TOUT() - ignore when non-verbose
-      break;
-    case 0 + VERBOSE_TAG:       // TOUT() - literal output
-      sout = msg;
+    case 0:                     // TOUT() - literal output
+      if (verbose())
+        sout = msg;
       break;
     case 1:                     // TMSG() - unconditional test message
-    case 1 + VERBOSE_TAG:
       sout = ensure_newline (msg);
       break;
-    case 2:                     // TINFO() - ignore when non-verbose
+    case 2:                     // TINFO() - verbose test message
+      if (verbose())
+        sout = ensure_newline (msg);
       break;
-    case 2 + VERBOSE_TAG:       // TINFO() - conditional test message
-      sout = ensure_newline (msg);
-      break;
-    case 3:                     // test program title
-      if (logging() && slow())
-        msg += " (logging,slow)";
-      else if (logging())
-        msg += " (logging)";
-      else if (slow())
-        msg += " (slow)";
-      sout = "START:   " + ensure_newline (msg);
-      break;
-    case 3 + VERBOSE_TAG:       // test program title
-      bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
-      msg = "### ** +  " + msg + "  + ** ###";
-      sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n\n";
-      break;
-    case 4:
-    case 4 + VERBOSE_TAG:       // TSTART() - verbose test case start
-      sout = "  TEST   " + msg + ":" + String (63 - MIN (63, msg.size()), ' ');
-      if (!test_start)
+    case 3:                     // TTITLE
+      if (verbose())
         {
-          test_start = strdup (sout.c_str());
-          sout = "";
+          String bar, txt;
+          bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
+          txt = "### ** +  " + msg + "  + ** ###";
+          sout = "\n" + bar + "\n" + txt + "\n" + bar + "\n";
+          sout += "# testing";
+          if (logging())
+            sout += ", logging";
+          else if (slow())
+            sout += ", slow";
+          sout += "\n\n";
         }
-      if (verbose())            // TSTART() - queue msg for later if non-verbose
-        sout = "# Test:  " + msg + " ...\n";
       break;
-    case 5:
-    case 5 + VERBOSE_TAG:       // TDONE() - test case done, issue "OK"
-      if (test_start)
+    case 4:                     // TSTART()
+      if (!test_start.empty())
+        TFAIL ("Unfinished Test: %s\n", test_start);
+      test_start = msg;
+      if (verbose())
         {
-          sout = test_start;    // issue delayed TSTART message
-          free (test_start);
-          test_start = NULL;
+          prefix = "# START    ";
+          sout = prefix + ensure_newline (msg);
         }
+      break;
+    case 5:                     // TDONE() - test passed
+      if (test_start.empty())
+        TFAIL ("Extraneous TDONE() call");
       else
-        sout = "";
-      if (test_warning)
         {
-          String w (test_warning);
-          free (test_warning);  // issue delayed TWARN message
-          test_warning = NULL;
-          sout += "WARN\n" + ensure_newline (w);
+          TPASS ("%s", test_start);
+          test_start = "";
         }
-      else
-        sout += "OK\n";
       break;
-    case 6:                     // TWARN() - queue test warning for later
-      {
-        String w;
-        if (test_warning)
-          {
-            w = test_warning;
-            free (test_warning);
-          }
-        test_warning = strdup ((w + ensure_newline (msg)).c_str());
-      }
+    case 'T': case 'S': case 'P': case 'F': case 'U': case 'X':
+      if      (kind == 'T')     prefix = "  TODO     ";
+      else if (kind == 'S')     prefix = "  SKIP     ";
+      else if (kind == 'P')     prefix = "  PASS     ";
+      else if (kind == 'F')     prefix = "  FAIL     ";
+      else if (kind == 'U')     prefix = "  XPASS    ";
+      else if (kind == 'X')     prefix = "  XFAIL    ";
+      sout = prefix + ensure_newline (msg);
       break;
-    case 6 + VERBOSE_TAG:       // TWARN() - immediate warning in verbose mode
-      sout = "WARNING: " + ensure_newline (msg);
-      break;
+    default: ;
     }
   if (!sout.empty())            // actual output to stderr
     {
