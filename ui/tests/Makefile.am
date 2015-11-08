@@ -6,7 +6,7 @@ DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
 # == Build Classes ==
-noinst_PROGRAMS	 = $(TAPTESTS) $(LOGTEST_PROGS) $(NOINSTPRGS)
+noinst_PROGRAMS	 = $(TAPTESTS) $(NOINSTPRGS)
 noinst_DATA	 =
 LDADDS		 = $(top_builddir)/ui/librapicorn-@MAJOR@.la
 XML_FILES	 =
@@ -22,13 +22,12 @@ imgcheck_LDADD     = $(LDADDS)
 export VPATH   # needed by test programs to find builddir relative input files
 
 # == Test Programs ==
-LOGTEST_PROGS       += servertests
 TAPTESTS            += servertests
 servertests_SOURCES  = servertests.cc cmdtest.cc properties.cc region.cc server.cc labelmarkup.cc \
 		       widgets.cc primitives.cc testwidgets.cc sinfextest.cc stores.cc testselector.cc
 servertests_LDADD    = $(LDADDS) $(READLINELIBS)
 XML_FILES    	    += factory.xml testwidgets.xml
-EXTRA_DIST          += servertests.hh $(XML_FILES) servertests.ref
+EXTRA_DIST          += servertests.hh $(XML_FILES)
 TAPTESTS            += clienttests
 clienttests_SOURCES  = clienttests.cc pixmaps.cc
 clienttests_LDADD    = $(LDADDS)
