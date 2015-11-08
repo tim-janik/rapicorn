@@ -11,35 +11,24 @@ void init_core_test (const String &app_ident, int *argcp, char **argv, const Str
 namespace Test {
 
 // Test Macros
-#define TTITLE(...)             Rapicorn::Test::test_format (3, __VA_ARGS__) ///< Print out the test program title.
 #define TSTART(...)             Rapicorn::Test::test_format (4, __VA_ARGS__) ///< Print message once a test case starts.
 #define TDONE()                 Rapicorn::Test::test_format (5, "%s", "")    ///< Print message for test case end.
-#define TOUT(...)               Rapicorn::Test::test_format (0, __VA_ARGS__) ///< Test output for verbose mode, like fputs().
-#define TMSG(...)               Rapicorn::Test::test_format (1, __VA_ARGS__) ///< Unconditional test message.
-#define TINFO(...)              Rapicorn::Test::test_format (2, __VA_ARGS__) ///< Conditional test message (for verbose mode).
 #define TPASS(...)              Rapicorn::Test::test_format ('P', __VA_ARGS__) ///< Test case needs work.
 #define TXPASS(...)             Rapicorn::Test::test_format ('U', __VA_ARGS__) ///< Test case needs work.
 #define TFAIL(...)              Rapicorn::Test::test_format ('F', __VA_ARGS__) ///< Test case needs work.
 #define TXFAIL(...)             Rapicorn::Test::test_format ('X', __VA_ARGS__) ///< Test case needs work.
 #define TTODO(...)              Rapicorn::Test::test_format ('T', __VA_ARGS__) ///< Test case needs work.
 #define TSKIP(...)              Rapicorn::Test::test_format ('S', __VA_ARGS__) ///< Test case needs work.
-#define TOK()                   do {} while (0)                 ///< Indicator for successful test progress.
+#define TOK()                   do {} while (0)
 #define TASSERT(cond)           TASSERT__AT (__LINE__, cond)    ///< Unconditional test assertion, enters breakpoint if not fullfilled.
 #define TASSERT_AT(LINE, cond)  TASSERT__AT (LINE, cond)        ///< Unconditional test assertion for deputy __LINE__.
 #define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)        ///< Compare @a a and @a b according to operator @a cmp.
 #define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr) ///< Variant of TCMP() for C strings.
 
-/// @cond
-#define TASSERT__AT(LINE,cond)  do { if (RAPICORN_LIKELY (cond)) break; \
-    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); } while (0)
-#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;   \
-  Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
-  Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
-    __tassert_as = Rapicorn::string_format ("'%s %s %s': %s %s %s", \
-                                            sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
-  Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
-  } while (0)
-/// @endcond
+/// If in verbose test mode, print a message on stdout (and flush stdout) ala printf(), using the POSIX/C locale.
+template<class... Args> void tprintout (const char *format, const Args &...args);
+/// If in verbose test mode, print a message on stderr (and flush stderr) ala printf(), using the POSIX/C locale.
+template<class... Args> void tprinterr (const char *format, const Args &...args);
 
 /** Class for profiling benchmark tests.
  * UseCase: Benchmarking function implementations, e.g. to compare sorting implementations.
@@ -176,6 +165,31 @@ enum ModeType {
   MODE_READOUT  = 0x4,  ///< Execute data driven tests to verify readouts according to a reference.
   MODE_SLOW     = 0x8,  ///< Allow tests to excercise slow code paths or loops.
 };
+
+// == Implementations ==
+/// @cond
+template<class... Args> void
+tprintout (const char *format, const Args &...args)
+{
+  if (verbose())
+    printout_string (string_format (format, args...));
+}
+template<class... Args> void
+tprinterr (const char *format, const Args &...args)
+{
+  if (verbose())
+    printerr_string (string_format (format, args...));
+}
+#define TASSERT__AT(LINE,cond)  do { if (RAPICORN_LIKELY (cond)) break; \
+    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); } while (0)
+#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
+  Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
+  Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
+    __tassert_as = Rapicorn::string_format ("'%s %s %s': %s %s %s", \
+                                            sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
+  Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
+  } while (0)
+/// @endcond
 
 } // Test
 } // Rapicorn

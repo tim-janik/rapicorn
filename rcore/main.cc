@@ -541,7 +541,6 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
       g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
       String ci = cpu_info(); // initialize cpu info
       (void) ci; // silence compiler
-      TTITLE ("%s", Path::basename (argv[0]).c_str());
     }
 }
 

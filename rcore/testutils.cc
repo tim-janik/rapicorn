@@ -118,31 +118,9 @@ test_output (int kind, const String &msg)
   String prefix, sout;
   switch (kind)
     {
-    case 0:                     // TOUT() - literal output
-      if (verbose())
-        sout = msg;
-      break;
-    case 1:                     // TMSG() - unconditional test message
-      sout = ensure_newline (msg);
-      break;
     case 2:                     // TINFO() - verbose test message
       if (verbose())
         sout = ensure_newline (msg);
-      break;
-    case 3:                     // TTITLE
-      if (verbose())
-        {
-          String bar, txt;
-          bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
-          txt = "### ** +  " + msg + "  + ** ###";
-          sout = "\n" + bar + "\n" + txt + "\n" + bar + "\n";
-          sout += "# testing";
-          if (logging())
-            sout += ", logging";
-          else if (slow())
-            sout += ", slow";
-          sout += "\n\n";
-        }
       break;
     case 4:                     // TSTART()
       if (!test_start.empty())
