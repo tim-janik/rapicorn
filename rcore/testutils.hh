@@ -79,11 +79,10 @@ Timer::benchmark (Callee callee)
 int     run                ();  ///< Run all registered tests.
 bool    verbose            ();  ///< Indicates whether tests should run verbosely.
 bool    normal             ();  ///< Indicates whether normal tests should be run.
-bool    logging            ();  ///< Indicates whether logging tests should be run.
 bool    slow               ();  ///< Indicates whether slow tests should be run.
 bool    ui_test            ();  ///< Indicates execution of ui-thread tests.
 
-void    set_assertion_hook (const std::function<void()> &hook);                 ///< Install hook tobe called when assertions fail.
+void    set_assertion_hook (const std::function<void()> &hook);                 ///< Install hook to be called when assertions fail.
 void    assertion_failed   (const char *file, int line, const char *message);   ///< Internal function for failing assertions.
 
 /// @cond
@@ -162,7 +161,6 @@ String  trap_stderr        ();
 enum ModeType {
   MODE_TESTING  = 0x1,  ///< Enable execution of test cases.
   MODE_VERBOSE  = 0x2,  ///< Enable extra verbosity during test runs.
-  MODE_READOUT  = 0x4,  ///< Execute data driven tests to verify readouts according to a reference.
   MODE_SLOW     = 0x8,  ///< Allow tests to excercise slow code paths or loops.
 };
 

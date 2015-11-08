@@ -221,17 +221,12 @@ RegisterTest::add_test (char kind, const String &testname, void (*test_func) (vo
 }
 
 static bool flag_test_ui = false;
+static bool test_output_redirected = false;
 
 bool
 verbose()
 {
-  return InitSettings::test_codes() & MODE_VERBOSE;
-}
-
-bool
-logging()
-{
-  return InitSettings::test_codes() & MODE_READOUT;
+  return test_output_redirected || InitSettings::test_codes() & MODE_VERBOSE;
 }
 
 bool
@@ -243,7 +238,7 @@ slow()
 bool
 normal ()
 {
-  return 0 == (InitSettings::test_codes() & (MODE_READOUT | MODE_SLOW));
+  return !test_output_redirected && 0 == (InitSettings::test_codes() & MODE_SLOW);
 }
 
 bool
@@ -268,7 +263,7 @@ run_tests (void)
   for (TestEntry *node = atomic_load (&test_entry_list); node; node = node->next)
     entries.push_back (node);
   stable_sort (entries.begin(), entries.end(), test_entry_cmp);
-  char ftype = logging() ? 'l' : (slow() ? 's' : 't');
+  char ftype = slow() ? 's' : 't';
   if (ui_test())
     ftype = toupper (ftype);
   TDEBUG ("running %u tests", entries.size());
@@ -295,6 +290,7 @@ run_tests (void)
               if (olog_name)
                 olog = open (olog_name, O_CREAT | O_TRUNC | O_WRONLY | O_CLOEXEC | O_NOCTTY, 0644);
             }
+          const bool was_output_redirected = test_output_redirected;
           if (olog >= 0)
             {
               fflush (stdout);
@@ -305,6 +301,7 @@ run_tests (void)
               dup3 (olog, 2, O_CLOEXEC);
               String hdr = String() + "\n### ---> " + te->name + " [START] <--- ###\n";
               fputs (hdr.c_str(), stdout);
+              test_output_redirected = true;
             }
           te->func (te->data);
           if (svdout >= 0 || svderr >= 0)
@@ -318,6 +315,7 @@ run_tests (void)
               close (svdout);
               close (svderr);
             }
+          test_output_redirected = was_output_redirected;
           TDONE();
           passed++;
         }
