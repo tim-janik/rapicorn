@@ -77,12 +77,6 @@ main (int   argc,
 {
   init_core_test (__PRETTY_FILE__, &argc, argv);
 
-  if (argc >= 2 || Test::logging())
-    {
-      // set testing switch 'testpid0' to enforce deterministic ouput
-      // debug_config_add ("testpid0");
-    }
-
   if (argc >= 2)
     test_logging (argv[1]);
 

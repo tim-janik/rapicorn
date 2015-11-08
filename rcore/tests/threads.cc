@@ -603,7 +603,7 @@ struct RingBufferWriter : public IntSequence {
   void
   run()
   {
-    TINFO ("%s start.", ThisThread::name().c_str());
+    Test::tprintout ("%s start.", ThisThread::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
         uint k, n = Test::random_int64() % MIN (ring_buffer_test_length - l + 1, 65536 * 2);
@@ -628,7 +628,7 @@ struct RingBufferWriter : public IntSequence {
           TOK();
         l += n;
       }
-    TINFO ("%s done (%d).", ThisThread::name().c_str(), total);
+    Test::tprintout ("%s done (%d).", ThisThread::name().c_str(), total);
   }
 };
 
@@ -645,7 +645,7 @@ struct RingBufferReader : public IntSequence {
   void
   run()
   {
-    TINFO ("%s start.", ThisThread::name().c_str());
+    Test::tprintout ("%s start.", ThisThread::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
         uint k, n = ring->n_readable();
@@ -675,7 +675,7 @@ struct RingBufferReader : public IntSequence {
           TOK();
         l += k;
       }
-    TINFO ("%s done (%d).", ThisThread::name().c_str(), total);
+    Test::tprintout ("%s done (%d).", ThisThread::name().c_str(), total);
   }
 };
 
