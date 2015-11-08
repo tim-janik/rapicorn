@@ -166,10 +166,6 @@ String  trap_stderr        ();
 #define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('s', name, __VA_ARGS__)
 
-/// Register a logging test function for output recording and verification.
-#define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('l', name, __VA_ARGS__)
-
 /// Register an output test function for output recording and verification.
 #define REGISTER_OUTPUT_TEST(name, ...) static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('o', name, __VA_ARGS__)

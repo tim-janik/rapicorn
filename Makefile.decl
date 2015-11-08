@@ -117,23 +117,8 @@ check: check_parallel--$(1)
 endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call check_parallel_TEMPLATE,$(PRG))))
 
-# === LOGTEST_PROGS ===
-LOGTEST_PROGS =
-define check_readout_TEMPLATE
-.PHONY: check_readout--$(1)
-check_readout--$(1): $(1)
-	$$(Q) tstout="$(1).log" && \
-	  $$(X11_ENV) RAPICORN_TEST="$$(TSTV$$(V)):test-readout" ./$(1) 2>&1 \
-	| $(FIX_STDERR_FILTER) >"$$$$tstout" \
-	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
-	; eval "$$$$TSTDIFF" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"
-check: check_readout--$(1)
-endef
-$(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_readout_TEMPLATE,$(PRG))))
-### Auto-Create refs: 	; $${FORCECHECKUPDATE} || { test -e "$$(srcdir)/$(1).ref" || touch "$$(srcdir)/$(1).ref" ; }
-
 # === ALLTESTS ===
-ALLTESTS = $(TAPTESTS) $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) # used in noinst_PROGRAMS
+ALLTESTS = $(TAPTESTS) $(TESTS) $(TEST_PROGS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
@@ -143,8 +128,6 @@ export MAKE_TARGET_DIR  = $(@D)
 export FAILOK           = FAIL  OK
 ### eval $$TSTDIAGNOSE ['TESTNAME'] - show test title and result atomically
 export TSTDIAGNOSE = _e=$$?; tstdiagnose() { printf '  CHECK  %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
-				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
-export TSTDIAGNOSE_LOGTEST = _e=$$?; tstdiagnose() { printf 'LOGTEST: %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
 				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
 ### eval $$TSTDIFF ['TESTREF'] ['TESTLOG'] ['TESTNAME']
 export TSTDIFF = tstverify() { \
