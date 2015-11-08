@@ -48,13 +48,7 @@ local-ETAGS:
 #   and in order to not disturb the existing session, we need to start Xvfb.
 XVFB_MISSING = $(shell test `echo $${DISPLAY:-:0} | sed 's/^[^:]*:\([0-9]\+\).*/\1/'` -ge 99 || echo missingxvfb)
 X11_ENV = $(if $(XVFB_MISSING), xvfb-run -a -s "-screen 0 800x600x24") /usr/bin/env
-testx:
-	echo $(X11_ENV) xlogo
 
-# == Error Filter ==
-FIX_STDERR_FILTER = grep -v -E \
-  -e '^Xlib: *extension "[^"]*" missing on display ":[^"]*"'
-# Use grep to filter bogus messages from test results
 # === distfile-list ===
 # recursive rule supported by all Makefiles to generate a list of all files
 # listed as DISTFILES. this asserts a writable file named $DISTFILE_LIST.
