@@ -2,7 +2,6 @@
 #ifndef __RAPICORN_CXXAUX_HH__
 #define __RAPICORN_CXXAUX_HH__
 
-#include <rcore/rapicornconfig.h>       // _GNU_SOURCE
 #include <rcore/buildconfig.h>
 #include <stdbool.h>
 #include <stdarg.h>

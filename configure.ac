@@ -304,7 +304,7 @@ AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
 
 ])
 
-dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rapicornconfig.h
+dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 [
   # === docdir ===
@@ -316,13 +316,13 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
     RAPICORN_SIZEOF_SYS_TYPESH_UINT="$glib_cv_sizeof_rapicorn_sys_typesh_uint"
-    AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT)
     GLIB_SIZEOF([], void**, rapicorn_pointer)
     RAPICORN_SIZEOF_POINTER="$glib_cv_sizeof_rapicorn_pointer"
-    AC_SUBST(RAPICORN_SIZEOF_POINTER) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_POINTER)
     GLIB_SIZEOF([], long, rapicorn_long)
     RAPICORN_SIZEOF_LONG="$glib_cv_sizeof_rapicorn_long"
-    AC_SUBST(RAPICORN_SIZEOF_LONG) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_LONG)
 
     # --- POLL* ---
     poll_headers=["
@@ -378,17 +378,17 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     # == sizeof pthread_rwlock_t ==
     GLIB_SIZEOF([#include <pthread.h>], pthread_rwlock_t, rapicorn_pthreadh_rwlock)
     RAPICORN_SIZEOF_PTHREADH_RWLOCK="$glib_cv_sizeof_rapicorn_pthreadh_rwlock"
-    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_RWLOCK) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_RWLOCK)
 
     # == sizeof pthread_spinlock_t ==
     GLIB_SIZEOF([#include <pthread.h>], pthread_spinlock_t, rapicorn_pthreadh_spinlock)
     RAPICORN_SIZEOF_PTHREADH_SPINLOCK="$glib_cv_sizeof_rapicorn_pthreadh_spinlock"
-    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK)
 
     # == pthread_spinlock_t initializer ==
     MC_DEFINE_SPINLOCK_INITIALIZER()
     RAPICORN_SPINLOCK_INITIALIZER="$mc_cv_spinlock_initializer"
-    AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
 
     dnl # --- pthread_mutexattr_settype ---
     AC_MSG_CHECKING([for pthread_mutexattr_settype()])

@@ -2,7 +2,6 @@
 #ifndef __RAPICORN_CORE_HH__
 #define __RAPICORN_CORE_HH__
 
-#include <rcore/rapicornconfig.h>
 #include <rcore/aida.hh>
 #include <rcore/aidacxx.hh>
 #include <rcore/aidaprops.hh>

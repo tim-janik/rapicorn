@@ -34,7 +34,7 @@ rapicorn_impl_headers = $(strip 	\
 )
 rapicorn_generated_headers = $(strip	\
 	aidavariants.hh			\
-	rapicornconfig.h		\
+	buildconfig.h			\
 )
 rapicorn_private_files = $(strip	\
 )
@@ -74,7 +74,7 @@ $(srcdir)/resources.cc: zres.cc
 
 # === API content ===
 api-content:
-	cat $(sort $(filter-out rapicornconfig.h, $(rapicorn_public_headers) $(rapicorn_generated_headers)))
+	cat $(sort $(filter-out buildconfig.h, $(rapicorn_public_headers) $(rapicorn_generated_headers)))
 .PHONY: api-content
 
 # === programs (not installed) ===
