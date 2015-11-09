@@ -13,12 +13,13 @@ namespace Test {
 // Test Macros
 #define TSTART(...)             Rapicorn::Test::test_format (4, __VA_ARGS__) ///< Print message once a test case starts.
 #define TDONE()                 Rapicorn::Test::test_format (5, "%s", "")    ///< Print message for test case end.
-#define TPASS(...)              Rapicorn::Test::test_format ('P', __VA_ARGS__) ///< Test case needs work.
-#define TXPASS(...)             Rapicorn::Test::test_format ('U', __VA_ARGS__) ///< Test case needs work.
-#define TFAIL(...)              Rapicorn::Test::test_format ('F', __VA_ARGS__) ///< Test case needs work.
-#define TXFAIL(...)             Rapicorn::Test::test_format ('X', __VA_ARGS__) ///< Test case needs work.
+#define TPASS(...)              Rapicorn::Test::test_format ('P', __VA_ARGS__) ///< Test case passed.
+#define TXPASS(...)             Rapicorn::Test::test_format ('U', __VA_ARGS__) ///< Test case passed unexpectedly.
+#define TFAIL(...)              Rapicorn::Test::test_format ('F', __VA_ARGS__) ///< Test case failed.
+#define TXFAIL(...)             Rapicorn::Test::test_format ('X', __VA_ARGS__) ///< Test case expectedly failed.
 #define TTODO(...)              Rapicorn::Test::test_format ('T', __VA_ARGS__) ///< Test case needs work.
-#define TSKIP(...)              Rapicorn::Test::test_format ('S', __VA_ARGS__) ///< Test case needs work.
+#define TSKIP(...)              Rapicorn::Test::test_format ('S', __VA_ARGS__) ///< Test case needs to be skipped.
+#define TCHECK(cond, ...)       Rapicorn::Test::test_format (bool (cond) ? 'P' : 'F', __VA_ARGS__) ///< Test case passed or failed.
 #define TOK()                   do {} while (0)
 #define TASSERT(cond)           TASSERT__AT (__LINE__, cond)    ///< Unconditional test assertion, enters breakpoint if not fullfilled.
 #define TASSERT_AT(LINE, cond)  TASSERT__AT (LINE, cond)        ///< Unconditional test assertion for deputy __LINE__.
