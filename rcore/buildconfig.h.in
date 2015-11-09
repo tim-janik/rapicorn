@@ -4,6 +4,16 @@
 #ifndef __RAPICORN_BUILDCONFIG_H__
 #define __RAPICORN_BUILDCONFIG_H__
 
+// Allow header decls to be used from C and C++
+#ifdef  __cplusplus
+#define RAPICORN_EXTERN_C_BEGIN()       extern "C" {
+#define RAPICORN_EXTERN_C_END()         }
+#else
+#define RAPICORN_EXTERN_C_BEGIN()
+#define RAPICORN_EXTERN_C_END()
+#endif
+
+// Provide poll constants without including poll.h or similar
 #define RAPICORN_SYSVAL_POLLIN 		(@RAPICORN_SYSVAL_POLLIN@)
 #define RAPICORN_SYSVAL_POLLPRI		(@RAPICORN_SYSVAL_POLLPRI@)
 #define RAPICORN_SYSVAL_POLLOUT		(@RAPICORN_SYSVAL_POLLOUT@)

@@ -39,12 +39,6 @@
 #define CLAMP                                   RAPICORN_CLAMP
 #undef ARRAY_SIZE
 #define ARRAY_SIZE				RAPICORN_ARRAY_SIZE
-#undef EXTERN_C
-#ifdef	__cplusplus
-#define EXTERN_C                                extern "C"
-#else
-#define EXTERN_C                                extern
-#endif
 #if     !defined (INT64_MAX) || !defined (INT64_MIN) || !defined (UINT64_MAX)
 // clang++ and g++ always have __LONG_LONG_MAX__
 #  define INT64_MAX     __LONG_LONG_MAX__               //  +9223372036854775807LL

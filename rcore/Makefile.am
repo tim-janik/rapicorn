@@ -138,15 +138,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define _GNU_SOURCE"								>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- standard C code wrappers --- */"					>> xgen-$(@F) \
-	&& echo "#ifdef  __cplusplus"								>> xgen-$(@F) \
-	&& echo '#define RAPICORN_EXTERN_C_BEGIN()	extern "C" {'				>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_END()		}"				>> xgen-$(@F) \
-	&& echo "#else"										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_BEGIN()"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_END()"						>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
 	&& XMINOR=`echo @MINOR@ | sed 's/^0\+//'`						>> xgen-$(@F) \
 	&& echo "/* version checks */"								>> xgen-$(@F) \
