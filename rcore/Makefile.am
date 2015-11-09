@@ -138,16 +138,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define _GNU_SOURCE"								>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
-	&& XMINOR=`echo @MINOR@ | sed 's/^0\+//'`						>> xgen-$(@F) \
-	&& echo "/* version checks */"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_CHECK_VERSION(major,minor,micro) \\"				>> xgen-$(@F) \
-	&& echo "  (@MAJOR@ > (major) || (@MAJOR@ == (major) && \\"				>> xgen-$(@F) \
-	&& echo "    ($$XMINOR > (minor) || ($$XMINOR == (minor) && \\"				>> xgen-$(@F) \
-	&& echo "      @MICRO@ >= (micro)))))"							>> xgen-$(@F) \
-	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @MICRO@)'					>> xgen-$(@F) \
-	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- resource paths --- */"							>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
