@@ -39,11 +39,6 @@ librapicorn_rsvg_@MAJOR@_la_LDFLAGS      = $(strip	\
 ) # set libtool version and export symbols for resolving
 EXTRA_DIST += $(rcore_rsvg_private_files) $(rcore_rsvg_headers)
 
-# === API content ===
-api-content:
-	cat $(sort $(filter-out rapicornconfig.h, $(rapicorn_public_headers) $(rapicorn_generated_headers)))
-.PHONY: api-content
-
 # === enum introspection ===
 librsvg-enum-types.h: $(rcore_rsvg_headers) Makefile
 	$(AM_V_GEN) ( cd $(srcdir) && $(GLIB_MKENUMS) \
