@@ -142,21 +142,6 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- backend configuration --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_WITH_PANGO	(1)"						>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- configure results --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_OS_@RAPICORN_OS@  	(1) /* one of: @RAPICORN_OS_CHOICES@ */"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_POINTER		(@RAPICORN_SIZEOF_POINTER@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_LONG		(@RAPICORN_SIZEOF_LONG@)"			>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_SYS_TYPESH_UINT	(@RAPICORN_SIZEOF_SYS_TYPESH_UINT@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTHREADH_SPINLOCK	(@RAPICORN_SIZEOF_PTHREADH_SPINLOCK@)" 	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTH_MUTEX_T	(@RAPICORN_SIZEOF_PTH_MUTEX_T@)" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTH_COND_T	(@RAPICORN_SIZEOF_PTH_COND_T@)" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SPINLOCK_INITIALIZER	@RAPICORN_SPINLOCK_INITIALIZER@" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_HAVE_MUTEXATTR_SETTYPE	(@RAPICORN_HAVE_MUTEXATTR_SETTYPE@ && \\" >> xgen-$(@F) \
-	&& echo "                                        RAPICORN_SIZEOF_PTH_MUTEX_T && \\" 	>> xgen-$(@F) \
-	&& echo "                                        RAPICORN_SIZEOF_PTH_COND_T)" 		>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
