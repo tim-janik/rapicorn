@@ -514,7 +514,7 @@ class XmlToPango : Rapicorn::MarkupParser {
              const XmlNode *enode)
   {
     if (error_.size())
-      critical ("%s: skipping second error: %s (%p)", G_STRFUNC, estring.c_str(), enode);
+      critical ("%s: skipping second error: %s (%p)", __func__, estring.c_str(), enode);
     else
       {
         error_ = estring;

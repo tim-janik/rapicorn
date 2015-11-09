@@ -82,7 +82,7 @@ Evaluator::pop_map (const VariableMap  &vmap)
   if (env_maps.size() || &vmap == env_maps.back())
     env_maps.pop_back();
   else
-    critical ("%s: unable to pop map: %p != %p", STRFUNC, &vmap, env_maps.back());
+    critical ("%s: unable to pop map: %p != %p", __func__, &vmap, env_maps.back());
 }
 
 String
@@ -135,7 +135,7 @@ Evaluator::populate_map (VariableMap        &vmap,
       if (Evaluator::split_argument (*it, key, value))
         vmap[key] = value;
       else
-        critical ("%s: invalid 'key=value' syntax: %s", STRFUNC, it->c_str());
+        critical ("%s: invalid 'key=value' syntax: %s", __func__, it->c_str());
     }
 }
 

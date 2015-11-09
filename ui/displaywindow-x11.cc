@@ -227,7 +227,7 @@ DisplayWindowX11::~DisplayWindowX11()
 {
   if (expose_surface_ || wm_icon_ || input_context_ || window_)
     {
-      critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%x im=%p w=0x%x", STRFUNC, expose_surface_, wm_icon_, input_context_, window_);
+      critical ("%s: stale X11 resource during deletion: ex=%p ic=0x%x im=%p w=0x%x", __func__, expose_surface_, wm_icon_, input_context_, window_);
       destroy_x11_resources(); // shouldn't happen, this potentially issues X11 calls from outside the X11 thread
     }
   if (isel_)
@@ -1445,7 +1445,7 @@ X11Context::X11Context (DisplayDriver &driver, AsyncNotifyingQueue<DisplayComman
   max_request_bytes (0), max_property_bytes (0), screen (0), depth (0),
   root_window (0), input_method (NULL)
 {
-  XDEBUG ("%s: X11Context started", STRFUNC);
+  XDEBUG ("%s: X11Context started", __func__);
   do_once {
     const bool x11_initialized_for_threads = XInitThreads ();
     assert (x11_initialized_for_threads == true);
@@ -1458,7 +1458,7 @@ X11Context::~X11Context ()
   assert_return (!display);
   assert_return (x11ids_.empty());
   assert_return (command_queue_.pending() == false);
-  XDEBUG ("%s: X11Context stopped", STRFUNC);
+  XDEBUG ("%s: X11Context stopped", __func__);
 }
 
 bool
@@ -1548,7 +1548,7 @@ X11Context::run()
   command_queue_.notifier (NULL);
   // close down
   if (!x11ids_.empty()) // DisplayWindowX11 unconditionally references X11Context
-    fatal ("%s: stopped handling X11Context with %d active windows", STRFUNC, x11ids_.size());
+    fatal ("%s: stopped handling X11Context with %d active windows", __func__, x11ids_.size());
   if (input_method)
     {
       XCloseIM (input_method);
@@ -1786,7 +1786,7 @@ X11Context::x11id_set (size_t xid, X11Widget *x11widget)
       return;
     }
   if (x11ids_.end() != it)
-    fatal ("%s: x11id=%d already in use for %p while setting to %p", STRFUNC, xid, it->second, x11widget);
+    fatal ("%s: x11id=%d already in use for %p while setting to %p", __func__, xid, it->second, x11widget);
   x11ids_[xid] = x11widget;
 }
 
