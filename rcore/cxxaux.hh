@@ -44,8 +44,6 @@
 #else
 #define EXTERN_C                                extern
 #endif
-#undef STRFUNC
-#define STRFUNC				        RAPICORN_SIMPLE_FUNCTION
 #if     !defined (INT64_MAX) || !defined (INT64_MIN) || !defined (UINT64_MAX)
 #ifdef  LLONG_MAX       // some gcc versions ship limits.h that fail to define LLONG_MAX for C99
 #  define INT64_MAX     LLONG_MAX       // +9223372036854775807LL

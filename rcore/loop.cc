@@ -234,7 +234,7 @@ void
 EventLoop::remove (uint id)
 {
   if (!try_remove (id))
-    critical ("%s: failed to remove loop source: %u", RAPICORN_SIMPLE_FUNCTION, id);
+    critical ("%s: failed to remove loop source: %u", __func__, id);
 }
 
 /* void EventLoop::change_priority (EventSource *source, int priority) {
