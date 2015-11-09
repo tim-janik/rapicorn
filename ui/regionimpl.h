@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_REGION_IMPL_H__
 #define __RAPICORN_REGION_IMPL_H__
 
-#include <rcore/rapicornconfig.h>
+#include <rcore/buildconfig.h>
 #include <stdint.h>
 #include <stdbool.h>
 

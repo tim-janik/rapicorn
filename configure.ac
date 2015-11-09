@@ -622,6 +622,7 @@ po-helper.sh
 po/Makefile.in
 data/Makefile
 rcore/Makefile
+rcore/buildconfig.h
 rcore/rsvg/Makefile
 rcore/tests/Makefile
 res/Makefile
