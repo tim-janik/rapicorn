@@ -72,7 +72,7 @@ mk= ; AC_SUBST([mk]) # workaround for Automake abusing MAKE(1) keywords
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
-AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=auto/yes/no turn on development mode, default=auto],,enable_devel_mode=auto)
+AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=auto/yes/no build a development version, default=auto],,enable_devel_mode=auto)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -214,7 +214,7 @@ AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
 test x"$enable_devel_mode" = xyes -o x"$enable_devel_mode" = x1 && enable_devel_mode=yes || enable_devel_mode=no
 AC_MSG_RESULT([$enable_devel_mode])
 edm=0; test x"$enable_devel_mode" = xyes && edm=1
-AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $edm, [Enable development mode toggles])
+AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $edm, [Build a development version])
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
 if test x"$enable_devel_mode" = xyes ; then
   TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
