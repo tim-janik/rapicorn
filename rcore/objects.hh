@@ -14,7 +14,6 @@ typedef Aida::Property     Property;     /// Import Property from Aida namespace
 
 class NullInterface : std::exception {};
 
-String          cxx_demangle       (const char *mangled_identifier);
 
 // == ClassDoctor (used for private class copies) ==
 #ifdef  __RAPICORN_BUILD__

@@ -57,6 +57,9 @@ vector_from_array (const T (&array_entries)[S]) /// Construct a std::vector<T> f
     result.push_back (array_entries[i]);
   return result;
 }
+#if 0 // Already prototyped in cxxaux.hh.
+String cxx_demangle (const char *mangled_identifier);
+#endif
 
 // === source location strings ===
 String  pretty_file                             (const char *file_dir, const char *file);

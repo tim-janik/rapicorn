@@ -427,6 +427,10 @@ template<class, class = void> struct Has__aida_to_any__ : std::false_type {};
 template<class T>
 struct Has__aida_to_any__<T, void_t< decltype (std::declval<T>().__aida_to_any__ ()) >> : std::true_type {};
 
+// == C++ Helper Functions ==
+// cxx_demangle() is here for Aida, the implementation is in utilities.cc.
+String cxx_demangle (const char *mangled_identifier);
+
 } // Rapicorn
 
 #endif // __RAPICORN_CXXAUX_HH__
