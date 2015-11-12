@@ -14,14 +14,6 @@ typedef Aida::Property     Property;     /// Import Property from Aida namespace
 
 class NullInterface : std::exception {};
 
-
-// == ClassDoctor (used for private class copies) ==
-#ifdef  __RAPICORN_BUILD__
-class ClassDoctor;
-#else
-class ClassDoctor {};
-#endif
-
 // == DataListContainer ==
 /**
  * By using a DataKey, DataListContainer objects allow storage and retrieval of custom data members in a typesafe fashion.
