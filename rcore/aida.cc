@@ -3,7 +3,6 @@
 #include "aidaprops.hh"
 #include "thread.hh"
 #include "regex.hh"
-#include "objects.hh"           // cxx_demangle
 #include "../configure.h"       // HAVE_SYS_EVENTFD_H
 #include "main.hh"              // random_nonce
 
