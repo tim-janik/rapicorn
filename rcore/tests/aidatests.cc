@@ -52,11 +52,11 @@ test_basics()
 {
   const Aida::EnumInfo tke1 = Aida::enum_info<Aida::TypeKind>();
   const Aida::EnumInfo tke = tke1;
-  TASSERT (not tke.name().empty() && tke.n_values() > 0);
-  const Aida::EnumValue *ev = tke.find_value ("UNTYPED");
-  TASSERT (ev && ev->value == Aida::UNTYPED);
+  TASSERT (not tke.name().empty() && tke.has_values());
+  Aida::EnumValue ev = tke.find_value ("UNTYPED");
+  TASSERT (ev.value == Aida::UNTYPED);
   ev = tke.find_value (Aida::STRING);
-  TASSERT (ev && String ("STRING") == ev->ident);
+  TASSERT (ev.ident && String ("STRING") == ev.ident);
   TASSERT (type_kind_name (Aida::VOID) == String ("VOID"));
 
   // RemoteHandle

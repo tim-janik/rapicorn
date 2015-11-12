@@ -96,63 +96,51 @@ EnumInfo::flags_enum () const
   return flags_;
 }
 
-size_t
-EnumInfo::n_values () const
+bool
+EnumInfo::has_values () const
 {
-  return n_values_;
-}
-
-const EnumValue*
-EnumInfo::values () const
-{
-  return values_;
+  return n_values_ > 0;
 }
 
 EnumValueVector
 EnumInfo::value_vector () const
 {
-  std::vector<const EnumValue*> vv;
+  EnumValueVector vv;
   for (size_t i = 0; i < n_values_; i++)
-    vv.push_back (&values_[i]);
+    vv.push_back (values_[i]);
   return vv;
 }
 
-const EnumValue*
+EnumValue
 EnumInfo::find_value (int64 value) const
 {
   for (size_t i = 0; i < n_values_; i++)
     if (values_[i].value == value)
-      return &values_[i];
-  return NULL;
+      return values_[i];
+  return EnumValue();
 }
 
-const EnumValue*
+EnumValue
 EnumInfo::find_value (const String &name) const
 {
   for (size_t i = 0; i < n_values_; i++)
     if (string_match_identifier_tail (values_[i].ident, name))
-      return &values_[i];
-  return NULL;
+      return values_[i];
+  return EnumValue();
 }
 
 String
 EnumInfo::value_to_string (int64 value) const
 {
-  const EnumValue *ev = find_value (value);
-  if (ev)
-    return ev->ident;
-  else
-    return string_format ("%d", value);
+  const EnumValue ev = find_value (value);
+  return ev.ident ? ev.ident : string_format ("%d", value);
 }
 
 int64
 EnumInfo::value_from_string (const String &valuestring) const
 {
-  const EnumValue *ev = find_value (valuestring);
-  if (ev)
-    return ev->value;
-  else
-    return string_to_int (valuestring);
+  const EnumValue ev = find_value (valuestring);
+  return ev.ident ? ev.value : string_to_int (valuestring);
 }
 
 static std::vector<const char*>
@@ -247,8 +235,8 @@ template<> EnumInfo enum_info<TypeKind> (); // instantiation
 const char*
 type_kind_name (TypeKind type_kind)
 {
-  const EnumValue *ev = enum_info<TypeKind>().find_value (type_kind);
-  return ev ? ev->ident : NULL;
+  const EnumValue ev = enum_info<TypeKind>().find_value (type_kind);
+  return ev.ident;
 }
 
 // == TypeHash ==

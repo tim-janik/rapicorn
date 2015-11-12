@@ -79,7 +79,7 @@ struct EnumValue {
   constexpr EnumValue (int64 v, const char *vident, const char *vlabel, const char *vblurb) :
     value (v), ident (vident), label (vlabel), blurb (vblurb) {}
 };
-typedef std::vector<const EnumValue*> EnumValueVector;
+typedef std::vector<EnumValue> EnumValueVector;
 
 // == Enum ==
 /// Class for enum type introspection.
@@ -93,15 +93,14 @@ class EnumInfo {
   explicit         EnumInfo (const String &enum_name, bool isflags, const EnumValue (&ev)[N]) :
     enum_name_ (enum_name), values_ (ev), n_values_ (N), flags_ (isflags) {}
 public:
-  String           name              () const;                          ///< Retrieve the enum type name for this Enum.
-  const EnumValue* find_value        (const String &name) const;        ///< Find first enum value matching @a name.
-  const EnumValue* find_value        (int64        value) const;        ///< Find first enum value equal to @a value.
-  String           value_to_string   (int64        value) const;        ///< Create a string representing @a value.
-  int64            value_from_string (const String &valuestring) const; ///< Reconstruct an enum value from @a valuestring.
-  bool             flags_enum        () const;  ///< Whether enum values support bit combinations to form flags.
-  size_t           n_values          () const;  ///< The number of enum values defined for this Enum.
-  const EnumValue* values            () const;  ///< Get an enum value array with n_values() elements for this Enum.
-  EnumValueVector  value_vector      () const;  ///< Retrieve the list of possible enum values as a std::vector<>.
+  String          name              () const;                           ///< Retrieve the enum type name for this Enum.
+  EnumValue       find_value        (const String &name) const;         ///< Find first enum value matching @a name.
+  EnumValue       find_value        (int64        value) const;         ///< Find first enum value equal to @a value.
+  String          value_to_string   (int64        value) const;         ///< Create a string representing @a value.
+  int64           value_from_string (const String &valuestring) const;  ///< Reconstruct an enum value from @a valuestring.
+  bool            flags_enum        () const;   ///< Whether enum values support bit combinations to form flags.
+  bool            has_values        () const;   ///< Indicate if the value_vector() is non-empty.
+  EnumValueVector value_vector      () const;   ///< Retrieve the list of possible enum values as a std::vector<>.
   /// Template to be specialised by introspectable enums.
   template<typename EnumType>
   friend EnumInfo enum_info         ()
