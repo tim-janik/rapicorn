@@ -8,9 +8,6 @@
 
 namespace Rapicorn {
 
-// == Misc Helpers ==
-class NullInterface : std::exception {};
-
 // == DataListContainer ==
 /**
  * By using a DataKey, DataListContainer objects allow storage and retrieval of custom data members in a typesafe fashion.
