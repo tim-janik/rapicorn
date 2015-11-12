@@ -9,9 +9,6 @@
 namespace Rapicorn {
 
 // == Misc Helpers ==
-typedef Aida::PropertyList PropertyList; /// Import PropertyList from Aida namespace
-typedef Aida::Property     Property;     /// Import Property from Aida namespace
-
 class NullInterface : std::exception {};
 
 // == DataListContainer ==

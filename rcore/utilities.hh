@@ -28,6 +28,8 @@ namespace Rapicorn {
 using Aida::Any;
 using Aida::Signal;
 using Aida::slot;
+using Aida::PropertyList;
+using Aida::Property;
 
 // == Common (stdc++) Utilities ==
 using ::std::swap;
