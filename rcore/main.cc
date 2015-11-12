@@ -197,8 +197,6 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
       testing_mode = b;
     else if (parse_bool_option (*it, "test-verbose", &b))
       tco |= Test::MODE_VERBOSE;
-    else if (parse_bool_option (*it, "test-readout", &b))
-      tco |= Test::MODE_READOUT;
     else if (parse_bool_option (*it, "test-slow", &b))
       tco |= Test::MODE_SLOW;
   if (testing_mode)
@@ -216,8 +214,6 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
         }
       else if (testing_mode && arg_parse_option (*argcp, argv, &i, "--test-verbose"))
         vsettings.test_codes() |= Test::MODE_VERBOSE;
-      else if (testing_mode && arg_parse_option (*argcp, argv, &i, "--test-readout"))
-        vsettings.test_codes() |= Test::MODE_READOUT;
       else if (testing_mode && arg_parse_option (*argcp, argv, &i, "--test-slow"))
         vsettings.test_codes() |= Test::MODE_SLOW;
     }
@@ -228,10 +224,7 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
     {
       auto test_flipper_check = [] (const char *key) { return envkey_feature_check ("RAPICORN_TEST", key, false, NULL, false); };
       vsettings.test_codes() |= test_flipper_check ("test-verbose") ? Test::MODE_VERBOSE : 0;
-      vsettings.test_codes() |= test_flipper_check ("test-readout") ? Test::MODE_READOUT : 0;
       vsettings.test_codes() |= test_flipper_check ("test-slow") ? Test::MODE_SLOW : 0;
-      if (vsettings.test_codes() & Test::MODE_READOUT)
-        vsettings.test_codes() |= Test::MODE_VERBOSE;
     }
 }
 
@@ -453,7 +446,6 @@ init_core_initialized ()
  * are stripped.
  * If 'rapicorn-test-initialization=1' is passed in @a args, these command line arguments are supported:
  * - @c --test-verbose - Execute test cases with verbose message generation.
- * - @c --test-readout - Execute only data driven test cases to verify readouts.
  * - @c --test-slow - Execute only test cases excercising slow code paths or loops.
  * .
  * Additional initialization arguments can be passed in @a args, currently supported are:
@@ -461,7 +453,6 @@ init_core_initialized ()
  * - @c cpu-affinity - CPU# to bind rapicorn thread to.
  * - @c rapicorn-test-initialization - Enable testing framework, used by init_core_test(), see also #$RAPICORN_TEST.
  * - @c test-verbose - acts like --test-verbose.
- * - @c test-readout - acts like --test-readout.
  * - @c test-slow - acts like --test-slow.
  * .
  * Additionally, the @c $RAPICORN environment variable affects toolkit behaviour. It supports
@@ -541,7 +532,6 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
       g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
       String ci = cpu_info(); // initialize cpu info
       (void) ci; // silence compiler
-      TTITLE ("%s", Path::basename (argv[0]).c_str());
     }
 }
 

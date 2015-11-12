@@ -23,7 +23,6 @@ REGISTER_UITHREAD_TEST ("Primitives/Test Affine", test_affine);
 static void
 test_double_int()
 {
-  TINFO ("Testing dtoi32...");
   TASSERT (_dtoi32_generic (0.0) == 0);
   TASSERT (_dtoi32_generic (+0.3) == +0);
   TASSERT (_dtoi32_generic (-0.3) == -0);
@@ -46,7 +45,7 @@ test_double_int()
   TASSERT (dtoi32 (-2147483646.7) == -2147483647);
   TASSERT (dtoi32 (-2147483647.3) == -2147483647);
   TASSERT (dtoi32 (-2147483647.7) == -2147483648LL);
-  TINFO ("Testing dtoi64...");
+  TPASS ("dtoi32 tests");
   TASSERT (_dtoi64_generic (0.0) == 0);
   TASSERT (_dtoi64_generic (+0.3) == +0);
   TASSERT (_dtoi64_generic (-0.3) == -0);
@@ -85,7 +84,7 @@ test_double_int()
   TASSERT (dtoi64 (+1125899906842624.7) == +1125899906842625LL);
   TASSERT (dtoi64 (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (dtoi64 (-1125899906842624.7) == -1125899906842625LL);
-  TINFO ("Testing iround...");
+  TPASS ("dtoi64 tests");
   TASSERT (round (0.0) == 0.0);
   TASSERT (round (+0.3) == +0.0);
   TASSERT (round (-0.3) == -0.0);
@@ -108,7 +107,7 @@ test_double_int()
   TASSERT (iround (+1125899906842624.7) == +1125899906842625LL);
   TASSERT (iround (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (iround (-1125899906842624.7) == -1125899906842625LL);
-  TINFO ("Testing iceil...");
+  TPASS ("iround tests");
   TASSERT (ceil (0.0) == 0.0);
   TASSERT (ceil (+0.3) == +1.0);
   TASSERT (ceil (-0.3) == -0.0);
@@ -131,7 +130,7 @@ test_double_int()
   TASSERT (iceil (+1125899906842624.7) == +1125899906842625LL);
   TASSERT (iceil (-1125899906842624.3) == -1125899906842624LL);
   TASSERT (iceil (-1125899906842624.7) == -1125899906842624LL);
-  TINFO ("Testing ifloor...");
+  TPASS ("iceil tests");
   TASSERT (floor (0.0) == 0.0);
   TASSERT (floor (+0.3) == +0.0);
   TASSERT (floor (-0.3) == -1.0);
@@ -154,6 +153,7 @@ test_double_int()
   TASSERT (ifloor (+1125899906842624.7) == +1125899906842624LL);
   TASSERT (ifloor (-1125899906842624.3) == -1125899906842625LL);
   TASSERT (ifloor (-1125899906842624.7) == -1125899906842625LL);
+  TPASS ("ifloor tests");
 }
 REGISTER_UITHREAD_TEST ("Primitives/Test Double <=> Int Conversion", test_double_int);
 

@@ -54,10 +54,10 @@ perf_skip_whitespace (void)
   double strchr_time = timer.benchmark (count_whitespace_strchr);
   //uint64 sn = timer.n_runs();
   assert (result == 17);
-  TINFO ("count_whitespace benchmark: timing results: switch=%fµs strchr=%fµs\n",
+  TPASS ("count_whitespace benchmark # timing: switch=%fµs strchr=%fµs\n",
          switch_time * 1000000.0, strchr_time * 1000000.0);
   if (switch_time > strchr_time)
-    TWARN ("count_whitespace benchmark: unexpected contest: switch=%gs strchr=%gs\n", switch_time, strchr_time);
+    TTODO ("count_whitespace benchmark: unexpected contest: switch=%gs strchr=%gs\n", switch_time, strchr_time);
 }
 REGISTER_TEST ("Performance/Whitespace Skipping", perf_skip_whitespace);
 

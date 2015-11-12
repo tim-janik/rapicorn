@@ -115,7 +115,7 @@ pdist() {
 	apt-get -y install $@
 	echo cidir/pdist-cmds-user "\$@" | su -p ciuser
 	__EOF
-  MAKE="make -j`nproc` V=1"
+  MAKE="make -j`nproc` V=$V"
   cat > cidir/pdist-cmds-user <<-__EOF
 	#!/bin/bash
 	( set -ex

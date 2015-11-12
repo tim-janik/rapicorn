@@ -1,6 +1,5 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include <rcore/testutils.hh>
-#include <rcore/randomhash.hh>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -72,48 +71,11 @@ test_logging (const char *logarg)
     }
 }
 
-struct EntropyTests : Entropy {
-  void
-  test (char *arg)
-  {
-    if      (strcmp (arg, "--entropy") == 0)
-      {
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n",
-                  Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(),
-                  Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed());
-        exit (0);
-      }
-    else if (strcmp (arg, "--system-entropy") == 0)
-      {
-        KeccakPRNG pool;
-        Entropy::system_entropy (pool);
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
-        exit (0);
-      }
-    else if (strcmp (arg, "--runtime-entropy") == 0)
-      {
-        KeccakPRNG pool;
-        Entropy::runtime_entropy (pool);
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
-        exit (0);
-      }
-  }
-};
-
 int
 main (int   argc,
       char *argv[])
 {
-  if (argc >= 2)        // Entropy tests that need to be carried out before core_init
-    EntropyTests().test (argv[1]);
-
   init_core_test (__PRETTY_FILE__, &argc, argv);
-
-  if (argc >= 2 || Test::logging())
-    {
-      // set testing switch 'testpid0' to enforce deterministic ouput
-      // debug_config_add ("testpid0");
-    }
 
   if (argc >= 2)
     test_logging (argv[1]);

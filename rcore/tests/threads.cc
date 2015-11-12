@@ -603,7 +603,7 @@ struct RingBufferWriter : public IntSequence {
   void
   run()
   {
-    TINFO ("%s start.", ThisThread::name().c_str());
+    Test::tprintout ("%s start.", ThisThread::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
         uint k, n = Test::random_int64() % MIN (ring_buffer_test_length - l + 1, 65536 * 2);
@@ -628,7 +628,7 @@ struct RingBufferWriter : public IntSequence {
           TOK();
         l += n;
       }
-    TINFO ("%s done (%d).", ThisThread::name().c_str(), total);
+    Test::tprintout ("%s done (%d).", ThisThread::name().c_str(), total);
   }
 };
 
@@ -645,7 +645,7 @@ struct RingBufferReader : public IntSequence {
   void
   run()
   {
-    TINFO ("%s start.", ThisThread::name().c_str());
+    Test::tprintout ("%s start.", ThisThread::name().c_str());
     for (uint l = 0; l < ring_buffer_test_length;)
       {
         uint k, n = ring->n_readable();
@@ -675,7 +675,7 @@ struct RingBufferReader : public IntSequence {
           TOK();
         l += k;
       }
-    TINFO ("%s done (%d).", ThisThread::name().c_str(), total);
+    Test::tprintout ("%s done (%d).", ThisThread::name().c_str(), total);
   }
 };
 
@@ -696,13 +696,12 @@ test_ring_buffer ()
   TCMP (rb1.n_readable(), ==, 0);
   TCMP (rb1.n_writable(), ==, ttl);
   TCMP (strncmp (buffer, testtext, n), ==, 0);
-  TDONE();
+  TPASS ("AsyncRingBuffer Basics");
 
   // check miniscule ring buffer sizes (high contention test)
   for (uint step = 1; step < 8; step++)
     {
       uint ring_buffer_test_length = 17 * step + (rand() % 19);
-      TSTART ("Threads/AsyncRingBuffer-%d-%d", step, ring_buffer_test_length);
       IntRingBuffer irb (step);
       RingBufferReader rbr (&irb, ring_buffer_test_length);
       RingBufferWriter rbw (&irb, ring_buffer_test_length);
@@ -712,12 +711,11 @@ test_ring_buffer ()
       r_thread.join();
       w_thread.join();
       TASSERT (rbr.total != 0 && rbr.total == rbw.total);
-      TDONE();
+      TPASS ("AsyncRingBuffer # step=%d length=%d", step, ring_buffer_test_length);
     }
 
   // check big ring buffer sizes
-  TSTART ("Threads/AsyncRingBuffer-big");
-  uint ring_buffer_test_length = 999999 * (Test::slow() ? 20 : 1);
+  uint ring_buffer_test_length = 999999 * 5;
   IntRingBuffer irb (16384 + (lrand48() % 8192));
   RingBufferReader rbr (&irb, ring_buffer_test_length);
   RingBufferWriter rbw (&irb, ring_buffer_test_length);
@@ -729,6 +727,5 @@ test_ring_buffer ()
   TASSERT (rbr.total != 0 && rbr.total == rbw.total);
 }
 REGISTER_TEST ("Threads/AsyncRingBuffer", test_ring_buffer);
-REGISTER_SLOWTEST ("Threads/AsyncRingBuffer (slow)", test_ring_buffer);
 
 } // Anon

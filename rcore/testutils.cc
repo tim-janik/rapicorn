@@ -7,7 +7,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Test", __VA_ARGS__)
 
@@ -105,97 +107,56 @@ ensure_newline (const String &s)
   return s;
 }
 
-static __thread char *test_warning = NULL;
-static __thread char *test_start = NULL;
+static __thread String *thread_test_start = NULL;
 
 void
-test_output (int kind, const String &output_msg)
+test_output (int kind, const String &msg)
 {
-  String msg = output_msg;
-  String sout, bar;
-  constexpr int VERBOSE_TAG = 1000000000;
-  switch (verbose() ? VERBOSE_TAG + kind : kind)
+  if (!thread_test_start)
+    thread_test_start = new String();
+  String &test_start = *thread_test_start;
+  String prefix, sout;
+  switch (kind)
     {
-    default:
-    case 0:                     // TOUT() - ignore when non-verbose
+    case 2:                     // TINFO() - verbose test message
+      if (verbose())
+        sout = ensure_newline (msg);
       break;
-    case 0 + VERBOSE_TAG:       // TOUT() - literal output
-      sout = msg;
-      break;
-    case 1:                     // TMSG() - unconditional test message
-    case 1 + VERBOSE_TAG:
-      sout = ensure_newline (msg);
-      break;
-    case 2:                     // TINFO() - ignore when non-verbose
-      break;
-    case 2 + VERBOSE_TAG:       // TINFO() - conditional test message
-      sout = ensure_newline (msg);
-      break;
-    case 3:                     // test program title
-      if (logging() && slow())
-        msg += " (logging,slow)";
-      else if (logging())
-        msg += " (logging)";
-      else if (slow())
-        msg += " (slow)";
-      sout = "START:   " + ensure_newline (msg);
-      break;
-    case 3 + VERBOSE_TAG:       // test program title
-      bar = "### ** +--" + String (msg.size(), '-') + "--+ ** ###";
-      msg = "### ** +  " + msg + "  + ** ###";
-      sout = "\n" + bar + "\n" + msg + "\n" + bar + "\n\n";
-      break;
-    case 4:
-    case 4 + VERBOSE_TAG:       // TSTART() - verbose test case start
-      sout = "  TEST   " + msg + ":" + String (63 - MIN (63, msg.size()), ' ');
-      if (!test_start)
+    case 4:                     // TSTART()
+      if (!test_start.empty())
+        TFAIL ("Unfinished Test: %s\n", test_start);
+      test_start = msg;
+      if (verbose())
         {
-          test_start = strdup (sout.c_str());
-          sout = "";
+          prefix = "# START    ";
+          sout = prefix + ensure_newline (msg);
         }
-      if (verbose())            // TSTART() - queue msg for later if non-verbose
-        sout = "# Test:  " + msg + " ...\n";
       break;
-    case 5:
-    case 5 + VERBOSE_TAG:       // TDONE() - test case done, issue "OK"
-      if (test_start)
-        {
-          sout = test_start;    // issue delayed TSTART message
-          free (test_start);
-          test_start = NULL;
-        }
+    case 5:                     // TDONE() - test passed
+      if (test_start.empty())
+        TFAIL ("Extraneous TDONE() call");
       else
-        sout = "";
-      if (test_warning)
         {
-          String w (test_warning);
-          free (test_warning);  // issue delayed TWARN message
-          test_warning = NULL;
-          sout += "WARN\n" + ensure_newline (w);
+          TPASS ("%s", test_start);
+          test_start = "";
         }
-      else
-        sout += "OK\n";
       break;
-    case 6:                     // TWARN() - queue test warning for later
-      {
-        String w;
-        if (test_warning)
-          {
-            w = test_warning;
-            free (test_warning);
-          }
-        test_warning = strdup ((w + ensure_newline (msg)).c_str());
-      }
+    case 'T': case 'S': case 'P': case 'F': case 'U': case 'X':
+      if      (kind == 'T')     prefix = "  TODO     ";
+      else if (kind == 'S')     prefix = "  SKIP     ";
+      else if (kind == 'P')     prefix = "  PASS     ";
+      else if (kind == 'F')     prefix = "  FAIL     ";
+      else if (kind == 'U')     prefix = "  XPASS    ";
+      else if (kind == 'X')     prefix = "  XFAIL    ";
+      sout = prefix + ensure_newline (msg);
       break;
-    case 6 + VERBOSE_TAG:       // TWARN() - immediate warning in verbose mode
-      sout = "WARNING: " + ensure_newline (msg);
-      break;
+    default: ;
     }
-  if (!sout.empty())            // actual output to stderr
+  if (!sout.empty())            // test message output
     {
-      fflush (stdout);
-      fputs (sout.c_str(), stderr);
       fflush (stderr);
+      fputs (sout.c_str(), stdout);
+      fflush (stdout);
     }
 }
 
@@ -236,10 +197,6 @@ assertion_failed (const char *file, int line, const char *message)
   return Rapicorn::breakpoint();
 }
 
-static vector<void(*)(void*)> testfuncs;
-static vector<void*>          testdatas;
-static vector<String>         testnames;
-
 struct TestEntry {
   void          (*func) (void*);
   void           *data;
@@ -247,23 +204,6 @@ struct TestEntry {
   char            kind;
   TestEntry      *next;
 };
-
-void
-add_internal (const String &testname,
-              void        (*test_func) (void*),
-              void         *data)
-{
-  testnames.push_back (testname);
-  testfuncs.push_back ((void(*)(void*)) test_func);
-  testdatas.push_back ((void*) data);
-}
-
-void
-add (const String &testname,
-     void        (*test_func) (void))
-{
-  add (testname, (void(*)(void*)) test_func, (void*) 0);
-}
 
 static TestEntry *volatile test_entry_list = NULL;
 
@@ -281,17 +221,12 @@ RegisterTest::add_test (char kind, const String &testname, void (*test_func) (vo
 }
 
 static bool flag_test_ui = false;
+static bool test_output_redirected = false;
 
 bool
 verbose()
 {
-  return InitSettings::test_codes() & MODE_VERBOSE;
-}
-
-bool
-logging()
-{
-  return InitSettings::test_codes() & MODE_READOUT;
+  return test_output_redirected || InitSettings::test_codes() & MODE_VERBOSE;
 }
 
 bool
@@ -303,7 +238,7 @@ slow()
 bool
 normal ()
 {
-  return 0 == (InitSettings::test_codes() & (MODE_READOUT | MODE_SLOW));
+  return !test_output_redirected && 0 == (InitSettings::test_codes() & MODE_SLOW);
 }
 
 bool
@@ -328,11 +263,12 @@ run_tests (void)
   for (TestEntry *node = atomic_load (&test_entry_list); node; node = node->next)
     entries.push_back (node);
   stable_sort (entries.begin(), entries.end(), test_entry_cmp);
-  char ftype = logging() ? 'l' : (slow() ? 's' : 't');
+  char ftype = slow() ? 's' : 't';
   if (ui_test())
     ftype = toupper (ftype);
-  TDEBUG ("running %u + %u tests", entries.size(), testfuncs.size());
+  TDEBUG ("running %u tests", entries.size());
   size_t skipped = 0, passed = 0;
+  int olog = -1;
   for (size_t i = 0; i < entries.size(); i++)
     {
       const TestEntry *te = entries[i];
@@ -343,18 +279,53 @@ run_tests (void)
           TDONE();
           passed++;
         }
+      else if ((ftype == 't' && te->kind == 'o') ||     // run output tests together with normal tests
+               (ftype == 'T' && te->kind == 'O'))
+        {
+          TSTART ("%s", te->name.c_str());
+          int svdout = -1, svderr = -1;
+          if (olog < 0)
+            {
+              const char *olog_name = getenv ("RAPICORN_OUTPUT_TEST_LOG");
+              if (olog_name)
+                olog = open (olog_name, O_CREAT | O_TRUNC | O_WRONLY | O_CLOEXEC | O_NOCTTY, 0644);
+            }
+          const bool was_output_redirected = test_output_redirected;
+          if (olog >= 0)
+            {
+              fflush (stdout);
+              fflush (stderr);
+              svdout = dup (1);
+              svderr = dup (2);
+              dup3 (olog, 1, O_CLOEXEC);
+              dup3 (olog, 2, O_CLOEXEC);
+              String hdr = String() + "\n### ---> " + te->name + " [START] <--- ###\n";
+              fputs (hdr.c_str(), stdout);
+              test_output_redirected = true;
+            }
+          te->func (te->data);
+          if (svdout >= 0 || svderr >= 0)
+            {
+              String hdr = String() + "### ---> " + te->name + " [DONE] <--- ###\n\n";
+              fputs (hdr.c_str(), stdout);
+              fflush (stdout);
+              fflush (stderr);
+              dup2 (svdout, 1);
+              dup2 (svderr, 2);
+              close (svdout);
+              close (svderr);
+            }
+          test_output_redirected = was_output_redirected;
+          TDONE();
+          passed++;
+        }
       else
         skipped++;
     }
-  for (uint i = 0; i < testfuncs.size(); i++)
-    {
-      TSTART ("%s", testnames[i].c_str());
-      testfuncs[i] (testdatas[i]);
-      TDONE();
-      passed++;
-    }
   TDEBUG ("passed %u tests", passed);
   TDEBUG ("skipped deselected %u tests", skipped);
+  if (olog >= 0)
+    close (olog);
 }
 
 void

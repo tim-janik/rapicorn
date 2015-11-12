@@ -43,7 +43,7 @@ REGISTER_TEST ("Examples/DataListContainer", data_list_container_example);
 class MyKey : public DataKey<int> {
   virtual void destroy (int i) override
   {
-    TMSG ("%s: delete %d;\n", STRFUNC, i);
+    Test::tprintout ("%s: delete %d;\n", STRFUNC, i);
   }
   int  fallback()
   {
@@ -54,7 +54,7 @@ class MyKey : public DataKey<int> {
 class StringKey : public DataKey<String> {
   virtual void destroy (String s) override
   {
-    TMSG ("%s: delete \"%s\";\n", STRFUNC, s.c_str());
+    Test::tprintout ("%s: delete \"%s\";\n", STRFUNC, s.c_str());
   }
 };
 
@@ -101,33 +101,23 @@ data_list_test_ints (DataListContainer &r)
 static void
 data_list_test ()
 {
-  TDONE();
-
-  TSTART ("DataList/DataList<String>");
   {
     DataListContainer r;
     data_list_test_strings (r);
   }
-  TDONE();
 
-  TSTART ("DataList/DataList<int>");
   {
     DataListContainer r;
     data_list_test_ints (r);
   }
-  TDONE();
 
-  TSTART ("DataList/Mixed");
   {
     DataListContainer r;
     data_list_test_strings (r);
     data_list_test_ints (r);
     data_list_test_strings (r);
   }
-  TDONE();
-
-  TSTART ("DataList/END");
 }
-REGISTER_LOGTEST ("DataList/BEGIN", data_list_test);
+REGISTER_OUTPUT_TEST ("DataList Tests", data_list_test);
 
 } // anon

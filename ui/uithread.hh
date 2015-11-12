@@ -52,10 +52,6 @@ bool                 uithread_is_current   ();
 #define REGISTER_UITHREAD_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
   RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('S', name, __VA_ARGS__)
 
-/// Register a logging test function with the ui-thread for output recording and verification.
-#define REGISTER_UITHREAD_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('L', name, __VA_ARGS__)
-
 } // Rapicorn
 
 #endif  // __RAPICORN_UITHREAD_HH__

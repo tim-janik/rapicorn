@@ -11,30 +11,25 @@ void init_core_test (const String &app_ident, int *argcp, char **argv, const Str
 namespace Test {
 
 // Test Macros
-#define TTITLE(...)             Rapicorn::Test::test_format (3, __VA_ARGS__) ///< Print out the test program title.
 #define TSTART(...)             Rapicorn::Test::test_format (4, __VA_ARGS__) ///< Print message once a test case starts.
 #define TDONE()                 Rapicorn::Test::test_format (5, "%s", "")    ///< Print message for test case end.
-#define TOUT(...)               Rapicorn::Test::test_format (0, __VA_ARGS__) ///< Test output for verbose mode, like fputs().
-#define TMSG(...)               Rapicorn::Test::test_format (1, __VA_ARGS__) ///< Unconditional test message.
-#define TINFO(...)              Rapicorn::Test::test_format (2, __VA_ARGS__) ///< Conditional test message (for verbose mode).
-#define TWARN(...)              Rapicorn::Test::test_format (6, __VA_ARGS__) ///< Issue a non-fatal test warning.
-#define TOK()                   do {} while (0)                 ///< Indicator for successful test progress.
+#define TPASS(...)              Rapicorn::Test::test_format ('P', __VA_ARGS__) ///< Test case passed.
+#define TXPASS(...)             Rapicorn::Test::test_format ('U', __VA_ARGS__) ///< Test case passed unexpectedly.
+#define TFAIL(...)              Rapicorn::Test::test_format ('F', __VA_ARGS__) ///< Test case failed.
+#define TXFAIL(...)             Rapicorn::Test::test_format ('X', __VA_ARGS__) ///< Test case expectedly failed.
+#define TTODO(...)              Rapicorn::Test::test_format ('T', __VA_ARGS__) ///< Test case needs work.
+#define TSKIP(...)              Rapicorn::Test::test_format ('S', __VA_ARGS__) ///< Test case needs to be skipped.
+#define TCHECK(cond, ...)       Rapicorn::Test::test_format (bool (cond) ? 'P' : 'F', __VA_ARGS__) ///< Test case passed or failed.
+#define TOK()                   do {} while (0)
 #define TASSERT(cond)           TASSERT__AT (__LINE__, cond)    ///< Unconditional test assertion, enters breakpoint if not fullfilled.
 #define TASSERT_AT(LINE, cond)  TASSERT__AT (LINE, cond)        ///< Unconditional test assertion for deputy __LINE__.
 #define TCMP(a,cmp,b)           TCMP_op (a,cmp,b,#a,#b,)        ///< Compare @a a and @a b according to operator @a cmp.
 #define TCMPS(a,cmp,b)          TCMP_op (a,cmp,b,#a,#b,Rapicorn::Test::_as_strptr) ///< Variant of TCMP() for C strings.
 
-/// @cond
-#define TASSERT__AT(LINE,cond)  do { if (RAPICORN_LIKELY (cond)) break; \
-    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); } while (0)
-#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;   \
-  Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
-  Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
-    __tassert_as = Rapicorn::string_format ("'%s %s %s': %s %s %s", \
-                                            sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
-  Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
-  } while (0)
-/// @endcond
+/// If in verbose test mode, print a message on stdout (and flush stdout) ala printf(), using the POSIX/C locale.
+template<class... Args> void tprintout (const char *format, const Args &...args);
+/// If in verbose test mode, print a message on stderr (and flush stderr) ala printf(), using the POSIX/C locale.
+template<class... Args> void tprinterr (const char *format, const Args &...args);
 
 /** Class for profiling benchmark tests.
  * UseCase: Benchmarking function implementations, e.g. to compare sorting implementations.
@@ -85,18 +80,13 @@ Timer::benchmark (Callee callee)
 int     run                ();  ///< Run all registered tests.
 bool    verbose            ();  ///< Indicates whether tests should run verbosely.
 bool    normal             ();  ///< Indicates whether normal tests should be run.
-bool    logging            ();  ///< Indicates whether logging tests should be run.
 bool    slow               ();  ///< Indicates whether slow tests should be run.
 bool    ui_test            ();  ///< Indicates execution of ui-thread tests.
 
-void    set_assertion_hook (const std::function<void()> &hook);                 ///< Install hook tobe called when assertions fail.
+void    set_assertion_hook (const std::function<void()> &hook);                 ///< Install hook to be called when assertions fail.
 void    assertion_failed   (const char *file, int line, const char *message);   ///< Internal function for failing assertions.
 
 /// @cond
-void                        add_internal  (const String &testname, void (*test_func) (void*), void *data);
-void                        add           (const String &funcname, void (*test_func) (void));
-template<typename D> void   add           (const String &testname, void (*test_func) (D*), D *data)
-{ add_internal (testname, (void(*)(void*)) test_func, (void*) data); }
 void                        test_output   (int kind, const String &string);
 template<class... Args> RAPICORN_PRINTF (2, 0)
 void                        test_format   (int kind, const char *format, const Args &...args)
@@ -159,22 +149,46 @@ String  trap_stderr        ();
 
 /// Register a standard test function for execution as unit test.
 #define REGISTER_TEST(name, ...)     static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('t', name, __VA_ARGS__)
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('t', name, __VA_ARGS__)
 
 /// Register a slow test function for execution as during slow unit testing.
 #define REGISTER_SLOWTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('s', name, __VA_ARGS__)
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('s', name, __VA_ARGS__)
 
-/// Register a logging test function for output recording and verification.
-#define REGISTER_LOGTEST(name, ...) static const Rapicorn::Test::RegisterTest \
-  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__line, __LINE__) ('l', name, __VA_ARGS__)
+/// Register an output test function for output recording and verification.
+#define REGISTER_OUTPUT_TEST(name, ...) static const Rapicorn::Test::RegisterTest \
+  RAPICORN_CPP_PASTE2 (__Rapicorn_RegisterTest__L, __LINE__) ('o', name, __VA_ARGS__)
 
 enum ModeType {
   MODE_TESTING  = 0x1,  ///< Enable execution of test cases.
   MODE_VERBOSE  = 0x2,  ///< Enable extra verbosity during test runs.
-  MODE_READOUT  = 0x4,  ///< Execute data driven tests to verify readouts according to a reference.
   MODE_SLOW     = 0x8,  ///< Allow tests to excercise slow code paths or loops.
 };
+
+// == Implementations ==
+/// @cond
+template<class... Args> void
+tprintout (const char *format, const Args &...args)
+{
+  if (verbose())
+    printout_string (string_format (format, args...));
+}
+template<class... Args> void
+tprinterr (const char *format, const Args &...args)
+{
+  if (verbose())
+    printerr_string (string_format (format, args...));
+}
+#define TASSERT__AT(LINE,cond)  do { if (RAPICORN_LIKELY (cond)) break; \
+    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); } while (0)
+#define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
+  Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
+  Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
+    __tassert_as = Rapicorn::string_format ("'%s %s %s': %s %s %s", \
+                                            sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
+  Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
+  } while (0)
+/// @endcond
 
 } // Test
 } // Rapicorn

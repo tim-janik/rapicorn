@@ -1,28 +1,18 @@
 
-### ** +--------------+ ** ###
-### ** +  testrcore1  + ** ###
-### ** +--------------+ ** ###
+### ---> DataList Tests [START] <--- ###
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::MyKey::destroy: delete 9;
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 4;
+::MyKey::destroy: delete 8;
+::StringKey::destroy: delete "RAPICORN";
+::MyKey::destroy: delete 9;
+### ---> DataList Tests [DONE] <--- ###
 
-# Test:  DataList/BEGIN ...
-  TEST   DataList/BEGIN:                                                 OK
-# Test:  DataList/DataList<String> ...
-::StringKey::destroy: delete "RAPICORN";
-  TEST   DataList/DataList<String>:                                      OK
-# Test:  DataList/DataList<int> ...
-::MyKey::destroy: delete 4;
-::MyKey::destroy: delete 8;
-::MyKey::destroy: delete 9;
-  TEST   DataList/DataList<int>:                                         OK
-# Test:  DataList/Mixed ...
-::StringKey::destroy: delete "RAPICORN";
-::MyKey::destroy: delete 4;
-::MyKey::destroy: delete 8;
-::StringKey::destroy: delete "RAPICORN";
-::MyKey::destroy: delete 9;
-  TEST   DataList/Mixed:                                                 OK
-# Test:  DataList/END ...
-  TEST   DataList/END:                                                   OK
-# Test:  IniFiles/Content Check ...
+
+### ---> IniFiles/Parsing [START] <--- ###
   Section With Spaces And Comment.longvalue1="value contains line continuation"
   Section With Spaces And Comment.longvalue2="value contains line continuation"
   Section With Spaces And Comment.spacings=" \tspacing@start and spacing@end\f\t "
@@ -34,8 +24,10 @@
   simple-section.string-key="string with # Hash"
   simple-section.name[de]="DE localized key"
   simple-section.name["en_US.UTF-8"]="US localized key"
-  TEST   IniFiles/Content Check:                                         OK
-# Test:  Strings/CxxPrintf Output ...
+### ---> IniFiles/Parsing [DONE] <--- ###
+
+
+### ---> Strings/CxxPrintf Output [START] <--- ###
 Char 'Y'                  right-adjusted: |                     Y|
 Char 'Y'                   left-adjusted: |Y                     |
 Char 'Y'     positional 0      truncated: |Y|
@@ -159,4 +151,5 @@ max long long: ffffffffffffffff 1777777777777777777777 18446744073709551615 -1 -
 positionals-reorder: |3 2 1|
 positionals-repeat:  |3.141593 == 3.141593|
 positionals-widths:  |  abc|
-  TEST   Strings/CxxPrintf Output:                                       OK
+### ---> Strings/CxxPrintf Output [DONE] <--- ###
+

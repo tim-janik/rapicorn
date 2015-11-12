@@ -93,7 +93,7 @@ REGISTER_UITHREAD_TEST ("TestWidget/Test C++ Server Side GUI", test_cxx_server_g
 static void
 assertion_ok (const String &assertion)
 {
-  TINFO ("assertion_ok: %s", assertion.c_str());
+  TPASS ("assertion_ok: %s", assertion.c_str());
 }
 
 static void

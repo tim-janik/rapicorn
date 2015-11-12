@@ -67,11 +67,12 @@ The distribution tarball includes Python and C++ examples directories:
 
 	examples/  pytests/
 
-And documentation is provided with the distribution and online:
+Documentation is provided online and locally (if installed in /usr):
 
 *   https://testbit.eu/pub/docs/rapicorn/latest/
 
-*   $prefix/share/doc/rapicorn-<VERSION>/html/apps.html
+*   file:///usr/share/doc/rapicorn/html/index.html
+
 
 # BINARY PACKAGES
 

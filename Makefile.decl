@@ -48,13 +48,7 @@ local-ETAGS:
 #   and in order to not disturb the existing session, we need to start Xvfb.
 XVFB_MISSING = $(shell test `echo $${DISPLAY:-:0} | sed 's/^[^:]*:\([0-9]\+\).*/\1/'` -ge 99 || echo missingxvfb)
 X11_ENV = $(if $(XVFB_MISSING), xvfb-run -a -s "-screen 0 800x600x24") /usr/bin/env
-testx:
-	echo $(X11_ENV) xlogo
 
-# == Error Filter ==
-FIX_STDERR_FILTER = grep -v -E \
-  -e '^Xlib: *extension "[^"]*" missing on display ":[^"]*"'
-# Use grep to filter bogus messages from test results
 # === distfile-list ===
 # recursive rule supported by all Makefiles to generate a list of all files
 # listed as DISTFILES. this asserts a writable file named $DISTFILE_LIST.
@@ -100,6 +94,18 @@ check: @NOTDEVELMODE@ slowcheck_parallel--$(1)
 endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call slowcheck_parallel_TEMPLATE,$(PRG))))
 
+# == TAPTESTS ==
+# tests run through taptool.sh
+TAPTESTS     =
+TAPTEST_RUNS = $(addsuffix .taprun, $(basename $(TAPTESTS)))
+.PHONY: tcheck $(TAPTEST_RUNS)
+tcheck: $(top_srcdir)/taptool.sh
+	$(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(TAPTEST_RUNS)
+$(TAPTEST_RUNS): %.taprun: % # static pattern rule - also works for phony targets
+	$(Q) test "$@" = "$(@F)" || { echo "$@: test program outside CWD" >&2; exit 1; }
+	$(Q) TST="$(@:%.taprun=%)"; $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
+check: tcheck
+
 # === TEST_PROGS ===
 TEST_PROGS =
 define check_parallel_TEMPLATE
@@ -111,23 +117,8 @@ check: check_parallel--$(1)
 endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call check_parallel_TEMPLATE,$(PRG))))
 
-# === LOGTEST_PROGS ===
-LOGTEST_PROGS =
-define check_readout_TEMPLATE
-.PHONY: check_readout--$(1)
-check_readout--$(1): $(1)
-	$$(Q) tstout="$(1).log" && \
-	  $$(X11_ENV) RAPICORN_TEST="$$(TSTV$$(V)):test-readout" ./$(1) 2>&1 \
-	| $(FIX_STDERR_FILTER) >"$$$$tstout" \
-	; eval "$$$$TSTDIAGNOSE_LOGTEST" "'$(1)'" \
-	; eval "$$$$TSTDIFF" "'$$(srcdir)/$(1).ref'" "'$$$$tstout'" "'$(1)'"
-check: check_readout--$(1)
-endef
-$(foreach PRG,$(LOGTEST_PROGS),$(eval $(call check_readout_TEMPLATE,$(PRG))))
-### Auto-Create refs: 	; $${FORCECHECKUPDATE} || { test -e "$$(srcdir)/$(1).ref" || touch "$$(srcdir)/$(1).ref" ; }
-
 # === ALLTESTS ===
-ALLTESTS = $(TESTS) $(TEST_PROGS) $(LOGTEST_PROGS) # used in noinst_PROGRAMS
+ALLTESTS = $(TAPTESTS) $(TESTS) $(TEST_PROGS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
@@ -137,8 +128,6 @@ export MAKE_TARGET_DIR  = $(@D)
 export FAILOK           = FAIL  OK
 ### eval $$TSTDIAGNOSE ['TESTNAME'] - show test title and result atomically
 export TSTDIAGNOSE = _e=$$?; tstdiagnose() { printf '  CHECK  %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
-				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
-export TSTDIAGNOSE_LOGTEST = _e=$$?; tstdiagnose() { printf 'LOGTEST: %-64s%s\n' "$${1:-$$MAKE_TARGET_FILE}:" \
 				"$${FAILOK:$$(($$_e?0:6)):6}"; [ $$_e = 0 ] || exit $$_e; }; tstdiagnose
 ### eval $$TSTDIFF ['TESTREF'] ['TESTLOG'] ['TESTNAME']
 export TSTDIFF = tstverify() { \
