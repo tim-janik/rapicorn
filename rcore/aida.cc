@@ -80,14 +80,14 @@ msgid_is (uint64 msgid, MessageId check_id)
 }
 
 // == EnumInfo ==
-EnumInfo::EnumInfo () :
-  name_ (""), values_ (NULL), n_values_ (0), flags_ (0)
+EnumInfo::EnumInfo (const String &enum_name, bool isflags) :
+  enum_name_ (enum_name), values_ (NULL), n_values_ (0), flags_ (isflags)
 {}
 
 String
 EnumInfo::name () const
 {
-  return name_;
+  return enum_name_;
 }
 
 bool
@@ -240,7 +240,7 @@ enum_info<TypeKind> ()
     { LOCAL,            "LOCAL",                NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
   };
-  return ::Rapicorn::Aida::EnumInfo ("Rapicorn::Aida::TypeKind", values, false);
+  return ::Rapicorn::Aida::EnumInfo (cxx_demangle (typeid (TypeKind).name()), false, values);
 } // specialization
 template<> EnumInfo enum_info<TypeKind> (); // instantiation
 

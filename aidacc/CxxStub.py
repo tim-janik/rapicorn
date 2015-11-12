@@ -418,7 +418,7 @@ class Generator:
       s += '    { %s, %s, %s, %s },\n' % (number, ident, label, blurb)
     s += '  };\n'
     """   template<> EnumInfo enum_info<X> () { return EnumInfo ("X", 3, xvalues, false); } """
-    s += '  return ::Rapicorn::Aida::EnumInfo ("%s", %s, %s);\n' % (c_typename, varray, int (type_info.combinable))
+    s += '  return ::Rapicorn::Aida::EnumInfo ("%s", %s, %s);\n' % (c_typename, int (type_info.combinable), varray)
     s += '} // specialization\n'
     s += 'template EnumInfo enum_info<%s> (); // instantiation\n' % c_typename
     return s

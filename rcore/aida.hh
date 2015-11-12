@@ -84,13 +84,14 @@ typedef std::vector<const EnumValue*> EnumValueVector;
 // == Enum ==
 /// Class for enum type introspection.
 class EnumInfo {
-  const char      *const name_;
-  const EnumValue *values_;
-  const uint32_t   n_values_;
-  const bool       flags_;
-  explicit         EnumInfo ();
+  const String           enum_name_;
+  const EnumValue *const values_;
+  const uint32_t         n_values_;
+  const bool             flags_;
+  explicit         EnumInfo (const String &enum_name, bool isflags);
   template<size_t N>
-  explicit         EnumInfo (const char *nm, const EnumValue (&ev)[N], bool f) : name_ (nm), values_ (ev), n_values_ (N), flags_ (f) {}
+  explicit         EnumInfo (const String &enum_name, bool isflags, const EnumValue (&ev)[N]) :
+    enum_name_ (enum_name), values_ (ev), n_values_ (N), flags_ (isflags) {}
 public:
   String           name              () const;                          ///< Retrieve the enum type name for this Enum.
   const EnumValue* find_value        (const String &name) const;        ///< Find first enum value matching @a name.
@@ -102,8 +103,12 @@ public:
   const EnumValue* values            () const;  ///< Get an enum value array with n_values() elements for this Enum.
   EnumValueVector  value_vector      () const;  ///< Retrieve the list of possible enum values as a std::vector<>.
   /// Template to be specialised by introspectable enums.
-  template<typename>
-  friend EnumInfo  enum_info         () { return EnumInfo (); }
+  template<typename EnumType>
+  friend EnumInfo enum_info         ()
+  {
+    static_assert (std::is_enum<EnumType>::value, "");
+    return EnumInfo (cxx_demangle (typeid (EnumType).name()), false);
+  }
 };
 
 template<typename EnumType> EnumType
