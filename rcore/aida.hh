@@ -88,10 +88,11 @@ class EnumInfo {
   const EnumValue *const values_;
   const uint32_t         n_values_;
   const bool             flags_;
-  explicit         EnumInfo (const String &enum_name, bool isflags);
+  explicit               EnumInfo          (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values);
+  static const EnumInfo& cached_enum_info  (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values);
   template<size_t N>
-  explicit         EnumInfo (const String &enum_name, bool isflags, const EnumValue (&ev)[N]) :
-    enum_name_ (enum_name), values_ (ev), n_values_ (N), flags_ (isflags) {}
+  static const EnumInfo& cached_enum_info  (const String &enum_name, bool isflags, const EnumValue (&varray)[N])
+  { return cached_enum_info (enum_name, isflags, N, varray); }
 public:
   String          name              () const;                           ///< Retrieve the enum type name for this Enum.
   EnumValue       find_value        (const String &name) const;         ///< Find first enum value matching @a name.
@@ -102,11 +103,11 @@ public:
   bool            has_values        () const;   ///< Indicate if the value_vector() is non-empty.
   EnumValueVector value_vector      () const;   ///< Retrieve the list of possible enum values as a std::vector<>.
   /// Template to be specialised by introspectable enums.
-  template<typename EnumType>
-  friend EnumInfo enum_info         ()
+  template<typename EnumType> friend
+  const EnumInfo& enum_info         ()
   {
     static_assert (std::is_enum<EnumType>::value, "");
-    return EnumInfo (cxx_demangle (typeid (EnumType).name()), false);
+    return cached_enum_info (cxx_demangle (typeid (EnumType).name()), false, 0, NULL);
   }
 };
 
@@ -158,7 +159,7 @@ enum TypeKind {
   LOCAL          = 'L', ///< Local object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
-template<> EnumInfo enum_info<TypeKind> ();
+template<> const EnumInfo& enum_info<TypeKind> ();
 
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 

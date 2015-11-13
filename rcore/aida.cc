@@ -80,9 +80,12 @@ msgid_is (uint64 msgid, MessageId check_id)
 }
 
 // == EnumInfo ==
-EnumInfo::EnumInfo (const String &enum_name, bool isflags) :
-  enum_name_ (enum_name), values_ (NULL), n_values_ (0), flags_ (isflags)
-{}
+EnumInfo::EnumInfo (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values) :
+  enum_name_ (enum_name), values_ (values), n_values_ (n_values), flags_ (isflags)
+{
+  if (n_values)
+    assert_return (values != NULL);
+}
 
 String
 EnumInfo::name () const
@@ -141,6 +144,24 @@ EnumInfo::value_from_string (const String &valuestring) const
 {
   const EnumValue ev = find_value (valuestring);
   return ev.ident ? ev.value : string_to_int (valuestring);
+}
+
+struct GlobalEnumInfoMap {
+  Mutex                             mutex;
+  std::map<String, const EnumInfo*> map;
+};
+static DurableInstance<GlobalEnumInfoMap*> global_enum_info;
+
+const EnumInfo&
+EnumInfo::cached_enum_info (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values)
+{
+  ScopedLock<Mutex> locker (global_enum_info->mutex);
+  auto it = global_enum_info->map.find (enum_name);
+  if (it != global_enum_info->map.end())
+    return *it->second;
+  EnumInfo *einfo = new EnumInfo (enum_name, isflags, n_values, values);
+  global_enum_info->map[einfo->name()] = einfo;
+  return *einfo;
 }
 
 static std::vector<const char*>
@@ -208,7 +229,7 @@ aux_vector_check_options (const std::vector<String> &auxvector, const String &fi
 
 
 // == TypeKind ==
-template<> EnumInfo
+template<> const EnumInfo&
 enum_info<TypeKind> ()
 {
   static const EnumValue values[] = {
@@ -228,9 +249,9 @@ enum_info<TypeKind> ()
     { LOCAL,            "LOCAL",                NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
   };
-  return ::Rapicorn::Aida::EnumInfo (cxx_demangle (typeid (TypeKind).name()), false, values);
+  return ::Rapicorn::Aida::EnumInfo::cached_enum_info (cxx_demangle (typeid (TypeKind).name()), false, values);
 } // specialization
-template<> EnumInfo enum_info<TypeKind> (); // instantiation
+template<> const EnumInfo& enum_info<TypeKind> (); // instantiation
 
 const char*
 type_kind_name (TypeKind type_kind)
