@@ -1718,7 +1718,7 @@ public:
     return NULL; // unmatched
   }
 };
-static StaticUndeletable<ConnectionRegistry*> connection_registry; // keep ConnectionRegistry across static dtors
+static DurableInstance<ConnectionRegistry*> connection_registry; // keep ConnectionRegistry across static dtors
 
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &protocol) :

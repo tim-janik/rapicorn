@@ -232,43 +232,45 @@ struct Init {
   explicit Init (void (*f) ()) { f(); }
 };
 
-/// StaticUndeletable - @a ClassPtr must be pointer to @a Class. See StaticUndeletable<Class*>.
-template<class ClassPtr> struct StaticUndeletable {
-  static_assert (std::is_pointer<ClassPtr>::value, "StaticUndeletable<Class*> requires class pointer template argument");
+/// DurableInstance - @a ClassPtr must be pointer to @a Class. See DurableInstance<Class*>.
+template<class ClassPtr> struct DurableInstance {
+  static_assert (std::is_pointer<ClassPtr>::value, "DurableInstance<Class*> requires class pointer template argument");
 };
 
 /// Create an instance of @a Class that is constructed and never destructed.
-/// StaticUndeletable<Class*> provides the memory for a @a Class instance and calls it's
+/// DurableInstance<Class*> provides the memory for a @a Class instance and calls it's
 /// constructor, but it's destructor is never called (so the memory allocated to the
-/// StaticUndeletable must not be freed). A StaticUndeletable should be used for static
+/// DurableInstance must not be freed). A DurableInstance should be used for static
 /// variables that need to persist across all other static ctor/dtor calls.
 template<class Class>
-class StaticUndeletable<Class*> {
-  Class *instance;
-  uint64 memspace[(sizeof (Class) + 7) / 8];
+class DurableInstance<Class*> {
+  Class *ptr_;
+  uint64 mem_[(sizeof (Class) + sizeof (uint64) - 1) / sizeof (uint64)];
+  bool
+  initialize() __attribute__ ((noinline))
+  {
+    /* assert (ptr_ == NULL); */
+    // call ctor but never dtor
+    ptr_ = new (mem_) Class();
+    return true;
+  }
 public:
-  constexpr  StaticUndeletable() : instance (NULL) {}
-  /*dtor*/  ~StaticUndeletable()                   { /* leave instance untouched */ }
-  /// Always return the same @a Class instance, created upon the first call.
+  constexpr  DurableInstance() : ptr_ (NULL) {}
+  /// Retrieve pointer to @a Class instance, always returns the same pointer.
   Class*
-  operator->()
+  operator->() __attribute__ ((pure))
   {
-    if (RAPICORN_UNLIKELY (!instance))
+    if (RAPICORN_UNLIKELY (ptr_ == NULL))
       {
-        static Mutex initialisation_mutex;
-        ScopedLock<Mutex> locker (initialisation_mutex);
-        // call new and never delete
-        if (!instance)
-          instance = new (memspace) Class();
+        static bool initialized = initialize(); // executes exclusively
+        (void) initialized;
       }
-    return instance;
+    return ptr_;
   }
-  /// Retrieve reference to @a Class instance.
-  Class&
-  operator*()
-  {
-    return *operator->();
-  }
+  const Class* operator->() const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator->(); }
+  /// Retrieve reference to @a Class instance, always returns the same reference.
+  Class&       operator*()  __attribute__ ((pure))       { return *operator->(); }
+  const Class& operator* () const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator*(); }
 };
 
 /**
