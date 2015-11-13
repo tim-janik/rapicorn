@@ -43,45 +43,45 @@ svgtool.cc: resources.cc
 
 # === test rules ===
 # validate failing assertions and fatal aborting
-check-assertion-handler: testrcore2
+check-assertion-handlers: testrcore2
 	$(Q) ( export RAPICORN=debug:no-syslog:no-fatal-syslog ; rm -f $(TSTOUT) ; \
 	       for arg in --test-assert --test-unreached --test-fatal --test-TASSERT --test-TCMP --test-assertion-hook ; do \
-	         ! ./testrcore2 $$arg 2>>$(TSTOUT) || exit $? ; done ) $(QSTDERR) ; eval "$$TSTDIAGNOSE"
-	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) assert'"
-	$(Q) grep -q 'FATAL:.*not.*reach' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) unreached'"
-	$(Q) grep -q 'FATAL:.*fatal.*"test-fatal"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) fatal error'"
-	$(Q) grep -q 'assert.*fail.*".*TASSERT"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) TASSERT()'"
-	$(Q) grep -q 'assert.*fail.*".*TCMP"' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) TCMP()'"
-	$(Q) grep -q 'assertion-hook.*magic=0xdecaff' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) Test::set_assertion_hook()'"
-	$(Q) grep -qi 'Aborting..' $(TSTOUT)			; eval "$$TSTDIAGNOSE" "'$(@F) aborting'"
+	         ! ./testrcore2 $$arg 2>>$(TSTOUT) || exit $? ; done ) $(QSTDERR) ; $(TSTRESULT)
+	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; $(TSTRESULT) "check assert"
+	$(Q) grep -q 'FATAL:.*not.*reach' $(TSTOUT)		; $(TSTRESULT) "check unreached"
+	$(Q) grep -q 'FATAL:.*fatal.*"test-fatal"' $(TSTOUT)	; $(TSTRESULT) "check fatal error"
+	$(Q) grep -q 'assert.*fail.*".*TASSERT"' $(TSTOUT)	; $(TSTRESULT) "check TASSERT()"
+	$(Q) grep -q 'assert.*fail.*".*TCMP"' $(TSTOUT)		; $(TSTRESULT) "check TCMP()"
+	$(Q) grep -q 'assertion-hook.*magic=0xdecaff' $(TSTOUT)	; $(TSTRESULT) "check Test::set_assertion_hook()"
+	$(Q) grep -qi 'Aborting..' $(TSTOUT)			; $(TSTRESULT) "check aborting"
 	$(Q) rm -f $(TSTOUT)
-check: check-assertion-handler
+check: check-assertion-handlers
 # check various non-fatal logging conditions
 check-logging-output: testrcore2
 	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \
-	     ./testrcore2 --test-logging 2>>$(TSTOUT)           ; eval "$$TSTDIAGNOSE"
-	$(Q) grep -q 'debugging messages' $(TSTOUT)		; eval "$$TSTDIAGNOSE" "'$(@F) debugging'"
-	$(Q) grep -q 'assertion failed: errno == 0' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) errno diagnostics'"
-	$(Q) grep -q 'failed.*"assert-return-void"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return'"
-	$(Q) grep -q 'failed.*"assert-return+val"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) assert_return+value'"
-	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; eval "$$TSTDIAGNOSE" "'$(@F) test critical()'"
+	     ./testrcore2 --test-logging 2>>$(TSTOUT)           ; $(TSTRESULT)
+	$(Q) grep -q 'debugging messages' $(TSTOUT)		; $(TSTRESULT) "check debugging"
+	$(Q) grep -q 'assertion failed: errno == 0' $(TSTOUT)	; $(TSTRESULT) "check errno diagnostics"
+	$(Q) grep -q 'failed.*"assert-return-void"' $(TSTOUT)	; $(TSTRESULT) "check assert_return"
+	$(Q) grep -q 'failed.*"assert-return+val"' $(TSTOUT)	; $(TSTRESULT) "check assert_return+value"
+	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; $(TSTRESULT) "check test critical()"
 	$(Q) rm -f $(TSTOUT)
 check: check-logging-output
 # process handle
 check-process-handle: testrcore1
-	$(Q) test -n `./testrcore1 --print-process-handle`; eval "$$TSTDIAGNOSE"
+	$(Q) test -n `./testrcore1 --print-process-handle`; $(TSTRESULT)
 check: check-process-handle
 check-unique-process: testrcore1
-	$(Q) test `./testrcore1 --print-process-handle` != `./testrcore1 --print-process-handle`; eval "$$TSTDIAGNOSE"
+	$(Q) test `./testrcore1 --print-process-handle` != `./testrcore1 --print-process-handle`; $(TSTRESULT)
 check: check-unique-process
 # check startup entropy
 check-startup-entropy:
 	$(Q) A=`./benchrcore --entropy` ; B=`./benchrcore --entropy`; \
-	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+	     test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT)
 check-system-entropy:
 	$(Q) A=`./benchrcore --system-entropy` ; B=`./benchrcore --system-entropy`; \
-	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+	     test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT)
 check-runtime-entropy:
 	$(Q) A=`./benchrcore --runtime-entropy` ; B=`./benchrcore --runtime-entropy`; \
-	     test -n "$$A$$B" -a "$$A" != "$$B"; eval "$$TSTDIAGNOSE"
+	     test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT)
 check: check-startup-entropy check-system-entropy check-runtime-entropy
