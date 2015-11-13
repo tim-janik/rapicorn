@@ -133,6 +133,13 @@ ALLTESTS = $(TAPTESTS) $(X11TESTS) $(TESTS) $(TEST_PROGS) # used in noinst_PROGR
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
+TSTRESULT = $(strip _e=$$?; \
+  tstresult() { \
+    local result="PASSFAIL" M="$$*"; \
+    printf ' %-9s %s\n' " $${result:$$(($$_e?4:0)):4}" "$${M:-$(@F)}"; \
+    test $$_e = 0 || exit $$_e; }; \
+  tstresult \
+)
 export MAKE_TARGET      = $@
 export MAKE_TARGET_FILE = $(@F)
 export MAKE_TARGET_DIR  = $(@D)
