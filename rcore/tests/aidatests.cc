@@ -2,6 +2,8 @@
 #include <rcore/testutils.hh>
 using namespace Rapicorn;
 
+enum TestEnum { TEST_COFFEE_COFFEE = -0xc0ffeec0ffeeLL };
+
 namespace {
 using namespace Rapicorn;
 using namespace Rapicorn::Aida;
@@ -74,7 +76,6 @@ test_basics()
 REGISTER_TEST ("Aida/Basics", test_basics);
 
 static const double test_double_value = 7.76576e-306;
-enum TestEnum { TEST_COFFEE_COFFEE = -0xc0ffeec0ffeeLL };
 
 static void
 any_test_set (Any &a, int what)
@@ -195,6 +196,10 @@ test_any()
       b.set (TEST_COFFEE_COFFEE);
       TASSERT (b.kind() == ENUM);
       TASSERT (b.get<TestEnum>() == TEST_COFFEE_COFFEE);
+      Any dup = b;
+      printerr ("SEE: %s\n", dup.get_enum_info().name());
+      TASSERT (dup.get_enum_info().name() == "TestEnum");
+      TASSERT (dup.get<TestEnum>() == TEST_COFFEE_COFFEE);
       printf ("  TEST   Aida basic functions                                            OK\n");
     }
   String s;

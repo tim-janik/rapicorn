@@ -654,10 +654,28 @@ Any::set_int64 (int64 value)
 }
 
 void
-Any::set_enum64 (int64 value)
+Any::set_enum (const EnumInfo &einfo, int64 value)
 {
   ensure (ENUM);
-  u_.vint64 = value;
+  u_.venum64 = value;
+  u_.enum_info = &einfo;
+}
+
+int64
+Any::get_enum (const EnumInfo &einfo) const
+{
+  if (kind() == ENUM && u_.enum_info &&
+      u_.enum_info->name() == einfo.name())
+    return u_.venum64;
+  return 0;
+}
+
+const EnumInfo&
+Any::get_enum_info ()
+{
+  if (kind() == ENUM)
+    return *u_.enum_info;
+  return *(const EnumInfo*) NULL; // undefined behavior
 }
 
 double

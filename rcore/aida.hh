@@ -418,6 +418,7 @@ private:
   typedef RemoteMember<RemoteHandle> ARemoteHandle;
   union {
     uint64 vuint64; int64 vint64; double vdouble; Any *vany; PlaceHolder *pholder;
+    struct { int64 venum64; const EnumInfo *enum_info; };
     int64 dummy_[AIDA_I64ELEMENTS (MAX (MAX (sizeof (String), sizeof (std::vector<void*>)),
                                         MAX (sizeof (ImplicitBaseP), sizeof (ARemoteHandle))))];
     FieldVector&         vfields () { return *(FieldVector*) this; static_assert (sizeof (FieldVector) <= sizeof (*this), ""); }
@@ -453,6 +454,9 @@ public:
   TypeKind  kind   () const { return type_kind_; }      ///< Obtain the type kind for the contents of this Any.
   void      swap   (Any           &other);              ///< Swap the contents of @a this and @a other in constant time.
   void      clear  ();                                  ///< Erase Any contents, making it empty like a newly constructed Any().
+  const EnumInfo& get_enum_info ();                     ///< Get enum info for an Any holding an enum, undefined otherwise.
+  void            set_enum      (const EnumInfo &einfo,
+                                 int64 value);          ///< Set Any to hold an enum value.
 private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
@@ -476,15 +480,15 @@ private:
   void               set_bool    (bool value);
   int64              get_int64   () const;
   void               set_int64   (int64 value);
-  void               set_enum64  (int64 value);
   double             get_double  () const;
   void               set_double  (double value);
   std::string        get_string  () const;
   void               set_string  (const std::string &value);
+  int64              get_enum    (const EnumInfo &einfo) const;
   template<typename Enum>
-  Enum               get_enum    () const               { return Enum (get_int64()); }
+  Enum               get_enum    () const               { return Enum (get_enum (enum_info<Enum>())); }
   template<typename Enum>
-  void               set_enum    (Enum value)           { return set_enum64 (value); }
+  void               set_enum    (Enum value)           { return set_enum (enum_info<Enum>(), value); }
   const AnyVector*   get_seq     () const;
   void               set_seq     (const AnyVector *seq);
   const FieldVector* get_rec     () const;
