@@ -634,16 +634,18 @@ Any::set_bool (bool value)
 }
 
 int64
-Any::get_int64 () const
+Any::as_int64 () const
 {
   switch (kind())
     {
     case BOOL: case ENUM: case INT32:
     case INT64:         return u_.vint64;
     case FLOAT64:       return u_.vdouble;
-    default: ;
+    case STRING:        return u_.vstring().size();
+    case SEQUENCE:      return u_.vanys().size();
+    case RECORD:        return u_.vfields().size();
+    default:            return 0;
     }
-  return 0;
 }
 
 void
@@ -679,9 +681,9 @@ Any::get_enum_info ()
 }
 
 double
-Any::get_double () const
+Any::as_double () const
 {
-  return kind() == FLOAT64 ? u_.vdouble : get_int64();
+  return kind() == FLOAT64 ? u_.vdouble : as_int64();
 }
 
 void

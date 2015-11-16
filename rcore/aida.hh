@@ -478,9 +478,7 @@ private:
     ::std::integral_constant<bool, ::std::is_pointer<T>::value && IsLocalClass< typename std::remove_pointer<T>::type >::value>;
   bool               get_bool    () const;
   void               set_bool    (bool value);
-  int64              get_int64   () const;
   void               set_int64   (int64 value);
-  double             get_double  () const;
   void               set_double  (double value);
   std::string        get_string  () const;
   void               set_string  (const std::string &value);
@@ -508,8 +506,8 @@ private:
 public:
   // Type get() const;
   template<typename T, REQUIRES< IsBool<T>::value > = true>                            T    get () const { return get_bool(); }
-  template<typename T, REQUIRES< IsInteger<T>::value > = true>                         T    get () const { return get_int64(); }
-  template<typename T, REQUIRES< std::is_floating_point<T>::value > = true>            T    get () const { return get_double(); }
+  template<typename T, REQUIRES< IsInteger<T>::value > = true>                         T    get () const { return as_int64(); }
+  template<typename T, REQUIRES< std::is_floating_point<T>::value > = true>            T    get () const { return as_double(); }
   template<typename T, REQUIRES< DerivesString<T>::value > = true>                     T    get () const { return get_string(); }
   template<typename T, REQUIRES< std::is_enum<T>::value > = true>                      T    get () const { return get_enum<T>(); }
   template<typename T, REQUIRES< IsConvertible<const AnyVector*, T>::value > = true>   T    get () const { return get_seq(); }
@@ -544,6 +542,8 @@ public:
   void                from_transition  (BaseConnection &base_connection);
   String              repr             (const String &field_name = "") const;
   String              to_string        () const; ///< Retrieve string representation of Any for printouts.
+  int64               as_int64         () const; ///< Obtain contents as int64.
+  double              as_double        () const; ///< Obtain contents as double.
   const Any&          as_any           () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
 };
 
