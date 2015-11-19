@@ -430,6 +430,12 @@ Any::clear()
   u_.vuint64 = 0;
 }
 
+bool
+Any::empty () const
+{
+  return kind() == UNTYPED;
+}
+
 void
 Any::rekind (TypeKind _kind)
 {

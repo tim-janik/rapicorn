@@ -454,6 +454,7 @@ public:
   TypeKind  kind   () const { return type_kind_; }      ///< Obtain the type kind for the contents of this Any.
   void      swap   (Any           &other);              ///< Swap the contents of @a this and @a other in constant time.
   void      clear  ();                                  ///< Erase Any contents, making it empty like a newly constructed Any().
+  bool      empty  () const;                            ///< Returns true if Any is newly constructed or after clear().
   const EnumInfo& get_enum_info ();                     ///< Get enum info for an Any holding an enum, undefined otherwise.
   void            set_enum      (const EnumInfo &einfo,
                                  int64 value);          ///< Set Any to hold an enum value.
