@@ -38,26 +38,28 @@ class MiniServerImpl : public A1::MiniServerIface {
   A1::Location      location_;
   A1::StringSeq     strings_;
   A1::DerivedIfaceP derived_;
+  int               sensor_;
 public:
+  void                      changed  (const String &what)              { sig_changed.emit (what); }
   virtual bool              vbool    () const                 override { return vbool_; }
-  virtual void              vbool    (bool b)                 override { vbool_ = b; }
+  virtual void              vbool    (bool b)                 override { vbool_ = b; changed ("vbool"); }
   virtual int32             vi32     () const                 override { return vi32_; }
-  virtual void              vi32     (int32 i)                override { vi32_ = i; }
+  virtual void              vi32     (int32 i)                override { vi32_ = i; changed ("vi32"); }
   virtual int64             vi64t    () const                 override { return vi64t_; }
-  virtual void              vi64t    (int64 i)                override { vi64t_ = i; }
+  virtual void              vi64t    (int64 i)                override { vi64t_ = i; changed ("vi64t"); }
   virtual double            vf64     () const                 override { return vf64_; }
-  virtual void              vf64     (double f)               override { vf64_ = f; }
+  virtual void              vf64     (double f)               override { vf64_ = f; changed ("vf64"); }
   virtual A1::CountEnum     count    () const                 override { return count_; }
-  virtual void              count    (A1::CountEnum v)        override { count_ = v; }
+  virtual void              count    (A1::CountEnum v)        override { count_ = v; changed ("count"); }
   virtual String            vstr     () const                 override { return vstr_; }
-  virtual void              vstr     (const String &s)        override { vstr_ = s; }
+  virtual void              vstr     (const String &s)        override { vstr_ = s; changed ("vstr"); }
   virtual A1::Location      location () const                 override { return location_; }
-  virtual void              location (const A1::Location &l)  override { location_ = l; }
+  virtual void              location (const A1::Location &l)  override { location_ = l; changed ("location"); }
   virtual A1::StringSeq     strings  () const                 override { return strings_; }
-  virtual void              strings  (const A1::StringSeq &q) override { strings_ = q; }
+  virtual void              strings  (const A1::StringSeq &q) override { strings_ = q; changed ("strings"); }
   virtual A1::DerivedIfaceP derived  () const                 override { return derived_; }
-  virtual void              derived  (A1::DerivedIface *d)    override { derived_ = shared_ptr_cast<A1::DerivedIface> (d); }
-  MiniServerImpl () : loop_ (MainLoop::create()), vbool_ (false) {}
+  virtual void              derived  (A1::DerivedIface *d)    override { derived_ = shared_ptr_cast<A1::DerivedIface> (d); changed ("derived"); }
+  MiniServerImpl () : loop_ (MainLoop::create()), vbool_ (false), sensor_ (0) {}
   bool
   bind (const String &address)
   {
@@ -70,8 +72,43 @@ public:
   EventLoop&   loop    ()                            { return *loop_; }
   int          run     ()                            { return loop_->run(); }
   virtual void message (const String &what) override { printout ("%s\n", what); }
-  virtual void quit    ()                            { loop_->quit(); } // FIXME: loop is quit before remote references can be cleared
+  virtual void quit    () override                   { loop_->quit(); } // FIXME: loop is quit before remote references can be cleared
+  virtual void test_parameters () override;
 };
+
+void
+MiniServerImpl::test_parameters ()
+{
+  // Aida::Parameter
+  Parameter pf64 (*this, "vf64", &MiniServerImpl::vf64, &MiniServerImpl::vf64);
+  assert (vf64() == pf64.get().get<double>());
+  vf64 (-0.75); assert (vf64() == -0.75);
+  assert (vf64() == pf64.get().get<double>());
+  // changed()
+  sensor_ = 0;
+  auto increment = [this] (const String &what) {
+    if (what == "vf64")
+      sensor_++;
+  };
+  size_t handlerid = pf64.sig_changed() += increment;
+  assert (sensor_ == 0);
+  vf64 (99);
+  assert (sensor_ == 1);
+  vf64 (98);
+  assert (sensor_ == 2);
+  vbool (true);
+  assert (sensor_ == 2);
+  vbool (false);
+  assert (sensor_ == 2);
+  pf64.sig_changed() -= handlerid;
+  vf64 (97);
+  assert (sensor_ == 2);
+  vf64 (96);
+  assert (sensor_ == 2);
+  // cleanup
+  vf64 (0);
+  sensor_ = 0;
+}
 
 static void
 a1_server_thread (AsyncBlockingQueue<String> *notify_queue)
@@ -101,6 +138,8 @@ static void
 test_server (A1::MiniServerH server)
 {
   Any a, b;
+  // test server side parameters
+  server.test_parameters();
   // create Parameter for the server properties
   std::vector<Parameter> params;
   {
