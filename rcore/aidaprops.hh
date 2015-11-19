@@ -10,11 +10,25 @@ namespace Rapicorn { namespace Aida {
 // == Parameter ==
 /// Parameter encapsulates the logic and data involved in editing an object property.
 class Parameter {
+  typedef std::function<void (const String &what)>           ChangedFunction;
   const String                                               name_;
   const Any                                                  instance_; // keeps Handle/Iface reference count
   const std::function<void (const Any&)>                     setter_;
   const std::function<Any ()>                                getter_;
   const std::function<String (const String&, const String&)> getaux_;
+  const std::function<size_t (const ChangedFunction&)>       connect_;
+  const std::function<bool (size_t)>                         disconnect_;
+  class Connector {
+    Parameter &parameter_;
+    Connector& operator= (const Connector&) = delete;
+  public:
+    /*copy*/   Connector (const Connector &con) : parameter_ (con.parameter_) {}
+    explicit   Connector (Parameter &parameter) : parameter_ (parameter) {}
+    /// Operator to add a new function or lambda as changed() signal handler, returns a handler connection ID.
+    size_t     operator+= (const ChangedFunction &callback) { return parameter_.connect_ (callback); }
+    /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
+    bool       operator-= (size_t connection_id)            { return parameter_.disconnect_ (connection_id); }
+  };
 protected:
   /// Helper to implement get_aux().
   static String find_aux (const std::vector<String> &vec, const String &field_name, const String &key, const String &fallback);
@@ -26,7 +40,9 @@ public:
     name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([instance, setter] (const Any &any) -> void { return (Klass (instance) .* setter) (any.get<Value>()); }),
     getter_ ([instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    getaux_ ([instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+    getaux_ ([instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); }),
+    connect_ ([instance] (const ChangedFunction &cb) -> size_t { return Klass (instance).sig_changed() += cb; }),
+    disconnect_ ([instance] (size_t id) -> bool { return Klass (instance).sig_changed() -= id; })
   {}
   /// Create a Parameter to wrap ImplicitBase accessors for plain values (bool, int, float).
   template<class Klass, class Value, REQUIRES< IsImplicitBaseDerived<Klass>::value > = true>
@@ -34,7 +50,9 @@ public:
     name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); }),
+    connect_ ([&instance] (const ChangedFunction &cb) -> size_t { return instance.sig_changed() += cb; }),
+    disconnect_ ([&instance] (size_t id) -> bool { return instance.sig_changed() -= id; })
   {}
   /// Create a Parameter to wrap RemoteHandle accessors for struct values (std::string, record).
   template<class Klass, class Value, REQUIRES< IsRemoteHandleDerived<Klass>::value > = true>
@@ -42,7 +60,9 @@ public:
     name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([instance, setter] (const Any &any) -> void { return (Klass (instance) .* setter) (any.get<Value>()); }),
     getter_ ([instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    getaux_ ([instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+    getaux_ ([instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); }),
+    connect_ ([instance] (const ChangedFunction &cb) -> size_t { return Klass (instance).sig_changed() += cb; }),
+    disconnect_ ([instance] (size_t id) -> bool { return Klass (instance).sig_changed() -= id; })
   {}
   /// Create a Parameter to wrap ImplicitBase accessors for struct values (std::string, record).
   template<class Klass, class Value, REQUIRES< IsImplicitBaseDerived<Klass>::value > = true>
@@ -50,7 +70,9 @@ public:
     name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<Value>()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); }),
+    connect_ ([&instance] (const ChangedFunction &cb) -> size_t { return instance.sig_changed() += cb; }),
+    disconnect_ ([&instance] (size_t id) -> bool { return instance.sig_changed() -= id; })
   {}
   /// Create a Parameter to wrap (ImplicitBase derived) interface accessors for instance/interface values.
   template<class Klass, class Value>
@@ -58,7 +80,9 @@ public:
     name_ (name), instance_ (({ Any a; a.set (instance); a; })),
     setter_ ([&instance, setter] (const Any &any) -> void { return (instance .* setter) (any.get<std::shared_ptr<Value> >().get()); }),
     getter_ ([&instance, getter] ()               -> Any  { Any a; a.set ((instance .* getter) ()); return a; }),
-    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); })
+    getaux_ ([&instance, name] (const String &k, const String &f) -> String { return find_aux (instance.__aida_aux_data__(), name, k, f); }),
+    connect_ ([&instance] (const ChangedFunction &cb) -> size_t { return instance.sig_changed() += cb; }),
+    disconnect_ ([&instance] (size_t id) -> bool { return instance.sig_changed() -= id; })
   {}
   String                                  name    () const;          ///< Retrieve the wrapped value's field or property name.
   void                                    set     (const Any &any);  ///< Set the wrapped value to the contents of @a any.
@@ -66,6 +90,8 @@ public:
   /// Fetch auxillary parameter information.
   template<typename Value = String> Value get_aux (const String &key, const String &fallback = "")
   { return string_to_type<Value> (getaux_ (key, fallback)); }
+  /// Signal for change notifications, used to notify property changes.
+  Connector     sig_changed()                               { return Connector (*this); }
   class ListVisitor;
 };
 
