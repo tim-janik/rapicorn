@@ -18,16 +18,17 @@ class Parameter {
   const std::function<String (const String&, const String&)> getaux_;
   const std::function<size_t (const ChangedFunction&)>       connect_;
   const std::function<bool (size_t)>                         disconnect_;
+  vector<size_t>                                             ids_;
   class Connector {
     Parameter &parameter_;
     Connector& operator= (const Connector&) = delete;
   public:
     /*copy*/   Connector (const Connector &con) : parameter_ (con.parameter_) {}
     explicit   Connector (Parameter &parameter) : parameter_ (parameter) {}
-    /// Operator to add a new function or lambda as changed() signal handler, returns a handler connection ID.
-    size_t     operator+= (const ChangedFunction &callback) { return parameter_.connect_ (callback); }
     /// Operator to remove a signal handler through its connection ID, returns if a handler was removed.
-    bool       operator-= (size_t connection_id)            { return parameter_.disconnect_ (connection_id); }
+    bool       operator-= (size_t connection_id);
+    /// Operator to add a new function or lambda as changed() signal handler, returns a handler connection ID.
+    size_t     operator+= (const ChangedFunction &callback);
   };
 protected:
   /// Helper to implement get_aux().
