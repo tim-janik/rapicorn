@@ -106,6 +106,17 @@ $(TAPRUNS): %.taprun: % # static pattern rule - also works for phony targets
 	$(Q) TST="$(@:%.taprun=%)"; $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
 check: taptests
 
+# == X11TESTS ==
+X11TESTS =
+X11RUNS  = $(addsuffix .x11run, $(basename $(X11TESTS)))
+.PHONY: x11tests $(X11RUNS)
+x11tests: $(top_srcdir)/taptool.sh
+	@$(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(X11RUNS)
+$(X11RUNS): %.x11run: % # static pattern rule - also works for phony targets
+	$(Q) test "$@" = "$(@F)" || { echo "$@: test program outside CWD" >&2; exit 1; }
+	$(Q) TST="$(@:%.x11run=%)"; $(X11_ENV) $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
+check: x11tests
+
 # === TEST_PROGS ===
 TEST_PROGS =
 define check_parallel_TEMPLATE
@@ -118,7 +129,7 @@ endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call check_parallel_TEMPLATE,$(PRG))))
 
 # === ALLTESTS ===
-ALLTESTS = $(TAPTESTS) $(TESTS) $(TEST_PROGS) # used in noinst_PROGRAMS
+ALLTESTS = $(TAPTESTS) $(X11TESTS) $(TESTS) $(TEST_PROGS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
