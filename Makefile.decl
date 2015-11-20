@@ -96,15 +96,15 @@ $(foreach PRG,$(TEST_PROGS),$(eval $(call slowcheck_parallel_TEMPLATE,$(PRG))))
 
 # == TAPTESTS ==
 # tests run through taptool.sh
-TAPTESTS     =
-TAPTEST_RUNS = $(addsuffix .taprun, $(basename $(TAPTESTS)))
-.PHONY: tcheck $(TAPTEST_RUNS)
-tcheck: $(top_srcdir)/taptool.sh
-	$(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(TAPTEST_RUNS)
-$(TAPTEST_RUNS): %.taprun: % # static pattern rule - also works for phony targets
+TAPTESTS =
+TAPRUNS  = $(addsuffix .taprun, $(basename $(TAPTESTS)))
+.PHONY: taptests $(TAPRUNS)
+taptests: $(top_srcdir)/taptool.sh
+	@$(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(TAPRUNS)
+$(TAPRUNS): %.taprun: % # static pattern rule - also works for phony targets
 	$(Q) test "$@" = "$(@F)" || { echo "$@: test program outside CWD" >&2; exit 1; }
 	$(Q) TST="$(@:%.taprun=%)"; $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
-check: tcheck
+check: taptests
 
 # === TEST_PROGS ===
 TEST_PROGS =
