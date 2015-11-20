@@ -12,7 +12,7 @@ struct AppData {
   ApplicationH          app;
   Aida::BaseConnectionP connection;
 };
-static StaticUndeletable<AppData*> static_appdata; // use StaticUndeletable to ensure app stays around for static dtors
+static DurableInstance<AppData*> static_appdata; // use DurableInstance to ensure app stays around for static dtors
 
 /// Check and return if init_app() or init_test_app() has already been called.
 bool

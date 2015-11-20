@@ -346,10 +346,10 @@ template<class Class, typename Type> void
 PropertyEnum<Class,Type>::set_value (PropertyHostInterface &obj, const String &svalue)
 {
   String error_string;
-  const EnumValue *ev = enum_.find_value (svalue);
-  if (!ev)
+  EnumValue ev = enum_.find_value (svalue);
+  if (!ev.ident)
     print_warning (String (__PRETTY_FUNCTION__) + ": invalid enum value name: " + svalue);
-  Type v = Type (ev ? ev->value : 0);
+  Type v = Type (ev.value);
   Class *instance = dynamic_cast<Class*> (&obj);
   (instance->*setter) (v);
 }
@@ -359,10 +359,10 @@ PropertyEnum<Class,Type>::get_value (PropertyHostInterface &obj)
 {
   Class *instance = dynamic_cast<Class*> (&obj);
   Type v = (instance->*getter) ();
-  const EnumValue *ev = enum_.find_value (v);
-  if (!ev)
+  EnumValue ev = enum_.find_value (v);
+  if (!ev.ident)
     print_warning (String (__PRETTY_FUNCTION__) + ": unrecognized enum value");
-  return ev ? ev->ident : "";
+  return ev.ident ? ev.ident : "";
 }
 
 } } // Rapicorn::Aida

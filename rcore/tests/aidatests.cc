@@ -2,6 +2,8 @@
 #include <rcore/testutils.hh>
 using namespace Rapicorn;
 
+enum TestEnum { TEST_COFFEE_COFFEE = -0xc0ffeec0ffeeLL };
+
 namespace {
 using namespace Rapicorn;
 using namespace Rapicorn::Aida;
@@ -52,11 +54,11 @@ test_basics()
 {
   const Aida::EnumInfo tke1 = Aida::enum_info<Aida::TypeKind>();
   const Aida::EnumInfo tke = tke1;
-  TASSERT (not tke.name().empty() && tke.n_values() > 0);
-  const Aida::EnumValue *ev = tke.find_value ("UNTYPED");
-  TASSERT (ev && ev->value == Aida::UNTYPED);
+  TASSERT (not tke.name().empty() && tke.has_values());
+  Aida::EnumValue ev = tke.find_value ("UNTYPED");
+  TASSERT (ev.value == Aida::UNTYPED);
   ev = tke.find_value (Aida::STRING);
-  TASSERT (ev && String ("STRING") == ev->ident);
+  TASSERT (ev.ident && String ("STRING") == ev.ident);
   TASSERT (type_kind_name (Aida::VOID) == String ("VOID"));
 
   // RemoteHandle
@@ -74,7 +76,6 @@ test_basics()
 REGISTER_TEST ("Aida/Basics", test_basics);
 
 static const double test_double_value = 7.76576e-306;
-enum TestEnum { TEST_COFFEE_COFFEE = -0xc0ffeec0ffeeLL };
 
 static void
 any_test_set (Any &a, int what)
@@ -195,6 +196,10 @@ test_any()
       b.set (TEST_COFFEE_COFFEE);
       TASSERT (b.kind() == ENUM);
       TASSERT (b.get<TestEnum>() == TEST_COFFEE_COFFEE);
+      Any dup = b;
+      printerr ("SEE: %s\n", dup.get_enum_info().name());
+      TASSERT (dup.get_enum_info().name() == "TestEnum");
+      TASSERT (dup.get<TestEnum>() == TEST_COFFEE_COFFEE);
       printf ("  TEST   Aida basic functions                                            OK\n");
     }
   String s;

@@ -3,7 +3,6 @@
 #define __RAPICORN_XMLNODE_HH__
 
 #include <rcore/markup.hh>
-#include <rcore/objects.hh>
 
 namespace Rapicorn {
 

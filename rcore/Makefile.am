@@ -13,7 +13,6 @@ rapicorn_public_headers = $(strip	\
 	bindable.hh	resources.hh	formatter.hh	inout.hh	inifile.hh \
         platform.hh	debugtools.hh					utilities.hh  \
 					math.hh				unicode.hh   \
-	objects.hh	\
         xmlnode.hh	markup.hh					testutils.hh \
 			regex.hh  strings.hh	loop.hh		main.hh	memory.hh \
 	quicktimer.hh	randomhash.hh	thread.hh	\
@@ -25,7 +24,6 @@ rapicorn_cc_sources = $(sort	\
 	bindable.cc	resources.cc	formatter.cc	inout.cc	inifile.cc \
         platform.cc	debugtools.cc					utilities.cc  \
 					math.cc				unicode.cc   \
-	objects.cc	\
         xmlnode.cc	markup.cc					testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	memory.cc \
 	quicktimer.cc	randomhash.cc	thread.cc	\

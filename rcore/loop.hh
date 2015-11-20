@@ -2,7 +2,6 @@
 #ifndef __RAPICORN_LOOP_HH__
 #define __RAPICORN_LOOP_HH__
 
-#include <rcore/objects.hh>
 #include <rcore/thread.hh>
 
 

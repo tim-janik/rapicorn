@@ -13,7 +13,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/types.h>  // gettid
-#include <cxxabi.h>
+#include <cxxabi.h> // abi::__cxa_demangle
 #include <signal.h>
 #include <glib.h>
 #include <vector>
@@ -49,6 +49,22 @@ RAPICORN_STARTUP_ASSERT (DBL_MIN      <= 1E-37);
 RAPICORN_STARTUP_ASSERT (DBL_MAX      >= 1E+37);
 RAPICORN_STARTUP_ASSERT (DBL_EPSILON  <= 1E-9);
 
+/** Demangle a std::typeinfo.name() string into a proper C++ type name.
+ * This function uses abi::__cxa_demangle() from <cxxabi.h> to demangle C++ type names,
+ * which works for g++, libstdc++, clang++, libc++.
+ */
+String
+cxx_demangle (const char *mangled_identifier)
+{
+  int status = 0;
+  char *malloced_result = abi::__cxa_demangle (mangled_identifier, NULL, NULL, &status);
+  String result = malloced_result && !status ? malloced_result : mangled_identifier;
+  if (malloced_result)
+    free (malloced_result);
+  return result;
+}
+
+// == Timestamps ==
 static clockid_t monotonic_clockid = CLOCK_REALTIME;
 static uint64    monotonic_start = 0;
 static uint64    monotonic_resolution = 1000;   // assume 1µs resolution for gettimeofday fallback

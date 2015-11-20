@@ -57,16 +57,16 @@ static void
 test_idl_enums()
 {
   const Aida::EnumInfo einfo = Aida::enum_info<AnchorType>();
-  const Aida::EnumValue *ev;
-  ev = einfo.find_value (0); assert (ev && ev->ident == String ("ANCHOR_NONE"));
-  ev = einfo.find_value ("ANCHOR_CENTER"); assert (ev && ev->value == 1);
+  Aida::EnumValue ev;
+  ev = einfo.find_value (0); assert (ev.ident && ev.ident == String ("ANCHOR_NONE"));
+  ev = einfo.find_value ("ANCHOR_CENTER"); assert (ev.ident && ev.value == 1);
   assert (einfo.flags_enum() == false);
   ev = einfo.find_value ("ANCHOR_NORTH");
-  assert (ev && ev->ident == String ("ANCHOR_NORTH"));
+  assert (ev.ident && ev.ident == String ("ANCHOR_NORTH"));
   const uint64 evalue = einfo.value_from_string ("south-west");
   assert (evalue == ANCHOR_SOUTH_WEST);
   const Aida::EnumInfo sinfo = Aida::enum_info<StateType>();
-  ev = sinfo.find_value (STATE_INSENSITIVE); assert (ev && ev->ident == String ("STATE_INSENSITIVE"));
+  ev = sinfo.find_value (STATE_INSENSITIVE); assert (ev.ident && ev.ident == String ("STATE_INSENSITIVE"));
   assert (sinfo.flags_enum() == true);
   //const uint64 smask = sinfo.value_from_string ("STATE_INSENSITIVE|STATE_HOVER|STATE_ACTIVE"); // FIXME
   //assert (smask == (STATE_INSENSITIVE | STATE_HOVER | STATE_ACTIVE));

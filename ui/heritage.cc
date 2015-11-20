@@ -242,9 +242,9 @@ Heritage::resolve_color (const String  &color_name,
       c.alpha (0xff - c.alpha());
       return state_color (c, state, color_type);
     }
-  const Aida::EnumValue *evalue = Aida::enum_info<ColorType>().find_value (color_name);
-  if (evalue)
-    return get_color (state, ColorType (evalue->value));
+  Aida::EnumValue evalue = Aida::enum_info<ColorType>().find_value (color_name);
+  if (evalue.ident)
+    return get_color (state, ColorType (evalue.value));
   else
     {
       Color parsed_color = Color::from_name (color_name);

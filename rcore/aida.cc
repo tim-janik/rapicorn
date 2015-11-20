@@ -3,7 +3,6 @@
 #include "aidaprops.hh"
 #include "thread.hh"
 #include "regex.hh"
-#include "objects.hh"           // cxx_demangle
 #include "../configure.h"       // HAVE_SYS_EVENTFD_H
 #include "main.hh"              // random_nonce
 
@@ -81,14 +80,17 @@ msgid_is (uint64 msgid, MessageId check_id)
 }
 
 // == EnumInfo ==
-EnumInfo::EnumInfo () :
-  name_ (""), values_ (NULL), n_values_ (0), flags_ (0)
-{}
+EnumInfo::EnumInfo (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values) :
+  enum_name_ (enum_name), values_ (values), n_values_ (n_values), flags_ (isflags)
+{
+  if (n_values)
+    assert_return (values != NULL);
+}
 
 String
 EnumInfo::name () const
 {
-  return name_;
+  return enum_name_;
 }
 
 bool
@@ -97,63 +99,69 @@ EnumInfo::flags_enum () const
   return flags_;
 }
 
-size_t
-EnumInfo::n_values () const
+bool
+EnumInfo::has_values () const
 {
-  return n_values_;
-}
-
-const EnumValue*
-EnumInfo::values () const
-{
-  return values_;
+  return n_values_ > 0;
 }
 
 EnumValueVector
 EnumInfo::value_vector () const
 {
-  std::vector<const EnumValue*> vv;
+  EnumValueVector vv;
   for (size_t i = 0; i < n_values_; i++)
-    vv.push_back (&values_[i]);
+    vv.push_back (values_[i]);
   return vv;
 }
 
-const EnumValue*
+EnumValue
 EnumInfo::find_value (int64 value) const
 {
   for (size_t i = 0; i < n_values_; i++)
     if (values_[i].value == value)
-      return &values_[i];
-  return NULL;
+      return values_[i];
+  return EnumValue();
 }
 
-const EnumValue*
+EnumValue
 EnumInfo::find_value (const String &name) const
 {
   for (size_t i = 0; i < n_values_; i++)
     if (string_match_identifier_tail (values_[i].ident, name))
-      return &values_[i];
-  return NULL;
+      return values_[i];
+  return EnumValue();
 }
 
 String
 EnumInfo::value_to_string (int64 value) const
 {
-  const EnumValue *ev = find_value (value);
-  if (ev)
-    return ev->ident;
-  else
-    return string_format ("%d", value);
+  const EnumValue ev = find_value (value);
+  return ev.ident ? ev.ident : string_format ("%d", value);
 }
 
 int64
 EnumInfo::value_from_string (const String &valuestring) const
 {
-  const EnumValue *ev = find_value (valuestring);
-  if (ev)
-    return ev->value;
-  else
-    return string_to_int (valuestring);
+  const EnumValue ev = find_value (valuestring);
+  return ev.ident ? ev.value : string_to_int (valuestring);
+}
+
+struct GlobalEnumInfoMap {
+  Mutex                             mutex;
+  std::map<String, const EnumInfo*> map;
+};
+static DurableInstance<GlobalEnumInfoMap*> global_enum_info;
+
+const EnumInfo&
+EnumInfo::cached_enum_info (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values)
+{
+  ScopedLock<Mutex> locker (global_enum_info->mutex);
+  auto it = global_enum_info->map.find (enum_name);
+  if (it != global_enum_info->map.end())
+    return *it->second;
+  EnumInfo *einfo = new EnumInfo (enum_name, isflags, n_values, values);
+  global_enum_info->map[einfo->name()] = einfo;
+  return *einfo;
 }
 
 static std::vector<const char*>
@@ -221,7 +229,7 @@ aux_vector_check_options (const std::vector<String> &auxvector, const String &fi
 
 
 // == TypeKind ==
-template<> EnumInfo
+template<> const EnumInfo&
 enum_info<TypeKind> ()
 {
   static const EnumValue values[] = {
@@ -241,15 +249,15 @@ enum_info<TypeKind> ()
     { LOCAL,            "LOCAL",                NULL, NULL },
     { ANY,              "ANY",                  NULL, NULL },
   };
-  return ::Rapicorn::Aida::EnumInfo ("Rapicorn::Aida::TypeKind", values, false);
+  return ::Rapicorn::Aida::EnumInfo::cached_enum_info (cxx_demangle (typeid (TypeKind).name()), false, values);
 } // specialization
-template<> EnumInfo enum_info<TypeKind> (); // instantiation
+template<> const EnumInfo& enum_info<TypeKind> (); // instantiation
 
 const char*
 type_kind_name (TypeKind type_kind)
 {
-  const EnumValue *ev = enum_info<TypeKind>().find_value (type_kind);
-  return ev ? ev->ident : NULL;
+  const EnumValue ev = enum_info<TypeKind>().find_value (type_kind);
+  return ev.ident;
 }
 
 // == TypeHash ==
@@ -626,16 +634,18 @@ Any::set_bool (bool value)
 }
 
 int64
-Any::get_int64 () const
+Any::as_int64 () const
 {
   switch (kind())
     {
     case BOOL: case ENUM: case INT32:
     case INT64:         return u_.vint64;
     case FLOAT64:       return u_.vdouble;
-    default: ;
+    case STRING:        return u_.vstring().size();
+    case SEQUENCE:      return u_.vanys().size();
+    case RECORD:        return u_.vfields().size();
+    default:            return 0;
     }
-  return 0;
 }
 
 void
@@ -646,16 +656,34 @@ Any::set_int64 (int64 value)
 }
 
 void
-Any::set_enum64 (int64 value)
+Any::set_enum (const EnumInfo &einfo, int64 value)
 {
   ensure (ENUM);
-  u_.vint64 = value;
+  u_.venum64 = value;
+  u_.enum_info = &einfo;
+}
+
+int64
+Any::get_enum (const EnumInfo &einfo) const
+{
+  if (kind() == ENUM && u_.enum_info &&
+      u_.enum_info->name() == einfo.name())
+    return u_.venum64;
+  return 0;
+}
+
+const EnumInfo&
+Any::get_enum_info ()
+{
+  if (kind() == ENUM)
+    return *u_.enum_info;
+  return *(const EnumInfo*) NULL; // undefined behavior
 }
 
 double
-Any::get_double () const
+Any::as_double () const
 {
-  return kind() == FLOAT64 ? u_.vdouble : get_int64();
+  return kind() == FLOAT64 ? u_.vdouble : as_int64();
 }
 
 void
@@ -1731,7 +1759,7 @@ public:
     return NULL; // unmatched
   }
 };
-static StaticUndeletable<ConnectionRegistry*> connection_registry; // keep ConnectionRegistry across static dtors
+static DurableInstance<ConnectionRegistry*> connection_registry; // keep ConnectionRegistry across static dtors
 
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &protocol) :

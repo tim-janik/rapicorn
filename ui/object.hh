@@ -91,7 +91,7 @@ template<class C> C&
 ObjectImpl::InterfaceMatch<C>::result (bool may_throw) const
 {
   if (!this->instance_ && may_throw)
-    throw NullInterface();
+    throw std::bad_cast();
   return *this->instance_;
 }
 

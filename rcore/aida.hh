@@ -79,31 +79,36 @@ struct EnumValue {
   constexpr EnumValue (int64 v, const char *vident, const char *vlabel, const char *vblurb) :
     value (v), ident (vident), label (vlabel), blurb (vblurb) {}
 };
-typedef std::vector<const EnumValue*> EnumValueVector;
+typedef std::vector<EnumValue> EnumValueVector;
 
 // == Enum ==
 /// Class for enum type introspection.
 class EnumInfo {
-  const char      *const name_;
-  const EnumValue *values_;
-  const uint32_t   n_values_;
-  const bool       flags_;
-  explicit         EnumInfo ();
+  const String           enum_name_;
+  const EnumValue *const values_;
+  const uint32_t         n_values_;
+  const bool             flags_;
+  explicit               EnumInfo          (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values);
+  static const EnumInfo& cached_enum_info  (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values);
   template<size_t N>
-  explicit         EnumInfo (const char *nm, const EnumValue (&ev)[N], bool f) : name_ (nm), values_ (ev), n_values_ (N), flags_ (f) {}
+  static const EnumInfo& cached_enum_info  (const String &enum_name, bool isflags, const EnumValue (&varray)[N])
+  { return cached_enum_info (enum_name, isflags, N, varray); }
 public:
-  String           name              () const;                          ///< Retrieve the enum type name for this Enum.
-  const EnumValue* find_value        (const String &name) const;        ///< Find first enum value matching @a name.
-  const EnumValue* find_value        (int64        value) const;        ///< Find first enum value equal to @a value.
-  String           value_to_string   (int64        value) const;        ///< Create a string representing @a value.
-  int64            value_from_string (const String &valuestring) const; ///< Reconstruct an enum value from @a valuestring.
-  bool             flags_enum        () const;  ///< Whether enum values support bit combinations to form flags.
-  size_t           n_values          () const;  ///< The number of enum values defined for this Enum.
-  const EnumValue* values            () const;  ///< Get an enum value array with n_values() elements for this Enum.
-  EnumValueVector  value_vector      () const;  ///< Retrieve the list of possible enum values as a std::vector<>.
+  String          name              () const;                           ///< Retrieve the enum type name for this Enum.
+  EnumValue       find_value        (const String &name) const;         ///< Find first enum value matching @a name.
+  EnumValue       find_value        (int64        value) const;         ///< Find first enum value equal to @a value.
+  String          value_to_string   (int64        value) const;         ///< Create a string representing @a value.
+  int64           value_from_string (const String &valuestring) const;  ///< Reconstruct an enum value from @a valuestring.
+  bool            flags_enum        () const;   ///< Whether enum values support bit combinations to form flags.
+  bool            has_values        () const;   ///< Indicate if the value_vector() is non-empty.
+  EnumValueVector value_vector      () const;   ///< Retrieve the list of possible enum values as a std::vector<>.
   /// Template to be specialised by introspectable enums.
-  template<typename>
-  friend EnumInfo  enum_info         () { return EnumInfo (); }
+  template<typename EnumType> friend
+  const EnumInfo& enum_info         ()
+  {
+    static_assert (std::is_enum<EnumType>::value, "");
+    return cached_enum_info (cxx_demangle (typeid (EnumType).name()), false, 0, NULL);
+  }
 };
 
 template<typename EnumType> EnumType
@@ -154,7 +159,7 @@ enum TypeKind {
   LOCAL          = 'L', ///< Local object type.
   ANY            = 'Y', ///< Generic type to hold any other type.
 };
-template<> EnumInfo enum_info<TypeKind> ();
+template<> const EnumInfo& enum_info<TypeKind> ();
 
 const char* type_kind_name (TypeKind type_kind); ///< Obtain TypeKind names as a string.
 
@@ -413,6 +418,7 @@ private:
   typedef RemoteMember<RemoteHandle> ARemoteHandle;
   union {
     uint64 vuint64; int64 vint64; double vdouble; Any *vany; PlaceHolder *pholder;
+    struct { int64 venum64; const EnumInfo *enum_info; };
     int64 dummy_[AIDA_I64ELEMENTS (MAX (MAX (sizeof (String), sizeof (std::vector<void*>)),
                                         MAX (sizeof (ImplicitBaseP), sizeof (ARemoteHandle))))];
     FieldVector&         vfields () { return *(FieldVector*) this; static_assert (sizeof (FieldVector) <= sizeof (*this), ""); }
@@ -448,6 +454,9 @@ public:
   TypeKind  kind   () const { return type_kind_; }      ///< Obtain the type kind for the contents of this Any.
   void      swap   (Any           &other);              ///< Swap the contents of @a this and @a other in constant time.
   void      clear  ();                                  ///< Erase Any contents, making it empty like a newly constructed Any().
+  const EnumInfo& get_enum_info ();                     ///< Get enum info for an Any holding an enum, undefined otherwise.
+  void            set_enum      (const EnumInfo &einfo,
+                                 int64 value);          ///< Set Any to hold an enum value.
 private:
   template<class A, class B> using IsConvertible = ///< Avoid pointer->bool reduction for std::is_convertible<>.
     ::std::integral_constant<bool, ::std::is_convertible<A, B>::value && (!::std::is_pointer<A>::value || !IsBool<B>::value)>;
@@ -469,17 +478,15 @@ private:
     ::std::integral_constant<bool, ::std::is_pointer<T>::value && IsLocalClass< typename std::remove_pointer<T>::type >::value>;
   bool               get_bool    () const;
   void               set_bool    (bool value);
-  int64              get_int64   () const;
   void               set_int64   (int64 value);
-  void               set_enum64  (int64 value);
-  double             get_double  () const;
   void               set_double  (double value);
   std::string        get_string  () const;
   void               set_string  (const std::string &value);
+  int64              get_enum    (const EnumInfo &einfo) const;
   template<typename Enum>
-  Enum               get_enum    () const               { return Enum (get_int64()); }
+  Enum               get_enum    () const               { return Enum (get_enum (enum_info<Enum>())); }
   template<typename Enum>
-  void               set_enum    (Enum value)           { return set_enum64 (value); }
+  void               set_enum    (Enum value)           { return set_enum (enum_info<Enum>(), value); }
   const AnyVector*   get_seq     () const;
   void               set_seq     (const AnyVector *seq);
   const FieldVector* get_rec     () const;
@@ -499,8 +506,8 @@ private:
 public:
   // Type get() const;
   template<typename T, REQUIRES< IsBool<T>::value > = true>                            T    get () const { return get_bool(); }
-  template<typename T, REQUIRES< IsInteger<T>::value > = true>                         T    get () const { return get_int64(); }
-  template<typename T, REQUIRES< std::is_floating_point<T>::value > = true>            T    get () const { return get_double(); }
+  template<typename T, REQUIRES< IsInteger<T>::value > = true>                         T    get () const { return as_int64(); }
+  template<typename T, REQUIRES< std::is_floating_point<T>::value > = true>            T    get () const { return as_double(); }
   template<typename T, REQUIRES< DerivesString<T>::value > = true>                     T    get () const { return get_string(); }
   template<typename T, REQUIRES< std::is_enum<T>::value > = true>                      T    get () const { return get_enum<T>(); }
   template<typename T, REQUIRES< IsConvertible<const AnyVector*, T>::value > = true>   T    get () const { return get_seq(); }
@@ -535,6 +542,8 @@ public:
   void                from_transition  (BaseConnection &base_connection);
   String              repr             (const String &field_name = "") const;
   String              to_string        () const; ///< Retrieve string representation of Any for printouts.
+  int64               as_int64         () const; ///< Obtain contents as int64.
+  double              as_double        () const; ///< Obtain contents as double.
   const Any&          as_any           () const { return kind() == ANY ? *u_.vany : *this; } ///< Obtain contents as Any.
 };
 

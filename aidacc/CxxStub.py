@@ -404,7 +404,7 @@ class Generator:
     s, varray = '\n', '_aida_enumvalues_%u' % self.idcounter
     self.idcounter += 1
     enum_ns, enum_class = '::'.join (self.type_relative_namespaces (type_info)), type_info.name
-    s += 'template<> EnumInfo\n'
+    s += 'template<> const EnumInfo&\n'
     s += 'enum_info<%s> ()\n{\n' % c_typename
     s += '  static const EnumValue %s[] = {\n' % varray
     import TypeMap
@@ -417,10 +417,10 @@ class Generator:
       blurb = blurb if blurb else "NULL"
       s += '    { %s, %s, %s, %s },\n' % (number, ident, label, blurb)
     s += '  };\n'
-    """   template<> EnumInfo enum_info<X> () { return EnumInfo ("X", 3, xvalues, false); } """
-    s += '  return ::Rapicorn::Aida::EnumInfo ("%s", %s, %s);\n' % (c_typename, varray, int (type_info.combinable))
+    """   template<> const EnumInfo& enum_info<X> () { return cached_enum_info ("X", 3, false, xvalues); } """
+    s += '  return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("%s", %s, %s);\n' % (c_typename, int (type_info.combinable), varray)
     s += '} // specialization\n'
-    s += 'template EnumInfo enum_info<%s> (); // instantiation\n' % c_typename
+    s += 'template const EnumInfo& enum_info<%s> (); // instantiation\n' % c_typename
     return s
   def digest2cbytes (self, digest):
     return '0x%02x%02x%02x%02x%02x%02x%02x%02xULL, 0x%02x%02x%02x%02x%02x%02x%02x%02xULL' % digest
@@ -1139,7 +1139,7 @@ class Generator:
   def generate_enum_info_specialization (self, type_info):
     s = ''
     classFull = '::'.join (self.type_relative_namespaces (type_info) + [ type_info.name ])
-    s += 'template<> EnumInfo enum_info<%s> ();\n' % classFull
+    s += 'template<> const EnumInfo& enum_info<%s> ();\n' % classFull
     return s
   def insertion_text (self, key):
     text = self.insertions.get (key, '')
