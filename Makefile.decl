@@ -96,15 +96,26 @@ $(foreach PRG,$(TEST_PROGS),$(eval $(call slowcheck_parallel_TEMPLATE,$(PRG))))
 
 # == TAPTESTS ==
 # tests run through taptool.sh
-TAPTESTS     =
-TAPTEST_RUNS = $(addsuffix .taprun, $(basename $(TAPTESTS)))
-.PHONY: tcheck $(TAPTEST_RUNS)
-tcheck: $(top_srcdir)/taptool.sh
-	$(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(TAPTEST_RUNS)
-$(TAPTEST_RUNS): %.taprun: % # static pattern rule - also works for phony targets
+TAPTESTS =
+TAPRUNS  = $(addsuffix .taprun, $(basename $(TAPTESTS)))
+.PHONY: taptests $(TAPRUNS)
+taptests: $(top_srcdir)/taptool.sh
+	@$(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(TAPRUNS)
+$(TAPRUNS): %.taprun: % # static pattern rule - also works for phony targets
 	$(Q) test "$@" = "$(@F)" || { echo "$@: test program outside CWD" >&2; exit 1; }
 	$(Q) TST="$(@:%.taprun=%)"; $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
-check: tcheck
+check: taptests
+
+# == X11TESTS ==
+X11TESTS =
+X11RUNS  = $(addsuffix .x11run, $(basename $(X11TESTS)))
+.PHONY: x11tests $(X11RUNS)
+x11tests: $(top_srcdir)/taptool.sh
+	@$(MAKE) $(AM_MAKEFLAGS) --no-print-directory $(X11RUNS)
+$(X11RUNS): %.x11run: % # static pattern rule - also works for phony targets
+	$(Q) test "$@" = "$(@F)" || { echo "$@: test program outside CWD" >&2; exit 1; }
+	$(Q) TST="$(@:%.x11run=%)"; $(X11_ENV) $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
+check: x11tests
 
 # === TEST_PROGS ===
 TEST_PROGS =
@@ -118,7 +129,7 @@ endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call check_parallel_TEMPLATE,$(PRG))))
 
 # === ALLTESTS ===
-ALLTESTS = $(TAPTESTS) $(TESTS) $(TEST_PROGS) # used in noinst_PROGRAMS
+ALLTESTS = $(TAPTESTS) $(X11TESTS) $(TESTS) $(TEST_PROGS) # used in noinst_PROGRAMS
 
 # === Test-rule macros ===
 FORCECHECKUPDATE = false
