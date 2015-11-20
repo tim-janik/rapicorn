@@ -115,6 +115,7 @@ interface Richie : Derived, Base, Other {
   AnySeq    anys;
   Derived   derived;
   BaseSeq   objects;
+  signal void changed (String what);
 };
 
 interface MiniServer {
@@ -127,8 +128,10 @@ interface MiniServer {
   Location  location;
   StringSeq strings;
   Derived   derived;
-  void   message       (String blurb);
-  void   quit          ();
+  void        message         (String blurb);
+  void        quit            ();
+  void        test_parameters ();
+  signal void changed         (String what);
 };
 
 } // A1

@@ -89,7 +89,28 @@ ImplicitBase::__aida_getter__ (const String &property_name)
 
 // == Parameter ==
 Parameter::~Parameter()
-{}
+{
+  while (!ids_.empty())
+    {
+      const size_t id = ids_.back();
+      ids_.pop_back();
+      disconnect_ (id);
+    }
+}
+
+bool
+Parameter::Connector::operator-= (size_t connection_id)
+{
+  return parameter_.disconnect_ (connection_id);
+}
+
+size_t
+Parameter::Connector::operator+= (const ChangedFunction &callback)
+{
+  const size_t id = parameter_.connect_ (callback);
+  parameter_.ids_.push_back (id);
+  return id;
+}
 
 void
 Parameter::set (const Any &any)
