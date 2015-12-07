@@ -123,6 +123,7 @@ String  timestamp_format     (uint64 stamp);
 namespace Path {
 String  dirname         (const String &path);
 String  basename        (const String &path);
+String  realpath        (const String &path);
 String  abspath         (const String &path, const String &incwd = "");
 bool    isabs           (const String &path);
 bool    isdirname       (const String &path);

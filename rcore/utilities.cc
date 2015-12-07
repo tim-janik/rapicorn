@@ -413,6 +413,27 @@ basename (const String &path)
 }
 
 /**
+ * @param path a filename path
+ *
+ * Resolve links and directory references in @a path and provide
+ * a canonicalized absolute pathname.
+ */
+String
+realpath (const String &path)
+{
+  char *const cpath = ::realpath (path.c_str(), NULL);
+  if (cpath)
+    {
+      const String result = cpath;
+      free (cpath);
+      errno = 0;
+      return result;
+    }
+  // error case
+  return path;
+}
+
+/**
  * @param path  a filename path
  * @param incwd optional current working directory
  *
