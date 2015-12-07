@@ -17,6 +17,9 @@ ctypedef int64_t  int64
 ctypedef uint64_t uint64
 ctypedef double   float64
 
+# == Utilities from Python ==
+cdef extern from "":
+  char* Py_GetProgramName ()
 
 # == Utilities from std:: ==
 cdef extern from "memory" namespace "std":

@@ -16,6 +16,7 @@ include "idlapi.pyx"
 # Manual binding bits for rapicorn.hh
 cdef extern from "ui/clientapi.hh" namespace "Rapicorn":
   Rapicorn__Application     Rapicorn__init_app "Rapicorn::init_app" (const String &app_ident, int*, char**)
+  void                      Rapicorn__program_argv0_init "Rapicorn::program_argv0_init" (const char *argv0)
   shared_ptr[Rapicorn__MainLoop] Rapicorn_ApplicationH_main_loop "Rapicorn::ApplicationH::main_loop" ()
 
 app = None # cached Rapicorn Application singleton after Rapicorn.init
@@ -37,6 +38,7 @@ def init (app_name):
       """Execute the Application and terminatie the program with sys.exit (Application.run())."""
       sys.exit (self.run())
   original_Application().__aida_wrapper__ (Application) # extend Application methods
+  Rapicorn__program_argv0_init (Py_GetProgramName()); # Rapicorn needs the real argv0
   cdef int   argc = 1
   cdef char *argv = sys.argv[0]
   global app
