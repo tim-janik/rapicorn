@@ -167,9 +167,15 @@ static bool
 parse_bool_option (const String &s, const char *arg, bool *boolp)
 {
   const size_t length = strlen (arg);
+  *boolp = false;
   if (s.size() > length && s[length] == '=' && strncmp (&s[0], arg, length) == 0)
     {
       *boolp = string_to_bool (s.substr (length + 1));
+      return true;
+    }
+  else if (s == arg)
+    {
+      *boolp = true;
       return true;
     }
   return false;
@@ -183,6 +189,7 @@ struct VInitSettings : InitSettings {
 };
 static VInitSettings vinit_settings;
 const InitSettings  &InitSettings::is = vinit_settings;
+static const char *internal_init_args_ = NULL;
 
 static void
 parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, const StringVector &args)
@@ -190,32 +197,45 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
   bool b, testing_mode = false;
   uint64 tco = 0;
   // apply init settings
+  const char *const internal_args = internal_init_args_ ? internal_init_args_ : "";
+  internal_init_args_ = NULL;
   for (StringVector::const_iterator it = args.begin(); it != args.end(); it++)
     if      (parse_bool_option (*it, "autonomous", &b))
       vsettings.autonomous() = b;
-    else if (parse_bool_option (*it, "rapicorn-test-initialization", &b))
+    else if (parse_bool_option (*it, "testing", &b))
       testing_mode = b;
-    else if (parse_bool_option (*it, "test-verbose", &b))
+    else if (parse_bool_option (*it, "test-verbose", &b) && b)
       tco |= Test::MODE_VERBOSE;
-    else if (parse_bool_option (*it, "test-slow", &b))
+    else if (parse_bool_option (*it, "test-slow", &b) && b)
       tco |= Test::MODE_SLOW;
+  if (strstr (internal_args, ":autonomous:"))
+    vsettings.autonomous() = true;
+  if (strstr (internal_args, ":testing:"))
+    testing_mode = true;
+  if (strstr (internal_args, ":test-verbose:"))
+    tco |= Test::MODE_VERBOSE;
+  if (strstr (internal_args, ":test-slow:"))
+    tco |= Test::MODE_SLOW;
   if (testing_mode)
     vsettings.test_codes() |= Test::MODE_TESTING | tco;
   // parse command line args
+  bool fatal_warnings = strstr (internal_args, ":fatal-warnings:") != NULL;
   const size_t argc = *argcp;
   for (size_t i = 1; i < argc; i++)
     {
-      if (            arg_parse_option (*argcp, argv, &i, "--fatal-warnings") ||
-                      arg_parse_option (*argcp, argv, &i, "--g-fatal-warnings")) // legacy option support
-        {
-          debug_config_add ("fatal-warnings");
-          const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
-          g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
-        }
+      if (arg_parse_option (*argcp, argv, &i, "--fatal-warnings") ||
+          arg_parse_option (*argcp, argv, &i, "--g-fatal-warnings")) // legacy option support
+        fatal_warnings = true;
       else if (testing_mode && arg_parse_option (*argcp, argv, &i, "--test-verbose"))
         vsettings.test_codes() |= Test::MODE_VERBOSE;
       else if (testing_mode && arg_parse_option (*argcp, argv, &i, "--test-slow"))
         vsettings.test_codes() |= Test::MODE_SLOW;
+    }
+  if (fatal_warnings)
+    {
+      debug_config_add ("fatal-warnings");
+      const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
+      g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
     }
   // collapse NULL arguments
   arg_parse_collapse (argcp, argv);
@@ -230,19 +250,19 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
 
 static const char   *program_argv0_ = NULL;
 static const String *program_cwd_ = NULL;
-static String program_app_ident = ""; // used to flag init_core() initialization
-static String program_name_;
+static const String *program_name_ = NULL;
+static const String *application_name_ = NULL;
 
 /// File name of the current process as set in argv[0] at startup.
 String
 program_argv0 ()
 {
   // assert program_argv0_init() has been called earlier
+  const char *fallback = "";
 #ifdef  _GNU_SOURCE
-  assert_return (program_argv0_ != NULL, program_invocation_name);
-#else
-  assert_return (program_argv0_ != NULL, "");
+  fallback = program_invocation_name;
 #endif
+  assert_return (program_argv0_ != NULL, fallback);
   return program_argv0_;
 }
 
@@ -262,48 +282,38 @@ program_argv0_init (const char *argv0)
   assert_return (strcmp (program_invocation_name, argv0) == 0); // there's only *one* argv[0]
 #endif
   program_argv0_ = libc_argv0 ? libc_argv0 : strdup (argv0);
+  // miscellaneous other initializations
   if (!program_cwd_)
     program_cwd_ = new String (Path::cwd());
 }
 
-/// Program name, usually argv[0], but can also be a Python script name, etc.
+/// Formal name of the program, used to retrieve resources and store session data.
 String
 program_name ()
 {
-  if (!program_name_.empty())
-    return program_name_;
-  const char *gpn = g_get_prgname();
-  if (gpn)
-    return gpn;
+  if (program_name_)
+    return *program_name_;
   if (program_argv0_)
     return program_argv0_;
 #ifdef  _GNU_SOURCE
   if (program_invocation_name) // from glibc
     return program_invocation_name;
 #endif
-  return "";
+  return "/proc/self/exe";
 }
 
-/**
- * Provides a short name for the current process, usually the last part of argv[0].
- * See also GNU Libc program_invocation_short_name.
+/** Provide short name for the current process.
+ * The short name is usually the last part of argv[0]. See also GNU Libc program_invocation_short_name.
  */
 String
 program_alias ()
 {
-#ifdef  _GNU_SOURCE
-  return program_invocation_short_name;
-#endif
-  const String pname = program_name();
-  const char *last = strrchr (pname.c_str(), '/');
-  return last ? last + 1 : pname;
-}
-
-/// The program identifier @a app_ident as specified during initialization of Rapicorn.
-String
-program_ident ()
-{
-  return program_app_ident;
+  if (program_name_)
+    {
+      const char *slash = strchr (program_name_->c_str(), '/');
+      return slash ? slash + 1 : *program_name_;
+    }
+  return program_invocation_short_name; // _GNU_SOURCE?
 }
 
 /// The current working directory during startup.
@@ -311,6 +321,15 @@ String
 program_cwd ()
 {
   return program_cwd_ ? *program_cwd_ : "./";
+}
+
+/// Application name suitable for user interface display.
+String
+application_name ()
+{
+  if (application_name_)
+    return *application_name_;
+  return program_alias();
 }
 
 static Mutex       prng_mutex;
@@ -459,21 +478,11 @@ ScopedPosixLocale::posix_locale ()
   return posix_locale_;
 }
 
-
-static struct __StaticCTorTest {
-  int v;
-  __StaticCTorTest() : v (0x12affe16)
-  {
-    v++;
-    ThreadInfo::self().name ("MainThread");
-  }
-} __staticctortest;
-
 /// Check and return if init_core() has already been called.
 bool
 init_core_initialized ()
 {
-  return program_app_ident.empty() == false;
+  return application_name_ != NULL;
 }
 
 /**
@@ -485,14 +494,14 @@ init_core_initialized ()
  * Initialize the Rapicorn toolkit core, including threading, CPU detection, loading resource libraries, etc.
  * The arguments passed in @a argcp and @a argv are parsed and any Rapicorn specific arguments
  * are stripped.
- * If 'rapicorn-test-initialization=1' is passed in @a args, these command line arguments are supported:
+ * If 'testing=1' is passed in @a args, these command line arguments are supported:
  * - @c --test-verbose - Execute test cases with verbose message generation.
  * - @c --test-slow - Execute only test cases excercising slow code paths or loops.
  * .
  * Additional initialization arguments can be passed in @a args, currently supported are:
  * - @c autonomous - Flag indicating a self-contained runtime environment (e.g. for tests) without loading rc-files, etc.
  * - @c cpu-affinity - CPU# to bind rapicorn thread to.
- * - @c rapicorn-test-initialization - Enable testing framework, used by init_core_test(), see also #$RAPICORN_TEST.
+ * - @c testing - Enable testing framework, used by init_core_test(), see also #$RAPICORN_TEST.
  * - @c test-verbose - acts like --test-verbose.
  * - @c test-slow - acts like --test-slow.
  * .
@@ -506,37 +515,20 @@ init_core_initialized ()
  * .
  */
 void
-init_core (const String &app_ident, int *argcp, char **argv, const StringVector &args)
+init_core (int *argcp, char **argv, const StringVector &args)
 {
-  assert_return (app_ident.empty() == false);   // application identifier is hard requirement
-  // rudimentary tests
-  if (__staticctortest.v != 0x12affe17)                 // check global_ctors work
-    {
-      errno = ENOTSUP;
-      perror ("librapicorncore: runtime error: C++ constructors have not been executed");
-      _exit (127);
-    }
   static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");
 
-  // guard against double initialization, checks if program_app_ident has already been set
+  // guard against double initialization
   if (init_core_initialized())
     return;
-  program_app_ident = app_ident;
 
   // setup program and application name
-  if (argcp && *argcp && argv && argv[0] && argv[0][0] != 0)
-    {
-      if (!program_argv0_)
-        program_argv0_init (argv[0]);
-      program_name_ = argv[0];
-    }
+  if (argcp && *argcp && argv && argv[0] && argv[0][0] != 0 && !program_argv0_)
+    program_argv0_init (argv[0]);
   if (!program_cwd_)
     program_cwd_ = new String (Path::cwd());
   const String palias = program_alias();
-  if (!g_get_prgname() && !palias.empty())
-    g_set_prgname (palias.c_str());
-  if (!g_get_application_name() || g_get_application_name() == g_get_prgname())
-    g_set_application_name (program_app_ident.c_str());
   if (!palias.empty())
     ThreadInfo::self().name (string_format ("%s-MainThread", palias.c_str()));
 
@@ -582,3 +574,27 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
 }
 
 } // Rapicorn
+
+namespace RapicornInternal {
+
+bool
+application_setup (const String &application_name, const String &program_name)
+{
+  assert_return (application_name.empty() == false, false);
+  if (application_name_)
+    return false;
+  if (!program_argv0_)
+    program_argv0_init (program_invocation_name);       // need _GNU_SOURCE?
+  application_name_ = new String (application_name);
+  if (!program_name_ && !program_name.empty())
+    program_name_ = new String (program_name);
+  return true;
+}
+
+void
+inject_init_args (const char *const internal_args)
+{
+  internal_init_args_ = internal_args;
+}
+
+} // RapicornInternal

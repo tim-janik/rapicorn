@@ -749,19 +749,19 @@ main (int   argc,
   String app_ident = __PRETTY_FILE__;
   if (argc >= 2 && String ("--cwd") == argv[1])
     {
-      init_core (app_ident, &argc, argv);
+      init_core (&argc, argv);
       printout ("%s\n", Path::cwd());
       return 0;
     }
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
-      init_core (app_ident, &argc, argv);
+      init_core (&argc, argv);
       printout ("%s", process_handle());
       return 0;
     }
   if (argc >= 3 && String ("--task-status") == argv[1])
     {
-      init_core (app_ident, &argc, argv);
+      init_core (&argc, argv);
       TaskStatus ts = TaskStatus (string_to_int (argv[2]));
       String result;
       bool valid = ts.update();
