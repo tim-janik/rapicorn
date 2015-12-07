@@ -63,7 +63,9 @@ public:
 };
 
 // == process info ==
-String       program_file       ();
+String       program_argv0      ();
+void         program_argv0_init (const char *argv0);
+String       program_name       ();
 String       program_alias      ();
 String       program_ident      ();
 String       program_cwd        ();

@@ -27,7 +27,7 @@ test_factory ()
   /* find and load GUI definitions relative to argv[0] */
   String factory_xml = "factory.xml";
   app.auto_load (Path::vpath_find (factory_xml),        // GUI file name
-                 program_file());                       // binary to determine file search path
+                 program_argv0());                      // binary to determine file search path
   TOK();
   WidgetImpl *widget;
   WindowIfaceP testwin = app.create_window ("test-TestWidgetL2");
@@ -135,7 +135,7 @@ ensure_ui_file()
     {
       // first, load required ui files
       ApplicationImpl &app = ApplicationImpl::the();
-      app.auto_load (Path::vpath_find ("testwidgets.xml"), program_file());
+      app.auto_load (Path::vpath_find ("testwidgets.xml"), program_argv0());
     }
 }
 
