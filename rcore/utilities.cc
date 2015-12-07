@@ -441,13 +441,12 @@ realpath (const String &path)
  * the real current working directory is prepended.
  */
 String
-abspath (const String &path,
-         const String &incwd)
+abspath (const String &path, const String &incwd)
 {
   if (isabs (path))
     return path;
   if (!incwd.empty())
-    return join (incwd, path);
+    return abspath (join (incwd, path), "");
   String pcwd = program_cwd();
   if (!pcwd.empty())
     return join (pcwd, path);
