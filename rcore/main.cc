@@ -228,10 +228,10 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
     }
 }
 
+static const char   *program_argv0_ = NULL;
+static const String *program_cwd_ = NULL;
 static String program_app_ident = ""; // used to flag init_core() initialization
-static String program_cwd0 = "";
 static String program_name_;
-static const char *program_argv0_ = NULL;
 
 /// File name of the current process as set in argv[0] at startup.
 String
@@ -262,6 +262,8 @@ program_argv0_init (const char *argv0)
   assert_return (strcmp (program_invocation_name, argv0) == 0); // there's only *one* argv[0]
 #endif
   program_argv0_ = libc_argv0 ? libc_argv0 : strdup (argv0);
+  if (!program_cwd_)
+    program_cwd_ = new String (Path::cwd());
 }
 
 /// Program name, usually argv[0], but can also be a Python script name, etc.
@@ -304,13 +306,11 @@ program_ident ()
   return program_app_ident;
 }
 
-/**
- * The current working directory during startup.
- */
+/// The current working directory during startup.
 String
 program_cwd ()
 {
-  return program_cwd0;
+  return program_cwd_ ? *program_cwd_ : "./";
 }
 
 static Mutex       prng_mutex;
@@ -530,8 +530,8 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
         program_argv0_init (argv[0]);
       program_name_ = argv[0];
     }
-  if (program_cwd0.empty())
-    program_cwd0 = Path::cwd();
+  if (!program_cwd_)
+    program_cwd_ = new String (Path::cwd());
   const String palias = program_alias();
   if (!g_get_prgname() && !palias.empty())
     g_set_prgname (palias.c_str());
