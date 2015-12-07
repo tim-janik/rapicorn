@@ -646,16 +646,40 @@ equals (const String &file1,
           st1.st_rdev == st2.st_rdev);
 }
 
-/**
- * Return the current working directoy.
- */
+/// Return the current working directoy, including symlinks used in $PWD if available.
 String
 cwd ()
 {
-  char *gpwd = g_get_current_dir();
-  String wd = gpwd;
-  g_free (gpwd);
-  return wd;
+#ifdef  _GNU_SOURCE
+  {
+    char *dir = get_current_dir_name();
+    if (dir)
+      {
+        const String result = dir;
+        free (dir);
+        return result;
+      }
+  }
+#endif
+  size_t size = 512;
+  do
+    {
+      char *buf = (char*) malloc (size);
+      if (!buf)
+        break;
+      const char *const dir = getcwd (buf, size);
+      if (dir)
+        {
+          const String result = dir;
+          free (buf);
+          return result;
+        }
+      free (buf);
+      size *= 2;
+    }
+  while (errno == ERANGE);
+  // system must be in a bad shape if we get here...
+  return "./";
 }
 
 StringVector

@@ -747,10 +747,16 @@ main (int   argc,
   test_before_thread_init();
 
   String app_ident = __PRETTY_FILE__;
+  if (argc >= 2 && String ("--cwd") == argv[1])
+    {
+      init_core (app_ident, &argc, argv);
+      printout ("%s\n", Path::cwd());
+      return 0;
+    }
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
       init_core (app_ident, &argc, argv);
-      printout ("%s", process_handle().c_str());
+      printout ("%s", process_handle());
       return 0;
     }
   if (argc >= 3 && String ("--task-status") == argv[1])
@@ -765,7 +771,7 @@ main (int   argc,
         result = ts.string();
       else
         result = "no stats";
-      printout ("TaskStatus: %s\n", result.c_str());
+      printout ("TaskStatus: %s\n", result);
       return 0;
     }
 
