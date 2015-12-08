@@ -225,6 +225,7 @@ WindowImpl::WindowImpl() :
   display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
+  config_.title = application_name();
   theme_info_ = ThemeInfo::fallback_theme();    // ensure valid theme_info_
   const_cast<AnchorInfo*> (force_anchor_info())->window = this;
   change_flags_silently (ANCHORED, true);       // window is always anchored
@@ -1069,21 +1070,13 @@ WindowImpl::create_display_window ()
               uint64 flags = DisplayWindow::ACCEPT_FOCUS | DisplayWindow::DELETABLE |
                              DisplayWindow::DECORATED | DisplayWindow::MINIMIZABLE | DisplayWindow::MAXIMIZABLE;
               setup.request_flags = DisplayWindow::Flags (flags);
-              String prg = program_ident();
-              if (prg.empty())
-                prg = program_name();
-              setup.session_role = "RAPICORN:" + prg;
+              setup.session_role = "RAPICORN:" + program_name();
               if (!name().empty())
                 setup.session_role += ":" + name();
               setup.bg_average = background();
               const Requisition rsize = requisition();
               config_.request_width = rsize.width;
               config_.request_height = rsize.height;
-              if (config_.title.empty())
-                {
-                  // user_warning (this->user_source(), "window title is unset");
-                  config_.title = setup.session_role;
-                }
               if (config_.alias.empty())
                 config_.alias = program_alias();
               pending_win_size_ = true;

@@ -36,6 +36,14 @@ ApplicationImpl::create_window (const String &window_identifier, const StringSeq
   return window;
 }
 
+void
+ApplicationImpl::setup (const String &application_name, const String &program_name)
+{
+  const bool success = RapicornInternal::application_setup (application_name, program_name);
+  if (!success)
+    critical ("ApplicationImpl::setup(): setup called more than once");
+}
+
 String
 ApplicationImpl::auto_path (const String  &file_name,
                             const String  &binary_path,

@@ -610,6 +610,16 @@ interface WidgetList : Container {
  */
 interface Application : Object {
   /// @name Application Startup
+  /** Setup application display name and unique identifier.
+   *
+   * The Application.setup() function should be called once and before any UI
+   * windows are created. If non-empty, the @a application_name is a possibly
+   * localized string useful to display the application name in user interfaces.
+   * If given, the @a program_name is a refinement of argv0, used for logging
+   * messages, as X11 application class and to identify persistently stored
+   * resources such as application session state.
+   */
+  void          setup           (String application_name, String program_name = "");
   String        auto_path       (String         file_name,
                                  String         binary_path,
                                  bool           search_vpath = true);
