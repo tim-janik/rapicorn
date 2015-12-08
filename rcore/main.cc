@@ -546,16 +546,6 @@ init_core (int *argcp, char **argv, const StringVector &args)
   };
   InitHookCaller::invoke ("core/", argcp, argv, args);
   InitHookCaller::invoke ("threading/", argcp, argv, args);
-
-  // initialize testing framework
-  if (vinit_settings.test_codes() & Test::MODE_TESTING)
-    {
-      debug_config_add ("fatal-warnings");
-      const uint fatal_mask = g_log_set_always_fatal (GLogLevelFlags (G_LOG_FATAL_MASK));
-      g_log_set_always_fatal (GLogLevelFlags (fatal_mask | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL));
-      String ci = cpu_info(); // initialize cpu info
-      (void) ci; // silence compiler
-    }
 }
 
 } // Rapicorn

@@ -50,6 +50,11 @@ init_app (const String &application_name, int *argcp, char **argv, const StringV
       setlocale (LC_ALL, "C");
       SDEBUG ("failed to initialize locale, falling back to \"C\"");
     }
+  // miscellaneous sub systems
+  {
+    const String ci = cpu_info(); // initialize cpu info
+    (void) ci;
+  }
   // initialize core
   if (!init_core_initialized())
     init_core (argcp, argv, args);
