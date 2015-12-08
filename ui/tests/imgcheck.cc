@@ -47,7 +47,7 @@ help_usage (bool usage_error)
     {
       printerr ("%s\n", usage.c_str());
       printerr ("Try '%s --help' for more information.\n", PRGNAME);
-      exit_app (1);
+      exit (1);
     }
   printout ("%s\n", usage.c_str());
   /*         12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
@@ -77,7 +77,7 @@ parse_args (int    *argc_p,
       else if (strcmp (argv[i], "--help") == 0 || strcmp (argv[i], "-h") == 0)
         {
           help_usage (false);
-          exit_app (0);
+          exit (0);
         }
       else if (strcmp (argv[i], "--version") == 0 || strcmp (argv[i], "-v") == 0)
         {
@@ -86,7 +86,7 @@ parse_args (int    *argc_p,
           printout ("This is free software and comes with ABSOLUTELY NO WARRANTY; see\n");
           printout ("the source for copying conditions. Sources, examples and contact\n");
           printout ("information are available at http://rapicorn.org/.\n");
-          exit_app (0);
+          exit (0);
         }
     }
 
@@ -113,7 +113,7 @@ main (int   argc,
   if (argc < 3)
     {
       help_usage (false);
-      exit_app (1);
+      exit (1);
     }
 
   double imgerror = compare_image_files (argv[1], argv[2]);
