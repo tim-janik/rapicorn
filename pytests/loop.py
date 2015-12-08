@@ -7,7 +7,7 @@ import Rapicorn # Load Rapicorn language bindings for Python
 import sys
 
 # initialize application
-app = Rapicorn.init ("PyRapicorn-Loop-Test")  # unique application name
+app = Rapicorn.init_app ("PyRapicorn Loop Test")
 
 verbose = 0
 loop_tchecks = 0

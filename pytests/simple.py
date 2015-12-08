@@ -18,9 +18,9 @@ simple_window_widgets = """
 """
 
 # setup application
-app = Rapicorn.init ("Simple-Python-Test")      # unique application name
-app.load_string (simple_window_widgets)         # loads widget tree
-window = app.create_window ("simple-window")    # creates main window
+app = Rapicorn.init_app ("Simple PyRapicorn Test") # unique application name
+app.load_string (simple_window_widgets)            # loads widget tree
+window = app.create_window ("simple-window")       # creates main window
 
 # signal connection testing
 def assert_unreachable (*args):

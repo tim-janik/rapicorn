@@ -15,12 +15,12 @@ include "idlapi.pyx"
 
 # Manual binding bits for rapicorn.hh
 cdef extern from "ui/clientapi.hh" namespace "Rapicorn":
-  Rapicorn__Application     Rapicorn__init_app "Rapicorn::init_app" (const String &app_ident, int*, char**)
+  Rapicorn__Application     Rapicorn__init_app "Rapicorn::init_app" (const String &application_name, int*, char**)
   void                      Rapicorn__program_argv0_init "Rapicorn::program_argv0_init" (const char *argv0)
   shared_ptr[Rapicorn__MainLoop] Rapicorn_ApplicationH_main_loop "Rapicorn::ApplicationH::main_loop" ()
 
 app = None # cached Rapicorn Application singleton after Rapicorn.init
-def init (app_name):
+def init_app (application_name = ""):
   import sys
   def original_Application():
     global Application # this workaround is needed because cython confuses the existing
@@ -42,7 +42,7 @@ def init (app_name):
   cdef int   argc = 1
   cdef char *argv = sys.argv[0]
   global app
-  app = Rapicorn__Object__wrap (Rapicorn__init_app (app_name, &argc, &argv))
+  app = Rapicorn__Object__wrap (Rapicorn__init_app (application_name, &argc, &argv))
   return app
 
 # Bindable decorator to use Python objects as data_context

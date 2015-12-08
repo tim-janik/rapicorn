@@ -2,8 +2,10 @@
 # [HelloRapicorn-EXAMPLE]
 import Rapicorn # Load Rapicorn language bindings for Python
 
-# Setup the application object, using a unique application name.
-app = Rapicorn.init ("Hello Rapicorn")
+
+# Retrieve the global Rapicorn Application object
+# and setup a user digestible application name.
+app = Rapicorn.init_app ("Hello Rapicorn")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """

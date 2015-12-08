@@ -23,7 +23,7 @@ my_window_xml = """
 """
 
 # setup application
-app = Rapicorn.init ('testrapicorn.py')         # provide unique application name
+app = Rapicorn.init_app()
 app.load_string (my_window_xml)                 # load widget tree
 window = app.create_window ('my-window')        # create main window
 
