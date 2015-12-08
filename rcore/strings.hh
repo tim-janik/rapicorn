@@ -191,4 +191,10 @@ string_locale_format (const char *format, const Args &...args)
 
 } // Rapicorn
 
+namespace RapicornInternal {
+
+void init_rapicorn_gettext (const char *const rapicorn_gettext_domain);
+
+} // RapicornInternal
+
 #endif /* __RAPICORN_STRINGS_HH__ */

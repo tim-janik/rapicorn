@@ -1,7 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "clientapi.hh"
 #include "internal.hh"
-#include "../configure.h"
+#include "../configure.h" // RAPICORN_GETTEXT_DOMAIN
 #include <stdlib.h>
 
 #define SDEBUG(...)     RAPICORN_KEY_DEBUG ("StartUp", __VA_ARGS__)
@@ -50,6 +50,8 @@ init_app (const String &application_name, int *argcp, char **argv, const StringV
       setlocale (LC_ALL, "C");
       SDEBUG ("failed to initialize locale, falling back to \"C\"");
     }
+  // initialize i18n functions
+  RapicornInternal::init_rapicorn_gettext (RAPICORN_GETTEXT_DOMAIN);
   // miscellaneous sub systems
   {
     const String ci = cpu_info(); // initialize cpu info
