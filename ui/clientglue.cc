@@ -65,19 +65,6 @@ ApplicationH::the ()
   return static_appdata->app;
 }
 
-/**
- * This function calls Application::shutdown() first, to properly terminate Rapicorn's
- * concurrently running ui-thread, and then terminates the program via
- * exit(3posix). This function does not return.
- * @param status        The exit status returned to the parent process.
- */
-void
-exit_app (int status)
-{
-  RapicornInternal::uithread_shutdown();
-  ::exit (status);
-}
-
 class AppSource;
 typedef std::shared_ptr<AppSource> AppSourceP;
 

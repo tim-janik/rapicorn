@@ -67,7 +67,6 @@ ApplicationHandle init_test_app           (const String       &app_ident,
                                            int                *argcp,
                                            char              **argv,
                                            const StringVector &args = StringVector());
-void              exit_app                (int status) RAPICORN_NORETURN;
 
 } // Rapicorn
 
