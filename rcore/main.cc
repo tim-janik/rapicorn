@@ -478,50 +478,13 @@ ScopedPosixLocale::posix_locale ()
   return posix_locale_;
 }
 
-/// Check and return if init_core() has already been called.
-bool
-init_core_initialized ()
-{
-  return application_name_ != NULL;
-}
-
-/**
- * @param app_ident     Application identifier, used to associate persistent resources
- * @param argcp         location of the 'argc' argument to main()
- * @param argv          location of the 'argv' arguments to main()
- * @param args          program specific initialization values
- *
- * Initialize the Rapicorn toolkit core, including threading, CPU detection, loading resource libraries, etc.
- * The arguments passed in @a argcp and @a argv are parsed and any Rapicorn specific arguments
- * are stripped.
- * If 'testing=1' is passed in @a args, these command line arguments are supported:
- * - @c --test-verbose - Execute test cases with verbose message generation.
- * - @c --test-slow - Execute only test cases excercising slow code paths or loops.
- * .
- * Additional initialization arguments can be passed in @a args, currently supported are:
- * - @c autonomous - Flag indicating a self-contained runtime environment (e.g. for tests) without loading rc-files, etc.
- * - @c cpu-affinity - CPU# to bind rapicorn thread to.
- * - @c testing - Enable testing framework, used by init_core_test(), see also #$RAPICORN_TEST.
- * - @c test-verbose - acts like --test-verbose.
- * - @c test-slow - acts like --test-slow.
- * .
- * Additionally, the @c $RAPICORN environment variable affects toolkit behaviour. It supports
- * multiple colon (':') separated options (options can be prfixed with 'no-' to disable):
- * - @c debug - Enables verbose debugging output (default=off).
- * - @c fatal-syslog - Fatal program conditions that lead to aborting are recorded via syslog (default=on).
- * - @c syslog - Critical and warning conditions are recorded via syslog (default=off).
- * - @c fatal-warnings - Critical and warning conditions are treated as fatal conditions (default=off).
- * - @c logfile=FILENAME - Record all messages and conditions into FILENAME.
- * .
- */
 void
 init_core (int *argcp, char **argv, const StringVector &args)
 {
   static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");
 
-  // guard against double initialization
-  if (init_core_initialized())
-    return;
+  static int initialized = 0;
+  assert_return (initialized++ == 0);
 
   // setup program and application name
   if (argcp && *argcp && argv && argv[0] && argv[0][0] != 0 && !program_argv0_)

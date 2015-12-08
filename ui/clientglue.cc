@@ -16,18 +16,40 @@ struct AppData {
 };
 static DurableInstance<AppData> static_appdata; // use DurableInstance to ensure app stays around for static dtors
 
-/** Initialize Rapicorn, setup and return the main Application object.
+/** Initialize Rapicorn and the main Application object.
  *
- * Initializes Rapicorn by starting a seperately running UI thread.
- * The UI thread initializes all UI related components and the main
- * Application object. After initialization, it enters the
- * main event loop for UI processing.
- *
- * @param application_name Possibly localized string useful to display
- *                         the application name in user interfaces.
- * @param argcp         Pointer to @a argc as passed into main().
- * @param argv          The @a argv argument as passed into main().
- * @param args          Internal initialization arguments, see init_core() for details.
+ * This funciton initializes the Rapicorn toolkit and starts an asynchronously
+ * running UI thread. The UI thread creates the main Application object,
+ * manages all UI related components and processes UI events.
+ * .
+ * The arguments passed in @a argcp and @a argv are parsed and any Rapicorn
+ * specific arguments are stripped. Note that Rapicorn requires the exact argv0
+ * as provided by main(). If @a argv[0] as passed into this function is empty or
+ * otherwise altered, the correct value needs to be supplied previously by a
+ * call to program_argv0_init().
+ * If 'testing=1' is passed in @a args, these command line arguments are supported:
+ * - @c --test-verbose - Execute test cases with verbose message generation.
+ * - @c --test-slow - Execute only test cases excercising slow code paths or loops.
+ * .
+ * The initialization arguments currenlty supported for @a args are as follows:
+ * - @c autonomous - Avoid loading external rc-files or other configurations that could affect test runs.
+ * - @c cpu-affinity - The CPU# to bind the Rapicorn UI thread to.
+ * - @c testing - Enable testing framework, used by init_core_test(), see also #$RAPICORN_TEST.
+ * - @c test-verbose - acts like --test-verbose.
+ * - @c test-slow - acts like --test-slow.
+ * .
+ * Additionally, the @c $RAPICORN environment variable affects toolkit behaviour. It supports
+ * multiple colon (':') separated options (options can be prfixed with 'no-' to disable):
+ * - @c debug - Enables verbose debugging output (default=off).
+ * - @c fatal-syslog - Fatal program conditions that lead to aborting are recorded via syslog (default=on).
+ * - @c syslog - Critical and warning conditions are recorded via syslog (default=off).
+ * - @c fatal-warnings - Critical and warning conditions are treated as fatal conditions (default=off).
+ * - @c logfile=FILENAME - Record all messages and conditions into FILENAME.
+ * .
+ * @param application_name Possibly localized string useful to display the application name in user interfaces.
+ * @param argcp         Location of the 'argc' argument to main()
+ * @param argv          Location of the 'argv' arguments to main()
+ * @param args          Rapicorn initialization arguments.
  */
 ApplicationH
 init_app (const String &application_name, int *argcp, char **argv, const StringVector &args)
@@ -58,8 +80,7 @@ init_app (const String &application_name, int *argcp, char **argv, const StringV
     (void) ci;
   }
   // initialize core
-  if (!init_core_initialized())
-    init_core (argcp, argv, args);
+  RapicornInternal::init_core (argcp, argv, args);
   // boot up UI thread
   const bool boot_ok = RapicornInternal::uithread_bootup (argcp, argv, args);
   if (!boot_ok)

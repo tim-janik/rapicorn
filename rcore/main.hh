@@ -12,7 +12,6 @@ namespace Rapicorn {
 
 // == initialization ==
 void    init_core               (int *argcp, char **argv, const StringVector &args = StringVector());
-bool    init_core_initialized   ();
 
 class InitSettings {
   static const InitSettings &is;

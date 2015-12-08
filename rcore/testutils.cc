@@ -383,7 +383,7 @@ void
 init_core_test (const String &application, int *argcp, char **argv, const StringVector &args)
 {
   RapicornInternal::inject_init_args (":autonomous:testing:fatal-warnings:");
-  init_core (argcp, argv, args);
+  RapicornInternal::init_core (argcp, argv, args);
   if (!application.empty())
     RapicornInternal::application_setup (application, "");
 }
