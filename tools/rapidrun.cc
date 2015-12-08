@@ -178,7 +178,7 @@ main (int   argc,
       char *argv[])
 {
   /* initialize Rapicorn and its backend (X11) */
-  ApplicationH app = Rapicorn::init_app ("Rapidrun", &argc, argv); // acquires Rapicorn mutex
+  ApplicationH app = Rapicorn::init_app ("Rapidrun", &argc, argv); // setup Rapicorn.Application
 
   struct TestRes : Res { using Res::utest_hook; };
   TestRes::utest_hook (unit_test_res);

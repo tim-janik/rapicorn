@@ -21,30 +21,29 @@ init_app_initialized ()
   return ApplicationH::the() != NULL;
 }
 
-/**
- * Initialize Rapicorn core via init_core(), and then starts a seperately
- * running UI thread. This UI thread initializes all UI related components
- * and the global Application object. After initialization, it enters the
+/** Initialize Rapicorn, setup and return the main Application object.
+ *
+ * Initializes Rapicorn by starting a seperately running UI thread.
+ * The UI thread initializes all UI related components and the main
+ * Application object. After initialization, it enters the
  * main event loop for UI processing.
- * @param app_ident     Identifier for this application, this is used to distinguish
- *                      persistent application resources and window configurations
- *                      from other applications.
+ *
+ * @param application_name Possibly localized string useful to display
+ *                         the application name in user interfaces.
  * @param argcp         Pointer to @a argc as passed into main().
  * @param argv          The @a argv argument as passed into main().
  * @param args          Internal initialization arguments, see init_core() for details.
  */
 ApplicationH
-init_app (const String &app_ident, int *argcp, char **argv, const StringVector &args)
+init_app (const String &application_name, int *argcp, char **argv, const StringVector &args)
 {
-  assert_return (init_app_initialized() == false, static_appdata->app);
+  return_unless (static_appdata->app == NULL, static_appdata->app);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("%s: link error: C++ constructors have not been executed", __func__);
   // initialize core
   if (!init_core_initialized())
-    init_core (app_ident, argcp, argv, args);
-  else if (app_ident != program_ident())
-    fatal ("%s: application identifier changed during ui initialization", __func__);
+    init_core (argcp, argv, args);
   // boot up UI thread
   const bool boot_ok = RapicornInternal::uithread_bootup (argcp, argv, args);
   if (!boot_ok)
@@ -56,6 +55,8 @@ init_app (const String &app_ident, int *argcp, char **argv, const StringVector &
   static_appdata->app = static_appdata->connection->remote_origin<ApplicationHandle>();
   if (!static_appdata->app)
     fatal ("%s: failed to retrieve Rapicorn::Application object: %s", __func__, strerror (errno));
+  if (!application_name.empty())
+    static_appdata->app.setup (application_name, "");
   return static_appdata->app;
 }
 
@@ -154,10 +155,11 @@ ApplicationH::main_loop()
  * Normally, Test::run() should be called next to execute all unit tests.
  */
 ApplicationH
-init_test_app (const String &app_ident, int *argcp, char **argv, const StringVector &args)
+init_test_app (const String &application_name, int *argcp, char **argv, const StringVector &args)
 {
-  init_core_test (app_ident, argcp, argv, args);
-  return init_app (app_ident, argcp, argv, args);
+  RapicornInternal::inject_init_args (":autonomous:testing:fatal-warnings:");
+  ApplicationH app = init_app (application_name, argcp, argv, args);
+  return app;
 }
 
 /**
