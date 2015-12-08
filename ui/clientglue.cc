@@ -14,13 +14,6 @@ struct AppData {
 };
 static DurableInstance<AppData> static_appdata; // use DurableInstance to ensure app stays around for static dtors
 
-/// Check and return if init_app() or init_test_app() has already been called.
-bool
-init_app_initialized ()
-{
-  return ApplicationH::the() != NULL;
-}
-
 /** Initialize Rapicorn, setup and return the main Application object.
  *
  * Initializes Rapicorn by starting a seperately running UI thread.

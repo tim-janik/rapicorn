@@ -58,7 +58,6 @@ IGNORE: // close last _scope
 global_scope:
 namespace Rapicorn {
 
-bool              init_app_initialized    ();
 ApplicationHandle init_app      (const String &application_name, int *argcp, char **argv, const StringVector &args = StringVector());
 ApplicationHandle init_test_app (const String &application_name, int *argcp, char **argv, const StringVector &args = StringVector());
 
