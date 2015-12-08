@@ -19,5 +19,5 @@ rapidrun_LDADD   = $(LDADDS)
 check-rapidrun-basics: $(RAPIDRUN)
 	$(Q) ./$(RAPIDRUN) --list $(srcdir)/minitest.xml | grep -q "MiniButton" \
 	; eval "$$TSTDIAGNOSE" "'Check sample definition for MiniButton'"
-check-am: check-rapidrun-basics
+check-local: check-rapidrun-basics
 EXTRA_DIST += minitest.xml

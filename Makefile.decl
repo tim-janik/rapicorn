@@ -68,13 +68,6 @@ distfile-list:
 	    echo "$(subdir)/$$file" >> $(DISTFILE_LIST) ;	\
 	done ; true
 
-# === check: check-before / check-after ===
-.PHONY: check-before check-after
-check-am: check-before
-check-local: check-after
-check-local: ; @:
-TSTV1=test-verbose
-
 # === slowcheck ===
 slowcheck: slowcheck-recursive
 .PHONY: slowcheck-recursive slowcheck
@@ -90,7 +83,7 @@ slowcheck_parallel--$(1): $(1)
 	$$(Q) $$(X11_ENV) RAPICORN_TEST="$$(TSTV$$(V)):test-slow" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
 slowcheck: slowcheck_parallel--$(1)
-check: @NOTDEVELMODE@ slowcheck_parallel--$(1)
+check-local: @NOTDEVELMODE@ slowcheck_parallel--$(1)
 endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call slowcheck_parallel_TEMPLATE,$(PRG))))
 
@@ -104,7 +97,7 @@ taptests: $(top_srcdir)/taptool.sh
 $(TAPRUNS): %.taprun: % # static pattern rule - also works for phony targets
 	$(Q) test "$@" = "$(@F)" || { echo "$@: test program outside CWD" >&2; exit 1; }
 	$(Q) TST="$(@:%.taprun=%)"; $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
-check: taptests
+check-local: taptests
 
 # == X11TESTS ==
 X11TESTS =
@@ -115,7 +108,7 @@ x11tests: $(top_srcdir)/taptool.sh
 $(X11RUNS): %.x11run: % # static pattern rule - also works for phony targets
 	$(Q) test "$@" = "$(@F)" || { echo "$@: test program outside CWD" >&2; exit 1; }
 	$(Q) TST="$(@:%.x11run=%)"; $(X11_ENV) $(top_srcdir)/taptool.sh --test-name "$$TST" -- ./"$$TST"
-check: x11tests
+check-local: x11tests
 
 # === TEST_PROGS ===
 TEST_PROGS =
@@ -124,7 +117,7 @@ define check_parallel_TEMPLATE
 check_parallel--$(1): $(1)
 	$$(Q) $$(X11_ENV) RAPICORN_TEST="$$(TSTV$$(V))" ./$(1) ; _e=$$$$?; \
 	  [ $$$$_e = 0 ] || { echo "FAILED($$$$_e): $(1)" ; exit $$$$_e; }
-check: check_parallel--$(1)
+check-local: check_parallel--$(1)
 endef
 $(foreach PRG,$(TEST_PROGS),$(eval $(call check_parallel_TEMPLATE,$(PRG))))
 

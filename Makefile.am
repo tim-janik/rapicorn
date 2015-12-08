@@ -85,7 +85,7 @@ check-dynamic_cast:	# check for dynamic_cast of reference types which is broken 
 	&& find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
 			-exec grep -Hn 'dynamic_cast[^<]*<[^>&]*&' {} \;	\
 	| grep '.' ; exit $$[!$$?] # fail on matches
-check-am: check-dynamic_cast # run source code checks before all others
+check-local: check-dynamic_cast # run source code checks before all others
 
 # === automake fixes ===
 # disable bogus cleanup checks
