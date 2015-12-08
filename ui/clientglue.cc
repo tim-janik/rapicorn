@@ -4,6 +4,8 @@
 #include "../configure.h"
 #include <stdlib.h>
 
+#define SDEBUG(...)     RAPICORN_KEY_DEBUG ("StartUp", __VA_ARGS__)
+
 namespace Rapicorn {
 
 static struct __StaticCTorTest { int v; __StaticCTorTest() : v (0x120caca0) { v += 0x300000; } } __staticctortest;
@@ -34,6 +36,20 @@ init_app (const String &application_name, int *argcp, char **argv, const StringV
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("%s: link error: C++ constructors have not been executed", __func__);
+  // full locale initialization is needed by X11, etc
+  if (!setlocale (LC_ALL,""))
+    {
+      auto sgetenv = [] (const char *var)  {
+        const char *str = getenv (var);
+        return str ? str : "";
+      };
+      String lv = string_format ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
+                                 sgetenv ("LANGUAGE"), sgetenv ("LC_ALL"), sgetenv ("LC_MONETARY"), sgetenv ("LC_MESSAGES"),
+                                 sgetenv ("LC_COLLATE"), sgetenv ("LC_CTYPE"), sgetenv ("LC_TIME"), sgetenv ("LANG"));
+      SDEBUG ("environment: %s", lv.c_str());
+      setlocale (LC_ALL, "C");
+      SDEBUG ("failed to initialize locale, falling back to \"C\"");
+    }
   // initialize core
   if (!init_core_initialized())
     init_core (argcp, argv, args);

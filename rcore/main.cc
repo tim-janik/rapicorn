@@ -536,21 +536,6 @@ init_core (int *argcp, char **argv, const StringVector &args)
   const char *env_rapicorn = getenv ("RAPICORN");
   RAPICORN_STARTUP_DEBUG ("$RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
 
-  // full locale initialization is needed by X11, etc
-  if (!setlocale (LC_ALL,""))
-    {
-      auto sgetenv = [] (const char *var)  {
-        const char *str = getenv (var);
-        return str ? str : "";
-      };
-      String lv = string_format ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
-                                 sgetenv ("LANGUAGE"), sgetenv ("LC_ALL"), sgetenv ("LC_MONETARY"), sgetenv ("LC_MESSAGES"),
-                                 sgetenv ("LC_COLLATE"), sgetenv ("LC_CTYPE"), sgetenv ("LC_TIME"), sgetenv ("LANG"));
-      RAPICORN_STARTUP_DEBUG ("environment: %s", lv.c_str());
-      setlocale (LC_ALL, "C");
-      RAPICORN_STARTUP_DEBUG ("failed to initialize locale, falling back to \"C\"");
-    }
-
   // setup init settings
   parse_settings_and_args (vinit_settings, argcp, argv, args);
 
