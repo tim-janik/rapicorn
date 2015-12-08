@@ -46,7 +46,7 @@ init_app (const String &app_ident, int *argcp, char **argv, const StringVector &
   else if (app_ident != program_ident())
     fatal ("%s: application identifier changed during ui initialization", __func__);
   // boot up UI thread
-  const bool boot_ok = uithread_bootup (argcp, argv, args);
+  const bool boot_ok = RapicornInternal::uithread_bootup (argcp, argv, args);
   if (!boot_ok)
     fatal ("%s: failed to start Rapicorn UI thread: %s", __func__, strerror (errno));
   // connect to remote UIThread and fetch main handle
@@ -74,7 +74,7 @@ ApplicationH::the ()
 void
 exit_app (int status)
 {
-  uithread_shutdown();
+  RapicornInternal::uithread_shutdown();
   ::exit (status);
 }
 
@@ -222,8 +222,12 @@ ApplicationH::iterate (bool block)
 void
 ApplicationH::shutdown()
 {
-  uithread_shutdown();
+  RapicornInternal::uithread_shutdown();
 }
+
+} // Rapicorn
+
+namespace RapicornInternal {
 
 // internal function for tests
 int64
@@ -232,4 +236,4 @@ client_app_test_hook ()
   return ApplicationH::the().test_hook();
 }
 
-} // Rapicorn
+} // RapicornInternal
