@@ -5,7 +5,6 @@
 #include "strings.hh"
 #include "thread.hh"
 #include "testutils.hh"
-#include "configbits.cc"
 #include <unistd.h>
 #include <string.h>
 #include <algorithm>
@@ -15,7 +14,7 @@
 namespace Rapicorn {
 
 String  rapicorn_version ()     { return RAPICORN_VERSION; }
-String  rapicorn_buildid ()     { return RAPICORN_BUILDID; }
+String  rapicorn_buildid ()     { return RapicornInternal::buildid(); }
 
 // === initialization hooks ===
 static InitHook *init_hooks = NULL;

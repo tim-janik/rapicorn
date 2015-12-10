@@ -38,11 +38,6 @@ rapicorn_generated_headers = $(strip	\
 )
 rapicorn_private_files = $(strip	\
 )
-rapicorn_generated_files = $(strip    	\
-	configbits.cc			\
-	zres.cc				\
-)
-# rapicorn_generated_files are NOT in EXTRA_DIST
 
 # === libraries ===
 # librapicorn-core
@@ -50,8 +45,8 @@ noinst_LTLIBRARIES                      = librapicorncore-@MAJOR@.la
 librapicorncore_@MAJOR@includedir       = $(includedir)/rapicorn-@MAJOR@/rcore
 librapicorncore_@MAJOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorncore_@MAJOR@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorncore_@MAJOR@_la_DEPENDENCIES = ldscript.map
-librapicorncore_@MAJOR@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm
+librapicorncore_@MAJOR@_la_DEPENDENCIES = ldscript.map buildid.lo
+librapicorncore_@MAJOR@_la_LIBADD       = $(RAPICORN_CORE_LIBS) -lm buildid.lo
 librapicorncore_@MAJOR@_la_LDFLAGS      = $(strip	\
 	$(AM_LDFLAGS) -no-undefined				\
 	-Wl,--version-script=$(srcdir)/ldscript.map		\
@@ -84,10 +79,11 @@ progs_ldadd	= librapicorncore-@MAJOR@.la $(RAPICORN_CORE_LIBS) -lm
 BIN_PROGS	=
 
 # == rapidres ==
-RAPIDRESV                = rapidres # rapidres-@MAJOR@
-BIN_PROGS               += $(RAPIDRESV)
-rapidres_SOURCES = rapidres.cc
-rapidres_LDADD   = $(LIBZ) # $(progs_ldadd)
+RAPIDRESV             = rapidres # rapidres-@MAJOR@
+BIN_PROGS            += $(RAPIDRESV)
+rapidres_SOURCES      = rapidres.cc
+rapidres_DEPENDENCIES = buildid.lo
+rapidres_LDADD        = buildid.lo $(LIBZ) # $(progs_ldadd)
 
 rapidres-installcheck:
 	$(Q) cd . \
@@ -105,27 +101,22 @@ rapidres-installcheck:
 installcheck-local: rapidres-installcheck
 CLEANFILES += xtmp-empty.dat xtmp-empty.out
 
-# === configbits.cc ===
-BUILDID=$(shell test -x $(top_srcdir)/.git/ && ( \
-	git log -n1 --pretty=format:Git-%h --abbrev=12 ; \
-	C=`git diff HEAD --raw | wc -l ` ; test "$$C" -lt 1 || echo "+$$C" ) \
-	|| sed -n "1,1{s/.*\# */ChangeLog-/g;p}" <$(top_srcdir)/ChangeLog )
-BUILDID_DEPS=$(shell B=`git rev-parse --git-dir 2>/dev/null` && for r in "`git symbolic-ref -q HEAD || echo HEAD`" packed-refs HEAD ; do echo "$B/$r" ; done)
-buildid:
-	@echo $(BUILDID)
-configbits.cc: $(top_builddir)/config.status $(BUILDID_DEPS) PHONY_REBUILDS # Makefile
+# === buildid.cc ===
+BUILDID = $(shell test -x $(top_srcdir)/.git/ && (git log -n1 --pretty=format:Git-%h --abbrev=12 ; \
+  C=`git diff HEAD --raw | wc -l ` ; test "$$C" -lt 1 || echo "+$$C" ) || sed -n "1,1{s/.*\# */ChangeLog-/g;p}" <$(top_srcdir)/ChangeLog )
+AUTOCLEAN_BUILDIDCC := $(shell test \! -e buildid.cc || grep -qF '"$(BUILDID)"' buildid.cc 2>/dev/null || \
+			   { rm -f buildid.cc ; echo "  CLEARING" buildid.cc >&2 ; })
+buildid.cc: # buildid.lo is linked into libs/executables
 	$(AM_V_GEN)
-	$(Q) cd . \
-	&& echo "// Generated data from $< (by make $@)" 					 > xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo '#define RAPICORN_BUILDID	"$(BUILDID)"'					>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "// Generated data ends here"	 						>> xgen-$(@F) \
-	&& (cmp -s xgen-$(@F) $@ || cp xgen-$(@F) $@)
-	$(Q) rm -f xgen-$(@F)
-CLEANFILES += xgen-configbits.cc configbits.cc
-$(srcdir)/main.cc $(srcdir)/rapidres.cc: configbits.cc
-.PHONY: PHONY_REBUILDS buildid
+	$(Q) ( \
+	  echo '#include "cxxaux.hh"' && \
+	  echo 'namespace RapicornInternal { const char* buildid() { return "$(BUILDID)"; } }' \
+	) >$@
+CLEANFILES += buildid.cc
+buildid:
+	@echo "BUILDID      = $(BUILDID)"
+	@echo "BUILDID_DEPS = $(BUILDID_DEPS)"
+.PHONY: buildid
 
 # === rapicornconfig.h ===
 rapicornconfig.h: $(top_builddir)/config.status # Makefile

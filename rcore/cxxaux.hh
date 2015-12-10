@@ -429,4 +429,8 @@ String cxx_demangle (const char *mangled_identifier);
 
 } // Rapicorn
 
+namespace RapicornInternal {
+const char* buildid(); // buildid.cc
+} // RapicornInternal
+
 #endif // __RAPICORN_CXXAUX_HH__
