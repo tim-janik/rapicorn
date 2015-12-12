@@ -4,6 +4,7 @@
 #include "strings.hh"
 #include "thread.hh"
 #include "main.hh"
+#include "../configure.h"
 #include <unistd.h>
 #include <syslog.h>
 #include <sys/types.h>
@@ -456,7 +457,7 @@ debug_config_get (const String &key, const String &default_value)
   const String options[3] = {
     envstring (dbg->envvar.c_str()),
     envstring ("RAPICORN_DEBUG"),
-    string_format ("fatal-syslog=1:devel=%d", RAPICORN_DEVEL_VERSION), // debug config defaults
+    string_format ("fatal-syslog=1:devel=%d", ENABLE_DEVEL_MODE), // debug config defaults
   };
   for (size_t i = 0; i < ARRAY_SIZE (options); i++)
     {

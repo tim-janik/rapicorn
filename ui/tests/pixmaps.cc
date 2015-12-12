@@ -91,13 +91,13 @@ test_pixstreams (void)
   /* decode pixstreams */
   Pixmap spixmap1, spixmap2, spixmap3, spixmap4;
   if (!spixmap1.load_pixstream (alpha_rle))
-    fatal ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+    fatal ("%s(): failed to decode pixstream: %s", __func__, string_from_errno (errno).c_str());
   if (!spixmap2.load_pixstream (alpha_raw))
-    fatal ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+    fatal ("%s(): failed to decode pixstream: %s", __func__, string_from_errno (errno).c_str());
   if (!spixmap3.load_pixstream (rgb_rle))
-    fatal ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+    fatal ("%s(): failed to decode pixstream: %s", __func__, string_from_errno (errno).c_str());
   if (!spixmap4.load_pixstream (rgb_raw))
-    fatal ("%s(): failed to decode pixstream: %s", STRFUNC, string_from_errno (errno).c_str());
+    fatal ("%s(): failed to decode pixstream: %s", __func__, string_from_errno (errno).c_str());
   /* concat pixstreams */
   Pixmap pixall (32, 128);
   pixall.copy (spixmap1, 0, 0, -1, -1, 0,  0);

@@ -11,10 +11,6 @@
 #include <fcntl.h>
 using namespace Rapicorn;
 
-#if RAPICORN_CHECK_VERSION (2147483647, 2147483647, 2147483647) || !RAPICORN_CHECK_VERSION (0, 0, 0)
-#error RAPICORN_CHECK_VERSION() implementation is broken
-#endif
-
 static void
 test_failing ()
 {

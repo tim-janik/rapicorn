@@ -89,3 +89,9 @@ which can be installed after adding an apt data source, example:
       sudo tee -a /etc/apt/sources.list.d/beast-team.list
     # Update package list and install Rapicorn
     apt-get update && apt-get -y install rapicorn
+
+Please note, that these packages and building from upstream source often
+introduces API or ABI incompatibilities that the shared-object library
+version may not properly reflect. So rebuilding or manual adjustments
+for dependent packages may be needed. The official release tarballs on
+the project website do not have this problem.

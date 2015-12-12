@@ -16,7 +16,6 @@
 #define SEARCHPATH_SEPARATOR    RAPICORN_SEARCHPATH_SEPARATOR   ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR.
 #define SEARCHPATH_SEPARATOR_S  RAPICORN_SEARCHPATH_SEPARATOR_S ///< Shorthand for RAPICORN_SEARCHPATH_SEPARATOR_S.
 #define __PRETTY_FILE__         RAPICORN_PRETTY_FILE            ///< Shorthand for #RAPICORN_PRETTY_FILE.
-//#define STRFUNC()                       RAPICORN_STRFUNC() // currently in cxxaux.hh
 #define STRLOC()         RAPICORN_STRLOC()          ///< Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
 #define return_if        RAPICORN_RETURN_IF         ///< Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
 #define return_unless    RAPICORN_RETURN_UNLESS     ///< Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.

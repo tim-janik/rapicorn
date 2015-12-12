@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_CXXAUX_HH__
 #define __RAPICORN_CXXAUX_HH__
 
-#include <rcore/rapicornconfig.h>       // _GNU_SOURCE
+#include <rcore/buildconfig.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stddef.h>			// NULL
@@ -38,24 +38,11 @@
 #define CLAMP                                   RAPICORN_CLAMP
 #undef ARRAY_SIZE
 #define ARRAY_SIZE				RAPICORN_ARRAY_SIZE
-#undef EXTERN_C
-#ifdef	__cplusplus
-#define EXTERN_C                                extern "C"
-#else
-#define EXTERN_C                                extern
-#endif
-#undef STRFUNC
-#define STRFUNC				        RAPICORN_SIMPLE_FUNCTION
 #if     !defined (INT64_MAX) || !defined (INT64_MIN) || !defined (UINT64_MAX)
-#ifdef  LLONG_MAX       // some gcc versions ship limits.h that fail to define LLONG_MAX for C99
-#  define INT64_MAX     LLONG_MAX       // +9223372036854775807LL
-#  define INT64_MIN     LLONG_MIN       // -9223372036854775808LL
-#  define UINT64_MAX    ULLONG_MAX      // +18446744073709551615LLU
-#else   // !LLONG_MAX but gcc always has __LONG_LONG_MAX__
-#  define INT64_MAX     __LONG_LONG_MAX__
-#  define INT64_MIN     (-INT64_MAX - 1LL)
-#  define UINT64_MAX    (INT64_MAX * 2ULL + 1ULL)
-#endif
+// clang++ and g++ always have __LONG_LONG_MAX__
+#  define INT64_MAX     __LONG_LONG_MAX__               //  +9223372036854775807LL
+#  define INT64_MIN     (-INT64_MAX - 1LL)              //  -9223372036854775808LL
+#  define UINT64_MAX    (INT64_MAX * 2ULL + 1ULL)       // +18446744073709551615LLU
 #endif
 #ifndef SIZE_T_MAX
 #define SIZE_T_MAX              (~size_t (0))

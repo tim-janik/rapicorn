@@ -578,7 +578,7 @@ trap_fork (uint64 usec_timeout, uint test_trap_flags)
                   kill_child (test_trap_last_pid, &status, 3);
                   test_trap_last_status = 1024; // timeout
                   if (0 && WIFSIGNALED (status))
-                    printerr ("%s: child timed out and received: %s\n", STRFUNC, strsignal (WTERMSIG (status)));
+                    printerr ("%s: child timed out and received: %s\n", __func__, strsignal (WTERMSIG (status)));
                   need_wait = false;
                   break;
                 }

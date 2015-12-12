@@ -2027,14 +2027,14 @@ ClientConnectionImpl::dispatch ()
         const bool deleted = true; // FIXME: currently broken
         if (!deleted)
           print_warning (string_format ("%s: invalid handler id (%016x) in message: (%016x, %016x%016x)",
-                                        STRFUNC, handler_id, msgid, hashhigh, hashlow));
+                                        __func__, handler_id, msgid, hashhigh, hashlow));
       }
       break;
     case MSGID_META_GARBAGE_SWEEP:
       gc_sweep (fb);
       break;
     default: // result/reply messages are handled in call_remote
-      print_warning (string_format ("%s: invalid message: %016x", STRFUNC, msgid));
+      print_warning (string_format ("%s: invalid message: %016x", __func__, msgid));
       break;
     }
   if (AIDA_UNLIKELY (fb))
@@ -2090,7 +2090,7 @@ ClientConnectionImpl::call_remote (ProtoMsg *fb)
         {
           ProtoReader frr (*fr);
           const uint64 retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
-          print_warning (string_format ("%s: invalid reply: (%016x, %016x%016x)", STRFUNC, retid, rethh, rethl));
+          print_warning (string_format ("%s: invalid reply: (%016x, %016x%016x)", __func__, retid, rethh, rethl));
         }
     }
   blocking_for_sem_ = false;
@@ -2384,7 +2384,7 @@ ServerConnectionImpl::dispatch ()
     default:
       {
         const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-        print_warning (string_format ("%s: invalid message: (%016x, %016x%016x)", STRFUNC, msgid, hashhigh, hashlow));
+        print_warning (string_format ("%s: invalid message: (%016x, %016x%016x)", __func__, msgid, hashhigh, hashlow));
       }
       break;
     }

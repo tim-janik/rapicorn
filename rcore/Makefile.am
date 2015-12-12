@@ -34,7 +34,7 @@ rapicorn_impl_headers = $(strip 	\
 )
 rapicorn_generated_headers = $(strip	\
 	aidavariants.hh			\
-	rapicornconfig.h		\
+	buildconfig.h			\
 )
 rapicorn_private_files = $(strip	\
 )
@@ -74,7 +74,7 @@ $(srcdir)/resources.cc: zres.cc
 
 # === API content ===
 api-content:
-	cat $(sort $(filter-out rapicornconfig.h, $(rapicorn_public_headers) $(rapicorn_generated_headers)))
+	cat $(sort $(filter-out buildconfig.h, $(rapicorn_public_headers) $(rapicorn_generated_headers)))
 .PHONY: api-content
 
 # === programs (not installed) ===
@@ -138,62 +138,18 @@ rapicornconfig.h: $(top_builddir)/config.status # Makefile
 	&& echo "#define _GNU_SOURCE"								>> xgen-$(@F) \
 	&& echo "#endif"									>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- standard C code wrappers --- */"					>> xgen-$(@F) \
-	&& echo "#ifdef  __cplusplus"								>> xgen-$(@F) \
-	&& echo '#define RAPICORN_EXTERN_C_BEGIN()	extern "C" {'				>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_END()		}"				>> xgen-$(@F) \
-	&& echo "#else"										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_BEGIN()"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_EXTERN_C_END()"						>> xgen-$(@F) \
-	&& echo "#endif"									>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- rapicorn version --- */"						>> xgen-$(@F) \
-	&& XMINOR=`echo @MINOR@ | sed 's/^0\+//'`						>> xgen-$(@F) \
-	&& echo "/* version checks */"								>> xgen-$(@F) \
-	&& echo "#define RAPICORN_CHECK_VERSION(major,minor,micro) \\"				>> xgen-$(@F) \
-	&& echo "  (@MAJOR@ > (major) || (@MAJOR@ == (major) && \\"				>> xgen-$(@F) \
-	&& echo "    ($$XMINOR > (minor) || ($$XMINOR == (minor) && \\"				>> xgen-$(@F) \
-	&& echo "      @MICRO@ >= (micro)))))"							>> xgen-$(@F) \
-	&& echo '#define RAPICORN_DEVEL_VERSION  (1 & @MICRO@)'					>> xgen-$(@F) \
-	&& echo '#define RAPICORN_STABLE_VERSION (!RAPICORN_DEVEL_VERSION)' 			>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* --- resource paths --- */"							>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_DOCDIR		"${docdir}"'				>> xgen-$(@F) \
 	&& echo	'#define RAPICORN_LOCALEDIR     	"${pkglocaledir}"'			>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- backend configuration --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_WITH_PANGO	(1)"						>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
-	&& echo "/* --- configure results --- */"						>> xgen-$(@F) \
-	&& echo "#define RAPICORN_OS_@RAPICORN_OS@  	(1) /* one of: @RAPICORN_OS_CHOICES@ */"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_POINTER		(@RAPICORN_SIZEOF_POINTER@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_LONG		(@RAPICORN_SIZEOF_LONG@)"			>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_SYS_TYPESH_UINT	(@RAPICORN_SIZEOF_SYS_TYPESH_UINT@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTHREADH_SPINLOCK	(@RAPICORN_SIZEOF_PTHREADH_SPINLOCK@)" 	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTH_MUTEX_T	(@RAPICORN_SIZEOF_PTH_MUTEX_T@)" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SIZEOF_PTH_COND_T	(@RAPICORN_SIZEOF_PTH_COND_T@)" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SPINLOCK_INITIALIZER	@RAPICORN_SPINLOCK_INITIALIZER@" 		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_HAVE_MUTEXATTR_SETTYPE	(@RAPICORN_HAVE_MUTEXATTR_SETTYPE@ && \\" >> xgen-$(@F) \
-	&& echo "                                        RAPICORN_SIZEOF_PTH_MUTEX_T && \\" 	>> xgen-$(@F) \
-	&& echo "                                        RAPICORN_SIZEOF_PTH_COND_T)" 		>> xgen-$(@F) \
-	&& echo ""										>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLIN 		(@RAPICORN_SYSVAL_POLLIN@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLPRI		(@RAPICORN_SYSVAL_POLLPRI@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLOUT		(@RAPICORN_SYSVAL_POLLOUT@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLRDNORM	(@RAPICORN_SYSVAL_POLLRDNORM@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLRDBAND 	(@RAPICORN_SYSVAL_POLLRDBAND@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLWRNORM   	(@RAPICORN_SYSVAL_POLLWRNORM@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLWRBAND	(@RAPICORN_SYSVAL_POLLWRBAND@)"		>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLERR		(@RAPICORN_SYSVAL_POLLERR@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLHUP		(@RAPICORN_SYSVAL_POLLHUP@)"	>> xgen-$(@F) \
-	&& echo "#define RAPICORN_SYSVAL_POLLNVAL	(@RAPICORN_SYSVAL_POLLNVAL@)"		>> xgen-$(@F) \
 	&& echo ""										>> xgen-$(@F) \
 	&& echo "/* Generated data ends here */" 						>> xgen-$(@F) \
 	&& cp xgen-$(@F) $@ \
 	&& rm -f xgen-$(@F)
 CLEANFILES += xgen-rapicornconfig.h rapicornconfig.h
 $(librapicorncore_@MAJOR@_la_OBJECTS): rapicornconfig.h
-
+EXTRA_DIST += buildconfig.h.in
 
 # === aidavariants.hh ===
 XMANIFOLD = $(top_srcdir)/aidacc/xmanifold.py

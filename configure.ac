@@ -71,8 +71,8 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 mk= ; AC_SUBST([mk]) # workaround for Automake abusing MAKE(1) keywords
 
 # declare --enable-* args and collect ac_help strings
-AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes] turn on debugging, default=yes],,enable_debug=yes)
-AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=no/yes    turn on development mode, default=auto],,enable_devel_mode=auto)
+AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
+AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=auto/yes/no build a development version, default=auto],,enable_devel_mode=auto)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -211,8 +211,10 @@ AC_SUBST(OPTIMIZE_FAST)
 # check for development build rules, which require acess to .git/
 AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
 [test x"$enable_devel_mode" = xauto -a -d "$srcdir/.git/" && enable_devel_mode=yes]
-test x"$enable_devel_mode" = xyes || enable_devel_mode=no
+test x"$enable_devel_mode" = xyes -o x"$enable_devel_mode" = x1 && enable_devel_mode=yes || enable_devel_mode=no
 AC_MSG_RESULT([$enable_devel_mode])
+edm=0; test x"$enable_devel_mode" = xyes && edm=1
+AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $edm, [Build a development version])
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
 if test x"$enable_devel_mode" = xyes ; then
   TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
@@ -302,7 +304,7 @@ AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
 
 ])
 
-dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rapicornconfig.h
+dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 [
   # === docdir ===
@@ -314,13 +316,13 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     # --- sizeof and presence of uint ---
     GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
     RAPICORN_SIZEOF_SYS_TYPESH_UINT="$glib_cv_sizeof_rapicorn_sys_typesh_uint"
-    AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT)
     GLIB_SIZEOF([], void**, rapicorn_pointer)
     RAPICORN_SIZEOF_POINTER="$glib_cv_sizeof_rapicorn_pointer"
-    AC_SUBST(RAPICORN_SIZEOF_POINTER) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_POINTER)
     GLIB_SIZEOF([], long, rapicorn_long)
     RAPICORN_SIZEOF_LONG="$glib_cv_sizeof_rapicorn_long"
-    AC_SUBST(RAPICORN_SIZEOF_LONG) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_LONG)
 
     # --- POLL* ---
     poll_headers=["
@@ -376,17 +378,17 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     # == sizeof pthread_rwlock_t ==
     GLIB_SIZEOF([#include <pthread.h>], pthread_rwlock_t, rapicorn_pthreadh_rwlock)
     RAPICORN_SIZEOF_PTHREADH_RWLOCK="$glib_cv_sizeof_rapicorn_pthreadh_rwlock"
-    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_RWLOCK) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_RWLOCK)
 
     # == sizeof pthread_spinlock_t ==
     GLIB_SIZEOF([#include <pthread.h>], pthread_spinlock_t, rapicorn_pthreadh_spinlock)
     RAPICORN_SIZEOF_PTHREADH_SPINLOCK="$glib_cv_sizeof_rapicorn_pthreadh_spinlock"
-    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK)
 
     # == pthread_spinlock_t initializer ==
     MC_DEFINE_SPINLOCK_INITIALIZER()
     RAPICORN_SPINLOCK_INITIALIZER="$mc_cv_spinlock_initializer"
-    AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER) dnl # for rapicornconfig.h
+    AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
 
     dnl # --- pthread_mutexattr_settype ---
     AC_MSG_CHECKING([for pthread_mutexattr_settype()])
@@ -620,6 +622,7 @@ po-helper.sh
 po/Makefile.in
 data/Makefile
 rcore/Makefile
+rcore/buildconfig.h
 rcore/rsvg/Makefile
 rcore/tests/Makefile
 res/Makefile
