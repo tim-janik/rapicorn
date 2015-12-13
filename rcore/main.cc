@@ -181,6 +181,10 @@ parse_bool_option (const String &s, const char *arg, bool *boolp)
 }
 
 // === initialization ===
+static const char   *program_argv0_ = NULL;
+static const String *program_name_ = NULL;
+static const String *application_name_ = NULL;
+
 struct VInitSettings : InitSettings {
   bool&   autonomous()  { return autonomous_; }
   uint64& test_codes()  { return test_codes_; }
@@ -193,6 +197,12 @@ static const char *internal_init_args_ = NULL;
 static void
 parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, const StringVector &args)
 {
+  static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");
+
+  // setup program and application name
+  if (argcp && *argcp && argv && argv[0] && argv[0][0] != 0 && !program_argv0_)
+    program_argv0_init (argv[0]);
+
   bool b, testing_mode = false;
   uint64 tco = 0;
   // apply init settings
@@ -247,11 +257,6 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
     }
 }
 
-static const char   *program_argv0_ = NULL;
-static const String *program_cwd_ = NULL;
-static const String *program_name_ = NULL;
-static const String *application_name_ = NULL;
-
 /// File name of the current process as set in argv[0] at startup.
 String
 program_argv0 ()
@@ -281,9 +286,6 @@ program_argv0_init (const char *argv0)
   assert_return (strcmp (program_invocation_name, argv0) == 0); // there's only *one* argv[0]
 #endif
   program_argv0_ = libc_argv0 ? libc_argv0 : strdup (argv0);
-  // miscellaneous other initializations
-  if (!program_cwd_)
-    program_cwd_ = new String (Path::cwd());
 }
 
 /// Formal name of the program, used to retrieve resources and store session data.
@@ -315,11 +317,18 @@ program_alias ()
   return program_invocation_short_name; // _GNU_SOURCE?
 }
 
+struct CwdString {
+  String dir_;
+  CwdString() : dir_ (Path::cwd()) {}
+};
+static DurableInstance<CwdString> program_cwd_;         // a DurableInstance Class is create on-demand
+static Init program_cwd_init ([]() { program_cwd(); }); // force program_cwd_ initialization during static ctors
+
 /// The current working directory during startup.
 String
 program_cwd ()
 {
-  return program_cwd_ ? *program_cwd_ : "./";
+  return program_cwd_->dir_;
 }
 
 /// Application name suitable for user interface display.
@@ -480,16 +489,9 @@ ScopedPosixLocale::posix_locale ()
 void
 init_core (int *argcp, char **argv, const StringVector &args)
 {
-  static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");
-
   static int initialized = 0;
   assert_return (initialized++ == 0);
 
-  // setup program and application name
-  if (argcp && *argcp && argv && argv[0] && argv[0][0] != 0 && !program_argv0_)
-    program_argv0_init (argv[0]);
-  if (!program_cwd_)
-    program_cwd_ = new String (Path::cwd());
   const String palias = program_alias();
   if (!palias.empty())
     ThreadInfo::self().name (string_format ("%s-MainThread", palias.c_str()));
