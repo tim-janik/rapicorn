@@ -150,7 +150,7 @@ struct GlobalEnumInfoMap {
   Mutex                             mutex;
   std::map<String, const EnumInfo*> map;
 };
-static DurableInstance<GlobalEnumInfoMap*> global_enum_info;
+static DurableInstance<GlobalEnumInfoMap> global_enum_info;
 
 const EnumInfo&
 EnumInfo::cached_enum_info (const String &enum_name, bool isflags, uint32_t n_values, const EnumValue *values)
@@ -1765,7 +1765,7 @@ public:
     return NULL; // unmatched
   }
 };
-static DurableInstance<ConnectionRegistry*> connection_registry; // keep ConnectionRegistry across static dtors
+static DurableInstance<ConnectionRegistry> connection_registry; // keep ConnectionRegistry across static dtors
 
 // == BaseConnection ==
 BaseConnection::BaseConnection (const std::string &protocol) :

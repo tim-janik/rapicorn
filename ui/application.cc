@@ -20,7 +20,7 @@ ApplicationImpl&
 ApplicationImpl::the ()
 {
   // call new and never delete to keep singelton across static dtors
-  static DurableInstance<ApplicationImplP*> singleton;
+  static DurableInstance<ApplicationImplP> singleton;
   if (!*singleton)
     *singleton = std::make_shared<ApplicationImpl>();
   return *singleton->get();

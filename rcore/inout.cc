@@ -403,7 +403,7 @@ struct DebugMap {
   DebugMap() {}
   RAPICORN_CLASS_NON_COPYABLE (DebugMap);
 };
-static DurableInstance<DebugMap*> dbg; // an undeletable DebugMap that makes dbg available across all other static ctor/dtor calls
+static DurableInstance<DebugMap> dbg; // an undeletable DebugMap that makes dbg available across all other static ctor/dtor calls
 
 /// Parse environment variable @a name for debug configuration.
 void
