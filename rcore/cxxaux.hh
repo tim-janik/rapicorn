@@ -251,10 +251,12 @@ public:
       initialize();
     return ptr_;
   }
-  const Class* operator->() const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator->(); }
   /// Retrieve reference to @a Class instance, always returns the same reference.
-  Class&       operator*()  __attribute__ ((pure))       { return *operator->(); }
-  const Class& operator* () const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator*(); }
+  Class&       operator*     () __attribute__ ((pure))       { return *operator->(); }
+  const Class* operator->    () const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator->(); }
+  const Class& operator*     () const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator*(); }
+  /// Check if @a this stores a @a Class instance yet.
+  explicit     operator bool () const                        { return ptr_ != NULL; }
 };
 
 /**
