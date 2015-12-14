@@ -225,11 +225,14 @@ template<class ClassPtr> struct DurableInstance {
   static_assert (std::is_pointer<ClassPtr>::value, "DurableInstance<Class*> requires class pointer template argument");
 };
 
-/// Create an instance of @a Class that is constructed and never destructed.
+/// Create an instance of @a Class on demand that is constructed and never destructed.
 /// DurableInstance<Class*> provides the memory for a @a Class instance and calls it's
-/// constructor, but it's destructor is never called (so the memory allocated to the
-/// DurableInstance must not be freed). A DurableInstance should be used for static
-/// variables that need to persist across all other static ctor/dtor calls.
+/// constructor on demand, but it's destructor is never called (so the memory allocated
+/// to the DurableInstance must not be freed). Due to its constexpr ctor and on-demand
+/// creation of @a Class, a DurableInstance<> can be accessed at any time during the
+/// static ctor (or dtor) phases and will always yield a properly initialized @a Class.
+/// A DurableInstance is useful for static variables that need to be accessible from
+/// other static ctor/dtor calls.
 template<class Class>
 class DurableInstance<Class*> {
   Class *ptr_;
