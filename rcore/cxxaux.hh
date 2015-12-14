@@ -11,6 +11,7 @@
 #include <limits.h>                     // {INT|CHAR|...}_{MIN|MAX}
 #include <float.h>                      // {FLT|DBL}_{MIN|MAX|EPSILON}
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <map>
@@ -233,13 +234,13 @@ template<class Class>
 class DurableInstance<Class*> {
   Class *ptr_;
   uint64 mem_[(sizeof (Class) + sizeof (uint64) - 1) / sizeof (uint64)];
-  bool
-  initialize() __attribute__ ((noinline))
+  void
+  initialize() RAPICORN_NOINLINE
   {
-    /* assert (ptr_ == NULL); */
-    // call ctor but never dtor
-    ptr_ = new (mem_) Class();
-    return true;
+    static std::mutex mtx;
+    std::unique_lock<std::mutex> lock (mtx);
+    if (ptr_ == NULL)
+      ptr_ = new (mem_) Class(); // exclusive construction
   }
 public:
   constexpr  DurableInstance() : ptr_ (NULL) {}
@@ -248,10 +249,7 @@ public:
   operator->() __attribute__ ((pure))
   {
     if (RAPICORN_UNLIKELY (ptr_ == NULL))
-      {
-        static bool initialized = initialize(); // executes exclusively
-        (void) initialized;
-      }
+      initialize();
     return ptr_;
   }
   const Class* operator->() const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator->(); }
