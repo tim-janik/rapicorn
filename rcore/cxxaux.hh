@@ -234,7 +234,7 @@ template<class ClassPtr> struct DurableInstance {
 /// A DurableInstance is useful for static variables that need to be accessible from
 /// other static ctor/dtor calls.
 template<class Class>
-class DurableInstance<Class*> {
+class DurableInstance<Class*> final {
   Class *ptr_;
   uint64 mem_[(sizeof (Class) + sizeof (uint64) - 1) / sizeof (uint64)];
   void
