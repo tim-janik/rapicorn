@@ -492,10 +492,6 @@ init_core (int *argcp, char **argv, const StringVector &args)
   static int initialized = 0;
   assert_return (initialized++ == 0);
 
-  const String palias = program_alias();
-  if (!palias.empty())
-    ThreadInfo::self().name (string_format ("%s-MainThread", palias.c_str()));
-
   // ensure logging is fully initialized
   const char *env_rapicorn = getenv ("RAPICORN");
   RAPICORN_STARTUP_DEBUG ("$RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
