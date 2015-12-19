@@ -222,22 +222,69 @@ struct Gen_Pcg32 {
 static void
 random_hash_benchmarks()
 {
-  Test::Timer timer (0.5); // maximum seconds
-  GeneratorBench64<std::mt19937_64> mb; // core-i7: 1415.3MB/s
-  double bench_time = timer.benchmark (mb);
-  TPASS ("mt19937_64 # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (mb), bench_time, mb.bytes_per_run() / bench_time / 1048576.);
-  GeneratorBench64<Gen_minstd> sb;      // core-i7:  763.7MB/s
-  bench_time = timer.benchmark (sb);
-  TPASS ("minstd     # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (sb), bench_time, sb.bytes_per_run() / bench_time / 1048576.);
-  GeneratorBench64<Gen_lrand48> lb;     // core-i7:  654.8MB/s
-  bench_time = timer.benchmark (lb);
-  TPASS ("lrand48()  # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (lb), bench_time, lb.bytes_per_run() / bench_time / 1048576.);
-  GeneratorBench64<KeccakPRNG> kb;      // core-i7:  185.3MB/s
-  bench_time = timer.benchmark (kb);
-  TPASS ("KeccakPRNG # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (kb), bench_time, kb.bytes_per_run() / bench_time / 1048576.);
+  Test::Timer timer (0.2); // maximum seconds
+  double bench_time;
+
   GeneratorBench64<Gen_Pcg32> pb;
   bench_time = timer.benchmark (pb);
-  TPASS ("Pcg32Rng   # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (pb), bench_time, pb.bytes_per_run() / bench_time / 1048576.);
+  TPASS ("Pcg32Rng        # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (pb), bench_time, pb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<std::mt19937_64> mb; // core-i7: 1415.3MB/s
+  bench_time = timer.benchmark (mb);
+  TPASS ("mt19937_64      # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (mb), bench_time, mb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<Gen_minstd> sb;      // core-i7:  763.7MB/s
+  bench_time = timer.benchmark (sb);
+  TPASS ("minstd          # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (sb), bench_time, sb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<Gen_lrand48> lb;     // core-i7:  654.8MB/s
+  bench_time = timer.benchmark (lb);
+  TPASS ("lrand48()       # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (lb), bench_time, lb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<KeccakFastRng> kf;
+  bench_time = timer.benchmark (kf);
+  TPASS ("KeccakFastRng   # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (kf), bench_time, kf.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<KeccakGoodRng> kg;
+  bench_time = timer.benchmark (kg);
+  TPASS ("KeccakGoodRng   # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (kg), bench_time, kg.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<KeccakCryptoRng> kc; // core-i7:  185.3MB/s
+  bench_time = timer.benchmark (kc);
+  TPASS ("KeccakCryptoRng # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (kc), bench_time, kc.bytes_per_run() / bench_time / 1048576.);
+
+  constexpr int N_RUNS = 1000, BLOCK = 256, N_BYTES = N_RUNS * BLOCK * sizeof (uint32_t) * 2; // * 2 counts bytes in + out
+  const uint32_t mixinput[BLOCK] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, };
+  uint32_t mixoutput[BLOCK];
+
+  auto mix_keccak = [&mixinput, &mixoutput] () {
+    for (size_t j = 0; j < N_RUNS; j++)
+      {
+        KeccakPRNG kcs (128, 8); // KeccakFastRng
+        kcs.seed ((const uint64_t*) &mixinput[0], ARRAY_SIZE (mixinput) / 2);
+        kcs.generate (&mixoutput[0], &mixoutput[ARRAY_SIZE (mixoutput)]);
+      }
+  };
+  bench_time = timer.benchmark (mix_keccak);
+  TPASS ("KeccakSeed      # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (KeccakPRNG), bench_time, N_BYTES / bench_time / 1048576.);
+
+  auto mix_seedseqfe256 = [&mixinput, &mixoutput] () {
+    for (size_t j = 0; j < N_RUNS; j++)
+      {
+        SeedSeqFE256 seeder (&mixinput[0], &mixinput[ARRAY_SIZE (mixinput)]);
+        seeder.generate (&mixoutput[0], &mixoutput[ARRAY_SIZE (mixoutput)]);
+      }
+  };
+  bench_time = timer.benchmark (mix_seedseqfe256);
+  TPASS ("SeedSeqFE       # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (SeedSeqFE256), bench_time, N_BYTES / bench_time / 1048576.);
+
+  auto mix_shake128 = [&mixinput, &mixoutput] () {
+    for (size_t j = 0; j < N_RUNS; j++)
+      shake128_hash (&mixinput[0], sizeof (uint32_t) * ARRAY_SIZE (mixinput), (uint8_t*) &mixoutput[0], sizeof (uint32_t) * ARRAY_SIZE (mixoutput));
+  };
+  bench_time = timer.benchmark (mix_shake128);
+  TPASS ("Shake128        # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (SHAKE128), bench_time, N_BYTES / bench_time / 1048576.);
+
+  auto mix_shake256 = [&mixinput, &mixoutput] () {
+    for (size_t j = 0; j < N_RUNS; j++)
+      shake256_hash (&mixinput[0], sizeof (uint32_t) * ARRAY_SIZE (mixinput), (uint8_t*) &mixoutput[0], sizeof (uint32_t) * ARRAY_SIZE (mixoutput));
+  };
+  bench_time = timer.benchmark (mix_shake256);
+  TPASS ("Shake256        # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (SHAKE256), bench_time, N_BYTES / bench_time / 1048576.);
 }
 REGISTER_TEST ("RandomHash/~ Benchmarks", random_hash_benchmarks);
 
