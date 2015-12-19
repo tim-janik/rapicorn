@@ -102,12 +102,11 @@ Lib::KeccakF1600::permute (const uint32_t n_rounds)
 }
 
 // == KeccakPRNG ==
-
-/// Keccak permutation for 1600 bits and 24 rounds, see Keccak11 @cite Keccak11 .
+/// Keccak permutation for 1600 bits, see Keccak11 @cite Keccak11 .
 void
 KeccakPRNG::permute1600()
 {
-  state_.permute (24);
+  state_.permute (n_rounds_);
   opos_ = 0;    // fresh outputs available
 }
 
@@ -162,6 +161,13 @@ KeccakPRNG::xor_seed (const uint64_t *seeds, size_t n_seeds)
   if (i < 25)           // apply Simple padding: pad10*
     state_[i] ^= 0x1;   // 1: payload boundary bit for Keccak Sponge compliant padding
   permute1600();        // integrate seed
+}
+
+void
+KeccakPRNG::auto_seed()
+{
+  // FIXME: !!!!!!!!!!!!!!!!!!!!!!!!!
+  seed (1);
 }
 
 /// The destructor resets the generator state to avoid leaving memory trails.
