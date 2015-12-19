@@ -265,6 +265,49 @@ public:
   }
 };
 
+/** Pcg32Rng is a permutating linear congruential PRNG.
+ * At the core, this pseudo random number generator uses the well known
+ * linear congruential generator:
+ * 6364136223846793005 * accumulator + 1442695040888963407 mod 2^64.
+ * See also TAOCP by D. E. Knuth, section 3.3.4, table 1, line 26.
+ * For good statistical performance, the output function of the permuted congruential
+ * generator family is used as described on http://www.pcg-random.org/.
+ * Period length for this generator is 2^64, the specified seed @a offset
+ * chooses the position of the genrator and the seed @a sequence parameter
+ * can be used to choose from 2^63 distinct random sequences.
+ */
+class Pcg32Rng {
+  uint64_t increment_;          // must be odd, allows for 2^63 distinct random sequences
+  uint64_t accu_;               // can contain all 2^64 possible values
+  static constexpr const uint64_t A = 6364136223846793005ULL; // from C. E. Hayness, see TAOCP by D. E. Knuth, 3.3.4, table 1, line 26.
+  static inline constexpr uint32_t
+  ror32 (const uint32_t bits, const uint32_t offset)
+  {
+    // bitwise rotate-right pattern recognized by gcc & clang iff 32==sizeof (bits)
+    return (bits >> offset) | (bits << (32 - offset));
+  }
+  static inline constexpr uint32_t
+  pcg_xsh_rr (const uint64_t input)
+  {
+    // Section 6.3.1. 32-bit Output, 64-bit State: PCG-XSH-RR
+    // http://www.pcg-random.org/pdf/toms-oneill-pcg-family-v1.02.pdf
+    return ror32 ((input ^ (input >> 18)) >> 27, input >> 59);
+  }
+public:
+  /// Initialize and seed.
+  explicit Pcg32Rng  (uint64_t offset = 11400714819323198485ULL, uint64_t sequence = 1442695040888963407ULL);
+  /// Seed by seeking to position @a offset within stream @a sequence.
+  void     seed      (uint64_t offset, uint64_t sequence = 1442695040888963407ULL);
+  /// Generate uniformly distributed 32 bit pseudo random number.
+  uint32_t
+  random ()
+  {
+    const uint64_t lcgout = accu_;      // using the *last* state as ouput helps with CPU pipelining
+    accu_ = A * accu_ + increment_;
+    return pcg_xsh_rr (lcgout);         // PCG XOR-shift + random rotation
+  }
+};
+
 } // Rapicorn
 
 #endif /* __RAPICORN_RANDOMHASH_HH__ */
