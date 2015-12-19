@@ -2,9 +2,111 @@
 #include <rcore/testutils.hh>
 #include <rcore/randomhash.hh>
 #include <random>
+#include <array>
 
 using namespace Rapicorn;
 
+/** SeedSeqFE256 provides a fixed-entropy seed sequence with good avalanche properties.
+ * This class provides a replacement for std::seed_seq that avoids problems with bias,
+ * performs better in empirical statistical tests, and executes faster in
+ * normal-sized use cases.
+ * The implementation is based on randutils::seed_seq_fe256 from Melissa E. O'Neill,
+ * see: http://www.pcg-random.org/posts/developing-a-seed_seq-alternative.html
+ */
+class SeedSeqFE256 {
+  std::array<uint32_t, 8> mixer_;
+  static constexpr uint32_t INIT_A = 0x43b0d7e5;
+  static constexpr uint32_t MULT_A = 0x931e8875;
+  static constexpr uint32_t INIT_B = 0x8b51f9dd;
+  static constexpr uint32_t MULT_B = 0x58f38ded;
+  static constexpr uint32_t MIX_MULT_L = 0xca01f9dd;
+  static constexpr uint32_t MIX_MULT_R = 0x4973f715;
+  static constexpr uint32_t XSHIFT = sizeof (uint32_t) * 8 / 2;
+public:
+  SeedSeqFE256 ()           {}
+  template<typename T>
+  SeedSeqFE256 (std::initializer_list<T> init)
+  {
+    seed (init.begin(), init.end());
+  }
+  template<typename InputIter>
+  SeedSeqFE256 (InputIter begin, InputIter end)
+  {
+    seed (begin, end);
+  }
+  template<typename InputIter> void
+  seed (InputIter begin, InputIter end)
+  {
+    const uint32_t *beginp = &*begin;
+    const uint32_t *endp = &*end;
+    mix_input (beginp, endp);
+  }
+  template<typename RandomAccessIterator> void
+  generate (RandomAccessIterator dest_begin, RandomAccessIterator dest_end) const
+  {
+    uint32_t *beginp = &*dest_begin;
+    uint32_t *endp = &*dest_end;
+    generate_output (beginp, endp);
+  }
+private:
+  void
+  mix_input (const uint32_t *begin, const uint32_t *end)
+  {
+    // based on http://www.pcg-random.org/posts/developing-a-seed_seq-alternative.html
+    // Copyright (C) 2015 Melissa E. O'Neill, The MIT License (MIT)
+    auto hash_const = INIT_A;
+    auto hash = [&] (uint32_t value) {
+      value ^= hash_const;
+      hash_const *= MULT_A;
+      value *= hash_const;
+      value ^= value >> XSHIFT;
+      return value;
+    };
+    auto mix = [] (uint32_t x, uint32_t y) {
+      uint32_t result = MIX_MULT_L * x - MIX_MULT_R * y;
+      result ^= result >> XSHIFT;
+      return result;
+    };
+    const uint32_t *current = begin;
+    for (auto &elem : mixer_)
+      {
+        if (current != end)
+          elem = hash (*current++);
+        else
+          elem = hash (0U);
+      }
+    for (auto &src : mixer_)
+      for (auto &dest : mixer_)
+        if (&src != &dest)
+          dest = mix (dest, hash (src));
+    for (; current != end; ++current)
+      for (auto &dest : mixer_)
+        dest = mix (dest, hash (*current));
+  }
+  void
+  generate_output (uint32_t *dest_begin, uint32_t *dest_end) const
+  {
+    // based on http://www.pcg-random.org/posts/developing-a-seed_seq-alternative.html
+    // Copyright (C) 2015 Melissa E. O'Neill, The MIT License (MIT)
+    auto src_begin  = mixer_.begin();
+    auto src_end    = mixer_.end();
+    auto src        = src_begin;
+    auto hash_const = INIT_B;
+    for (auto dest = dest_begin; dest != dest_end; ++dest)
+      {
+        auto dataval = *src;
+        if (++src == src_end)
+          src = src_begin;
+        dataval ^= hash_const;
+        hash_const *= MULT_B;
+        dataval *= hash_const;
+        dataval ^= dataval >> XSHIFT;
+        *dest = dataval;
+      }
+  }
+};
+
+// == EntropyTests ==
 struct EntropyTests : Entropy {
   void
   test (char *arg)
@@ -167,6 +269,34 @@ test_pcg32()
 REGISTER_TEST ("RandomHash/Pcg32Rng", test_pcg32);
 
 static void
+test_seeder32()
+{
+  uint32_t ref[337] = { 0, };
+  constexpr uint32_t LENGTH = 17;
+  SeedSeqFE256 seeder (&ref[0], &ref[ARRAY_SIZE (ref)]);
+  // simple non-zero + mixing check
+  uint32_t seed1[LENGTH] = { 0, };
+  seeder.generate (&seed1[0], &seed1[LENGTH]);
+  for (uint i = 0; i < LENGTH; i++)
+    {
+      assert (seed1[i] != 0);
+      assert (seed1[i] != seed1[(i + 1) % LENGTH]);
+    }
+  // check avalange of single bit
+  ref[5] = 0x00100000;
+  seeder.seed (&ref[0], &ref[ARRAY_SIZE (ref)]);
+  uint32_t seed2[LENGTH] = { 0, };
+  seeder.generate (&seed2[0], &seed2[LENGTH]);
+  for (uint i = 0; i < LENGTH; i++)
+    {
+      assert (seed2[i] != 0);
+      assert (seed2[i] != seed1[i]);
+      assert (seed2[i] != seed2[(i + 1) % LENGTH]);
+    }
+}
+REGISTER_TEST ("RandomHash/SeedSeqFE256", test_seeder32);
+
+static void
 test_keccak_prng()
 {
   KeccakPRNG krandom1;
@@ -179,7 +309,7 @@ test_keccak_prng()
                                l & 0xff, (l>>8) & 0xff, (l>>16) & 0xff, l>>24, h & 0xff, (h>>8) & 0xff, (h>>16) & 0xff, h>>24);
     }
   // printf ("KeccakPRNG: %s\n", digest.c_str());
-  TASSERT (digest == "c336e57d8674ec52528a79e41c5e4ec9b31aa24c07cdf0fc8c6e8d88529f583b37a389883d2362639f8cc042abe980e0");
+  TCMP (digest, ==, "c336e57d8674ec52528a79e41c5e4ec9b31aa24c07cdf0fc8c6e8d88529f583b37a389883d2362639f8cc042abe980e0"); // 24 rounds
 
   std::stringstream kss;
   kss << krandom1;

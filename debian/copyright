@@ -26,6 +26,13 @@ Copyright:
   Copyright (C) 2000-2005, the GLib Project
 License: LGPL-2+
 
+Files: rcore/tests/benchrcore.cc
+Copyright: Copyright (C) 2015 Melissa E. O'Neill
+License: MIT-License
+Comment: The SeedSeqFE256 mixing and generation is based on
+ randutils::seed_seq_fe256 by Melissa E. O'Neill, source at:
+ https://gist.github.com/imneme/540829265469e673d045
+
 Files: ui/table.cc
 Copyright:
   Copyright (C) 1996-2002, the GTK+ Project
