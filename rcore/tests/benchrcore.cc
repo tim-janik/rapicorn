@@ -111,24 +111,60 @@ struct Gen_minstd  {
   uint64_t operator() () { return uint64_t (minstd()) << 32 | minstd(); }
 };
 
+struct Gen_Pcg32 {
+  Pcg32Rng pcg1, pcg2;
+  Gen_Pcg32() : pcg1 (0x853c49e6748fea9bULL, 1), pcg2 (0x853c49e6748fea9bULL, 2) {}
+  uint64_t operator() () { return (uint64_t (pcg1.random()) << 32) | pcg2.random(); }
+};
+
 static void
 random_hash_benchmarks()
 {
   Test::Timer timer (0.5); // maximum seconds
   GeneratorBench64<std::mt19937_64> mb; // core-i7: 1415.3MB/s
   double bench_time = timer.benchmark (mb);
-  TPASS ("mt19937_64 # timing: fastest=%fs prng=%.1fMB/s\n", bench_time, mb.bytes_per_run() / bench_time / 1048576.);
+  TPASS ("mt19937_64 # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (mb), bench_time, mb.bytes_per_run() / bench_time / 1048576.);
   GeneratorBench64<Gen_minstd> sb;      // core-i7:  763.7MB/s
   bench_time = timer.benchmark (sb);
-  TPASS ("minstd     # timing: fastest=%fs prng=%.1fMB/s\n", bench_time, sb.bytes_per_run() / bench_time / 1048576.);
+  TPASS ("minstd     # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (sb), bench_time, sb.bytes_per_run() / bench_time / 1048576.);
   GeneratorBench64<Gen_lrand48> lb;     // core-i7:  654.8MB/s
   bench_time = timer.benchmark (lb);
-  TPASS ("lrand48()  # timing: fastest=%fs prng=%.1fMB/s\n", bench_time, lb.bytes_per_run() / bench_time / 1048576.);
+  TPASS ("lrand48()  # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (lb), bench_time, lb.bytes_per_run() / bench_time / 1048576.);
   GeneratorBench64<KeccakPRNG> kb;      // core-i7:  185.3MB/s
   bench_time = timer.benchmark (kb);
-  TPASS ("KeccakPRNG # timing: fastest=%fs prng=%.1fMB/s\n", bench_time, kb.bytes_per_run() / bench_time / 1048576.);
+  TPASS ("KeccakPRNG # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (kb), bench_time, kb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<Gen_Pcg32> pb;
+  bench_time = timer.benchmark (pb);
+  TPASS ("Pcg32Rng   # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (pb), bench_time, pb.bytes_per_run() / bench_time / 1048576.);
 }
 REGISTER_TEST ("RandomHash/~ Benchmarks", random_hash_benchmarks);
+
+static void
+test_pcg32()
+{
+  Pcg32Rng pcg (0x853c49e6748fea9b, 0xda3e39cb94b95bdb);
+  static const uint32_t ref[] = {
+    0x486fa52f, 0x6c1825ef, 0xbc7dfd25, 0x2e39be5d, 0xbab9d529, 0x3db767df, 0x8a57b4e5, 0x62cb137d,
+    0xb121455c, 0x5d82c6c9, 0x161abd58, 0x011d98b6, 0x82bcfc78, 0x41b769d5, 0x77519400, 0x18bb198e,
+    0x3a8b2057, 0xf1512960, 0x9a750b7f, 0x04681633, 0x9b6a5b63, 0x5938d377, 0x29cd44fb, 0xc3721bf6,
+    0x20cc9794, 0xe8d41401, 0x500009b9, 0xfe598389, 0xdeebbb9c, 0x4b2a51e7, 0x4ae4140d, 0xa64e4fa2,
+    0x2dc6a4cc, 0xd01c11ad, 0xedbc9f1b, 0x35a3c1df, 0x4449116e, 0x2239fdf7, 0x7000690f, 0x4f60058e,
+    0x1d20a167, 0xd9edfc2c, 0x8e8902f2, 0xcfed8ff2, 0x05ecda19, 0x228ee89b, 0x8f4b6611, 0x4502516a,
+    0x75af390c, 0xc57e17ef, 0x7bce8d57, 0x95a0243a, 0x44756680, 0x41355c24, 0x6a90eb2c, 0x737a859a,
+    0x09484943, 0xc203b087, 0xd74db10b, 0x58581181, 0x578164f4, 0x2f2e074a, 0x633016d3, 0x4e8ce966,
+    0xffd9615f, 0xd2e3c4e6, 0x06d284d4, 0x26d4992f, 0xcf9e3b7b, 0xeaa253fe, 0xc3ceae63, 0x861fa55b,
+    0x7b0903f6, 0x97942419, 0x17816c14, 0xc2ddae2c, 0x24649959, 0xe119bab4, 0xd5e799ee, 0x6f026406,
+    0xa76379a9, 0xfb11a942, 0xad1bc66d, 0x417a71be, 0x2419f1d4, 0x2e147b0f, 0xab978e73, 0x0d99f55a,
+    0xd4451092, 0x61289548, 0x98ef28b8, 0x13a103e4, 0x8c287e23, 0xa6b55d2f, 0x0188aced, 0xbef16c94,
+    0xae63a19e, 0x681c6636, 0xc2420ad9, 0xcea8838b, 0x6b4702ea, 0xe07aa9ce, 0x0a84bb38, 0x5b854da5,
+    0x9f1a7d0e, 0xaa3322ee, 0x7bf1e47d, 0xfa7628a9, 0x1fc2c457, 0x647eec8d, 0x9806ac98, 0x60f7ccd2,
+    0x65a5f357, 0x66bf120c, 0xebb03252, 0x4ab8342c, 0x0815863a, 0x5e231280, 0xd8239bf8, 0xf07552a8,
+    0x9de7423f, 0x1b638c20, 0x9cc1906d, 0xebf2f75a, 0xb0ae1c23, 0xba701ce1, 0x13e17960, 0x7e8152c4,
+  };
+  for (size_t i = 0; i < ARRAY_SIZE (ref); i++)
+    TCMP (ref[i], ==, pcg.random());
+}
+REGISTER_TEST ("RandomHash/Pcg32Rng", test_pcg32);
 
 static void
 test_keccak_prng()
