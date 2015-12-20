@@ -681,6 +681,19 @@ Entropy::system_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_stat (pool, "/var/spool");                 // for atime
   hash_time (stamp++);  hash_stat (pool, "/var/spool/cron");            // for atime
   hash_time (stamp++);  hash_stat (pool, "/var/spool/anacron");         // for atime
+  hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
+  hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/uuid");
+  hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/sched_debug");
+  hash_time (stamp++);  hash_file (pool, "/proc/fairsched");
+  hash_time (stamp++);  hash_file (pool, "/proc/interrupts");
+  hash_time (stamp++);  hash_file (pool, "/proc/loadavg");
+  hash_time (stamp++);  hash_file (pool, "/proc/softirqs");
+  hash_time (stamp++);  hash_file (pool, "/proc/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/fib_triestat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
+  hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
   hash_time (stamp++);  *uintp++ = getuid();
   hash_time (stamp++);  *uintp++ = geteuid();
   hash_time (stamp++);  *uintp++ = getgid();
@@ -707,31 +720,20 @@ Entropy::system_entropy (KeccakRng &pool)
 void
 Entropy::runtime_entropy (KeccakRng &pool)
 {
-  HashStamp hash_stamps[128] = { 0, };
+  HashStamp hash_stamps[32] = { 0, };
   HashStamp *stamp = &hash_stamps[0];
   hash_time (stamp++);
-  uint64_t uint_array[64] = { 0, };
+  uint64_t uint_array[32] = { 0, };
   uint64_t *uintp = &uint_array[0];
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
   hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
   hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
   hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
-  hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
-  hash_time (stamp++);  hash_file (pool, "/proc/sched_debug");
-  hash_time (stamp++);  hash_file (pool, "/proc/fairsched");
-  hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/uuid");
-  hash_time (stamp++);  hash_file (pool, "/proc/interrupts");
-  hash_time (stamp++);  hash_file (pool, "/proc/loadavg");
-  hash_time (stamp++);  hash_file (pool, "/proc/softirqs");
-  hash_time (stamp++);  hash_file (pool, "/proc/stat");
-  hash_time (stamp++);  hash_file (pool, "/proc/net/fib_triestat");
-  hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
-  hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
-  hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
   hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
   hash_time (stamp++);
