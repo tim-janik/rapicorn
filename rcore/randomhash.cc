@@ -571,24 +571,91 @@ Pcg32Rng::seed (uint64_t offset, uint64_t sequence)
   accu_ = A * accu_ + increment_;
 }
 
-// == AutoSeeder ==
-uint64_t
-AutoSeeder::random ()
+// == Random Numbers ==
+static uint64_t
+global_random64()
 {
+  static KeccakRng *global_rng = NULL;
   static std::mutex mtx;
   std::unique_lock<std::mutex> lock (mtx);
-  static KeccakRng *global_seeder = NULL;
-  if (UNLIKELY (!global_seeder))
+  if (UNLIKELY (!global_rng))
     {
       uint64 entropy[32];
       collect_runtime_entropy (entropy, ARRAY_SIZE (entropy));
       static uint64 mem[(sizeof (KeccakRng) + 7) / 8];
       // 8 rounds provide good statistical shuffling, and
-      // 256 bit hidden state make the seeder unguessable
-      global_seeder = new (mem) KeccakRng (256, 8);
-      global_seeder->seed (entropy, ARRAY_SIZE (entropy));
+      // 256 hidden bits make the generator state unguessable
+      global_rng = new (mem) KeccakRng (256, 8);
+      global_rng->seed (entropy, ARRAY_SIZE (entropy));
     }
-  return global_seeder->operator()();
+  return global_rng->random();
+}
+
+/** Generate a non-deterministic, uniformly distributed 64 bit pseudo-random number.
+ * This function generates pseudo-random numbers using the system state as entropy
+ * and class KeccakRng for the mixing. No seeding is required.
+ */
+uint64_t
+random_int64 ()
+{
+  return global_random64();
+}
+
+/** Generate uniformly distributed pseudo-random integer within range.
+ * This function generates a pseudo-random number like random_int64(),
+ * constrained to the range: @a begin <= number < @a end.
+ */
+int64_t
+random_irange (int64_t begin, int64_t end)
+{
+  return_unless (begin < end, begin);
+  const uint64_t range    = end - begin;
+  const uint64_t quotient = 0xffffffffffffffffULL / range;
+  const uint64_t bound    = quotient * range;
+  uint64_t r = global_random64();
+  while (RAPICORN_UNLIKELY (r >= bound))        // repeats with <50% probability
+    r = global_random64();
+  return begin + r / quotient;
+}
+
+/** Generate uniformly distributed pseudo-random floating point number.
+ * This function generates a pseudo-random number like random_int64(),
+ * constrained to the range: 0.0 <= number < 1.0.
+ */
+double
+random_float ()
+{
+  double r01;
+  do
+    r01 = global_random64() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
+  while (RAPICORN_UNLIKELY (r01 >= 1.0));       // retry if arithmetic exceeds boundary
+  return r01;
+}
+
+/** Generate uniformly distributed pseudo-random floating point number within a range.
+ * This function generates a pseudo-random number like random_float(),
+ * constrained to the range: @a begin <= number < @a end.
+ */
+double
+random_frange (double begin, double end)
+{
+  return_unless (begin < end, begin + 0 * end); // catch and propagate NaNs
+  const double r01 = global_random64() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
+  return end * r01 + (1.0 - r01) * begin;
+}
+
+/// Provide a unique 64 bit identifier that is not 0, see also random_int64().
+uint64_t
+random_nonce ()
+{
+  static uint64_t nonce = []() {
+    uint64_t d;
+    do
+      d = global_random64();
+    while (d == 0); // very unlikely
+    return d;
+  } ();
+  return nonce;
 }
 
 } // Rapicorn

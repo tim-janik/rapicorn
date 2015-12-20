@@ -7,6 +7,14 @@
 
 namespace Rapicorn {
 
+// == Random Numbers ==
+uint64_t        random_nonce    ();
+uint64_t        random_int64    ();
+int64_t         random_irange   (int64_t begin, int64_t end);
+double          random_float    ();
+double          random_frange   (double begin, double end);
+
+// == Hashing ==
 /** SHA3_224 - 224 Bit digest generation.
  * This class implements the SHA3 hash funtion to create 224 Bit digests, see FIPS 202 @cite Fips202 .
  */
@@ -127,13 +135,13 @@ public:
 
 } // Lib
 
-/// AutoSeeder provides seeding entropy system devices.
+/// AutoSeeder provides non-deterministic seeding entropy.
 class AutoSeeder {
 public:
   /// Generate non-deterministic 64bit random value.
-  static uint64_t random     ();
+  static uint64   random     ()       { return random_int64(); }
   /// Generate non-deterministic 64bit random value.
-  uint64_t        operator() () const { return this->random(); }
+  uint64          operator() () const { return this->random(); }
   /// Fill the range [begin, end) with random unsigned integer values.
   template<typename RandomAccessIterator> void
   generate (RandomAccessIterator begin, RandomAccessIterator end)
