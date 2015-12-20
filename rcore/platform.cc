@@ -643,6 +643,32 @@ hash_cpu_usage (KeccakRng &pool)
 }
 
 void
+Entropy::runtime_entropy (KeccakRng &pool)
+{
+  HashStamp hash_stamps[32] = { 0, };
+  HashStamp *stamp = &hash_stamps[0];
+  hash_time (stamp++);
+  uint64_t uint_array[32] = { 0, };
+  uint64_t *uintp = &uint_array[0];
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
+  hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
+  hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
+  hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);
+  assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
+  pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+}
+
+void
 Entropy::system_entropy (KeccakRng &pool)
 {
   HashStamp hash_stamps[128] = { 0, };
@@ -708,32 +734,6 @@ Entropy::system_entropy (KeccakRng &pool)
   hash_time (stamp++);  *uintp++ = size_t (&system_entropy);    // code segment
   hash_time (stamp++);  *uintp++ = size_t (&entropy_mutex);     // data segment
   hash_time (stamp++);  *uintp++ = size_t (&stamp);             // stack segment
-  hash_time (stamp++);  hash_cpu_usage (pool);
-  hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);
-  assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
-  assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
-  pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
-  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
-}
-
-void
-Entropy::runtime_entropy (KeccakRng &pool)
-{
-  HashStamp hash_stamps[32] = { 0, };
-  HashStamp *stamp = &hash_stamps[0];
-  hash_time (stamp++);
-  uint64_t uint_array[32] = { 0, };
-  uint64_t *uintp = &uint_array[0];
-  hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);  hash_cpu_usage (pool);
-  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
-  hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
-  hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
-  hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
-  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
   hash_time (stamp++);
