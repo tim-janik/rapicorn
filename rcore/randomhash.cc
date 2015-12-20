@@ -5,6 +5,17 @@
 namespace Rapicorn {
 
 // == Lib::KeccakF1600 ==
+Lib::KeccakF1600::KeccakF1600()
+{
+  reset();
+}
+
+void
+Lib::KeccakF1600::reset ()
+{
+  memset4 ((uint32*) bytes, 0, sizeof (bytes) / 4);
+}
+
 static constexpr const uint8_t KECCAK_RHO_OFFSETS[25] = { 0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43,
                                                           25, 39, 41, 45, 15, 21, 8, 18, 2, 61, 56, 14 };
 static constexpr const uint64_t KECCAK_ROUND_CONSTANTS[255] = {
@@ -215,10 +226,9 @@ protected:
       state_.permute (24);                      // prepare new block to append last bit
     state_.byte (lastbyte) ^= 0x80;             // 1: last bitrate bit; required by MultiRatePadding
   }
-  SHAKE_Base (size_t rate) : rate_ (rate), iopos_ (0), feeding_mode_ (true)
-  {
-    std::fill (&state_[0], &state_[25], 0);
-  }
+  SHAKE_Base (size_t rate) :
+    rate_ (rate), iopos_ (0), feeding_mode_ (true)
+  {}
 public:
   size_t
   byte_rate() const
@@ -228,7 +238,7 @@ public:
   void
   reset()
   {
-    std::fill (&state_[0], &state_[25], 0);
+    state_.reset();
     iopos_ = 0;
     feeding_mode_ = true;
   }

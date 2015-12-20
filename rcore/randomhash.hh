@@ -107,11 +107,13 @@ class KeccakF1600 {
     // __MMX__: __m64   V[25];
   } __attribute__ ((__aligned__ (16)));
 public:
+  explicit      KeccakF1600 ();                         ///< Zero the state.
+  void          reset       ();                         ///< Zero the state.
   uint64_t&     operator[]  (int      index)       { return A[index]; }
   uint64_t      operator[]  (int      index) const { return A[index]; }
-  void          permute     (uint32_t n_rounds);
+  void          permute     (uint32_t n_rounds);        ///< Apply Keccak permutation with @a n_rounds.
   inline uint8_t&
-  byte (size_t state_index)
+  byte (size_t state_index)                             ///< Access byte 0..199 of the state.
   {
 #if   __BYTE_ORDER == __LITTLE_ENDIAN
     return bytes[(state_index / 8) * 8 + (state_index % 8)];            // 8 == sizeof (uint64_t)
@@ -152,8 +154,6 @@ public:
     RAPICORN_ASSERT (hidden_state_capacity > 0 && hidden_state_capacity <= 1600 - 64);
     RAPICORN_ASSERT (64 * (hidden_state_capacity / 64) == hidden_state_capacity); // capacity must be 64bit aligned
     RAPICORN_ASSERT (n_rounds > 0 && n_rounds < 255);                             // see KECCAK_ROUND_CONSTANTS access
-    // static_assert (bit_rate_ <= 1536 && bit_rate_ % 64 == 0, "KeccakPRNG bit rate is invalid");
-    std::fill (&state_[0], &state_[25], 0);
   }
   void forget   ();
   void discard  (unsigned long long count);
@@ -164,7 +164,7 @@ public:
   void
   seed (const uint64_t *seeds, size_t n_seeds)
   {
-    std::fill (&state_[0], &state_[25], 0);
+    state_.reset();
     xor_seed (seeds, n_seeds);
   }
   /// Reinitialize the generator state from a @a seed_sequence.
