@@ -202,15 +202,17 @@ public:
   }
   /// Seed the generator from a system specific nondeterministic random source.
   void auto_seed ();
-  /// Generate a new 64 bit random number.
+  /// Generate uniformly distributed 64 bit pseudo random number.
   /// A new block permutation is carried out every n_nums() calls, see also xor_seed().
-  result_type
-  operator() ()
+  uint64_t
+  random ()
   {
     if (opos_ >= n_nums())
       permute1600();
     return state_[opos_++];
   }
+  /// Generate uniformly distributed 32 bit pseudo random number.
+  result_type   operator() ()   { return random(); }
   /// Fill the range [begin, end) with random unsigned integer values.
   template<typename RandomAccessIterator> void
   generate (RandomAccessIterator begin, RandomAccessIterator end)
