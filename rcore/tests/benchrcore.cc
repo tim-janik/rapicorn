@@ -107,33 +107,31 @@ private:
 };
 
 // == EntropyTests ==
-struct EntropyTests : Entropy {
-  void
-  test (char *arg)
-  {
-    if      (strcmp (arg, "--entropy") == 0)
-      {
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n",
-                  Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(),
-                  Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed());
-        exit (0);
-      }
-    else if (strcmp (arg, "--system-entropy") == 0)
-      {
-        KeccakCryptoRng pool;
-        Entropy::system_entropy (pool);
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
-        exit (0);
-      }
-    else if (strcmp (arg, "--runtime-entropy") == 0)
-      {
-        KeccakCryptoRng pool;
-        Entropy::runtime_entropy (pool);
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
-        exit (0);
-      }
-  }
-};
+static void
+test_entropy (char *arg)
+{
+  if      (strcmp (arg, "--entropy") == 0)
+    {
+      printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n",
+                random_int64(), random_int64(), random_int64(), random_int64(),
+                random_int64(), random_int64(), random_int64(), random_int64());
+      exit (0);
+    }
+  else if (strcmp (arg, "--runtime-entropy") == 0)
+    {
+      uint64 data[8];
+      collect_runtime_entropy (data, 8);
+      printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+      exit (0);
+    }
+  else if (strcmp (arg, "--system-entropy") == 0)
+    {
+      uint64 data[8];
+      collect_system_entropy (data, 8);
+      printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+      exit (0);
+    }
+}
 
 static void
 test_auto_seeder()
@@ -404,7 +402,7 @@ main (int   argc,
       char *argv[])
 {
   if (argc >= 2)        // Entropy tests that need to be carried out before core_init
-    EntropyTests().test (argv[1]);
+    test_entropy (argv[1]);
 
   init_core_test (__PRETTY_FILE__, &argc, argv);
 

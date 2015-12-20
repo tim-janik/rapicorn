@@ -417,57 +417,6 @@ TaskStatus::string ()
                    utime * 0.001, stime * 0.001, cutime * 0.001, cstime * 0.001);
 }
 
-// == Entropy ==
-static Mutex      entropy_mutex;
-static KeccakRng *entropy_global_pool = NULL;
-static uint64     entropy_mix_simple = 0;
-
-/** @class Entropy
- * To provide good quality random numbers, this class gathers entropy from a variety of sources.
- * Under Linux, this includes the runtime environment and (if present) devices, interrupts,
- * disk + network statistics, system load, execution + pipelining + scheduling latencies and of
- * course random number devices. In combination with well established techniques like
- * syscall timings (see Entropics13 @cite Entropics13) and a SHA3 algorithm derived random number
- * generator (KeccakRng) for the mixing, the entropy collection is designed to be good enough
- * to use as seeds for new PRNGs and to securely generate cryptographic tokens like session keys.
- */
-
-KeccakRng&
-Entropy::entropy_pool()
-{
-  if (RAPICORN_LIKELY (entropy_global_pool))
-    return *entropy_global_pool;
-  assert (entropy_mutex.try_lock() == false); // pool *must* be locked by caller
-  // create pool and seed it with system details
-  std::seed_seq seq { 1 };
-  KeccakRng *kpool = new KeccakCryptoRng (seq); // prevent auto-seeding
-  system_entropy (*kpool);
-  // gather entropy from runtime information and mix into pool
-  KeccakCryptoRng keccak (seq);
-  runtime_entropy (keccak);
-  uint64_t seed_data[25];
-  keccak.generate (&seed_data[0], &seed_data[25]);
-  kpool->seed (seed_data, 25);
-  // establish global pool
-  assert (entropy_global_pool == NULL);
-  entropy_global_pool = kpool;
-  return *entropy_global_pool;
-}
-
-void
-Entropy::slow_reseed ()
-{
-  // gather and mangle entropy data
-  std::seed_seq seq { 1 };
-  KeccakCryptoRng keccak (seq); // prevent auto-seeding
-  runtime_entropy (keccak);
-  // mix entropy into global pool
-  uint64_t seed_data[25];
-  keccak.generate (&seed_data[0], &seed_data[25]);
-  ScopedLock<Mutex> locker (entropy_mutex);
-  entropy_pool().xor_seed (seed_data, 25);
-}
-
 static constexpr uint64_t
 bytehash_fnv64a (const uint8_t *bytes, size_t n, uint64_t hash = 0xcbf29ce484222325)
 {
@@ -478,27 +427,6 @@ static uint64_t
 stringhash_fnv64a (const String &string)
 {
   return bytehash_fnv64a ((const uint8*) string.data(), string.size());
-}
-
-void
-Entropy::add_data (const void *bytes, size_t n_bytes)
-{
-  const uint64_t bits = bytehash_fnv64a ((const uint8_t*) bytes, n_bytes);
-  ScopedLock<Mutex> locker (entropy_mutex);
-  entropy_mix_simple ^= bits + (entropy_mix_simple * 1664525);
-}
-
-uint64_t
-Entropy::get_seed ()
-{
-  ScopedLock<Mutex> locker (entropy_mutex);
-  KeccakRng &pool = entropy_pool();
-  if (entropy_mix_simple)
-    {
-      pool.xor_seed (&entropy_mix_simple, 1);
-      entropy_mix_simple = 0;
-    }
-  return pool();
 }
 
 static int
@@ -751,7 +679,7 @@ runtime_entropy (KeccakRng &pool)
   String compiletime = __DATE__ __TIME__ __FILE__ __TIMESTAMP__;
   hash_time (stamp++);  *uintp++ = stringhash_fnv64a (compiletime);     // compilation entropy
   hash_time (stamp++);  *uintp++ = size_t (compiletime.data());         // heap address
-  hash_time (stamp++);  *uintp++ = size_t (&entropy_mutex);             // data segment
+  hash_time (stamp++);  *uintp++ = size_t (&cpu_info_jmp_buf);          // data segment
   hash_time (stamp++);  *uintp++ = size_t ("PATH");                     // const data segment
   hash_time (stamp++);  *uintp++ = size_t (getenv ("PATH"));            // a.out address
   hash_time (stamp++);  *uintp++ = size_t (&stamp);                     // stack segment
@@ -767,22 +695,6 @@ runtime_entropy (KeccakRng &pool)
   assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
   pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
   pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
-}
-
-void
-Entropy::runtime_entropy (KeccakRng &pool)
-{
-  Rapicorn::runtime_entropy (pool);
-}
-
-void
-collect_runtime_entropy (uint64 *data, size_t n)
-{
-  std::seed_seq seq { 1 }; // provide seed_seq to avoid auto seeding
-  KeccakFastRng pool (seq);
-  runtime_entropy (pool);
-  for (size_t i = 0; i < n; i++)
-    data[i] = pool();
 }
 
 static void
@@ -849,18 +761,42 @@ system_entropy (KeccakRng &pool)
   pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
 }
 
+/**
+ * To provide good quality random number seeds, this function gathers entropy from a variety
+ * of process specific sources. Under Linux, this includes the CPU counters, clocks and
+ * random devices.
+ * In combination with well established techniques like syscall timings (see Entropics13
+ * @cite Entropics13) and a SHA3 algorithm derived random number generator for the mixing,
+ * the entropy collection is designed to be fast and good enough for all non-cryptographic
+ * uses.
+ * On an Intel Core i7, this function takes around 25µs.
+ */
 void
-Entropy::system_entropy (KeccakRng &pool)
+collect_runtime_entropy (uint64 *data, size_t n)
 {
-  Rapicorn::system_entropy (pool);
+  KeccakRng pool (128, 8);
+  runtime_entropy (pool);
+  for (size_t i = 0; i < n; i++)
+    data[i] = pool();
 }
 
+/**
+ * This function adds to collect_runtime_entropy() by collecting entropy from aditional
+ * but potentially slower system sources, such as interrupt counters, disk + network statistics,
+ * system load, execution + pipelining + scheduling latencies and device MACs.
+ * The function is designed to yield random number seeds good enough to generate
+ * cryptographic tokens like session keys.
+ * On an Intel Core i7, this function takes around 2ms, so it's roughly 80 times slower
+ * than collect_runtime_entropy().
+ */
 void
 collect_system_entropy (uint64 *data, size_t n)
 {
-  std::seed_seq seq { 1 }; // provide seed_seq to avoid auto seeding
-  KeccakCryptoRng pool (seq);
+  KeccakRng pool (512, 24);
+  hash_cpu_usage (pool);
+  runtime_entropy (pool);
   system_entropy (pool);
+  hash_cpu_usage (pool);
   for (size_t i = 0; i < n; i++)
     data[i] = pool();
 }
