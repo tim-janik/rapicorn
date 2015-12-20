@@ -127,6 +127,28 @@ public:
 
 } // Lib
 
+/// AutoSeeder provides seeding entropy system devices.
+class AutoSeeder {
+public:
+  /// Generate non-deterministic 64bit random value.
+  static uint64_t random     ();
+  /// Generate non-deterministic 64bit random value.
+  uint64_t        operator() () const { return this->random(); }
+  /// Fill the range [begin, end) with random unsigned integer values.
+  template<typename RandomAccessIterator> void
+  generate (RandomAccessIterator begin, RandomAccessIterator end)
+  {
+    typedef typename std::iterator_traits<RandomAccessIterator>::value_type Value;
+    while (begin != end)
+      {
+        const uint64_t rbits = operator()();
+        *begin++ = Value (rbits);
+        if (sizeof (Value) <= 4 && begin != end)
+          *begin++ = Value (rbits >> 32);
+      }
+  }
+};
+
 /** KeccakRng - A KeccakF1600 based pseudo-random number generator.
  * The permutation steps are derived from the Keccak specification @cite Keccak11 .
  * For further details about this implementation, see also: http://testbit.org/keccak
@@ -167,7 +189,7 @@ public:
     state_.reset();
     xor_seed (seeds, n_seeds);
   }
-  /// Reinitialize the generator state from a @a seed_sequence.
+  /// Seed the generator state from a @a seed_sequence.
   template<class SeedSeq> void
   seed (SeedSeq &seed_sequence)
   {
@@ -178,7 +200,7 @@ public:
       u64[i] = u32[i * 2] | (uint64_t (u32[i * 2 + 1]) << 32);
     seed (u64, 25);
   }
-  /// Seed the generator from a system specific undeterministic random source.
+  /// Seed the generator from a system specific nondeterministic random source.
   void auto_seed ();
   /// Generate a new 64 bit random number.
   /// A new block permutation is carried out every n_nums() calls, see also xor_seed().
@@ -269,7 +291,9 @@ public:
  */
 class KeccakCryptoRng : public KeccakRng {
 public:
+  /// Initialize and seed the generator from a system specific nondeterministic random source.
   explicit      KeccakCryptoRng ()                       : KeccakRng (256, 24)   { auto_seed(); }
+  /// Initialize and seed the generator from @a seed_sequence.
   template<class SeedSeq>
   explicit      KeccakCryptoRng (SeedSeq &seed_sequence) : KeccakRng (256, 24)   { seed (seed_sequence); }
 };
@@ -282,7 +306,9 @@ public:
  */
 class KeccakGoodRng : public KeccakRng {
 public:
+  /// Initialize and seed the generator from a system specific nondeterministic random source.
   explicit      KeccakGoodRng   ()                       : KeccakRng (192, 13)   { auto_seed(); }
+  /// Initialize and seed the generator from @a seed_sequence.
   template<class SeedSeq>
   explicit      KeccakGoodRng   (SeedSeq &seed_sequence) : KeccakRng (192, 13)   { seed (seed_sequence); }
 };
@@ -295,7 +321,9 @@ public:
  */
 class KeccakFastRng : public KeccakRng {
 public:
+  /// Initialize and seed the generator from a system specific nondeterministic random source.
   explicit      KeccakFastRng   ()                       : KeccakRng (128, 8)    { auto_seed(); }
+  /// Initialize and seed the generator from @a seed_sequence.
   template<class SeedSeq>
   explicit      KeccakFastRng   (SeedSeq &seed_sequence) : KeccakRng (128, 8)    { seed (seed_sequence); }
 };
@@ -329,10 +357,25 @@ class Pcg32Rng {
     return ror32 ((input ^ (input >> 18)) >> 27, input >> 59);
   }
 public:
-  /// Initialize and seed.
-  explicit Pcg32Rng  (uint64_t offset = 11400714819323198485ULL, uint64_t sequence = 1442695040888963407ULL);
+  /// Initialize and seed from @a seed_sequence.
+  template<class SeedSeq>
+  explicit Pcg32Rng  (SeedSeq &seed_sequence) : increment_ (0), accu_ (0) { seed (seed_sequence); }
+  /// Initialize and seed by seeking to position @a offset within stream @a sequence.
+  explicit Pcg32Rng  (uint64_t offset, uint64_t sequence);
+  /// Initialize and seed the generator from a system specific nondeterministic random source.
+  explicit Pcg32Rng  ();
+  /// Seed the generator from a system specific nondeterministic random source.
+  void     auto_seed ();
   /// Seed by seeking to position @a offset within stream @a sequence.
-  void     seed      (uint64_t offset, uint64_t sequence = 1442695040888963407ULL);
+  void     seed      (uint64_t offset, uint64_t sequence);
+  /// Seed the generator state from a @a seed_sequence.
+  template<class SeedSeq> void
+  seed (SeedSeq &seed_sequence)
+  {
+    uint64_t seeds[2];
+    seed_sequence.generate (&seeds[0], &seeds[2]);
+    seed (seeds[0], seeds[1]);
+  }
   /// Generate uniformly distributed 32 bit pseudo random number.
   uint32_t
   random ()

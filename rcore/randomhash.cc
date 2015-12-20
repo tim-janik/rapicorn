@@ -1,6 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 // Author: 2014, Tim Janik, see http://testbit.org/keccak
 #include "randomhash.hh"
+#include "platform.hh"
 
 namespace Rapicorn {
 
@@ -177,8 +178,8 @@ KeccakRng::xor_seed (const uint64_t *seeds, size_t n_seeds)
 void
 KeccakRng::auto_seed()
 {
-  // FIXME: !!!!!!!!!!!!!!!!!!!!!!!!!
-  seed (17777);
+  AutoSeeder seeder;
+  seed (seeder);
 }
 
 /// The destructor resets the generator state to avoid leaving memory trails.
@@ -542,10 +543,23 @@ shake256_hash (const void *data, size_t data_length, uint8_t *hashvalues, size_t
 }
 
 // == Pcg32Rng ==
+Pcg32Rng::Pcg32Rng () :
+  increment_ (0), accu_ (0)
+{
+  auto_seed();
+}
+
 Pcg32Rng::Pcg32Rng (uint64_t offset, uint64_t sequence) :
   increment_ (0), accu_ (0)
 {
   seed (offset, sequence);
+}
+
+void
+Pcg32Rng::auto_seed ()
+{
+  AutoSeeder seeder;
+  seed (seeder);
 }
 
 void
@@ -555,6 +569,26 @@ Pcg32Rng::seed (uint64_t offset, uint64_t sequence)
   increment_ = (sequence << 1) | 1;    // force increment_ to be odd
   accu_ += offset;
   accu_ = A * accu_ + increment_;
+}
+
+// == AutoSeeder ==
+uint64_t
+AutoSeeder::random ()
+{
+  static std::mutex mtx;
+  std::unique_lock<std::mutex> lock (mtx);
+  static KeccakRng *global_seeder = NULL;
+  if (UNLIKELY (!global_seeder))
+    {
+      uint64 entropy[32];
+      collect_runtime_entropy (entropy, ARRAY_SIZE (entropy));
+      static uint64 mem[(sizeof (KeccakRng) + 7) / 8];
+      // 8 rounds provide good statistical shuffling, and
+      // 256 bit hidden state make the seeder unguessable
+      global_seeder = new (mem) KeccakRng (256, 8);
+      global_seeder->seed (entropy, ARRAY_SIZE (entropy));
+    }
+  return global_seeder->operator()();
 }
 
 } // Rapicorn
