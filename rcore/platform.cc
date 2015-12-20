@@ -678,6 +678,24 @@ hash_cpu_usage (KeccakRng &pool)
   pool.xor_seed (u.ui64, sizeof (u.ui64) / sizeof (u.ui64[0]));
 }
 
+static bool
+get_rdrand (uint64 *u, uint count)
+{
+#if defined (__i386__) || defined (__x86_64__)
+  if (strstr (cpu_info().c_str(), " rdrand"))
+    for (uint i = 0; i < count; i++)
+      __asm__ __volatile__ ("rdrand %0" : "=r" (u[i]));
+  else
+    for (uint i = 0; i < count; i++)
+      {
+        uint64_t d = __rdtsc();       // fallback
+        u[i] = bytehash_fnv64a ((const uint8*) &d, 8);
+      }
+  return true;
+#endif
+  return false;
+}
+
 void
 Entropy::runtime_entropy (KeccakRng &pool)
 {
