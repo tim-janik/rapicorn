@@ -419,9 +419,9 @@ TaskStatus::string ()
 }
 
 // == Entropy ==
-static Mutex       entropy_mutex;
-static KeccakPRNG *entropy_global_pool = NULL;
-static uint64      entropy_mix_simple = 0;
+static Mutex      entropy_mutex;
+static KeccakRng *entropy_global_pool = NULL;
+static uint64     entropy_mix_simple = 0;
 
 /** @class Entropy
  * To provide good quality random numbers, this class gathers entropy from a variety of sources.
@@ -429,11 +429,11 @@ static uint64      entropy_mix_simple = 0;
  * disk + network statistics, system load, execution + pipelining + scheduling latencies and of
  * course random number devices. In combination with well established techniques like
  * syscall timings (see Entropics13 @cite Entropics13) and a SHA3 algorithm derived random number
- * generator (KeccakPRNG) for the mixing, the entropy collection is designed to be good enough
+ * generator (KeccakRng) for the mixing, the entropy collection is designed to be good enough
  * to use as seeds for new PRNGs and to securely generate cryptographic tokens like session keys.
  */
 
-KeccakPRNG&
+KeccakRng&
 Entropy::entropy_pool()
 {
   if (RAPICORN_LIKELY (entropy_global_pool))
@@ -441,7 +441,7 @@ Entropy::entropy_pool()
   assert (entropy_mutex.try_lock() == false); // pool *must* be locked by caller
   // create pool and seed it with system details
   std::seed_seq seq { 1 };
-  KeccakPRNG *kpool = new KeccakCryptoRng (seq); // prevent auto-seeding
+  KeccakRng *kpool = new KeccakCryptoRng (seq); // prevent auto-seeding
   system_entropy (*kpool);
   // gather entropy from runtime information and mix into pool
   KeccakCryptoRng keccak (seq);
@@ -487,7 +487,7 @@ uint64_t
 Entropy::get_seed ()
 {
   ScopedLock<Mutex> locker (entropy_mutex);
-  KeccakPRNG &pool = entropy_pool();
+  KeccakRng &pool = entropy_pool();
   if (entropy_mix_simple)
     {
       pool.xor_seed (&entropy_mix_simple, 1);
@@ -497,7 +497,7 @@ Entropy::get_seed ()
 }
 
 static bool
-hash_macs (KeccakPRNG &pool)
+hash_macs (KeccakRng &pool)
 {
   // query devices for the AF_INET family which might be the only one supported
   int sockfd = socket (AF_INET, SOCK_DGRAM, 0);         // open IPv4 UDP socket
@@ -553,7 +553,7 @@ hash_macs (KeccakPRNG &pool)
 }
 
 static bool
-hash_stat (KeccakPRNG &pool, const char *filename)
+hash_stat (KeccakRng &pool, const char *filename)
 {
   struct {
     struct stat stat;
@@ -569,7 +569,7 @@ hash_stat (KeccakPRNG &pool, const char *filename)
 }
 
 static bool
-hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384)
+hash_file (KeccakRng &pool, const char *filename, const size_t maxbytes = 16384)
 {
   FILE *file = fopen (filename, "r");
   if (file)
@@ -588,7 +588,7 @@ hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384
 }
 
 static bool __attribute__ ((__unused__))
-hash_glob (KeccakPRNG &pool, const char *fileglob, const size_t maxbytes = 16384)
+hash_glob (KeccakRng &pool, const char *fileglob, const size_t maxbytes = 16384)
 {
   glob_t globbuf = { 0, };
   glob (fileglob, GLOB_NOSORT, NULL, &globbuf);
@@ -627,7 +627,7 @@ hash_time (HashStamp *hstamp)
 }
 
 static void
-hash_cpu_usage (KeccakPRNG &pool)
+hash_cpu_usage (KeccakRng &pool)
 {
   union {
     uint64_t      ui64[24];
@@ -643,7 +643,7 @@ hash_cpu_usage (KeccakPRNG &pool)
 }
 
 void
-Entropy::system_entropy (KeccakPRNG &pool)
+Entropy::system_entropy (KeccakRng &pool)
 {
   HashStamp hash_stamps[128] = { 0, };
   HashStamp *stamp = &hash_stamps[0];
@@ -705,7 +705,7 @@ Entropy::system_entropy (KeccakPRNG &pool)
 }
 
 void
-Entropy::runtime_entropy (KeccakPRNG &pool)
+Entropy::runtime_entropy (KeccakRng &pool)
 {
   HashStamp hash_stamps[128] = { 0, };
   HashStamp *stamp = &hash_stamps[0];

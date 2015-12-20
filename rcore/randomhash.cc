@@ -101,10 +101,10 @@ Lib::KeccakF1600::permute (const uint32_t n_rounds)
     }
 }
 
-// == KeccakPRNG ==
+// == KeccakRng ==
 /// Keccak permutation for 1600 bits, see Keccak11 @cite Keccak11 .
 void
-KeccakPRNG::permute1600()
+KeccakRng::permute1600()
 {
   state_.permute (n_rounds_);
   opos_ = 0;    // fresh outputs available
@@ -116,7 +116,7 @@ KeccakPRNG::permute1600()
  * Use this for forward security @cite Security03 of generated security tokens like session keys.
  */
 void
-KeccakPRNG::forget()
+KeccakRng::forget()
 {
   std::fill (&state_[0], &state_[256 / 64], 0);
   permute1600();
@@ -126,7 +126,7 @@ KeccakPRNG::forget()
  * This function is slightly faster than calling operator()() exactly @a count times.
  */
 void
-KeccakPRNG::discard (unsigned long long count)
+KeccakRng::discard (unsigned long long count)
 {
   while (count)
     {
@@ -144,7 +144,7 @@ KeccakPRNG::discard (unsigned long long count)
  * block for a new permutation.
  */
 void
-KeccakPRNG::xor_seed (const uint64_t *seeds, size_t n_seeds)
+KeccakRng::xor_seed (const uint64_t *seeds, size_t n_seeds)
 {
   // printerr ("xor_seed(%p): %s\n", this, String ((const char*) seeds, n_seeds * 8));
   size_t i = 0;
@@ -164,14 +164,14 @@ KeccakPRNG::xor_seed (const uint64_t *seeds, size_t n_seeds)
 }
 
 void
-KeccakPRNG::auto_seed()
+KeccakRng::auto_seed()
 {
   // FIXME: !!!!!!!!!!!!!!!!!!!!!!!!!
   seed (17777);
 }
 
 /// The destructor resets the generator state to avoid leaving memory trails.
-KeccakPRNG::~KeccakPRNG()
+KeccakRng::~KeccakRng()
 {
   // forget all state and leave no trails
   std::fill (&state_[0], &state_[25], 0xaffeaffeaffeaffe);

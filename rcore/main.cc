@@ -340,18 +340,18 @@ application_name ()
   return program_alias();
 }
 
-static Mutex       prng_mutex;
-static KeccakPRNG *keccak_prng = NULL;
+static Mutex      prng_mutex;
+static KeccakRng *keccak_prng = NULL;
 
-static inline KeccakPRNG&
+static inline KeccakRng&
 initialize_random_generator_LOCKED()
 {
   if (RAPICORN_UNLIKELY (!keccak_prng))
     {
       assert (prng_mutex.try_lock() == false);
-      static uint64 space[(sizeof (KeccakPRNG) + 7) / 8];
+      static uint64 space[(sizeof (KeccakRng) + 7) / 8];
       Entropy e;
-      keccak_prng = new (space) KeccakPRNG (e); // uses e as generator & initializes Entropy
+      keccak_prng = new (space) KeccakCryptoRng (e); // uses e as generator & initializes Entropy
     }
   return *keccak_prng;
 }
@@ -361,7 +361,7 @@ uint64_t
 random_nonce ()
 {
   ScopedLock<Mutex> locker (prng_mutex);
-  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  KeccakRng &rgen = initialize_random_generator_LOCKED();
   uint64_t nonce = rgen();
   while (RAPICORN_UNLIKELY (nonce == 0))
     nonce = rgen();
@@ -369,19 +369,19 @@ random_nonce ()
 }
 
 /** Generate uniformly distributed 64 bit pseudo-random number.
- * This function generates a pseudo-random number using class KeccakPRNG,
+ * This function generates a pseudo-random number using class KeccakRng,
  * seeded from class Entropy.
  */
 uint64_t
 random_int64 ()
 {
   ScopedLock<Mutex> locker (prng_mutex);
-  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  KeccakRng &rgen = initialize_random_generator_LOCKED();
   return rgen();
 }
 
 /** Generate uniformly distributed pseudo-random integer within a range.
- * This function generates a pseudo-random number using class KeccakPRNG,
+ * This function generates a pseudo-random number using class KeccakRng,
  * seeded from class Entropy.
  * The generated number will be in the range: @a begin <= number < @a end.
  */
@@ -393,7 +393,7 @@ random_irange (int64_t begin, int64_t end)
   const uint64_t quotient = 0xffffffffffffffffULL / range;
   const uint64_t bound    = quotient * range;
   ScopedLock<Mutex> locker (prng_mutex);
-  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  KeccakRng &rgen = initialize_random_generator_LOCKED();
   uint64_t r = rgen ();
   while (RAPICORN_UNLIKELY (r >= bound))        // repeats with <50% probability
     r = rgen ();
@@ -401,7 +401,7 @@ random_irange (int64_t begin, int64_t end)
 }
 
 /** Generate uniformly distributed pseudo-random floating point number.
- * This function generates a pseudo-random number using class KeccakPRNG,
+ * This function generates a pseudo-random number using class KeccakRng,
  * seeded from class Entropy.
  * The generated number will be in the range: 0.0 <= number < 1.0.
  */
@@ -409,7 +409,7 @@ double
 random_float ()
 {
   ScopedLock<Mutex> locker (prng_mutex);
-  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  KeccakRng &rgen = initialize_random_generator_LOCKED();
   double r01;
   do
     r01 = rgen() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
@@ -418,7 +418,7 @@ random_float ()
 }
 
 /** Generate uniformly distributed pseudo-random floating point number within a range.
- * This function generates a pseudo-random number using class KeccakPRNG,
+ * This function generates a pseudo-random number using class KeccakRng,
  * seeded from class Entropy.
  * The generated number will be in the range: @a begin <= number < @a end.
  */
@@ -427,7 +427,7 @@ random_frange (double begin, double end)
 {
   return_unless (begin < end, begin + 0 * end); // catch and propagate NaNs
   ScopedLock<Mutex> locker (prng_mutex);
-  KeccakPRNG &rgen = initialize_random_generator_LOCKED();
+  KeccakRng &rgen = initialize_random_generator_LOCKED();
   const double r01 = rgen() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
   return end * r01 + (1.0 - r01) * begin;
 }

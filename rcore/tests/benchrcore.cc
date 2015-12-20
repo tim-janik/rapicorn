@@ -254,13 +254,13 @@ random_hash_benchmarks()
   auto mix_keccak = [&mixinput, &mixoutput] () {
     for (size_t j = 0; j < N_RUNS; j++)
       {
-        KeccakPRNG kcs (128, 8); // KeccakFastRng
+        KeccakRng kcs (128, 8); // KeccakFastRng
         kcs.seed ((const uint64_t*) &mixinput[0], ARRAY_SIZE (mixinput) / 2);
         kcs.generate (&mixoutput[0], &mixoutput[ARRAY_SIZE (mixoutput)]);
       }
   };
   bench_time = timer.benchmark (mix_keccak);
-  TPASS ("KeccakSeed      # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (KeccakPRNG), bench_time, N_BYTES / bench_time / 1048576.);
+  TPASS ("KeccakSeed      # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (KeccakRng), bench_time, N_BYTES / bench_time / 1048576.);
 
   auto mix_seedseqfe256 = [&mixinput, &mixoutput] () {
     for (size_t j = 0; j < N_RUNS; j++)
@@ -356,7 +356,7 @@ test_keccak_prng()
       digest += string_format ("%02x%02x%02x%02x%02x%02x%02x%02x",
                                l & 0xff, (l>>8) & 0xff, (l>>16) & 0xff, l>>24, h & 0xff, (h>>8) & 0xff, (h>>16) & 0xff, h>>24);
     }
-  // printf ("KeccakPRNG: %s\n", digest.c_str());
+  // printf ("KeccakRng: %s\n", digest.c_str());
   TCMP (digest, ==, "c336e57d8674ec52528a79e41c5e4ec9b31aa24c07cdf0fc8c6e8d88529f583b37a389883d2362639f8cc042abe980e0"); // 24 rounds
 
   std::stringstream kss;
@@ -395,7 +395,7 @@ test_keccak_prng()
   krandom2.seed (krandom1);     // uses krandom1.generate
   TASSERT (krandom1 != krandom2 && krandom1() != krandom2());
 }
-REGISTER_TEST ("RandomHash/KeccakPRNG", test_keccak_prng);
+REGISTER_TEST ("RandomHash/KeccakRng", test_keccak_prng);
 
 
 int

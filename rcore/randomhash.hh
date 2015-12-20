@@ -125,26 +125,28 @@ public:
 
 } // Lib
 
-/** KeccakPRNG - A KeccakF1600 based pseudo-random number generator.
+/** KeccakRng - A KeccakF1600 based pseudo-random number generator.
  * The permutation steps are derived from the Keccak specification @cite Keccak11 .
  * For further details about this implementation, see also: http://testbit.org/keccak
+ * This class is primarily used to implement more fine tuned generators, such as:
+ * KeccakCryptoRng, KeccakGoodRng and KeccakFastRng.
  */
-class KeccakPRNG {
+class KeccakRng {
   const uint16_t      bit_rate_, n_rounds_;
   uint32_t            opos_;
   Lib::KeccakF1600    state_;
   void                permute1600();
 public:
-  /// Integral type of the KeccakPRNG generator results.
+  /// Integral type of the KeccakRng generator results.
   typedef uint64_t    result_type;
   /// Amount of 64 bit random numbers per generated block.
   inline size_t       n_nums() const            { return bit_rate_ / 64; }
   /// Amount of bits used to store hidden random number generator state.
   inline size_t       bit_capacity() const      { return 1600 - bit_rate_; }
-  /*dtor*/           ~KeccakPRNG  ();
+  /*dtor*/           ~KeccakRng  ();
   /// Create an unseeded Keccak PRNG with specific capacity and number of rounds, for experts only.
   explicit
-  KeccakPRNG (uint16_t hidden_state_capacity, uint16_t n_rounds) :
+  KeccakRng (uint16_t hidden_state_capacity, uint16_t n_rounds) :
     bit_rate_ (1600 - hidden_state_capacity), n_rounds_ (n_rounds), opos_ (n_nums())
   {
     RAPICORN_ASSERT (hidden_state_capacity > 0 && hidden_state_capacity <= 1600 - 64);
@@ -152,15 +154,6 @@ public:
     RAPICORN_ASSERT (n_rounds > 0 && n_rounds < 255);                             // see KECCAK_ROUND_CONSTANTS access
     // static_assert (bit_rate_ <= 1536 && bit_rate_ % 64 == 0, "KeccakPRNG bit rate is invalid");
     std::fill (&state_[0], &state_[25], 0);
-  }
-  /// Create a SHAKE128 grade Keccak PRNG, seeded from a @a seed sequence.
-  template<class SeedSeq> explicit
-  KeccakPRNG (SeedSeq &seed_sequence) :
-    bit_rate_ (1600 - 256), n_rounds_ (24), opos_ (n_nums())
-  {
-    // static_assert (bit_rate_ <= 1536 && bit_rate_ % 64 == 0, "KeccakPRNG bit rate is invalid");
-    std::fill (&state_[0], &state_[25], 0);
-    seed (seed_sequence);
   }
   void forget   ();
   void discard  (unsigned long long count);
@@ -211,7 +204,7 @@ public:
   }
   /// Compare two generators for state equality.
   friend bool
-  operator== (const KeccakPRNG &lhs, const KeccakPRNG &rhs)
+  operator== (const KeccakRng &lhs, const KeccakRng &rhs)
   {
     for (size_t i = 0; i < 25; i++)
       if (lhs.state_[i] != rhs.state_[i])
@@ -220,7 +213,7 @@ public:
   }
   /// Compare two generators for state inequality.
   friend bool
-  operator!= (const KeccakPRNG &lhs, const KeccakPRNG &rhs)
+  operator!= (const KeccakRng &lhs, const KeccakRng &rhs)
   {
     return !(lhs == rhs);
   }
@@ -239,7 +232,7 @@ public:
   /// Serialize generator state into an OStream.
   template<typename CharT, typename Traits>
   friend std::basic_ostream<CharT, Traits>&
-  operator<< (std::basic_ostream<CharT, Traits> &os, const KeccakPRNG &self)
+  operator<< (std::basic_ostream<CharT, Traits> &os, const KeccakRng &self)
   {
     typedef typename std::basic_ostream<CharT, Traits>::ios_base IOS;
     const typename IOS::fmtflags saved_flags = os.flags();
@@ -257,7 +250,7 @@ public:
   /// Deserialize generator state from an IStream.
   template<typename CharT, typename Traits>
   friend std::basic_istream<CharT, Traits>&
-  operator>> (std::basic_istream<CharT, Traits> &is, KeccakPRNG &self)
+  operator>> (std::basic_istream<CharT, Traits> &is, KeccakRng &self)
   {
     typedef typename std::basic_istream<CharT, Traits>::ios_base IOS;
     const typename IOS::fmtflags saved_flags = is.flags();
@@ -272,13 +265,13 @@ public:
 };
 
 /** KeccakCryptoRng - A KeccakF1600 based cryptographic quality pseudo-random number generator.
- * The quality of the generated pseudo random numbers is comaparable to SHAKE128.
+ * The quality of the generated pseudo random numbers is comaparable to the hash output of SHAKE128.
  */
-class KeccakCryptoRng : public KeccakPRNG {
+class KeccakCryptoRng : public KeccakRng {
 public:
-  explicit      KeccakCryptoRng ()                       : KeccakPRNG (256, 24)   { auto_seed(); }
+  explicit      KeccakCryptoRng ()                       : KeccakRng (256, 24)   { auto_seed(); }
   template<class SeedSeq>
-  explicit      KeccakCryptoRng (SeedSeq &seed_sequence) : KeccakPRNG (256, 24)   { seed (seed_sequence); }
+  explicit      KeccakCryptoRng (SeedSeq &seed_sequence) : KeccakRng (256, 24)   { seed (seed_sequence); }
 };
 
 /** KeccakGoodRng - A KeccakF1600 based good quality pseudo-random number generator.
@@ -287,11 +280,11 @@ public:
  * significantly without noticably trading random number quality.
  * For cryptography grade number generation KeccakCryptoRng should be used instead.
  */
-class KeccakGoodRng : public KeccakPRNG {
+class KeccakGoodRng : public KeccakRng {
 public:
-  explicit      KeccakGoodRng   ()                       : KeccakPRNG (192, 13)   { auto_seed(); }
+  explicit      KeccakGoodRng   ()                       : KeccakRng (192, 13)   { auto_seed(); }
   template<class SeedSeq>
-  explicit      KeccakGoodRng   (SeedSeq &seed_sequence) : KeccakPRNG (192, 13)   { seed (seed_sequence); }
+  explicit      KeccakGoodRng   (SeedSeq &seed_sequence) : KeccakRng (192, 13)   { seed (seed_sequence); }
 };
 
 /** KeccakFastRng - A KeccakF1600 based fast pseudo-random number generator.
@@ -300,11 +293,11 @@ public:
  * number generation, according to the findings in seciton "4.1.1 Statistical tests"
  * from http://keccak.noekeon.org/Keccak-reference-3.0.pdf.
  */
-class KeccakFastRng : public KeccakPRNG {
+class KeccakFastRng : public KeccakRng {
 public:
-  explicit      KeccakFastRng   ()                       : KeccakPRNG (128, 8)    { auto_seed(); }
+  explicit      KeccakFastRng   ()                       : KeccakRng (128, 8)    { auto_seed(); }
   template<class SeedSeq>
-  explicit      KeccakFastRng   (SeedSeq &seed_sequence) : KeccakPRNG (128, 8)    { seed (seed_sequence); }
+  explicit      KeccakFastRng   (SeedSeq &seed_sequence) : KeccakRng (128, 8)    { seed (seed_sequence); }
 };
 
 /** Pcg32Rng is a permutating linear congruential PRNG.
