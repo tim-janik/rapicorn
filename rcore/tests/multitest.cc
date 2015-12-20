@@ -748,6 +748,11 @@ main (int   argc,
 
   init_core_test (__PRETTY_FILE__, &argc, argv);
 
+  if (argc >= 2 && String ("--cpu-info") == argv[1])
+    {
+      printout ("%s\n", cpu_info ());
+      return 0;
+    }
   if (argc >= 2 && String ("--cwd") == argv[1])
     {
       printout ("%s\n", Path::cwd());
