@@ -136,16 +136,14 @@ struct EntropyTests : Entropy {
 };
 
 static void
-test_entropy()
+test_auto_seeder()
 {
-  const uint64_t seed1 = Entropy::get_seed();
-  const uint64_t seed2 = Entropy::get_seed();
-  TASSERT (seed1 != seed2);
-  Entropy e;
-  KeccakCryptoRng k1 (e), k2 (e);
+  AutoSeeder auto_seeder;
+  TASSERT (auto_seeder.random() != auto_seeder.random());
+  KeccakCryptoRng k1 (auto_seeder), k2 (auto_seeder);
   TASSERT (k1 != k2);
 }
-REGISTER_TEST ("RandomHash/Entropy", test_entropy);
+REGISTER_TEST ("RandomGenerator/AutoSeeder", test_auto_seeder);
 
 static void
 test_random_numbers()
@@ -180,7 +178,7 @@ test_random_numbers()
     }
 #endif
 }
-REGISTER_TEST ("RandomHash/Random Numbers", test_random_numbers);
+REGISTER_TEST ("RandomGenerator/Random Numbers", test_random_numbers);
 
 template<class Gen>
 struct GeneratorBench64 {
@@ -291,6 +289,9 @@ REGISTER_TEST ("RandomHash/~ Benchmarks", random_hash_benchmarks);
 static void
 test_pcg32()
 {
+  Pcg32Rng pcg1, pcg2;
+  TASSERT (pcg1.random() != pcg2.random()); // test auto-seeding
+  TASSERT (pcg1.random() != pcg2.random()); // test auto-seeding
   Pcg32Rng pcg (0x853c49e6748fea9b, 0xda3e39cb94b95bdb);
   static const uint32_t ref[] = {
     0x486fa52f, 0x6c1825ef, 0xbc7dfd25, 0x2e39be5d, 0xbab9d529, 0x3db767df, 0x8a57b4e5, 0x62cb137d,
@@ -313,7 +314,7 @@ test_pcg32()
   for (size_t i = 0; i < ARRAY_SIZE (ref); i++)
     TCMP (ref[i], ==, pcg.random());
 }
-REGISTER_TEST ("RandomHash/Pcg32Rng", test_pcg32);
+REGISTER_TEST ("RandomGenerator/Pcg32Rng", test_pcg32);
 
 static void
 test_seeder32()
@@ -341,12 +342,13 @@ test_seeder32()
       assert (seed2[i] != seed2[(i + 1) % LENGTH]);
     }
 }
-REGISTER_TEST ("RandomHash/SeedSeqFE256", test_seeder32);
+REGISTER_TEST ("RandomGenerator/SeedSeqFE256", test_seeder32);
 
 static void
 test_keccak_prng()
 {
-  KeccakCryptoRng krandom1;
+  KeccakCryptoRng krandom1, krandom2;
+  TASSERT (krandom1() != krandom2()); // test auto-seeding
   krandom1.seed (1);
   String digest;
   for (size_t i = 0; i < 6; i++)
@@ -361,7 +363,6 @@ test_keccak_prng()
 
   std::stringstream kss;
   kss << krandom1;
-  KeccakCryptoRng krandom2;
   TASSERT (krandom1 != krandom2 && !(krandom1 == krandom2));
   kss >> krandom2;
   TASSERT (krandom1 == krandom2 && !(krandom1 != krandom2));
@@ -395,7 +396,7 @@ test_keccak_prng()
   krandom2.seed (krandom1);     // uses krandom1.generate
   TASSERT (krandom1 != krandom2 && krandom1() != krandom2());
 }
-REGISTER_TEST ("RandomHash/KeccakRng", test_keccak_prng);
+REGISTER_TEST ("RandomGenerator/KeccakRng", test_keccak_prng);
 
 
 int
