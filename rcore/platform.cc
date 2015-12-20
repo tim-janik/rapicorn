@@ -20,6 +20,8 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/resource.h>
+#include <linux/random.h>       // GRND_NONBLOCK
+#include <sys/syscall.h>        // __NR_getrandom
 #if defined (__i386__) || defined (__x86_64__)
 #  include <x86intrin.h>        // __rdtsc
 #endif
@@ -491,6 +493,43 @@ Entropy::get_seed ()
       entropy_mix_simple = 0;
     }
   return pool();
+}
+
+static int
+getrandom (void *buffer, size_t count, unsigned flags)
+{
+#ifdef __NR_getrandom
+  const long ret = syscall (__NR_getrandom, buffer, count, flags);
+  if (ret > 0)
+    return ret;
+#endif
+  FILE *file = fopen ("/dev/urandom", "r");     // fallback
+  if (file)
+    {
+      const size_t l = fread (buffer, 1, count, file);
+      fclose (file);
+      if (l > 0)
+        return 0;
+    }
+  errno = ENOSYS;
+  return 0;
+}
+
+static bool
+hash_getrandom (KeccakRng &pool)
+{
+  uint64_t buffer[25];
+  int flags = 0;
+#ifdef GRND_NONBLOCK
+  flags |= GRND_NONBLOCK;
+#endif
+  int l = getrandom (buffer, sizeof (buffer), flags);
+  if (l > 0)
+    {
+      pool.xor_seed (buffer, l / sizeof (buffer[0]));
+      return true;
+    }
+  return false;
 }
 
 static bool
