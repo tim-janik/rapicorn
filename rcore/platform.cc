@@ -37,7 +37,7 @@ struct CPUInfo {
   uint x86_fpu : 1, x86_ssesys : 1, x86_tsc   : 1, x86_htt      : 1;
   uint x86_mmx : 1, x86_mmxext : 1, x86_3dnow : 1, x86_3dnowext : 1;
   uint x86_sse : 1, x86_sse2   : 1, x86_sse3  : 1, x86_ssse3    : 1;
-  uint x86_cx16 : 1, x86_sse4_1 : 1, x86_sse4_2 : 1;
+  uint x86_cx16 : 1, x86_sse4_1 : 1, x86_sse4_2 : 1, x86_rdrand : 1;
 };
 
 /* figure architecture name from compiler */
@@ -180,6 +180,8 @@ get_x86_cpu_features (CPUInfo *ci)
         ci->x86_sse4_1 = true;
       if (ecx & (1 << 20))
         ci->x86_sse4_2 = true;
+      if (ecx & (1 << 30))
+        ci->x86_rdrand = true;
       if (edx & (1 << 0))
         ci->x86_fpu = true;
       if (edx & (1 << 4))
@@ -246,19 +248,6 @@ get_x86_cpu_features (CPUInfo *ci)
   return true;
 }
 
-static CPUInfo
-get_cpu_info (void)
-{
-  static CPUInfo cached_cpu_info = [] () {
-    CPUInfo ci = { 0, };
-    if (!get_x86_cpu_features (&ci))
-      strcat (ci.cpu_vendor, "unknown");
-    ci.machine = get_arch_name();
-    return ci;
-  } ();
-  return cached_cpu_info;
-}
-
 /** Retrieve string identifying the runtime CPU type.
  * The returned string contains: number of online CPUs, a string
  * describing the CPU architecture, the vendor and finally
@@ -270,50 +259,58 @@ get_cpu_info (void)
 String
 cpu_info()
 {
-  const CPUInfo cpu_info = get_cpu_info();
-  String info;
-  // cores
-  info += string_format ("%d", sysconf (_SC_NPROCESSORS_ONLN));
-  // architecture
-  info += String (" ") + cpu_info.machine;
-  // vendor
-  info += String (" ") + cpu_info.cpu_vendor;
-  // processor flags
-  if (cpu_info.x86_fpu)
-    info += " FPU";
-  if (cpu_info.x86_tsc)
-    info += " TSC";
-  if (cpu_info.x86_htt)
-    info += " HTT";
-  if (cpu_info.x86_cx16)
-    info += " CMPXCHG16B";
-  // MMX flags
-  if (cpu_info.x86_mmx)
-    info += " MMX";
-  if (cpu_info.x86_mmxext)
-    info += " MMXEXT";
-  // SSE flags
-  if (cpu_info.x86_ssesys)
-    info += " SSESYS";
-  if (cpu_info.x86_sse)
-    info += " SSE";
-  if (cpu_info.x86_sse2)
-    info += " SSE2";
-  if (cpu_info.x86_sse3)
-    info += " SSE3";
-  if (cpu_info.x86_ssse3)
-    info += " SSSE3";
-  if (cpu_info.x86_sse4_1)
-    info += " SSE4.1";
-  if (cpu_info.x86_sse4_2)
-    info += " SSE4.2";
-  // 3DNOW flags
-  if (cpu_info.x86_3dnow)
-    info += " 3DNOW";
-  if (cpu_info.x86_3dnowext)
-    info += " 3DNOWEXT";
-  info += " ";
-  return info;
+  static String cpu_info_string = []() {
+    CPUInfo cpu_info = { 0, };
+    if (!get_x86_cpu_features (&cpu_info))
+      strcat (cpu_info.cpu_vendor, "Unknown");
+    cpu_info.machine = get_arch_name();
+    String info;
+    // cores
+    info += string_format ("%d", sysconf (_SC_NPROCESSORS_ONLN));
+    // architecture
+    info += String (" ") + cpu_info.machine;
+    // vendor
+    info += String (" ") + cpu_info.cpu_vendor;
+    // processor flags
+    if (cpu_info.x86_fpu)
+      info += " FPU";
+    if (cpu_info.x86_tsc)
+      info += " TSC";
+    if (cpu_info.x86_htt)
+      info += " HTT";
+    if (cpu_info.x86_cx16)
+      info += " CMPXCHG16B";
+    // MMX flags
+    if (cpu_info.x86_mmx)
+      info += " MMX";
+    if (cpu_info.x86_mmxext)
+      info += " MMXEXT";
+    // SSE flags
+    if (cpu_info.x86_ssesys)
+      info += " SSESYS";
+    if (cpu_info.x86_sse)
+      info += " SSE";
+    if (cpu_info.x86_sse2)
+      info += " SSE2";
+    if (cpu_info.x86_sse3)
+      info += " SSE3";
+    if (cpu_info.x86_ssse3)
+      info += " SSSE3";
+    if (cpu_info.x86_sse4_1)
+      info += " SSE4.1";
+    if (cpu_info.x86_sse4_2)
+      info += " SSE4.2";
+    if (cpu_info.x86_rdrand)
+      info += " rdrand";
+    // 3DNOW flags
+    if (cpu_info.x86_3dnow)
+      info += " 3DNOW";
+    if (cpu_info.x86_3dnowext)
+      info += " 3DNOWEXT";
+    info += " ";
+    return String (info.c_str());
+  }();
+  return cpu_info_string;
 }
 
 // == TaskStatus ==
