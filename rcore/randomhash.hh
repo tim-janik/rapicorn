@@ -144,7 +144,7 @@ public:
   /*dtor*/           ~KeccakPRNG  ();
   /// Create an unseeded Keccak PRNG with specific capacity and number of rounds, for experts only.
   explicit
-  KeccakPRNG (uint16_t hidden_state_capacity = 256, uint16_t n_rounds = 24) :
+  KeccakPRNG (uint16_t hidden_state_capacity, uint16_t n_rounds) :
     bit_rate_ (1600 - hidden_state_capacity), n_rounds_ (n_rounds), opos_ (n_nums())
   {
     RAPICORN_ASSERT (hidden_state_capacity > 0 && hidden_state_capacity <= 1600 - 64);

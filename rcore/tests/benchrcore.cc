@@ -120,14 +120,14 @@ struct EntropyTests : Entropy {
       }
     else if (strcmp (arg, "--system-entropy") == 0)
       {
-        KeccakPRNG pool;
+        KeccakCryptoRng pool;
         Entropy::system_entropy (pool);
         printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
         exit (0);
       }
     else if (strcmp (arg, "--runtime-entropy") == 0)
       {
-        KeccakPRNG pool;
+        KeccakCryptoRng pool;
         Entropy::runtime_entropy (pool);
         printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
         exit (0);
@@ -142,7 +142,7 @@ test_entropy()
   const uint64_t seed2 = Entropy::get_seed();
   TASSERT (seed1 != seed2);
   Entropy e;
-  KeccakPRNG k1, k2 (e);
+  KeccakCryptoRng k1 (e), k2 (e);
   TASSERT (k1 != k2);
 }
 REGISTER_TEST ("RandomHash/Entropy", test_entropy);
@@ -346,7 +346,8 @@ REGISTER_TEST ("RandomHash/SeedSeqFE256", test_seeder32);
 static void
 test_keccak_prng()
 {
-  KeccakPRNG krandom1;
+  KeccakCryptoRng krandom1;
+  krandom1.seed (1);
   String digest;
   for (size_t i = 0; i < 6; i++)
     {
@@ -360,7 +361,7 @@ test_keccak_prng()
 
   std::stringstream kss;
   kss << krandom1;
-  KeccakPRNG krandom2;
+  KeccakCryptoRng krandom2;
   TASSERT (krandom1 != krandom2 && !(krandom1 == krandom2));
   kss >> krandom2;
   TASSERT (krandom1 == krandom2 && !(krandom1 != krandom2));

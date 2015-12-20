@@ -167,7 +167,7 @@ void
 KeccakPRNG::auto_seed()
 {
   // FIXME: !!!!!!!!!!!!!!!!!!!!!!!!!
-  seed (1);
+  seed (17777);
 }
 
 /// The destructor resets the generator state to avoid leaving memory trails.

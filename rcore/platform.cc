@@ -4,6 +4,7 @@
 #include "strings.hh"
 #include "thread.hh"
 #include "randomhash.hh"
+#include <random>
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>
@@ -439,10 +440,11 @@ Entropy::entropy_pool()
     return *entropy_global_pool;
   assert (entropy_mutex.try_lock() == false); // pool *must* be locked by caller
   // create pool and seed it with system details
-  KeccakPRNG *kpool = new KeccakPRNG();
+  std::seed_seq seq { 1 };
+  KeccakPRNG *kpool = new KeccakCryptoRng (seq); // prevent auto-seeding
   system_entropy (*kpool);
   // gather entropy from runtime information and mix into pool
-  KeccakPRNG keccak;
+  KeccakCryptoRng keccak (seq);
   runtime_entropy (keccak);
   uint64_t seed_data[25];
   keccak.generate (&seed_data[0], &seed_data[25]);
@@ -457,7 +459,8 @@ void
 Entropy::slow_reseed ()
 {
   // gather and mangle entropy data
-  KeccakPRNG keccak;
+  std::seed_seq seq { 1 };
+  KeccakCryptoRng keccak (seq); // prevent auto-seeding
   runtime_entropy (keccak);
   // mix entropy into global pool
   uint64_t seed_data[25];
