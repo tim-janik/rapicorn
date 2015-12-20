@@ -474,6 +474,12 @@ bytehash_fnv64a (const uint8_t *bytes, size_t n, uint64_t hash = 0xcbf29ce484222
   return n == 0 ? hash : bytehash_fnv64a (bytes + 1, n - 1, 0x100000001b3 * (hash ^ bytes[0]));
 }
 
+static uint64_t
+stringhash_fnv64a (const String &string)
+{
+  return bytehash_fnv64a ((const uint8*) string.data(), string.size());
+}
+
 void
 Entropy::add_data (const void *bytes, size_t n_bytes)
 {
@@ -530,6 +536,22 @@ hash_getrandom (KeccakRng &pool)
       return true;
     }
   return false;
+}
+
+template<class Data> static void
+hash_anything (KeccakRng &pool, const Data &data)
+{
+  const uint64_t *d64 = (const uint64_t*) &data;
+  uint len = sizeof (data);
+  uint64_t dummy;
+  if (sizeof (Data) < sizeof (uint64_t))
+    {
+      dummy = 0;
+      memcpy (&dummy, &data, sizeof (Data));
+      d64 = &dummy;
+      len = 1;
+    }
+  pool.xor_seed (d64, len / sizeof (d64[0]));
 }
 
 static bool
@@ -699,19 +721,44 @@ get_rdrand (uint64 *u, uint count)
 void
 Entropy::runtime_entropy (KeccakRng &pool)
 {
-  HashStamp hash_stamps[32] = { 0, };
+  HashStamp hash_stamps[64] = { 0, };
   HashStamp *stamp = &hash_stamps[0];
   hash_time (stamp++);
-  uint64_t uint_array[32] = { 0, };
+  uint64_t uint_array[64] = { 0, };
   uint64_t *uintp = &uint_array[0];
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
-  hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
-  hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
+  hash_time (stamp++);  get_rdrand (uintp, 8); uintp += 8;
   hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
+  hash_time (stamp++);  *uintp++ = getuid();
+  hash_time (stamp++);  *uintp++ = geteuid();
+  hash_time (stamp++);  *uintp++ = getgid();
+  hash_time (stamp++);  *uintp++ = getegid();
+  hash_time (stamp++);  *uintp++ = getpid();
+  hash_time (stamp++);  *uintp++ = getsid (0);
+  int ppid;
+  hash_time (stamp++);  *uintp++ = ppid = getppid();
+  hash_time (stamp++);  *uintp++ = getsid (ppid);
+  hash_time (stamp++);  *uintp++ = getpgrp();
+  hash_time (stamp++);  *uintp++ = tcgetpgrp (0);
+  hash_time (stamp++);  hash_getrandom (pool);
+  hash_time (stamp++);  { *uintp++ = std::random_device()(); } // may open devices, so destroy early on
+  hash_time (stamp++);  hash_anything (pool, std::chrono::high_resolution_clock::now().time_since_epoch().count());
+  hash_time (stamp++);  hash_anything (pool, std::chrono::steady_clock::now().time_since_epoch().count());
+  hash_time (stamp++);  hash_anything (pool, std::chrono::system_clock::now().time_since_epoch().count());
+  hash_time (stamp++);  hash_anything (pool, std::this_thread::get_id());
+  String compiletime = __DATE__ __TIME__ __FILE__ __TIMESTAMP__;
+  hash_time (stamp++);  *uintp++ = stringhash_fnv64a (compiletime);     // compilation entropy
+  hash_time (stamp++);  *uintp++ = size_t (compiletime.data());         // heap address
+  hash_time (stamp++);  *uintp++ = size_t (&entropy_mutex);             // data segment
+  hash_time (stamp++);  *uintp++ = size_t ("PATH");                     // const data segment
+  hash_time (stamp++);  *uintp++ = size_t (getenv ("PATH"));            // a.out address
+  hash_time (stamp++);  *uintp++ = size_t (&stamp);                     // stack segment
+  hash_time (stamp++);  *uintp++ = size_t (&runtime_entropy);           // code segment
+  hash_time (stamp++);  *uintp++ = size_t (&::fopen);                   // libc code segment
+  hash_time (stamp++);  *uintp++ = size_t (&std::string::npos);         // stl address
+  hash_time (stamp++);  *uintp++ = stringhash_fnv64a (cpu_info());      // CPU type influence
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
@@ -725,7 +772,7 @@ Entropy::runtime_entropy (KeccakRng &pool)
 void
 Entropy::system_entropy (KeccakRng &pool)
 {
-  HashStamp hash_stamps[128] = { 0, };
+  HashStamp hash_stamps[64] = { 0, };
   HashStamp *stamp = &hash_stamps[0];
   hash_time (stamp++);
   uint64_t uint_array[64] = { 0, };
@@ -744,6 +791,9 @@ Entropy::system_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/1/stat");
   hash_time (stamp++);  hash_file (pool, "/proc/1/sched");
   hash_time (stamp++);  hash_file (pool, "/proc/1/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
   hash_time (stamp++);  hash_macs (pool);
   // hash_glob: "/sys/devices/**/net/*/address", "/sys/devices/*/*/*/ieee80211/phy*/*address*"
   hash_time (stamp++);  hash_file (pool, "/proc/uptime");
@@ -774,20 +824,6 @@ Entropy::system_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
   hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
   hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
-  hash_time (stamp++);  *uintp++ = getuid();
-  hash_time (stamp++);  *uintp++ = geteuid();
-  hash_time (stamp++);  *uintp++ = getgid();
-  hash_time (stamp++);  *uintp++ = getegid();
-  hash_time (stamp++);  *uintp++ = getpid();
-  hash_time (stamp++);  *uintp++ = getsid (0);
-  int ppid;
-  hash_time (stamp++);  *uintp++ = ppid = getppid();
-  hash_time (stamp++);  *uintp++ = getsid (ppid);
-  hash_time (stamp++);  *uintp++ = getpgrp();
-  hash_time (stamp++);  *uintp++ = tcgetpgrp (0);
-  hash_time (stamp++);  *uintp++ = size_t (&system_entropy);    // code segment
-  hash_time (stamp++);  *uintp++ = size_t (&entropy_mutex);     // data segment
-  hash_time (stamp++);  *uintp++ = size_t (&stamp);             // stack segment
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
   hash_time (stamp++);
