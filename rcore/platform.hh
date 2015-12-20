@@ -29,6 +29,12 @@ struct TaskStatus {
   String        string     ();  ///< Retrieve string representation of the status information.
 };
 
+/// Collect entropy from system devices, like interrupt counters, clocks and random devices.
+void collect_system_entropy  (uint64 *data, size_t n);
+
+/// Collect entropy from the current process, usually quicker than collect_system_entropy().
+void collect_runtime_entropy (uint64 *data, size_t n);
+
 /// Entropy gathering and provisioning class.
 class Entropy {
   static KeccakRng& entropy_pool();

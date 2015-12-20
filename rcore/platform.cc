@@ -718,8 +718,8 @@ get_rdrand (uint64 *u, uint count)
   return false;
 }
 
-void
-Entropy::runtime_entropy (KeccakRng &pool)
+static void
+runtime_entropy (KeccakRng &pool)
 {
   HashStamp hash_stamps[64] = { 0, };
   HashStamp *stamp = &hash_stamps[0];
@@ -770,7 +770,23 @@ Entropy::runtime_entropy (KeccakRng &pool)
 }
 
 void
-Entropy::system_entropy (KeccakRng &pool)
+Entropy::runtime_entropy (KeccakRng &pool)
+{
+  Rapicorn::runtime_entropy (pool);
+}
+
+void
+collect_runtime_entropy (uint64 *data, size_t n)
+{
+  std::seed_seq seq { 1 }; // provide seed_seq to avoid auto seeding
+  KeccakFastRng pool (seq);
+  runtime_entropy (pool);
+  for (size_t i = 0; i < n; i++)
+    data[i] = pool();
+}
+
+static void
+system_entropy (KeccakRng &pool)
 {
   HashStamp hash_stamps[64] = { 0, };
   HashStamp *stamp = &hash_stamps[0];
@@ -831,6 +847,22 @@ Entropy::system_entropy (KeccakRng &pool)
   assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
   pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
   pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+}
+
+void
+Entropy::system_entropy (KeccakRng &pool)
+{
+  Rapicorn::system_entropy (pool);
+}
+
+void
+collect_system_entropy (uint64 *data, size_t n)
+{
+  std::seed_seq seq { 1 }; // provide seed_seq to avoid auto seeding
+  KeccakCryptoRng pool (seq);
+  system_entropy (pool);
+  for (size_t i = 0; i < n; i++)
+    data[i] = pool();
 }
 
 } // Rapicorn
