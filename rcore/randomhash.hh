@@ -24,8 +24,10 @@ struct SHA3_224 {
   void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
   void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      digest      (uint8_t hashvalue[28]);                ///< Retrieve the resulting hash value.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate 224 bit SHA3 digest from @a data, see also class SHA3_224.
 void    sha3_224_hash   (const void *data, size_t data_length, uint8_t hashvalue[28]);
@@ -39,8 +41,10 @@ struct SHA3_256 {
   void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
   void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      digest      (uint8_t hashvalue[32]);                ///< Retrieve the resulting hash value.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate 256 bit SHA3 digest from @a data, see also class SHA3_256.
 void    sha3_256_hash   (const void *data, size_t data_length, uint8_t hashvalue[32]);
@@ -54,8 +58,10 @@ struct SHA3_384 {
   void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
   void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      digest      (uint8_t hashvalue[48]);                ///< Retrieve the resulting hash value.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate 384 bit SHA3 digest from @a data, see also class SHA3_384.
 void    sha3_384_hash   (const void *data, size_t data_length, uint8_t hashvalue[48]);
@@ -69,8 +75,10 @@ struct SHA3_512 {
   void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
   void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      digest      (uint8_t hashvalue[64]);                ///< Retrieve the resulting hash value.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate 512 bit SHA3 digest from @a data, see also class SHA3_512.
 void    sha3_512_hash   (const void *data, size_t data_length, uint8_t hashvalue[64]);
@@ -84,8 +92,10 @@ struct SHAKE128 {
   void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
   void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate SHA3 extendable output digest for 128 bit security strength, see also class SHAKE128.
 void    shake128_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
@@ -99,8 +109,10 @@ struct SHAKE256 {
   void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
   void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate SHA3 extendable output digest for 256 bit security strength, see also class SHAKE256.
 void    shake256_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
