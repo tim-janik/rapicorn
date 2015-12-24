@@ -411,6 +411,85 @@ public:
 };
 
 // == Hashing ==
+/** Hash function based on the PCG family of random number generators (RNG).
+ * This function is based on the paper [PCG: A Family of Simple Fast
+ * Space-Efficient Statistically Good Algorithms for Random Number
+ * Generation](http://www.pcg-random.org/paper.html),
+ * because of its excellent avalange and distribution properties.
+ * The hash data is integrated as octets in the inner LCG RNG loop.
+ * Hash generation is very fast, because the inner loop consists only of a
+ * multiplication and subtraction, while the ouput bit mixing consists of
+ * just 5 simple operations (xor, shift and rotation).
+ */
+template<class Num> static RAPICORN_CONST inline uint32_t
+pcg_hash32 (const Num *data, size_t length, uint64_t seed)
+{
+  static_assert (sizeof (Num) <= 1, "");
+  uint64_t h = seed;
+  // Knuth LCG
+  h ^= 0x14057b7ef767814fULL;
+  for (size_t i = 0; RAPICORN_LIKELY (i < length); i++)
+    {
+      h -= uint8_t (data[i]);
+      h *= 6364136223846793005ULL;
+    }
+  // based on pcg_detail::xsh_rr_mixin
+  const size_t   rsh = h >> 59;
+  const uint32_t xsh = (h ^ (h >> 18)) >> 27;
+  const uint32_t rot = (xsh >> rsh) | (xsh << (32 - rsh));
+  return rot;
+}
+
+/** Hash function based on the PCG family of random number generators (RNG).
+ * This function is similar to pcg_hash32() at its core, but because the
+ * output is 64bit, the accumulated 64bit LCG state does not need to be
+ * bit reduced. A fast but statistially good mixing function with
+ * 5 xor/shifts and one multiplication is applied as output stage.
+ * This function is allmost as fast as FNV-1a at 64bit due to the similar
+ * structures of the inner loops, but it tends to score much better in
+ * [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect)
+ * tests, usch as [SMHasher](https://code.google.com/p/smhasher/).
+ */
+template<class Num> static RAPICORN_CONST inline uint64_t
+pcg_hash64 (const Num *data, size_t length, uint64_t seed)
+{
+  static_assert (sizeof (Num) <= 1, "");
+  uint64_t h = seed;
+  // Knuth LCG
+  h ^= 0x14057b7ef767814fULL;
+  for (size_t i = 0; RAPICORN_LIKELY (i < length); i++)
+    {
+      h -= uint8_t (data[i]);
+      h *= 6364136223846793005ULL;
+    }
+  // based on pcg_detail::rxs_m_xs_mixin
+  const size_t   rsh = h >> 59;
+  const uint64_t rxs = h ^ (h >> (5 + rsh));
+  const uint64_t m = rxs * 12605985483714917081ULL;
+  const uint64_t xs = m ^ (m >> 43);
+  return xs;
+}
+
+/// pcg_hash64() variant for zero-terminated strings.
+static RAPICORN_CONST inline uint64_t
+pcg_hash64 (const char *ztdata, uint64_t seed)
+{
+  uint64_t h = seed;
+  // Knuth LCG
+  h ^= 0x14057b7ef767814fULL;
+  for (size_t i = 0; RAPICORN_LIKELY (ztdata[i] != 0); i++)
+    {
+      h -= uint8_t (ztdata[i]);
+      h *= 6364136223846793005ULL;
+    }
+  // based on pcg_detail::rxs_m_xs_mixin
+  const size_t   rsh = h >> 59;
+  const uint64_t rxs = h ^ (h >> (5 + rsh));
+  const uint64_t m = rxs * 12605985483714917081ULL;
+  const uint64_t xs = m ^ (m >> 43);
+  return xs;
+}
+
 extern uint64_t cached_hash_secret; ///< Use hash_secret() for access.
 
 /// Provide hashing nonce for reseeding hashes at program start to avoid collision attacks.
@@ -420,6 +499,20 @@ hash_secret ()
   if (RAPICORN_UNLIKELY (cached_hash_secret == 0))
     random_secret (&cached_hash_secret);
   return cached_hash_secret;
+}
+
+/// Fast string hashing with good dispersion for std::string and runtime randomization.
+static RAPICORN_CONST inline uint64_t
+string_hash64 (const std::string &string)
+{
+  return pcg_hash64 (string.data(), string.size(), hash_secret());
+}
+
+/// pcg_hash64() variant for zero-terminated strings.
+static RAPICORN_CONST inline uint64_t
+string_hash64 (const char *ztdata)
+{
+  return pcg_hash64 (ztdata, hash_secret());
 }
 
 } // Rapicorn
