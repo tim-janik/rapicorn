@@ -738,8 +738,7 @@ constructur_attribute_test_initializer (void)
 }
 
 int
-main (int   argc,
-      char *argv[])
+main (int argc, char *argv[])
 {
   if (constructur_attribute_test != 305638330)
     fatal ("static constructors have not been called before main");
@@ -748,6 +747,16 @@ main (int   argc,
 
   init_core_test (__PRETTY_FILE__, &argc, argv);
 
+  if (argc >= 3 && String ("--pcg-hash64") == argv[1])
+    {
+      printout ("0x%016x\n", pcg_hash64 (argv[2], 0));
+      return 0;
+    }
+  if (argc >= 3 && String ("--string-hash64") == argv[1])
+    {
+      printout ("0x%016x\n", string_hash64 (argv[2]));
+      return 0;
+    }
   if (argc >= 2 && String ("--cpu-info") == argv[1])
     {
       printout ("%s\n", cpu_info ());
