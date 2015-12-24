@@ -501,6 +501,14 @@ hash_secret ()
   return cached_hash_secret;
 }
 
+/// Fast byte hashing with good dispersion and runtime randomization.
+template<class Num> static RAPICORN_CONST inline uint64_t
+byte_hash64 (const Num *data, size_t length)
+{
+  static_assert (sizeof (Num) <= 1, "");
+  return pcg_hash64 (data, length, hash_secret());
+}
+
 /// Fast string hashing with good dispersion for std::string and runtime randomization.
 static RAPICORN_CONST inline uint64_t
 string_hash64 (const std::string &string)
