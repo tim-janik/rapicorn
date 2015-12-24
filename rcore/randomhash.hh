@@ -411,6 +411,19 @@ public:
 };
 
 // == Hashing ==
+/** Simple, very fast and well known hash function as constexpr with good dispersion.
+ * This is the 64bit version of the well known
+ * [FNV-1a](https://en.wikipedia.org/wiki/Fowler-Noll-Vo_hash_function)
+ * hash function, implemented as a C++11 constexpr for zero-terminated
+ * strings, so the hashes can be used e.g. as case labels in switch statements.
+ */
+template<class Num> static inline constexpr uint64_t
+fnv1a_consthash64 (const Num *const ztdata, uint64_t hash = 0xcbf29ce484222325)
+{
+  static_assert (sizeof (Num) <= 1, "");
+  return RAPICORN_LIKELY (ztdata[0] != 0) ? fnv1a_consthash64 (ztdata + 1, 0x100000001b3 * (hash ^ uint8_t (ztdata[0]))) : hash;
+}
+
 /** Hash function based on the PCG family of random number generators (RNG).
  * This function is based on the paper [PCG: A Family of Simple Fast
  * Space-Efficient Statistically Good Algorithms for Random Number
@@ -445,7 +458,7 @@ pcg_hash32 (const Num *data, size_t length, uint64_t seed)
  * output is 64bit, the accumulated 64bit LCG state does not need to be
  * bit reduced. A fast but statistially good mixing function with
  * 5 xor/shifts and one multiplication is applied as output stage.
- * This function is allmost as fast as FNV-1a at 64bit due to the similar
+ * This function is allmost as fast as fnv1a_consthash64 due to the similar
  * structures of the inner loops, but it tends to score much better in
  * [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect)
  * tests, usch as [SMHasher](https://code.google.com/p/smhasher/).

@@ -949,6 +949,11 @@ test_string_hashing()
   TCMP (string_hash64 (String ("bar")), ==, string_hash64 ("bar"));
   TCMP (byte_hash64 ("foo", 3), ==, string_hash64 ("foo"));
   TCMP (byte_hash64 ("bazbaz", 6), ==, string_hash64 ("bazbaz"));
+  TCMP (fnv1a_consthash64 ("foo"), ==, fnv1a_consthash64 ("foo"));
+  TCMP (fnv1a_consthash64 ("bar"), ==, fnv1a_consthash64 ("bar"));
+  TCMP (fnv1a_consthash64 ("xBAR" + 1), ==, fnv1a_consthash64 ("yBAR" + 1));
+  TCMP (fnv1a_consthash64 ("BAR\0x"), ==, fnv1a_consthash64 ("BAR\0y"));
+  TCMP (fnv1a_consthash64 ("BAR\0x"), ==, fnv1a_consthash64 ("BAR\0y"));
 }
 REGISTER_TEST ("RandomHash/String Hashing", test_string_hashing);
 
