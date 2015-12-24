@@ -2,6 +2,7 @@
 #include "resources.hh"
 #include "thread.hh"
 #include "strings.hh"
+#include "randomhash.hh"
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -294,16 +295,10 @@ Blob::load (const String &filename)
   return error_result (filename, ENOENT);
 }
 
-static constexpr uint64
-consthash_fnv64a (const char *string, uint64 hash = 0xcbf29ce484222325)
-{
-  return string[0] == 0 ? hash : consthash_fnv64a (string + 1, 0x100000001b3 * (hash ^ string[0]));
-}
-
 Blob
 Blob::from (const String &blob_string)
 {
-  String res_url = string_format ("res:/.tmp/%016x", consthash_fnv64a (blob_string.c_str()));
+  String res_url = string_format ("res:/.tmp/%016x", string_hash64 (blob_string));
   return Blob (std::make_shared<StringBlob> (res_url, blob_string));
 }
 
