@@ -13,6 +13,8 @@ uint64_t        random_int64    ();
 int64_t         random_irange   (int64_t begin, int64_t end);
 double          random_float    ();
 double          random_frange   (double begin, double end);
+void            random_secret   (uint64_t *secret_var);
+
 
 // == Hashing ==
 /** SHA3_224 - 224 Bit digest generation.
@@ -407,6 +409,18 @@ public:
     return pcg_xsh_rr (lcgout);         // PCG XOR-shift + random rotation
   }
 };
+
+// == Hashing ==
+extern uint64_t cached_hash_secret; ///< Use hash_secret() for access.
+
+/// Provide hashing nonce for reseeding hashes at program start to avoid collision attacks.
+static RAPICORN_PURE inline uint64_t
+hash_secret ()
+{
+  if (RAPICORN_UNLIKELY (cached_hash_secret == 0))
+    random_secret (&cached_hash_secret);
+  return cached_hash_secret;
+}
 
 } // Rapicorn
 

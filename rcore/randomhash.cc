@@ -658,4 +658,22 @@ random_nonce ()
   return nonce;
 }
 
+/// Generate a secret non-zero nonce in secret_var, unless it has already been assigned.
+void
+random_secret (uint64_t *secret_var)
+{
+  static std::mutex mtx;
+  std::unique_lock<std::mutex> lock (mtx);
+  if (!*secret_var)
+    {
+      uint64_t d;
+      do
+        d = global_random64();
+      while (d == 0); // very unlikely
+      *secret_var = d;
+    }
+}
+
+uint64_t cached_hash_secret = 0;
+
 } // Rapicorn
