@@ -648,14 +648,10 @@ random_frange (double begin, double end)
 uint64_t
 random_nonce ()
 {
-  static uint64_t nonce = []() {
-    uint64_t d;
-    do
-      d = global_random64();
-    while (d == 0); // very unlikely
-    return d;
-  } ();
-  return nonce;
+  static uint64_t cached_nonce = 0;
+  if (RAPICORN_UNLIKELY (cached_nonce == 0))
+    random_secret (&cached_nonce);
+  return cached_nonce;
 }
 
 /// Generate a secret non-zero nonce in secret_var, unless it has already been assigned.
