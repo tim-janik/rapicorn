@@ -51,9 +51,8 @@
 #endif
 
 // == Likelyness Hinting ==
-#define	RAPICORN__BOOL(expr)		__extension__ ({ bool _rapicorn__bool; if (expr) _rapicorn__bool = 1; else _rapicorn__bool = 0; _rapicorn__bool; })
-#define	RAPICORN_ISLIKELY(expr)		__builtin_expect (RAPICORN__BOOL (expr), 1)
-#define	RAPICORN_UNLIKELY(expr)		__builtin_expect (RAPICORN__BOOL (expr), 0)
+#define	RAPICORN_ISLIKELY(expr)		__builtin_expect (bool (expr), 1)
+#define	RAPICORN_UNLIKELY(expr)		__builtin_expect (bool (expr), 0)
 #define	RAPICORN_LIKELY			RAPICORN_ISLIKELY
 
 // == Convenience Macros ==
