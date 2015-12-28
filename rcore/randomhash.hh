@@ -7,6 +7,14 @@
 
 namespace Rapicorn {
 
+// == Random Numbers ==
+uint64_t        random_nonce    ();
+uint64_t        random_int64    ();
+int64_t         random_irange   (int64_t begin, int64_t end);
+double          random_float    ();
+double          random_frange   (double begin, double end);
+
+// == Hashing ==
 /** SHA3_224 - 224 Bit digest generation.
  * This class implements the SHA3 hash funtion to create 224 Bit digests, see FIPS 202 @cite Fips202 .
  */
@@ -107,11 +115,13 @@ class KeccakF1600 {
     // __MMX__: __m64   V[25];
   } __attribute__ ((__aligned__ (16)));
 public:
+  explicit      KeccakF1600 ();                         ///< Zero the state.
+  void          reset       ();                         ///< Zero the state.
   uint64_t&     operator[]  (int      index)       { return A[index]; }
   uint64_t      operator[]  (int      index) const { return A[index]; }
-  void          permute     (uint32_t n_rounds);
+  void          permute     (uint32_t n_rounds);        ///< Apply Keccak permutation with @a n_rounds.
   inline uint8_t&
-  byte (size_t state_index)
+  byte (size_t state_index)                             ///< Access byte 0..199 of the state.
   {
 #if   __BYTE_ORDER == __LITTLE_ENDIAN
     return bytes[(state_index / 8) * 8 + (state_index % 8)];            // 8 == sizeof (uint64_t)
@@ -125,38 +135,55 @@ public:
 
 } // Lib
 
-/** KeccakPRNG - A KeccakF1600 based cryptographically secure pseudo-random number generator.
+/// AutoSeeder provides non-deterministic seeding entropy.
+class AutoSeeder {
+public:
+  /// Generate non-deterministic 64bit random value.
+  static uint64   random     ()       { return random_int64(); }
+  /// Generate non-deterministic 64bit random value.
+  uint64          operator() () const { return this->random(); }
+  /// Fill the range [begin, end) with random unsigned integer values.
+  template<typename RandomAccessIterator> void
+  generate (RandomAccessIterator begin, RandomAccessIterator end)
+  {
+    typedef typename std::iterator_traits<RandomAccessIterator>::value_type Value;
+    while (begin != end)
+      {
+        const uint64_t rbits = operator()();
+        *begin++ = Value (rbits);
+        if (sizeof (Value) <= 4 && begin != end)
+          *begin++ = Value (rbits >> 32);
+      }
+  }
+};
+
+/** KeccakRng - A KeccakF1600 based pseudo-random number generator.
  * The permutation steps are derived from the Keccak specification @cite Keccak11 .
  * For further details about this implementation, see also: http://testbit.org/keccak
+ * This class is primarily used to implement more fine tuned generators, such as:
+ * KeccakCryptoRng, KeccakGoodRng and KeccakFastRng.
  */
-class KeccakPRNG {
+class KeccakRng {
+  const uint16_t      bit_rate_, n_rounds_;
+  uint32_t            opos_;
   Lib::KeccakF1600    state_;
-  const size_t        prng_bit_rate_;
-  size_t              opos_;
   void                permute1600();
 public:
-  /// Integral type of the KeccakPRNG generator results.
+  /// Integral type of the KeccakRng generator results.
   typedef uint64_t    result_type;
   /// Amount of 64 bit random numbers per generated block.
-  inline size_t       n_nums() const            { return prng_bit_rate_ / 64; }
+  inline size_t       n_nums() const            { return bit_rate_ / 64; }
   /// Amount of bits used to store hidden random number generator state.
-  inline size_t       bit_capacity() const      { return 1600 - prng_bit_rate_; }
-  /*dtor*/           ~KeccakPRNG  ();
-  /// Create a Keccak PRNG with one 64 bit @a seed_value.
+  inline size_t       bit_capacity() const      { return 1600 - bit_rate_; }
+  /*dtor*/           ~KeccakRng  ();
+  /// Create an unseeded Keccak PRNG with specific capacity and number of rounds, for experts only.
   explicit
-  KeccakPRNG (uint64_t seed_value = 1) : prng_bit_rate_ (1024), opos_ (n_nums())
+  KeccakRng (uint16_t hidden_state_capacity, uint16_t n_rounds) :
+    bit_rate_ (1600 - hidden_state_capacity), n_rounds_ (n_rounds), opos_ (n_nums())
   {
-    // static_assert (prng_bit_rate_ <= 1536 && prng_bit_rate_ % 64 == 0, "KeccakPRNG bit rate is invalid");
-    std::fill (&state_[0], &state_[25], 0);
-    seed (seed_value);
-  }
-  /// Create a Keccak PRNG, seeded from a @a seed sequence.
-  template<class SeedSeq> explicit
-  KeccakPRNG (SeedSeq &seed_sequence) : prng_bit_rate_ (1024), opos_ (n_nums())
-  {
-    // static_assert (prng_bit_rate_ <= 1536 && prng_bit_rate_ % 64 == 0, "KeccakPRNG bit rate is invalid");
-    std::fill (&state_[0], &state_[25], 0);
-    seed (seed_sequence);
+    RAPICORN_ASSERT (hidden_state_capacity > 0 && hidden_state_capacity <= 1600 - 64);
+    RAPICORN_ASSERT (64 * (hidden_state_capacity / 64) == hidden_state_capacity); // capacity must be 64bit aligned
+    RAPICORN_ASSERT (n_rounds > 0 && n_rounds < 255);                             // see KECCAK_ROUND_CONSTANTS access
   }
   void forget   ();
   void discard  (unsigned long long count);
@@ -167,10 +194,10 @@ public:
   void
   seed (const uint64_t *seeds, size_t n_seeds)
   {
-    std::fill (&state_[0], &state_[25], 0);
+    state_.reset();
     xor_seed (seeds, n_seeds);
   }
-  /// Reinitialize the generator state from a @a seed_sequence.
+  /// Seed the generator state from a @a seed_sequence.
   template<class SeedSeq> void
   seed (SeedSeq &seed_sequence)
   {
@@ -181,15 +208,19 @@ public:
       u64[i] = u32[i * 2] | (uint64_t (u32[i * 2 + 1]) << 32);
     seed (u64, 25);
   }
-  /// Generate a new 64 bit random number.
+  /// Seed the generator from a system specific nondeterministic random source.
+  void auto_seed ();
+  /// Generate uniformly distributed 64 bit pseudo random number.
   /// A new block permutation is carried out every n_nums() calls, see also xor_seed().
-  result_type
-  operator() ()
+  uint64_t
+  random ()
   {
     if (opos_ >= n_nums())
       permute1600();
     return state_[opos_++];
   }
+  /// Generate uniformly distributed 32 bit pseudo random number.
+  result_type   operator() ()   { return random(); }
   /// Fill the range [begin, end) with random unsigned integer values.
   template<typename RandomAccessIterator> void
   generate (RandomAccessIterator begin, RandomAccessIterator end)
@@ -205,16 +236,16 @@ public:
   }
   /// Compare two generators for state equality.
   friend bool
-  operator== (const KeccakPRNG &lhs, const KeccakPRNG &rhs)
+  operator== (const KeccakRng &lhs, const KeccakRng &rhs)
   {
     for (size_t i = 0; i < 25; i++)
       if (lhs.state_[i] != rhs.state_[i])
         return false;
-    return lhs.opos_ == rhs.opos_ && lhs.prng_bit_rate_ == rhs.prng_bit_rate_;
+    return lhs.opos_ == rhs.opos_ && lhs.bit_rate_ == rhs.bit_rate_;
   }
   /// Compare two generators for state inequality.
   friend bool
-  operator!= (const KeccakPRNG &lhs, const KeccakPRNG &rhs)
+  operator!= (const KeccakRng &lhs, const KeccakRng &rhs)
   {
     return !(lhs == rhs);
   }
@@ -233,7 +264,7 @@ public:
   /// Serialize generator state into an OStream.
   template<typename CharT, typename Traits>
   friend std::basic_ostream<CharT, Traits>&
-  operator<< (std::basic_ostream<CharT, Traits> &os, const KeccakPRNG &self)
+  operator<< (std::basic_ostream<CharT, Traits> &os, const KeccakRng &self)
   {
     typedef typename std::basic_ostream<CharT, Traits>::ios_base IOS;
     const typename IOS::fmtflags saved_flags = os.flags();
@@ -251,18 +282,60 @@ public:
   /// Deserialize generator state from an IStream.
   template<typename CharT, typename Traits>
   friend std::basic_istream<CharT, Traits>&
-  operator>> (std::basic_istream<CharT, Traits> &is, KeccakPRNG &self)
+  operator>> (std::basic_istream<CharT, Traits> &is, KeccakRng &self)
   {
     typedef typename std::basic_istream<CharT, Traits>::ios_base IOS;
     const typename IOS::fmtflags saved_flags = is.flags();
     is.flags (IOS::dec | IOS::skipws);
     is >> self.opos_;
-    self.opos_ = std::min (self.n_nums(), self.opos_);
+    self.opos_ = std::min (self.n_nums(), size_t (self.opos_));
     for (size_t i = 0; i < 25; i++)
       is >> self.state_[i];
     is.flags (saved_flags);
     return is;
   }
+};
+
+/** KeccakCryptoRng - A KeccakF1600 based cryptographic quality pseudo-random number generator.
+ * The quality of the generated pseudo random numbers is comaparable to the hash output of SHAKE128.
+ */
+class KeccakCryptoRng : public KeccakRng {
+public:
+  /// Initialize and seed the generator from a system specific nondeterministic random source.
+  explicit      KeccakCryptoRng ()                       : KeccakRng (256, 24)   { auto_seed(); }
+  /// Initialize and seed the generator from @a seed_sequence.
+  template<class SeedSeq>
+  explicit      KeccakCryptoRng (SeedSeq &seed_sequence) : KeccakRng (256, 24)   { seed (seed_sequence); }
+};
+
+/** KeccakGoodRng - A KeccakF1600 based good quality pseudo-random number generator.
+ * This class provides very good random numbers, using the KeccakF1600 algorithm without
+ * the extra security margins applied for SHA3 hash generation. This improves performance
+ * significantly without noticably trading random number quality.
+ * For cryptography grade number generation KeccakCryptoRng should be used instead.
+ */
+class KeccakGoodRng : public KeccakRng {
+public:
+  /// Initialize and seed the generator from a system specific nondeterministic random source.
+  explicit      KeccakGoodRng   ()                       : KeccakRng (192, 13)   { auto_seed(); }
+  /// Initialize and seed the generator from @a seed_sequence.
+  template<class SeedSeq>
+  explicit      KeccakGoodRng   (SeedSeq &seed_sequence) : KeccakRng (192, 13)   { seed (seed_sequence); }
+};
+
+/** KeccakFastRng - A KeccakF1600 based fast pseudo-random number generator.
+ * This class tunes the KeccakF1600 algorithm for best performance in pseudo random
+ * number generation. Performance is improved while still retaining quality random
+ * number generation, according to the findings in seciton "4.1.1 Statistical tests"
+ * from http://keccak.noekeon.org/Keccak-reference-3.0.pdf.
+ */
+class KeccakFastRng : public KeccakRng {
+public:
+  /// Initialize and seed the generator from a system specific nondeterministic random source.
+  explicit      KeccakFastRng   ()                       : KeccakRng (128, 8)    { auto_seed(); }
+  /// Initialize and seed the generator from @a seed_sequence.
+  template<class SeedSeq>
+  explicit      KeccakFastRng   (SeedSeq &seed_sequence) : KeccakRng (128, 8)    { seed (seed_sequence); }
 };
 
 /** Pcg32Rng is a permutating linear congruential PRNG.
@@ -294,10 +367,25 @@ class Pcg32Rng {
     return ror32 ((input ^ (input >> 18)) >> 27, input >> 59);
   }
 public:
-  /// Initialize and seed.
-  explicit Pcg32Rng  (uint64_t offset = 11400714819323198485ULL, uint64_t sequence = 1442695040888963407ULL);
+  /// Initialize and seed from @a seed_sequence.
+  template<class SeedSeq>
+  explicit Pcg32Rng  (SeedSeq &seed_sequence) : increment_ (0), accu_ (0) { seed (seed_sequence); }
+  /// Initialize and seed by seeking to position @a offset within stream @a sequence.
+  explicit Pcg32Rng  (uint64_t offset, uint64_t sequence);
+  /// Initialize and seed the generator from a system specific nondeterministic random source.
+  explicit Pcg32Rng  ();
+  /// Seed the generator from a system specific nondeterministic random source.
+  void     auto_seed ();
   /// Seed by seeking to position @a offset within stream @a sequence.
-  void     seed      (uint64_t offset, uint64_t sequence = 1442695040888963407ULL);
+  void     seed      (uint64_t offset, uint64_t sequence);
+  /// Seed the generator state from a @a seed_sequence.
+  template<class SeedSeq> void
+  seed (SeedSeq &seed_sequence)
+  {
+    uint64_t seeds[2];
+    seed_sequence.generate (&seeds[0], &seeds[2]);
+    seed (seeds[0], seeds[1]);
+  }
   /// Generate uniformly distributed 32 bit pseudo random number.
   uint32_t
   random ()

@@ -2,48 +2,146 @@
 #include <rcore/testutils.hh>
 #include <rcore/randomhash.hh>
 #include <random>
+#include <array>
 
 using namespace Rapicorn;
 
-struct EntropyTests : Entropy {
-  void
-  test (char *arg)
+/** SeedSeqFE256 provides a fixed-entropy seed sequence with good avalanche properties.
+ * This class provides a replacement for std::seed_seq that avoids problems with bias,
+ * performs better in empirical statistical tests, and executes faster in
+ * normal-sized use cases.
+ * The implementation is based on randutils::seed_seq_fe256 from Melissa E. O'Neill,
+ * see: http://www.pcg-random.org/posts/developing-a-seed_seq-alternative.html
+ */
+class SeedSeqFE256 {
+  std::array<uint32_t, 8> mixer_;
+  static constexpr uint32_t INIT_A = 0x43b0d7e5;
+  static constexpr uint32_t MULT_A = 0x931e8875;
+  static constexpr uint32_t INIT_B = 0x8b51f9dd;
+  static constexpr uint32_t MULT_B = 0x58f38ded;
+  static constexpr uint32_t MIX_MULT_L = 0xca01f9dd;
+  static constexpr uint32_t MIX_MULT_R = 0x4973f715;
+  static constexpr uint32_t XSHIFT = sizeof (uint32_t) * 8 / 2;
+public:
+  SeedSeqFE256 ()           {}
+  template<typename T>
+  SeedSeqFE256 (std::initializer_list<T> init)
   {
-    if      (strcmp (arg, "--entropy") == 0)
+    seed (init.begin(), init.end());
+  }
+  template<typename InputIter>
+  SeedSeqFE256 (InputIter begin, InputIter end)
+  {
+    seed (begin, end);
+  }
+  template<typename InputIter> void
+  seed (InputIter begin, InputIter end)
+  {
+    const uint32_t *beginp = &*begin;
+    const uint32_t *endp = &*end;
+    mix_input (beginp, endp);
+  }
+  template<typename RandomAccessIterator> void
+  generate (RandomAccessIterator dest_begin, RandomAccessIterator dest_end) const
+  {
+    uint32_t *beginp = &*dest_begin;
+    uint32_t *endp = &*dest_end;
+    generate_output (beginp, endp);
+  }
+private:
+  void
+  mix_input (const uint32_t *begin, const uint32_t *end)
+  {
+    // based on http://www.pcg-random.org/posts/developing-a-seed_seq-alternative.html
+    // Copyright (C) 2015 Melissa E. O'Neill, The MIT License (MIT)
+    auto hash_const = INIT_A;
+    auto hash = [&] (uint32_t value) {
+      value ^= hash_const;
+      hash_const *= MULT_A;
+      value *= hash_const;
+      value ^= value >> XSHIFT;
+      return value;
+    };
+    auto mix = [] (uint32_t x, uint32_t y) {
+      uint32_t result = MIX_MULT_L * x - MIX_MULT_R * y;
+      result ^= result >> XSHIFT;
+      return result;
+    };
+    const uint32_t *current = begin;
+    for (auto &elem : mixer_)
       {
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n",
-                  Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(),
-                  Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed(), Entropy::get_seed());
-        exit (0);
+        if (current != end)
+          elem = hash (*current++);
+        else
+          elem = hash (0U);
       }
-    else if (strcmp (arg, "--system-entropy") == 0)
+    for (auto &src : mixer_)
+      for (auto &dest : mixer_)
+        if (&src != &dest)
+          dest = mix (dest, hash (src));
+    for (; current != end; ++current)
+      for (auto &dest : mixer_)
+        dest = mix (dest, hash (*current));
+  }
+  void
+  generate_output (uint32_t *dest_begin, uint32_t *dest_end) const
+  {
+    // based on http://www.pcg-random.org/posts/developing-a-seed_seq-alternative.html
+    // Copyright (C) 2015 Melissa E. O'Neill, The MIT License (MIT)
+    auto src_begin  = mixer_.begin();
+    auto src_end    = mixer_.end();
+    auto src        = src_begin;
+    auto hash_const = INIT_B;
+    for (auto dest = dest_begin; dest != dest_end; ++dest)
       {
-        KeccakPRNG pool;
-        Entropy::system_entropy (pool);
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
-        exit (0);
-      }
-    else if (strcmp (arg, "--runtime-entropy") == 0)
-      {
-        KeccakPRNG pool;
-        Entropy::runtime_entropy (pool);
-        printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", pool(), pool(), pool(), pool(), pool(), pool(), pool(), pool());
-        exit (0);
+        auto dataval = *src;
+        if (++src == src_end)
+          src = src_begin;
+        dataval ^= hash_const;
+        hash_const *= MULT_B;
+        dataval *= hash_const;
+        dataval ^= dataval >> XSHIFT;
+        *dest = dataval;
       }
   }
 };
 
+// == EntropyTests ==
 static void
-test_entropy()
+test_entropy (char *arg)
 {
-  const uint64_t seed1 = Entropy::get_seed();
-  const uint64_t seed2 = Entropy::get_seed();
-  TASSERT (seed1 != seed2);
-  Entropy e;
-  KeccakPRNG k1, k2 (e);
+  if      (strcmp (arg, "--entropy") == 0)
+    {
+      printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n",
+                random_int64(), random_int64(), random_int64(), random_int64(),
+                random_int64(), random_int64(), random_int64(), random_int64());
+      exit (0);
+    }
+  else if (strcmp (arg, "--runtime-entropy") == 0)
+    {
+      uint64 data[8];
+      collect_runtime_entropy (data, 8);
+      printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+      exit (0);
+    }
+  else if (strcmp (arg, "--system-entropy") == 0)
+    {
+      uint64 data[8];
+      collect_system_entropy (data, 8);
+      printout ("%016x%016x%016x%016x%016x%016x%016x%016x\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+      exit (0);
+    }
+}
+
+static void
+test_auto_seeder()
+{
+  AutoSeeder auto_seeder;
+  TASSERT (auto_seeder.random() != auto_seeder.random());
+  KeccakCryptoRng k1 (auto_seeder), k2 (auto_seeder);
   TASSERT (k1 != k2);
 }
-REGISTER_TEST ("RandomHash/Entropy", test_entropy);
+REGISTER_TEST ("RandomGenerator/AutoSeeder", test_auto_seeder);
 
 static void
 test_random_numbers()
@@ -78,7 +176,7 @@ test_random_numbers()
     }
 #endif
 }
-REGISTER_TEST ("RandomHash/Random Numbers", test_random_numbers);
+REGISTER_TEST ("RandomGenerator/Random Numbers", test_random_numbers);
 
 template<class Gen>
 struct GeneratorBench64 {
@@ -120,28 +218,78 @@ struct Gen_Pcg32 {
 static void
 random_hash_benchmarks()
 {
-  Test::Timer timer (0.5); // maximum seconds
-  GeneratorBench64<std::mt19937_64> mb; // core-i7: 1415.3MB/s
-  double bench_time = timer.benchmark (mb);
-  TPASS ("mt19937_64 # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (mb), bench_time, mb.bytes_per_run() / bench_time / 1048576.);
-  GeneratorBench64<Gen_minstd> sb;      // core-i7:  763.7MB/s
-  bench_time = timer.benchmark (sb);
-  TPASS ("minstd     # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (sb), bench_time, sb.bytes_per_run() / bench_time / 1048576.);
-  GeneratorBench64<Gen_lrand48> lb;     // core-i7:  654.8MB/s
-  bench_time = timer.benchmark (lb);
-  TPASS ("lrand48()  # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (lb), bench_time, lb.bytes_per_run() / bench_time / 1048576.);
-  GeneratorBench64<KeccakPRNG> kb;      // core-i7:  185.3MB/s
-  bench_time = timer.benchmark (kb);
-  TPASS ("KeccakPRNG # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (kb), bench_time, kb.bytes_per_run() / bench_time / 1048576.);
+  Test::Timer timer (0.2); // maximum seconds
+  double bench_time;
+
   GeneratorBench64<Gen_Pcg32> pb;
   bench_time = timer.benchmark (pb);
-  TPASS ("Pcg32Rng   # size=%-4zd timing: fastest=%fs prng=%.1fMB/s\n", sizeof (pb), bench_time, pb.bytes_per_run() / bench_time / 1048576.);
+  TPASS ("Pcg32Rng        # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (pb), bench_time, pb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<std::mt19937_64> mb; // core-i7: 1415.3MB/s
+  bench_time = timer.benchmark (mb);
+  TPASS ("mt19937_64      # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (mb), bench_time, mb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<Gen_minstd> sb;      // core-i7:  763.7MB/s
+  bench_time = timer.benchmark (sb);
+  TPASS ("minstd          # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (sb), bench_time, sb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<Gen_lrand48> lb;     // core-i7:  654.8MB/s
+  bench_time = timer.benchmark (lb);
+  TPASS ("lrand48()       # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (lb), bench_time, lb.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<KeccakFastRng> kf;
+  bench_time = timer.benchmark (kf);
+  TPASS ("KeccakFastRng   # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (kf), bench_time, kf.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<KeccakGoodRng> kg;
+  bench_time = timer.benchmark (kg);
+  TPASS ("KeccakGoodRng   # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (kg), bench_time, kg.bytes_per_run() / bench_time / 1048576.);
+  GeneratorBench64<KeccakCryptoRng> kc; // core-i7:  185.3MB/s
+  bench_time = timer.benchmark (kc);
+  TPASS ("KeccakCryptoRng # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (kc), bench_time, kc.bytes_per_run() / bench_time / 1048576.);
+
+  constexpr int N_RUNS = 1000, BLOCK = 256, N_BYTES = N_RUNS * BLOCK * sizeof (uint32_t) * 2; // * 2 counts bytes in + out
+  const uint32_t mixinput[BLOCK] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, };
+  uint32_t mixoutput[BLOCK];
+
+  auto mix_keccak = [&mixinput, &mixoutput] () {
+    for (size_t j = 0; j < N_RUNS; j++)
+      {
+        KeccakRng kcs (128, 8); // KeccakFastRng
+        kcs.seed ((const uint64_t*) &mixinput[0], ARRAY_SIZE (mixinput) / 2);
+        kcs.generate (&mixoutput[0], &mixoutput[ARRAY_SIZE (mixoutput)]);
+      }
+  };
+  bench_time = timer.benchmark (mix_keccak);
+  TPASS ("KeccakSeed      # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (KeccakRng), bench_time, N_BYTES / bench_time / 1048576.);
+
+  auto mix_seedseqfe256 = [&mixinput, &mixoutput] () {
+    for (size_t j = 0; j < N_RUNS; j++)
+      {
+        SeedSeqFE256 seeder (&mixinput[0], &mixinput[ARRAY_SIZE (mixinput)]);
+        seeder.generate (&mixoutput[0], &mixoutput[ARRAY_SIZE (mixoutput)]);
+      }
+  };
+  bench_time = timer.benchmark (mix_seedseqfe256);
+  TPASS ("SeedSeqFE       # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (SeedSeqFE256), bench_time, N_BYTES / bench_time / 1048576.);
+
+  auto mix_shake128 = [&mixinput, &mixoutput] () {
+    for (size_t j = 0; j < N_RUNS; j++)
+      shake128_hash (&mixinput[0], sizeof (uint32_t) * ARRAY_SIZE (mixinput), (uint8_t*) &mixoutput[0], sizeof (uint32_t) * ARRAY_SIZE (mixoutput));
+  };
+  bench_time = timer.benchmark (mix_shake128);
+  TPASS ("Shake128        # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (SHAKE128), bench_time, N_BYTES / bench_time / 1048576.);
+
+  auto mix_shake256 = [&mixinput, &mixoutput] () {
+    for (size_t j = 0; j < N_RUNS; j++)
+      shake256_hash (&mixinput[0], sizeof (uint32_t) * ARRAY_SIZE (mixinput), (uint8_t*) &mixoutput[0], sizeof (uint32_t) * ARRAY_SIZE (mixoutput));
+  };
+  bench_time = timer.benchmark (mix_shake256);
+  TPASS ("Shake256        # size=%-4zd timing: fastest=%fs throughput=%.1fMB/s\n", sizeof (SHAKE256), bench_time, N_BYTES / bench_time / 1048576.);
 }
 REGISTER_TEST ("RandomHash/~ Benchmarks", random_hash_benchmarks);
 
 static void
 test_pcg32()
 {
+  Pcg32Rng pcg1, pcg2;
+  TASSERT (pcg1.random() != pcg2.random()); // test auto-seeding
+  TASSERT (pcg1.random() != pcg2.random()); // test auto-seeding
   Pcg32Rng pcg (0x853c49e6748fea9b, 0xda3e39cb94b95bdb);
   static const uint32_t ref[] = {
     0x486fa52f, 0x6c1825ef, 0xbc7dfd25, 0x2e39be5d, 0xbab9d529, 0x3db767df, 0x8a57b4e5, 0x62cb137d,
@@ -164,12 +312,42 @@ test_pcg32()
   for (size_t i = 0; i < ARRAY_SIZE (ref); i++)
     TCMP (ref[i], ==, pcg.random());
 }
-REGISTER_TEST ("RandomHash/Pcg32Rng", test_pcg32);
+REGISTER_TEST ("RandomGenerator/Pcg32Rng", test_pcg32);
+
+static void
+test_seeder32()
+{
+  uint32_t ref[337] = { 0, };
+  constexpr uint32_t LENGTH = 17;
+  SeedSeqFE256 seeder (&ref[0], &ref[ARRAY_SIZE (ref)]);
+  // simple non-zero + mixing check
+  uint32_t seed1[LENGTH] = { 0, };
+  seeder.generate (&seed1[0], &seed1[LENGTH]);
+  for (uint i = 0; i < LENGTH; i++)
+    {
+      assert (seed1[i] != 0);
+      assert (seed1[i] != seed1[(i + 1) % LENGTH]);
+    }
+  // check avalange of single bit
+  ref[5] = 0x00100000;
+  seeder.seed (&ref[0], &ref[ARRAY_SIZE (ref)]);
+  uint32_t seed2[LENGTH] = { 0, };
+  seeder.generate (&seed2[0], &seed2[LENGTH]);
+  for (uint i = 0; i < LENGTH; i++)
+    {
+      assert (seed2[i] != 0);
+      assert (seed2[i] != seed1[i]);
+      assert (seed2[i] != seed2[(i + 1) % LENGTH]);
+    }
+}
+REGISTER_TEST ("RandomGenerator/SeedSeqFE256", test_seeder32);
 
 static void
 test_keccak_prng()
 {
-  KeccakPRNG krandom1;
+  KeccakCryptoRng krandom1, krandom2;
+  TASSERT (krandom1() != krandom2()); // test auto-seeding
+  krandom1.seed (1);
   String digest;
   for (size_t i = 0; i < 6; i++)
     {
@@ -178,12 +356,11 @@ test_keccak_prng()
       digest += string_format ("%02x%02x%02x%02x%02x%02x%02x%02x",
                                l & 0xff, (l>>8) & 0xff, (l>>16) & 0xff, l>>24, h & 0xff, (h>>8) & 0xff, (h>>16) & 0xff, h>>24);
     }
-  // printf ("KeccakPRNG: %s\n", digest.c_str());
-  TASSERT (digest == "c336e57d8674ec52528a79e41c5e4ec9b31aa24c07cdf0fc8c6e8d88529f583b37a389883d2362639f8cc042abe980e0");
+  // printf ("KeccakRng: %s\n", digest.c_str());
+  TCMP (digest, ==, "c336e57d8674ec52528a79e41c5e4ec9b31aa24c07cdf0fc8c6e8d88529f583b37a389883d2362639f8cc042abe980e0"); // 24 rounds
 
   std::stringstream kss;
   kss << krandom1;
-  KeccakPRNG krandom2;
   TASSERT (krandom1 != krandom2 && !(krandom1 == krandom2));
   kss >> krandom2;
   TASSERT (krandom1 == krandom2 && !(krandom1 != krandom2));
@@ -217,7 +394,7 @@ test_keccak_prng()
   krandom2.seed (krandom1);     // uses krandom1.generate
   TASSERT (krandom1 != krandom2 && krandom1() != krandom2());
 }
-REGISTER_TEST ("RandomHash/KeccakPRNG", test_keccak_prng);
+REGISTER_TEST ("RandomGenerator/KeccakRng", test_keccak_prng);
 
 
 int
@@ -225,7 +402,7 @@ main (int   argc,
       char *argv[])
 {
   if (argc >= 2)        // Entropy tests that need to be carried out before core_init
-    EntropyTests().test (argv[1]);
+    test_entropy (argv[1]);
 
   init_core_test (__PRETTY_FILE__, &argc, argv);
 

@@ -3,7 +3,6 @@
 #define __RAPICORN_CPU_HH__
 
 #include <rcore/utilities.hh>
-#include <rcore/randomhash.hh>
 
 namespace Rapicorn {
 
@@ -29,35 +28,11 @@ struct TaskStatus {
   String        string     ();  ///< Retrieve string representation of the status information.
 };
 
-/// Entropy gathering and provisioning class.
-class Entropy {
-  static KeccakPRNG& entropy_pool();
-protected:
-  static void     system_entropy  (KeccakPRNG &pool);
-  static void     runtime_entropy (KeccakPRNG &pool);
-public:
-  /// Add up to 64 bits to entropy pool.
-  static void     add_bits      (uint64_t bits)                 { add_data (&bits, sizeof (bits)); }
-  /// Add an arbitrary number of bytes to the entropy pool.
-  static void     add_data      (const void *bytes, size_t n_bytes);
-  /// Gather system statistics (might take several milliseconds) and add to the entropy pool.
-  static void     slow_reseed   ();
-  /// Get 64 bit of high quality random bits useful for seeding PRNGs.
-  static uint64_t get_seed      ();
-  /// Fill the range [begin, end) with high quality random seed values.
-  template<typename RandomAccessIterator> static void
-  generate (RandomAccessIterator begin, RandomAccessIterator end)
-  {
-    typedef typename std::iterator_traits<RandomAccessIterator>::value_type Value;
-    while (begin != end)
-      {
-        const uint64_t rbits = get_seed();
-        *begin++ = Value (rbits);
-        if (sizeof (Value) <= 4 && begin != end)
-          *begin++ = Value (rbits >> 32);
-      }
-  }
-};
+/// Collect entropy from the current process, usually quicker than collect_system_entropy().
+void collect_runtime_entropy (uint64 *data, size_t n);
+
+/// Collect entropy from system devices, like interrupt counters, clocks and random devices.
+void collect_system_entropy  (uint64 *data, size_t n);
 
 } // Rapicorn
 

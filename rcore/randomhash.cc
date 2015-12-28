@@ -1,10 +1,22 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 // Author: 2014, Tim Janik, see http://testbit.org/keccak
 #include "randomhash.hh"
+#include "platform.hh"
 
 namespace Rapicorn {
 
 // == Lib::KeccakF1600 ==
+Lib::KeccakF1600::KeccakF1600()
+{
+  reset();
+}
+
+void
+Lib::KeccakF1600::reset ()
+{
+  memset4 ((uint32*) bytes, 0, sizeof (bytes) / 4);
+}
+
 static constexpr const uint8_t KECCAK_RHO_OFFSETS[25] = { 0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43,
                                                           25, 39, 41, 45, 15, 21, 8, 18, 2, 61, 56, 14 };
 static constexpr const uint64_t KECCAK_ROUND_CONSTANTS[255] = {
@@ -101,13 +113,12 @@ Lib::KeccakF1600::permute (const uint32_t n_rounds)
     }
 }
 
-// == KeccakPRNG ==
-
-/// Keccak permutation for 1600 bits and 24 rounds, see Keccak11 @cite Keccak11 .
+// == KeccakRng ==
+/// Keccak permutation for 1600 bits, see Keccak11 @cite Keccak11 .
 void
-KeccakPRNG::permute1600()
+KeccakRng::permute1600()
 {
-  state_.permute (24);
+  state_.permute (n_rounds_);
   opos_ = 0;    // fresh outputs available
 }
 
@@ -117,7 +128,7 @@ KeccakPRNG::permute1600()
  * Use this for forward security @cite Security03 of generated security tokens like session keys.
  */
 void
-KeccakPRNG::forget()
+KeccakRng::forget()
 {
   std::fill (&state_[0], &state_[256 / 64], 0);
   permute1600();
@@ -127,7 +138,7 @@ KeccakPRNG::forget()
  * This function is slightly faster than calling operator()() exactly @a count times.
  */
 void
-KeccakPRNG::discard (unsigned long long count)
+KeccakRng::discard (unsigned long long count)
 {
   while (count)
     {
@@ -145,7 +156,7 @@ KeccakPRNG::discard (unsigned long long count)
  * block for a new permutation.
  */
 void
-KeccakPRNG::xor_seed (const uint64_t *seeds, size_t n_seeds)
+KeccakRng::xor_seed (const uint64_t *seeds, size_t n_seeds)
 {
   // printerr ("xor_seed(%p): %s\n", this, String ((const char*) seeds, n_seeds * 8));
   size_t i = 0;
@@ -164,8 +175,15 @@ KeccakPRNG::xor_seed (const uint64_t *seeds, size_t n_seeds)
   permute1600();        // integrate seed
 }
 
+void
+KeccakRng::auto_seed()
+{
+  AutoSeeder seeder;
+  seed (seeder);
+}
+
 /// The destructor resets the generator state to avoid leaving memory trails.
-KeccakPRNG::~KeccakPRNG()
+KeccakRng::~KeccakRng()
 {
   // forget all state and leave no trails
   std::fill (&state_[0], &state_[25], 0xaffeaffeaffeaffe);
@@ -209,10 +227,9 @@ protected:
       state_.permute (24);                      // prepare new block to append last bit
     state_.byte (lastbyte) ^= 0x80;             // 1: last bitrate bit; required by MultiRatePadding
   }
-  SHAKE_Base (size_t rate) : rate_ (rate), iopos_ (0), feeding_mode_ (true)
-  {
-    std::fill (&state_[0], &state_[25], 0);
-  }
+  SHAKE_Base (size_t rate) :
+    rate_ (rate), iopos_ (0), feeding_mode_ (true)
+  {}
 public:
   size_t
   byte_rate() const
@@ -222,7 +239,7 @@ public:
   void
   reset()
   {
-    std::fill (&state_[0], &state_[25], 0);
+    state_.reset();
     iopos_ = 0;
     feeding_mode_ = true;
   }
@@ -526,10 +543,23 @@ shake256_hash (const void *data, size_t data_length, uint8_t *hashvalues, size_t
 }
 
 // == Pcg32Rng ==
+Pcg32Rng::Pcg32Rng () :
+  increment_ (0), accu_ (0)
+{
+  auto_seed();
+}
+
 Pcg32Rng::Pcg32Rng (uint64_t offset, uint64_t sequence) :
   increment_ (0), accu_ (0)
 {
   seed (offset, sequence);
+}
+
+void
+Pcg32Rng::auto_seed ()
+{
+  AutoSeeder seeder;
+  seed (seeder);
 }
 
 void
@@ -539,6 +569,93 @@ Pcg32Rng::seed (uint64_t offset, uint64_t sequence)
   increment_ = (sequence << 1) | 1;    // force increment_ to be odd
   accu_ += offset;
   accu_ = A * accu_ + increment_;
+}
+
+// == Random Numbers ==
+static uint64_t
+global_random64()
+{
+  static KeccakRng *global_rng = NULL;
+  static std::mutex mtx;
+  std::unique_lock<std::mutex> lock (mtx);
+  if (UNLIKELY (!global_rng))
+    {
+      uint64 entropy[32];
+      collect_runtime_entropy (entropy, ARRAY_SIZE (entropy));
+      static uint64 mem[(sizeof (KeccakRng) + 7) / 8];
+      // 8 rounds provide good statistical shuffling, and
+      // 256 hidden bits make the generator state unguessable
+      global_rng = new (mem) KeccakRng (256, 8);
+      global_rng->seed (entropy, ARRAY_SIZE (entropy));
+    }
+  return global_rng->random();
+}
+
+/** Generate a non-deterministic, uniformly distributed 64 bit pseudo-random number.
+ * This function generates pseudo-random numbers using the system state as entropy
+ * and class KeccakRng for the mixing. No seeding is required.
+ */
+uint64_t
+random_int64 ()
+{
+  return global_random64();
+}
+
+/** Generate uniformly distributed pseudo-random integer within range.
+ * This function generates a pseudo-random number like random_int64(),
+ * constrained to the range: @a begin <= number < @a end.
+ */
+int64_t
+random_irange (int64_t begin, int64_t end)
+{
+  return_unless (begin < end, begin);
+  const uint64_t range    = end - begin;
+  const uint64_t quotient = 0xffffffffffffffffULL / range;
+  const uint64_t bound    = quotient * range;
+  uint64_t r = global_random64();
+  while (RAPICORN_UNLIKELY (r >= bound))        // repeats with <50% probability
+    r = global_random64();
+  return begin + r / quotient;
+}
+
+/** Generate uniformly distributed pseudo-random floating point number.
+ * This function generates a pseudo-random number like random_int64(),
+ * constrained to the range: 0.0 <= number < 1.0.
+ */
+double
+random_float ()
+{
+  double r01;
+  do
+    r01 = global_random64() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
+  while (RAPICORN_UNLIKELY (r01 >= 1.0));       // retry if arithmetic exceeds boundary
+  return r01;
+}
+
+/** Generate uniformly distributed pseudo-random floating point number within a range.
+ * This function generates a pseudo-random number like random_float(),
+ * constrained to the range: @a begin <= number < @a end.
+ */
+double
+random_frange (double begin, double end)
+{
+  return_unless (begin < end, begin + 0 * end); // catch and propagate NaNs
+  const double r01 = global_random64() * 5.42101086242752217003726400434970855712890625e-20; // 1.0 / 2^64
+  return end * r01 + (1.0 - r01) * begin;
+}
+
+/// Provide a unique 64 bit identifier that is not 0, see also random_int64().
+uint64_t
+random_nonce ()
+{
+  static uint64_t nonce = []() {
+    uint64_t d;
+    do
+      d = global_random64();
+    while (d == 0); // very unlikely
+    return d;
+  } ();
+  return nonce;
 }
 
 } // Rapicorn

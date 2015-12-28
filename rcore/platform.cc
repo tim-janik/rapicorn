@@ -4,6 +4,7 @@
 #include "strings.hh"
 #include "thread.hh"
 #include "randomhash.hh"
+#include <random>
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>
@@ -19,6 +20,8 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/resource.h>
+#include <linux/random.h>       // GRND_NONBLOCK
+#include <sys/syscall.h>        // __NR_getrandom
 #if defined (__i386__) || defined (__x86_64__)
 #  include <x86intrin.h>        // __rdtsc
 #endif
@@ -36,7 +39,7 @@ struct CPUInfo {
   uint x86_fpu : 1, x86_ssesys : 1, x86_tsc   : 1, x86_htt      : 1;
   uint x86_mmx : 1, x86_mmxext : 1, x86_3dnow : 1, x86_3dnowext : 1;
   uint x86_sse : 1, x86_sse2   : 1, x86_sse3  : 1, x86_ssse3    : 1;
-  uint x86_cx16 : 1, x86_sse4_1 : 1, x86_sse4_2 : 1;
+  uint x86_cx16 : 1, x86_sse4_1 : 1, x86_sse4_2 : 1, x86_rdrand : 1;
 };
 
 /* figure architecture name from compiler */
@@ -179,6 +182,8 @@ get_x86_cpu_features (CPUInfo *ci)
         ci->x86_sse4_1 = true;
       if (ecx & (1 << 20))
         ci->x86_sse4_2 = true;
+      if (ecx & (1 << 30))
+        ci->x86_rdrand = true;
       if (edx & (1 << 0))
         ci->x86_fpu = true;
       if (edx & (1 << 4))
@@ -245,19 +250,6 @@ get_x86_cpu_features (CPUInfo *ci)
   return true;
 }
 
-static CPUInfo
-get_cpu_info (void)
-{
-  static CPUInfo cached_cpu_info = [] () {
-    CPUInfo ci = { 0, };
-    if (!get_x86_cpu_features (&ci))
-      strcat (ci.cpu_vendor, "unknown");
-    ci.machine = get_arch_name();
-    return ci;
-  } ();
-  return cached_cpu_info;
-}
-
 /** Retrieve string identifying the runtime CPU type.
  * The returned string contains: number of online CPUs, a string
  * describing the CPU architecture, the vendor and finally
@@ -269,50 +261,58 @@ get_cpu_info (void)
 String
 cpu_info()
 {
-  const CPUInfo cpu_info = get_cpu_info();
-  String info;
-  // cores
-  info += string_format ("%d", sysconf (_SC_NPROCESSORS_ONLN));
-  // architecture
-  info += String (" ") + cpu_info.machine;
-  // vendor
-  info += String (" ") + cpu_info.cpu_vendor;
-  // processor flags
-  if (cpu_info.x86_fpu)
-    info += " FPU";
-  if (cpu_info.x86_tsc)
-    info += " TSC";
-  if (cpu_info.x86_htt)
-    info += " HTT";
-  if (cpu_info.x86_cx16)
-    info += " CMPXCHG16B";
-  // MMX flags
-  if (cpu_info.x86_mmx)
-    info += " MMX";
-  if (cpu_info.x86_mmxext)
-    info += " MMXEXT";
-  // SSE flags
-  if (cpu_info.x86_ssesys)
-    info += " SSESYS";
-  if (cpu_info.x86_sse)
-    info += " SSE";
-  if (cpu_info.x86_sse2)
-    info += " SSE2";
-  if (cpu_info.x86_sse3)
-    info += " SSE3";
-  if (cpu_info.x86_ssse3)
-    info += " SSSE3";
-  if (cpu_info.x86_sse4_1)
-    info += " SSE4.1";
-  if (cpu_info.x86_sse4_2)
-    info += " SSE4.2";
-  // 3DNOW flags
-  if (cpu_info.x86_3dnow)
-    info += " 3DNOW";
-  if (cpu_info.x86_3dnowext)
-    info += " 3DNOWEXT";
-  info += " ";
-  return info;
+  static String cpu_info_string = []() {
+    CPUInfo cpu_info = { 0, };
+    if (!get_x86_cpu_features (&cpu_info))
+      strcat (cpu_info.cpu_vendor, "Unknown");
+    cpu_info.machine = get_arch_name();
+    String info;
+    // cores
+    info += string_format ("%d", sysconf (_SC_NPROCESSORS_ONLN));
+    // architecture
+    info += String (" ") + cpu_info.machine;
+    // vendor
+    info += String (" ") + cpu_info.cpu_vendor;
+    // processor flags
+    if (cpu_info.x86_fpu)
+      info += " FPU";
+    if (cpu_info.x86_tsc)
+      info += " TSC";
+    if (cpu_info.x86_htt)
+      info += " HTT";
+    if (cpu_info.x86_cx16)
+      info += " CMPXCHG16B";
+    // MMX flags
+    if (cpu_info.x86_mmx)
+      info += " MMX";
+    if (cpu_info.x86_mmxext)
+      info += " MMXEXT";
+    // SSE flags
+    if (cpu_info.x86_ssesys)
+      info += " SSESYS";
+    if (cpu_info.x86_sse)
+      info += " SSE";
+    if (cpu_info.x86_sse2)
+      info += " SSE2";
+    if (cpu_info.x86_sse3)
+      info += " SSE3";
+    if (cpu_info.x86_ssse3)
+      info += " SSSE3";
+    if (cpu_info.x86_sse4_1)
+      info += " SSE4.1";
+    if (cpu_info.x86_sse4_2)
+      info += " SSE4.2";
+    if (cpu_info.x86_rdrand)
+      info += " rdrand";
+    // 3DNOW flags
+    if (cpu_info.x86_3dnow)
+      info += " 3DNOW";
+    if (cpu_info.x86_3dnowext)
+      info += " 3DNOWEXT";
+    info += " ";
+    return String (info.c_str());
+  }();
+  return cpu_info_string;
 }
 
 // == TaskStatus ==
@@ -417,84 +417,73 @@ TaskStatus::string ()
                    utime * 0.001, stime * 0.001, cutime * 0.001, cstime * 0.001);
 }
 
-// == Entropy ==
-static Mutex       entropy_mutex;
-static KeccakPRNG *entropy_global_pool = NULL;
-static uint64      entropy_mix_simple = 0;
-
-/** @class Entropy
- * To provide good quality random numbers, this class gathers entropy from a variety of sources.
- * Under Linux, this includes the runtime environment and (if present) devices, interrupts,
- * disk + network statistics, system load, execution + pipelining + scheduling latencies and of
- * course random number devices. In combination with well established techniques like
- * syscall timings (see Entropics13 @cite Entropics13) and a SHA3 algorithm derived random number
- * generator (KeccakPRNG) for the mixing, the entropy collection is designed to be good enough
- * to use as seeds for new PRNGs and to securely generate cryptographic tokens like session keys.
- */
-
-KeccakPRNG&
-Entropy::entropy_pool()
-{
-  if (RAPICORN_LIKELY (entropy_global_pool))
-    return *entropy_global_pool;
-  assert (entropy_mutex.try_lock() == false); // pool *must* be locked by caller
-  // create pool and seed it with system details
-  KeccakPRNG *kpool = new KeccakPRNG();
-  system_entropy (*kpool);
-  // gather entropy from runtime information and mix into pool
-  KeccakPRNG keccak;
-  runtime_entropy (keccak);
-  uint64_t seed_data[25];
-  keccak.generate (&seed_data[0], &seed_data[25]);
-  kpool->seed (seed_data, 25);
-  // establish global pool
-  assert (entropy_global_pool == NULL);
-  entropy_global_pool = kpool;
-  return *entropy_global_pool;
-}
-
-void
-Entropy::slow_reseed ()
-{
-  // gather and mangle entropy data
-  KeccakPRNG keccak;
-  runtime_entropy (keccak);
-  // mix entropy into global pool
-  uint64_t seed_data[25];
-  keccak.generate (&seed_data[0], &seed_data[25]);
-  ScopedLock<Mutex> locker (entropy_mutex);
-  entropy_pool().xor_seed (seed_data, 25);
-}
-
 static constexpr uint64_t
 bytehash_fnv64a (const uint8_t *bytes, size_t n, uint64_t hash = 0xcbf29ce484222325)
 {
   return n == 0 ? hash : bytehash_fnv64a (bytes + 1, n - 1, 0x100000001b3 * (hash ^ bytes[0]));
 }
 
-void
-Entropy::add_data (const void *bytes, size_t n_bytes)
+static uint64_t
+stringhash_fnv64a (const String &string)
 {
-  const uint64_t bits = bytehash_fnv64a ((const uint8_t*) bytes, n_bytes);
-  ScopedLock<Mutex> locker (entropy_mutex);
-  entropy_mix_simple ^= bits + (entropy_mix_simple * 1664525);
+  return bytehash_fnv64a ((const uint8*) string.data(), string.size());
 }
 
-uint64_t
-Entropy::get_seed ()
+static int
+getrandom (void *buffer, size_t count, unsigned flags)
 {
-  ScopedLock<Mutex> locker (entropy_mutex);
-  KeccakPRNG &pool = entropy_pool();
-  if (entropy_mix_simple)
+#ifdef __NR_getrandom
+  const long ret = syscall (__NR_getrandom, buffer, count, flags);
+  if (ret > 0)
+    return ret;
+#endif
+  FILE *file = fopen ("/dev/urandom", "r");     // fallback
+  if (file)
     {
-      pool.xor_seed (&entropy_mix_simple, 1);
-      entropy_mix_simple = 0;
+      const size_t l = fread (buffer, 1, count, file);
+      fclose (file);
+      if (l > 0)
+        return 0;
     }
-  return pool();
+  errno = ENOSYS;
+  return 0;
 }
 
 static bool
-hash_macs (KeccakPRNG &pool)
+hash_getrandom (KeccakRng &pool)
+{
+  uint64_t buffer[25];
+  int flags = 0;
+#ifdef GRND_NONBLOCK
+  flags |= GRND_NONBLOCK;
+#endif
+  int l = getrandom (buffer, sizeof (buffer), flags);
+  if (l > 0)
+    {
+      pool.xor_seed (buffer, l / sizeof (buffer[0]));
+      return true;
+    }
+  return false;
+}
+
+template<class Data> static void
+hash_anything (KeccakRng &pool, const Data &data)
+{
+  const uint64_t *d64 = (const uint64_t*) &data;
+  uint len = sizeof (data);
+  uint64_t dummy;
+  if (sizeof (Data) < sizeof (uint64_t))
+    {
+      dummy = 0;
+      memcpy (&dummy, &data, sizeof (Data));
+      d64 = &dummy;
+      len = 1;
+    }
+  pool.xor_seed (d64, len / sizeof (d64[0]));
+}
+
+static bool
+hash_macs (KeccakRng &pool)
 {
   // query devices for the AF_INET family which might be the only one supported
   int sockfd = socket (AF_INET, SOCK_DGRAM, 0);         // open IPv4 UDP socket
@@ -550,7 +539,7 @@ hash_macs (KeccakPRNG &pool)
 }
 
 static bool
-hash_stat (KeccakPRNG &pool, const char *filename)
+hash_stat (KeccakRng &pool, const char *filename)
 {
   struct {
     struct stat stat;
@@ -566,7 +555,7 @@ hash_stat (KeccakPRNG &pool, const char *filename)
 }
 
 static bool
-hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384)
+hash_file (KeccakRng &pool, const char *filename, const size_t maxbytes = 16384)
 {
   FILE *file = fopen (filename, "r");
   if (file)
@@ -585,7 +574,7 @@ hash_file (KeccakPRNG &pool, const char *filename, const size_t maxbytes = 16384
 }
 
 static bool __attribute__ ((__unused__))
-hash_glob (KeccakPRNG &pool, const char *fileglob, const size_t maxbytes = 16384)
+hash_glob (KeccakRng &pool, const char *fileglob, const size_t maxbytes = 16384)
 {
   glob_t globbuf = { 0, };
   glob (fileglob, GLOB_NOSORT, NULL, &globbuf);
@@ -624,7 +613,7 @@ hash_time (HashStamp *hstamp)
 }
 
 static void
-hash_cpu_usage (KeccakPRNG &pool)
+hash_cpu_usage (KeccakRng &pool)
 {
   union {
     uint64_t      ui64[24];
@@ -639,10 +628,79 @@ hash_cpu_usage (KeccakPRNG &pool)
   pool.xor_seed (u.ui64, sizeof (u.ui64) / sizeof (u.ui64[0]));
 }
 
-void
-Entropy::system_entropy (KeccakPRNG &pool)
+static bool
+get_rdrand (uint64 *u, uint count)
 {
-  HashStamp hash_stamps[128] = { 0, };
+#if defined (__i386__) || defined (__x86_64__)
+  if (strstr (cpu_info().c_str(), " rdrand"))
+    for (uint i = 0; i < count; i++)
+      __asm__ __volatile__ ("rdrand %0" : "=r" (u[i]));
+  else
+    for (uint i = 0; i < count; i++)
+      {
+        uint64_t d = __rdtsc();       // fallback
+        u[i] = bytehash_fnv64a ((const uint8*) &d, 8);
+      }
+  return true;
+#endif
+  return false;
+}
+
+static void
+runtime_entropy (KeccakRng &pool)
+{
+  HashStamp hash_stamps[64] = { 0, };
+  HashStamp *stamp = &hash_stamps[0];
+  hash_time (stamp++);
+  uint64_t uint_array[64] = { 0, };
+  uint64_t *uintp = &uint_array[0];
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
+  hash_time (stamp++);  get_rdrand (uintp, 8); uintp += 8;
+  hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
+  hash_time (stamp++);  *uintp++ = getuid();
+  hash_time (stamp++);  *uintp++ = geteuid();
+  hash_time (stamp++);  *uintp++ = getgid();
+  hash_time (stamp++);  *uintp++ = getegid();
+  hash_time (stamp++);  *uintp++ = getpid();
+  hash_time (stamp++);  *uintp++ = getsid (0);
+  int ppid;
+  hash_time (stamp++);  *uintp++ = ppid = getppid();
+  hash_time (stamp++);  *uintp++ = getsid (ppid);
+  hash_time (stamp++);  *uintp++ = getpgrp();
+  hash_time (stamp++);  *uintp++ = tcgetpgrp (0);
+  hash_time (stamp++);  hash_getrandom (pool);
+  hash_time (stamp++);  { *uintp++ = std::random_device()(); } // may open devices, so destroy early on
+  hash_time (stamp++);  hash_anything (pool, std::chrono::high_resolution_clock::now().time_since_epoch().count());
+  hash_time (stamp++);  hash_anything (pool, std::chrono::steady_clock::now().time_since_epoch().count());
+  hash_time (stamp++);  hash_anything (pool, std::chrono::system_clock::now().time_since_epoch().count());
+  hash_time (stamp++);  hash_anything (pool, std::this_thread::get_id());
+  String compiletime = __DATE__ __TIME__ __FILE__ __TIMESTAMP__;
+  hash_time (stamp++);  *uintp++ = stringhash_fnv64a (compiletime);     // compilation entropy
+  hash_time (stamp++);  *uintp++ = size_t (compiletime.data());         // heap address
+  hash_time (stamp++);  *uintp++ = size_t (&cpu_info_jmp_buf);          // data segment
+  hash_time (stamp++);  *uintp++ = size_t ("PATH");                     // const data segment
+  hash_time (stamp++);  *uintp++ = size_t (getenv ("PATH"));            // a.out address
+  hash_time (stamp++);  *uintp++ = size_t (&stamp);                     // stack segment
+  hash_time (stamp++);  *uintp++ = size_t (&runtime_entropy);           // code segment
+  hash_time (stamp++);  *uintp++ = size_t (&::fopen);                   // libc code segment
+  hash_time (stamp++);  *uintp++ = size_t (&std::string::npos);         // stl address
+  hash_time (stamp++);  *uintp++ = stringhash_fnv64a (cpu_info());      // CPU type influence
+  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
+  hash_time (stamp++);  hash_cpu_usage (pool);
+  hash_time (stamp++);  *uintp++ = timestamp_realtime();
+  hash_time (stamp++);
+  assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
+  pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+}
+
+static void
+system_entropy (KeccakRng &pool)
+{
+  HashStamp hash_stamps[64] = { 0, };
   HashStamp *stamp = &hash_stamps[0];
   hash_time (stamp++);
   uint64_t uint_array[64] = { 0, };
@@ -661,6 +719,9 @@ Entropy::system_entropy (KeccakPRNG &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/1/stat");
   hash_time (stamp++);  hash_file (pool, "/proc/1/sched");
   hash_time (stamp++);  hash_file (pool, "/proc/1/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
+  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
   hash_time (stamp++);  hash_macs (pool);
   // hash_glob: "/sys/devices/**/net/*/address", "/sys/devices/*/*/*/ieee80211/phy*/*address*"
   hash_time (stamp++);  hash_file (pool, "/proc/uptime");
@@ -678,20 +739,19 @@ Entropy::system_entropy (KeccakPRNG &pool)
   hash_time (stamp++);  hash_stat (pool, "/var/spool");                 // for atime
   hash_time (stamp++);  hash_stat (pool, "/var/spool/cron");            // for atime
   hash_time (stamp++);  hash_stat (pool, "/var/spool/anacron");         // for atime
-  hash_time (stamp++);  *uintp++ = getuid();
-  hash_time (stamp++);  *uintp++ = geteuid();
-  hash_time (stamp++);  *uintp++ = getgid();
-  hash_time (stamp++);  *uintp++ = getegid();
-  hash_time (stamp++);  *uintp++ = getpid();
-  hash_time (stamp++);  *uintp++ = getsid (0);
-  int ppid;
-  hash_time (stamp++);  *uintp++ = ppid = getppid();
-  hash_time (stamp++);  *uintp++ = getsid (ppid);
-  hash_time (stamp++);  *uintp++ = getpgrp();
-  hash_time (stamp++);  *uintp++ = tcgetpgrp (0);
-  hash_time (stamp++);  *uintp++ = size_t (&system_entropy);    // code segment
-  hash_time (stamp++);  *uintp++ = size_t (&entropy_mutex);     // data segment
-  hash_time (stamp++);  *uintp++ = size_t (&stamp);             // stack segment
+  hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
+  hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/uuid");
+  hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/sched_debug");
+  hash_time (stamp++);  hash_file (pool, "/proc/fairsched");
+  hash_time (stamp++);  hash_file (pool, "/proc/interrupts");
+  hash_time (stamp++);  hash_file (pool, "/proc/loadavg");
+  hash_time (stamp++);  hash_file (pool, "/proc/softirqs");
+  hash_time (stamp++);  hash_file (pool, "/proc/stat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/fib_triestat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
+  hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
+  hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
   hash_time (stamp++);
@@ -701,41 +761,44 @@ Entropy::system_entropy (KeccakPRNG &pool)
   pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
 }
 
+/**
+ * To provide good quality random number seeds, this function gathers entropy from a variety
+ * of process specific sources. Under Linux, this includes the CPU counters, clocks and
+ * random devices.
+ * In combination with well established techniques like syscall timings (see Entropics13
+ * @cite Entropics13) and a SHA3 algorithm derived random number generator for the mixing,
+ * the entropy collection is designed to be fast and good enough for all non-cryptographic
+ * uses.
+ * On an Intel Core i7, this function takes around 25µs.
+ */
 void
-Entropy::runtime_entropy (KeccakPRNG &pool)
+collect_runtime_entropy (uint64 *data, size_t n)
 {
-  HashStamp hash_stamps[128] = { 0, };
-  HashStamp *stamp = &hash_stamps[0];
-  hash_time (stamp++);
-  uint64_t uint_array[64] = { 0, };
-  uint64_t *uintp = &uint_array[0];
-  hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);  *uintp++ = timestamp_benchmark();
-  hash_time (stamp++);  hash_cpu_usage (pool);
-  hash_time (stamp++);  hash_file (pool, "/dev/urandom", 400);
-  hash_time (stamp++);  hash_file (pool, "/proc/self/stat");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/sched");
-  hash_time (stamp++);  hash_file (pool, "/proc/self/schedstat");
-  hash_time (stamp++);  hash_file (pool, "/proc/schedstat");
-  hash_time (stamp++);  hash_file (pool, "/proc/sched_debug");
-  hash_time (stamp++);  hash_file (pool, "/proc/fairsched");
-  hash_time (stamp++);  hash_file (pool, "/proc/sys/kernel/random/uuid");
-  hash_time (stamp++);  hash_file (pool, "/proc/interrupts");
-  hash_time (stamp++);  hash_file (pool, "/proc/loadavg");
-  hash_time (stamp++);  hash_file (pool, "/proc/softirqs");
-  hash_time (stamp++);  hash_file (pool, "/proc/stat");
-  hash_time (stamp++);  hash_file (pool, "/proc/net/fib_triestat");
-  hash_time (stamp++);  hash_file (pool, "/proc/net/netstat");
-  hash_time (stamp++);  hash_file (pool, "/proc/net/dev");
-  hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
-  hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
-  hash_time (stamp++);  hash_cpu_usage (pool);
-  hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);
-  assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
-  assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
-  pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
-  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  KeccakRng pool (128, 8);
+  runtime_entropy (pool);
+  for (size_t i = 0; i < n; i++)
+    data[i] = pool();
+}
+
+/**
+ * This function adds to collect_runtime_entropy() by collecting entropy from aditional
+ * but potentially slower system sources, such as interrupt counters, disk + network statistics,
+ * system load, execution + pipelining + scheduling latencies and device MACs.
+ * The function is designed to yield random number seeds good enough to generate
+ * cryptographic tokens like session keys.
+ * On an Intel Core i7, this function takes around 2ms, so it's roughly 80 times slower
+ * than collect_runtime_entropy().
+ */
+void
+collect_system_entropy (uint64 *data, size_t n)
+{
+  KeccakRng pool (512, 24);
+  hash_cpu_usage (pool);
+  runtime_entropy (pool);
+  system_entropy (pool);
+  hash_cpu_usage (pool);
+  for (size_t i = 0; i < n; i++)
+    data[i] = pool();
 }
 
 } // Rapicorn
