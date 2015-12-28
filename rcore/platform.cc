@@ -419,18 +419,6 @@ TaskStatus::string ()
                    utime * 0.001, stime * 0.001, cutime * 0.001, cstime * 0.001);
 }
 
-static constexpr uint64_t
-bytehash_fnv64a (const uint8_t *bytes, size_t n, uint64_t hash = 0xcbf29ce484222325)
-{
-  return n == 0 ? hash : bytehash_fnv64a (bytes + 1, n - 1, 0x100000001b3 * (hash ^ bytes[0]));
-}
-
-static uint64_t
-stringhash_fnv64a (const String &string)
-{
-  return bytehash_fnv64a ((const uint8*) string.data(), string.size());
-}
-
 static int
 getrandom (void *buffer, size_t count, unsigned flags)
 {
@@ -657,7 +645,7 @@ get_rdrand (uint64 *u, uint count)
     for (uint i = 0; i < count; i++)
       {
         uint64_t d = __rdtsc();       // fallback
-        u[i] = bytehash_fnv64a ((const uint8*) &d, 8);
+        u[i] = pcg_hash64 ((const uint8*) &d, sizeof (d), 0xeaeaeaea113377ccULL);
       }
   return true;
 #endif
@@ -708,16 +696,16 @@ runtime_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_anything (pool, std::chrono::system_clock::now().time_since_epoch().count());
   hash_time (stamp++);  hash_anything (pool, std::this_thread::get_id());
   String compiletime = __DATE__ __TIME__ __FILE__ __TIMESTAMP__;
-  hash_time (stamp++);  *uintp++ = stringhash_fnv64a (compiletime);     // compilation entropy
-  hash_time (stamp++);  *uintp++ = size_t (compiletime.data());         // heap address
-  hash_time (stamp++);  *uintp++ = size_t (&cpu_info_jmp_buf);          // data segment
-  hash_time (stamp++);  *uintp++ = size_t ("PATH");                     // const data segment
-  hash_time (stamp++);  *uintp++ = size_t (getenv ("PATH"));            // a.out address
-  hash_time (stamp++);  *uintp++ = size_t (&stamp);                     // stack segment
-  hash_time (stamp++);  *uintp++ = size_t (&runtime_entropy);           // code segment
-  hash_time (stamp++);  *uintp++ = size_t (&::fopen);                   // libc code segment
-  hash_time (stamp++);  *uintp++ = size_t (&std::string::npos);         // stl address
-  hash_time (stamp++);  *uintp++ = stringhash_fnv64a (cpu_info());      // CPU type influence
+  hash_time (stamp++);  *uintp++ = fnv1a_consthash64 (compiletime.c_str());     // compilation entropy
+  hash_time (stamp++);  *uintp++ = size_t (compiletime.data());                 // heap address
+  hash_time (stamp++);  *uintp++ = size_t (&cpu_info_jmp_buf);                  // data segment
+  hash_time (stamp++);  *uintp++ = size_t ("PATH");                             // const data segment
+  hash_time (stamp++);  *uintp++ = size_t (getenv ("PATH"));                    // a.out address
+  hash_time (stamp++);  *uintp++ = size_t (&stamp);                             // stack segment
+  hash_time (stamp++);  *uintp++ = size_t (&runtime_entropy);                   // code segment
+  hash_time (stamp++);  *uintp++ = size_t (&::fopen);                           // libc code segment
+  hash_time (stamp++);  *uintp++ = size_t (&std::string::npos);                 // stl address
+  hash_time (stamp++);  *uintp++ = fnv1a_consthash64 (cpu_info().c_str());      // CPU type influence
   hash_time (stamp++);  hash_sys_structs (pool);
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
