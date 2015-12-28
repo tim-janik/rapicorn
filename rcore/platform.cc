@@ -20,8 +20,10 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/resource.h>
+#include <sys/time.h>           // gettimeofday
 #include <linux/random.h>       // GRND_NONBLOCK
 #include <sys/syscall.h>        // __NR_getrandom
+#include <sys/utsname.h>        // uname
 #if defined (__i386__) || defined (__x86_64__)
 #  include <x86intrin.h>        // __rdtsc
 #endif
@@ -628,6 +630,22 @@ hash_cpu_usage (KeccakRng &pool)
   pool.xor_seed (u.ui64, sizeof (u.ui64) / sizeof (u.ui64[0]));
 }
 
+static void
+hash_sys_structs (KeccakRng &pool)
+{
+  struct SysStructs {
+    uint64 alignment_dummy1;
+    struct timezone tz;
+    struct timeval  tv;
+    struct utsname uts;
+    uint64 alignment_dummy2;
+  };
+  SysStructs sst = { 0, };
+  gettimeofday (&sst.tv, &sst.tz);
+  uname (&sst.uts);
+  pool.xor_seed ((uint64*) &sst, sizeof (sst) / sizeof (uint64));
+}
+
 static bool
 get_rdrand (uint64 *u, uint count)
 {
@@ -700,6 +718,7 @@ runtime_entropy (KeccakRng &pool)
   hash_time (stamp++);  *uintp++ = size_t (&::fopen);                   // libc code segment
   hash_time (stamp++);  *uintp++ = size_t (&std::string::npos);         // stl address
   hash_time (stamp++);  *uintp++ = stringhash_fnv64a (cpu_info());      // CPU type influence
+  hash_time (stamp++);  hash_sys_structs (pool);
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
