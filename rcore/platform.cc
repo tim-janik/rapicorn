@@ -647,6 +647,18 @@ get_rdrand (uint64 *u, uint count)
 }
 
 static void
+get_arc4random (uint64 *u, uint count)
+{
+#ifdef __OpenBSD__
+  for (uint i = 0; i < count; i++)
+    u[i] = uint64_t (arc4random()) << 32;
+  arc4random_stir();
+  for (uint i = 0; i < count; i++)
+    u[i] |= arc4random();
+#endif
+}
+
+static void
 runtime_entropy (KeccakRng &pool)
 {
   HashStamp hash_stamps[64] = { 0, };
@@ -658,6 +670,7 @@ runtime_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  get_rdrand (uintp, 8); uintp += 8;
+  hash_time (stamp++);  get_arc4random (uintp, 8); uintp += 8;
   hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
   hash_time (stamp++);  *uintp++ = getuid();
   hash_time (stamp++);  *uintp++ = geteuid();
