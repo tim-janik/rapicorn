@@ -536,7 +536,7 @@ hash_macs (KeccakRng &pool)
   close (sockfd);
   devices.resize (((devices.size() + 7) / 8) * 8); // align to uint64_t
   pool.xor_seed ((const uint64_t*) devices.data(), devices.size() / 8);
-  // printout ("SEED(MACs): %s\n", devices.c_str());
+  // printerr ("SEED(MACs): %s\n", devices.c_str());
   return !devices.empty();
 }
 
@@ -550,7 +550,7 @@ hash_stat (KeccakRng &pool, const char *filename)
   if (stat (filename, &s.stat) == 0)
     {
       pool.xor_seed ((const uint64_t*) &s.stat, sizeof (s.stat) / sizeof (uint64_t));
-      // printout ("SEED(%s): atime=%u mtime=%u ctime=%u size=%u...\n", filename, s.stat.st_atime, s.stat.st_atime, s.stat.st_atime, s.stat.st_size);
+      // printerr ("SEED(%s): atime=%u mtime=%u ctime=%u size=%u...\n", filename, s.stat.st_atime, s.stat.st_atime, s.stat.st_atime, s.stat.st_size);
       return true;
     }
   return false;
@@ -568,7 +568,7 @@ hash_file (KeccakRng &pool, const char *filename, const size_t maxbytes = 16384)
       if (l > 0)
         {
           pool.xor_seed (buffer, l);
-          // printout ("SEED(%s): %s\n", filename, String ((const char*) buffer, std::min (l * 8, size_t (48))));
+          // printerr ("SEED(%s): %s\n", filename, String ((const char*) buffer, std::min (l * 8, size_t (48))));
           return true;
         }
     }
@@ -722,11 +722,12 @@ runtime_entropy (KeccakRng &pool)
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);
   assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  hash_time (stamp++);
   assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
   pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
-  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  // printerr ("%s(): duration=%fµsec\n", __func__, (stamp[-1].bstamp - hash_stamps[0].bstamp) / 1000.0);
 }
 
 static void
@@ -786,11 +787,12 @@ system_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);
   assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  hash_time (stamp++);
   assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
   pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
-  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  // printerr ("%s(): duration=%fµsec\n", __func__, (stamp[-1].bstamp - hash_stamps[0].bstamp) / 1000.0);
 }
 
 /**
