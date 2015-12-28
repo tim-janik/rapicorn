@@ -11,6 +11,7 @@
 #include <limits.h>                     // {INT|CHAR|...}_{MIN|MAX}
 #include <float.h>                      // {FLT|DBL}_{MIN|MAX|EPSILON}
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <map>
@@ -219,27 +220,26 @@ struct Init {
   explicit Init (void (*f) ()) { f(); }
 };
 
-/// DurableInstance - @a ClassPtr must be pointer to @a Class. See DurableInstance<Class*>.
-template<class ClassPtr> struct DurableInstance {
-  static_assert (std::is_pointer<ClassPtr>::value, "DurableInstance<Class*> requires class pointer template argument");
-};
-
-/// Create an instance of @a Class that is constructed and never destructed.
+/// Create an instance of @a Class on demand that is constructed and never destructed.
 /// DurableInstance<Class*> provides the memory for a @a Class instance and calls it's
-/// constructor, but it's destructor is never called (so the memory allocated to the
-/// DurableInstance must not be freed). A DurableInstance should be used for static
-/// variables that need to persist across all other static ctor/dtor calls.
+/// constructor on demand, but it's destructor is never called (so the memory allocated
+/// to the DurableInstance must not be freed). Due to its constexpr ctor and on-demand
+/// creation of @a Class, a DurableInstance<> can be accessed at any time during the
+/// static ctor (or dtor) phases and will always yield a properly initialized @a Class.
+/// A DurableInstance is useful for static variables that need to be accessible from
+/// other static ctor/dtor calls.
 template<class Class>
-class DurableInstance<Class*> {
+class DurableInstance final {
+  static_assert (std::is_class<Class>::value, "DurableInstance<Class> requires class template argument");
   Class *ptr_;
   uint64 mem_[(sizeof (Class) + sizeof (uint64) - 1) / sizeof (uint64)];
-  bool
-  initialize() __attribute__ ((noinline))
+  void
+  initialize() RAPICORN_NOINLINE
   {
-    /* assert (ptr_ == NULL); */
-    // call ctor but never dtor
-    ptr_ = new (mem_) Class();
-    return true;
+    static std::mutex mtx;
+    std::unique_lock<std::mutex> lock (mtx);
+    if (ptr_ == NULL)
+      ptr_ = new (mem_) Class(); // exclusive construction
   }
 public:
   constexpr  DurableInstance() : ptr_ (NULL) {}
@@ -248,16 +248,15 @@ public:
   operator->() __attribute__ ((pure))
   {
     if (RAPICORN_UNLIKELY (ptr_ == NULL))
-      {
-        static bool initialized = initialize(); // executes exclusively
-        (void) initialized;
-      }
+      initialize();
     return ptr_;
   }
-  const Class* operator->() const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator->(); }
   /// Retrieve reference to @a Class instance, always returns the same reference.
-  Class&       operator*()  __attribute__ ((pure))       { return *operator->(); }
-  const Class& operator* () const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator*(); }
+  Class&       operator*     () __attribute__ ((pure))       { return *operator->(); }
+  const Class* operator->    () const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator->(); }
+  const Class& operator*     () const __attribute__ ((pure)) { return const_cast<DurableInstance*> (this)->operator*(); }
+  /// Check if @a this stores a @a Class instance yet.
+  explicit     operator bool () const                        { return ptr_ != NULL; }
 };
 
 /**

@@ -12,7 +12,7 @@ namespace Rapicorn {
 class ServerConnectionSource;
 typedef std::shared_ptr<ServerConnectionSource> ServerConnectionSourceP;
 
-static DurableInstance<Aida::BaseConnectionP*> global_server_connection; // automatically allocated and never destroyed
+static DurableInstance<Aida::BaseConnectionP> global_server_connection; // automatically allocated and never destroyed
 
 class ServerConnectionSource : public virtual EventSource {
   const char             *WHERE;
