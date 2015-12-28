@@ -308,13 +308,13 @@ struct SHA3_224::State : SHAKE_Base<224, 0x06> {
 };
 
 SHA3_224::SHA3_224 () :
-  state_ (new State())
-{}
+  state_ (new (mem_) State())
+{
+  static_assert (sizeof (mem_) >= sizeof (*state_), "");
+}
 
 SHA3_224::~SHA3_224 ()
-{
-  delete state_;
-}
+{}
 
 void
 SHA3_224::update (const uint8_t *data, size_t length)
@@ -348,13 +348,13 @@ struct SHA3_256::State : SHAKE_Base<256, 0x06> {
 };
 
 SHA3_256::SHA3_256 () :
-  state_ (new State())
-{}
+  state_ (new (mem_) State())
+{
+  static_assert (sizeof (mem_) >= sizeof (*state_), "");
+}
 
 SHA3_256::~SHA3_256 ()
-{
-  delete state_;
-}
+{}
 
 void
 SHA3_256::update (const uint8_t *data, size_t length)
@@ -388,13 +388,13 @@ struct SHA3_384::State : SHAKE_Base<384, 0x06> {
 };
 
 SHA3_384::SHA3_384 () :
-  state_ (new State())
-{}
+  state_ (new (mem_) State())
+{
+  static_assert (sizeof (mem_) >= sizeof (*state_), "");
+}
 
 SHA3_384::~SHA3_384 ()
-{
-  delete state_;
-}
+{}
 
 void
 SHA3_384::update (const uint8_t *data, size_t length)
@@ -428,13 +428,13 @@ struct SHA3_512::State : SHAKE_Base<512, 0x06> {
 };
 
 SHA3_512::SHA3_512 () :
-  state_ (new State())
-{}
+  state_ (new (mem_) State())
+{
+  static_assert (sizeof (mem_) >= sizeof (*state_), "");
+}
 
 SHA3_512::~SHA3_512 ()
-{
-  delete state_;
-}
+{}
 
 void
 SHA3_512::update (const uint8_t *data, size_t length)
@@ -468,13 +468,13 @@ struct SHAKE128::State : SHAKE_Base<0, 0x1f> {
 };
 
 SHAKE128::SHAKE128 () :
-  state_ (new State())
-{}
+  state_ (new (mem_) State())
+{
+  static_assert (sizeof (mem_) >= sizeof (*state_), "");
+}
 
 SHAKE128::~SHAKE128 ()
-{
-  delete state_;
-}
+{}
 
 void
 SHAKE128::update (const uint8_t *data, size_t length)
@@ -508,13 +508,13 @@ struct SHAKE256::State : SHAKE_Base<0, 0x1f> {
 };
 
 SHAKE256::SHAKE256 () :
-  state_ (new State())
-{}
+  state_ (new (mem_) State())
+{
+  static_assert (sizeof (mem_) >= sizeof (*state_), "");
+}
 
 SHAKE256::~SHAKE256 ()
-{
-  delete state_;
-}
+{}
 
 void
 SHAKE256::update (const uint8_t *data, size_t length)
@@ -648,14 +648,28 @@ random_frange (double begin, double end)
 uint64_t
 random_nonce ()
 {
-  static uint64_t nonce = []() {
-    uint64_t d;
-    do
-      d = global_random64();
-    while (d == 0); // very unlikely
-    return d;
-  } ();
-  return nonce;
+  static uint64_t cached_nonce = 0;
+  if (RAPICORN_UNLIKELY (cached_nonce == 0))
+    random_secret (&cached_nonce);
+  return cached_nonce;
 }
+
+/// Generate a secret non-zero nonce in secret_var, unless it has already been assigned.
+void
+random_secret (uint64_t *secret_var)
+{
+  static std::mutex mtx;
+  std::unique_lock<std::mutex> lock (mtx);
+  if (!*secret_var)
+    {
+      uint64_t d;
+      do
+        d = global_random64();
+      while (d == 0); // very unlikely
+      *secret_var = d;
+    }
+}
+
+uint64_t cached_hash_secret = 0;
 
 } // Rapicorn

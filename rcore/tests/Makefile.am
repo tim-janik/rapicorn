@@ -42,6 +42,10 @@ noinst_DATA  = resources.cc
 svgtool.cc: resources.cc
 
 # === test rules ===
+# validate hash reseeding at program start
+check-randomized-hashing:
+	$(Q) test `./testrcore1 --string-hash64 foo` != `./testrcore1 --string-hash64 foo` ; $(TSTRESULT)
+check-local: check-randomized-hashing
 # validate failing assertions and fatal aborting
 check-assertion-handlers: testrcore2
 	$(Q) ( export RAPICORN=debug:no-syslog:no-fatal-syslog ; rm -f $(TSTOUT) ; \

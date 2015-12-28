@@ -13,6 +13,8 @@ uint64_t        random_int64    ();
 int64_t         random_irange   (int64_t begin, int64_t end);
 double          random_float    ();
 double          random_frange   (double begin, double end);
+void            random_secret   (uint64_t *secret_var);
+
 
 // == Hashing ==
 /** SHA3_224 - 224 Bit digest generation.
@@ -24,8 +26,10 @@ struct SHA3_224 {
   void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
   void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      digest      (uint8_t hashvalue[28]);                ///< Retrieve the resulting hash value.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate 224 bit SHA3 digest from @a data, see also class SHA3_224.
 void    sha3_224_hash   (const void *data, size_t data_length, uint8_t hashvalue[28]);
@@ -39,8 +43,10 @@ struct SHA3_256 {
   void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
   void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      digest      (uint8_t hashvalue[32]);                ///< Retrieve the resulting hash value.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate 256 bit SHA3 digest from @a data, see also class SHA3_256.
 void    sha3_256_hash   (const void *data, size_t data_length, uint8_t hashvalue[32]);
@@ -54,8 +60,10 @@ struct SHA3_384 {
   void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
   void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      digest      (uint8_t hashvalue[48]);                ///< Retrieve the resulting hash value.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate 384 bit SHA3 digest from @a data, see also class SHA3_384.
 void    sha3_384_hash   (const void *data, size_t data_length, uint8_t hashvalue[48]);
@@ -69,8 +77,10 @@ struct SHA3_512 {
   void      reset       ();         ///< Reset state to feed and retrieve a new hash value.
   void      update      (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      digest      (uint8_t hashvalue[64]);                ///< Retrieve the resulting hash value.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate 512 bit SHA3 digest from @a data, see also class SHA3_512.
 void    sha3_512_hash   (const void *data, size_t data_length, uint8_t hashvalue[64]);
@@ -84,8 +94,10 @@ struct SHAKE128 {
   void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
   void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate SHA3 extendable output digest for 128 bit security strength, see also class SHAKE128.
 void    shake128_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
@@ -99,8 +111,10 @@ struct SHAKE256 {
   void      reset           ();         ///< Reset state to feed and retrieve a new hash value.
   void      update          (const uint8_t *data, size_t length);   ///< Feed data to be hashed.
   void      squeeze_digest  (uint8_t *hashvalues, size_t n);        ///< Retrieve an arbitrary number of hash value bytes.
+private:
   class     State;
-private: State *state_;
+  State    *state_;
+  uint64_t  mem_[32];
 };
 /// Calculate SHA3 extendable output digest for 256 bit security strength, see also class SHAKE256.
 void    shake256_hash   (const void *data, size_t data_length, uint8_t *hashvalues, size_t n);
@@ -395,6 +409,132 @@ public:
     return pcg_xsh_rr (lcgout);         // PCG XOR-shift + random rotation
   }
 };
+
+// == Hashing ==
+/** Simple, very fast and well known hash function as constexpr with good dispersion.
+ * This is the 64bit version of the well known
+ * [FNV-1a](https://en.wikipedia.org/wiki/Fowler-Noll-Vo_hash_function)
+ * hash function, implemented as a C++11 constexpr for zero-terminated
+ * strings, so the hashes can be used e.g. as case labels in switch statements.
+ */
+template<class Num> static inline constexpr uint64_t
+fnv1a_consthash64 (const Num *const ztdata, uint64_t hash = 0xcbf29ce484222325)
+{
+  static_assert (sizeof (Num) <= 1, "");
+  return RAPICORN_LIKELY (ztdata[0] != 0) ? fnv1a_consthash64 (ztdata + 1, 0x100000001b3 * (hash ^ uint8_t (ztdata[0]))) : hash;
+}
+
+/** Hash function based on the PCG family of random number generators (RNG).
+ * This function is based on the paper [PCG: A Family of Simple Fast
+ * Space-Efficient Statistically Good Algorithms for Random Number
+ * Generation](http://www.pcg-random.org/paper.html),
+ * because of its excellent avalange and distribution properties.
+ * The hash data is integrated as octets in the inner LCG RNG loop.
+ * Hash generation is very fast, because the inner loop consists only of a
+ * multiplication and subtraction, while the ouput bit mixing consists of
+ * just 5 simple operations (xor, shift and rotation).
+ */
+template<class Num> static RAPICORN_CONST inline uint32_t
+pcg_hash32 (const Num *data, size_t length, uint64_t seed)
+{
+  static_assert (sizeof (Num) <= 1, "");
+  uint64_t h = seed;
+  // Knuth LCG
+  h ^= 0x14057b7ef767814fULL;
+  for (size_t i = 0; RAPICORN_LIKELY (i < length); i++)
+    {
+      h -= uint8_t (data[i]);
+      h *= 6364136223846793005ULL;
+    }
+  // based on pcg_detail::xsh_rr_mixin
+  const size_t   rsh = h >> 59;
+  const uint32_t xsh = (h ^ (h >> 18)) >> 27;
+  const uint32_t rot = (xsh >> rsh) | (xsh << (32 - rsh));
+  return rot;
+}
+
+/** Hash function based on the PCG family of random number generators (RNG).
+ * This function is similar to pcg_hash32() at its core, but because the
+ * output is 64bit, the accumulated 64bit LCG state does not need to be
+ * bit reduced. A fast but statistially good mixing function with
+ * 5 xor/shifts and one multiplication is applied as output stage.
+ * This function is allmost as fast as fnv1a_consthash64 due to the similar
+ * structures of the inner loops, but it tends to score much better in
+ * [Avalanche effect](https://en.wikipedia.org/wiki/Avalanche_effect)
+ * tests, usch as [SMHasher](https://code.google.com/p/smhasher/).
+ */
+template<class Num> static RAPICORN_CONST inline uint64_t
+pcg_hash64 (const Num *data, size_t length, uint64_t seed)
+{
+  static_assert (sizeof (Num) <= 1, "");
+  uint64_t h = seed;
+  // Knuth LCG
+  h ^= 0x14057b7ef767814fULL;
+  for (size_t i = 0; RAPICORN_LIKELY (i < length); i++)
+    {
+      h -= uint8_t (data[i]);
+      h *= 6364136223846793005ULL;
+    }
+  // based on pcg_detail::rxs_m_xs_mixin
+  const size_t   rsh = h >> 59;
+  const uint64_t rxs = h ^ (h >> (5 + rsh));
+  const uint64_t m = rxs * 12605985483714917081ULL;
+  const uint64_t xs = m ^ (m >> 43);
+  return xs;
+}
+
+/// pcg_hash64() variant for zero-terminated strings.
+static RAPICORN_CONST inline uint64_t
+pcg_hash64 (const char *ztdata, uint64_t seed)
+{
+  uint64_t h = seed;
+  // Knuth LCG
+  h ^= 0x14057b7ef767814fULL;
+  for (size_t i = 0; RAPICORN_LIKELY (ztdata[i] != 0); i++)
+    {
+      h -= uint8_t (ztdata[i]);
+      h *= 6364136223846793005ULL;
+    }
+  // based on pcg_detail::rxs_m_xs_mixin
+  const size_t   rsh = h >> 59;
+  const uint64_t rxs = h ^ (h >> (5 + rsh));
+  const uint64_t m = rxs * 12605985483714917081ULL;
+  const uint64_t xs = m ^ (m >> 43);
+  return xs;
+}
+
+extern uint64_t cached_hash_secret; ///< Use hash_secret() for access.
+
+/// Provide hashing nonce for reseeding hashes at program start to avoid collision attacks.
+static RAPICORN_PURE inline uint64_t
+hash_secret ()
+{
+  if (RAPICORN_UNLIKELY (cached_hash_secret == 0))
+    random_secret (&cached_hash_secret);
+  return cached_hash_secret;
+}
+
+/// Fast byte hashing with good dispersion and runtime randomization.
+template<class Num> static RAPICORN_CONST inline uint64_t
+byte_hash64 (const Num *data, size_t length)
+{
+  static_assert (sizeof (Num) <= 1, "");
+  return pcg_hash64 (data, length, hash_secret());
+}
+
+/// Fast string hashing with good dispersion for std::string and runtime randomization.
+static RAPICORN_CONST inline uint64_t
+string_hash64 (const std::string &string)
+{
+  return pcg_hash64 (string.data(), string.size(), hash_secret());
+}
+
+/// pcg_hash64() variant for zero-terminated strings.
+static RAPICORN_CONST inline uint64_t
+string_hash64 (const char *ztdata)
+{
+  return pcg_hash64 (ztdata, hash_secret());
+}
 
 } // Rapicorn
 

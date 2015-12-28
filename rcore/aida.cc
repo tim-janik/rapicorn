@@ -1609,11 +1609,6 @@ private:
   };
   void          delete_orbid            (uint64            orbid);
   uint          next_index              ();
-  template<class Num> static constexpr uint64_t
-  hash_fnv64a (const Num *data, size_t length, uint64_t hash = 0xcbf29ce484222325)
-  {
-    return length ? hash_fnv64a (data + 1, length - 1, 0x100000001b3 * (hash ^ data[0])) : hash;
-  }
 public:
   explicit   ObjectMap          (size_t            start_id = 0) : start_id_ (start_id), id_mask_ (0xffffffffffffffff) {}
   /*dtor*/  ~ObjectMap          ()                 { assert (entries_.size() == 0); assert (map_.size() == 0); }
@@ -1658,8 +1653,7 @@ ObjectMap<Instance>::next_index ()
   const size_t FREE_LENGTH = 31;
   if (free_list_.size() > FREE_LENGTH)
     {
-      static uint64_t randomize = random_nonce ();
-      const size_t prandom = randomize ^ hash_fnv64a (free_list_.data(), free_list_.size());
+      const size_t prandom = byte_hash64 ((uint8*) free_list_.data(), sizeof (free_list_.data()) * free_list_.size());
       const size_t end = free_list_.size(), j = prandom % (end - 1);
       assert (j < end - 1); // use end-1 to avoid popping the last pushed slot
       idx = free_list_[j];

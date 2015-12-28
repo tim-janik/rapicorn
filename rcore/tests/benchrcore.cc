@@ -146,6 +146,9 @@ REGISTER_TEST ("RandomGenerator/AutoSeeder", test_auto_seeder);
 static void
 test_random_numbers()
 {
+  TASSERT (random_nonce() == random_nonce());
+  TASSERT (hash_secret() == hash_secret());
+  TASSERT (hash_secret() != random_nonce());
   TASSERT (random_int64() != random_int64());
   TASSERT (random_float() != random_float());
   TASSERT (random_irange (-999999999999999999, +999999999999999999) != random_irange (-999999999999999999, +999999999999999999));

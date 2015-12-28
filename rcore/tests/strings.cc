@@ -932,6 +932,31 @@ test_shake_hashing()
 }
 REGISTER_TEST ("RandomHash/SHAKE Hashing", test_shake_hashing);
 
+static void
+test_string_hashing()
+{
+  TCMP (pcg_hash64 ("foo", 0), ==, pcg_hash64 ("foo", 0));
+  TCMP (pcg_hash64 ("bar", 0), ==, pcg_hash64 ("bar", 0));
+  TCMP (pcg_hash64 ("xBAR" + 1, 0), ==, pcg_hash64 ("yBAR" + 1, 0));
+  TCMP (pcg_hash64 ("BAR\0x", 0), ==, pcg_hash64 ("BAR\0y", 0));
+  TCMP (pcg_hash64 ("BAR\0x", 0), ==, pcg_hash64 ("BAR\0y", 0));
+  TCMP (pcg_hash64 ("BAR\0x", 5, 0), !=, pcg_hash64 ("BAR\0y", 5, 0));
+  TCMP (byte_hash64 ("BAR\0x", 5), !=, byte_hash64 ("BAR\0y", 5));
+  TCMP (byte_hash64 ("BAR\0x", 4), ==, byte_hash64 ("BAR\0y", 4));
+  TCMP (byte_hash64 ("xBAR" + 1, 3), ==, byte_hash64 ("yBAR" + 1, 3));
+  TCMP (string_hash64 ("foo"), !=, string_hash64 ("bar"));
+  TCMP (string_hash64 ("foo"), ==, string_hash64 (String ("foo")));
+  TCMP (string_hash64 (String ("bar")), ==, string_hash64 ("bar"));
+  TCMP (byte_hash64 ("foo", 3), ==, string_hash64 ("foo"));
+  TCMP (byte_hash64 ("bazbaz", 6), ==, string_hash64 ("bazbaz"));
+  TCMP (fnv1a_consthash64 ("foo"), ==, fnv1a_consthash64 ("foo"));
+  TCMP (fnv1a_consthash64 ("bar"), ==, fnv1a_consthash64 ("bar"));
+  TCMP (fnv1a_consthash64 ("xBAR" + 1), ==, fnv1a_consthash64 ("yBAR" + 1));
+  TCMP (fnv1a_consthash64 ("BAR\0x"), ==, fnv1a_consthash64 ("BAR\0y"));
+  TCMP (fnv1a_consthash64 ("BAR\0x"), ==, fnv1a_consthash64 ("BAR\0y"));
+}
+REGISTER_TEST ("RandomHash/String Hashing", test_string_hashing);
+
 } // Anon
 
 /* vim:set ts=8 sts=2 sw=2: */

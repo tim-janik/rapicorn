@@ -707,29 +707,23 @@ ElementPainterImpl::svg_element (const String &fragment)
   changed ("svg_source");
 }
 
-static constexpr uint64
-consthash_fnv64a (const char *string, uint64 hash = 0xcbf29ce484222325)
-{
-  return string[0] == 0 ? hash : consthash_fnv64a (string + 1, 0x100000001b3 * (hash ^ string[0]));
-}
-
 static const uint64 BROKEN = 0x80000000;
 
 static uint64
 single_state_score (const String &state_string)
 {
-  switch (consthash_fnv64a (state_string.c_str()))
+  switch (fnv1a_consthash64 (state_string.c_str()))
     {
-    case consthash_fnv64a ("normal"):           return STATE_NORMAL;
-    case consthash_fnv64a ("hover"):            return STATE_HOVER;
-    case consthash_fnv64a ("panel"):            return STATE_PANEL;
-    case consthash_fnv64a ("acceleratable"):    return STATE_ACCELERATABLE;
-    case consthash_fnv64a ("default"):          return STATE_DEFAULT;
-    case consthash_fnv64a ("selected"):         return STATE_SELECTED;
-    case consthash_fnv64a ("focused"):          return STATE_FOCUSED;
-    case consthash_fnv64a ("insensitive"):      return STATE_INSENSITIVE;
-    case consthash_fnv64a ("active"):           return STATE_ACTIVE;
-    case consthash_fnv64a ("retained"):         return STATE_RETAINED;
+    case fnv1a_consthash64 ("normal"):          return STATE_NORMAL;
+    case fnv1a_consthash64 ("hover"):           return STATE_HOVER;
+    case fnv1a_consthash64 ("panel"):           return STATE_PANEL;
+    case fnv1a_consthash64 ("acceleratable"):   return STATE_ACCELERATABLE;
+    case fnv1a_consthash64 ("default"):         return STATE_DEFAULT;
+    case fnv1a_consthash64 ("selected"):        return STATE_SELECTED;
+    case fnv1a_consthash64 ("focused"):         return STATE_FOCUSED;
+    case fnv1a_consthash64 ("insensitive"):     return STATE_INSENSITIVE;
+    case fnv1a_consthash64 ("active"):          return STATE_ACTIVE;
+    case fnv1a_consthash64 ("retained"):        return STATE_RETAINED;
     default:                                    return BROKEN;
     }
 }
