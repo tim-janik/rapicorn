@@ -41,9 +41,8 @@ struct RenderTable {
                                  uint32        green2pre16,
                                  uint32        blue2pre16);
 };
-extern RenderTable render;
 
-void    render_optimize_mmx     (void);
+void    render_optimize_mmx     (RenderTable*);
 
 
 } // Blit
