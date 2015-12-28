@@ -746,22 +746,20 @@ main (int   argc,
 
   test_before_thread_init();
 
-  String app_ident = __PRETTY_FILE__;
+  init_core_test (__PRETTY_FILE__, &argc, argv);
+
   if (argc >= 2 && String ("--cwd") == argv[1])
     {
-      init_core (app_ident, &argc, argv);
       printout ("%s\n", Path::cwd());
       return 0;
     }
   if (argc >= 2 && String ("--print-process-handle") == argv[1])
     {
-      init_core (app_ident, &argc, argv);
       printout ("%s", process_handle());
       return 0;
     }
   if (argc >= 3 && String ("--task-status") == argv[1])
     {
-      init_core (app_ident, &argc, argv);
       TaskStatus ts = TaskStatus (string_to_int (argv[2]));
       String result;
       bool valid = ts.update();
@@ -774,8 +772,6 @@ main (int   argc,
       printout ("TaskStatus: %s\n", result);
       return 0;
     }
-
-  init_core_test (app_ident, &argc, argv);
 
   return Test::run();
 }

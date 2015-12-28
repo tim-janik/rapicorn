@@ -11,11 +11,7 @@
 namespace Rapicorn {
 
 // == initialization ==
-void    init_core               (const String       &app_ident,
-                                 int                *argcp,
-                                 char              **argv,
-                                 const StringVector &args = StringVector());
-bool    init_core_initialized   ();
+void    init_core               (int *argcp, char **argv, const StringVector &args = StringVector());
 
 class InitSettings {
   static const InitSettings &is;
@@ -67,8 +63,8 @@ String       program_argv0      ();
 void         program_argv0_init (const char *argv0);
 String       program_name       ();
 String       program_alias      ();
-String       program_ident      ();
 String       program_cwd        ();
+String       application_name   ();
 
 // == Random Numbers ==
 uint64_t        random_nonce    ();
@@ -93,5 +89,12 @@ public:
 };
 
 } // Rapicorn
+
+namespace RapicornInternal {
+using namespace Rapicorn;
+bool    application_setup (const String &application_name, const String &program_name);
+void    inject_init_args  (const char *const internal_args);
+
+} // RapicornInternal
 
 #endif /* __RAPICORN_MAIN_HH__ */

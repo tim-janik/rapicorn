@@ -211,58 +211,11 @@ uithread_is_current ()
   return atomic_load (&uithread_threadinfo) == &ThreadInfo::self();
 }
 
-void
-uithread_shutdown (void)
-{
-  if (the_uithread && the_uithread->running())
-    {
-      the_uithread->queue_stop(); // stops ui thread main loop
-      the_uithread->join();
-    }
-}
-
 static void
-uithread_uncancelled_atexit()
+reap_uithread_atexit()
 {
   if (the_uithread && the_uithread->running())
-    {
-      /* For proper shutdown, the ui-thread needs to stop running before global
-       * dtors or any atexit() handlers are being executed. C9x and C++03 leave
-       * this unsolved, so we provide explicit API for the user, like
-       * Rapicorn::exit() and Application::shutdown(). In case these are omitted,
-       * we're not 100% safe, some earlier atexit() handler could have shot some
-       * of our required resources already, however we do our best to start a
-       * graceful shutdown at this point.
-       */
-      critical ("FIX""ME: UI-Thread still running during exit(), call Application::shutdown()");
-      uithread_shutdown();
-    }
-}
-
-static void wrap_test_runner (void);
-
-bool // provide errno on error
-uithread_bootup (int *argcp, char **argv, const StringVector &args) // internal.hh
-{
-  assert_return (the_uithread == NULL, false);
-  // catch exit() while UIThread is still running
-  atexit (uithread_uncancelled_atexit);
-  // setup client/server connection pair
-  Initializer idata;
-  // initialize and create UIThread
-  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.done = false;
-  // start and syncronize with thread
-  idata.mutex.lock();
-  the_uithread = new UIThread (&idata);
-  the_uithread->start();
-  while (!idata.done)
-    idata.cond.wait (idata.mutex);
-  idata.mutex.unlock();
-  assert (the_uithread->running());
-  // install handler for UIThread test cases
-  wrap_test_runner();
-  errno = 0;
-  return true;
+    RapicornInternal::uithread_shutdown();
 }
 
 } // Rapicorn
@@ -285,25 +238,7 @@ ui_thread_syscall (Callable *callable)
   syscall_mutex.lock();
   syscall_queue.push_back (callable);
   syscall_mutex.unlock();
-  const int64 result = client_app_test_hook();
-  return result;
-}
-
-int64
-server_app_test_hook()
-{
-  int64 result = -1;
-  syscall_mutex.lock();
-  while (syscall_queue.size())
-    {
-      Callable &callable = *syscall_queue.front();
-      syscall_queue.pop_front();
-      syscall_mutex.unlock();
-      result = callable ();
-      delete &callable;
-      syscall_mutex.lock();
-    }
-  syscall_mutex.unlock();
+  const int64 result = RapicornInternal::client_app_test_hook();
   return result;
 }
 
@@ -337,7 +272,64 @@ uithread_test_trigger (void (*test_func) ())
   // run tests from ui-thread
   ui_thread_syscall (new SyscallTestTrigger (test_func));
   // ensure ui-thread shutdown
-  uithread_shutdown();
+  RapicornInternal::uithread_shutdown();
 }
 
 } // Rapicorn
+
+namespace RapicornInternal {
+
+int64
+server_app_test_hook()
+{
+  int64 result = -1;
+  syscall_mutex.lock();
+  while (syscall_queue.size())
+    {
+      Callable &callable = *syscall_queue.front();
+      syscall_queue.pop_front();
+      syscall_mutex.unlock();
+      result = callable ();
+      delete &callable;
+      syscall_mutex.lock();
+    }
+  syscall_mutex.unlock();
+  return result;
+}
+
+bool // provide errno on error
+uithread_bootup (int *argcp, char **argv, const StringVector &args)
+{
+  assert_return (the_uithread == NULL, false);
+  // catch exit() while UIThread is still running
+  if (std::atexit (reap_uithread_atexit) != 0)
+    fatal ("failed to install ui-thread reaper");
+  // setup client/server connection pair
+  Initializer idata;
+  // initialize and create UIThread
+  idata.argcp = argcp; idata.argv = argv; idata.args = &args; idata.done = false;
+  // start and syncronize with thread
+  idata.mutex.lock();
+  the_uithread = new UIThread (&idata);
+  the_uithread->start();
+  while (!idata.done)
+    idata.cond.wait (idata.mutex);
+  idata.mutex.unlock();
+  assert (the_uithread->running());
+  // install handler for UIThread test cases
+  wrap_test_runner();
+  errno = 0;
+  return true;
+}
+
+void
+uithread_shutdown()
+{
+  if (the_uithread && the_uithread->running())
+    {
+      the_uithread->queue_stop(); // stops ui thread main loop
+      the_uithread->join();
+    }
+}
+
+} // RapicornInternal

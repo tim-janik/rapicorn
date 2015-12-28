@@ -197,7 +197,6 @@ test_any()
       TASSERT (b.kind() == ENUM);
       TASSERT (b.get<TestEnum>() == TEST_COFFEE_COFFEE);
       Any dup = b;
-      printerr ("SEE: %s\n", dup.get_enum_info().name());
       TASSERT (dup.get_enum_info().name() == "TestEnum");
       TASSERT (dup.get<TestEnum>() == TEST_COFFEE_COFFEE);
       printf ("  TEST   Aida basic functions                                            OK\n");

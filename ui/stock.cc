@@ -16,19 +16,19 @@ public:
 };
 
 // == Stock ==
-static Mutex             stock_mutex;
-static vector<StockFile> stock_files;
-
-static void
-init_stock_lib (const StringVector &args)
+static const vector<StockFile>&
+get_stock_files()
 {
-  const ScopedLock<Mutex> sl (stock_mutex);
-  StockFile std_stock_file (Res ("@res Rapicorn/stock.ini").as<Blob>());
-  if (!std_stock_file.ini_file().has_sections())
-    fatal ("failed to load builtin: %s", "Rapicorn/stock.ini");
-  stock_files.push_back (std_stock_file);
+  static const vector<StockFile> stock_files = []() {
+    StockFile std_stock_file (Res ("@res Rapicorn/stock.ini").as<Blob>());
+    if (!std_stock_file.ini_file().has_sections())
+      fatal ("failed to load builtin: %s", "Rapicorn/stock.ini");
+    vector<StockFile> stock_files;
+    stock_files.push_back (std_stock_file);
+    return stock_files;
+  }();
+  return stock_files;
 }
-static InitHook _init_stock_lib ("core/50 Init Stock Lib", init_stock_lib);
 
 Stock::Stock (const String &stock_id) :
   stock_id_ (stock_id)
@@ -38,8 +38,7 @@ Stock::Stock (const String &stock_id) :
 String
 Stock::icon() const
 {
-  const ScopedLock<Mutex> sl (stock_mutex);
-  for (auto sf : stock_files)
+  for (auto sf : get_stock_files())
     {
       String icon_source = sf.stock_element (stock_id_, "icon");
       if (!icon_source.empty())
@@ -53,8 +52,7 @@ Stock::icon() const
 String
 Stock::element (const String &key) const
 {
-  const ScopedLock<Mutex> sl (stock_mutex);
-  for (auto sf : stock_files)
+  for (auto sf : get_stock_files())
     {
       String s = sf.stock_element (stock_id_, key);
       if (!s.empty())

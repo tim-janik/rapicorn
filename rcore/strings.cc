@@ -10,29 +10,8 @@
 #include <libintl.h>
 #include <iconv.h>
 #include <errno.h>
-#include "../configure.h" // RAPICORN_GETTEXT_DOMAIN
 
 namespace Rapicorn {
-
-// === i18n ===
-static const char *rapicorn_gettext_domain = NULL;
-
-const char*
-rapicorn_gettext (const char *text)
-{
-  assert (rapicorn_gettext_domain != NULL);
-  return dgettext (rapicorn_gettext_domain, text);
-}
-
-static void
-init_gettext (const StringVector &args)
-{
-  // initialize i18n functions
-  rapicorn_gettext_domain = RAPICORN_GETTEXT_DOMAIN;
-  // bindtextdomain (rapicorn_gettext_domain, package_dirname);
-  bind_textdomain_codeset (rapicorn_gettext_domain, "UTF-8");
-}
-static InitHook _init_gettext ("core/10 Init i18n Translation Domain", init_gettext);
 
 // === String ===
 /// Reproduce a string @a s for @a count times.
@@ -1299,4 +1278,25 @@ strerror()
   return strerror (errno);
 }
 
+// === i18n ===
+static const char *rapicorn_gettext_domain_ = NULL;
+
+const char*
+rapicorn_gettext (const char *text)
+{
+  return rapicorn_gettext_domain_ ? dgettext (rapicorn_gettext_domain_, text) : text;
+}
+
 } // Rapicorn
+
+namespace RapicornInternal {
+
+void
+init_rapicorn_gettext (const char *const rapicorn_gettext_domain)
+{
+  assert_return (rapicorn_gettext_domain_ == NULL);
+  rapicorn_gettext_domain_ = rapicorn_gettext_domain;
+  bind_textdomain_codeset (rapicorn_gettext_domain_, "UTF-8");
+}
+
+} // RapicornInternal

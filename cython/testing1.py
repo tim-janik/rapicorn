@@ -133,7 +133,7 @@ assert_raises (TypeError, Rapicorn.Window)
 assert_raises (TypeError, Rapicorn.Application)
 
 # Application setup
-app = Rapicorn.init ('testing1.py')
+app = Rapicorn.init_app()
 
 # Test object handles
 w1 = app.create_window ('Window')

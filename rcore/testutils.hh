@@ -6,7 +6,7 @@
 
 namespace Rapicorn {
 
-void init_core_test (const String &app_ident, int *argcp, char **argv, const StringVector &args = StringVector());
+void init_core_test (const String &application, int *argcp, char **argv, const StringVector &args = StringVector());
 
 namespace Test {
 

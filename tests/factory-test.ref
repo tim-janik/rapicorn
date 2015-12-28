@@ -1,5 +1,5 @@
 <Rapicorn::Window
-  title="RAPICORN:Rapidrun:main-test"
+  title="Rapidrun"
   auto_focus="1"
   name="main-test"
   visible="1"

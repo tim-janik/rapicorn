@@ -376,16 +376,16 @@ namespace Rapicorn {
 
 /** Initialize the Rapicorn toolkit core for a test program.
  * Initialize the Rapicorn toolkit core to execute unit tests. Calling this function is
- * equivalent to calling init_core() with args "autonomous=1" and "rapicorn-test-initialization=1".
+ * equivalent to calling init_core() with args "autonomous=1" and "testing=1".
  * See also #$RAPICORN_TEST.
  */
 void
-init_core_test (const String &app_ident, int *argcp, char **argv, const StringVector &args)
+init_core_test (const String &application, int *argcp, char **argv, const StringVector &args)
 {
-  const char *ivalues[] = { "autonomous=1", "rapicorn-test-initialization=1" };
-  StringVector targs = RAPICORN_STRING_VECTOR_FROM_ARRAY (ivalues);
-  std::copy (args.begin(), args.end(), std::back_inserter (targs));
-  init_core (app_ident, argcp, argv, targs);
+  RapicornInternal::inject_init_args (":autonomous:testing:fatal-warnings:");
+  RapicornInternal::init_core (argcp, argv, args);
+  if (!application.empty())
+    RapicornInternal::application_setup (application, "");
 }
 
 } // Rapicorn

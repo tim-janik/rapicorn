@@ -11,6 +11,7 @@ class ApplicationImpl : public ApplicationIface {
   int                  tc_;
 public:
   explicit            ApplicationImpl        ();
+  virtual void        setup                  (const String &application_name, const String &program_name) override;
   virtual String      auto_path              (const String  &file_name,
                                               const String  &binary_path,
                                               bool           search_vpath = true) override;

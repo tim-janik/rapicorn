@@ -55,7 +55,7 @@ check-assertion-handlers: testrcore2
 	$(Q) grep -q 'assertion-hook.*magic=0xdecaff' $(TSTOUT)	; $(TSTRESULT) "check Test::set_assertion_hook()"
 	$(Q) grep -qi 'Aborting..' $(TSTOUT)			; $(TSTRESULT) "check aborting"
 	$(Q) rm -f $(TSTOUT)
-check: check-assertion-handlers
+check-local: check-assertion-handlers
 # check various non-fatal logging conditions
 check-logging-output: testrcore2
 	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \
@@ -66,14 +66,14 @@ check-logging-output: testrcore2
 	$(Q) grep -q 'failed.*"assert-return+val"' $(TSTOUT)	; $(TSTRESULT) "check assert_return+value"
 	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; $(TSTRESULT) "check test critical()"
 	$(Q) rm -f $(TSTOUT)
-check: check-logging-output
+check-local: check-logging-output
 # process handle
 check-process-handle: testrcore1
 	$(Q) test -n `./testrcore1 --print-process-handle`; $(TSTRESULT)
-check: check-process-handle
+check-local: check-process-handle
 check-unique-process: testrcore1
 	$(Q) test `./testrcore1 --print-process-handle` != `./testrcore1 --print-process-handle`; $(TSTRESULT)
-check: check-unique-process
+check-local: check-unique-process
 # check startup entropy
 check-startup-entropy:
 	$(Q) A=`./benchrcore --entropy` ; B=`./benchrcore --entropy`; \
@@ -84,4 +84,4 @@ check-system-entropy:
 check-runtime-entropy:
 	$(Q) A=`./benchrcore --runtime-entropy` ; B=`./benchrcore --runtime-entropy`; \
 	     test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT)
-check: check-startup-entropy check-system-entropy check-runtime-entropy
+check-local: check-startup-entropy check-system-entropy check-runtime-entropy

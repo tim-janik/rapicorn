@@ -1,8 +1,10 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "clientapi.hh"
 #include "internal.hh"
-#include "../configure.h"
+#include "../configure.h" // RAPICORN_GETTEXT_DOMAIN
 #include <stdlib.h>
+
+#define SDEBUG(...)     RAPICORN_KEY_DEBUG ("StartUp", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -14,39 +16,73 @@ struct AppData {
 };
 static DurableInstance<AppData> static_appdata; // use DurableInstance to ensure app stays around for static dtors
 
-/// Check and return if init_app() or init_test_app() has already been called.
-bool
-init_app_initialized ()
-{
-  return ApplicationH::the() != NULL;
-}
-
-/**
- * Initialize Rapicorn core via init_core(), and then starts a seperately
- * running UI thread. This UI thread initializes all UI related components
- * and the global Application object. After initialization, it enters the
- * main event loop for UI processing.
- * @param app_ident     Identifier for this application, this is used to distinguish
- *                      persistent application resources and window configurations
- *                      from other applications.
- * @param argcp         Pointer to @a argc as passed into main().
- * @param argv          The @a argv argument as passed into main().
- * @param args          Internal initialization arguments, see init_core() for details.
+/** Initialize Rapicorn and the main Application object.
+ *
+ * This funciton initializes the Rapicorn toolkit and starts an asynchronously
+ * running UI thread. The UI thread creates the main Application object,
+ * manages all UI related components and processes UI events.
+ * .
+ * The arguments passed in @a argcp and @a argv are parsed and any Rapicorn
+ * specific arguments are stripped. Note that Rapicorn requires the exact argv0
+ * as provided by main(). If @a argv[0] as passed into this function is empty or
+ * otherwise altered, the correct value needs to be supplied previously by a
+ * call to program_argv0_init().
+ * If 'testing=1' is passed in @a args, these command line arguments are supported:
+ * - @c --test-verbose - Execute test cases with verbose message generation.
+ * - @c --test-slow - Execute only test cases excercising slow code paths or loops.
+ * .
+ * The initialization arguments currenlty supported for @a args are as follows:
+ * - @c autonomous - Avoid loading external rc-files or other configurations that could affect test runs.
+ * - @c cpu-affinity - The CPU# to bind the Rapicorn UI thread to.
+ * - @c testing - Enable testing framework, used by init_core_test(), see also #$RAPICORN_TEST.
+ * - @c test-verbose - acts like --test-verbose.
+ * - @c test-slow - acts like --test-slow.
+ * .
+ * Additionally, the @c $RAPICORN environment variable affects toolkit behaviour. It supports
+ * multiple colon (':') separated options (options can be prfixed with 'no-' to disable):
+ * - @c debug - Enables verbose debugging output (default=off).
+ * - @c fatal-syslog - Fatal program conditions that lead to aborting are recorded via syslog (default=on).
+ * - @c syslog - Critical and warning conditions are recorded via syslog (default=off).
+ * - @c fatal-warnings - Critical and warning conditions are treated as fatal conditions (default=off).
+ * - @c logfile=FILENAME - Record all messages and conditions into FILENAME.
+ * .
+ * @param application_name Possibly localized string useful to display the application name in user interfaces.
+ * @param argcp         Location of the 'argc' argument to main()
+ * @param argv          Location of the 'argv' arguments to main()
+ * @param args          Rapicorn initialization arguments.
  */
 ApplicationH
-init_app (const String &app_ident, int *argcp, char **argv, const StringVector &args)
+init_app (const String &application_name, int *argcp, char **argv, const StringVector &args)
 {
-  assert_return (init_app_initialized() == false, static_appdata->app);
+  return_unless (static_appdata->app == NULL, static_appdata->app);
   // assert global_ctors work
   if (__staticctortest.v != 0x123caca0)
     fatal ("%s: link error: C++ constructors have not been executed", __func__);
+  // full locale initialization is needed by X11, etc
+  if (!setlocale (LC_ALL,""))
+    {
+      auto sgetenv = [] (const char *var)  {
+        const char *str = getenv (var);
+        return str ? str : "";
+      };
+      String lv = string_format ("LANGUAGE=%s;LC_ALL=%s;LC_MONETARY=%s;LC_MESSAGES=%s;LC_COLLATE=%s;LC_CTYPE=%s;LC_TIME=%s;LANG=%s",
+                                 sgetenv ("LANGUAGE"), sgetenv ("LC_ALL"), sgetenv ("LC_MONETARY"), sgetenv ("LC_MESSAGES"),
+                                 sgetenv ("LC_COLLATE"), sgetenv ("LC_CTYPE"), sgetenv ("LC_TIME"), sgetenv ("LANG"));
+      SDEBUG ("environment: %s", lv.c_str());
+      setlocale (LC_ALL, "C");
+      SDEBUG ("failed to initialize locale, falling back to \"C\"");
+    }
+  // initialize i18n functions
+  RapicornInternal::init_rapicorn_gettext (RAPICORN_GETTEXT_DOMAIN);
+  // miscellaneous sub systems
+  {
+    const String ci = cpu_info(); // initialize cpu info
+    (void) ci;
+  }
   // initialize core
-  if (!init_core_initialized())
-    init_core (app_ident, argcp, argv, args);
-  else if (app_ident != program_ident())
-    fatal ("%s: application identifier changed during ui initialization", __func__);
+  RapicornInternal::init_core (argcp, argv, args);
   // boot up UI thread
-  const bool boot_ok = uithread_bootup (argcp, argv, args);
+  const bool boot_ok = RapicornInternal::uithread_bootup (argcp, argv, args);
   if (!boot_ok)
     fatal ("%s: failed to start Rapicorn UI thread: %s", __func__, strerror (errno));
   // connect to remote UIThread and fetch main handle
@@ -56,6 +92,8 @@ init_app (const String &app_ident, int *argcp, char **argv, const StringVector &
   static_appdata->app = static_appdata->connection->remote_origin<ApplicationHandle>();
   if (!static_appdata->app)
     fatal ("%s: failed to retrieve Rapicorn::Application object: %s", __func__, strerror (errno));
+  if (!application_name.empty())
+    static_appdata->app.setup (application_name, "");
   return static_appdata->app;
 }
 
@@ -63,19 +101,6 @@ ApplicationH
 ApplicationH::the ()
 {
   return static_appdata->app;
-}
-
-/**
- * This function calls Application::shutdown() first, to properly terminate Rapicorn's
- * concurrently running ui-thread, and then terminates the program via
- * exit(3posix). This function does not return.
- * @param status        The exit status returned to the parent process.
- */
-void
-exit_app (int status)
-{
-  uithread_shutdown();
-  ::exit (status);
 }
 
 class AppSource;
@@ -167,10 +192,11 @@ ApplicationH::main_loop()
  * Normally, Test::run() should be called next to execute all unit tests.
  */
 ApplicationH
-init_test_app (const String &app_ident, int *argcp, char **argv, const StringVector &args)
+init_test_app (const String &application_name, int *argcp, char **argv, const StringVector &args)
 {
-  init_core_test (app_ident, argcp, argv, args);
-  return init_app (app_ident, argcp, argv, args);
+  RapicornInternal::inject_init_args (":autonomous:testing:fatal-warnings:");
+  ApplicationH app = init_app (application_name, argcp, argv, args);
+  return app;
 }
 
 /**
@@ -222,8 +248,12 @@ ApplicationH::iterate (bool block)
 void
 ApplicationH::shutdown()
 {
-  uithread_shutdown();
+  RapicornInternal::uithread_shutdown();
 }
+
+} // Rapicorn
+
+namespace RapicornInternal {
 
 // internal function for tests
 int64
@@ -232,4 +262,4 @@ client_app_test_hook ()
   return ApplicationH::the().test_hook();
 }
 
-} // Rapicorn
+} // RapicornInternal

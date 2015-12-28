@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <unistd.h> // getcwd
 using namespace Rapicorn;
 
 static void
@@ -75,6 +76,25 @@ int
 main (int   argc,
       char *argv[])
 {
+  // check early program_cwd() initialization
+  {
+    constexpr int bsize = 8192;
+    char startdir[bsize], buf[bsize];
+    bool ok;
+    ok = getcwd (startdir, bsize) != NULL;
+    assert (ok);
+    if (chdir (RAPICORN_DIR_SEPARATOR_S) != 0)
+      fatal ("chdir failed: %s: %s", RAPICORN_DIR_SEPARATOR_S, string_from_errno (errno));
+    ok = getcwd (buf, bsize) != NULL;
+    assert (ok);
+    ok = program_cwd() != buf;
+    assert (ok);
+    ok = program_cwd() == startdir;
+    assert (ok);
+    if (chdir (startdir) != 0)
+      fatal ("chdir failed: %s: %s", startdir, string_from_errno (errno));
+  }
+
   init_core_test (__PRETTY_FILE__, &argc, argv);
 
   if (argc >= 2)

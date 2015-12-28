@@ -3,7 +3,7 @@
 import Rapicorn # Load Rapicorn language bindings for Python
 
 # Setup the application object, unsing a unique application name.
-app = Rapicorn.init ("Test Rapicorn Bindings")
+app = Rapicorn.init_app ("Test Rapicorn Bindings")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """

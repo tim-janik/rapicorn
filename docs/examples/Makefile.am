@@ -27,7 +27,7 @@ check-TEST_XMLUIS: $(RAPIDRUN)
 	    [ -f ./"$$tst" ] && rt=./"$$tst" || rt="$(srcdir)/$$tst" ;		\
 	    $(X11_ENV) $(RAPIDRUN) -x $$rt && echo "PASS: $$tst" || exit 1 ;	\
 	  done
-check-am: check-TEST_XMLUIS
+check-local: check-TEST_XMLUIS
 
 # === TEST_PYPROGS ===
 .PHONY: check-TEST_PYPROGS

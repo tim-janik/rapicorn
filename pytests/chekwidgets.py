@@ -3,7 +3,7 @@
 # setup Rapicorn test
 import Rapicorn # Load Rapicorn language bindings for Python
 
-app = Rapicorn.init (__file__)
+app = Rapicorn.init_app()
 
 def show_and_display (win): # show and run main loop until the window is fully displayed
   # FIXME: convenience function for app
