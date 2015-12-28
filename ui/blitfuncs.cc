@@ -17,14 +17,6 @@ init_render_table (const StringVector &args)
 }
 static InitHook _init_render_table ("ui-core/10 Optimize Render Table for SIMD Blitting", init_render_table);
 
-static inline uint32
-quick_rand32 ()
-{
-  static uint32 accu = 2147483563;
-  accu = 1664525 * accu + 1013904223;
-  return accu;
-}
-
 static void
 alu_gradient_line (uint32 *pixel,
                    uint32 *bound,
@@ -48,9 +40,10 @@ alu_gradient_line (uint32 *pixel,
       Dg /= delta;
       Db /= delta;
     }
+  static Pcg32Rng pcg;
   while (pixel < bound)
     {
-      union { uint32 i32; uint8 b[4]; } rnd = { quick_rand32() };
+      union { uint32 i32; uint8 b[4]; } rnd = { pcg.random() };
       *pixel = COL_ARGB ((Ca + (rnd.b[3] * 0x0101)) >> 16,
                          (Cr + (rnd.b[2] * 0x0101)) >> 16,
                          (Cg + (rnd.b[1] * 0x0101)) >> 16,
