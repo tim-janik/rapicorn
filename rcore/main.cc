@@ -127,7 +127,7 @@ static VInitSettings vinit_settings;
 const InitSettings  &InitSettings::is = vinit_settings;
 static const char *internal_init_args_ = NULL;
 
-static void
+static bool
 parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, const StringVector &args)
 {
   static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");
@@ -188,6 +188,21 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
       vsettings.test_codes() |= test_flipper_check ("test-verbose") ? Test::MODE_VERBOSE : 0;
       vsettings.test_codes() |= test_flipper_check ("test-slow") ? Test::MODE_SLOW : 0;
     }
+
+  return true;
+}
+
+/** Parse Rapicorn initialization arguments and adjust global settings.
+ * Note that parse_init_args() only parses arguments the first time it is called.
+ * Arguments specific to the Rapicorn toolkit are removed from the @a argc, @a argv
+ * array passed in.
+ */
+bool
+parse_init_args (int *argcp, char **argv, const StringVector &args)
+{
+  static bool initialized = parse_settings_and_args (vinit_settings, argcp, argv, args);
+  assert (initialized != false);
+  return true;
 }
 
 /// File name of the current process as set in argv[0] at startup.
@@ -325,20 +340,6 @@ ScopedPosixLocale::posix_locale ()
         freelocale (posix_locale_);
     }
   return posix_locale_;
-}
-
-void
-init_core (int *argcp, char **argv, const StringVector &args)
-{
-  static int initialized = 0;
-  assert_return (initialized++ == 0);
-
-  // ensure logging is fully initialized
-  const char *env_rapicorn = getenv ("RAPICORN");
-  RAPICORN_STARTUP_DEBUG ("$RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
-
-  // setup init settings
-  parse_settings_and_args (vinit_settings, argcp, argv, args);
 }
 
 } // Rapicorn

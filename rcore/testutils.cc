@@ -375,15 +375,16 @@ random_frange (double begin, double end)
 namespace Rapicorn {
 
 /** Initialize the Rapicorn toolkit core for a test program.
- * Initialize the Rapicorn toolkit core to execute unit tests. Calling this function is
- * equivalent to calling init_core() with args "autonomous=1" and "testing=1".
+ * Initializes the Rapicorn toolkit core to execute unit tests by calling
+ * parse_settings_and_args() with args "autonomous=1" and "testing=1" and
+ * setting the application name.
  * See also #$RAPICORN_TEST.
  */
 void
 init_core_test (const String &application, int *argcp, char **argv, const StringVector &args)
 {
   RapicornInternal::inject_init_args (":autonomous:testing:fatal-warnings:");
-  RapicornInternal::init_core (argcp, argv, args);
+  RapicornInternal::parse_init_args (argcp, argv, args);
   if (!application.empty())
     RapicornInternal::application_setup (application, "");
 }
