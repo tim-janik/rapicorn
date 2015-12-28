@@ -180,9 +180,9 @@ assertion_failed (const char *file, int line, const char *message)
     }
   else
     {
-      const String pfile = program_file();
-      if (!pfile.empty())
-        m += pfile + ":";
+      const String argv0 = program_argv0();
+      if (!argv0.empty())
+        m += argv0 + ":";
     }
   m += " assertion failed: ";
   m += message;

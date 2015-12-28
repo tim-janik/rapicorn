@@ -1071,7 +1071,7 @@ WindowImpl::create_display_window ()
               setup.request_flags = DisplayWindow::Flags (flags);
               String prg = program_ident();
               if (prg.empty())
-                prg = program_file();
+                prg = program_name();
               setup.session_role = "RAPICORN:" + prg;
               if (!name().empty())
                 setup.session_role += ":" + name();

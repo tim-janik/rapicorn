@@ -228,17 +228,60 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
     }
 }
 
-static String program_argv0 = "";
+static const char   *program_argv0_ = NULL;
+static const String *program_cwd_ = NULL;
 static String program_app_ident = ""; // used to flag init_core() initialization
-static String program_cwd0 = "";
+static String program_name_;
 
-/**
- * File name of the current process as set in argv[0] at startup.
- */
+/// File name of the current process as set in argv[0] at startup.
 String
-program_file ()
+program_argv0 ()
 {
-  return program_argv0;
+  // assert program_argv0_init() has been called earlier
+#ifdef  _GNU_SOURCE
+  assert_return (program_argv0_ != NULL, program_invocation_name);
+#else
+  assert_return (program_argv0_ != NULL, "");
+#endif
+  return program_argv0_;
+}
+
+// Early initialization of program_argv0() from argv0 as passed into main().
+void
+program_argv0_init (const char *argv0)
+{
+  assert_return (argv0 != NULL);
+  if (program_argv0_)
+    {
+      assert_return (strcmp (program_argv0_, argv0) == 0); // there's only *one* argv[0]
+      return;
+    }
+  const char *libc_argv0 = NULL;
+#ifdef  _GNU_SOURCE
+  libc_argv0 = program_invocation_name; // from glibc
+  assert_return (strcmp (program_invocation_name, argv0) == 0); // there's only *one* argv[0]
+#endif
+  program_argv0_ = libc_argv0 ? libc_argv0 : strdup (argv0);
+  if (!program_cwd_)
+    program_cwd_ = new String (Path::cwd());
+}
+
+/// Program name, usually argv[0], but can also be a Python script name, etc.
+String
+program_name ()
+{
+  if (!program_name_.empty())
+    return program_name_;
+  const char *gpn = g_get_prgname();
+  if (gpn)
+    return gpn;
+  if (program_argv0_)
+    return program_argv0_;
+#ifdef  _GNU_SOURCE
+  if (program_invocation_name) // from glibc
+    return program_invocation_name;
+#endif
+  return "";
 }
 
 /**
@@ -250,10 +293,10 @@ program_alias ()
 {
 #ifdef  _GNU_SOURCE
   return program_invocation_short_name;
-#else
-  const char *last = strrchr (program_argv0.c_str(), '/');
-  return last ? last + 1 : "";
 #endif
+  const String pname = program_name();
+  const char *last = strrchr (pname.c_str(), '/');
+  return last ? last + 1 : pname;
 }
 
 /// The program identifier @a app_ident as specified during initialization of Rapicorn.
@@ -263,13 +306,11 @@ program_ident ()
   return program_app_ident;
 }
 
-/**
- * The current working directory during startup.
- */
+/// The current working directory during startup.
 String
 program_cwd ()
 {
-  return program_cwd0;
+  return program_cwd_ ? *program_cwd_ : "./";
 }
 
 static Mutex       prng_mutex;
@@ -483,16 +524,21 @@ init_core (const String &app_ident, int *argcp, char **argv, const StringVector 
   program_app_ident = app_ident;
 
   // setup program and application name
-  if (program_argv0.empty() && argcp && *argcp && argv && argv[0] && argv[0][0] != 0)
-    program_argv0 = argv[0];
-  if (program_cwd0.empty())
-    program_cwd0 = Path::cwd();
-  if (!g_get_prgname() && !program_argv0.empty())
-    g_set_prgname (Path::basename (program_argv0).c_str());
+  if (argcp && *argcp && argv && argv[0] && argv[0][0] != 0)
+    {
+      if (!program_argv0_)
+        program_argv0_init (argv[0]);
+      program_name_ = argv[0];
+    }
+  if (!program_cwd_)
+    program_cwd_ = new String (Path::cwd());
+  const String palias = program_alias();
+  if (!g_get_prgname() && !palias.empty())
+    g_set_prgname (palias.c_str());
   if (!g_get_application_name() || g_get_application_name() == g_get_prgname())
     g_set_application_name (program_app_ident.c_str());
-  if (!program_argv0.empty())
-    ThreadInfo::self().name (string_format ("%s-MainThread", Path::basename (program_argv0).c_str()));
+  if (!palias.empty())
+    ThreadInfo::self().name (string_format ("%s-MainThread", palias.c_str()));
 
   // ensure logging is fully initialized
   const char *env_rapicorn = getenv ("RAPICORN");
