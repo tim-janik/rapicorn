@@ -71,13 +71,6 @@ check-logging-output: testrcore2
 	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; $(TSTRESULT) "check test critical()"
 	$(Q) rm -f $(TSTOUT)
 check-local: check-logging-output
-# process handle
-check-process-handle: testrcore1
-	$(Q) test -n `./testrcore1 --print-process-handle`; $(TSTRESULT)
-check-local: check-process-handle
-check-unique-process: testrcore1
-	$(Q) test `./testrcore1 --print-process-handle` != `./testrcore1 --print-process-handle`; $(TSTRESULT)
-check-local: check-unique-process
 # check startup entropy
 check-startup-entropy:
 	$(Q) A=`./benchrcore --entropy` ; B=`./benchrcore --entropy`; \
