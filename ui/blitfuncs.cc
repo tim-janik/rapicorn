@@ -5,19 +5,6 @@ namespace Rapicorn {
 namespace Blit {
 
 static void
-init_render_table (const StringVector &args)
-{
-  const bool have_mmx = strstr (cpu_info().c_str(), " MMX ");
-  assert (have_mmx);
-  if (have_mmx)
-    {
-      Blit::render_optimize_mmx();
-      RAPICORN_STARTUP_DEBUG ("Using MMX functions for blitting");
-    }
-}
-static InitHook _init_render_table ("ui-core/10 Optimize Render Table for SIMD Blitting", init_render_table);
-
-static void
 alu_gradient_line (uint32 *pixel,
                    uint32 *bound,
                    uint32  alpha1pre16,
@@ -83,11 +70,21 @@ nop_clear_fpu (void)
   /* clear render state for FPU use */
 }
 
-RenderTable render = {
-  nop_clear_fpu,
-  alu_combine_over,
-  alu_gradient_line,
-};
+static const RenderTable&
+get_render_table()
+{
+  static RenderTable render_table = []() {
+    RenderTable render_table = {
+      nop_clear_fpu,
+      alu_combine_over,
+      alu_gradient_line,
+    };
+    if (strstr (cpu_info().c_str(), " MMX "))
+      Blit::render_optimize_mmx (&render_table);
+    return render_table;
+  } ();
+  return render_table;
+}
 
 } // Blit
 } // Rapicorn

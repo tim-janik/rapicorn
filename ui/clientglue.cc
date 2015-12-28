@@ -80,7 +80,7 @@ init_app (const String &application_name, int *argcp, char **argv, const StringV
     (void) ci;
   }
   // initialize core
-  RapicornInternal::init_core (argcp, argv, args);
+  parse_init_args (argcp, argv, args);
   // boot up UI thread
   const bool boot_ok = RapicornInternal::uithread_bootup (argcp, argv, args);
   if (!boot_ok)

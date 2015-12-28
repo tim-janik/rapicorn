@@ -16,73 +16,6 @@ namespace Rapicorn {
 String  rapicorn_version ()     { return RAPICORN_VERSION; }
 String  rapicorn_buildid ()     { return RapicornInternal::buildid(); }
 
-// === initialization hooks ===
-static InitHook *init_hooks = NULL;
-
-InitHook::InitHook (const String &fname, InitHookFunc func) :
-  next (NULL), hook (func), name_ (fname)
-{
-  next = init_hooks;
-  init_hooks = this;
-}
-
-static int
-init_hook_cmp (const InitHook *const &v1, const InitHook *const &v2)
-{
-  static const char *levels[] = { "core/", "threading/", "ui/" };
-  uint l1 = UINT_MAX, l2 = UINT_MAX;
-  for (uint i = 0; i < RAPICORN_ARRAY_SIZE (levels); i++)
-    {
-      const uint len = strlen (levels[i]);
-      if (l1 == UINT_MAX && strncmp (levels[i], v1->name().c_str(), len) == 0)
-        {
-          l1 = i;
-          if (l2 != UINT_MAX)
-            break;
-        }
-      if (l2 == UINT_MAX && strncmp (levels[i], v2->name().c_str(), len) == 0)
-        {
-          l2 = i;
-          if (l1 != UINT_MAX)
-            break;
-        }
-    }
-  if (l1 != l2)
-    return l1 < l2 ? -1 : l2 > l1;
-  return strverscmp (v1->name().c_str(), v2->name().c_str()) < 0;
-}
-
-static StringVector *init_hook_main_args = NULL;
-
-StringVector
-InitHook::main_args () const
-{
-  return *init_hook_main_args;
-}
-
-void
-InitHook::invoke_hooks (const String &kind, int *argcp, char **argv, const StringVector &args)
-{
-  std::vector<InitHook*> hv;
-  for (InitHook *ihook = init_hooks; ihook; ihook = ihook->next)
-    hv.push_back (ihook);
-  stable_sort (hv.begin(), hv.end(), init_hook_cmp);
-  StringVector main_args;
-  for (uint i = 1; i < uint (*argcp); i++)
-    main_args.push_back (argv[i]);
-  init_hook_main_args = &main_args;
-  for (std::vector<InitHook*>::iterator it = hv.begin(); it != hv.end(); it++)
-    {
-      String name = (*it)->name();
-      if (name.size() > kind.size() && strncmp (name.data(), kind.data(), kind.size()) == 0)
-        {
-          RAPICORN_STARTUP_DEBUG ("InitHook: %s", name.c_str());
-          (*it)->hook (args);
-        }
-    }
-  init_hook_main_args = NULL;
-}
-
 // === arg parsers ===
 /**
  * Try to parse argument @a arg at position @a i in @a argv.
@@ -194,7 +127,7 @@ static VInitSettings vinit_settings;
 const InitSettings  &InitSettings::is = vinit_settings;
 static const char *internal_init_args_ = NULL;
 
-static void
+static bool
 parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, const StringVector &args)
 {
   static_assert (sizeof (NULL) == sizeof (void*), "NULL must be defined to __null in C++ on 64bit");
@@ -255,6 +188,21 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
       vsettings.test_codes() |= test_flipper_check ("test-verbose") ? Test::MODE_VERBOSE : 0;
       vsettings.test_codes() |= test_flipper_check ("test-slow") ? Test::MODE_SLOW : 0;
     }
+
+  return true;
+}
+
+/** Parse Rapicorn initialization arguments and adjust global settings.
+ * Note that parse_init_args() only parses arguments the first time it is called.
+ * Arguments specific to the Rapicorn toolkit are removed from the @a argc, @a argv
+ * array passed in.
+ */
+bool
+parse_init_args (int *argcp, char **argv, const StringVector &args)
+{
+  static bool initialized = parse_settings_and_args (vinit_settings, argcp, argv, args);
+  assert (initialized != false);
+  return true;
 }
 
 /// File name of the current process as set in argv[0] at startup.
@@ -392,28 +340,6 @@ ScopedPosixLocale::posix_locale ()
         freelocale (posix_locale_);
     }
   return posix_locale_;
-}
-
-void
-init_core (int *argcp, char **argv, const StringVector &args)
-{
-  static int initialized = 0;
-  assert_return (initialized++ == 0);
-
-  // ensure logging is fully initialized
-  const char *env_rapicorn = getenv ("RAPICORN");
-  RAPICORN_STARTUP_DEBUG ("$RAPICORN=%s", env_rapicorn ? env_rapicorn : "");
-
-  // setup init settings
-  parse_settings_and_args (vinit_settings, argcp, argv, args);
-
-  // initialize sub systems
-  struct InitHookCaller : public InitHook {
-    static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
-    { invoke_hooks (kind, argcp, argv, args); }
-  };
-  InitHookCaller::invoke ("core/", argcp, argv, args);
-  InitHookCaller::invoke ("threading/", argcp, argv, args);
 }
 
 } // Rapicorn

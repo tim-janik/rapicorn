@@ -189,16 +189,16 @@ mmx_gradient_line (uint32 *pixel,
 }
 
 void
-render_optimize_mmx (void)
+render_optimize_mmx (RenderTable *render_table)
 {
-  render.clear_fpu = mmx_clear_fpu;
-  render.gradient_line = mmx_gradient_line;
-  render.combine_over = mmx_combine_over;
+  render_table->clear_fpu = mmx_clear_fpu;
+  render_table->gradient_line = mmx_gradient_line;
+  render_table->combine_over = mmx_combine_over;
 }
 
 #else  /* !__MMX__ */
 void
-render_optimize_mmx (void)
+render_optimize_mmx (RenderTable *render_table)
 {}
 #endif /* !__MMX__ */
 } // Blit

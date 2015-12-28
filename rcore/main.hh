@@ -11,7 +11,7 @@
 namespace Rapicorn {
 
 // == initialization ==
-void    init_core               (int *argcp, char **argv, const StringVector &args = StringVector());
+bool parse_init_args (int *argcp, char **argv, const StringVector &args = StringVector());
 
 class InitSettings {
   static const InitSettings &is;
@@ -65,21 +65,6 @@ String       program_name       ();
 String       program_alias      ();
 String       program_cwd        ();
 String       application_name   ();
-
-// == initialization hooks ==
-class InitHook {
-  typedef void (*InitHookFunc) (const StringVector &args);
-  InitHook    *next;
-  InitHookFunc hook;
-  const String name_;
-  RAPICORN_CLASS_NON_COPYABLE (InitHook);
-protected:
-  static void  invoke_hooks (const String&, int*, char**, const StringVector&);
-public:
-  String       name () const { return name_; }
-  StringVector main_args () const;
-  explicit     InitHook (const String &fname, InitHookFunc func);
-};
 
 } // Rapicorn
 
