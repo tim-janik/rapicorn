@@ -525,4 +525,20 @@ shake256_hash (const void *data, size_t data_length, uint8_t *hashvalues, size_t
   context.squeeze_digest (hashvalues, n);
 }
 
+// == Pcg32Rng ==
+Pcg32Rng::Pcg32Rng (uint64_t offset, uint64_t sequence) :
+  increment_ (0), accu_ (0)
+{
+  seed (offset, sequence);
+}
+
+void
+Pcg32Rng::seed (uint64_t offset, uint64_t sequence)
+{
+  accu_ = sequence;
+  increment_ = (sequence << 1) | 1;    // force increment_ to be odd
+  accu_ += offset;
+  accu_ = A * accu_ + increment_;
+}
+
 } // Rapicorn
