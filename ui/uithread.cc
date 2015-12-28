@@ -147,18 +147,7 @@ private:
     Aida::BaseConnectionP connection =
       Aida::ServerConnection::bind<ApplicationIface> ("inproc://Rapicorn-" RAPICORN_VERSION,
                                                       shared_ptr_cast<ApplicationIface> (&application));
-    // initialize sub systems
-    struct InitHookCaller : public InitHook {
-      static void  invoke (const String &kind, int *argcp, char **argv, const StringVector &args)
-      { invoke_hooks (kind, argcp, argv, args); }
-    };
-    // UI library core parts
-    InitHookCaller::invoke ("ui-core/", idata_->argcp, idata_->argv, *idata_->args);
-    // Application Singleton
-    InitHookCaller::invoke ("ui-thread/", idata_->argcp, idata_->argv, *idata_->args);
     assert_return (NULL != &ApplicationImpl::the());
-    // Initializations after Application Singleton
-    InitHookCaller::invoke ("ui-app/", idata_->argcp, idata_->argv, *idata_->args);
     // hook up server connection to main loop to process remote calls
     ServerConnectionSourceP server_source = ServerConnectionSource::create (*main_loop_, connection);
     // Complete initialization by signalling caller

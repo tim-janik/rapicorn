@@ -66,21 +66,6 @@ String       program_alias      ();
 String       program_cwd        ();
 String       application_name   ();
 
-// == initialization hooks ==
-class InitHook {
-  typedef void (*InitHookFunc) (const StringVector &args);
-  InitHook    *next;
-  InitHookFunc hook;
-  const String name_;
-  RAPICORN_CLASS_NON_COPYABLE (InitHook);
-protected:
-  static void  invoke_hooks (const String&, int*, char**, const StringVector&);
-public:
-  String       name () const { return name_; }
-  StringVector main_args () const;
-  explicit     InitHook (const String &fname, InitHookFunc func);
-};
-
 } // Rapicorn
 
 namespace RapicornInternal {
