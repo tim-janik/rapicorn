@@ -20,8 +20,10 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/resource.h>
+#include <sys/time.h>           // gettimeofday
 #include <linux/random.h>       // GRND_NONBLOCK
 #include <sys/syscall.h>        // __NR_getrandom
+#include <sys/utsname.h>        // uname
 #if defined (__i386__) || defined (__x86_64__)
 #  include <x86intrin.h>        // __rdtsc
 #endif
@@ -417,18 +419,6 @@ TaskStatus::string ()
                    utime * 0.001, stime * 0.001, cutime * 0.001, cstime * 0.001);
 }
 
-static constexpr uint64_t
-bytehash_fnv64a (const uint8_t *bytes, size_t n, uint64_t hash = 0xcbf29ce484222325)
-{
-  return n == 0 ? hash : bytehash_fnv64a (bytes + 1, n - 1, 0x100000001b3 * (hash ^ bytes[0]));
-}
-
-static uint64_t
-stringhash_fnv64a (const String &string)
-{
-  return bytehash_fnv64a ((const uint8*) string.data(), string.size());
-}
-
 static int
 getrandom (void *buffer, size_t count, unsigned flags)
 {
@@ -534,7 +524,7 @@ hash_macs (KeccakRng &pool)
   close (sockfd);
   devices.resize (((devices.size() + 7) / 8) * 8); // align to uint64_t
   pool.xor_seed ((const uint64_t*) devices.data(), devices.size() / 8);
-  // printout ("SEED(MACs): %s\n", devices.c_str());
+  // printerr ("SEED(MACs): %s\n", devices.c_str());
   return !devices.empty();
 }
 
@@ -548,7 +538,7 @@ hash_stat (KeccakRng &pool, const char *filename)
   if (stat (filename, &s.stat) == 0)
     {
       pool.xor_seed ((const uint64_t*) &s.stat, sizeof (s.stat) / sizeof (uint64_t));
-      // printout ("SEED(%s): atime=%u mtime=%u ctime=%u size=%u...\n", filename, s.stat.st_atime, s.stat.st_atime, s.stat.st_atime, s.stat.st_size);
+      // printerr ("SEED(%s): atime=%u mtime=%u ctime=%u size=%u...\n", filename, s.stat.st_atime, s.stat.st_atime, s.stat.st_atime, s.stat.st_size);
       return true;
     }
   return false;
@@ -566,7 +556,7 @@ hash_file (KeccakRng &pool, const char *filename, const size_t maxbytes = 16384)
       if (l > 0)
         {
           pool.xor_seed (buffer, l);
-          // printout ("SEED(%s): %s\n", filename, String ((const char*) buffer, std::min (l * 8, size_t (48))));
+          // printerr ("SEED(%s): %s\n", filename, String ((const char*) buffer, std::min (l * 8, size_t (48))));
           return true;
         }
     }
@@ -628,6 +618,22 @@ hash_cpu_usage (KeccakRng &pool)
   pool.xor_seed (u.ui64, sizeof (u.ui64) / sizeof (u.ui64[0]));
 }
 
+static void
+hash_sys_structs (KeccakRng &pool)
+{
+  struct SysStructs {
+    uint64 alignment_dummy1;
+    struct timezone tz;
+    struct timeval  tv;
+    struct utsname uts;
+    uint64 alignment_dummy2;
+  };
+  SysStructs sst = { 0, };
+  gettimeofday (&sst.tv, &sst.tz);
+  uname (&sst.uts);
+  pool.xor_seed ((uint64*) &sst, sizeof (sst) / sizeof (uint64));
+}
+
 static bool
 get_rdrand (uint64 *u, uint count)
 {
@@ -639,11 +645,23 @@ get_rdrand (uint64 *u, uint count)
     for (uint i = 0; i < count; i++)
       {
         uint64_t d = __rdtsc();       // fallback
-        u[i] = bytehash_fnv64a ((const uint8*) &d, 8);
+        u[i] = pcg_hash64 ((const uint8*) &d, sizeof (d), 0xeaeaeaea113377ccULL);
       }
   return true;
 #endif
   return false;
+}
+
+static void
+get_arc4random (uint64 *u, uint count)
+{
+#ifdef __OpenBSD__
+  for (uint i = 0; i < count; i++)
+    u[i] = uint64_t (arc4random()) << 32;
+  arc4random_stir();
+  for (uint i = 0; i < count; i++)
+    u[i] |= arc4random();
+#endif
 }
 
 static void
@@ -658,6 +676,7 @@ runtime_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  get_rdrand (uintp, 8); uintp += 8;
+  hash_time (stamp++);  get_arc4random (uintp, 8); uintp += 8;
   hash_time (stamp++);  *uintp++ = ThisThread::thread_pid();
   hash_time (stamp++);  *uintp++ = getuid();
   hash_time (stamp++);  *uintp++ = geteuid();
@@ -677,24 +696,26 @@ runtime_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_anything (pool, std::chrono::system_clock::now().time_since_epoch().count());
   hash_time (stamp++);  hash_anything (pool, std::this_thread::get_id());
   String compiletime = __DATE__ __TIME__ __FILE__ __TIMESTAMP__;
-  hash_time (stamp++);  *uintp++ = stringhash_fnv64a (compiletime);     // compilation entropy
-  hash_time (stamp++);  *uintp++ = size_t (compiletime.data());         // heap address
-  hash_time (stamp++);  *uintp++ = size_t (&cpu_info_jmp_buf);          // data segment
-  hash_time (stamp++);  *uintp++ = size_t ("PATH");                     // const data segment
-  hash_time (stamp++);  *uintp++ = size_t (getenv ("PATH"));            // a.out address
-  hash_time (stamp++);  *uintp++ = size_t (&stamp);                     // stack segment
-  hash_time (stamp++);  *uintp++ = size_t (&runtime_entropy);           // code segment
-  hash_time (stamp++);  *uintp++ = size_t (&::fopen);                   // libc code segment
-  hash_time (stamp++);  *uintp++ = size_t (&std::string::npos);         // stl address
-  hash_time (stamp++);  *uintp++ = stringhash_fnv64a (cpu_info());      // CPU type influence
+  hash_time (stamp++);  *uintp++ = fnv1a_consthash64 (compiletime.c_str());     // compilation entropy
+  hash_time (stamp++);  *uintp++ = size_t (compiletime.data());                 // heap address
+  hash_time (stamp++);  *uintp++ = size_t (&cpu_info_jmp_buf);                  // data segment
+  hash_time (stamp++);  *uintp++ = size_t ("PATH");                             // const data segment
+  hash_time (stamp++);  *uintp++ = size_t (getenv ("PATH"));                    // a.out address
+  hash_time (stamp++);  *uintp++ = size_t (&stamp);                             // stack segment
+  hash_time (stamp++);  *uintp++ = size_t (&runtime_entropy);                   // code segment
+  hash_time (stamp++);  *uintp++ = size_t (&::fopen);                           // libc code segment
+  hash_time (stamp++);  *uintp++ = size_t (&std::string::npos);                 // stl address
+  hash_time (stamp++);  *uintp++ = fnv1a_consthash64 (cpu_info().c_str());      // CPU type influence
+  hash_time (stamp++);  hash_sys_structs (pool);
   hash_time (stamp++);  *uintp++ = timestamp_benchmark();
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);
   assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  hash_time (stamp++);
   assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
   pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
-  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  // printerr ("%s(): duration=%fµsec\n", __func__, (stamp[-1].bstamp - hash_stamps[0].bstamp) / 1000.0);
 }
 
 static void
@@ -754,11 +775,12 @@ system_entropy (KeccakRng &pool)
   hash_time (stamp++);  hash_file (pool, "/proc/vz/vestat");
   hash_time (stamp++);  hash_cpu_usage (pool);
   hash_time (stamp++);  *uintp++ = timestamp_realtime();
-  hash_time (stamp++);
   assert (uintp <= &uint_array[sizeof (uint_array) / sizeof (uint_array[0])]);
+  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  hash_time (stamp++);
   assert (stamp <= &hash_stamps[sizeof (hash_stamps) / sizeof (hash_stamps[0])]);
   pool.xor_seed ((uint64_t*) &hash_stamps[0], (stamp - &hash_stamps[0]) * sizeof (hash_stamps[0]) / sizeof (uint64_t));
-  pool.xor_seed (&uint_array[0], uintp - &uint_array[0]);
+  // printerr ("%s(): duration=%fµsec\n", __func__, (stamp[-1].bstamp - hash_stamps[0].bstamp) / 1000.0);
 }
 
 /**

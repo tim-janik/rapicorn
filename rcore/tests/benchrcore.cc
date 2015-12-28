@@ -108,7 +108,35 @@ private:
 
 // == EntropyTests ==
 static void
-test_entropy (char *arg)
+test_entropy ()
+{
+  struct EntropyData {
+    uint64 data[8];
+    bool
+    operator== (const EntropyData &e2) const
+    {
+      for (size_t i = 0; i < ARRAY_SIZE (data); i++)
+        if (data[i] != e2.data[i])
+          return false;
+      return true;
+    }
+    bool operator!= (const EntropyData &e2) const { return !operator== (e2); }
+  };
+  EntropyData r1, s1, r2, s2;
+  // very simple entropy tests
+  collect_runtime_entropy (r1.data, ARRAY_SIZE (r1.data));
+  collect_system_entropy  (s1.data, ARRAY_SIZE (s1.data));
+  collect_runtime_entropy (r2.data, ARRAY_SIZE (r2.data));
+  collect_system_entropy  (s2.data, ARRAY_SIZE (s2.data));
+  TCMP (r1, !=, s1);
+  TCMP (r1, !=, r2);
+  TCMP (s1, !=, s2);
+  TCMP (r2, !=, s2);
+}
+REGISTER_TEST ("RandomGenerator/EntropyGathering", test_entropy);
+
+static void
+handle_entropy_args (char *arg)
 {
   if      (strcmp (arg, "--entropy") == 0)
     {
@@ -405,7 +433,7 @@ main (int   argc,
       char *argv[])
 {
   if (argc >= 2)        // Entropy tests that need to be carried out before core_init
-    test_entropy (argv[1]);
+    handle_entropy_args (argv[1]);
 
   init_core_test (__PRETTY_FILE__, &argc, argv);
 

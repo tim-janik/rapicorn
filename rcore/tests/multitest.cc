@@ -767,11 +767,6 @@ main (int argc, char *argv[])
       printout ("%s\n", Path::cwd());
       return 0;
     }
-  if (argc >= 2 && String ("--print-process-handle") == argv[1])
-    {
-      printout ("%s", process_handle());
-      return 0;
-    }
   if (argc >= 3 && String ("--task-status") == argv[1])
     {
       TaskStatus ts = TaskStatus (string_to_int (argv[2]));

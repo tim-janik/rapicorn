@@ -88,7 +88,6 @@ vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __a
 void        debug_backtrace_snapshot (size_t key);
 String      debug_backtrace_showshot (size_t key);
 inline void breakpoint ();
-String      process_handle ();
 
 // === Macro Implementations ===
 #define RAPICORN_BREAKPOINT()           Rapicorn::breakpoint()  ///< Cause a debugging breakpoint, for development only.
