@@ -535,9 +535,9 @@ class Generator:
     assert u_typename == u_base
     s += 'cdef object %s__wrap (const %s &%s):\n' % (u_typename, u_typename, ident)
     s += '  cdef Aida__TypeHashList thl = %s.__aida_typelist__()\n' % ident
-    s += '  cdef Rapicorn__Object_WrapFunc object_pywrapper\n'
+    s += '  cdef %s_WrapFunc object_pywrapper\n' % u_base
     s += '  for idx in range (thl.size()):\n'
-    s += '    object_pywrapper = pyxx_aida_type_class_mapper (thl[idx], <Rapicorn__Object_WrapFunc> NULL)\n'
+    s += '    object_pywrapper = pyxx_aida_type_class_mapper (thl[idx], <%s_WrapFunc> NULL)\n' % u_base
     s += '    if object_pywrapper:\n'
     s += '      return object_pywrapper (%s)\n' % ident
     s += '  return None\n'
