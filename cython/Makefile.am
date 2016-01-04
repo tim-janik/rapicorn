@@ -27,12 +27,12 @@ Rapicorn_la_CXXFLAGS	   = $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-functi
 Rapicorn_la_LDFLAGS	   = $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
 EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rapicorn-core.pyx PyxxStub.py
-CLEANFILES	          += Rapicorn.cc idlapi.pyx
+CLEANFILES	          += Rapicorn.cc rapicorn-api.pyx
 
-Rapicorn.cc: Rapicorn.pyx Aida.pyx rapicorn-core.pyx idlapi.pyx aidapyxxcallers.hh
+Rapicorn.cc: Rapicorn.pyx Aida.pyx rapicorn-core.pyx rapicorn-api.pyx aidapyxxcallers.hh
 	@echo "  CYTHON  " $@
 	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. $(srcdir)/Rapicorn.pyx -o $@
-idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
+rapicorn-api.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
 	@echo "  AIDACC  " $@
 	$(Q) ${AIDACC} -x $(srcdir)/PyxxStub $(RAPICORNIDL) -o $@ -G strip-path=$(abs_top_srcdir)/
 $(srcdir)/*.cc: aidapyxxcallers.hh

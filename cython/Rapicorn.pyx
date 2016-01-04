@@ -5,8 +5,8 @@ include "Aida.pyx"
 cdef extern from "rapicorn.hh" namespace "Rapicorn":
   pass
 
-# Generated rapicorn.hh bindings (PyxxStub.py)
-include "idlapi.pyx"
+# Generated rapicorn.hh bindings (via PyxxStub.py)
+include "rapicorn-api.pyx"
 
 # Manual binding bits for rapicorn.hh
 cdef extern from "ui/clientapi.hh" namespace "Rapicorn":
