@@ -207,4 +207,4 @@ cdef extern from "aidapyxxutils.hh":
 
 
 # == Utilities from Rapicorn core ==
-include "rcore.pyx"
+include "rapicorn-core.pyx"

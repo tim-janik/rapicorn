@@ -26,10 +26,10 @@ nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	   = $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	   = $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
-EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rcore.pyx PyxxStub.py
+EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rapicorn-core.pyx PyxxStub.py
 CLEANFILES	          += Rapicorn.cc idlapi.pyx
 
-Rapicorn.cc: Rapicorn.pyx Aida.pyx rcore.pyx idlapi.pyx aidapyxxcallers.hh
+Rapicorn.cc: Rapicorn.pyx Aida.pyx rapicorn-core.pyx idlapi.pyx aidapyxxcallers.hh
 	@echo "  CYTHON  " $@
 	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. $(srcdir)/Rapicorn.pyx -o $@
 idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
