@@ -26,19 +26,19 @@ nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	   = $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	   = $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
-EXTRA_DIST	          += Rapicorn.pyx pyxxutils.hh pyxxutils.pyx rcore.pyx PyxxStub.py
+EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rcore.pyx PyxxStub.py
 CLEANFILES	          += Rapicorn.cc idlapi.pyx
 
-Rapicorn.cc: Rapicorn.pyx pyxxutils.pyx rcore.pyx idlapi.pyx pyxxutils-xmany.hh
+Rapicorn.cc: Rapicorn.pyx Aida.pyx rcore.pyx idlapi.pyx pyxxutils-xmany.hh
 	@echo "  CYTHON  " $@
 	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. $(srcdir)/Rapicorn.pyx -o $@
 idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
 	@echo "  AIDACC  " $@
 	$(Q) ${AIDACC} -x $(srcdir)/PyxxStub $(RAPICORNIDL) -o $@ -G strip-path=$(abs_top_srcdir)/
 $(srcdir)/*.cc: pyxxutils-xmany.hh
-pyxxutils-xmany.hh: $(srcdir)/pyxxutils.hh $(XMANIFOLD)
+pyxxutils-xmany.hh: $(srcdir)/aidapyxxutils.hh $(XMANIFOLD)
 	$(AM_V_GEN)
-	$(Q) $(XMANIFOLD) -S $(srcdir)/pyxxutils.hh 18 >xtmp-$(@F) \
+	$(Q) $(XMANIFOLD) -S $(srcdir)/aidapyxxutils.hh 18 >xtmp-$(@F) \
 	&& mv xtmp-$(@F) $@
 CLEANFILES += pyxxutils-xmany.hh
 

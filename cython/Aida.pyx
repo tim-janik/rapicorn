@@ -162,8 +162,8 @@ cdef extern from *:
   ctypedef vector[Aida__TypeHash] Aida__TypeHashList "Rapicorn::Aida::TypeHashList"
 
 
-# == Utilities from pyxxutils.hh ==
-cdef extern from "pyxxutils.hh":
+# == Utilities from aidapyxxutils.hh ==
+cdef extern from "aidapyxxutils.hh":
   void pyxx_main_loop_add_watchdog (Rapicorn__MainLoop&)
 
   cppclass PyxxCaller0[R]:
@@ -204,3 +204,7 @@ cdef extern from "pyxxutils.hh":
     PyxxCaller17 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17) except *)
   cppclass PyxxCaller18[R, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18]:
     PyxxCaller18 (object, R (*M) (object, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18) except *)
+
+
+# == Utilities from Rapicorn core ==
+include "rcore.pyx"
