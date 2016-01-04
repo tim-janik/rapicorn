@@ -29,18 +29,18 @@ Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
 EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rcore.pyx PyxxStub.py
 CLEANFILES	          += Rapicorn.cc idlapi.pyx
 
-Rapicorn.cc: Rapicorn.pyx Aida.pyx rcore.pyx idlapi.pyx pyxxutils-xmany.hh
+Rapicorn.cc: Rapicorn.pyx Aida.pyx rcore.pyx idlapi.pyx aidapyxxcallers.hh
 	@echo "  CYTHON  " $@
 	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. $(srcdir)/Rapicorn.pyx -o $@
 idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
 	@echo "  AIDACC  " $@
 	$(Q) ${AIDACC} -x $(srcdir)/PyxxStub $(RAPICORNIDL) -o $@ -G strip-path=$(abs_top_srcdir)/
-$(srcdir)/*.cc: pyxxutils-xmany.hh
-pyxxutils-xmany.hh: $(srcdir)/aidapyxxutils.hh $(XMANIFOLD)
+$(srcdir)/*.cc: aidapyxxcallers.hh
+aidapyxxcallers.hh: $(srcdir)/aidapyxxutils.hh $(XMANIFOLD)
 	$(AM_V_GEN)
 	$(Q) $(XMANIFOLD) -S $(srcdir)/aidapyxxutils.hh 18 >xtmp-$(@F) \
 	&& mv xtmp-$(@F) $@
-CLEANFILES += pyxxutils-xmany.hh
+CLEANFILES += aidapyxxcallers.hh
 
 # install-hook for __init__.py
 # cython gets confused about having an __init__.py in builddir, so we
