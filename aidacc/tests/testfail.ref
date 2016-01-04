@@ -166,3 +166,6 @@
 .../testfail.idl:110:45: Exception: Invalid enum value: 9223372036854775808
 >  enum TooBig { VALUE = +9223372036854775808 }; // number too large
 >                                              ^
+.../testfail.idl:112:26: NameError: invalid field name: type
+>  record R { int32 type; }; // invalid field name
+>                           ^

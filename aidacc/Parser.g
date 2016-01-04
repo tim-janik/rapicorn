@@ -9,9 +9,11 @@ import AuxData
 
 reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
-keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
+keywords = ('TRUE', 'true', 'FALSE', 'false',
             'namespace', 'enum', 'Const', 'interface',
             'record', 'sequence', 'bool', 'String', 'Any',
+            # Python/Cython
+            'True', 'False', 'type',
             # golang types
             'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64',
             'float32', 'float64', 'complex64', 'complex128', 'byte', 'rune')
