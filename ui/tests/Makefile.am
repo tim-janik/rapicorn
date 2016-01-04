@@ -39,7 +39,7 @@ sinfex-expressions: $(srcdir)/expressions.ref ./servertests
 	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/expressions.txt > $(TSTTMP)
 	$(Q) $(X11_ENV) COLUMNS=9999 \
 		$(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) \
-	; eval "$$TSTDIAGNOSE_LOGTEST"
+	; eval "$$TSTDIAGNOSE"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/expressions.ref'" "'$(TSTOUT)'"
 	$(Q) rm -f $(TSTTMP)
 EXTRA_DIST += expressions.txt expressions.ref
