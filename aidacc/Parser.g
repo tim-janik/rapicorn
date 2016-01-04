@@ -95,6 +95,8 @@ class YYGlobals (object):
     self.parse_assign_auxdata (rfields)
     fdict = {}
     for field in rfields:
+      if field[0] in reservedkeywords:
+        raise NameError ('invalid field name: ' + field[0])
       if fdict.has_key (field[0]):
         raise NameError ('duplicate field name: ' + field[0])
       fdict[field[0]] = true
