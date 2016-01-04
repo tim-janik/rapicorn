@@ -356,9 +356,10 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-  if (yy.namespace_lookup (identifier, astype = True, asconst = True, asnamespace = True, withusing = False) or
-      (identifier in reservedkeywords)):
-    raise NameError ('redefining existing identifier: %s' % identifier)
+  if identifier in reservedkeywords:
+    raise NameError ('redefining keyword: ' + identifier)
+  if yy.namespace_lookup (identifier, astype = True, asconst = True, asnamespace = True, withusing = False):
+    raise NameError ('redefining identifier: %s' % identifier)
 def AIi (identifier):   # assert interface identifier
   ti = yy.namespace_lookup (identifier, astype = True)
   if ti and ti.storage == Decls.INTERFACE:
