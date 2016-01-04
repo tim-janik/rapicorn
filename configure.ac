@@ -112,6 +112,7 @@ ACX_PROG_LD_GNU_SYMBOLIC
 MC_EVAR_ADD(AM_LDFLAGS, $SYMBOLIC_LDFLAGS)
 MC_EVAR_ADD(AM_LDFLAGS, -pthread)
 MC_EVAR_ADD(AM_LDFLAGS, -lrt)
+MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--no-undefined])
 if ${LD} --help 2>&1 | grep -q -- '-export-dynamic\b' ; then
   MC_EVAR_ADD(AM_LDFLAGS, [-Wl,-export-dynamic])
 fi
