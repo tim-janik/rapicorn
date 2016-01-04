@@ -1,19 +1,19 @@
-.../testfail.idl:5:26: TypeError: redefining existing identifier: a
+.../testfail.idl:5:26: NameError: redefining existing identifier: a
 >  Const a = 5; Const a = 6; // redefining existing identifier
 >                           ^
-.../testfail.idl:7:18: TypeError: redefining existing identifier: record
+.../testfail.idl:7:18: NameError: redefining existing identifier: record
 >  Const record = 5; // keyword assignment
 >                   ^
 .../testfail.idl:11:22: NameError: invalid characters in namespace: broken$name
 >  namespace broken$name { Const a = 5; } // invalid namespace name (without --system-typedefs)
 >                       ^
-.../testfail.idl:13:31: TypeError: redefining existing identifier: E
+.../testfail.idl:13:31: NameError: redefining existing identifier: E
 >  enum E { VALUE }; Const E = 0; // typename assignment
 >                                ^
-.../testfail.idl:15:35: TypeError: redefining existing identifier: VALUE
+.../testfail.idl:15:35: NameError: redefining existing identifier: VALUE
 >  enum E { VALUE }; Const VALUE = 0; // enum value assignment
 >                                    ^
-.../testfail.idl:17:17: TypeError: redefining existing identifier: TRUE
+.../testfail.idl:17:17: NameError: redefining existing identifier: TRUE
 >  Const TRUE = 17; // invalid constant name
 >                  ^
 .../testfail.idl:19:24: Trying to find ';': STRING, IDENT, '\)', '_', '\*\*', '\*', '/', '%', '\+', '-', '<<', '>>', '&', '\^', '\|', ';', ',', '}', got '_'
@@ -34,22 +34,22 @@
 .../testfail.idl:29:22: Trying to find one of ...
 >  record EmptyRecord { }; // record is empty
 >                       ^
-.../testfail.idl:31:28: TypeError: redefining existing identifier: record
+.../testfail.idl:31:28: NameError: redefining existing identifier: record
 >  enum ExtensiveEnum { record, }; // keyword as enum value
 >                             ^
 .../testfail.idl:33:25: Trying to find one of ...
 >  enum ExtensiveEnum { Foo; }; // semicolon in enum
 >                          ^
-.../testfail.idl:35:35: TypeError: redefining existing identifier: EV1
+.../testfail.idl:35:35: NameError: redefining existing identifier: EV1
 >  enum ExtensiveEnum { EV1, EV2, EV1 }; // duplicate enum value
 >                                    ^
-.../testfail.idl:37:33: TypeError: redefining existing identifier: AA
+.../testfail.idl:37:33: NameError: redefining existing identifier: AA
 >  enum Enu1 { AA }; enum Enu2 { AA }; // duplicate enum value
 >                                  ^
-.../testfail.idl:39:35: TypeError: redefining existing identifier: Enu1
+.../testfail.idl:39:35: NameError: redefining existing identifier: Enu1
 >  enum Enu1 { AA }; enum Enu1 { BB }; // duplicate enum name
 >                                    ^
-.../testfail.idl:41:40: TypeError: redefining existing identifier: Var
+.../testfail.idl:41:40: NameError: redefining existing identifier: Var
 >  Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
 >                                         ^
 .../testfail.idl:43:26: Trying to find one of ...
@@ -64,13 +64,13 @@
 .../testfail.idl:49:45: TypeError: unknown type: '_S1'
 >  sequence S1 { bool b; }; sequence S2 { _S1 s; }; // need existing typenames
 >                                              ^
-.../testfail.idl:51:52: TypeError: redefining existing identifier: Dup
+.../testfail.idl:51:52: NameError: redefining existing identifier: Dup
 >  sequence Dup { bool b; }; sequence Dup { bool b; }; // duplicate definition
 >                                                     ^
-.../testfail.idl:57:17: TypeError: redefining existing identifier: class
+.../testfail.idl:57:17: NameError: redefining existing identifier: class
 >  Const class = 5; // keyword redefinition
 >                  ^
-.../testfail.idl:59:33: TypeError: redefining existing identifier: AA
+.../testfail.idl:59:33: NameError: redefining existing identifier: AA
 >  enum Enu1 { AA }; enum Enu1 { AA }; // type redefinition
 >                                  ^
 .../testfail.idl:67: invalid type definition: = Num ("x", "X coord", 0, 0, 100.0, 0.5, "ro")
@@ -95,7 +95,7 @@
 .../testfail.idl:75:32: TypeError: non-method invalidly declared as 'signal': xxx
 >  interface I { signal int32 xxx; }; // invalidly declared as signal
 >                                 ^
-.../testfail.idl:76:17: TypeError: redefining existing identifier: void
+.../testfail.idl:76:17: NameError: redefining existing identifier: void
 >  Const void = 17; // invalid constant name
 >                  ^
 .../testfail.idl:77:1: Trying to find one of ...
@@ -112,10 +112,10 @@
 >    ^
 .../include-f1.idl:1: note: included "include-f2.idl" from here
 .../testfail.idl:81: note: included "include-f1.idl" from here
-.../testfail.idl:83:57: TypeError: redefining existing identifier: E1
+.../testfail.idl:83:57: NameError: redefining existing identifier: E1
 >  namespace B { enum E { E1 }; } namespace B { enum E { E1 }; } // namespaced type redefinition
 >                                                          ^
-.../testfail.idl:85:71: TypeError: redefining existing identifier: E1
+.../testfail.idl:85:71: NameError: redefining existing identifier: E1
 >  ...espace B { enum E { E1 }; } namespace B { enum E { E1 }; } } // namespaced type redefinition
 >                                                          ^
 .../testfail.idl:87:40: NameError: invalid method arg name: method (...self...)
@@ -130,7 +130,7 @@
 .../testfail.idl:93:30: TypeError: unknown type: 'void'
 >  interface P { void void_prop; }; // invalid property type
 >                               ^
-.../testfail.idl:95:56: TypeError: redefining existing identifier: I
+.../testfail.idl:95:56: NameError: redefining existing identifier: I
 >  interface I; interface I {}; interface I; interface I {}; // interface redefinition
 >                                                         ^
 .../testfail.idl:97:15: AttributeError: invalid empty enumeration: Empty

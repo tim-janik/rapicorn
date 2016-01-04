@@ -358,7 +358,7 @@ def ASi (string_candidate): # assert i18n string
 def AIn (identifier):   # assert new identifier
   if (yy.namespace_lookup (identifier, astype = True, asconst = True, asnamespace = True, withusing = False) or
       (identifier in reservedkeywords)):
-    raise TypeError ('redefining existing identifier: %s' % identifier)
+    raise NameError ('redefining existing identifier: %s' % identifier)
 def AIi (identifier):   # assert interface identifier
   ti = yy.namespace_lookup (identifier, astype = True)
   if ti and ti.storage == Decls.INTERFACE:
