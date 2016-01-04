@@ -67,7 +67,7 @@ check: arrowsize-test
 # factory-test
 factory-test: $(srcdir)/factory-test.ref
 	$(Q) $(X11TEST_RAPIDRUN) -x --test-dump \
-	  --test-matched-node=".*" $(srcdir)/factory-test.xml > $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	  --test-matched-node=".*" $(srcdir)/factory-test.xml > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/factory-test.ref'" "'$(TSTOUT)'"
 EXTRA_DIST += factory-test.xml factory-test.ref
 check: factory-test
