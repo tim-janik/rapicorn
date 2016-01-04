@@ -118,12 +118,12 @@
 .../testfail.idl:85:71: NameError: redefining identifier: E1
 >  ...espace B { enum E { E1 }; } namespace B { enum E { E1 }; } } // namespaced type redefinition
 >                                                          ^
-.../testfail.idl:87:40: NameError: invalid method arg name: method (...self...)
+.../testfail.idl:87:35: NameError: expected identifier, not keyword: self
 >  interface I { int32 method (I self); }; // invalid method arg name
->                                         ^
-.../testfail.idl:89:29: NameError: invalid property name: self
+>                                    ^
+.../testfail.idl:89:25: NameError: expected identifier, not keyword: self
 >  interface I { int32 self; }; // invalid property name
->                              ^
+>                          ^
 .../testfail.idl:90:63: AttributeError: missing subsequent default initializer: method (...c...)
 >  ...I { int32 method (int32 a, int32 b = 2, int32 c); }; // missing subsequent default initializer
 >                                                         ^
@@ -166,6 +166,6 @@
 .../testfail.idl:110:45: Exception: Invalid enum value: 9223372036854775808
 >  enum TooBig { VALUE = +9223372036854775808 }; // number too large
 >                                              ^
-.../testfail.idl:112:26: NameError: invalid field name: type
+.../testfail.idl:112:22: NameError: expected identifier, not keyword: type
 >  record R { int32 type; }; // invalid field name
->                           ^
+>                       ^
