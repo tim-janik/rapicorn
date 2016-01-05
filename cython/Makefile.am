@@ -17,6 +17,10 @@ objdir       = .libs
 UPYTHON      = PYTHONPATH="$(abs_builddir)/${objdir}:$$PYTHONPATH" $(PYTHON)
 FPYTHON      = PYTHONPATH="$$PYTHONPATH:${pythondir}" $(PYTHON)
 
+# == PyxxStub.py ==
+aidaccpydir     = $(libdir)/rapicorn-@MAJOR@/aidacc
+aidaccpy_PYTHON = PyxxStub.py
+
 # Py Rapicorn - installation
 # pythondir = ${prefix}/lib/pythonX.Y/site-packages
 pymodulesdir		   = ${pythondir}/Rapicorn_@MAJOR@
@@ -26,7 +30,7 @@ nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	   = $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	   = $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
-EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rapicorn-core.pyx PyxxStub.py
+EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rapicorn-core.pyx
 CLEANFILES	          += Rapicorn.cc rapicorn-api.pyx
 
 Rapicorn.cc: Rapicorn.pyx Aida.pyx rapicorn-core.pyx rapicorn-api.pyx aidapyxxcallers.hh
