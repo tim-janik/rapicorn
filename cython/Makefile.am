@@ -21,6 +21,10 @@ FPYTHON      = PYTHONPATH="$$PYTHONPATH:${pythondir}" $(PYTHON)
 aidaccpydir     = $(libdir)/rapicorn-@MAJOR@/aidacc
 aidaccpy_PYTHON = PyxxStub.py
 
+# == pyxx includes ==
+pyxincludedir   = $(libdir)/rapicorn-@MAJOR@/pyxx
+pyxinclude_DATA = aidapyxxutils.hh aidapyxxcallers.hh Aida.pyx rapicorn-core.pyx rapicorn-api.pyx
+
 # Py Rapicorn - installation
 # pythondir = ${prefix}/lib/pythonX.Y/site-packages
 pymodulesdir		   = ${pythondir}/Rapicorn_@MAJOR@
