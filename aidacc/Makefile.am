@@ -27,8 +27,8 @@ EXTRA_DIST += Parser.g Parser.py
 MAINTAINERCLEANFILES += Parser.py
 
 # == Build Aida Executables ==
-CONFIGINT = "pyutilsdir" : "${abs_srcdir}",	"AIDA_VERSION" : "${VERSION}",	"INTERN" : 1
-CONFIGBIN = "pyutilsdir" : "${pyutilsdir}",	"AIDA_VERSION" : "${VERSION}"
+CONFIGINT = "aidaccpydir" : "${abs_srcdir}",	"AIDA_VERSION" : "${VERSION}",	"INTERN" : 1
+CONFIGBIN = "aidaccpydir" : "${aidaccpydir}",	"AIDA_VERSION" : "${VERSION}"
 ${AIDACC_INTERN}: plic.py Parser.py
 	$(AM_V_GEN)
 	$(Q) sed <$< >xgen-$(@F)			\
@@ -50,8 +50,8 @@ EXTRA_DIST += plic.py
 GPRINT      = @printf '  %-9s%s\n'
 
 # == Install aidacc Helper Modules ==
-pyutilsdir      = $(libdir)/rapicorn-@MAJOR@/aida
-pyutils_PYTHON  = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
+aidaccpydir     = $(libdir)/rapicorn-@MAJOR@/aida
+aidaccpy_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
 backendfiles    = PrettyDump.py TypeMap.py CxxStub.py ExtractDocs.py TmplFiles.py
 noinst_SCRIPTS += $(backendfiles)
 
