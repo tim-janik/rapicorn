@@ -50,7 +50,7 @@ EXTRA_DIST += plic.py
 GPRINT      = @printf '  %-9s%s\n'
 
 # == Install aidacc Helper Modules ==
-aidaccpydir     = $(libdir)/rapicorn-@MAJOR@/aida
+aidaccpydir     = $(libdir)/rapicorn-@MAJOR@/aidacc
 aidaccpy_PYTHON = Decls.py GenUtils.py Parser.py AuxData.py yapps2runtime.py ${backendfiles}
 backendfiles    = PrettyDump.py TypeMap.py CxxStub.py ExtractDocs.py TmplFiles.py
 noinst_SCRIPTS += $(backendfiles)
