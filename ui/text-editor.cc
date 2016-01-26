@@ -7,7 +7,7 @@ namespace Rapicorn {
 
 // == ParagraphState ==
 ParagraphState::ParagraphState() :
-  align (ALIGN_LEFT), ellipsize (ELLIPSIZE_END),
+  align (Align::LEFT), ellipsize (Ellipsize::END),
   line_spacing (1), indent (0),
   font_family ("Sans"), font_size (12)
 {}

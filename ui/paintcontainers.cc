@@ -13,14 +13,14 @@ AmbienceImpl::AmbienceImpl() :
   hover_background_ ("none"),
   active_background_ ("none"),
   insensitive_background_ ("none"),
-  normal_lighting_ (LIGHTING_UPPER_LEFT),
-  hover_lighting_ (LIGHTING_UPPER_LEFT),
-  active_lighting_ (LIGHTING_LOWER_RIGHT),
-  insensitive_lighting_ (LIGHTING_CENTER),
-  normal_shade_ (LIGHTING_UPPER_LEFT),
-  hover_shade_ (LIGHTING_UPPER_LEFT),
-  active_shade_ (LIGHTING_LOWER_RIGHT),
-  insensitive_shade_ (LIGHTING_CENTER)
+  normal_lighting_ (Lighting::UPPER_LEFT),
+  hover_lighting_ (Lighting::UPPER_LEFT),
+  active_lighting_ (Lighting::LOWER_RIGHT),
+  insensitive_lighting_ (Lighting::CENTER),
+  normal_shade_ (Lighting::UPPER_LEFT),
+  hover_shade_ (Lighting::UPPER_LEFT),
+  active_shade_ (Lighting::LOWER_RIGHT),
+  insensitive_shade_ (Lighting::CENTER)
 {}
 
 AmbienceImpl::~AmbienceImpl()
@@ -47,9 +47,9 @@ AmbienceImpl::lighting (Lighting sh)
 void
 AmbienceImpl::shade (Lighting sh)
 {
-  insensitive_shade (LIGHTING_NONE);
-  hover_shade (LIGHTING_NONE);
-  active_shade (LIGHTING_NONE);
+  insensitive_shade (Lighting::NONE);
+  hover_shade (Lighting::NONE);
+  active_shade (Lighting::NONE);
   normal_shade (sh);
 }
 
@@ -244,34 +244,36 @@ AmbienceImpl::render_shade (cairo_t *cairo, int x, int y, int width, int height,
 {
   int shade_alpha = 0x3b;
   Color light = light_glint().shade (shade_alpha), dark = dark_glint().shade (shade_alpha);
-  Lighting dark_flag = st & LIGHTING_DARK_FLAG;
+  uint64 dark_flag = uint64 (st) & Lighting::DARK_FLAG;
   CPainter painter (cairo);
-  if (dark_flag)
+  if (dark_flag != Lighting::NONE)
     swap (light, dark);
-  switch (st & ~LIGHTING_DARK_FLAG)
+  const Lighting lighting = Lighting (st & ~uint64 (Lighting::DARK_FLAG));
+  switch (lighting)
     {
-    case LIGHTING_UPPER_LEFT:
+    case Lighting::UPPER_LEFT:
       painter.draw_center_shade_rect (x, y, light, x + width - 1, y + height - 1, dark);
       break;
-    case LIGHTING_UPPER_RIGHT:
+    case Lighting::UPPER_RIGHT:
       painter.draw_center_shade_rect (x + width - 1, y, light, x, y + height - 1, dark);
       break;
-    case LIGHTING_LOWER_LEFT:
+    case Lighting::LOWER_LEFT:
       painter.draw_center_shade_rect (x, y + height - 1, light, x + width - 1, y, dark);
       break;
-    case LIGHTING_LOWER_RIGHT:
+    case Lighting::LOWER_RIGHT:
       painter.draw_center_shade_rect (x + width - 1, y + height - 1, light, x, y, dark);
       break;
-    case LIGHTING_CENTER:
-      render_shade (cairo, x, y, width / 2, height / 2, LIGHTING_UPPER_RIGHT | dark_flag);
-      render_shade (cairo, x, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_RIGHT | dark_flag);
-      render_shade (cairo, x + width / 2, y + height / 2, width / 2, height / 2, LIGHTING_LOWER_LEFT | dark_flag);
-      render_shade (cairo, x + width / 2, y, width / 2, height / 2, LIGHTING_UPPER_LEFT | dark_flag);
+    case Lighting::CENTER:
+      render_shade (cairo, x, y, width / 2, height / 2, Lighting (dark_flag | Lighting::UPPER_RIGHT));
+      render_shade (cairo, x, y + height / 2, width / 2, height / 2, Lighting (dark_flag | Lighting::LOWER_RIGHT));
+      render_shade (cairo, x + width / 2, y + height / 2, width / 2, height / 2, Lighting (dark_flag | Lighting::LOWER_LEFT));
+      render_shade (cairo, x + width / 2, y, width / 2, height / 2, Lighting (dark_flag | Lighting::UPPER_LEFT));
       break;
-    case LIGHTING_DIFFUSE:
+    case Lighting::DIFFUSE:
       painter.draw_shaded_rect (x, y, light, x + width - 1, y + height - 1, light);
       break;
-    case LIGHTING_NONE:
+    case Lighting::NONE:
+    default:
       break;
     }
 }
@@ -292,28 +294,28 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
     background_color = hover_background();
   else
     background_color = normal_background();
-  Color background = heritage()->resolve_color (background_color, STATE_NORMAL, COLOR_BACKGROUND);
+  Color background = heritage()->resolve_color (background_color, WidgetState::NORMAL, ColorType::BACKGROUND);
   cairo_t *cr = cairo_context (rcontext, rect);
   CPainter painter (cr);
   if (background)
     painter.draw_filled_rect (x, y, width, height, background);
   /* render lighting (mutually exclusive) */
-  if (aactive && active_lighting())
+  if (aactive && Lighting::NONE != active_lighting())
     render_shade (cr, x, y, width, height, active_lighting());
-  else if (insensitive() && insensitive_lighting())
+  else if (insensitive() && Lighting::NONE != insensitive_lighting())
     render_shade (cr, x, y, width, height, insensitive_lighting());
-  else if (ahover && hover_lighting())
+  else if (ahover && Lighting::NONE != hover_lighting())
     render_shade (cr, x, y, width, height, hover_lighting());
-  else if (normal_lighting() && !aactive && !insensitive() && !ahover)
+  else if (Lighting::NONE != normal_lighting() && !aactive && !insensitive() && !ahover)
     render_shade (cr, x, y, width, height, normal_lighting());
   /* render shade (combinatoric) */
-  if (aactive && active_shade())
+  if (aactive && Lighting::NONE != active_shade())
     render_shade (cr, x, y, width, height, active_shade());
-  if (insensitive() && insensitive_shade())
+  if (insensitive() && Lighting::NONE != insensitive_shade())
     render_shade (cr, x, y, width, height, insensitive_shade());
-  if (ahover && hover_shade())
+  if (ahover && Lighting::NONE != hover_shade())
     render_shade (cr, x, y, width, height, hover_shade());
-  if (!aactive && !insensitive() && !ahover && normal_shade())
+  if (!aactive && !insensitive() && !ahover && Lighting::NONE != normal_shade())
     render_shade (cr, x, y, width, height, normal_shade());
 }
 
@@ -321,8 +323,8 @@ static const WidgetFactory<AmbienceImpl> ambience_factory ("Rapicorn::Ambience")
 
 // == FrameImpl ==
 FrameImpl::FrameImpl() :
-  normal_frame_ (FRAME_ETCHED_IN),
-  active_frame_ (FRAME_ETCHED_IN),
+  normal_frame_ (DrawFrame::ETCHED_IN),
+  active_frame_ (DrawFrame::ETCHED_IN),
   overlap_child_ (false), tight_focus_ (false)
 {}
 
@@ -344,8 +346,8 @@ FrameImpl::tap_tight_focus (int onoffx)
 bool
 FrameImpl::is_tight_focus() const
 {
-  return tight_focus_ && ((normal_frame_ == FRAME_FOCUS || normal_frame_ == FRAME_NONE) &&
-                          (active_frame_ == FRAME_FOCUS || active_frame_ == FRAME_NONE));
+  return tight_focus_ && ((normal_frame_ == DrawFrame::FOCUS || normal_frame_ == DrawFrame::NONE) &&
+                          (active_frame_ == DrawFrame::FOCUS || active_frame_ == DrawFrame::NONE));
 }
 
 void
@@ -478,42 +480,42 @@ FrameImpl::render (RenderContext &rcontext, const Rect &rect)
       Color outer_lower_right;
       switch (current_frame())
         {
-        case FRAME_IN:
+        case DrawFrame::IN:
           outer_upper_left = dark_glint();
           inner_upper_left = dark_shadow();
           inner_lower_right = light_shadow();
           outer_lower_right = light_glint();
           break;
-        case FRAME_OUT:
+        case DrawFrame::OUT:
           outer_upper_left = light_shadow();
           inner_upper_left = light_glint();
           inner_lower_right = dark_glint();
           outer_lower_right = dark_shadow();
           break;
-        case FRAME_ETCHED_IN:
+        case DrawFrame::ETCHED_IN:
           outer_upper_left = dark_shadow();
           inner_upper_left = light_glint();
           inner_lower_right = dark_shadow();
           outer_lower_right = light_glint();
           break;
-        case FRAME_ETCHED_OUT:
+        case DrawFrame::ETCHED_OUT:
           outer_upper_left = light_glint();
           inner_upper_left = dark_shadow();
           inner_lower_right = light_glint();
           outer_lower_right = dark_shadow();
           break;
-        case FRAME_FOCUS:
+        case DrawFrame::FOCUS:
           if (is_tight_focus())
             border1 = focus_color();
           else
             border2 = focus_color();
           break;
-        case FRAME_ALERT_FOCUS:
+        case DrawFrame::ALERT_FOCUS:
           border1 = 0xff000000;
           border2 = 0xffff0000;
           break;
-        case FRAME_NONE:       /* no space to draw frame */
-        case FRAME_BACKGROUND: /* space available, but frame is invisible */
+        case DrawFrame::NONE:       /* no space to draw frame */
+        case DrawFrame::BACKGROUND: /* space available, but frame is invisible */
         default: ;
         }
       vector<double> dashes;
@@ -534,7 +536,7 @@ static const WidgetFactory<FrameImpl> frame_factory ("Rapicorn::Frame");
 
 // == FocusFrameImpl ==
 FocusFrameImpl::FocusFrameImpl() :
-  focus_container_ (NULL), container_has_focus_ (false), focus_frame_ (FRAME_FOCUS)
+  focus_container_ (NULL), container_has_focus_ (false), focus_frame_ (DrawFrame::FOCUS)
 {}
 
 FocusFrameImpl::~FocusFrameImpl ()
@@ -707,23 +709,23 @@ ElementPainterImpl::svg_element (const String &fragment)
   changed ("svg_source");
 }
 
-static const uint64 BROKEN = 0x80000000;
+static const WidgetState BROKEN = WidgetState (0x80000000);
 
-static uint64
+static WidgetState
 single_state_score (const String &state_string)
 {
   switch (fnv1a_consthash64 (state_string.c_str()))
     {
-    case fnv1a_consthash64 ("normal"):          return STATE_NORMAL;
-    case fnv1a_consthash64 ("hover"):           return STATE_HOVER;
-    case fnv1a_consthash64 ("panel"):           return STATE_PANEL;
-    case fnv1a_consthash64 ("acceleratable"):   return STATE_ACCELERATABLE;
-    case fnv1a_consthash64 ("default"):         return STATE_DEFAULT;
-    case fnv1a_consthash64 ("selected"):        return STATE_SELECTED;
-    case fnv1a_consthash64 ("focused"):         return STATE_FOCUSED;
-    case fnv1a_consthash64 ("insensitive"):     return STATE_INSENSITIVE;
-    case fnv1a_consthash64 ("active"):          return STATE_ACTIVE;
-    case fnv1a_consthash64 ("retained"):        return STATE_RETAINED;
+    case fnv1a_consthash64 ("normal"):          return WidgetState::NORMAL;
+    case fnv1a_consthash64 ("hover"):           return WidgetState::HOVER;
+    case fnv1a_consthash64 ("panel"):           return WidgetState::PANEL;
+    case fnv1a_consthash64 ("acceleratable"):   return WidgetState::ACCELERATABLE;
+    case fnv1a_consthash64 ("default"):         return WidgetState::DEFAULT;
+    case fnv1a_consthash64 ("selected"):        return WidgetState::SELECTED;
+    case fnv1a_consthash64 ("focused"):         return WidgetState::FOCUSED;
+    case fnv1a_consthash64 ("insensitive"):     return WidgetState::INSENSITIVE;
+    case fnv1a_consthash64 ("active"):          return WidgetState::ACTIVE;
+    case fnv1a_consthash64 ("retained"):        return WidgetState::RETAINED;
     default:                                    return BROKEN;
     }
 }
@@ -734,8 +736,8 @@ state_score (const String &state_string)
   StringVector sv = string_split (state_string, "+");
   uint64 r = 0;
   for (const String &s : sv)
-    r |= single_state_score (s);
-  return r >= BROKEN ? 0 : r;
+    r |= uint64 (single_state_score (s));
+  return r >= uint64 (BROKEN) ? 0 : r;
 }
 
 String
@@ -770,7 +772,7 @@ ElementPainterImpl::element_state () const
 {
   WidgetState mystate = state();
   if (ancestry_active())
-    mystate |= STATE_ACTIVE;
+    mystate = WidgetState (uint64 (mystate) | WidgetState::ACTIVE);
   return mystate;
 }
 
@@ -789,7 +791,7 @@ ElementPainterImpl::size_request (Requisition &requisition)
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
   if (!size_painter_)
-    size_painter_ = ImagePainter (state_element (STATE_NORMAL));
+    size_painter_ = ImagePainter (state_element (WidgetState::NORMAL));
   const Requisition image_size = size_painter_.image_size ();
   const Rect fill = size_painter_.fill_area();
   assert_return (fill.x + fill.width <= image_size.width);
@@ -914,7 +916,7 @@ FocusPainterImpl::element_state () const
   in_focus = in_focus || (focus_container_ && focus_container_->get_focus_child() != NULL);
   WidgetState mystate = ElementPainterImpl::element_state();
   if (in_focus)
-    mystate |= STATE_FOCUSED;
+    mystate = WidgetState (uint64 (mystate) | WidgetState::FOCUSED);
   return mystate;
 }
 

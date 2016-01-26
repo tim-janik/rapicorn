@@ -295,13 +295,13 @@ DisplayWindowX11::create_window (const DisplayWindow::Setup &setup, const Displa
   assert_return (!window_ && !expose_surface_);
   state_.window_type = setup.window_type;
   update_state (state_);
-  override_redirect_ = (setup.window_type == WINDOW_TYPE_DESKTOP ||
-                         setup.window_type == WINDOW_TYPE_DROPDOWN_MENU ||
-                         setup.window_type == WINDOW_TYPE_POPUP_MENU ||
-                         setup.window_type == WINDOW_TYPE_TOOLTIP ||
-                         setup.window_type == WINDOW_TYPE_NOTIFICATION ||
-                         setup.window_type == WINDOW_TYPE_COMBO ||
-                         setup.window_type == WINDOW_TYPE_DND);
+  override_redirect_ = (setup.window_type == WindowType::DESKTOP ||
+                         setup.window_type == WindowType::DROPDOWN_MENU ||
+                         setup.window_type == WindowType::POPUP_MENU ||
+                         setup.window_type == WindowType::TOOLTIP ||
+                         setup.window_type == WindowType::NOTIFICATION ||
+                         setup.window_type == WindowType::COMBO ||
+                         setup.window_type == WindowType::DND);
   XSetWindowAttributes attributes;
   attributes.event_mask        = ExposureMask | StructureNotifyMask | SubstructureNotifyMask | VisibilityChangeMask | PropertyChangeMask |
                                  FocusChangeMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | PointerMotionHintMask |
@@ -1063,21 +1063,21 @@ window_type_atom_name (WindowType window_type)
 {
   switch (window_type)
     {
-    case WINDOW_TYPE_DESKTOP:   	return "_NET_WM_WINDOW_TYPE_DESKTOP";
-    case WINDOW_TYPE_DOCK:      	return "_NET_WM_WINDOW_TYPE_DOCK";
-    case WINDOW_TYPE_TOOLBAR:   	return "_NET_WM_WINDOW_TYPE_TOOLBAR";
-    case WINDOW_TYPE_MENU:      	return "_NET_WM_WINDOW_TYPE_MENU";
-    case WINDOW_TYPE_UTILITY:   	return "_NET_WM_WINDOW_TYPE_UTILITY";
-    case WINDOW_TYPE_SPLASH:    	return "_NET_WM_WINDOW_TYPE_SPLASH";
-    case WINDOW_TYPE_DIALOG:    	return "_NET_WM_WINDOW_TYPE_DIALOG";
-    case WINDOW_TYPE_DROPDOWN_MENU:	return "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU";
-    case WINDOW_TYPE_POPUP_MENU:	return "_NET_WM_WINDOW_TYPE_POPUP_MENU";
-    case WINDOW_TYPE_TOOLTIP:	        return "_NET_WM_WINDOW_TYPE_TOOLTIP";
-    case WINDOW_TYPE_NOTIFICATION:	return "_NET_WM_WINDOW_TYPE_NOTIFICATION";
-    case WINDOW_TYPE_COMBO:	        return "_NET_WM_WINDOW_TYPE_COMBO";
-    case WINDOW_TYPE_DND:       	return "_NET_WM_WINDOW_TYPE_DND";
+    case WindowType::DESKTOP:   	return "_NET_WM_WINDOW_TYPE_DESKTOP";
+    case WindowType::DOCK:      	return "_NET_WM_WINDOW_TYPE_DOCK";
+    case WindowType::TOOLBAR:   	return "_NET_WM_WINDOW_TYPE_TOOLBAR";
+    case WindowType::MENU:      	return "_NET_WM_WINDOW_TYPE_MENU";
+    case WindowType::UTILITY:   	return "_NET_WM_WINDOW_TYPE_UTILITY";
+    case WindowType::SPLASH:    	return "_NET_WM_WINDOW_TYPE_SPLASH";
+    case WindowType::DIALOG:    	return "_NET_WM_WINDOW_TYPE_DIALOG";
+    case WindowType::DROPDOWN_MENU:	return "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU";
+    case WindowType::POPUP_MENU:	return "_NET_WM_WINDOW_TYPE_POPUP_MENU";
+    case WindowType::TOOLTIP:	        return "_NET_WM_WINDOW_TYPE_TOOLTIP";
+    case WindowType::NOTIFICATION:	return "_NET_WM_WINDOW_TYPE_NOTIFICATION";
+    case WindowType::COMBO:	        return "_NET_WM_WINDOW_TYPE_COMBO";
+    case WindowType::DND:       	return "_NET_WM_WINDOW_TYPE_DND";
     default: ;
-    case WINDOW_TYPE_NORMAL:	        return "_NET_WM_WINDOW_TYPE_NORMAL";
+    case WindowType::NORMAL:	        return "_NET_WM_WINDOW_TYPE_NORMAL";
     }
 }
 

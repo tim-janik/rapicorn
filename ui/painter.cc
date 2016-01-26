@@ -123,25 +123,25 @@ CPainter::draw_dir_arrow (double x, double y, double width, double height, Color
   double xhalf = width / 2., yhalf = height / 2.;
   switch (dir)
     {
-    case DIR_RIGHT:
+    case Direction::RIGHT:
       cairo_move_to (cr, x + width, y + yhalf);
       cairo_rel_line_to (cr, -width, +yhalf);
       cairo_rel_line_to (cr, 0, -height);
       cairo_close_path (cr);
       break;
-    case DIR_DOWN:
+    case Direction::DOWN:
       cairo_move_to (cr, x, y);
       cairo_rel_line_to (cr, +width, 0);
       cairo_rel_line_to (cr, -xhalf, height);
       cairo_close_path (cr);
       break;
-    case DIR_LEFT:
+    case Direction::LEFT:
       cairo_move_to (cr, x, y + yhalf);
       cairo_rel_line_to (cr, +width, -yhalf);
       cairo_rel_line_to (cr, 0, +height);
       cairo_close_path (cr);
       break;
-    case DIR_UP:
+    case Direction::UP:
       cairo_move_to (cr, x + width, y + height);
       cairo_rel_line_to (cr, -width, 0);
       cairo_rel_line_to (cr, +xhalf, -height);

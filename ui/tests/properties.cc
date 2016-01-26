@@ -31,9 +31,9 @@ class PropertyHost {
   void          string_prop (const String &v)      	{}
   String        const_string_prop () const   		{ return ""; }
   void          const_string_prop (const String &v) 	{}
-  DrawFrame     enum_prop () const              	{ return FRAME_NONE; }
+  DrawFrame     enum_prop () const              	{ return DrawFrame::NONE; }
   void          enum_prop (DrawFrame ft)        	{}
-  DrawFrame     const_enum_prop () const        	{ return FRAME_NONE; }
+  DrawFrame     const_enum_prop () const        	{ return DrawFrame::NONE; }
   void          const_enum_prop (DrawFrame ft)  	{}
 public:
   virtual      ~PropertyHost () {}

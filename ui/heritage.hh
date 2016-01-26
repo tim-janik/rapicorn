@@ -26,30 +26,30 @@ public:
   // colors
   Color         get_color       (WidgetState state,
                                  ColorType ct) const;
-  Color         foreground      (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_FOREGROUND); }
-  Color         background      (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_BACKGROUND); }
-  Color         background_even (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_BACKGROUND_EVEN); }
-  Color         background_odd  (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_BACKGROUND_ODD); }
-  Color         dark_color      (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_DARK); }
-  Color         dark_shadow     (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_DARK_SHADOW); }
-  Color         dark_glint      (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_DARK_GLINT); }
-  Color         light_color     (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_LIGHT); }
-  Color         light_shadow    (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_LIGHT_SHADOW); }
-  Color         light_glint     (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_LIGHT_GLINT); }
-  Color         focus_color     (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_FOCUS); }
-  Color         black           (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_BLACK); }
-  Color         white           (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_WHITE); }
-  Color         red             (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_RED); }
-  Color         yellow          (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_YELLOW); }
-  Color         green           (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_GREEN); }
-  Color         cyan            (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_CYAN); }
-  Color         blue            (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_BLUE); }
-  Color         magenta         (WidgetState st = STATE_NORMAL) const { return get_color (st, COLOR_MAGENTA); }
-  Color         insensitive_ink (WidgetState st = STATE_NORMAL, Color *glint = NULL) const;
+  Color         foreground      (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::FOREGROUND); }
+  Color         background      (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::BACKGROUND); }
+  Color         background_even (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::BACKGROUND_EVEN); }
+  Color         background_odd  (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::BACKGROUND_ODD); }
+  Color         dark_color      (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::DARK); }
+  Color         dark_shadow     (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::DARK_SHADOW); }
+  Color         dark_glint      (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::DARK_GLINT); }
+  Color         light_color     (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::LIGHT); }
+  Color         light_shadow    (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::LIGHT_SHADOW); }
+  Color         light_glint     (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::LIGHT_GLINT); }
+  Color         focus_color     (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::FOCUS); }
+  Color         black           (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::BLACK); }
+  Color         white           (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::WHITE); }
+  Color         red             (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::RED); }
+  Color         yellow          (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::YELLOW); }
+  Color         green           (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::GREEN); }
+  Color         cyan            (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::CYAN); }
+  Color         blue            (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::BLUE); }
+  Color         magenta         (WidgetState st = WidgetState::NORMAL) const { return get_color (st, ColorType::MAGENTA); }
+  Color         insensitive_ink (WidgetState st = WidgetState::NORMAL, Color *glint = NULL) const;
   // variants
   Heritage&     selected        ();
   // parsing
-  Color         resolve_color   (const String &color_name, WidgetState state, ColorType color_type = COLOR_NONE);
+  Color         resolve_color   (const String &color_name, WidgetState state, ColorType color_type = ColorType::NONE);
 };
 typedef Heritage::HeritageP HeritageP;
 

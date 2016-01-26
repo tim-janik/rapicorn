@@ -119,15 +119,15 @@ Rect::anchor_point (Anchor anchor)
   switch (anchor)
     {
     default:
-    case ANCHOR_CENTER:       return center();        break;
-    case ANCHOR_NORTH:        return north();         break;
-    case ANCHOR_NORTH_EAST:   return north_east();    break;
-    case ANCHOR_EAST:         return east();          break;
-    case ANCHOR_SOUTH_EAST:   return south_east();    break;
-    case ANCHOR_SOUTH:        return south();         break;
-    case ANCHOR_SOUTH_WEST:   return south_west();    break;
-    case ANCHOR_WEST:         return west();          break;
-    case ANCHOR_NORTH_WEST:   return north_west();    break;
+    case Anchor::CENTER:        return center();        break;
+    case Anchor::NORTH:         return north();         break;
+    case Anchor::NORTH_EAST:    return north_east();    break;
+    case Anchor::EAST:          return east();          break;
+    case Anchor::SOUTH_EAST:    return south_east();    break;
+    case Anchor::SOUTH:         return south();         break;
+    case Anchor::SOUTH_WEST:    return south_west();    break;
+    case Anchor::WEST:          return west();          break;
+    case Anchor::NORTH_WEST:    return north_west();    break;
     }
 }
 

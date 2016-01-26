@@ -131,7 +131,7 @@ bool
 WidgetImpl::change_flags_silently (uint64 mask, bool on)
 {
   const uint64 old_flags = flags_;
-  assert_return (mask != STATE_NORMAL, 0);
+  assert_return (mask != WidgetState::NORMAL, 0);
   if (old_flags & CONSTRUCTED)
     {
       // refuse to change constant flags
@@ -169,9 +169,9 @@ void
 WidgetImpl::set_flag (uint64 flag, bool on)
 {
   assert ((flag & (flag - 1)) == 0); // single bit check
-  const uint64 propagate_flag_mask = VISIBLE | STATE_INSENSITIVE | UNVIEWABLE |
+  const uint64 propagate_flag_mask = VISIBLE | uint64 (WidgetState::INSENSITIVE) | UNVIEWABLE |
                                      PARENT_INSENSITIVE | PARENT_UNVIEWABLE |
-                                     STATE_HOVER | STATE_ACTIVE | HAS_DEFAULT;
+                                     WidgetState::HOVER | WidgetState::ACTIVE | HAS_DEFAULT;
   const uint64 repack_flag_mask = HSHRINK | VSHRINK | HEXPAND | VEXPAND |
                                   HSPREAD | VSPREAD | HSPREAD_CONTAINER | VSPREAD_CONTAINER |
                                   VISIBLE | UNVIEWABLE | PARENT_UNVIEWABLE;
@@ -202,18 +202,18 @@ WidgetImpl::grab_default () const
 WidgetState
 WidgetImpl::state () const
 {
-  constexpr WidgetState z0 = WidgetState (0); // STATE_NORMAL
-  WidgetState st = z0;
-  st |= hover()       ? STATE_HOVER : z0;
-  // STATE_PANEL
-  // STATE_ACCELERATABLE
-  st |= has_default() ? STATE_DEFAULT : z0;
-  st |= insensitive() ? STATE_INSENSITIVE : z0;
-  // STATE_SELECTED
-  st |= has_focus()   ? STATE_FOCUSED : z0;
-  st |= active()      ? STATE_ACTIVE : z0;
-  // STATE_RETAINED
-  return st;
+  constexpr WidgetState s0 = WidgetState (0); // WidgetState::NORMAL
+  uint64 state = 0;
+  state = state | (hover()       ? WidgetState::HOVER : s0);
+  // WidgetState::PANEL
+  // WidgetState::ACCELERATABLE
+  state = state | (has_default() ? WidgetState::DEFAULT : s0);
+  state = state | (insensitive() ? WidgetState::INSENSITIVE : s0);
+  // WidgetState::SELECTED
+  state = state | (has_focus()   ? WidgetState::FOCUSED : s0);
+  state = state | (active()      ? WidgetState::ACTIVE : s0);
+  // WidgetState::RETAINED
+  return WidgetState (state);
 }
 
 bool
@@ -243,7 +243,7 @@ WidgetImpl::focusable () const
 bool
 WidgetImpl::has_focus () const
 {
-  if (test_any_flag (STATE_FOCUSED))
+  if (test_any_flag (uint64 (WidgetState::FOCUSED)))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -255,7 +255,7 @@ WidgetImpl::has_focus () const
 void
 WidgetImpl::unset_focus ()
 {
-  if (test_any_flag (STATE_FOCUSED))
+  if (test_any_flag (uint64 (WidgetState::FOCUSED)))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -1820,7 +1820,7 @@ WidgetImpl::color_scheme (ColorScheme cst)
 {
   if (cst != get_data (&widget_color_scheme_key))
     {
-      if (!cst)
+      if (cst == 0)
         delete_data (&widget_color_scheme_key);
       else
         set_data (&widget_color_scheme_key, cst);

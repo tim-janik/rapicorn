@@ -18,18 +18,18 @@ class StyleImpl : public std::enable_shared_from_this<StyleImpl> {
   explicit      StyleImpl       (ThemeInfoP theme_info);
   friend        class FriendAllocator<StyleImpl>; // allows make_shared() access to ctor/dtor
 public:
-  enum ColorType { FOREGROUND = 1, BACKGROUND, DARK, DARK_SHADOW, DARK_GLINT, LIGHT, LIGHT_SHADOW, LIGHT_GLINT, FOCUS_FG, FOCUS_BG };
+  enum StyleColor { FOREGROUND = 1, BACKGROUND, DARK, DARK_SHADOW, DARK_GLINT, LIGHT, LIGHT_SHADOW, LIGHT_GLINT, FOCUS_FG, FOCUS_BG };
   Color         theme_color     (double hue360, double saturation100, double brightness100, const String &detail = "");
-  Color         state_color     (WidgetState state, ColorType color_type, const String &detail = "");
-  Color         foreground      (WidgetState state) { return state_color (state, FOREGROUND); }
-  Color         background      (WidgetState state) { return state_color (state, BACKGROUND); }
-  Color         dark_color      (WidgetState state) { return state_color (state, DARK); }
-  Color         dark_shadow     (WidgetState state) { return state_color (state, DARK_SHADOW); }
-  Color         dark_glint      (WidgetState state) { return state_color (state, DARK_GLINT); }
-  Color         light_color     (WidgetState state) { return state_color (state, LIGHT); }
-  Color         light_shadow    (WidgetState state) { return state_color (state, LIGHT_SHADOW); }
-  Color         light_glint     (WidgetState state) { return state_color (state, LIGHT_GLINT); }
-  Color         focus_color     (WidgetState state) { return state_color (state, FOCUS_FG); }
+  Color         style_color     (WidgetState state, StyleColor color_type, const String &detail = "");
+  Color         foreground      (WidgetState state) { return style_color (state, FOREGROUND); }
+  Color         background      (WidgetState state) { return style_color (state, BACKGROUND); }
+  Color         dark_color      (WidgetState state) { return style_color (state, DARK); }
+  Color         dark_shadow     (WidgetState state) { return style_color (state, DARK_SHADOW); }
+  Color         dark_glint      (WidgetState state) { return style_color (state, DARK_GLINT); }
+  Color         light_color     (WidgetState state) { return style_color (state, LIGHT); }
+  Color         light_shadow    (WidgetState state) { return style_color (state, LIGHT_SHADOW); }
+  Color         light_glint     (WidgetState state) { return style_color (state, LIGHT_GLINT); }
+  Color         focus_color     (WidgetState state) { return style_color (state, FOCUS_FG); }
   static StyleImplP  create     (ThemeInfoP theme_info);
 };
 

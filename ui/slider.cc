@@ -11,7 +11,7 @@ class SliderSkidImpl;
 // == SliderAreaImpl ==
 SliderAreaImpl::SliderAreaImpl() :
   adjustment_ (NULL), avc_id_ (0), arc_id_ (0),
-  adjustment_source_ (ADJUSTMENT_SOURCE_NONE),
+  adjustment_source_ (AdjustmentSourceType::NONE),
   flip_ (false),
   sig_slider_changed (Aida::slot (*this, &SliderAreaImpl::slider_changed))
 {
@@ -79,7 +79,7 @@ void
 SliderAreaImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
   this->TableLayoutImpl::hierarchy_changed (old_toplevel);
-  if (anchored() && adjustment_source_ != ADJUSTMENT_SOURCE_NONE)
+  if (anchored() && adjustment_source_ != AdjustmentSourceType::NONE)
     {
       Adjustment *adj = NULL;
       find_adjustments (adjustment_source_, &adj);

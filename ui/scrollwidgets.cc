@@ -31,9 +31,9 @@ ScrollAreaImpl::get_adjustment (AdjustmentSourceType adj_source, const String &n
 {
   switch (adj_source)
     {
-    case ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL:
+    case AdjustmentSourceType::ANCESTRY_HORIZONTAL:
       return &hadjustment();
-    case ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL:
+    case AdjustmentSourceType::ANCESTRY_VERTICAL:
       return &vadjustment();
     default:
       return NULL;
@@ -86,8 +86,8 @@ ScrollPortImpl::hierarchy_changed (WidgetImpl *old_toplevel)
   this->ViewportImpl::hierarchy_changed (old_toplevel);
   if (anchored())
     {
-      find_adjustments (ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL, &hadjustment_,
-                        ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL, &vadjustment_);
+      find_adjustments (AdjustmentSourceType::ANCESTRY_HORIZONTAL, &hadjustment_,
+                        AdjustmentSourceType::ANCESTRY_VERTICAL, &vadjustment_);
       if (hadjustment_)
         conid_hadjustment_ = hadjustment_->sig_value_changed() += Aida::slot (*this, &ScrollPortImpl::adjustment_changed);
       if (vadjustment_)

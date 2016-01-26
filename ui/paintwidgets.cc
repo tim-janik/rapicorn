@@ -13,7 +13,7 @@ namespace Rapicorn {
 
 // == ArrowImpl ==
 ArrowImpl::ArrowImpl() :
-  dir_ (DIR_RIGHT)
+  dir_ (Direction::RIGHT)
 {}
 
 ArrowImpl::~ArrowImpl()
@@ -45,7 +45,7 @@ ArrowImpl::size_policy () const
 void
 ArrowImpl::size_policy (SizePolicy spol)
 {
-  if (!spol)
+  if (spol == 0)
     delete_data (&size_policy_key);
   else
     set_data (&size_policy_key, spol);
@@ -64,9 +64,9 @@ void
 ArrowImpl::size_allocate (Allocation area, bool changed)
 {
   SizePolicy spol = size_policy();
-  if (spol == SIZE_POLICY_WIDTH_FROM_HEIGHT)
+  if (spol == SizePolicy::WIDTH_FROM_HEIGHT)
     tune_requisition (area.height, -1);
-  else if (spol == SIZE_POLICY_HEIGHT_FROM_WIDTH)
+  else if (spol == SizePolicy::HEIGHT_FROM_WIDTH)
     tune_requisition (-1, area.width);
 }
 
@@ -87,8 +87,8 @@ static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn::Arrow");
 
 // == DotGrid ==
 DotGridImpl::DotGridImpl() :
-  normal_dot_ (FRAME_IN),
-  active_dot_ (FRAME_IN),
+  normal_dot_ (DrawFrame::IN),
+  active_dot_ (DrawFrame::IN),
   n_hdots_ (1), n_vdots_ (1),
   right_padding_dots_ (0), top_padding_dots_ (0),
   left_padding_dots_ (0), bottom_padding_dots_ (0)

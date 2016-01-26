@@ -53,18 +53,18 @@ StyleImpl::theme_color (double hue360, double saturation100, double brightness10
 }
 
 Color
-StyleImpl::state_color (WidgetState state, ColorType color_type, const String &detail)
+StyleImpl::style_color (WidgetState state, StyleColor color_type, const String &detail)
 {
   switch (color_type)
     {
     case FOREGROUND:    return theme_info_->fragment_color ("#fg", state);
     case BACKGROUND:    return theme_info_->fragment_color ("#bg", state);
     case DARK:          return 0xff9f9c98;
-    case DARK_SHADOW:   return adjust_color (state_color (state, DARK, detail), 1, 0.9); // 0xff8f8c88
-    case DARK_GLINT:    return adjust_color (state_color (state, DARK, detail), 1, 1.1); // 0xffafaca8
+    case DARK_SHADOW:   return adjust_color (style_color (state, DARK, detail), 1, 0.9); // 0xff8f8c88
+    case DARK_GLINT:    return adjust_color (style_color (state, DARK, detail), 1, 1.1); // 0xffafaca8
     case LIGHT:         return 0xffdfdcd8;
-    case LIGHT_SHADOW:  return adjust_color (state_color (state, LIGHT, detail), 1, 0.93); // 0xffcfccc8
-    case LIGHT_GLINT:   return adjust_color (state_color (state, LIGHT, detail), 1, 1.07); // 0xffefece8
+    case LIGHT_SHADOW:  return adjust_color (style_color (state, LIGHT, detail), 1, 0.93); // 0xffcfccc8
+    case LIGHT_GLINT:   return adjust_color (style_color (state, LIGHT, detail), 1, 1.07); // 0xffefece8
     case FOCUS_FG:      return 0xff000060;
     case FOCUS_BG:      return 0xff000060;
     default:            return 0x00000000; // silence warnings

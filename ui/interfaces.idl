@@ -14,178 +14,179 @@ Const MAXFLOAT64 = 1.7976931348623157e+308;
 
 /// Enum used to specify how adjustments are picked from Widget ancestry.
 enum AdjustmentSourceType {
-  ADJUSTMENT_SOURCE_NONE = 0,
-  ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL,
-  ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL,
-  ADJUSTMENT_SOURCE_ANCESTRY_VALUE
+  NONE = 0,
+  ANCESTRY_HORIZONTAL,
+  ANCESTRY_VERTICAL,
+  ANCESTRY_VALUE
 };
 
 /// Enum generally used for text paragraph alignments.
 enum Align  {
-  ALIGN_LEFT = 1,
-  ALIGN_CENTER,
-  ALIGN_RIGHT,
+  LEFT = 1,
+  CENTER,
+  RIGHT,
 };
 
 /// Enum to specify an anchoring point for graphical elements.
 enum Anchor {
-  ANCHOR_NONE = 0,
-  ANCHOR_CENTER,
-  ANCHOR_EAST,
-  ANCHOR_NORTH_EAST,
-  ANCHOR_NORTH,
-  ANCHOR_NORTH_WEST,
-  ANCHOR_WEST,
-  ANCHOR_SOUTH_WEST,
-  ANCHOR_SOUTH,
-  ANCHOR_SOUTH_EAST,
+  NONE = 0,
+  CENTER,
+  EAST,
+  NORTH_EAST,
+  NORTH,
+  NORTH_WEST,
+  WEST,
+  SOUTH_WEST,
+  SOUTH,
+  SOUTH_EAST,
 };
 
 /// Enum to specify button click behaviour.
 enum Click {
-  CLICK_ON_PRESS = 1,
-  CLICK_ON_RELEASE,
-  CLICK_SLOW_REPEAT,
-  CLICK_FAST_REPEAT,
-  CLICK_KEY_REPEAT,
+  ON_PRESS = 1,
+  ON_RELEASE,
+  SLOW_REPEAT,
+  FAST_REPEAT,
+  KEY_REPEAT,
 };
 
 /// Enum used to index various predefined colors.
 enum ColorType {
-  COLOR_NONE = 0,
-  COLOR_FOREGROUND,
-  COLOR_BACKGROUND,
-  COLOR_BACKGROUND_EVEN,
-  COLOR_BACKGROUND_ODD,
-  COLOR_DARK,
-  COLOR_DARK_SHADOW,
-  COLOR_DARK_GLINT,
-  COLOR_LIGHT,
-  COLOR_LIGHT_SHADOW,
-  COLOR_LIGHT_GLINT,
-  COLOR_FOCUS,
-  COLOR_BLACK,
-  COLOR_WHITE,
-  COLOR_RED,
-  COLOR_YELLOW,
-  COLOR_GREEN,
-  COLOR_CYAN,
-  COLOR_BLUE,
-  COLOR_MAGENTA,
+  NONE = 0,
+  FOREGROUND,
+  BACKGROUND,
+  BACKGROUND_EVEN,
+  BACKGROUND_ODD,
+  DARK,
+  DARK_SHADOW,
+  DARK_GLINT,
+  LIGHT,
+  LIGHT_SHADOW,
+  LIGHT_GLINT,
+  FOCUS,
+  BLACK,
+  WHITE,
+  RED,
+  YELLOW,
+  GREEN,
+  CYAN,
+  BLUE,
+  MAGENTA,
 };
 
 /// Enum used to specify the color schemes of a Widget.
 enum ColorScheme {
-  COLOR_INHERIT = 0,    ///< Inherit color from parent component
-  COLOR_NORMAL,         ///< Normal color specification
-  COLOR_SELECTED,       ///< Color used for selected areas
-  COLOR_BASE,           ///< Color used for text or scroll fields
+  INHERIT = 0,    ///< Inherit color from parent component
+  NORMAL,         ///< Normal color specification
+  SELECTED,       ///< Color used for selected areas
+  BASE,           ///< Color used for text or scroll fields
 };
 
 /// Enum type for directional elements like arrows.
 enum Direction {
-  DIR_NONE = 0,
-  DIR_RIGHT,
-  DIR_UP,
-  DIR_LEFT,
-  DIR_DOWN,
+  NONE = 0,
+  RIGHT,
+  UP,
+  LEFT,
+  DOWN,
 };
 
 /// Enum type for text ellipsization.
 enum Ellipsize {
-  ELLIPSIZE_START = 1,
-  ELLIPSIZE_MIDDLE,
-  ELLIPSIZE_END
+  START = 1,
+  MIDDLE,
+  END
 };
 
 /// Enum values used to navigate the focus chain.
 enum FocusDir {
-  FOCUS_NEXT = 1,
-  FOCUS_PREV,
-  FOCUS_RIGHT,
-  FOCUS_UP,
-  FOCUS_LEFT,
-  FOCUS_DOWN
+  NONE = 0,
+  NEXT,
+  PREV,
+  RIGHT,
+  UP,
+  LEFT,
+  DOWN
 };
 
 /// Enum type to discriminate various Frame widget types.
 enum DrawFrame {
-  FRAME_NONE = 0,
-  FRAME_BACKGROUND,
-  FRAME_IN,
-  FRAME_OUT,
-  FRAME_ETCHED_IN,
-  FRAME_ETCHED_OUT,
-  FRAME_FOCUS,
-  FRAME_ALERT_FOCUS,
+  NONE = 0,
+  BACKGROUND,
+  IN,
+  OUT,
+  ETCHED_IN,
+  ETCHED_OUT,
+  FOCUS,
+  ALERT_FOCUS,
 };
 
 /// Enum with various lighting types.
 flags enum Lighting {
-  LIGHTING_NONE = 0,
-  LIGHTING_UPPER_LEFT,
-  LIGHTING_UPPER_RIGHT,
-  LIGHTING_LOWER_LEFT,
-  LIGHTING_LOWER_RIGHT,
-  LIGHTING_CENTER,
-  LIGHTING_DIFFUSE,
-  LIGHTING_DARK_FLAG         = 0x80,
-  LIGHTING_DARK_UPPER_LEFT   = LIGHTING_DARK_FLAG | LIGHTING_UPPER_LEFT,
-  LIGHTING_DARK_UPPER_RIGHT  = LIGHTING_DARK_FLAG | LIGHTING_UPPER_RIGHT,
-  LIGHTING_DARK_LOWER_LEFT   = LIGHTING_DARK_FLAG | LIGHTING_LOWER_LEFT,
-  LIGHTING_DARK_LOWER_RIGHT  = LIGHTING_DARK_FLAG | LIGHTING_LOWER_RIGHT,
-  LIGHTING_DARK_CENTER       = LIGHTING_DARK_FLAG | LIGHTING_CENTER,
-  LIGHTING_DARK_DIFFUSE      = LIGHTING_DARK_FLAG | LIGHTING_DIFFUSE,
+  NONE = 0,
+  UPPER_LEFT,
+  UPPER_RIGHT,
+  LOWER_LEFT,
+  LOWER_RIGHT,
+  CENTER,
+  DIFFUSE,
+  DARK_FLAG         = 0x80,
+  DARK_UPPER_LEFT   = DARK_FLAG | UPPER_LEFT,
+  DARK_UPPER_RIGHT  = DARK_FLAG | UPPER_RIGHT,
+  DARK_LOWER_LEFT   = DARK_FLAG | LOWER_LEFT,
+  DARK_LOWER_RIGHT  = DARK_FLAG | LOWER_RIGHT,
+  DARK_CENTER       = DARK_FLAG | CENTER,
+  DARK_DIFFUSE      = DARK_FLAG | DIFFUSE,
 };
 
 /// Enum type for list widget selection behaviour.
 enum SelectionMode {
-  SELECTION_NONE = 0,   ///< No selection possible
-  SELECTION_SINGLE,     ///< Allow selection toggling of a single widget
-  SELECTION_BROWSE,     ///< Browse by always forcing a single selected widget
-  SELECTION_MULTIPLE,   ///< Allow arbitrary combinations of selected widgets
+  NONE = 0,   ///< No selection possible
+  SINGLE,     ///< Allow selection toggling of a single widget
+  BROWSE,     ///< Browse by always forcing a single selected widget
+  MULTIPLE,   ///< Allow arbitrary combinations of selected widgets
 };
 
 /// Enum policy type for sizing trade offs.
 enum SizePolicy {
-  SIZE_POLICY_NORMAL = 0,
-  SIZE_POLICY_WIDTH_FROM_HEIGHT,
-  SIZE_POLICY_HEIGHT_FROM_WIDTH,
+  NORMAL = 0,
+  WIDTH_FROM_HEIGHT,
+  HEIGHT_FROM_WIDTH,
 };
 
 /// Enum flags type to indicate Widget states.
 flags enum WidgetState {
-  STATE_NORMAL          = 0,       ///< Widget factory / initial state.
-  STATE_HOVER           = 1 <<  0, ///< A pointing device (e.g. mouse) is above the Widget.
-  STATE_PANEL           = 1 <<  1, ///< Widget is rendered as part of a panel section.
-  STATE_ACCELERATABLE   = 1 <<  2, ///< Widget participates in mnemonic activation.
-  STATE_DEFAULT         = 1 <<  3, ///< Widget receives the default activation.
-  STATE_SELECTED        = 1 <<  4, ///< Widget is currently selected.
-  STATE_FOCUSED         = 1 <<  5, ///< Widget has the focus.
-  STATE_INSENSITIVE     = 1 <<  6, ///< Widget cannot process input events.
-  STATE_ACTIVE          = 1 <<  7, ///< Widget and its children are active or pressed.
-  STATE_RETAINED        = 1 <<  8, ///< Widget activation state is held back.
-  STATE_RESERVED1       = 1 <<  9,
-  STATE_RESERVED2       = 1 << 10,
-  STATE_RESERVED3       = 1 << 11,
+  NORMAL          = 0,       ///< Widget factory / initial state.
+  HOVER           = 1 <<  0, ///< A pointing device (e.g. mouse) is above the Widget.
+  PANEL           = 1 <<  1, ///< Widget is rendered as part of a panel section.
+  ACCELERATABLE   = 1 <<  2, ///< Widget participates in mnemonic activation.
+  DEFAULT         = 1 <<  3, ///< Widget receives the default activation.
+  SELECTED        = 1 <<  4, ///< Widget is currently selected.
+  FOCUSED         = 1 <<  5, ///< Widget has the focus.
+  INSENSITIVE     = 1 <<  6, ///< Widget cannot process input events.
+  ACTIVE          = 1 <<  7, ///< Widget and its children are active or pressed.
+  RETAINED        = 1 <<  8, ///< Widget activation state is held back.
+  RESERVED1       = 1 <<  9,
+  RESERVED2       = 1 << 10,
+  RESERVED3       = 1 << 11,
 };
 
 /// Enum type to discriminate various toplevel Window types.
 enum WindowType {
-  WINDOW_TYPE_NORMAL = 0,       ///< Normal window
-  WINDOW_TYPE_DESKTOP,          ///< Desktop background
-  WINDOW_TYPE_DOCK,             ///< Dock or panel
-  WINDOW_TYPE_TOOLBAR,          ///< Torn-off toolbar
-  WINDOW_TYPE_MENU,             ///< Torn-off menu
-  WINDOW_TYPE_UTILITY,          ///< Palette or toolbox
-  WINDOW_TYPE_SPLASH,           ///< Startup/splash screen
-  WINDOW_TYPE_DIALOG,           ///< Dialog window, usually transient
-  WINDOW_TYPE_DROPDOWN_MENU,    ///< Menu, opened from menubar
-  WINDOW_TYPE_POPUP_MENU,       ///< Menu, opened as context menu
-  WINDOW_TYPE_TOOLTIP,          ///< Transient context info window
-  WINDOW_TYPE_NOTIFICATION,     ///< Transient info window (e.g. info bubble)
-  WINDOW_TYPE_COMBO,            ///< Combo box menu or list window
-  WINDOW_TYPE_DND,              ///< Window for dragged during DND operations
+  NORMAL = 0,       ///< Normal window
+  DESKTOP,          ///< Desktop background
+  DOCK,             ///< Dock or panel
+  TOOLBAR,          ///< Torn-off toolbar
+  MENU,             ///< Torn-off menu
+  UTILITY,          ///< Palette or toolbox
+  SPLASH,           ///< Startup/splash screen
+  DIALOG,           ///< Dialog window, usually transient
+  DROPDOWN_MENU,    ///< Menu, opened from menubar
+  POPUP_MENU,       ///< Menu, opened as context menu
+  TOOLTIP,          ///< Transient context info window
+  NOTIFICATION,     ///< Transient info window (e.g. info bubble)
+  COMBO,            ///< Combo box menu or list window
+  DND,              ///< Window for dragged during DND operations
 };
 
 /// A sequence of booleans.
@@ -228,10 +229,10 @@ interface BindableRelay : Object {
 
 /// Classification for element update request messages.
 enum UpdateKind {
-  UPDATE_READ,                  ///< Indicates an element range read request.
-  UPDATE_CHANGE,                ///< Indicates element range changes.
-  UPDATE_INSERTION,             ///< Indicates element range insertions.
-  UPDATE_DELETION               ///< Indicates deletion of a range of elements.
+  READ,                  ///< Indicates an element range read request.
+  CHANGE,                ///< Indicates element range changes.
+  INSERTION,             ///< Indicates element range insertions.
+  DELETION               ///< Indicates deletion of a range of elements.
 };
 
 /** Structure identifying an index span.
@@ -650,9 +651,9 @@ interface Application : Object {
 
 /// An enum used exclusively for unit testing.
 enum TestEnum {
-  TEST_ENUM_VALUE1,
-  TEST_ENUM_VALUE2,
-  TEST_ENUM_VALUE3,
+  VALUE1,
+  VALUE2,
+  VALUE3,
 };
 
 /// A widget used exclusively for unit testing.

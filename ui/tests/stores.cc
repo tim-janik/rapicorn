@@ -81,10 +81,10 @@ store_updated (const UpdateRequest &urequest)
 {
   switch (urequest.kind)
     {
-    case UPDATE_INSERTION:
+    case UpdateKind::INSERTION:
       store_inserted_counter++;
       break;
-    case UPDATE_CHANGE:
+    case UpdateKind::CHANGE:
       store_changed_counter++;
       break;
     default: ;

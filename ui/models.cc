@@ -31,7 +31,7 @@ ListModelRelayImpl::update (const UpdateRequest &urequest)
 {
   switch (urequest.kind)
     {
-    case UPDATE_INSERTION:
+    case UpdateKind::INSERTION:
       assert_return (urequest.rowspan.start >= 0);
       assert_return (urequest.rowspan.start <= model_->count());
       assert_return (urequest.rowspan.length >= 0);
@@ -39,14 +39,14 @@ ListModelRelayImpl::update (const UpdateRequest &urequest)
       model_->sig_updated.emit (urequest);
       refill (urequest.rowspan.start, urequest.rowspan.length);
       break;
-    case UPDATE_CHANGE:
+    case UpdateKind::CHANGE:
       assert_return (urequest.rowspan.start >= 0);
       assert_return (urequest.rowspan.start <= model_->count());
       assert_return (urequest.rowspan.length >= 0);
       assert_return (urequest.rowspan.start + urequest.rowspan.length <= model_->count());
-      refill (urequest.rowspan.start, urequest.rowspan.length); // emits UPDATE_CHANGE later
+      refill (urequest.rowspan.start, urequest.rowspan.length); // emits UpdateKind::CHANGE later
       break;
-    case UPDATE_DELETION:
+    case UpdateKind::DELETION:
       assert_return (urequest.rowspan.start >= 0);
       assert_return (urequest.rowspan.start <= model_->count());
       assert_return (urequest.rowspan.length >= 0);
@@ -54,7 +54,7 @@ ListModelRelayImpl::update (const UpdateRequest &urequest)
       model_->rows_.erase (model_->rows_.begin() + urequest.rowspan.start, model_->rows_.begin() + urequest.rowspan.start + urequest.rowspan.length);
       model_->sig_updated.emit (urequest);
       break;
-    case UPDATE_READ: ;
+    case UpdateKind::READ: ;
     }
 }
 
@@ -68,7 +68,7 @@ ListModelRelayImpl::fill (int first, const AnySeq &anyseq)
   for (i = 0; i < anyseq.size() && first + i < model_->rows_.size(); i++)
     model_->rows_[first + i] = anyseq[i];
   if (i)
-    emit_updated (UPDATE_CHANGE, first, i);
+    emit_updated (UpdateKind::CHANGE, first, i);
 }
 
 void
@@ -79,7 +79,7 @@ ListModelRelayImpl::refill (int start, int length)
   assert_return (length >= 0);
   length = MIN (start + length, model_->count()) - start;
   if (length)
-    sig_refill.emit (UpdateRequest (UPDATE_READ, UpdateSpan (start, length)));
+    sig_refill.emit (UpdateRequest (UpdateKind::READ, UpdateSpan (start, length)));
 }
 
 ListModelRelayImplP
@@ -124,7 +124,7 @@ MemoryListStore::insert (int n, const Any &any)
   if (n < 0)
     n = rows_.size(); // append
   rows_.insert (rows_.begin() + n, any);
-  emit_updated (UPDATE_INSERTION, n, 1);
+  emit_updated (UpdateKind::INSERTION, n, 1);
 }
 
 void
@@ -132,7 +132,7 @@ MemoryListStore::update_row (uint n, const Any &any)
 {
   assert_return (n < rows_.size());
   rows_[n] = any;
-  emit_updated (UPDATE_CHANGE, n, 1);
+  emit_updated (UpdateKind::CHANGE, n, 1);
 }
 
 void
@@ -141,7 +141,7 @@ MemoryListStore::remove (uint start, uint length)
   assert_return (start < rows_.size());
   assert_return (start + length <= rows_.size());
   rows_.erase (rows_.begin() + start, rows_.begin() + start + length);
-  emit_updated (UPDATE_DELETION, start, length);
+  emit_updated (UpdateKind::DELETION, start, length);
 }
 
 } // Rapicorn
