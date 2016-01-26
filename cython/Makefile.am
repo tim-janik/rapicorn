@@ -6,6 +6,7 @@ SUBDIRS = . # tests
 AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
 DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
+AM_LDFLAGS  += $(PYTHON_LDFLAGS)
 
 AIDACC       = $(top_builddir)/aidacc/aidacc-intern
 RAPICORNIDL  = $(srcdir)/../ui/interfaces.idl
@@ -16,37 +17,45 @@ objdir       = .libs
 UPYTHON      = PYTHONPATH="$(abs_builddir)/${objdir}:$$PYTHONPATH" $(PYTHON)
 FPYTHON      = PYTHONPATH="$$PYTHONPATH:${pythondir}" $(PYTHON)
 
+# == PyxxStub.py ==
+aidaccpydir     = $(libdir)/rapicorn-@MAJOR@/aidacc
+aidaccpy_PYTHON = PyxxStub.py
+
+# == pyxx includes ==
+pyxincludedir   = $(libdir)/rapicorn-@MAJOR@/pyxx
+pyxinclude_DATA = aidapyxxutils.hh aidapyxxcallers.hh Aida.pyx rapicorn-core.pyx rapicorn-api.pyx
+
 # Py Rapicorn - installation
 # pythondir = ${prefix}/lib/pythonX.Y/site-packages
-Rapicorndir                = ${pythondir}/Rapicorn_@MAJOR@
-Rapicorn_LTLIBRARIES	   = Rapicorn.la
+pymodulesdir		   = ${pythondir}/Rapicorn_@MAJOR@
+pymodules_LTLIBRARIES	   = Rapicorn.la
 # Pyx Rapicorn module
 nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	   = $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	   = $(AM_LDFLAGS) -no-undefined -module -avoid-version
 Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
-EXTRA_DIST	          += Rapicorn.pyx pyxxutils.hh pyxxutils.pyx rcore.pyx PyxxStub.py
-CLEANFILES	          += Rapicorn.cc idlapi.pyx
+EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rapicorn-core.pyx
+CLEANFILES	          += Rapicorn.cc rapicorn-api.pyx
 
-Rapicorn.cc: Rapicorn.pyx pyxxutils.pyx rcore.pyx idlapi.pyx pyxxutils-xmany.hh
+Rapicorn.cc: Rapicorn.pyx Aida.pyx rapicorn-core.pyx rapicorn-api.pyx aidapyxxcallers.hh
 	@echo "  CYTHON  " $@
 	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. $(srcdir)/Rapicorn.pyx -o $@
-idlapi.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
+rapicorn-api.pyx: $(RAPICORNIDL) $(srcdir)/PyxxStub.py
 	@echo "  AIDACC  " $@
 	$(Q) ${AIDACC} -x $(srcdir)/PyxxStub $(RAPICORNIDL) -o $@ -G strip-path=$(abs_top_srcdir)/
-$(srcdir)/*.cc: pyxxutils-xmany.hh
-pyxxutils-xmany.hh: $(srcdir)/pyxxutils.hh $(XMANIFOLD)
+$(srcdir)/*.cc: aidapyxxcallers.hh
+aidapyxxcallers.hh: $(srcdir)/aidapyxxutils.hh $(XMANIFOLD)
 	$(AM_V_GEN)
-	$(Q) $(XMANIFOLD) -S $(srcdir)/pyxxutils.hh 18 >xtmp-$(@F) \
+	$(Q) $(XMANIFOLD) -S $(srcdir)/aidapyxxutils.hh 18 >xtmp-$(@F) \
 	&& mv xtmp-$(@F) $@
-CLEANFILES += pyxxutils-xmany.hh
+CLEANFILES += aidapyxxcallers.hh
 
 # install-hook for __init__.py
 # cython gets confused about having an __init__.py in builddir, so we
 # keep it around under a different name.
 rapicornmodule-install-initpy:
-	$(INSTALL_DATA) __init__.py.in "$(DESTDIR)$(Rapicorndir)"/__init__.py
-	$(am__py_compile) --destdir "$(DESTDIR)" --basedir "$(Rapicorndir)" __init__.py
+	$(INSTALL_DATA) __init__.py.in "$(DESTDIR)$(pymodulesdir)"/__init__.py
+	$(am__py_compile) --destdir "$(DESTDIR)" --basedir "$(pymodulesdir)" __init__.py
 install-data-hook: rapicornmodule-install-initpy
 rapicornmodule-uninstall-initpy: # see PEP-3147 for __pycache__
 	@RMPY=__init__.py && \
@@ -55,19 +64,19 @@ rapicornmodule-uninstall-initpy: # see PEP-3147 for __pycache__
 	RMCHC=`echo "$$RMPY" | sed -e 's|\.py$$|| ; s|[^/]*$$|__pycache__/&.*.pyc|'` && \
 	RMCHO=`echo "$$RMPY" | sed -e 's|\.py$$|| ; s|[^/]*$$|__pycache__/&.*.pyo|'` && \
 	PS4= && set -x && \
-	cd "$(DESTDIR)$(Rapicorndir)" && \
+	cd "$(DESTDIR)$(pymodulesdir)" && \
 	rm -f "$$RMPY" "$$RMPYC" "$$RMPYO" $$RMCHC $$RMCHO
 uninstall-hook: rapicornmodule-uninstall-initpy
 EXTRA_DIST += __init__.py.in
 
 # install-hook to pick version
 rapicornmodule-install-hook:	# runs after install-data
-	$(Q) cd $(DESTDIR)$(Rapicorndir)/.. && \
+	$(Q) cd $(DESTDIR)$(pymodulesdir)/.. && \
 	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
 	  test -x Rapicorn.so -a -L Rapicorn.so
 install-data-hook: rapicornmodule-install-hook
 rapicornmodule-uninstall-hook: # runs after uninstall
-	$(Q) cd $(DESTDIR)$(Rapicorndir)/.. && \
+	$(Q) cd $(DESTDIR)$(pymodulesdir)/.. && \
 	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
 	  test -x Rapicorn.so -o ! -e Rapicorn.so
 uninstall-hook: rapicornmodule-uninstall-hook

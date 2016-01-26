@@ -1,17 +1,12 @@
 # This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0   -*-mode:python;-*-
-
-# Typedefs, shared_ptr, PyxxCaller, etc
-include "pyxxutils.pyx"
-
-# Manual rapicorn-core.hh bindings
-include "rcore.pyx"
+include "Aida.pyx"
 
 # Include "ui/clientapi.hh" for binding generation
 cdef extern from "rapicorn.hh" namespace "Rapicorn":
   pass
 
-# Generated rapicorn.hh bindings (PyxxStub.py)
-include "idlapi.pyx"
+# Generated rapicorn.hh bindings (via PyxxStub.py)
+include "rapicorn-api.pyx"
 
 # Manual binding bits for rapicorn.hh
 cdef extern from "ui/clientapi.hh" namespace "Rapicorn":

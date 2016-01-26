@@ -46,7 +46,7 @@ public:
 };
 #endif  // XMANIFOLD_SECTION
 
-#include "pyxxutils-xmany.hh" // generated from XMANIFOLD_SECTION
+#include "aidapyxxcallers.hh" // generated from XMANIFOLD_SECTION
 
 /* PyxxCaller0<bool> is used for main loop handlers that will be disconnected if 'false'
  * is returned. When Python exceptions are thrown, the 'marshal_' default behaviour is

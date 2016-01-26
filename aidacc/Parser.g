@@ -9,9 +9,20 @@ import AuxData
 
 reservedwords = ('class', 'signal', 'void', 'self')
 collectors = ('void', 'sum', 'last', 'until0', 'while0')
-keywords = ('TRUE', 'True', 'true', 'FALSE', 'False', 'false',
-            'namespace', 'enum', 'Const', 'interface',
-            'record', 'sequence', 'bool', 'String', 'Any',
+keywords = ('TRUE', 'FALSE',
+            'Const', 'interface', 'record', 'sequence', 'String', 'Any',
+            # Python/Cython
+            'True', 'False', 'type',
+            # C++
+            'alignas', 'alignof', 'and', 'and_eq', 'asm', 'auto', 'bitand', 'bitor', 'bool', 'break',
+            'case', 'catch', 'char', 'char16_t', 'char32_t', 'class', 'compl', 'const', 'const_cast', 'constexpr', 'continue',
+            'decltype', 'default', 'delete', 'do', 'double', 'dynamic_cast', 'else', 'enum', 'explicit', 'export', 'extern',
+            'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'mutable',
+            'namespace', 'new', 'noexcept', 'not', 'not_eq', 'nullptr', 'operator', 'or', 'or_eq',
+            'private', 'protected', 'public', 'register', 'reinterpret_cast', 'return',
+            'short', 'signed', 'sizeof', 'static', 'static_assert', 'static_cast', 'struct', 'switch',
+            'template', 'this', 'thread_local', 'throw', 'true', 'try', 'typedef', 'typeid', 'typename',
+            'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'wchar_t', 'while', 'xor', 'xor_eq',
             # golang types
             'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64',
             'float32', 'float64', 'complex64', 'complex128', 'byte', 'rune')
@@ -95,6 +106,7 @@ class YYGlobals (object):
     self.parse_assign_auxdata (rfields)
     fdict = {}
     for field in rfields:
+      AIc (field[0]) # should be ensured earlier
       if fdict.has_key (field[0]):
         raise NameError ('duplicate field name: ' + field[0])
       fdict[field[0]] = true
@@ -130,8 +142,7 @@ class YYGlobals (object):
     self.parse_assign_auxdata (ifields)
     mdict = {}
     for field in ifields:
-      if field[0] in reservedkeywords:
-        raise NameError ('invalid property name: ' + field[0])
+      AIc (field[0]) # should be ensured earlier
       if mdict.has_key (field[0]):
         raise NameError ('duplicate member name: ' + field[0])
       mdict[field[0]] = true
@@ -151,8 +162,7 @@ class YYGlobals (object):
       need_default = false
       for arg in method_args:
         need_default = need_default or arg[2] != None
-        if arg[0] in reservedkeywords:
-          raise NameError ('invalid method arg name: ' + method[0] + ' (...' + arg[0] + '...)')
+        AIc (arg[0]) # should be ensured earlier
         if adict.has_key (arg[0]):
           raise NameError ('duplicate method arg name: ' + method[0] + ' (...' + arg[0] + '...)')
         if need_default and arg[2] == None:
@@ -352,9 +362,13 @@ def ASp (string_candidate, constname = None):   # assert plain string
 def ASi (string_candidate): # assert i18n string
   if not TSi (string_candidate): raise TypeError ('invalid translated string: ' + repr (string_candidate))
 def AIn (identifier):   # assert new identifier
-  if (yy.namespace_lookup (identifier, astype = True, asconst = True, asnamespace = True, withusing = False) or
-      (identifier in reservedkeywords)):
-    raise TypeError ('redefining existing identifier: %s' % identifier)
+  if identifier in reservedkeywords:
+    raise NameError ('redefining keyword: ' + identifier)
+  if yy.namespace_lookup (identifier, astype = True, asconst = True, asnamespace = True, withusing = False):
+    raise NameError ('redefining identifier: %s' % identifier)
+def AIc (identifier):   # check for non-reserved identifier
+  if identifier in reservedkeywords:
+    raise NameError ('expected identifier, not keyword: ' + identifier)
 def AIi (identifier):   # assert interface identifier
   ti = yy.namespace_lookup (identifier, astype = True)
   if ti and ti.storage == Decls.INTERFACE:
@@ -485,7 +499,7 @@ rule enumeration:
         ( 'flags' ('enumeration' | 'enum')      {{ as_flags = True }}
         |         ('enumeration' | 'enum')      {{ as_flags = False }}
         )
-        IDENT '{'                               {{ evalues = []; yy.ecounter = 1 }}
+        IDENT '{'                               {{ evalues = []; yy.ecounter = 1; AIc (IDENT) }}
         enumeration_rest                        {{ evalues = enumeration_rest }}
         '}'                                     {{ AIn (IDENT); yy.nsadd_enum (IDENT, evalues, as_flags) }}
         ';'                                     {{ evalues = None; yy.ecounter = None }}
@@ -529,15 +543,15 @@ rule auxinit:
         '\)'                                    {{ return (tiident, tiargs) }}
 
 rule field_decl:
-        typename IDENT                          {{ ftype = yy.link_type (typename, IDENT); fdecl = [ IDENT, ftype, (), None ] }}
+        typename IDENT                          {{ ftype = yy.link_type (typename, IDENT); fdecl = [ IDENT, ftype, (), None ]; AIc (IDENT) }}
         [ '=' auxinit                           {{ fdecl = [ fdecl[0], fdecl[1], auxinit, None ] }}
         ] ';'                                   {{ return fdecl }}
 
 rule method_args:
-        typename IDENT                          {{ aident = IDENT; adef = None; atype = yy.link_type (typename, IDENT) }}
+        typename IDENT                          {{ aident = IDENT; adef = None; atype = yy.link_type (typename, IDENT); AIc (IDENT) }}
         [ '=' expression                        {{ adef = expression }}
         ]                                       {{ a = yy.argcheck (aident, atype, adef); args = [ a ] }}
-        ( ',' typename IDENT                    {{ aident = IDENT; adef = None; atype = yy.link_type (typename, IDENT) }}
+        ( ',' typename IDENT                    {{ aident = IDENT; adef = None; atype = yy.link_type (typename, IDENT); AIc (IDENT) }}
           [ '=' expression                      {{ adef = expression }}
           ]                                     {{ a = yy.argcheck (aident, atype, adef); args += [ a ] }}
         ) *                                     {{ return args }}
@@ -549,7 +563,7 @@ rule field_stream_method_signal_decl:
         ( 'void'                                {{ dtname = 'void' }}
         | typename                              {{ dtname = typename }}
         )
-        IDENT                                   {{ dident = IDENT; kind = 'field' }}
+        IDENT                                   {{ dident = IDENT; kind = 'field'; AIc (IDENT) }}
         ( [ '=' auxinit                         {{ daux = auxinit }}
           ]
         | '\('                                  {{ kind = signal and 'signal' or 'func' }}
@@ -572,7 +586,7 @@ rule field_group:
                  )+ '}' ';'                     {{ return gfields }}
 rule interface:
         'interface'                             {{ ipls = []; ifls = []; prq = [] }}
-        IDENT                                   {{ iident = IDENT; isigs = [] }}
+        IDENT                                   {{ iident = IDENT; isigs = []; AIc (IDENT) }}
         ( ';'                                   {{ iface = yy.nsadd_interface (iident, True) }}
         |
           [ ':' typename                        {{ prq += [ typename ]; AIi (typename) }}
@@ -590,7 +604,7 @@ rule interface:
         )
 
 rule record:
-        'record' IDENT                          {{ rident, rfields = IDENT, [];  }}
+        'record' IDENT                          {{ rident, rfields = IDENT, []; AIc (IDENT) }}
         ( ';'                                   {{ yy.nsadd_record (rident, rfields, True) }}
         |
           '{'
@@ -602,7 +616,7 @@ rule record:
         )
 
 rule sequence:
-        'sequence' IDENT                        {{ sident, sfields = IDENT, [];  }}
+        'sequence' IDENT                        {{ sident, sfields = IDENT, []; AIc (IDENT) }}
         ( ';'                                   {{ yy.nsadd_sequence (sident, sfields, True) }}
         |
           '{'

@@ -535,9 +535,9 @@ class Generator:
     assert u_typename == u_base
     s += 'cdef object %s__wrap (const %s &%s):\n' % (u_typename, u_typename, ident)
     s += '  cdef Aida__TypeHashList thl = %s.__aida_typelist__()\n' % ident
-    s += '  cdef Rapicorn__Object_WrapFunc object_pywrapper\n'
+    s += '  cdef %s_WrapFunc object_pywrapper\n' % u_base
     s += '  for idx in range (thl.size()):\n'
-    s += '    object_pywrapper = pyxx_aida_type_class_mapper (thl[idx], <Rapicorn__Object_WrapFunc> NULL)\n'
+    s += '    object_pywrapper = pyxx_aida_type_class_mapper (thl[idx], <%s_WrapFunc> NULL)\n' % u_base
     s += '    if object_pywrapper:\n'
     s += '      return object_pywrapper (%s)\n' % ident
     s += '  return None\n'
@@ -547,21 +547,26 @@ def generate (namespace_list, **args):
   import sys, tempfile, os
   config = {}
   config.update (args)
-  outname = config.get ('output', 'testmodule')
-  if outname == '-':
-    raise RuntimeError ("-: stdout is not support for generation of multiple files")
-  idlfiles = config['files']
-  if len (idlfiles) != 1:
-    raise RuntimeError ("PyxxStub: exactly one IDL input file is required")
-  gg = Generator (idlfiles[0], outname)
-  for opt in config['backend-options']:
-    if opt.startswith ('strip-path='):
-      gg.strip_path += opt[11:]
-  fname = outname
-  fout = open (fname, 'w')
-  textstring = gg.generate_types_pyxx (config['implementation_types'])
-  fout.write (textstring)
-  fout.close()
+  if '--print-include-path' in config.get ('backend-options', []):
+    includestem = os.path.dirname (os.path.dirname (os.path.abspath (__file__)))
+    includepath = os.path.join (includestem, 'pyxx')
+    print includepath
+  else:
+    outname = config.get ('output', 'testmodule')
+    if outname == '-':
+      raise RuntimeError ("-: stdout is not support for generation of multiple files")
+    idlfiles = config['files']
+    if len (idlfiles) != 1:
+      raise RuntimeError ("PyxxStub: exactly one IDL input file is required")
+    gg = Generator (idlfiles[0], outname)
+    for opt in config['backend-options']:
+      if opt.startswith ('strip-path='):
+        gg.strip_path += opt[11:]
+    fname = outname
+    fout = open (fname, 'w')
+    textstring = gg.generate_types_pyxx (config['implementation_types'])
+    fout.write (textstring)
+    fout.close()
 
 # register extension hooks
 __Aida__.add_backend (__file__, generate, __doc__)

@@ -3,10 +3,10 @@
 import sys, os, re
 pkginstall_configvars = {
   'AIDA_VERSION' : '0.0-uninstalled',
-  'pyutilsdir'   : '.',
+  'aidaccpydir'  : '.',
   #@PKGINSTALL_CONFIGVARS_IN24LINES@ # configvars are substituted upon script installation
 }
-sys.path.insert (0, pkginstall_configvars["pyutilsdir"])
+sys.path.insert (0, pkginstall_configvars["aidaccpydir"])
 import yapps2runtime as runtime
 import Parser, Decls, GenUtils # pre-import modules for Generator modules
 true, false, length = (True, False, len)
