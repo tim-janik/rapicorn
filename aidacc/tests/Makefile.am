@@ -59,7 +59,7 @@ check-local: check-testpass check-include-p1
 
 # == IDL Error Tests ==
 check-testfail: $(srcdir)/testfail.idl
-	$(Q) ${AIDACC_NODEBUG} --aida-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	$(Q) ${AIDACC_NODEBUG} --aida-fail-file-test $(srcdir)/testfail.idl >$(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) sed 's/\(:[0-9]\+:[0-9]\+: Trying to find one of \).*/\1.../' <$(TSTOUT) >$(TSTOUT).tmp && mv $(TSTOUT).tmp $(TSTOUT)
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testfail.ref'" "'$(TSTOUT)'"
 check-local: check-testfail
@@ -67,11 +67,11 @@ check-local: check-testfail
 # == Test CxxStub Generation for Clinet & Server ==
 check-CxxStub-server-gen: $(srcdir)/testcxxserver.ref
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G aidaids -G strip-path=$(abs_top_srcdir)/ \
-	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxserver.ref'"
 check-CxxStub-client-gen: $(srcdir)/testcxxclient.ref
 	$(Q) ${AIDACC} -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(abs_top_srcdir)/ \
-	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE_LOGTEST"
+	  $(srcdir)/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) sed -i -e '1i#define _(string) string\' $(TSTOUT)				# '''''
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/testcxxclient.ref'"
 check: check-CxxStub-server-gen check-CxxStub-client-gen

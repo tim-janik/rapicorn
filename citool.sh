@@ -115,7 +115,8 @@ pdist() {
 	apt-get -y install $@
 	echo cidir/pdist-cmds-user "\$@" | su -p ciuser
 	__EOF
-  MAKE="make -j`nproc` V=$V"
+  MAKE_J="make -j`nproc` V=$V"
+  MAKE="make V=$V"
   cat > cidir/pdist-cmds-user <<-__EOF
 	#!/bin/bash
 	( set -ex
@@ -133,7 +134,7 @@ pdist() {
 	  test -n "\$DIST_TARBALL"
 	  rm -f cidir/pdist-tmk
 	  # build, check and dist
-	  $MAKE
+	  $MAKE_J
 	  $MAKE check
 	  $MAKE install
 	  $MAKE installcheck
