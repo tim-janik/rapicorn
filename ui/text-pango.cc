@@ -214,9 +214,9 @@ class LayoutCache {
 public:
   PangoLayout*
   create_layout (String         font_description,
-                 Align      align,
+                 Align          align,
                  PangoWrapMode  pangowrap,
-                 Ellipsize  ellipsize,
+                 Ellipsize      ellipsize,
                  int            indent,
                  int            spacing,
                  bool           single_paragraph)

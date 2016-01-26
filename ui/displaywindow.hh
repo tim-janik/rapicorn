@@ -81,7 +81,7 @@ public:
   void          configure               (const Config &config, bool sizeevent); ///< Change window configuration, requesting size event.
   void          blit_surface            (cairo_surface_t *surface, const Rapicorn::Region &region);   ///< Blit/paint window region.
   void          start_user_move         (uint button, double root_x, double root_y);                  ///< Trigger window movement.
-  void          start_user_resize       (uint button, double root_x, double root_y, Anchor edge); ///< Trigger window resizing.
+  void          start_user_resize       (uint button, double root_x, double root_y, Anchor edge);     ///< Trigger window resizing.
   void          set_content_owner       (ContentSourceType source, uint64 nonce, const StringVector &data_types); ///< Yields CONTENT_REQUEST & CONTENT_CLEAR.
   void          request_content         (ContentSourceType source, uint64 nonce, const String &data_type); ///< Yields CONTENT_DATA.
   void          provide_content         (const String &data_type, const String &data, uint64 request_id); ///< Reply for CONTENT_REQUEST.

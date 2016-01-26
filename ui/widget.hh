@@ -213,7 +213,7 @@ public:
   virtual void                name              (const String &str); ///< Set Widget name and "id"
   FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
-  ColorScheme             color_scheme      () const;
+  ColorScheme                 color_scheme      () const;
   void                        color_scheme      (ColorScheme cst);
   /* override requisition */
   double                      width             () const;
@@ -318,7 +318,7 @@ public:
   Color                 state_color             (WidgetState state, bool foreground, const String &detail = "");
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
   // state colors
-  WidgetState             state                   () const;
+  WidgetState           state                   () const;
   Color                 foreground              ();
   Color                 background              ();
   // Color              black                   () { return theme_color (  0,   0,   0); }

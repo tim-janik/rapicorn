@@ -16,9 +16,9 @@ class TextPango : public virtual TextLayout { // FIXME: move to TextBlock
 public:
   virtual void          font_name       (const String &fname) = 0;
   virtual String        font_name       () const = 0;
-  virtual Align     align           () const = 0;
+  virtual Align         align           () const = 0;
   virtual void          align           (Align at) = 0;
-  virtual Ellipsize ellipsize       () const = 0;
+  virtual Ellipsize     ellipsize       () const = 0;
   virtual void          ellipsize       (Ellipsize et) = 0;
   virtual uint16        spacing         () const = 0;
   virtual void          spacing         (uint16 sp) = 0;

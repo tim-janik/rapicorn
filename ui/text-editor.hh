@@ -15,8 +15,8 @@ enum TextMode {
 
 /// Configurable aspects about text paragraphs.
 struct ParagraphState {
-  Align     align;
-  Ellipsize ellipsize;
+  Align         align;
+  Ellipsize     ellipsize;
   double        line_spacing;
   double        indent;
   String        font_family;

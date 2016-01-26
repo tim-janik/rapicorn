@@ -295,7 +295,7 @@ interface Widget : Object {
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
   bool            allow_focus  = Bool (_("Allow Focus"), _("Whether this widget may receive input focus"), "rw");
-  ColorScheme color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
+  ColorScheme     color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
   /// @name User Sizes and Size Groups
   String  hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
   String  vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
@@ -425,7 +425,7 @@ interface Ambience : Container {
   Lighting hover_shade          = Enum (_("Hover Shade"), _("The kind of shade painted when in hover state"), "rw");
   Lighting active_shade         = Enum (_("Active Shade"), _("The kind of shade painted in active state"), "rw");
   Lighting insensitive_shade    = Enum (_("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw");
-  String       background           = String (_("Background"), _("The kind of background painted for all modes"), "wo");
+  String   background           = String (_("Background"), _("The kind of background painted for all modes"), "wo");
   Lighting lighting             = Enum (_("Lighting"), _("The kind of lighting painted for all modes"), "wo");
   Lighting shade                = Enum (_("Shade"), _("The kind of shade painted for all modes"), "wo");
 };
@@ -465,7 +465,7 @@ interface VBox : Container {
  * <br/> See also the corresponding implementation class ButtonAreaImpl.
  */
 interface ButtonArea : Container {
-  Click     click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
+  Click         click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
   String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
   String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
   String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
@@ -500,7 +500,7 @@ interface SliderSkid : Container {
 /// The Arrow widget paints a single arrow with configurable direction.
 /// See also the corresponding implementation class ArrowImpl.
 interface Arrow : Widget {
-  Direction        arrow_dir   = Enum (_("Arrow Direction"), _("The direction the arrow points to"), "rw");
+  Direction  arrow_dir   = Enum (_("Arrow Direction"), _("The direction the arrow points to"), "rw");
   SizePolicy size_policy = Enum (_("Size Policy"),     _("Policy which determines coupling of width and height"), "rw");
 };
 

@@ -16,9 +16,9 @@ public:
   explicit               ArrowImpl      ();
   virtual               ~ArrowImpl      () override;
   virtual void           arrow_dir      (Direction dir) override;
-  virtual Direction        arrow_dir      () const override;
+  virtual Direction      arrow_dir      () const override;
   virtual void           size_policy    (SizePolicy spol) override;
-  virtual SizePolicy size_policy    () const override;
+  virtual SizePolicy     size_policy    () const override;
 };
 
 class DotGridImpl : public virtual WidgetImpl, public virtual DotGridIface {

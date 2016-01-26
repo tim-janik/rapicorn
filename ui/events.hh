@@ -40,7 +40,7 @@ enum ActivateKeyType {
 unichar         key_value_to_unichar      (uint32 keysym);
 bool            key_value_is_modifier     (uint32 keysym);
 bool            key_value_is_accelerator  (uint32 keysym);
-FocusDir    key_value_to_focus_dir    (uint32 keysym);
+FocusDir        key_value_to_focus_dir    (uint32 keysym);
 bool            key_value_is_focus_dir    (uint32 keysym);
 ActivateKeyType key_value_to_activation   (uint32 keysym);
 bool            key_value_is_cancellation (uint32 keysym);

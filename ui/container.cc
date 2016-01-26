@@ -487,10 +487,9 @@ struct LesserWidgetByHBand {
 };
 
 struct LesserWidgetByDirection {
-  FocusDir dir;
+  FocusDir     dir;
   Point        anchor;
-  LesserWidgetByDirection (FocusDir d,
-                         const Point &p) :
+  LesserWidgetByDirection (FocusDir d, const Point &p) :
     dir (d), anchor (p)
   {}
   double
