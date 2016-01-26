@@ -115,19 +115,19 @@ EnumInfo::value_vector () const
 }
 
 EnumValue
-EnumInfo::find_value (int64 value) const
+EnumInfo::find_value (const String &name) const
 {
   for (size_t i = 0; i < n_values_; i++)
-    if (values_[i].value == value)
+    if (string_match_identifier_tail (values_[i].ident, name))
       return values_[i];
   return EnumValue();
 }
 
 EnumValue
-EnumInfo::find_value (const String &name) const
+EnumInfo::find_value (int64 value) const
 {
   for (size_t i = 0; i < n_values_; i++)
-    if (string_match_identifier_tail (values_[i].ident, name))
+    if (values_[i].value == value)
       return values_[i];
   return EnumValue();
 }

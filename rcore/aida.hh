@@ -75,7 +75,9 @@ template<class T> using IsImplicitBaseDerived = ::std::integral_constant<bool, :
 struct EnumValue {
   int64       value;
   const char *ident, *label, *blurb;
-  constexpr EnumValue (int64 dflt = 0) : value (dflt), ident (0), label (0), blurb (0) {}
+  template<class EValue>
+  constexpr EnumValue (EValue dflt) : value (int64 (dflt)), ident (0), label (0), blurb (0) {}
+  constexpr EnumValue ()            : value (0), ident (0), label (0), blurb (0) {}
   constexpr EnumValue (int64 v, const char *vident, const char *vlabel, const char *vblurb) :
     value (v), ident (vident), label (vlabel), blurb (vblurb) {}
 };
@@ -96,12 +98,18 @@ class EnumInfo {
 public:
   String          name              () const;                           ///< Retrieve the enum type name for this Enum.
   EnumValue       find_value        (const String &name) const;         ///< Find first enum value matching @a name.
-  EnumValue       find_value        (int64        value) const;         ///< Find first enum value equal to @a value.
-  String          value_to_string   (int64        value) const;         ///< Create a string representing @a value.
   int64           value_from_string (const String &valuestring) const;  ///< Reconstruct an enum value from @a valuestring.
   bool            flags_enum        () const;   ///< Whether enum values support bit combinations to form flags.
   bool            has_values        () const;   ///< Indicate if the value_vector() is non-empty.
   EnumValueVector value_vector      () const;   ///< Retrieve the list of possible enum values as a std::vector<>.
+  /// Find first enum value equal to @a value.
+  template<typename T, REQUIRES< std::is_enum<T>::value > = true>
+  EnumValue       find_value        (T     value) const                     { return find_value (int64 (value)); }
+  EnumValue       find_value        (int64 value) const;
+  /// Create a string representing @a value.
+  template<typename T, REQUIRES< std::is_enum<T>::value > = true>
+  String          value_to_string   (T     value) const                     { return value_to_string (int64 (value)); }
+  String          value_to_string   (int64 value) const;
   /// Template to be specialised by introspectable enums.
   template<typename EnumType> friend
   const EnumInfo& enum_info         ()
@@ -487,7 +495,7 @@ private:
   template<typename Enum>
   Enum               get_enum    () const               { return Enum (get_enum (enum_info<Enum>())); }
   template<typename Enum>
-  void               set_enum    (Enum value)           { return set_enum (enum_info<Enum>(), value); }
+  void               set_enum    (Enum value)           { return set_enum (enum_info<Enum>(), int64 (value)); }
   const AnyVector*   get_seq     () const;
   void               set_seq     (const AnyVector *seq);
   const FieldVector* get_rec     () const;
