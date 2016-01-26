@@ -354,7 +354,7 @@ class Generator:
     s += '\n'
     s += '# Python Enums\n'
     for tp in [t for t in types if t.storage == Decls.ENUM]:
-      s += '\nclass %s (Enum):\n' % tp.name
+      s += '\nclass %s (enum.Enum):\n' % tp.name
       for opt in tp.options:
         (ident, label, blurb, number) = opt
         s += '  %-40s = %s\n' % (ident, '%s__%s' % (tp.name, ident))
@@ -473,16 +473,21 @@ class Generator:
   def py_wrap (self, ident, tp): # wrap a C++ object to return a PyObject
     if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD):
       return underscore_typename (tp) + '__wrap (%s)' % ident
-    elif tp.storage == Decls.INTERFACE:
+    if tp.storage == Decls.INTERFACE:
       u_base = underscore_typename (self.inheritance_base (tp))
       return '%s__wrap (%s)' % (u_base, ident)
-    else:
-      return ident
+    if tp.storage == Decls.ENUM:
+      u_enum = tp.name
+      return '%s (%s)' % (u_enum, ident)
+    return ident
   def cxx_unwrap (self, ident, tp): # unwrap a PyObject to yield a C++ object
     if tp.storage == Decls.INT32:
       return underscore_typename (tp) + '__unwrap (%s)' % ident
     if tp.storage in (Decls.ANY, Decls.SEQUENCE, Decls.RECORD, Decls.INTERFACE):
       return underscore_typename (tp) + '__unwrap (%s)' % ident
+    if tp.storage == Decls.ENUM:
+      u_enum = tp.name
+      return '%s (%s).value' % (u_enum, ident)
     return ident
   def cxx_unwrap_impl (self, ident, tp):
     s = ''
