@@ -34,7 +34,7 @@ new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 namespace MandatoryNamespace {
 
 /// @cond GeneratedEnums
-enum Enum1 {
+enum class Enum1 {
   E1_A = 1,
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
@@ -42,7 +42,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum1 &e) { e = Enum
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum1c {
+enum class Enum1c {
   E1C_A = 1,
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
@@ -50,7 +50,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum1c &e) { e = Enu
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum2 {
+enum class Enum2 {
   E2_A = 1,
   E2_B = 2,
 };
@@ -59,7 +59,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum2 &e) { e = Enum
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum2c {
+enum class Enum2c {
   E2C_A = 1,
   E2C_B = 2,
 };
@@ -68,7 +68,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum2c &e) { e = Enu
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum3 {
+enum class Enum3 {
   E3_A = 1,
   E3_B = 2,
   E3_C = 3,
@@ -78,7 +78,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum3 &e) { e = Enum
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum3c {
+enum class Enum3c {
   E3C_A = 1,
   E3C_B = 2,
   E3C_C = 3,
@@ -88,7 +88,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum3c &e) { e = Enu
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum4a {
+enum class Enum4a {
   E4A_A = 1,
   E4A_B = 2,
   E4A_C = 3,
@@ -99,7 +99,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4a &e) { e = Enu
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum4b {
+enum class Enum4b {
   E4B_A = 1,
   E4B_B = 2,
   E4B_C = 3,
@@ -110,7 +110,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4b &e) { e = Enu
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum4c {
+enum class Enum4c {
   E4C_A = 1,
   E4C_B = 2,
   E4C_C = 3,
@@ -121,7 +121,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4c &e) { e = Enu
 /// @endcond
 
 /// @cond GeneratedEnums
-enum Enum4d {
+enum class Enum4d {
   E4D_A = 1,
   E4D_B = 2,
   E4D_C = 3,
@@ -132,7 +132,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4d &e) { e = Enu
 /// @endcond
 
 /// @cond GeneratedEnums
-enum ExtensiveEnum {
+enum class ExtensiveEnum {
   V1a = 1,
   V1b = 1,
   V2 = 2,
@@ -177,7 +177,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, ExtensiveEnum &e) { 
 namespace InterfaceTests {
 
 /// @cond GeneratedEnums
-enum QuickEnum {
+enum class QuickEnum {
   ZERO = 0,
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  QuickEnum  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
@@ -188,7 +188,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, QuickEnum &e) { e = 
 namespace RapicornAidaTest {
 
 /// @cond GeneratedEnums
-enum ClickType {
+enum class ClickType {
   CLICK_ON_PRESS = 1,
   CLICK_ON_RELEASE = 2,
   CLICK_SLOW_REPEAT = 3,
@@ -200,7 +200,7 @@ inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, ClickType &e) { e = 
 /// @endcond
 
 /// @cond GeneratedEnums
-enum MathExpressions {
+enum class MathExpressions {
   RESULT_2 = 2,
   RESULT_5 = 5,
   RESULT_8 = 8,
@@ -3789,7 +3789,7 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum1> ()
 {
   static const EnumValue _aida_enumvalues_1001[] = {
-    { MandatoryNamespace::E1_A, "E1_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum1::E1_A), "E1_A", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum1", 0, _aida_enumvalues_1001);
 } // specialization
@@ -3799,7 +3799,7 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum1c> ()
 {
   static const EnumValue _aida_enumvalues_1002[] = {
-    { MandatoryNamespace::E1C_A, "E1C_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum1c::E1C_A), "E1C_A", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum1c", 0, _aida_enumvalues_1002);
 } // specialization
@@ -3809,8 +3809,8 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum2> ()
 {
   static const EnumValue _aida_enumvalues_1003[] = {
-    { MandatoryNamespace::E2_A, "E2_A", NULL, NULL },
-    { MandatoryNamespace::E2_B, "E2_B", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum2::E2_A), "E2_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum2::E2_B), "E2_B", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum2", 0, _aida_enumvalues_1003);
 } // specialization
@@ -3820,8 +3820,8 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum2c> ()
 {
   static const EnumValue _aida_enumvalues_1004[] = {
-    { MandatoryNamespace::E2C_A, "E2C_A", NULL, NULL },
-    { MandatoryNamespace::E2C_B, "E2C_B", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum2c::E2C_A), "E2C_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum2c::E2C_B), "E2C_B", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum2c", 0, _aida_enumvalues_1004);
 } // specialization
@@ -3831,9 +3831,9 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum3> ()
 {
   static const EnumValue _aida_enumvalues_1005[] = {
-    { MandatoryNamespace::E3_A, "E3_A", NULL, NULL },
-    { MandatoryNamespace::E3_B, "E3_B", NULL, NULL },
-    { MandatoryNamespace::E3_C, "E3_C", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum3::E3_A), "E3_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum3::E3_B), "E3_B", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum3::E3_C), "E3_C", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum3", 0, _aida_enumvalues_1005);
 } // specialization
@@ -3843,9 +3843,9 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum3c> ()
 {
   static const EnumValue _aida_enumvalues_1006[] = {
-    { MandatoryNamespace::E3C_A, "E3C_A", NULL, NULL },
-    { MandatoryNamespace::E3C_B, "E3C_B", NULL, NULL },
-    { MandatoryNamespace::E3C_C, "E3C_C", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum3c::E3C_A), "E3C_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum3c::E3C_B), "E3C_B", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum3c::E3C_C), "E3C_C", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum3c", 0, _aida_enumvalues_1006);
 } // specialization
@@ -3855,10 +3855,10 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum4a> ()
 {
   static const EnumValue _aida_enumvalues_1007[] = {
-    { MandatoryNamespace::E4A_A, "E4A_A", NULL, NULL },
-    { MandatoryNamespace::E4A_B, "E4A_B", NULL, NULL },
-    { MandatoryNamespace::E4A_C, "E4A_C", NULL, NULL },
-    { MandatoryNamespace::E4A_D, "E4A_D", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4a::E4A_A), "E4A_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4a::E4A_B), "E4A_B", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4a::E4A_C), "E4A_C", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4a::E4A_D), "E4A_D", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum4a", 0, _aida_enumvalues_1007);
 } // specialization
@@ -3868,10 +3868,10 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum4b> ()
 {
   static const EnumValue _aida_enumvalues_1008[] = {
-    { MandatoryNamespace::E4B_A, "E4B_A", NULL, NULL },
-    { MandatoryNamespace::E4B_B, "E4B_B", NULL, NULL },
-    { MandatoryNamespace::E4B_C, "E4B_C", NULL, NULL },
-    { MandatoryNamespace::E4B_D, "E4B_D", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4b::E4B_A), "E4B_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4b::E4B_B), "E4B_B", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4b::E4B_C), "E4B_C", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4b::E4B_D), "E4B_D", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum4b", 0, _aida_enumvalues_1008);
 } // specialization
@@ -3881,10 +3881,10 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum4c> ()
 {
   static const EnumValue _aida_enumvalues_1009[] = {
-    { MandatoryNamespace::E4C_A, "E4C_A", NULL, NULL },
-    { MandatoryNamespace::E4C_B, "E4C_B", NULL, NULL },
-    { MandatoryNamespace::E4C_C, "E4C_C", NULL, NULL },
-    { MandatoryNamespace::E4C_D, "E4C_D", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4c::E4C_A), "E4C_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4c::E4C_B), "E4C_B", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4c::E4C_C), "E4C_C", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4c::E4C_D), "E4C_D", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum4c", 0, _aida_enumvalues_1009);
 } // specialization
@@ -3894,10 +3894,10 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::Enum4d> ()
 {
   static const EnumValue _aida_enumvalues_1010[] = {
-    { MandatoryNamespace::E4D_A, "E4D_A", NULL, NULL },
-    { MandatoryNamespace::E4D_B, "E4D_B", NULL, NULL },
-    { MandatoryNamespace::E4D_C, "E4D_C", NULL, NULL },
-    { MandatoryNamespace::E4D_D, "E4D_D", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4d::E4D_A), "E4D_A", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4d::E4D_B), "E4D_B", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4d::E4D_C), "E4D_C", NULL, NULL },
+    { int64_t (MandatoryNamespace::Enum4d::E4D_D), "E4D_D", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::Enum4d", 0, _aida_enumvalues_1010);
 } // specialization
@@ -3907,41 +3907,41 @@ template<> const EnumInfo&
 enum_info<MandatoryNamespace::ExtensiveEnum> ()
 {
   static const EnumValue _aida_enumvalues_1011[] = {
-    { MandatoryNamespace::V1a, "V1a", NULL, NULL },
-    { MandatoryNamespace::V1b, "V1b", NULL, NULL },
-    { MandatoryNamespace::V2, "V2", NULL, NULL },
-    { MandatoryNamespace::V3, "V3", "v3", NULL },
-    { MandatoryNamespace::V4, "V4", _("v4"), NULL },
-    { MandatoryNamespace::V5, "V5", "v5", "V5" },
-    { MandatoryNamespace::V6, "V6", _("v6"), "V6" },
-    { MandatoryNamespace::V7, "V7", "v7", _("V7") },
-    { MandatoryNamespace::V8, "V8", _("v8"), _("V8") },
-    { MandatoryNamespace::V9, "V9", NULL, NULL },
-    { MandatoryNamespace::V10, "V10", "v10", NULL },
-    { MandatoryNamespace::V11, "V11", _("v11"), NULL },
-    { MandatoryNamespace::V12, "V12", "v12", NULL },
-    { MandatoryNamespace::V13, "V13", NULL, NULL },
-    { MandatoryNamespace::V14, "V14", _("v14"), NULL },
-    { MandatoryNamespace::V15, "V15", "v15", "V15" },
-    { MandatoryNamespace::V16, "V16", _("v16"), "V16" },
-    { MandatoryNamespace::V17, "V17", "v17", _("V17") },
-    { MandatoryNamespace::V18, "V18", _("v18"), _("V18") },
-    { MandatoryNamespace::V20, "V20", NULL, NULL },
-    { MandatoryNamespace::V21, "V21", NULL, NULL },
-    { MandatoryNamespace::V22, "V22", NULL, NULL },
-    { MandatoryNamespace::V23, "V23", NULL, NULL },
-    { MandatoryNamespace::V24, "V24", NULL, NULL },
-    { MandatoryNamespace::V25, "V25", NULL, NULL },
-    { MandatoryNamespace::V26, "V26", NULL, NULL },
-    { MandatoryNamespace::V27, "V27", NULL, NULL },
-    { MandatoryNamespace::V28, "V28", NULL, NULL },
-    { MandatoryNamespace::V30, "V30", NULL, NULL },
-    { MandatoryNamespace::V31, "V31", "foo", NULL },
-    { MandatoryNamespace::V32, "V32", NULL, NULL },
-    { MandatoryNamespace::V33, "V33", "foo", NULL },
-    { MandatoryNamespace::V34, "V34", "foo", "foo" },
-    { MandatoryNamespace::V35, "V35", "foo", NULL },
-    { MandatoryNamespace::V36, "V36", "foo", "foo""4" },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V1a), "V1a", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V1b), "V1b", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V2), "V2", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V3), "V3", "v3", NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V4), "V4", _("v4"), NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V5), "V5", "v5", "V5" },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V6), "V6", _("v6"), "V6" },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V7), "V7", "v7", _("V7") },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V8), "V8", _("v8"), _("V8") },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V9), "V9", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V10), "V10", "v10", NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V11), "V11", _("v11"), NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V12), "V12", "v12", NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V13), "V13", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V14), "V14", _("v14"), NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V15), "V15", "v15", "V15" },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V16), "V16", _("v16"), "V16" },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V17), "V17", "v17", _("V17") },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V18), "V18", _("v18"), _("V18") },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V20), "V20", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V21), "V21", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V22), "V22", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V23), "V23", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V24), "V24", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V25), "V25", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V26), "V26", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V27), "V27", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V28), "V28", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V30), "V30", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V31), "V31", "foo", NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V32), "V32", NULL, NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V33), "V33", "foo", NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V34), "V34", "foo", "foo" },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V35), "V35", "foo", NULL },
+    { int64_t (MandatoryNamespace::ExtensiveEnum::V36), "V36", "foo", "foo""4" },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("MandatoryNamespace::ExtensiveEnum", 0, _aida_enumvalues_1011);
 } // specialization
@@ -3951,7 +3951,7 @@ template<> const EnumInfo&
 enum_info<InterfaceTests::QuickEnum> ()
 {
   static const EnumValue _aida_enumvalues_1012[] = {
-    { InterfaceTests::ZERO, "ZERO", NULL, NULL },
+    { int64_t (InterfaceTests::QuickEnum::ZERO), "ZERO", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("InterfaceTests::QuickEnum", 0, _aida_enumvalues_1012);
 } // specialization
@@ -3961,11 +3961,11 @@ template<> const EnumInfo&
 enum_info<RapicornAidaTest::ClickType> ()
 {
   static const EnumValue _aida_enumvalues_1013[] = {
-    { RapicornAidaTest::CLICK_ON_PRESS, "CLICK_ON_PRESS", NULL, NULL },
-    { RapicornAidaTest::CLICK_ON_RELEASE, "CLICK_ON_RELEASE", NULL, NULL },
-    { RapicornAidaTest::CLICK_SLOW_REPEAT, "CLICK_SLOW_REPEAT", NULL, NULL },
-    { RapicornAidaTest::CLICK_FAST_REPEAT, "CLICK_FAST_REPEAT", NULL, NULL },
-    { RapicornAidaTest::CLICK_KEY_REPEAT, "CLICK_KEY_REPEAT", NULL, NULL },
+    { int64_t (RapicornAidaTest::ClickType::CLICK_ON_PRESS), "CLICK_ON_PRESS", NULL, NULL },
+    { int64_t (RapicornAidaTest::ClickType::CLICK_ON_RELEASE), "CLICK_ON_RELEASE", NULL, NULL },
+    { int64_t (RapicornAidaTest::ClickType::CLICK_SLOW_REPEAT), "CLICK_SLOW_REPEAT", NULL, NULL },
+    { int64_t (RapicornAidaTest::ClickType::CLICK_FAST_REPEAT), "CLICK_FAST_REPEAT", NULL, NULL },
+    { int64_t (RapicornAidaTest::ClickType::CLICK_KEY_REPEAT), "CLICK_KEY_REPEAT", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("RapicornAidaTest::ClickType", 0, _aida_enumvalues_1013);
 } // specialization
@@ -3975,18 +3975,18 @@ template<> const EnumInfo&
 enum_info<RapicornAidaTest::MathExpressions> ()
 {
   static const EnumValue _aida_enumvalues_1014[] = {
-    { RapicornAidaTest::RESULT_2, "RESULT_2", NULL, NULL },
-    { RapicornAidaTest::RESULT_5, "RESULT_5", NULL, NULL },
-    { RapicornAidaTest::RESULT_8, "RESULT_8", NULL, NULL },
-    { RapicornAidaTest::RESULT_6, "RESULT_6", NULL, NULL },
-    { RapicornAidaTest::RESULT_7, "RESULT_7", NULL, NULL },
-    { RapicornAidaTest::RESULT_16, "RESULT_16", NULL, NULL },
-    { RapicornAidaTest::RESULT_3, "RESULT_3", NULL, NULL },
-    { RapicornAidaTest::RESULT_24, "RESULT_24", NULL, NULL },
-    { RapicornAidaTest::RESULT_13, "RESULT_13", NULL, NULL },
-    { RapicornAidaTest::RESULT_m2, "RESULT_m2", NULL, NULL },
-    { RapicornAidaTest::RESULT_77, "RESULT_77", NULL, NULL },
-    { RapicornAidaTest::RESULT_511, "RESULT_511", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_2), "RESULT_2", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_5), "RESULT_5", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_8), "RESULT_8", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_6), "RESULT_6", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_7), "RESULT_7", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_16), "RESULT_16", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_3), "RESULT_3", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_24), "RESULT_24", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_13), "RESULT_13", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_m2), "RESULT_m2", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_77), "RESULT_77", NULL, NULL },
+    { int64_t (RapicornAidaTest::MathExpressions::RESULT_511), "RESULT_511", NULL, NULL },
   };
   return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("RapicornAidaTest::MathExpressions", 0, _aida_enumvalues_1014);
 } // specialization

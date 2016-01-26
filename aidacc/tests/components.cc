@@ -32,7 +32,7 @@ fill_simple_data_pack (A1::SimpleDataPack &simple)
   simple.vi64t = 64;
   simple.vf64 = 123456789e-11;
   simple.vstr = "donkeykong";
-  simple.count = A1::THREE;
+  simple.count = A1::CountEnum::THREE;
   simple.location.x = -3;
   simple.location.y = -3;
   simple.strings.push_back ("ABCDEFGHI");
@@ -53,7 +53,7 @@ fill_big_data_pack (A1::BigDataPack &big)
   ints64.swap (big.ints64);
   std::vector<double> floats = { -TstNAN, -INFINITY, -5.5, -0.75, -0, +0, +0.25, +1.25, +INFINITY, +TstNAN };
   floats.swap (big.floats);
-  std::vector<A1::CountEnum> counts = { A1::THREE, A1::TWO, A1::ONE };
+  std::vector<A1::CountEnum> counts = { A1::CountEnum::THREE, A1::CountEnum::TWO, A1::CountEnum::ONE };
   counts.swap (big.counts);
   A1::Location l;
   l.x = -3; l.y = -5; big.locations.push_back (l);

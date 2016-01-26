@@ -411,11 +411,11 @@ class Generator:
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
       # number = self.c_long_postfix (number)
-      number = enum_ns + '::' + ident
+      number = enum_ns + '::' + enum_class + '::' + ident
       ident = cquote (ident)
       label = label if label else "NULL"
       blurb = blurb if blurb else "NULL"
-      s += '    { %s, %s, %s, %s },\n' % (number, ident, label, blurb)
+      s += '    { int64_t (%s), %s, %s, %s },\n' % (number, ident, label, blurb)
     s += '  };\n'
     """   template<> const EnumInfo& enum_info<X> () { return cached_enum_info ("X", 3, false, xvalues); } """
     s += '  return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("%s", %s, %s);\n' % (c_typename, int (type_info.combinable), varray)
@@ -1117,7 +1117,7 @@ class Generator:
     nm = type_info.name
     l = []
     s += '/// @cond GeneratedEnums\n'
-    s += 'enum %s {\n' % type_info.name
+    s += 'enum class %s {\n' % type_info.name
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
       s += '  %s = %s,' % (ident, self.c_long_postfix (number))
@@ -1130,9 +1130,9 @@ class Generator:
     s += 'inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, %s &e) ' % nm
     s += '{ e = %s (__f_.pop_evalue()); }\n' % nm
     if type_info.combinable: # enum as flags
-      s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (s1 & Rapicorn::Aida::uint64 (s2)); }\n' % (nm, nm, nm, nm)
+      s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (uint64_t (s1) & uint64_t (s2)); }\n' % (nm, nm, nm, nm)
       s += 'inline %s& operator&= (%s &s1, %s s2) { s1 = s1 & s2; return s1; }\n' % (nm, nm, nm)
-      s += 'inline %s  operator|  (%s  s1, %s s2) { return %s (s1 | Rapicorn::Aida::uint64 (s2)); }\n' % (nm, nm, nm, nm)
+      s += 'inline %s  operator|  (%s  s1, %s s2) { return %s (uint64_t (s1) | uint64_t (s2)); }\n' % (nm, nm, nm, nm)
       s += 'inline %s& operator|= (%s &s1, %s s2) { s1 = s1 | s2; return s1; }\n' % (nm, nm, nm)
     s += '/// @endcond\n'
     return s

@@ -34,24 +34,24 @@
 .../testfail.idl:29:22: Trying to find one of ...
 >  record EmptyRecord { }; // record is empty
 >                       ^
-.../testfail.idl:31:28: NameError: redefining keyword: record
+.../testfail.idl:31:28: NameError: expected identifier, not keyword: record
 >  enum ExtensiveEnum { record, }; // keyword as enum value
 >                             ^
 .../testfail.idl:33:25: Trying to find one of ...
 >  enum ExtensiveEnum { Foo; }; // semicolon in enum
 >                          ^
-.../testfail.idl:35:35: NameError: redefining identifier: EV1
+.../testfail.idl:35:37: NameError: redefining enum member: EV1
 >  enum ExtensiveEnum { EV1, EV2, EV1 }; // duplicate enum value
->                                    ^
-.../testfail.idl:37:33: NameError: redefining identifier: AA
->  enum Enu1 { AA }; enum Enu2 { AA }; // duplicate enum value
->                                  ^
+>                                      ^
+.../testfail.idl:37:21: NameError: redefining enum member: AA
+>  enum Enu1 { AA, AA }; // duplicate enum value
+>                      ^
 .../testfail.idl:39:35: NameError: redefining identifier: Enu1
 >  enum Enu1 { AA }; enum Enu1 { BB }; // duplicate enum name
 >                                    ^
-.../testfail.idl:41:40: NameError: redefining identifier: Var
->  Const Var = 0; enum ExtensiveEnum { Var }; // constant in enum
->                                         ^
+.../testfail.idl:41:27: NameError: expected identifier, not keyword: Const
+>  enum ExtensiveEnum { Const }; // Const keyword in enum
+>                            ^
 .../testfail.idl:43:26: Trying to find one of ...
 >  sequence EmptySequence { }; // sequence needs 1 field
 >                           ^
@@ -70,9 +70,9 @@
 .../testfail.idl:57:17: NameError: redefining keyword: class
 >  Const class = 5; // keyword redefinition
 >                  ^
-.../testfail.idl:59:33: NameError: redefining identifier: AA
+.../testfail.idl:59:35: NameError: redefining identifier: Enu1
 >  enum Enu1 { AA }; enum Enu1 { AA }; // type redefinition
->                                  ^
+>                                    ^
 .../testfail.idl:67: invalid type definition: = Num ("x", "X coord", 0, 0, 100.0, 0.5, "ro")
 .../testfail.idl:69:29: Trying to find one of ...
 >  interface I { int32 method (,); }; // invalid method arg separator
@@ -112,12 +112,12 @@
 >    ^
 .../include-f1.idl:1: note: included "include-f2.idl" from here
 .../testfail.idl:81: note: included "include-f1.idl" from here
-.../testfail.idl:83:57: NameError: redefining identifier: E1
+.../testfail.idl:83:59: NameError: redefining identifier: E
 >  namespace B { enum E { E1 }; } namespace B { enum E { E1 }; } // namespaced type redefinition
->                                                          ^
-.../testfail.idl:85:71: NameError: redefining identifier: E1
+>                                                            ^
+.../testfail.idl:85:73: NameError: redefining identifier: E
 >  ...espace B { enum E { E1 }; } namespace B { enum E { E1 }; } } // namespaced type redefinition
->                                                          ^
+>                                                            ^
 .../testfail.idl:87:35: NameError: expected identifier, not keyword: self
 >  interface I { int32 method (I self); }; // invalid method arg name
 >                                    ^
