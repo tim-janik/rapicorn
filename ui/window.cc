@@ -568,7 +568,7 @@ WindowImpl::dispatch_focus_event (const EventFocus &fevent)
 }
 
 bool
-WindowImpl::move_focus_dir (FocusDirType focus_dir)
+WindowImpl::move_focus_dir (FocusDir focus_dir)
 {
   WidgetImplP new_focus = NULL, old_focus = shared_ptr_cast<WidgetImpl> (get_focus());
 
@@ -610,7 +610,7 @@ WindowImpl::dispatch_key_event (const Event &event)
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
     {
-      FocusDirType fdir = key_value_to_focus_dir (kevent->key);
+      FocusDir fdir = key_value_to_focus_dir (kevent->key);
       ActivateKeyType activate = key_value_to_activation (kevent->key);
       if (!handled && fdir)
         {

@@ -23,7 +23,7 @@ static __attribute__ ((unused)) Color alternate (Color color) { return adjust_co
 
 static Color
 state_color (Color     color,
-             StateType state,
+             WidgetState state,
              ColorType ctype)
 {
   /* foreground colors remain stable across certain states */
@@ -50,7 +50,7 @@ state_color (Color     color,
 }
 
 static Color
-colorset_normal (StateType state,
+colorset_normal (WidgetState state,
                  ColorType color_type)
 {
   switch (color_type)
@@ -80,7 +80,7 @@ colorset_normal (StateType state,
 }
 
 static Color
-colorset_selected (StateType state,
+colorset_selected (WidgetState state,
                    ColorType color_type)
 {
   switch (color_type)
@@ -94,7 +94,7 @@ colorset_selected (StateType state,
 }
 
 static Color
-colorset_base (StateType state,
+colorset_base (WidgetState state,
                ColorType color_type)
 {
   switch (color_type)
@@ -107,7 +107,7 @@ colorset_base (StateType state,
     }
 }
 
-typedef Color (*ColorFunc) (StateType, ColorType);
+typedef Color (*ColorFunc) (WidgetState, ColorType);
 
 class Heritage::Internals {
   WidgetImpl &widget_;
@@ -123,7 +123,7 @@ public:
     return widget == widget_ && normal_cf == ncf && selected_cf == scf;
   }
   Color
-  get_color (const Heritage *heritage, StateType state, ColorType ct) const
+  get_color (const Heritage *heritage, WidgetState state, ColorType ct) const
   {
     if (selected.get() == heritage)
       return scf (state, ct);
@@ -149,7 +149,7 @@ Heritage::~Heritage ()
 }
 
 HeritageP
-Heritage::create_heritage (WindowImpl &window, WidgetImpl &widget, ColorSchemeType color_scheme)
+Heritage::create_heritage (WindowImpl &window, WidgetImpl &widget, ColorScheme color_scheme)
 {
   WindowImpl *iwindow = widget.get_window();
   assert (iwindow == &window);
@@ -165,7 +165,7 @@ Heritage::create_heritage (WindowImpl &window, WidgetImpl &widget, ColorSchemeTy
 }
 
 HeritageP
-Heritage::adapt_heritage (WidgetImpl &widget, ColorSchemeType color_scheme)
+Heritage::adapt_heritage (WidgetImpl &widget, ColorScheme color_scheme)
 {
   if (internals_)
     {
@@ -207,7 +207,7 @@ Heritage::selected ()
 }
 
 Color
-Heritage::get_color (StateType state,
+Heritage::get_color (WidgetState state,
                      ColorType color_type) const
 {
   Color c;
@@ -217,7 +217,7 @@ Heritage::get_color (StateType state,
 }
 
 Color
-Heritage::insensitive_ink (StateType state,
+Heritage::insensitive_ink (WidgetState state,
                            Color    *glintp) const
 {
   /* constrcut insensitive ink from a mixture of foreground and dark_color */
@@ -231,7 +231,7 @@ Heritage::insensitive_ink (StateType state,
 
 Color
 Heritage::resolve_color (const String  &color_name,
-                         StateType      state,
+                         WidgetState      state,
                          ColorType      color_type)
 {
   if (color_name[0] == '#')

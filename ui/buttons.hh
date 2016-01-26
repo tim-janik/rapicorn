@@ -10,7 +10,7 @@ namespace Rapicorn {
 class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual ButtonAreaIface,
                        public virtual EventHandler {
   uint          button_, repeater_, unpress_;
-  ClickType     click_type_;
+  Click     click_type_;
   String        on_click_[3];
   virtual void          dump_private_data       (TestStream &tstream);
   bool                  activate_button_command (int button);
@@ -23,8 +23,8 @@ protected:
 public:
   explicit              ButtonAreaImpl  ();
   virtual bool          activate_widget ();
-  virtual ClickType     click_type      () const override;
-  virtual void          click_type      (ClickType click_type) override;
+  virtual Click     click_type      () const override;
+  virtual void          click_type      (Click click_type) override;
   virtual String        on_click        () const override;
   virtual void          on_click        (const String &command) override;
   virtual String        on_click2       () const override;

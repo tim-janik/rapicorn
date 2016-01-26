@@ -160,7 +160,7 @@ DisplayWindow::start_user_move (uint button, double root_x, double root_y)
 }
 
 void
-DisplayWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
+DisplayWindow::start_user_resize (uint button, double root_x, double root_y, Anchor edge)
 {
   DisplayCommand *cmd = new DisplayCommand (DisplayCommand::URESIZE, this);
   cmd->button = button;

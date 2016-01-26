@@ -21,14 +21,14 @@ ButtonAreaImpl::construct ()
   SingleContainerImpl::construct();
 }
 
-ClickType
+Click
 ButtonAreaImpl::click_type () const
 {
   return click_type_;
 }
 
 void
-ButtonAreaImpl::click_type (ClickType click_type)
+ButtonAreaImpl::click_type (Click click_type)
 {
   reset();
   click_type_ = click_type;

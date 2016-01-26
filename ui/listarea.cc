@@ -533,7 +533,7 @@ WidgetListImpl::focus_lost ()
 }
 
 bool
-WidgetListImpl::move_focus (FocusDirType fdir)
+WidgetListImpl::move_focus (FocusDir fdir)
 {
   // check focus ability
   if (!visible() || !sensitive())

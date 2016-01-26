@@ -376,7 +376,7 @@ key_value_is_accelerator (uint32 keysym)
   return true;
 }
 
-FocusDirType
+FocusDir
 key_value_to_focus_dir (uint32 keysym)
 {
   switch (keysym)
@@ -387,7 +387,7 @@ key_value_to_focus_dir (uint32 keysym)
     case KEY_Up:                        return FOCUS_UP;
     case KEY_Left:                      return FOCUS_LEFT;
     case KEY_Down:                      return FOCUS_DOWN;
-    default:                            return FocusDirType (0);
+    default:                            return FocusDir (0);
     }
 }
 

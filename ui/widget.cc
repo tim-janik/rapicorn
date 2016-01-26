@@ -199,11 +199,11 @@ WidgetImpl::grab_default () const
   return false;
 }
 
-StateType
+WidgetState
 WidgetImpl::state () const
 {
-  constexpr StateType z0 = StateType (0); // STATE_NORMAL
-  StateType st = z0;
+  constexpr WidgetState z0 = WidgetState (0); // STATE_NORMAL
+  WidgetState st = z0;
   st |= hover()       ? STATE_HOVER : z0;
   // STATE_PANEL
   // STATE_ACCELERATABLE
@@ -282,7 +282,7 @@ WidgetImpl::grab_focus ()
 }
 
 bool
-WidgetImpl::move_focus (FocusDirType fdir)
+WidgetImpl::move_focus (FocusDir fdir)
 {
   if (!has_focus() && focusable())
     return grab_focus();
@@ -1807,16 +1807,16 @@ WidgetImpl::user_source () const
   return Factory::factory_context_source (factory_context());
 }
 
-static DataKey<ColorSchemeType> widget_color_scheme_key;
+static DataKey<ColorScheme> widget_color_scheme_key;
 
-ColorSchemeType
+ColorScheme
 WidgetImpl::color_scheme () const
 {
   return get_data (&widget_color_scheme_key);
 }
 
 void
-WidgetImpl::color_scheme (ColorSchemeType cst)
+WidgetImpl::color_scheme (ColorScheme cst)
 {
   if (cst != get_data (&widget_color_scheme_key))
     {

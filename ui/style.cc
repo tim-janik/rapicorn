@@ -53,7 +53,7 @@ StyleImpl::theme_color (double hue360, double saturation100, double brightness10
 }
 
 Color
-StyleImpl::state_color (StateType state, ColorType color_type, const String &detail)
+StyleImpl::state_color (WidgetState state, ColorType color_type, const String &detail)
 {
   switch (color_type)
     {
@@ -76,12 +76,12 @@ class FallbackTheme : public ThemeInfo {
   friend class FriendAllocator<FallbackTheme>; // allows make_shared() access to ctor/dtor
 public:
   virtual String name           () override        { return "Rapicorn::FallbackTheme"; }
-  virtual Color  fragment_color (const String &fragment, StateType state) override;
+  virtual Color  fragment_color (const String &fragment, WidgetState state) override;
   virtual Color  theme_color    (double hue360, double saturation100, double brightness100) override;
 };
 
 Color
-FallbackTheme::fragment_color (const String &fragment, StateType state)
+FallbackTheme::fragment_color (const String &fragment, WidgetState state)
 {
   return fragment == "#fg" ? 0xff000000 : 0xffdfdcd8;
 }
@@ -101,12 +101,12 @@ class FileTheme : public ThemeInfo {
 public:
   explicit       FileTheme      (const String &theme_name, const Blob &blob, bool local_files);
   virtual String name           () override         { return theme_name_; }
-  virtual Color  fragment_color (const String &fragment, StateType state) override;
+  virtual Color  fragment_color (const String &fragment, WidgetState state) override;
   virtual Color  theme_color    (double hue360, double saturation100, double brightness100) override;
 };
 
 Color
-FileTheme::fragment_color (const String &fragment, StateType state)
+FileTheme::fragment_color (const String &fragment, WidgetState state)
 {
   return fallback_theme()->fragment_color (fragment, state);
 }

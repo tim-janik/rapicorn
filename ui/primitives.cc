@@ -114,7 +114,7 @@ Rect::string() const
 }
 
 Point
-Rect::anchor_point (AnchorType anchor)
+Rect::anchor_point (Anchor anchor)
 {
   switch (anchor)
     {
@@ -132,7 +132,7 @@ Rect::anchor_point (AnchorType anchor)
 }
 
 Rect
-Rect::create_anchored (AnchorType anchor,
+Rect::create_anchored (Anchor anchor,
                        double     width,
                        double     height)
 {

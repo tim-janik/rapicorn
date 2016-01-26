@@ -9,10 +9,10 @@ namespace Rapicorn {
 
 class AmbienceImpl : public virtual SingleContainerImpl, public virtual AmbienceIface {
   String normal_background_, hover_background_, active_background_, insensitive_background_;
-  LightingType normal_lighting_, hover_lighting_, active_lighting_, insensitive_lighting_;
-  LightingType normal_shade_, hover_shade_, active_shade_, insensitive_shade_;
+  Lighting normal_lighting_, hover_lighting_, active_lighting_, insensitive_lighting_;
+  Lighting normal_shade_, hover_shade_, active_shade_, insensitive_shade_;
 protected:
-  void                 render_shade            (cairo_t *cairo, int x, int y, int width, int height, LightingType st);
+  void                 render_shade            (cairo_t *cairo, int x, int y, int width, int height, Lighting st);
   virtual void         render                  (RenderContext &rcontext, const Rect &rect) override;
 public:
   explicit             AmbienceImpl            ();
@@ -25,34 +25,34 @@ public:
   virtual String       active_background       () const override;
   virtual void         normal_background       (const String &color) override;
   virtual String       normal_background       () const override;
-  virtual void         insensitive_lighting    (LightingType sh) override;
-  virtual LightingType insensitive_lighting    () const override;
-  virtual void         hover_lighting          (LightingType sh) override;
-  virtual LightingType hover_lighting          () const override;
-  virtual void         active_lighting         (LightingType sh) override;
-  virtual LightingType active_lighting         () const override;
-  virtual void         normal_lighting         (LightingType sh) override;
-  virtual LightingType normal_lighting         () const override;
-  virtual void         insensitive_shade       (LightingType sh) override;
-  virtual LightingType insensitive_shade       () const override;
-  virtual void         hover_shade             (LightingType sh) override;
-  virtual LightingType hover_shade             () const override;
-  virtual void         active_shade            (LightingType sh) override;
-  virtual LightingType active_shade            () const override;
-  virtual void         normal_shade            (LightingType sh) override;
-  virtual LightingType normal_shade            () const override;
+  virtual void         insensitive_lighting    (Lighting sh) override;
+  virtual Lighting insensitive_lighting    () const override;
+  virtual void         hover_lighting          (Lighting sh) override;
+  virtual Lighting hover_lighting          () const override;
+  virtual void         active_lighting         (Lighting sh) override;
+  virtual Lighting active_lighting         () const override;
+  virtual void         normal_lighting         (Lighting sh) override;
+  virtual Lighting normal_lighting         () const override;
+  virtual void         insensitive_shade       (Lighting sh) override;
+  virtual Lighting insensitive_shade       () const override;
+  virtual void         hover_shade             (Lighting sh) override;
+  virtual Lighting hover_shade             () const override;
+  virtual void         active_shade            (Lighting sh) override;
+  virtual Lighting active_shade            () const override;
+  virtual void         normal_shade            (Lighting sh) override;
+  virtual Lighting normal_shade            () const override;
   // group setters
   virtual void         background              (const String &color) override;
-  virtual void         lighting                (LightingType sh) override;
-  virtual void         shade                   (LightingType sh) override;
+  virtual void         lighting                (Lighting sh) override;
+  virtual void         shade                   (Lighting sh) override;
 private:
   virtual String       background              () const override;
-  virtual LightingType lighting                () const override;
-  virtual LightingType shade                   () const override;
+  virtual Lighting lighting                () const override;
+  virtual Lighting shade                   () const override;
 };
 
 class FrameImpl : public virtual SingleContainerImpl, public virtual FrameIface {
-  FrameType         normal_frame_, active_frame_;
+  DrawFrame         normal_frame_, active_frame_;
   bool              overlap_child_, tight_focus_;
   bool              is_tight_focus    () const;
 protected:
@@ -64,13 +64,13 @@ protected:
 public: // FrameIface
   explicit          FrameImpl       ();
   virtual          ~FrameImpl       () override;
-  virtual FrameType current_frame   () override;
-  virtual FrameType normal_frame    () const override;
-  virtual void      normal_frame    (FrameType) override;
-  virtual FrameType active_frame    () const override;
-  virtual void      active_frame    (FrameType) override;
-  virtual FrameType frame_type      () const override;
-  virtual void      frame_type      (FrameType) override;
+  virtual DrawFrame current_frame   () override;
+  virtual DrawFrame normal_frame    () const override;
+  virtual void      normal_frame    (DrawFrame) override;
+  virtual DrawFrame active_frame    () const override;
+  virtual void      active_frame    (DrawFrame) override;
+  virtual DrawFrame frame_type      () const override;
+  virtual void      frame_type      (DrawFrame) override;
   virtual bool      overlap_child   () const override;
   virtual void      overlap_child   (bool) override;
 };
@@ -78,7 +78,7 @@ public: // FrameIface
 class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrameIface, public virtual FocusIndicator {
   ContainerImpl    *focus_container_;
   bool              container_has_focus_;
-  FrameType         focus_frame_;
+  DrawFrame         focus_frame_;
 protected:
   virtual void set_focus_child            (WidgetImpl *widget) override;
   virtual void hierarchy_changed          (WidgetImpl *old_toplevel) override;
@@ -86,10 +86,10 @@ protected:
 public:
   explicit          FocusFrameImpl    ();
   virtual          ~FocusFrameImpl    () override;
-  virtual FrameType current_frame () override;
+  virtual DrawFrame current_frame () override;
   // FocusFrameIface
-  virtual FrameType focus_frame   () const override;
-  virtual void      focus_frame   (FrameType) override;
+  virtual DrawFrame focus_frame   () const override;
+  virtual void      focus_frame   (DrawFrame) override;
   virtual bool      tight_focus   () const override;
   virtual void      tight_focus   (bool) override;
 };
@@ -109,9 +109,9 @@ class ElementPainterImpl : public virtual SingleContainerImpl, public virtual El
   ImagePainter   size_painter_, state_painter_;
   String         cached_painter_;
   String         current_element     ();
-  String         state_element       (StateType state);
+  String         state_element       (WidgetState state);
 protected:
-  virtual StateType element_state    () const;
+  virtual WidgetState element_state    () const;
   virtual void      do_changed       (const String &name) override;
   virtual void      size_request     (Requisition &requisition) override;
   virtual void      size_allocate    (Allocation area, bool changed) override;
@@ -129,7 +129,7 @@ class FocusPainterImpl : public virtual ElementPainterImpl, public virtual Focus
   ContainerImpl *focus_container_;
   bool           container_has_focus_, tight_;
 protected:
-  virtual StateType element_state              () const override;
+  virtual WidgetState element_state              () const override;
   virtual void      set_focus_child            (WidgetImpl *widget) override;
   virtual void      hierarchy_changed          (WidgetImpl *old_toplevel) override;
   virtual void      focusable_container_change (ContainerImpl &focus_container) override;

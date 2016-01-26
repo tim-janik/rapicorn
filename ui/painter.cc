@@ -118,7 +118,7 @@ CPainter::draw_center_shade_rect (int xc0, int yc0, Color color0, int xc1, int y
 }
 
 void
-CPainter::draw_dir_arrow (double x, double y, double width, double height, Color fill, DirType dir)
+CPainter::draw_dir_arrow (double x, double y, double width, double height, Color fill, Direction dir)
 {
   double xhalf = width / 2., yhalf = height / 2.;
   switch (dir)

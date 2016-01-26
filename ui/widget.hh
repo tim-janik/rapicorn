@@ -177,10 +177,10 @@ public:
   void                        insensitive       (bool b) { sensitive (!b); }                    ///< Negation of sensitive(bool)
   bool                        key_sensitive     () const;
   bool                        pointer_sensitive () const;
-  bool                        hover             () const { return test_any_flag (STATE_HOVER); } ///< Get widget "hover" state, see StateType::STATE_HOVER
+  bool                        hover             () const { return test_any_flag (STATE_HOVER); } ///< Get widget "hover" state, see WidgetState::STATE_HOVER
   virtual void                hover             (bool b) { set_flag (STATE_HOVER, b); } ///< Toggled with "hover" state of a widget
   bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
-  bool                        active            () const { return test_any_flag (STATE_ACTIVE); } ///< Get the widget's StateType::STATE_ACTIVE.
+  bool                        active            () const { return test_any_flag (STATE_ACTIVE); } ///< Get the widget's WidgetState::STATE_ACTIVE.
   virtual void                active            (bool b) { set_flag (STATE_ACTIVE, b); } ///< Toggled for active widgets (e.g. buttons).
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
@@ -191,7 +191,7 @@ public:
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();
   void                        unset_focus       ();
-  virtual bool                move_focus        (FocusDirType fdir);
+  virtual bool                move_focus        (FocusDir fdir);
   virtual bool                activate          ();
   virtual bool                hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal expansion
   virtual void                hexpand           (bool b) { set_flag (HEXPAND, b); } ///< Allow horizontal expansion, see #VEXPAND
@@ -213,8 +213,8 @@ public:
   virtual void                name              (const String &str); ///< Set Widget name and "id"
   FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
-  ColorSchemeType             color_scheme      () const;
-  void                        color_scheme      (ColorSchemeType cst);
+  ColorScheme             color_scheme      () const;
+  void                        color_scheme      (ColorScheme cst);
   /* override requisition */
   double                      width             () const;
   void                        width             (double w);
@@ -315,10 +315,10 @@ public:
   Color                 selected_bg             () { return state_color (STATE_SELECTED, 0); }
   Color                 selected_fg             () { return state_color (STATE_SELECTED, 1); }
   // Color                 focus_color             () { return state_color (FOCUS_COLOR); }
-  Color                 state_color             (StateType state, bool foreground, const String &detail = "");
+  Color                 state_color             (WidgetState state, bool foreground, const String &detail = "");
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
   // state colors
-  StateType             state                   () const;
+  WidgetState             state                   () const;
   Color                 foreground              ();
   Color                 background              ();
   // Color              black                   () { return theme_color (  0,   0,   0); }

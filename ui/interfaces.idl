@@ -21,14 +21,14 @@ enum AdjustmentSourceType {
 };
 
 /// Enum generally used for text paragraph alignments.
-enum AlignType  {
+enum Align  {
   ALIGN_LEFT = 1,
   ALIGN_CENTER,
   ALIGN_RIGHT,
 };
 
 /// Enum to specify an anchoring point for graphical elements.
-enum AnchorType {
+enum Anchor {
   ANCHOR_NONE = 0,
   ANCHOR_CENTER,
   ANCHOR_EAST,
@@ -42,7 +42,7 @@ enum AnchorType {
 };
 
 /// Enum to specify button click behaviour.
-enum ClickType {
+enum Click {
   CLICK_ON_PRESS = 1,
   CLICK_ON_RELEASE,
   CLICK_SLOW_REPEAT,
@@ -75,7 +75,7 @@ enum ColorType {
 };
 
 /// Enum used to specify the color schemes of a Widget.
-enum ColorSchemeType {
+enum ColorScheme {
   COLOR_INHERIT = 0,    ///< Inherit color from parent component
   COLOR_NORMAL,         ///< Normal color specification
   COLOR_SELECTED,       ///< Color used for selected areas
@@ -83,7 +83,7 @@ enum ColorSchemeType {
 };
 
 /// Enum type for directional elements like arrows.
-enum DirType {
+enum Direction {
   DIR_NONE = 0,
   DIR_RIGHT,
   DIR_UP,
@@ -92,14 +92,14 @@ enum DirType {
 };
 
 /// Enum type for text ellipsization.
-enum EllipsizeType {
+enum Ellipsize {
   ELLIPSIZE_START = 1,
   ELLIPSIZE_MIDDLE,
   ELLIPSIZE_END
 };
 
 /// Enum values used to navigate the focus chain.
-enum FocusDirType {
+enum FocusDir {
   FOCUS_NEXT = 1,
   FOCUS_PREV,
   FOCUS_RIGHT,
@@ -109,7 +109,7 @@ enum FocusDirType {
 };
 
 /// Enum type to discriminate various Frame widget types.
-enum FrameType {
+enum DrawFrame {
   FRAME_NONE = 0,
   FRAME_BACKGROUND,
   FRAME_IN,
@@ -121,7 +121,7 @@ enum FrameType {
 };
 
 /// Enum with various lighting types.
-flags enum LightingType {
+flags enum Lighting {
   LIGHTING_NONE = 0,
   LIGHTING_UPPER_LEFT,
   LIGHTING_UPPER_RIGHT,
@@ -147,14 +147,14 @@ enum SelectionMode {
 };
 
 /// Enum policy type for sizing trade offs.
-enum SizePolicyType {
+enum SizePolicy {
   SIZE_POLICY_NORMAL = 0,
   SIZE_POLICY_WIDTH_FROM_HEIGHT,
   SIZE_POLICY_HEIGHT_FROM_WIDTH,
 };
 
 /// Enum flags type to indicate Widget states.
-flags enum StateType {
+flags enum WidgetState {
   STATE_NORMAL          = 0,       ///< Widget factory / initial state.
   STATE_HOVER           = 1 <<  0, ///< A pointing device (e.g. mouse) is above the Widget.
   STATE_PANEL           = 1 <<  1, ///< Widget is rendered as part of a panel section.
@@ -295,7 +295,7 @@ interface Widget : Object {
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
   bool            allow_focus  = Bool (_("Allow Focus"), _("Whether this widget may receive input focus"), "rw");
-  ColorSchemeType color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
+  ColorScheme color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
   /// @name User Sizes and Size Groups
   String  hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
   String  vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
@@ -396,17 +396,17 @@ interface Alignment : Container {
 /// The Frame container decorates its single child with a state dependant frame drawing.
 /// See also the corresponding implementation class FrameImpl.
 interface Frame : Container {
-  FrameType normal_frame    = Enum (_("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw");
-  FrameType active_frame    = Enum (_("Active Frame"), _("The kind of frame to draw in active state"), "rw");
-  FrameType frame_type      = Enum (_("Frame Type"),     _("The kind of frame to draw in all states"), "wo");
+  DrawFrame normal_frame    = Enum (_("Normal Frame"),   _("The kind of frame to draw in normal state"), "rw");
+  DrawFrame active_frame    = Enum (_("Active Frame"), _("The kind of frame to draw in active state"), "rw");
+  DrawFrame frame_type      = Enum (_("Frame Type"),     _("The kind of frame to draw in all states"), "wo");
   bool      overlap_child   = Bool (_("Overlap Child"),  _("Draw frame into child allocation"), "rw");
-  FrameType current_frame ();     ///< Retrieve the kind of frame that is currently being displayed.
+  DrawFrame current_frame ();     ///< Retrieve the kind of frame that is currently being displayed.
 };
 
 /// The FocusFrame container decorates its single child depending on whether its descendants have focus.
 /// See also the corresponding implementation class FocusFrameImpl.
 interface FocusFrame : Frame {
-  FrameType focus_frame = Enum (_("Focus Frame"), _("The kind of frame to draw in focus state"), "rw");
+  DrawFrame focus_frame = Enum (_("Focus Frame"), _("The kind of frame to draw in focus state"), "rw");
   bool      tight_focus = Bool (_("Tight Focus"), _("Prevent extra padding around focus frames"), "rw");
 };
 
@@ -417,17 +417,17 @@ interface Ambience : Container {
   String hover_background           = String (_("Hover Background"), _("The kind of background painted when in hover state"), "rw");
   String active_background          = String (_("Active Background"), _("The kind of background painted in active state"), "rw");
   String insensitive_background     = String (_("Insensitive Background"), _("The kind of background painted when insensitive"), "rw");
-  LightingType normal_lighting      = Enum (_("Normal Lighting"), _("The kind of lighting painted when normal"), "rw");
-  LightingType hover_lighting       = Enum (_("Hover Lighting"), _("The kind of lighting painted when in hover state"), "rw");
-  LightingType active_lighting      = Enum (_("Active Lighting"), _("The kind of lighting painted in active state"), "rw");
-  LightingType insensitive_lighting = Enum (_("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw");
-  LightingType normal_shade         = Enum (_("Normal Shade"), _("The kind of shade painted when normal"), "rw");
-  LightingType hover_shade          = Enum (_("Hover Shade"), _("The kind of shade painted when in hover state"), "rw");
-  LightingType active_shade         = Enum (_("Active Shade"), _("The kind of shade painted in active state"), "rw");
-  LightingType insensitive_shade    = Enum (_("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw");
+  Lighting normal_lighting      = Enum (_("Normal Lighting"), _("The kind of lighting painted when normal"), "rw");
+  Lighting hover_lighting       = Enum (_("Hover Lighting"), _("The kind of lighting painted when in hover state"), "rw");
+  Lighting active_lighting      = Enum (_("Active Lighting"), _("The kind of lighting painted in active state"), "rw");
+  Lighting insensitive_lighting = Enum (_("Insensitive Lighting"), _("The kind of lighting painted when insensitive"), "rw");
+  Lighting normal_shade         = Enum (_("Normal Shade"), _("The kind of shade painted when normal"), "rw");
+  Lighting hover_shade          = Enum (_("Hover Shade"), _("The kind of shade painted when in hover state"), "rw");
+  Lighting active_shade         = Enum (_("Active Shade"), _("The kind of shade painted in active state"), "rw");
+  Lighting insensitive_shade    = Enum (_("Insensitive Shade"), _("The kind of shade painted when insensitive"), "rw");
   String       background           = String (_("Background"), _("The kind of background painted for all modes"), "wo");
-  LightingType lighting             = Enum (_("Lighting"), _("The kind of lighting painted for all modes"), "wo");
-  LightingType shade                = Enum (_("Shade"), _("The kind of shade painted for all modes"), "wo");
+  Lighting lighting             = Enum (_("Lighting"), _("The kind of lighting painted for all modes"), "wo");
+  Lighting shade                = Enum (_("Shade"), _("The kind of shade painted for all modes"), "wo");
 };
 
 /// The Table layout container allows to arrange widgets in rows and columns.
@@ -465,7 +465,7 @@ interface VBox : Container {
  * <br/> See also the corresponding implementation class ButtonAreaImpl.
  */
 interface ButtonArea : Container {
-  ClickType     click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
+  Click     click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
   String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
   String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
   String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
@@ -500,23 +500,23 @@ interface SliderSkid : Container {
 /// The Arrow widget paints a single arrow with configurable direction.
 /// See also the corresponding implementation class ArrowImpl.
 interface Arrow : Widget {
-  DirType        arrow_dir   = Enum (_("Arrow Direction"), _("The direction the arrow points to"), "rw");
-  SizePolicyType size_policy = Enum (_("Size Policy"),     _("Policy which determines coupling of width and height"), "rw");
+  Direction        arrow_dir   = Enum (_("Arrow Direction"), _("The direction the arrow points to"), "rw");
+  SizePolicy size_policy = Enum (_("Size Policy"),     _("Policy which determines coupling of width and height"), "rw");
 };
 
 /// The DotGrid widget paints a configurable set of dots arranged in a grid.
 /// See also the corresponding implementation class DotGridImpl.
 interface DotGrid : Widget {
-  FrameType normal_dot      = Enum (_("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw");
-  FrameType active_dot      = Enum (_("Active Dot"), _("The kind of dot-frame to draw in active state"), "rw");
-  FrameType dot_type        = Enum (_("Dot Type"), _("The kind of dot-frame to draw in all states"), "wo");
+  DrawFrame normal_dot      = Enum (_("Normal Dot"), _("The kind of dot-frame to draw in normal state"), "rw");
+  DrawFrame active_dot      = Enum (_("Active Dot"), _("The kind of dot-frame to draw in active state"), "rw");
+  DrawFrame dot_type        = Enum (_("Dot Type"), _("The kind of dot-frame to draw in all states"), "wo");
   int32 n_hdots             = Range (_("H-Dot #"), _("The number of horizontal dots to be drawn"), "rw", 0, 99999, 3);
   int32 n_vdots             = Range (_("V-Dot #"), _("The number of vertical dots to be drawn"), "rw", 0, 99999, 3);
   int32 right_padding_dots  = Range (_("Right Padding Dots"), _("Amount of padding in dots to add at the child's right side"), "rw", 0, 65535, 3);
   int32 top_padding_dots    = Range (_("Top Padding Dots"), _("Amount of padding in dots to add at the child's top side"), "rw", 0, 65535, 3);
   int32 left_padding_dots   = Range (_("Left Padding Dots"), _("Amount of padding in dots to add at the child's left side"), "rw", 0, 65535, 3);
   int32 bottom_padding_dots = Range (_("Bottom Padding Dots"), _("Amount of padding in dots to add at the child's bottom side"), "rw", 0, 65535, 3);
-  FrameType current_dot ();     ///< Retrieve the kind of dot that is currently being displayed.
+  DrawFrame current_dot ();     ///< Retrieve the kind of dot that is currently being displayed.
 };
 
 /** The Drawable widget allows display of custom graphics.

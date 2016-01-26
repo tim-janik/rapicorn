@@ -36,7 +36,7 @@ AmbienceImpl::background (const String &color)
 }
 
 void
-AmbienceImpl::lighting (LightingType sh)
+AmbienceImpl::lighting (Lighting sh)
 {
   insensitive_lighting (sh);
   hover_lighting (sh);
@@ -45,7 +45,7 @@ AmbienceImpl::lighting (LightingType sh)
 }
 
 void
-AmbienceImpl::shade (LightingType sh)
+AmbienceImpl::shade (Lighting sh)
 {
   insensitive_shade (LIGHTING_NONE);
   hover_shade (LIGHTING_NONE);
@@ -59,13 +59,13 @@ AmbienceImpl::background () const
   RAPICORN_ASSERT_UNREACHED();
 }
 
-LightingType
+Lighting
 AmbienceImpl::lighting () const
 {
   RAPICORN_ASSERT_UNREACHED();
 }
 
-LightingType
+Lighting
 AmbienceImpl::shade () const
 {
   RAPICORN_ASSERT_UNREACHED();
@@ -128,123 +128,123 @@ AmbienceImpl::normal_background () const
 }
 
 void
-AmbienceImpl::insensitive_lighting (LightingType sh)
+AmbienceImpl::insensitive_lighting (Lighting sh)
 {
   insensitive_lighting_ = sh;
   expose();
   changed ("insensitive_lighting");
 }
 
-LightingType
+Lighting
 AmbienceImpl::insensitive_lighting () const
 {
   return insensitive_lighting_;
 }
 
 void
-AmbienceImpl::hover_lighting (LightingType sh)
+AmbienceImpl::hover_lighting (Lighting sh)
 {
   hover_lighting_ = sh;
   expose();
   changed ("hover_lighting");
 }
 
-LightingType
+Lighting
 AmbienceImpl::hover_lighting () const
 {
   return hover_lighting_;
 }
 
 void
-AmbienceImpl::active_lighting (LightingType sh)
+AmbienceImpl::active_lighting (Lighting sh)
 {
   active_lighting_ = sh;
   expose();
   changed ("active_lighting");
 }
 
-LightingType
+Lighting
 AmbienceImpl::active_lighting () const
 {
   return active_lighting_;
 }
 
 void
-AmbienceImpl::normal_lighting (LightingType sh)
+AmbienceImpl::normal_lighting (Lighting sh)
 {
   normal_lighting_ = sh;
   expose();
   changed ("normal_lighting");
 }
 
-LightingType
+Lighting
 AmbienceImpl::normal_lighting () const
 {
   return normal_lighting_;
 }
 
 void
-AmbienceImpl::insensitive_shade (LightingType sh)
+AmbienceImpl::insensitive_shade (Lighting sh)
 {
   insensitive_shade_ = sh;
   expose();
   changed ("insensitive_shade");
 }
 
-LightingType
+Lighting
 AmbienceImpl::insensitive_shade () const
 {
   return insensitive_shade_;
 }
 
 void
-AmbienceImpl::hover_shade (LightingType sh)
+AmbienceImpl::hover_shade (Lighting sh)
 {
   hover_shade_ = sh;
   expose();
   changed ("hover_shade");
 }
 
-LightingType
+Lighting
 AmbienceImpl::hover_shade () const
 {
   return hover_shade_;
 }
 
 void
-AmbienceImpl::active_shade (LightingType sh)
+AmbienceImpl::active_shade (Lighting sh)
 {
   active_shade_ = sh;
   expose();
   changed ("active_shade");
 }
 
-LightingType
+Lighting
 AmbienceImpl::active_shade () const
 {
   return active_shade_;
 }
 
 void
-AmbienceImpl::normal_shade (LightingType sh)
+AmbienceImpl::normal_shade (Lighting sh)
 {
   normal_shade_ = sh;
   expose();
   changed ("normal_shade");
 }
 
-LightingType
+Lighting
 AmbienceImpl::normal_shade () const
 {
   return normal_shade_;
 }
 
 void
-AmbienceImpl::render_shade (cairo_t *cairo, int x, int y, int width, int height, LightingType st)
+AmbienceImpl::render_shade (cairo_t *cairo, int x, int y, int width, int height, Lighting st)
 {
   int shade_alpha = 0x3b;
   Color light = light_glint().shade (shade_alpha), dark = dark_glint().shade (shade_alpha);
-  LightingType dark_flag = st & LIGHTING_DARK_FLAG;
+  Lighting dark_flag = st & LIGHTING_DARK_FLAG;
   CPainter painter (cairo);
   if (dark_flag)
     swap (light, dark);
@@ -358,14 +358,14 @@ FrameImpl::do_changed (const String &name)
     expose_enclosure();
 }
 
-FrameType
+DrawFrame
 FrameImpl::normal_frame () const
 {
   return normal_frame_;
 }
 
 void
-FrameImpl::normal_frame (FrameType ft)
+FrameImpl::normal_frame (DrawFrame ft)
 {
   if (normal_frame_ != ft)
     {
@@ -375,14 +375,14 @@ FrameImpl::normal_frame (FrameType ft)
     }
 }
 
-FrameType
+DrawFrame
 FrameImpl::active_frame () const
 {
   return active_frame_;
 }
 
 void
-FrameImpl::active_frame (FrameType ft)
+FrameImpl::active_frame (DrawFrame ft)
 {
   if (active_frame_ != ft)
     {
@@ -392,7 +392,7 @@ FrameImpl::active_frame (FrameType ft)
     }
 }
 
-FrameType
+DrawFrame
 FrameImpl::frame_type () const
 {
   // this is a write-only propery
@@ -400,7 +400,7 @@ FrameImpl::frame_type () const
 }
 
 void
-FrameImpl::frame_type (FrameType ft)
+FrameImpl::frame_type (DrawFrame ft)
 {
   normal_frame (ft);
   active_frame (ft);
@@ -420,7 +420,7 @@ FrameImpl::overlap_child (bool ovc)
   changed ("overlap_child");
 }
 
-FrameType
+DrawFrame
 FrameImpl::current_frame ()
 {
   return ancestry_active() ? active_frame() : normal_frame();
@@ -583,19 +583,19 @@ FocusFrameImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 }
 
 void
-FocusFrameImpl::focus_frame (FrameType ft)
+FocusFrameImpl::focus_frame (DrawFrame ft)
 {
   focus_frame_ = ft;
   changed ("focus_frame");
 }
 
-FrameType
+DrawFrame
 FocusFrameImpl::focus_frame () const
 {
   return focus_frame_;
 }
 
-FrameType
+DrawFrame
 FocusFrameImpl::current_frame ()
 {
   bool in_focus = has_focus();
@@ -739,7 +739,7 @@ state_score (const String &state_string)
 }
 
 String
-ElementPainterImpl::state_element (StateType state)
+ElementPainterImpl::state_element (WidgetState state)
 {
   if (!size_painter_)
     size_painter_ = ImagePainter (svg_source_);
@@ -765,10 +765,10 @@ ElementPainterImpl::state_element (StateType state)
   return svg_source_ + "#" + match;
 }
 
-StateType
+WidgetState
 ElementPainterImpl::element_state () const
 {
-  StateType mystate = state();
+  WidgetState mystate = state();
   if (ancestry_active())
     mystate |= STATE_ACTIVE;
   return mystate;
@@ -905,14 +905,14 @@ FocusPainterImpl::hierarchy_changed (WidgetImpl *old_toplevel)
     }
 }
 
-StateType
+WidgetState
 FocusPainterImpl::element_state () const
 {
   bool in_focus = has_focus();
   in_focus = in_focus || get_focus_child() != NULL;
   in_focus = in_focus || (focus_container_ && focus_container_->has_focus());
   in_focus = in_focus || (focus_container_ && focus_container_->get_focus_child() != NULL);
-  StateType mystate = ElementPainterImpl::element_state();
+  WidgetState mystate = ElementPainterImpl::element_state();
   if (in_focus)
     mystate |= STATE_FOCUSED;
   return mystate;

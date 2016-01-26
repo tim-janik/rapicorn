@@ -109,7 +109,7 @@ default_pango_cairo_font_options (PangoContext *pcontext,
 }
 
 static PangoAlignment
-pango_alignment_from_align_type (AlignType at)
+pango_alignment_from_align_type (Align at)
 {
   switch (at)
     {
@@ -120,7 +120,7 @@ pango_alignment_from_align_type (AlignType at)
     }
 }
 
-static AlignType
+static Align
 align_type_from_pango_alignment (PangoAlignment pa)
 {
   switch (pa)
@@ -133,7 +133,7 @@ align_type_from_pango_alignment (PangoAlignment pa)
 }
 
 static PangoEllipsizeMode
-pango_ellipsize_mode_from_ellipsize_type (EllipsizeType et)
+pango_ellipsize_mode_from_ellipsize_type (Ellipsize et)
 {
   switch (et)
     {
@@ -145,7 +145,7 @@ pango_ellipsize_mode_from_ellipsize_type (EllipsizeType et)
     }
 }
 
-static EllipsizeType
+static Ellipsize
 ellipsize_type_from_pango_ellipsize_mode (PangoEllipsizeMode em)
 {
   switch (em)
@@ -214,9 +214,9 @@ class LayoutCache {
 public:
   PangoLayout*
   create_layout (String         font_description,
-                 AlignType      align,
+                 Align      align,
                  PangoWrapMode  pangowrap,
-                 EllipsizeType  ellipsize,
+                 Ellipsize  ellipsize,
                  int            indent,
                  int            spacing,
                  bool           single_paragraph)

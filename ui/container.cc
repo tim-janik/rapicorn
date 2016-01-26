@@ -487,9 +487,9 @@ struct LesserWidgetByHBand {
 };
 
 struct LesserWidgetByDirection {
-  FocusDirType dir;
+  FocusDir dir;
   Point        anchor;
-  LesserWidgetByDirection (FocusDirType d,
+  LesserWidgetByDirection (FocusDir d,
                          const Point &p) :
     dir (d), anchor (p)
   {}
@@ -541,7 +541,7 @@ rect_center (const Allocation &a)
 }
 
 bool
-ContainerImpl::move_focus (FocusDirType fdir)
+ContainerImpl::move_focus (FocusDir fdir)
 {
   // check focus ability
   if (!visible() || !sensitive())
