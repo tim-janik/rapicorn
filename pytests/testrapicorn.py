@@ -37,10 +37,10 @@ for i in (9999, 22, 778, 0, 1, 2, 3, 123):
   window.width = i ; assert window.width == i
 # enum testing
 wlist = window.query_selector ("#CheckWidgetList")
-wlist.selection_mode = Rapicorn.SELECTION_NONE          ; assert wlist.selection_mode == Rapicorn.SELECTION_NONE
-wlist.selection_mode = Rapicorn.SELECTION_SINGLE        ; assert wlist.selection_mode == Rapicorn.SELECTION_SINGLE
-wlist.selection_mode = Rapicorn.SELECTION_BROWSE        ; assert wlist.selection_mode == Rapicorn.SELECTION_BROWSE
-wlist.selection_mode = Rapicorn.SELECTION_MULTIPLE      ; assert wlist.selection_mode == Rapicorn.SELECTION_MULTIPLE
+wlist.selection_mode = Rapicorn.SelectionMode.NONE      ; assert wlist.selection_mode == Rapicorn.SelectionMode.NONE
+wlist.selection_mode = Rapicorn.SelectionMode.SINGLE    ; assert wlist.selection_mode == Rapicorn.SelectionMode.SINGLE
+wlist.selection_mode = Rapicorn.SelectionMode.BROWSE    ; assert wlist.selection_mode == Rapicorn.SelectionMode.BROWSE
+wlist.selection_mode = Rapicorn.SelectionMode.MULTIPLE  ; assert wlist.selection_mode == Rapicorn.SelectionMode.MULTIPLE
 
 # print positive feedback if we made it here
 print " " * max (0, 75 - len ("  " + __file__)), "OK"
