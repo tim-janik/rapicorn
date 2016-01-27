@@ -7,6 +7,39 @@
 // --- ClientHH Boilerplate ---
 #include <rapicorn-core.hh>
 
+#define RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ(Enum)   \
+  bool constexpr operator== (Enum v, int64_t n) { return int64_t (v) == n; } \
+  bool constexpr operator== (int64_t n, Enum v) { return n == int64_t (v); } \
+  bool constexpr operator!= (Enum v, int64_t n) { return int64_t (v) != n; } \
+  bool constexpr operator!= (int64_t n, Enum v) { return n != int64_t (v); }
+#define RAPICORN_AIDA_FLAGS_DEFINE_ARITHMETIC_OPS(Enum)   \
+  static constexpr int64_t operator>> (Enum v, int64_t n) { return int64_t (v) >> n; } \
+  static constexpr int64_t operator<< (Enum v, int64_t n) { return int64_t (v) << n; } \
+  static constexpr int64_t operator^  (Enum v, int64_t n) { return int64_t (v) ^ n; } \
+  static constexpr int64_t operator^  (int64_t n, Enum v) { return n ^ int64_t (v); } \
+  static constexpr int64_t operator|  (Enum v, int64_t n) { return int64_t (v) | n; } \
+  static constexpr int64_t operator|  (int64_t n, Enum v) { return n | int64_t (v); } \
+  static constexpr int64_t operator&  (Enum v, int64_t n) { return int64_t (v) & n; } \
+  static constexpr int64_t operator&  (int64_t n, Enum v) { return n & int64_t (v); } \
+  static constexpr int64_t operator~  (Enum v)            { return ~int64_t (v); } \
+  static constexpr int64_t operator+  (Enum v)            { return +int64_t (v); } \
+  static constexpr int64_t operator-  (Enum v)            { return -int64_t (v); } \
+  static constexpr int64_t operator+  (Enum v, int64_t n) { return int64_t (v) + n; } \
+  static constexpr int64_t operator+  (int64_t n, Enum v) { return n + int64_t (v); } \
+  static constexpr int64_t operator-  (Enum v, int64_t n) { return int64_t (v) - n; } \
+  static constexpr int64_t operator-  (int64_t n, Enum v) { return n - int64_t (v); } \
+  static constexpr int64_t operator*  (Enum v, int64_t n) { return int64_t (v) * n; } \
+  static constexpr int64_t operator*  (int64_t n, Enum v) { return n * int64_t (v); } \
+  static constexpr int64_t operator/  (Enum v, int64_t n) { return int64_t (v) / n; } \
+  static constexpr int64_t operator/  (int64_t n, Enum v) { return n / int64_t (v); } \
+  static constexpr int64_t operator%  (Enum v, int64_t n) { return int64_t (v) % n; } \
+  static constexpr int64_t operator%  (int64_t n, Enum v) { return n % int64_t (v); }
+#ifdef    RAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC
+#define RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS        RAPICORN_AIDA_FLAGS_DEFINE_ARITHMETIC_OPS
+#else // !RAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC
+#define RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS(Enum)  /* no arithmetic ops */
+#endif // !RAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC
+
 
 #ifndef AIDA_CHECK
 #define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
@@ -39,6 +72,8 @@ enum class Enum1 {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum1 &e) { e = Enum1 (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum1);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum1);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -47,6 +82,8 @@ enum class Enum1c {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum1c &e) { e = Enum1c (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum1c);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum1c);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -56,6 +93,8 @@ enum class Enum2 {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum2  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum2 &e) { e = Enum2 (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum2);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum2);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -65,6 +104,8 @@ enum class Enum2c {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum2c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum2c &e) { e = Enum2c (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum2c);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum2c);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -75,6 +116,8 @@ enum class Enum3 {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum3  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum3 &e) { e = Enum3 (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum3);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum3);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -85,6 +128,8 @@ enum class Enum3c {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum3c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum3c &e) { e = Enum3c (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum3c);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum3c);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -96,6 +141,8 @@ enum class Enum4a {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4a  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4a &e) { e = Enum4a (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum4a);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum4a);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -107,6 +154,8 @@ enum class Enum4b {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4b  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4b &e) { e = Enum4b (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum4b);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum4b);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -118,6 +167,8 @@ enum class Enum4c {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4c &e) { e = Enum4c (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum4c);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum4c);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -129,6 +180,8 @@ enum class Enum4d {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum4d  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, Enum4d &e) { e = Enum4d (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (Enum4d);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum4d);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -171,6 +224,8 @@ enum class ExtensiveEnum {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  ExtensiveEnum  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, ExtensiveEnum &e) { e = ExtensiveEnum (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (ExtensiveEnum);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (ExtensiveEnum);
 /// @endcond
 } // MandatoryNamespace
 
@@ -182,6 +237,8 @@ enum class QuickEnum {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  QuickEnum  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, QuickEnum &e) { e = QuickEnum (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (QuickEnum);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (QuickEnum);
 /// @endcond
 } // InterfaceTests
 
@@ -197,6 +254,8 @@ enum class ClickType {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  ClickType  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, ClickType &e) { e = ClickType (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (ClickType);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (ClickType);
 /// @endcond
 
 /// @cond GeneratedEnums
@@ -216,6 +275,8 @@ enum class MathExpressions {
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  MathExpressions  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
 inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, MathExpressions &e) { e = MathExpressions (__f_.pop_evalue()); }
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (MathExpressions);
+RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (MathExpressions);
 /// @endcond
 } // RapicornAidaTest
 
