@@ -77,8 +77,8 @@ class YYGlobals (object):
         raise NameError ('redefining enum member: %s' % ident)
       else:
         dups.add (ident)
-      if number < -9223372036854775807 or number > +9223372036854775807:
-        raise Exception ("Invalid enum value: %d" % number)
+      if number < -9223372036854775808 or number > +9223372036854775807:
+        raise Exception ("Enum value out of range: %d" % number)
       enum.add_option (*ev)
     self.namespaces[-1].add_type (enum)
   def nsadd_record (self, name, rfields, fwddecl = False):

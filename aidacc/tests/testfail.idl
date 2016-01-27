@@ -106,7 +106,7 @@ interface I { signal void stream_signal2 (float64 f, OStream os); }; // stream t
 record I { OStream istream; }; // stream type used in wrong context
 sequence S { IStream istream; }; // stream type used in wrong context
 
-enum TooBig { VALUE = -9223372036854775808 }; // number too large
+enum TooBig { VALUE = -9223372036854775809 }; // number too large
 enum TooBig { VALUE = +9223372036854775808 }; // number too large
 
 record R { int32 type; }; // invalid field name

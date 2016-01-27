@@ -1139,14 +1139,11 @@ class Generator:
     s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
   def c_long_postfix (self, number):
-    num, minus = (-number, '-') if number < 0 else (number, '')
-    if num <= 2147483647:
-      return minus + str (num)
-    if num <= 9223372036854775807:
-      return minus + str (num) + 'LL'
-    if num <= 18446744073709551615:
-      return minus + str (num) + 'uLL'
-    return number # not a ULL?
+    if number >= 9223372036854775808:
+      return str (number) + 'u'
+    if number == -9223372036854775808:    # in C++ parsed as two tokens '-' '9223372036854775808'
+      return '(-9223372036854775807 - 1)' # avoid "integer constant is so large that it is unsigned"
+    return str (number)
   def generate_enum_decl (self, type_info):
     s = '\n'
     nm = type_info.name

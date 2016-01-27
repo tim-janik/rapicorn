@@ -160,10 +160,10 @@
 .../testfail.idl:107:29: TypeError: stream type used in wrong context: IStream istream
 >  sequence S { IStream istream; }; // stream type used in wrong context
 >                              ^
-.../testfail.idl:109:45: Exception: Invalid enum value: -9223372036854775808
->  enum TooBig { VALUE = -9223372036854775808 }; // number too large
+.../testfail.idl:109:45: Exception: Enum value out of range: -9223372036854775809
+>  enum TooBig { VALUE = -9223372036854775809 }; // number too large
 >                                              ^
-.../testfail.idl:110:45: Exception: Invalid enum value: 9223372036854775808
+.../testfail.idl:110:45: Exception: Enum value out of range: 9223372036854775808
 >  enum TooBig { VALUE = +9223372036854775808 }; // number too large
 >                                              ^
 .../testfail.idl:112:22: NameError: expected identifier, not keyword: type
