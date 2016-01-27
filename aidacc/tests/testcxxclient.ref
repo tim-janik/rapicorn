@@ -67,7 +67,7 @@ new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 namespace MandatoryNamespace {
 
 /// @cond GeneratedEnums
-enum class Enum1 {
+enum class Enum1 : int64_t {
   E1_A = 1,
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
@@ -77,7 +77,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum1);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum1c {
+enum class Enum1c : int64_t {
   E1C_A = 1,
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  Enum1c  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
@@ -87,7 +87,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum1c);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum2 {
+enum class Enum2 : int64_t {
   E2_A = 1,
   E2_B = 2,
 };
@@ -98,7 +98,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum2);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum2c {
+enum class Enum2c : int64_t {
   E2C_A = 1,
   E2C_B = 2,
 };
@@ -109,7 +109,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum2c);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum3 {
+enum class Enum3 : int64_t {
   E3_A = 1,
   E3_B = 2,
   E3_C = 3,
@@ -121,7 +121,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum3);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum3c {
+enum class Enum3c : int64_t {
   E3C_A = 1,
   E3C_B = 2,
   E3C_C = 3,
@@ -133,7 +133,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum3c);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum4a {
+enum class Enum4a : int64_t {
   E4A_A = 1,
   E4A_B = 2,
   E4A_C = 3,
@@ -146,7 +146,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum4a);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum4b {
+enum class Enum4b : int64_t {
   E4B_A = 1,
   E4B_B = 2,
   E4B_C = 3,
@@ -159,7 +159,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum4b);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum4c {
+enum class Enum4c : int64_t {
   E4C_A = 1,
   E4C_B = 2,
   E4C_C = 3,
@@ -172,7 +172,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum4c);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class Enum4d {
+enum class Enum4d : int64_t {
   E4D_A = 1,
   E4D_B = 2,
   E4D_C = 3,
@@ -185,7 +185,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (Enum4d);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class ExtensiveEnum {
+enum class ExtensiveEnum : int64_t {
   V1a = 1,
   V1b = 1,
   V2 = 2,
@@ -232,7 +232,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (ExtensiveEnum);
 namespace InterfaceTests {
 
 /// @cond GeneratedEnums
-enum class QuickEnum {
+enum class QuickEnum : int64_t {
   ZERO = 0,
 };
 inline void operator<<= (Rapicorn::Aida::ProtoMsg &__p_,  QuickEnum  e) { __p_ <<= Rapicorn::Aida::EnumValue (e); }
@@ -245,7 +245,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (QuickEnum);
 namespace RapicornAidaTest {
 
 /// @cond GeneratedEnums
-enum class ClickType {
+enum class ClickType : int64_t {
   CLICK_ON_PRESS = 1,
   CLICK_ON_RELEASE = 2,
   CLICK_SLOW_REPEAT = 3,
@@ -259,7 +259,7 @@ RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (ClickType);
 /// @endcond
 
 /// @cond GeneratedEnums
-enum class MathExpressions {
+enum class MathExpressions : int64_t {
   RESULT_2 = 2,
   RESULT_5 = 5,
   RESULT_8 = 8,

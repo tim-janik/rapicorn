@@ -1152,7 +1152,7 @@ class Generator:
     nm = type_info.name
     l = []
     s += '/// @cond GeneratedEnums\n'
-    s += 'enum class %s {\n' % type_info.name
+    s += 'enum class %s : int64_t {\n' % type_info.name
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
       s += '  %s = %s,' % (ident, self.c_long_postfix (number))
