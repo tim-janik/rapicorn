@@ -64,12 +64,16 @@ def underscore_namespace (tp):
   return '__'.join (type_namespace_names (tp))
 def colon_namespace (tp):
   return '::'.join (type_namespace_names (tp))
+def identifier_name (joiner, type_name, member = None):
+  parts = type_namespace_names (type_name) + [ type_name.name ]
+  if member: parts += [ member ]
+  return joiner.join (parts)
 def underscore_typename (tp):
   if tp.storage == Decls.ANY:
     return 'Rapicorn__Any'
-  return '__'.join (type_namespace_names (tp) + [ tp.name ])
+  return identifier_name ('__', tp)
 def colon_typename (tp):
-  name = '::'.join (type_namespace_names (tp) + [ tp.name ])
+  name = identifier_name ('::', tp)
   if tp.storage == Decls.INTERFACE:
     name += 'H' # e.g. WidgetHandle
   return name
@@ -255,7 +259,7 @@ class Generator:
         s += '  cdef enum %-50s "%s":\n' % (underscore_typename (tp), colon_typename (tp))
         for opt in tp.options:
           (ident, label, blurb, number) = opt
-          s += '    %-60s "%s"\n' % ('%s__%s' % (tp.name, ident), colon_namespace (tp) + '::' + ident)
+          s += '    %-60s "%s"\n' % (identifier_name ('__', tp, ident), identifier_name ('::', tp, ident))
     # C++ Declarations
     s += '\n'
     s += '# C++ Declarations\n'
@@ -357,10 +361,7 @@ class Generator:
       s += '\nclass %s (enum.Enum):\n' % tp.name
       for opt in tp.options:
         (ident, label, blurb, number) = opt
-        s += '  %-40s = %s\n' % (ident, '%s__%s' % (tp.name, ident))
-      for opt in tp.options:
-        (ident, label, blurb, number) = opt
-        s += '%-42s =  %s.%s\n' % (ident, tp.name, ident)
+        s += '  %-40s = %s\n' % (ident, identifier_name ('__', tp, ident))
     # Py Classes
     s += '\n'
     s += '# Python Classes\n'
