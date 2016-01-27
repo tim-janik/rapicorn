@@ -58,16 +58,15 @@ assert summary == [3, True, True, True, 'Yes', 'Yes', 'Yes', 0, 1, 2]
 
 # Enum Tests
 assert Rapicorn.FocusDir
-assert Rapicorn.FocusDir.FOCUS_UP and Rapicorn.FOCUS_UP
-assert Rapicorn.FocusDir.FOCUS_DOWN and Rapicorn.FOCUS_DOWN
-assert Rapicorn.FOCUS_UP.name == 'FOCUS_UP'
-assert Rapicorn.FOCUS_DOWN.name == 'FOCUS_DOWN'
-assert Rapicorn.FocusDir[Rapicorn.FOCUS_UP.name] == Rapicorn.FOCUS_UP
-assert Rapicorn.FocusDir[Rapicorn.FOCUS_DOWN.name] == Rapicorn.FOCUS_DOWN
-assert Rapicorn.FOCUS_UP.value < Rapicorn.FOCUS_DOWN.value and Rapicorn.FOCUS_DOWN.value > Rapicorn.FOCUS_UP.value
-assert Rapicorn.FOCUS_UP != Rapicorn.FOCUS_DOWN
-assert Rapicorn.FOCUS_UP.value > 0 and Rapicorn.FOCUS_DOWN.value > 0
-assert Rapicorn.FOCUS_UP.value + Rapicorn.FOCUS_DOWN.value > 0
+assert Rapicorn.FocusDir.UP and Rapicorn.FocusDir.DOWN
+assert Rapicorn.FocusDir.UP != Rapicorn.FocusDir.DOWN
+assert Rapicorn.FocusDir.UP.name == 'UP'
+assert Rapicorn.FocusDir.DOWN.name == 'DOWN'
+assert Rapicorn.FocusDir[Rapicorn.FocusDir.UP.name] == Rapicorn.FocusDir.UP
+assert Rapicorn.FocusDir[Rapicorn.FocusDir.DOWN.name] == Rapicorn.FocusDir.DOWN
+assert Rapicorn.FocusDir.UP.value > 0 and Rapicorn.FocusDir.DOWN.value > 0
+assert Rapicorn.FocusDir.UP.value < Rapicorn.FocusDir.DOWN.value and Rapicorn.FocusDir.DOWN.value > Rapicorn.FocusDir.UP.value
+assert Rapicorn.FocusDir.UP.value + Rapicorn.FocusDir.DOWN.value > 0
 
 # List Base Tests
 s = Rapicorn.BoolSeq ([ True, False, "A", [], 88, None ])
@@ -93,11 +92,11 @@ def invalid_assignment (u): u.no_such_dummy = 999
 assert_raises (AttributeError, invalid_assignment, u)
 # UpdateRequest
 r = Rapicorn.UpdateRequest()
-r.kind = Rapicorn.UPDATE_CHANGE
+r.kind = Rapicorn.UpdateKind.CHANGE
 r.rowspan = u
 r.colspan = u
 r.variables = p.variables
-assert r.kind == Rapicorn.UPDATE_CHANGE
+assert r.kind == Rapicorn.UpdateKind.CHANGE
 assert r.colspan == u
 assert r.rowspan == r.colspan
 assert r.variables == p.variables
