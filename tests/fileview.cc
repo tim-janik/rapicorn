@@ -86,7 +86,7 @@ ListModelBinding::disconnect()
 void
 ListModelBinding::refill (const UpdateRequest &urequest)
 {
-  if (urequest.kind == UPDATE_READ)
+  if (urequest.kind == UpdateKind::READ)
     {
       AnySeq aseq;
       for (ssize_t i = urequest.rowspan.start; i < urequest.rowspan.start + urequest.rowspan.length; i++)
