@@ -153,7 +153,7 @@ main (int   argc,
   WindowH window = app.create_window ("main-dialog");
   WidgetListH wl = WidgetListH::down_cast (window.query_selector (".WidgetList"));
   assert (wl != NULL);
-  wl.set_list_model (lmh);
+  wl.bind_model (lmh, "WidgetListRow");
 
   window.show();
 

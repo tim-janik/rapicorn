@@ -589,7 +589,7 @@ interface WidgetListRow : Container {
  * @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
  */
 interface WidgetList : Container {
-  String        model           = String (_("Model"), _("Source locator for the data to be displayed (deprecated)."), "rw");
+  String        row_identifier  = String (_("Row Identifier"), _("Widget identifier to create list rows from."), "rw");
   SelectionMode selection_mode  = Enum (_("Selection Mode"), _("None - allow no selected rows<br/>"
                                                                "Single - allow a single selected row<br/>"
                                                                "Browse - always select a single row<br/>"
@@ -599,7 +599,7 @@ interface WidgetList : Container {
   BoolSeq       get_selection  ();
   void          select_range   (int32 first, int32 length);
   void          unselect_range (int32 first, int32 length);
-  void          set_list_model (ListModel model);
+  void          bind_model     (ListModel model, String row_identifier);
 };
 
 /** Application singleton.

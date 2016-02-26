@@ -119,7 +119,6 @@ WidgetListImpl::WidgetListImpl() :
 WidgetListImpl::~WidgetListImpl()
 {
   // remove model
-  model ("");
   assert_return (model_ == NULL);
   // purge row map
   RowMap rc;
@@ -182,19 +181,19 @@ WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source, const String &n
 }
 
 void
-WidgetListImpl::model (const String &modelurl)
+WidgetListImpl::row_identifier (const String &row_identifier)
 {
-  critical ("deprecated property does not work: WidgetListImpl::model");
+  row_identifier_ = row_identifier;
 }
 
 String
-WidgetListImpl::model () const
+WidgetListImpl::row_identifier () const
 {
-  return ""; // FIXME: property deprectaed
+  return row_identifier_;
 }
 
 void
-WidgetListImpl::set_list_model (ListModelIface &model)
+WidgetListImpl::bind_model (ListModelIface &model, const String &row_identifier)
 {
   ListModelIfaceP oldmodel = model_;
   model_ = shared_ptr_cast<ListModelIface> (&model);
@@ -209,7 +208,10 @@ WidgetListImpl::set_list_model (ListModelIface &model)
     {
       row_heights_.resize (model_->count(), -1);
       conid_updated_ = model_->sig_updated() += Aida::slot (*this, &WidgetListImpl::model_updated);
+      row_identifier_ = row_identifier;
     }
+  else
+    row_identifier_ = "";
   invalidate_model (true, true);
   changed ("model");
 }
@@ -780,7 +782,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   Any row = model_->row (nthrow);
   ListRow *lr = new ListRow();
   IFDEBUG (dbg_created++);
-  WidgetImplP widget = Factory::create_ui_child (*this, "WidgetListRow", Factory::ArgumentList(), false);
+  WidgetImplP widget = Factory::create_ui_child (*this, row_identifier_, Factory::ArgumentList(), false);
   assert (widget != NULL); // FIXME: error->console + error->UI
   lr->lrow = shared_ptr_cast<WidgetListRowImpl> (widget);
   assert (lr->lrow != NULL);

@@ -50,6 +50,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   typedef map<int64,ListRow*>  RowMap;
   typedef std::deque<int>      SizeQueue;
   ListModelIfaceP        model_;
+  String                 row_identifier_;
   size_t                 conid_updated_;
   vector<int>            row_heights_;
   mutable AdjustmentP    hadjustment_, vadjustment_;
@@ -78,15 +79,15 @@ protected:
   void                  deselect_all            ();
 public:
   // == WidgetListIface ==
-  virtual std::string                   model           () const override;
-  virtual void                          model           (const std::string &modelurl) override;
   virtual SelectionMode                 selection_mode  () const override;
   virtual void                          selection_mode  (SelectionMode smode) override;
   virtual void                          set_selection   (const BoolSeq &selection) override;
   virtual BoolSeq                       get_selection   () override;
   virtual void                          select_range    (int first, int length) override;
   virtual void                          unselect_range  (int first, int length) override;
-  virtual void                          set_list_model  (ListModelIface &model) override;
+  virtual void                          bind_model      (ListModelIface &model, const String &row_identifier) override;
+  virtual std::string                   row_identifier  () const override;
+  virtual void                          row_identifier  (const std::string &row_identifier) override;
   // == WidgetListImpl ==
   explicit              WidgetListImpl          ();
   virtual              ~WidgetListImpl          () override;
