@@ -990,16 +990,34 @@ MultiContainerImpl::add_child (WidgetImpl &widget)
 void
 MultiContainerImpl::remove_child (WidgetImpl &widget)
 {
-  vector<WidgetImplP>::iterator it;
-  for (it = widgets.begin(); it != widgets.end(); it++)
-    if (it->get() == &widget)
-      {
-        const WidgetImplP guard_widget = *it;
-        widgets.erase (it);
-        ClassDoctor::widget_set_parent (widget, NULL);
-        return;
-      }
-  assert_unreached();
+  size_t index = ~size_t (0);
+  // often the last child is removed, so loop while looking at both ends
+  for (size_t i = 0; i < (widgets.size() + 1) / 2; i++)
+    {
+      const int i1 = i;
+      if (widgets[i1].get() == &widget)
+        {
+          index = i1;
+          break;
+        }
+      const int i2 = widgets.size() - (i + 1);
+      if (i2 <= i1)
+        break;
+      if (widgets[i2].get() == &widget)
+        {
+          index = i2;
+          break;
+        }
+    }
+  // actual removal
+  if (index < widgets.size())
+    {
+      const WidgetImplP guard_widget = widgets[index];
+      widgets.erase (widgets.begin() + index);
+      ClassDoctor::widget_set_parent (widget, NULL);
+    }
+  else
+    assert_unreached();
 }
 
 void
