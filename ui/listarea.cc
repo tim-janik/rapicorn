@@ -190,7 +190,7 @@ WidgetListImpl::model (const String &modelurl)
 String
 WidgetListImpl::model () const
 {
-  return ""; // FIME: property deprectaed
+  return ""; // FIXME: property deprectaed
 }
 
 void
@@ -781,7 +781,7 @@ WidgetListImpl::create_row (uint64 nthrow, bool with_size_groups)
   ListRow *lr = new ListRow();
   IFDEBUG (dbg_created++);
   WidgetImplP widget = Factory::create_ui_child (*this, "WidgetListRow", Factory::ArgumentList(), false);
-  assert (widget != NULL);
+  assert (widget != NULL); // FIXME: error->console + error->UI
   lr->lrow = shared_ptr_cast<WidgetListRowImpl> (widget);
   assert (lr->lrow != NULL);
   lr->lrow->interface<HBoxIface>().spacing (5); // FIXME
