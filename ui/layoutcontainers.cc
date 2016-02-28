@@ -45,7 +45,7 @@ AlignmentImpl::size_allocate (Allocation area, bool changed)
   /* pad allocation */
   area.x += left_padding();
   area.width -= left_padding() + right_padding();
-  area.y += bottom_padding();
+  area.y += top_padding();
   area.height -= bottom_padding() + top_padding();
   /* expand/scale child */
   if (area.width > rq.width && !child.hexpand())
