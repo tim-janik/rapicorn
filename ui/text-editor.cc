@@ -105,14 +105,8 @@ TextControllerImpl::get_text_block()
   TextBlock *candidate = interface<TextBlock*>();
   if (candidate == &*cached_tblock_)
     return candidate;
-  // if our text block changes, can_focus() and thus focusable() may change, ensure we notify about it
+  // if our text block changes, can_focus() and thus focusable() may change
   const bool old_focusable = focusable();
-  WidgetImplP thisp = widgetp(); // passing thisp to exec_now keeps a life reference in the lambda
-  auto update_focus = [thisp, this, old_focusable] () {
-    if (!finalizing() && old_focusable != focusable())
-      changed ("flags");
-  };
-  exec_now (update_focus);
   // adjust to new text block
   TextBlockP next_tblock = shared_ptr_cast<TextBlock> (candidate);
   if (cached_tblock_)
@@ -125,6 +119,9 @@ TextControllerImpl::get_text_block()
     }
   else
     tblock_sig_ = 0;
+  // ensure we notify about can_focus/focusable changes
+  if (!finalizing() && old_focusable != focusable())
+    changed ("flags");
   return &*cached_tblock_;
 }
 
