@@ -57,8 +57,8 @@ static Mutex        uncross_callback_stack_mutex;
 size_t
 ContainerImpl::widget_cross_link (WidgetImpl &owner, WidgetImpl &link, const WidgetSlot &uncross)
 {
-  assert (&owner != &link);
-  assert (owner.common_ancestor (link) == this); // could be disabled for performance
+  assert_return (&owner != &link, 0);
+  assert_return (owner.common_ancestor (link) == this, 0); // could be disabled for performance
   CrossLinks *clinks = get_data (&cross_links_key);
   if (!clinks)
     {
@@ -105,7 +105,7 @@ ContainerImpl::widget_cross_unlink (WidgetImpl &owner, WidgetImpl &link, size_t 
           }
     }
   if (!found_one)
-    throw Exception ("no cross link from \"" + owner.name() + "\" to \"" + link.name() + "\" on \"" + name() + "\" to remove");
+    critical ("no cross link from \"%s\" to \"%s\" on \"%s\" to remove", owner.name(), link.name(), name());
 }
 
 void
