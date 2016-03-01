@@ -745,6 +745,17 @@ ContainerImpl::size_request_child (WidgetImpl &child, bool *hspread, bool *vspre
   return cr;
 }
 
+/// Calculate real requisition of a widget, including spacing/padding/alignment/etc.
+Requisition
+ContainerImpl::measure_child (WidgetImpl &child)
+{
+  const Requisition rq = child.requisition();
+  const PackInfo &pi = child.pack_info();
+  return Requisition (pi.left_spacing + rq.width + pi.right_spacing,
+                      pi.top_spacing + rq.height + pi.bottom_spacing);
+}
+
+/// Layout a widget with an area @a carea, including spacing/padding/alignment/etc.
 Allocation
 ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
 {

@@ -44,6 +44,7 @@ protected:
   virtual void        set_focus_child   (WidgetImpl *widget);
   virtual void        scroll_to_child   (WidgetImpl &widget);
   virtual void        dump_test_data    (TestStream &tstream);
+  static Requisition  measure_child     (WidgetImpl &child);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
   static Requisition  size_request_child (WidgetImpl &child, bool *hspread, bool *vspread);
 public:
