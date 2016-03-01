@@ -2,8 +2,9 @@
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
 <interfaces>
 
-  <!-- list construction -->
-  <WidgetList id="ListArea"/>
+  <!-- old list construction -->
+  <WidgetList id="ListArea">
+  </WidgetList>
   <RapicornWidgetListRow id="WidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
       <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
@@ -12,20 +13,39 @@
     </Ambience>
   </RapicornWidgetListRow>
 
-  <!-- list area -->
-  <Alignment id="widget-list" >
+  <!-- list items/rows -->
+  <FocusFrame id="list-row" hexpand="1" tight-focus="true" frame-type="none">
+    <Argument name="index"/>
+    <HBox name="ListRowCavity">
+      <Label name="list-label" markup-text="Hello; index="/>
+      <Label markup-text="@eval index"/>
+      <Label markup-text="more..."/>
+    </HBox>
+  </FocusFrame>
+
+  <!-- widget list -->
+  <Table id="widget-list" >
     <Argument name="model"/>
-    <Table>
-      <Alignment hexpand="1" vexpand="1" hposition="0" vposition="1"
-		 left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
-	<Frame frame-type="in">
-	  <ListArea model="@eval model"/>
-	</Frame>
-      </Alignment>
-      <VSlider vexpand="0" adjustment-source="ancestry-vertical" vposition="1" hposition="1" />
-      <HSlider visible="0" hexpand="0" adjustment-source="ancestry-horizontal" vposition="0" />
-    </Table>
-  </Alignment>
+    <Frame frame-type="in" hexpand="1" vexpand="1" hposition="0" vposition="1">
+      <VBox>
+	<HBox hexpand="1">
+	  <Button hexpand="1"><Label markup-text="Col-1"/></Button>
+	  <Button hexpand="1"><Label markup-text="Col-2"/></Button>
+	  <Button hexpand="1"><Label markup-text="Col-3"/></Button>
+	  <Button hexpand="1"><Label markup-text="Col-4"/></Button>
+	  <Button hexpand="1"><Label markup-text="Col-5"/></Button>
+	  <Button hexpand="1"><Label markup-text="Col-6"/></Button>
+	</HBox>
+	<ListArea model="@eval model"/>
+      </VBox>
+    </Frame>
+    <Alignment vposition="1" hposition="1" left-padding="2">
+      <VSlider vexpand="0" adjustment-source="ancestry-vertical"/>
+    </Alignment>
+    <Alignment vposition="2" hposition="0" top-padding="2">
+      <HSlider hexpand="0" adjustment-source="ancestry-horizontal" visible="1" />
+    </Alignment>
+  </Table>
 
   <!-- main dialog -->
   <Window id="main-dialog">
