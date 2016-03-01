@@ -463,20 +463,17 @@ WidgetListImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
   requisition.width = 0;
-  requisition.height = -1;
-  for (auto row : widget_rows_)
-    if (row && row->visible())
-      {
-        const Requisition crq = row->requisition();
-        requisition.width = MAX (requisition.width, crq.width);
-        chspread = cvspread = false;
-      }
-  if (model_ && model_->count())
-    requisition.height = -1;  // FIXME: allow property to specify how many rows should be visible
-  else
-    requisition.height = -1;
-  if (requisition.height < 0)
-    requisition.height = 12 * 5; // FIXME: request single label height
+  requisition.height = 0;
+  for (auto child : widget_rows_)
+    {
+      if (!child || !child->visible())
+        continue;
+      const Requisition crq = measure_child (*child);
+      requisition.width = MAX (requisition.width, crq.width);
+      requisition.height += crq.height;
+      chspread |= child->hspread();
+      cvspread |= child->vspread();
+    }
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
 }
@@ -484,7 +481,22 @@ WidgetListImpl::size_request (Requisition &requisition)
 void
 WidgetListImpl::size_allocate (Allocation area, bool changed)
 {
-  layout_rows();
+  const Allocation list_area = allocation();
+  int64 list_y = list_area.y;
+  for (auto child : widget_rows_)
+    {
+      if (!child || !child->visible())
+        continue;
+      const Requisition crq = measure_child (*child);
+      Allocation carea;
+      carea.x = list_area.x;
+      carea.width = list_area.width;
+      carea.y = list_y;
+      carea.height = crq.height;
+      list_y += carea.height;
+      carea = layout_child (*child, carea); // handle spacing/alignment
+      child->set_allocation (carea, &list_area);
+    }
 }
 
 int
@@ -793,28 +805,6 @@ void
 WidgetListImpl::reset (ResetMode mode)
 {
   // first_row_ = last_row_ = current_row_ = MIN_INT;
-}
-
-// == Layout implementations ==
-void
-WidgetListImpl::layout_rows ()
-{
-  const Allocation list_area = allocation();
-  int64 list_y = list_area.y;
-  for (auto wlrp : widget_rows_)
-    {
-      WidgetImpl *row = wlrp.get();
-      if (!row || !row->test_any_flag (INVALID_ALLOCATION))
-        continue;
-      const Requisition requisition = row->requisition();
-      Allocation carea;
-      carea.y = list_y;
-      carea.height = requisition.height;
-      carea.x = list_area.x;
-      carea.width = list_area.width;
-      list_y += carea.height;
-      row->set_allocation (carea);
-    }
 }
 
 } // Rapicorn

@@ -101,7 +101,6 @@ public:
   int                   focus_row               ();
   bool                  grab_row_focus          (int next_focus, int old_focus = -1);
   // == Layout implementations ==
-  void                  layout_rows             ();
   void                  update_row              (uint64 index);
 };
 
