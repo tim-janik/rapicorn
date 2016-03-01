@@ -754,7 +754,7 @@ ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
   /* pad allocation */
   area.x += pi.left_spacing;
   area.width -= pi.left_spacing + pi.right_spacing;
-  area.y += pi.bottom_spacing;
+  area.y += pi.top_spacing;
   area.height -= pi.bottom_spacing + pi.top_spacing;
   /* expand/scale child */
   if (area.width > rq.width && !child.hexpand())
