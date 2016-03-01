@@ -41,7 +41,7 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   typedef vector<WidgetListRowImplP> WidgetRowVector;
   ListModelIfaceP        model_;
   String                 row_identifier_;
-  WidgetRowVector        widget_rows_;
+  vector<WidgetImplP>    widget_rows_; // FIXME: rename and merge w MultiContainer
   size_t                 conid_updated_;
   mutable AdjustmentP    hadjustment_, vadjustment_;
   vector<bool>           selection_;
@@ -49,10 +49,13 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   SelectionMode          selection_mode_;
   bool                   block_invalidate_;
   int                   first_row_, last_row_, multi_sel_range_start_;
+  uint                  insertion_cursor_;
   void                  model_updated           (const UpdateRequest &ur);
   void                  selection_changed       (int first, int length);
   virtual void          invalidate_parent       () override;
-  WidgetListRowImpl*    get_widget_row          (uint64 idx)     { return idx < widget_rows_.size() ? widget_rows_[idx].get() : NULL; }
+  WidgetListRowImpl*    get_widget_row          (uint64 idx)     { return idx < widget_rows_.size() // FIXME
+                                                                                ? dynamic_cast<WidgetListRowImpl*> (widget_rows_[idx].get())
+                                                                                : NULL; }
   void                  destroy_row             (uint64 index);
 protected:
   void                  change_selection        (int current, int previous, bool toggle, bool range, bool preserve);
@@ -63,6 +66,9 @@ protected:
   virtual void          reset                   (ResetMode mode) override;
   virtual bool          move_focus              (FocusDir fdir) override;
   virtual void          focus_lost              () override;
+  virtual void          add_child               (WidgetImpl &widget) override;
+  virtual void          remove_child            (WidgetImpl &widget) override;
+  ssize_t               child_index             (WidgetImpl &widget) const;
   bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
   void                  toggle_selected         (int row);
   void                  deselect_all            ();
@@ -77,6 +83,7 @@ public:
   virtual void                          bind_model      (ListModelIface &model, const String &row_identifier) override;
   virtual std::string                   row_identifier  () const override;
   virtual void                          row_identifier  (const std::string &row_identifier) override;
+  virtual WidgetIfaceP                  create_row      (int64 index, const String &widget_identifier, const StringSeq &arguments) override;
   // == WidgetListImpl ==
   explicit              WidgetListImpl          ();
   virtual              ~WidgetListImpl          () override;

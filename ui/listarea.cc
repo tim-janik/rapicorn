@@ -104,7 +104,7 @@ WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
   selection_mode_ (SelectionMode::SINGLE), block_invalidate_ (false),
-  first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1)
+  first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1), insertion_cursor_ (0)
 {}
 
 WidgetListImpl::~WidgetListImpl()
@@ -195,6 +195,58 @@ WidgetListImpl::bind_model (ListModelIface &model, const String &row_identifier)
     row_identifier_ = "";
   invalidate_model (true, true);
   changed ("model");
+}
+
+WidgetIfaceP
+WidgetListImpl::create_row (int64 index, const String &widget_identifier, const StringSeq &arguments)
+{
+  WidgetImplP widget = Factory::create_ui_child (*this, widget_identifier, arguments, false /*autoadd*/);
+  if (widget)
+    {
+      if (index < 0)
+        insertion_cursor_ = widget_rows_.size() + index; // e.g. -1 replaces last element
+      else
+        insertion_cursor_ = index;
+      add (*widget);
+    }
+  return widget;
+}
+
+/// Find index of @a widget in this container or return -1.
+ssize_t
+WidgetListImpl::child_index (WidgetImpl &widget) const
+{
+  for (size_t i = 0; i < widget_rows_.size(); i++)
+    if (widget_rows_[i].get() == &widget)
+      return i;
+  return -1;
+}
+
+void
+WidgetListImpl::add_child (WidgetImpl &widget)
+{
+  critical_unless (widget.parent() == NULL); // unparented
+  MultiContainerImpl::add_child (widget);
+  if (widget.parent() == this) // parented to self
+    {
+      insertion_cursor_ = std::max (0U, insertion_cursor_);
+      insertion_cursor_ = std::min (size_t (insertion_cursor_), widget_rows_.size()); // e.g. MAXINT appends
+      if (insertion_cursor_ >= widget_rows_.size())
+        widget_rows_.resize (widget_rows_.size() + 1);
+      widget_rows_[insertion_cursor_] = shared_ptr_cast<WidgetImpl> (&widget);
+      insertion_cursor_ += 1;
+    }
+}
+
+void
+WidgetListImpl::remove_child (WidgetImpl &widget)
+{
+  MultiContainerImpl::remove_child (widget);
+  const ssize_t index = child_index (widget);
+  if (index >= 0 && widget.parent() == this) // parented
+    {
+      widget_rows_[index] = NULL;
+    }
 }
 
 SelectionMode
@@ -673,10 +725,10 @@ void
 WidgetListImpl::destroy_row (uint64 idx)
 {
   return_unless (idx < widget_rows_.size());
-  WidgetListRowImplP row = widget_rows_[idx];
+  WidgetImplP row = widget_rows_[idx];
   if (row)
     {
-      WidgetListRowImplP widget = row; // keep a reference across remove()
+      WidgetImplP widget = row; // keep a reference across remove()
       widget_rows_[idx] = NULL;
       ContainerImpl *parent = widget->parent();
       if (parent)
@@ -695,14 +747,14 @@ WidgetListImpl::update_row (uint64 index)
   HBoxImpl *hbox;
   if (widget_rows_.size() < mcount)
     widget_rows_.resize (mcount);
-  WidgetListRowImpl* row = widget_rows_[index].get();
+  WidgetListRowImpl* row = get_widget_row (index);
   if (!row)
     {
       Any vany = model_->row (index);
       WidgetImplP widget = Factory::create_ui_child (*this, row_identifier_, Factory::ArgumentList(), false);
       if (widget)
-        widget_rows_[index] = shared_ptr_cast<WidgetListRowImpl> (widget);
-      row = widget_rows_[index].get();
+        widget_rows_[index] = widget;
+      row = get_widget_row (index);
       if (!row)
         {
           user_warning (UserSource ("Rapicorn", __FILE__, __LINE__), "%s: failed to create list row widget: %s", __func__, row_identifier_); // FIXME
@@ -751,7 +803,7 @@ WidgetListImpl::layout_rows ()
   int64 list_y = list_area.y;
   for (auto wlrp : widget_rows_)
     {
-      WidgetListRowImpl *row = wlrp.get();
+      WidgetImpl *row = wlrp.get();
       if (!row || !row->test_any_flag (INVALID_ALLOCATION))
         continue;
       const Requisition requisition = row->requisition();
