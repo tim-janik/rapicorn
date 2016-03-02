@@ -40,6 +40,7 @@ protected:
   virtual bool        move_focus        (FocusDir              fdir);
   void                expose_enclosure  (); /* expose without children */
   void                change_unviewable (WidgetImpl &child, bool);
+  void                flag_descendant   (WidgetImpl &widget, uint64 flag, bool onoff);
   virtual void        focus_lost        ()                              { set_focus_child (NULL); }
   virtual void        set_focus_child   (WidgetImpl *widget);
   virtual void        scroll_to_child   (WidgetImpl &widget);

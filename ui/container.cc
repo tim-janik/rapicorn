@@ -13,6 +13,7 @@ namespace Rapicorn {
 
 struct ClassDoctor {
   static void widget_set_parent (WidgetImpl &widget, ContainerImpl *parent) { widget.set_parent (parent); }
+  static void widget_set_flag   (WidgetImpl &widget, uint64 flag, bool val) { widget.set_flag (flag, val); }
 };
 
 /* --- CrossLinks --- */
@@ -639,6 +640,14 @@ void
 ContainerImpl::change_unviewable (WidgetImpl &child, bool b)
 {
   child.set_flag (UNVIEWABLE, b);
+}
+
+/// Adjust Widget flags on a descendant.
+void
+ContainerImpl::flag_descendant (WidgetImpl &widget, uint64 flag, bool onoff)
+{
+  assert_return (widget.has_ancestor (*this)); // could be disabled for performance
+  ClassDoctor::widget_set_flag (widget, flag, onoff);
 }
 
 // window coordinates relative
