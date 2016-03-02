@@ -1,6 +1,6 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "heritage.hh"
-#include "widget.hh"
+#include "container.hh"
 
 namespace Rapicorn {
 
@@ -171,10 +171,14 @@ Heritage::adapt_heritage (WidgetImpl &widget, ColorScheme color_scheme)
       ColorFunc cnorm = colorset_normal, csel = colorset_selected;
       switch (color_scheme)
         {
-        case ColorScheme::INHERIT:     return shared_from_this();
+        case ColorScheme::NORMAL:      break;
         case ColorScheme::BASE:        cnorm = colorset_base; break;
         case ColorScheme::SELECTED:    cnorm = colorset_selected; break;
-        case ColorScheme::NORMAL:      ;
+        case ColorScheme::INHERIT:
+          {
+            ContainerImpl *container = widget.parent();
+            return container ? container->heritage() : shared_from_this();
+          }
         }
       if (internals_->match (widget, cnorm, csel))
         return shared_from_this();
