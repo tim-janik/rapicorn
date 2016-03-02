@@ -8,93 +8,62 @@
 
 namespace Rapicorn {
 
-// == WidgetListRowImpl ==
-WidgetListImpl*
-WidgetListRowImpl::widget_list () const
-{
-  return dynamic_cast<WidgetListImpl*> (parent());
-}
+// == SelectableItemImpl ==
+SelectableItemImpl::SelectableItemImpl ()
+{}
 
 void
-WidgetListRowImpl::dump_private_data (TestStream &tstream)
-{
-  WidgetListImpl *list = widget_list();
-  int kind = 0;
-  if (list && index_ >= 0)
-    {
-      WidgetListRowImpl *row = list->get_widget_row (index_);
-      if (this == row)
-        kind = 1;
-    }
-  const char *knames[] = { "nil", "visible" };
-  tstream.dump ("row_kind", String (knames[kind]));
-}
-
-bool
-WidgetListRowImpl::handle_event (const Event &event)
-{
-  WidgetListImpl *list = widget_list();
-  return list && list->row_event (event, this, index_);
-}
-
-WidgetListRowImpl::WidgetListRowImpl() :
-  index_ (INT_MIN)
-{
-  color_scheme (ColorScheme::BASE);
-}
-
-void
-WidgetListRowImpl::construct ()
+SelectableItemImpl::construct ()
 {
   set_flag (NEEDS_FOCUS_INDICATOR); // prerequisite for focusable
   set_flag (ALLOW_FOCUS);
   SingleContainerImpl::construct();
 }
 
-int
-WidgetListRowImpl::row_index() const
+bool
+SelectableItemImpl::selected () const
 {
-  return index_;
+  return test_any_flag (uint64 (WidgetState::SELECTED));
 }
 
 void
-WidgetListRowImpl::row_index (int i)
+SelectableItemImpl::selected (bool s)
 {
-  index_ = i >= 0 ? i : INT_MIN;
-  WidgetListImpl *list = widget_list();
-  if (list && index_ >= 0)
-    color_scheme (list->selected (index_) ? ColorScheme::SELECTED : ColorScheme::BASE);
-  visible (index_ >= 0);
-  changed ("row_index");
+  set_flag (uint64 (WidgetState::SELECTED), s);
+  color_scheme (s ? ColorScheme::SELECTED : ColorScheme::INHERIT);
 }
 
 bool
-WidgetListRowImpl::selected () const
+SelectableItemImpl::handle_event (const Event &event)
 {
-  WidgetListImpl *list = widget_list();
-  return list && index_ >= 0 ? list->selected (index_) : false;
-}
-
-void
-WidgetListRowImpl::selected (bool s)
-{
-  WidgetListImpl *list = widget_list();
-  if (list && index_ >= 0)
+  bool handled = false;
+  switch (event.type)
     {
-      if (list->selected (index_) != s)
+    case KEY_PRESS:
+      if (dynamic_cast<const EventKey*> (&event)->key == KEY_space)
         {
-          list->toggle_selected (index_);
-          changed ("selected");
+          selected (!selected());
+          handled = true;
         }
-      color_scheme (list->selected (index_) ? ColorScheme::SELECTED : ColorScheme::BASE);
+      break;
+    case BUTTON_PRESS:
+      if (dynamic_cast<const EventButton*> (&event)->button == 1)
+        {
+          selected (!selected());
+          handled = true;
+        }
+      break;
+    default:
+      break;
     }
+  return handled;
 }
 
 void
-WidgetListRowImpl::reset (ResetMode mode)
+SelectableItemImpl::reset (ResetMode mode)
 {}
 
-static const WidgetFactory<WidgetListRowImpl> widget_list_row_factory ("Rapicorn::WidgetListRow");
+static const WidgetFactory<SelectableItemImpl> selectable_item_factory ("Rapicorn::SelectableItem");
 
 
 // == WidgetListImpl ==
@@ -229,6 +198,9 @@ WidgetListImpl::add_child (WidgetImpl &widget)
   MultiContainerImpl::add_child (widget);
   if (widget.parent() == this) // parented to self
     {
+      EventHandler *ehandler = dynamic_cast<EventHandler*> (&widget);
+      if (ehandler)
+        ehandler->sig_event() += [this, &widget] (const Event &event) -> bool { return this->row_event (event, &widget); };
       insertion_cursor_ = std::max (0U, insertion_cursor_);
       insertion_cursor_ = std::min (size_t (insertion_cursor_), widget_rows_.size()); // e.g. MAXINT appends
       if (insertion_cursor_ >= widget_rows_.size())
@@ -416,6 +388,26 @@ WidgetListImpl::model_updated (const UpdateRequest &urequest)
     }
 }
 
+int64
+WidgetListImpl::row_widget_index (WidgetImpl &widget)
+{
+  for (size_t i = 0; i < widget_rows_.size(); i++)
+    if (widget_rows_[i].get() == &widget)
+      return i;
+  return -1;
+}
+
+void
+WidgetListImpl::select_row_widget (uint64 idx, bool selected)
+{
+  WidgetImpl *row = get_row_widget (idx);
+  if (row)
+    {
+      flag_descendant (*row, uint64 (WidgetState::SELECTED), selected);
+      row->color_scheme (selected ? ColorScheme::SELECTED : ColorScheme::BASE);
+    }
+}
+
 void
 WidgetListImpl::toggle_selected (int row)
 {
@@ -437,11 +429,7 @@ void
 WidgetListImpl::selection_changed (int first, int length)
 {
   for (int i = first; i < first + length; i++)
-    {
-      WidgetListRowImpl *row = get_widget_row (i);
-      if (row)
-        row->selected (selected (i));
-    }
+    select_row_widget (i, selected (i));
 }
 
 void
@@ -503,20 +491,19 @@ int
 WidgetListImpl::focus_row()
 {
   WidgetImpl *fchild = get_focus_child();
-  WidgetListRowImpl *lrow = dynamic_cast<WidgetListRowImpl*> (fchild);
-  return lrow ? lrow->row_index() : -1;
+  return fchild ? row_widget_index (*fchild) : -1;
 }
 
 bool
 WidgetListImpl::grab_row_focus (int next_focus, int old_focus)
 {
-  WidgetListRowImpl *row = get_widget_row (next_focus);
+  WidgetImpl *row = get_row_widget (next_focus);
   bool success;
   if (row && row->grab_focus())                 // assign new focus
     success = true;
   else
     {
-      row = get_widget_row (old_focus);
+      row = get_row_widget (old_focus);
       if (row)
         row->unset_focus();                     // or no row gets focus
       success = false;
@@ -679,14 +666,14 @@ WidgetListImpl::key_press_event (const EventKey &event)
 }
 
 bool
-WidgetListImpl::button_event (const EventButton &event, WidgetListRowImpl *lrow, int index)
+WidgetListImpl::button_event (const EventButton &event, WidgetImpl *row, int index)
 {
   bool handled = false;
   bool preserve_old_selection = event.key_state & MOD_CONTROL;
   bool toggle_selection = event.key_state & MOD_CONTROL, range_selection = event.key_state & MOD_SHIFT;
   int current_focus = index;
   const int saved_current_row = current_focus;
-  if (event.type == BUTTON_PRESS && event.button == 1 && lrow)
+  if (event.type == BUTTON_PRESS && event.button == 1 && row)
     {
       grab_row_focus (current_focus, saved_current_row);
       change_selection (current_focus, saved_current_row, toggle_selection, range_selection, preserve_old_selection);
@@ -696,19 +683,17 @@ WidgetListImpl::button_event (const EventButton &event, WidgetListRowImpl *lrow,
 }
 
 bool
-WidgetListImpl::row_event (const Event &event, WidgetListRowImpl *lrow, int index)
+WidgetListImpl::row_event (const Event &event, WidgetImpl *row)
 {
-  return_unless (model_ != NULL, false);
-  const int64 mcount = model_->count();
-  return_unless (mcount > 0, false);
+  // const int index = row ? row_widget_index (*row) : -1;
   bool handled = false;
   switch (event.type)
     {
     case KEY_PRESS:
-      handled = key_press_event (*dynamic_cast<const EventKey*> (&event));
+      // handled = key_press_event (*dynamic_cast<const EventKey*> (&event));
       break;
     case BUTTON_PRESS:
-      handled = button_event (*dynamic_cast<const EventButton*> (&event), lrow, index);
+      // handled = button_event (*dynamic_cast<const EventButton*> (&event), row, index);
       break;
     default:
       break;
@@ -725,7 +710,7 @@ WidgetListImpl::handle_event (const Event &event)
     {
     case KEY_PRESS:
     case KEY_RELEASE:
-      handled = row_event (event, NULL, -1);
+      handled = row_event (event, NULL);
       break;
     default:
       break;
@@ -759,14 +744,14 @@ WidgetListImpl::update_row (uint64 index)
   HBoxImpl *hbox;
   if (widget_rows_.size() < mcount)
     widget_rows_.resize (mcount);
-  WidgetListRowImpl* row = get_widget_row (index);
+  WidgetImpl* row = get_row_widget (index);
   if (!row)
     {
       Any vany = model_->row (index);
       WidgetImplP widget = Factory::create_ui_child (*this, row_identifier_, Factory::ArgumentList(), false);
       if (widget)
         widget_rows_[index] = widget;
-      row = get_widget_row (index);
+      row = get_row_widget (index);
       if (!row)
         {
           user_warning (UserSource ("Rapicorn", __FILE__, __LINE__), "%s: failed to create list row widget: %s", __func__, row_identifier_); // FIXME
@@ -787,8 +772,7 @@ WidgetListImpl::update_row (uint64 index)
   else
     hbox = row->interface<HBoxImpl*>();
   // update column contents
-  if (row->row_index() != ssize_t (index))
-    row->row_index (index);
+  // FIXME: needed? if (row->row_index() != ssize_t (index)) row->row_index (index);
   if (hbox)
     {
       Any dat = model_->row (index);
@@ -797,7 +781,7 @@ WidgetListImpl::update_row (uint64 index)
       AmbienceIface *ambience = row->interface<AmbienceIface*>();
       if (ambience)
         ambience->background (index & 1 ? "background-odd" : "background-even");
-      row->selected (selected (index));
+      select_row_widget (index, selected (index));
     }
 }
 

@@ -575,12 +575,10 @@ interface TextEditor : Container {
   int32    request_digits = Range (_("Request Digits"), _("Number of digits to request space for."), "rw", 0, 65535, 2);
 };
 
-/// A container for WidgetList rows.
-/// See also the corresponding implementation class WidgetListRowImpl.
-/// @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
-interface WidgetListRow : Container {
-  bool  selected  = Bool (_("Selected"), _("Indicates wether this row is selected"), "rw");
-  int32 row_index = Range (_("Row Index"), _("Row number inside WidgetList"), "ro", MININT31, MAXINT31, 0);
+/// A container that supports the selected state.
+/// See also the corresponding implementation class SelectableItemImpl.
+interface SelectableItem : Container {
+  bool  selected  = Bool (_("Selected"), _("Indicates wether this container widget is selected"), "rw");
 };
 
 /** A list widget containing scrollable and selectable widgets.

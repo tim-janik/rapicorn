@@ -11,26 +11,20 @@
 
 namespace Rapicorn {
 
-class WidgetListImpl;
-
-class WidgetListRowImpl : public virtual SingleContainerImpl,
-                          public virtual WidgetListRowIface,
-                          public virtual EventHandler {
-  int             index_;
-  WidgetListImpl* widget_list          () const;
+class SelectableItemImpl : public virtual SingleContainerImpl,
+                           public virtual SelectableItemIface,
+                           public virtual EventHandler {
 protected:
   virtual void  construct              () override;
-  virtual void  dump_private_data      (TestStream &tstream) override;
   virtual bool  handle_event           (const Event &event) override;
 public:
-  explicit      WidgetListRowImpl      ();
-  virtual int   row_index              () const override;
-  virtual void  row_index              (int i) override;
+  explicit      SelectableItemImpl     ();
   virtual bool  selected               () const override;
   virtual void  selected               (bool s) override;
   virtual void  reset                  (ResetMode mode = RESET_ALL) override;
 };
-typedef std::shared_ptr<WidgetListRowImpl> WidgetListRowImplP;
+typedef std::shared_ptr<SelectableItemImpl> SelectableItemImplP;
+
 
 class WidgetListImpl : public virtual MultiContainerImpl,
                        public virtual WidgetListIface,
@@ -38,7 +32,6 @@ class WidgetListImpl : public virtual MultiContainerImpl,
                        public virtual EventHandler
 {
   friend class WidgetListRowImpl;
-  typedef vector<WidgetListRowImplP> WidgetRowVector;
   ListModelIfaceP        model_;
   String                 row_identifier_;
   vector<WidgetImplP>    widget_rows_; // FIXME: rename and merge w MultiContainer
@@ -53,16 +46,16 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   void                  model_updated           (const UpdateRequest &ur);
   void                  selection_changed       (int first, int length);
   virtual void          invalidate_parent       () override;
-  WidgetListRowImpl*    get_widget_row          (uint64 idx)     { return idx < widget_rows_.size() // FIXME
-                                                                                ? dynamic_cast<WidgetListRowImpl*> (widget_rows_[idx].get())
-                                                                                : NULL; }
+  WidgetImpl*           get_row_widget          (uint64 idx)     { return idx < widget_rows_.size() ? widget_rows_[idx].get() : NULL; }
   void                  destroy_row             (uint64 index);
+  void                  select_row_widget       (uint64 idx, bool selected);
+  int64                 row_widget_index        (WidgetImpl &widget);
 protected:
   void                  change_selection        (int current, int previous, bool toggle, bool range, bool preserve);
   bool                  key_press_event         (const EventKey &event);
-  bool                  button_event            (const EventButton &event, WidgetListRowImpl *lrow, int index);
+  bool                  button_event            (const EventButton &event, WidgetImpl *row, int index);
   virtual bool          handle_event            (const Event &event) override;
-  virtual bool          row_event               (const Event &event, WidgetListRowImpl *lrow, int index) ;
+  virtual bool          row_event               (const Event &event, WidgetImpl *row);
   virtual void          reset                   (ResetMode mode) override;
   virtual bool          move_focus              (FocusDir fdir) override;
   virtual void          focus_lost              () override;
