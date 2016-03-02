@@ -14,14 +14,16 @@
   </RapicornWidgetListRow>
 
   <!-- list items/rows -->
-  <FocusFrame id="list-row" hexpand="1" tight-focus="true" frame-type="none">
+  <SelectableItem id="list-row" hexpand="1">
     <Argument name="index"/>
-    <HBox name="ListRowCavity">
-      <Label name="list-label" markup-text="Hello; index="/>
-      <Label markup-text="@eval index"/>
-      <Label markup-text="more..."/>
-    </HBox>
-  </FocusFrame>
+    <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
+      <HBox name="ListRowCavity">
+	<Label name="list-label" markup-text="Hello; index="/>
+	<Label markup-text="@eval index"/>
+	<Label markup-text="more..."/>
+      </HBox>
+    </FocusFrame>
+  </SelectableItem>
 
   <!-- widget list -->
   <Table id="widget-list" >
