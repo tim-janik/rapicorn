@@ -144,6 +144,13 @@ WidgetImpl::change_flags_silently (uint64 mask, bool on)
     flags_ |= mask;
   else
     flags_ &= ~mask;
+  if (parent() && uint64 (WidgetState::SELECTED) & (old_flags ^ flags_))
+    {
+      WidgetChain this_chain;
+      this_chain.widget = this;
+      this_chain.next = NULL;
+      parent()->selectable_child_changed (this_chain);
+    }
   // silently: omit change notification
   return old_flags != flags_;
 }

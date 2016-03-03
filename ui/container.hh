@@ -47,6 +47,7 @@ protected:
   static Requisition  measure_child     (WidgetImpl &child);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
   static Requisition  size_request_child (WidgetImpl &child, bool *hspread, bool *vspread);
+  virtual void        selectable_child_changed (WidgetChain &chain);
 public:
   virtual WidgetImplP*  begin             () const = 0;
   virtual WidgetImplP*  end               () const = 0;

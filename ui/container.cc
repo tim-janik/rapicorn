@@ -708,6 +708,19 @@ ContainerImpl::dump_test_data (TestStream &tstream)
     child->make_test_dump (tstream);
 }
 
+void
+ContainerImpl::selectable_child_changed (WidgetChain &chain)
+{
+  ContainerImpl *container = parent();
+  if (container)
+    {
+      WidgetChain this_chain;
+      this_chain.widget = this;
+      this_chain.next = &chain;
+      container->selectable_child_changed (this_chain);
+    }
+}
+
 WidgetIfaceP
 ContainerImpl::create_widget (const String &widget_identifier, const StringSeq &args) // ContainerIface
 {

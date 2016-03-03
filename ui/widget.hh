@@ -270,6 +270,7 @@ public:
   bool                       process_display_window_event (const Event &event);  // display_window coordinates relative
   /* coordinate handling */
 protected:
+  struct WidgetChain { WidgetImpl *widget; WidgetChain *next; WidgetChain() : widget (NULL), next (NULL) {} };
   Affine                     affine_to_display_window   ();                    // widget => display_window affine
   Affine                     affine_from_display_window ();                    // display_window => widget affine
   // rendering
