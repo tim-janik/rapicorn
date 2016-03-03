@@ -593,10 +593,11 @@ interface WidgetList : Container {
                                                                "Browse - always select a single row<br/>"
                                                                "Multiple - allow any row selection combinations<br/>"),
                                         "rw");
-  void          set_selection  (BoolSeq selection);
-  BoolSeq       get_selection  ();
-  void          select_range   (int32 first, int32 length);
-  void          unselect_range (int32 first, int32 length);
+  signal void   selection_changed ();                       ///< This signal is emitted whenever the list selection changes.
+  BoolSeq       get_selection  ();                          ///< Retrieve a bit mask for all selected widgets.
+  void          set_selection  (BoolSeq selection);         ///< Reset the list of selected widgets according to a bit mask.
+  void          select_range   (int32 first, int32 length); ///< Select a range of widgets.
+  void          unselect_range (int32 first, int32 length); ///< Unselect a range of widgets.
   void          bind_model     (ListModel model, String row_identifier);
   Widget        create_row     (int64 index, String widget_identifier, StringSeq arguments = 0); ///< Add/replace row @a index with a new widget.
 };

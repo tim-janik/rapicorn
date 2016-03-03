@@ -66,13 +66,28 @@ SelectableItemImpl::reset (ResetMode mode)
 static const WidgetFactory<SelectableItemImpl> selectable_item_factory ("Rapicorn::SelectableItem");
 
 
+// == SelectionChangedGuard ==
+WidgetListImpl::SelectionChangedGuard::SelectionChangedGuard (WidgetListImpl &wlist) :
+  wlist_ (wlist)
+{
+  wlist_.selection_changed_freeze_ += 1;
+}
+
+WidgetListImpl::SelectionChangedGuard::~SelectionChangedGuard ()
+{
+  assert_return (wlist_.selection_changed_freeze_ > 0);
+  wlist_.selection_changed_freeze_ -= 1;
+  if (wlist_.selection_changed_freeze_ == 0 && wlist_.selection_changed_pending_)
+    wlist_.notify_selection_changed();
+}
+
 // == WidgetListImpl ==
 static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::WidgetList");
 
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
-  selection_mode_ (SelectionMode::SINGLE), block_invalidate_ (false),
+  selection_changed_freeze_ (0), selection_mode_ (uint64 (SelectionMode::SINGLE)), selection_changed_pending_ (false), block_invalidate_ (false),
   first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1), insertion_cursor_ (0)
 {}
 
@@ -221,149 +236,6 @@ WidgetListImpl::remove_child (WidgetImpl &widget)
     }
 }
 
-SelectionMode
-WidgetListImpl::selection_mode () const
-{
-  return selection_mode_;
-}
-
-void
-WidgetListImpl::selection_mode (SelectionMode smode)
-{
-  if (selection_mode_ != smode)
-    {
-      selection_mode_ = smode;
-      validate_selection (0);
-      selection_changed (0, selection_.size());
-      changed ("selection_mode");
-    }
-}
-
-void
-WidgetListImpl::set_selection (const BoolSeq &bseq)
-{
-  size_t lastrow = 0, firstrow = ~size_t (0);
-  const size_t max_size = min (bseq.size(), selection_.size());
-  for (size_t i = 0; i < max_size; i++)
-    if (bseq[i] != selection_[i])
-      {
-        selection_[i] = bseq[i];
-        firstrow = min (firstrow, i);
-        lastrow = max (lastrow, i);
-      }
-  if (!validate_selection (firstrow))
-    {
-      firstrow = 0;
-      lastrow = selection_.size() - 1;
-    }
-  if (firstrow <= lastrow)
-    selection_changed (firstrow, 1 + lastrow - firstrow);
-}
-
-BoolSeq
-WidgetListImpl::get_selection ()
-{
-  BoolSeq bseq;
-  bseq.resize (selection_.size());
-  std::copy (selection_.begin(), selection_.end(), bseq.begin());
-  return bseq;
-}
-
-void
-WidgetListImpl::select_range (int first, int length)
-{
-  return_unless (first >= 0 && length >= 0);
-  size_t lastrow = 0, firstrow = ~size_t (0);
-  const size_t max_size = min (size_t (first + length), selection_.size());
-  for (size_t i = first; i < max_size; i++)
-    if (!selection_[i])
-      {
-        selection_[i] = true;
-        firstrow = min (firstrow, i);
-        lastrow = max (lastrow, i);
-      }
-  if (!validate_selection (firstrow))
-    {
-      firstrow = 0;
-      lastrow = selection_.size() - 1;
-    }
-  if (firstrow <= lastrow)
-    selection_changed (firstrow, 1 + lastrow - firstrow);
-}
-
-void
-WidgetListImpl::unselect_range (int first, int length)
-{
-  return_unless (first >= 0 && length >= 0);
-  size_t lastrow = 0, firstrow = ~size_t (0);
-  const size_t max_size = min (size_t (first + length), selection_.size());
-  for (size_t i = first; i < max_size; i++)
-    if (selection_[i])
-      {
-        selection_[i] = false;
-        firstrow = min (firstrow, i);
-        lastrow = max (lastrow, i);
-      }
-  if (!validate_selection (firstrow))
-    {
-      firstrow = 0;
-      lastrow = selection_.size() - 1;
-    }
-  if (firstrow <= lastrow)
-    selection_changed (firstrow, 1 + lastrow - firstrow);
-}
-
-bool
-WidgetListImpl::validate_selection (int fallback)
-{
-  // ensure a valid selection
-  bool changed = false;
-  int first = -1;
-  switch (selection_mode())
-    {
-    case SelectionMode::NONE:                // nothing to select ever
-      for (size_t i = 0; i < selection_.size(); i++)
-        if (selection_[i])
-          {
-            selection_[i] = false;
-            changed = true;
-          }
-      break;
-    case SelectionMode::SINGLE:              // maintain a single selection at most
-    case SelectionMode::BROWSE:              // always maintain a single selection
-      for (size_t i = 0; i < selection_.size(); i++)
-        if (selection_[i])
-          {
-            if (first < 0)
-              first = i;
-            else
-              {
-                selection_[i] = 0;
-                changed = true;
-              }
-          }
-      if (selection_mode() == SelectionMode::BROWSE && first < 0 && selection_.size() > 0)
-        {
-          selection_[CLAMP (fallback, 0, ssize_t (selection_.size() - 1))] = true;
-          changed = true;
-        }
-      break;
-    case SelectionMode::MULTIPLE:            // allow any combination of selected rows
-      break;
-    }
-  return changed == false;
-}
-
-bool
-WidgetListImpl::has_selection () const
-{
-  // OPTIMIZE: speed up by always caching first & last selected row
-  for (size_t i = 0; i < selection_.size(); i++)
-    if (selection_[i])
-      return true;
-  return false;
-}
-
 void
 WidgetListImpl::model_updated (const UpdateRequest &urequest)
 {
@@ -397,39 +269,207 @@ WidgetListImpl::row_widget_index (WidgetImpl &widget)
   return -1;
 }
 
+SelectionMode
+WidgetListImpl::selection_mode () const
+{
+  return SelectionMode (selection_mode_);
+}
+
 void
-WidgetListImpl::select_row_widget (uint64 idx, bool selected)
+WidgetListImpl::selection_mode (SelectionMode smode)
+{
+  if (selection_mode_ != smode)
+    {
+      SelectionChangedGuard selection_changed_guard (*this);
+      selection_mode_ = uint64 (smode);
+      validate_selection (0);
+      changed ("selection_mode");
+      notify_selection_changed();
+    }
+}
+
+bool
+WidgetListImpl::row_selected (uint64 idx) const
 {
   WidgetImpl *row = get_row_widget (idx);
-  if (row)
+  return row && row->test_any_flag (uint64 (WidgetState::SELECTED));
+}
+
+void
+WidgetListImpl::row_select_range (size_t first, size_t length, bool selected)
+{
+  SelectionChangedGuard selection_changed_guard (*this);
+  const int64 nrows = widget_rows_.size();
+  return_unless (first >= 0 && length >= 0);
+  size_t firstrow = ~size_t (0);
+  const size_t max_size = min (size_t (first + length), nrows);
+  for (size_t i = first; i < max_size; i++)
+    if (row_selected (i) != selected)
+      {
+        WidgetImpl *row = get_row_widget (i);
+        SelectableItemImpl *selectable = dynamic_cast<SelectableItemImpl*> (row);
+        if (selectable)
+          selectable->selected (selected);
+        firstrow = min (firstrow, i);
+      }
+  validate_selection (firstrow);
+}
+
+void
+WidgetListImpl::deselect_rows ()
+{
+  SelectionChangedGuard selection_changed_guard (*this);
+  const int64 nrows = widget_rows_.size();
+  for (ssize_t i = 0; i < nrows; i++)
+    if (row_selected (i))
+      row_select (i, false);
+}
+
+void
+WidgetListImpl::set_selection (const BoolSeq &bseq)
+{
+  SelectionChangedGuard selection_changed_guard (*this);
+  const int64 nrows = widget_rows_.size();
+  size_t firstrow = ~size_t (0);
+  const size_t max_size = min (bseq.size(), nrows);
+  for (size_t i = 0; i < max_size; i++)
+    if (bseq[i] != row_selected (i))
+      {
+        row_select (i, bseq[i]);
+        firstrow = min (firstrow, i);
+      }
+  validate_selection (firstrow);
+}
+
+BoolSeq
+WidgetListImpl::get_selection ()
+{
+  const int64 nrows = widget_rows_.size();
+  BoolSeq bseq;
+  bseq.resize (nrows);
+  for (ssize_t i = 0; i < nrows; i++)
+    bseq[i] = row_selected (i);
+  return bseq;
+}
+
+bool
+WidgetListImpl::validate_selection (int fallback)
+{
+  SelectionChangedGuard selection_changed_guard (*this);
+  const int64 nrows = widget_rows_.size();
+  // ensure a valid selection
+  bool changed = false;
+  ssize_t first = -1;
+  switch (selection_mode())
     {
-      flag_descendant (*row, uint64 (WidgetState::SELECTED), selected);
-      row->color_scheme (selected ? ColorScheme::SELECTED : ColorScheme::BASE);
+    case SelectionMode::NONE:                // nothing to select ever
+      for (ssize_t i = 0; i < nrows; i++)
+        if (row_selected (i))
+          {
+            row_select (i, false);
+            changed = true;
+          }
+      break;
+    case SelectionMode::SINGLE:              // maintain a single selection at most
+    case SelectionMode::BROWSE:              // always maintain a single selection
+      for (ssize_t i = 0; i < nrows; i++)
+        if (row_selected (i))
+          {
+            if (first < 0)
+              first = i;
+            else
+              {
+                row_select (i, false);
+                changed = true;
+              }
+          }
+      if (selection_mode() == SelectionMode::BROWSE && first < 0 && nrows > 0)
+        {
+          row_select (CLAMP (fallback, 0, nrows - 1), true);
+          changed = true;
+        }
+      break;
+    case SelectionMode::MULTIPLE:            // allow any combination of selected rows
+      break;
+    }
+  if (changed)
+    notify_selection_changed();
+  return changed == false;
+}
+
+void
+WidgetListImpl::change_selection (const int current, int previous, const bool toggle, const bool range, const bool preserve)
+{
+  SelectionChangedGuard selection_changed_guard (*this);
+  const int64 nrows = widget_rows_.size();
+  return_unless (nrows > 0);
+  return_unless (previous < nrows);
+  return_unless (current < nrows);
+  switch (selection_mode())
+    {
+      int sel, old;
+    case SelectionMode::NONE:                // nothing to select ever
+      break;
+    case SelectionMode::BROWSE:              // always maintain a single selection
+      sel = MAX (0, current >= 0 ? current : previous);
+      old = focus_row();
+      if (sel != old)
+        {
+          if (old >= 0 && row_selected (old))
+            row_select (old, false);
+          if (!row_selected (sel))
+            row_select (sel, true);
+        }
+      break;
+    case SelectionMode::SINGLE:              // maintain a single selection at most
+      if (!preserve || toggle)
+        {
+          sel = row_selected (current) ? current : -1;
+          deselect_rows();
+          if (current >= 0 && (!toggle || sel < 0))
+            row_select (current, true);
+        }
+      break;
+    case SelectionMode::MULTIPLE:            // allow any combination of selected rows
+      if (!preserve)
+        deselect_rows();
+      if (current < 0)
+        ;               // nothing to select
+      else if (toggle)
+        row_select (current, !row_selected (current));
+      else if (range)
+        {
+          if (multi_sel_range_start_ < 0)
+            multi_sel_range_start_ = previous >= 0 ? previous : current;
+          for (int i = MAX (0, MIN (multi_sel_range_start_, current)); i <= MAX (multi_sel_range_start_, current); i++)
+            if (!row_selected (i))
+              row_select (i, true);
+        }
+      else if (!preserve)
+        row_select (current, !row_selected (current));
+      if (!range)
+        multi_sel_range_start_ = -1;
+      break;
     }
 }
 
 void
-WidgetListImpl::toggle_selected (int row)
+WidgetListImpl::notify_selection_changed()
 {
-  if (selection_.size() <= size_t (row))
-    selection_.resize (row + 1);
-  selection_[row] = !selection_[row];
-  selection_changed (row, 1 + row);
+  if (selection_changed_freeze_)
+    selection_changed_pending_ = true;
+  else
+    {
+      selection_changed_pending_ = false;
+      sig_selection_changed.emit();
+    }
 }
 
 void
-WidgetListImpl::deselect_all ()
+WidgetListImpl::selectable_child_changed (WidgetChain &chain)
 {
-  selection_.assign (selection_.size(), 0);
-  if (selection_.size())
-    selection_changed (0, selection_.size());
-}
-
-void
-WidgetListImpl::selection_changed (int first, int length)
-{
-  for (int i = first; i < first + length; i++)
-    select_row_widget (i, selected (i));
+  notify_selection_changed();
+  // since we emit notification, there's no need to propagate this further up
 }
 
 void
@@ -542,65 +582,10 @@ WidgetListImpl::move_focus (FocusDir fdir)
   return false;                                         // list focus-out
 }
 
-void
-WidgetListImpl::change_selection (const int current, int previous, const bool toggle, const bool range, const bool preserve)
-{
-  const int64 mcount = model_->count();
-  return_unless (mcount > 0);
-  return_unless (previous < mcount);
-  return_unless (current < mcount);
-  switch (selection_mode())
-    {
-      int sel, old;
-    case SelectionMode::NONE:                // nothing to select ever
-      break;
-    case SelectionMode::BROWSE:              // always maintain a single selection
-      sel = MAX (0, current >= 0 ? current : previous);
-      old = focus_row();
-      if (sel != old)
-        {
-          if (old >= 0 && selected (old))
-            toggle_selected (old);
-          if (!selected (sel))
-            toggle_selected (sel);
-        }
-      break;
-    case SelectionMode::SINGLE:              // maintain a single selection at most
-      if (!preserve || toggle)
-        {
-          sel = selected (current) ? current : -1;
-          deselect_all();
-          if (current >= 0 && (!toggle || sel < 0))
-            toggle_selected (current);
-        }
-      break;
-    case SelectionMode::MULTIPLE:            // allow any combination of selected rows
-      if (!preserve)
-        deselect_all();
-      if (current < 0)
-        ;               // nothing to select
-      else if (toggle)
-        toggle_selected (current);
-      else if (range)
-        {
-          if (multi_sel_range_start_ < 0)
-            multi_sel_range_start_ = previous >= 0 ? previous : current;
-          for (int i = MAX (0, MIN (multi_sel_range_start_, current)); i <= MAX (multi_sel_range_start_, current); i++)
-            if (!selected (i))
-              toggle_selected (i);
-        }
-      else if (!preserve)
-        toggle_selected (current);
-      if (!range)
-        multi_sel_range_start_ = -1;
-      break;
-    }
-}
-
 bool
 WidgetListImpl::key_press_event (const EventKey &event)
 {
-  const int64 mcount = model_->count();
+  const int64 nrows = widget_rows_.size();
   bool handled = false;
   bool preserve_old_selection = event.key_state & MOD_CONTROL;
   bool toggle_selection = false, range_selection = event.key_state & MOD_SHIFT;
@@ -609,7 +594,7 @@ WidgetListImpl::key_press_event (const EventKey &event)
   switch (event.key)
     {
     case KEY_space:
-      if (current_focus >= 0 && current_focus < mcount)
+      if (current_focus >= 0 && current_focus < nrows)
         {
           toggle_selection = true;
           range_selection = false;
@@ -617,32 +602,32 @@ WidgetListImpl::key_press_event (const EventKey &event)
       handled = true;
       break;
     case KEY_Down:
-      if (!preserve_old_selection && current_focus >= 0 && !selected (current_focus))
+      if (!preserve_old_selection && current_focus >= 0 && !row_selected (current_focus))
         toggle_selection = true;        // treat like space
-      else if (current_focus + 1 < mcount)
+      else if (current_focus + 1 < nrows)
         current_focus = MAX (current_focus + 1, 0);
       handled = true;
       break;
     case KEY_Up:
-      if (!preserve_old_selection && current_focus >= 0 && !selected (current_focus))
+      if (!preserve_old_selection && current_focus >= 0 && !row_selected (current_focus))
         toggle_selection = true;        // treat like space
       else if (current_focus > 0)
         current_focus = current_focus - 1;
       handled = true;
       break;
     case KEY_Page_Up:
-      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < mcount)
+      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < nrows)
         {
           // See KEY_Page_Down comment.
           const Allocation list_area = allocation();
           const int delta = list_area.height; // - row_height (current_focus) - 1;
-          const int jumprow = 0 * delta; // FIXME: vscroll_relative_row (current_focus, -MAX (0, delta)) + 1;
-          current_focus = CLAMP (MIN (jumprow, current_focus - 1), 0, mcount - 1);
+          const int jumprow = 0 * delta; // vscroll_relative_row (current_focus, -MAX (0, delta)) + 1;
+          current_focus = CLAMP (MIN (jumprow, current_focus - 1), 0, nrows - 1);
         }
       handled = true;
       break;
     case KEY_Page_Down:
-      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < mcount)
+      if (first_row_ >= 0 && last_row_ >= first_row_ && last_row_ < nrows)
         {
           /* Ideally, jump to a new row by a single screenful of pixels, but: never skip rows by
            * jumping more than a screenful of pixels, keep in mind that the view will be aligned
@@ -652,7 +637,7 @@ WidgetListImpl::key_press_event (const EventKey &event)
           const Allocation list_area = allocation();
           const int delta = list_area.height; //  - row_height (current_focus) - 1;
           const int jumprow = 0 * delta; // vscroll_relative_row (current_focus, +MAX (0, delta)) - 1;
-          current_focus = CLAMP (MAX (jumprow, current_focus + 1), 0, mcount - 1);
+          current_focus = CLAMP (MAX (jumprow, current_focus + 1), 0, nrows - 1);
         }
       handled = true;
       break;
@@ -690,7 +675,7 @@ WidgetListImpl::row_event (const Event &event, WidgetImpl *row)
   switch (event.type)
     {
     case KEY_PRESS:
-      // handled = key_press_event (*dynamic_cast<const EventKey*> (&event));
+      handled = key_press_event (*dynamic_cast<const EventKey*> (&event));
       break;
     case BUTTON_PRESS:
       // handled = button_event (*dynamic_cast<const EventButton*> (&event), row, index);
@@ -781,7 +766,7 @@ WidgetListImpl::update_row (uint64 index)
       AmbienceIface *ambience = row->interface<AmbienceIface*>();
       if (ambience)
         ambience->background (index & 1 ? "background-odd" : "background-even");
-      select_row_widget (index, selected (index));
+      row_select (index, row_selected (index));
     }
 }
 
