@@ -719,6 +719,26 @@ more_blob_tests ()
 }
 REGISTER_TEST ("Blob/File IO Tests", more_blob_tests);
 
+static void
+test_stamps()
+{
+  const uint64 b1 = timestamp_benchmark();
+  TASSERT (timestamp_startup() < timestamp_realtime());
+  TASSERT (timestamp_startup() < timestamp_realtime());
+  TASSERT (timestamp_startup() < timestamp_realtime());
+  TASSERT (timestamp_resolution() > 0);
+  uint64 c = monotonic_counter();
+  for (size_t i = 0; i < 999999; i++)
+    {
+      const uint64 last = c;
+      c = monotonic_counter();
+      TASSERT (c > last);
+    }
+  const uint64 b2 = timestamp_benchmark();
+  TASSERT (b1 < b2);
+}
+REGISTER_TEST ("utilities/Stamps", test_stamps);
+
 static void // Test Mutextes before GLib's thread initialization
 test_before_thread_init()
 {

@@ -117,6 +117,7 @@ uint64  timestamp_realtime   ();        // µseconds
 uint64  timestamp_benchmark  ();        // nseconds
 uint64  timestamp_resolution ();        // nseconds
 String  timestamp_format     (uint64 stamp);
+uint64  monotonic_counter    ();
 
 /// The Path namespace provides functions for file path manipulation and testing.
 namespace Path {
