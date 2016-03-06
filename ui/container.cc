@@ -899,7 +899,7 @@ ResizeContainerImpl::idle_sizing ()
 {
   assert_return (resizer_ != 0);
   resizer_ = 0;
-  if (anchored() && drawable())
+  if (anchored() && visible() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       ContainerImpl *pc = parent();
       if (pc && pc->test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
@@ -949,8 +949,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
         tunable_requisition_counter_--;
     }
   tunable_requisition_counter_ = 0;
-  if (!carea)
-    DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), String ("result: " + area.string()).c_str());
+  DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), String ("result: " + area.string()).c_str());
 }
 
 void
