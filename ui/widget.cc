@@ -1394,17 +1394,22 @@ WidgetImpl::invalidate (uint64 mask)
   const bool had_invalid_content = test_any_flag (INVALID_CONTENT);
   const bool had_invalid_allocation = test_any_flag (INVALID_ALLOCATION);
   const bool had_invalid_requisition = test_any_flag (INVALID_REQUISITION);
+  bool emit_invalidated = false;
   if (!had_invalid_content && (mask & INVALID_CONTENT))
-    expose();
+    {
+      expose();
+      emit_invalidated = true;
+    }
   change_flags_silently (mask, true);
-  if (!finalizing())
-    sig_invalidate.emit();
   if ((!had_invalid_requisition && (mask & INVALID_REQUISITION)) ||
       (!had_invalid_allocation && (mask & INVALID_ALLOCATION)))
     {
       invalidate_parent(); // need new size-request from parent
       WidgetGroup::invalidate_widget (*this);
+      emit_invalidated = true;
     }
+  if (emit_invalidated && anchored())
+    sig_invalidate.emit();
 }
 
 /// Determine "internal" size requisition of a widget, including overrides, excluding groupings.
