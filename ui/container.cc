@@ -750,29 +750,16 @@ ContainerImpl::remove_widget (WidgetIface &child) // ContainerIface method
     remove (widget);
 }
 
+/// Calculate real requisition of a widget, including spacing/padding/alignment/etc.
 Requisition
 ContainerImpl::size_request_child (WidgetImpl &child, bool *hspread, bool *vspread)
 {
-  bool chspread = false, cvspread = false;
-  Requisition cr = child.requisition ();
-  const PackInfo &pi = child.pack_info();
-  cr.width += pi.left_spacing + pi.right_spacing;
-  cr.height += pi.bottom_spacing + pi.top_spacing;
-  chspread = child.hspread();
-  cvspread = child.vspread();
   if (hspread)
-    *hspread = chspread;
+    *hspread = child.hspread();
   if (vspread)
-    *vspread = cvspread;
-  return cr;
-}
-
-/// Calculate real requisition of a widget, including spacing/padding/alignment/etc.
-Requisition
-ContainerImpl::measure_child (WidgetImpl &child)
-{
-  const Requisition rq = child.requisition();
+    *vspread = child.vspread();
   const PackInfo &pi = child.pack_info();
+  const Requisition rq = child.requisition();
   return Requisition (pi.left_spacing + rq.width + pi.right_spacing,
                       pi.top_spacing + rq.height + pi.bottom_spacing);
 }
