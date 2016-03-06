@@ -130,18 +130,26 @@ private:
   vector<GrabEntry>     grab_stack_;
   /* --- ButtonState --- */
   struct ButtonState {
-    WidgetImpl           *widget;
-    uint                button;
-    explicit            ButtonState     (WidgetImpl *i, uint b) : widget (i), button (b) {}
-    explicit            ButtonState     () : widget (NULL), button (0) {}
-    bool                operator< (const ButtonState &bs2) const
+    const uint64 serializer;
+    WidgetImpl  &widget;
+    uint         const button;
+    bool        captured;
+    explicit    ButtonState (uint64 s, WidgetImpl &w, uint b, bool c = false) : serializer (s), widget (w), button (b), captured (c) {}
+    explicit    ButtonState () = delete;
+    bool        operator<   (const ButtonState &bs2) const
     {
+      // NOTE: only widget+captured+button are used for button_state_map_ deduplication
       const ButtonState &bs1 = *this;
-      return bs1.widget < bs2.widget || (bs1.widget == bs2.widget &&
-                                     bs1.button < bs2.button);
+      if (&bs1.widget != &bs2.widget)
+        return &bs1.widget < &bs2.widget;
+      if (bs1.captured != bs2.captured)
+        return bs1.captured < bs2.captured;
+      return bs1.button < bs2.button;
     }
   };
-  map<ButtonState,uint> button_state_map_;
+  typedef std::map<ButtonState,uint> ButtonStateMap;
+  ButtonStateMap button_state_map_;
+  ButtonStateMap::iterator button_state_map_find_earliest (const uint button, const bool captured);
 public: // tailored member access for WidgetImpl
   /// @cond INTERNAL
   class Internal {

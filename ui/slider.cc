@@ -6,6 +6,13 @@
 
 namespace Rapicorn {
 
+struct ClassDoctor {
+  struct WidgetImpl_ : public WidgetImpl {
+    using WidgetImpl::process_event;
+  };
+};
+static ClassDoctor::WidgetImpl_& internal_cast (WidgetImpl &w) { return *static_cast<ClassDoctor::WidgetImpl_*> (&w); }
+
 class SliderSkidImpl;
 
 // == SliderAreaImpl ==
@@ -241,7 +248,7 @@ SliderTroughImpl::handle_event (const Event &event)
     case BUTTON_CANCELED:
       /* forward button events to allow slider warps */
       if (has_visible_child())
-        handled = get_child().process_event (event);
+        handled = internal_cast (get_child()).process_event (event);
       break;
     case SCROLL_UP:
     case SCROLL_LEFT:

@@ -14,6 +14,8 @@ struct ClassDoctor {
   struct WidgetImpl_ : public WidgetImpl {
     using WidgetImpl::set_flag;
     using WidgetImpl::unset_flag;
+    using WidgetImpl::process_event;
+    using WidgetImpl::process_display_window_event;
   };
 };
 static ClassDoctor::WidgetImpl_& internal_cast (WidgetImpl &w) { return *static_cast<ClassDoctor::WidgetImpl_*> (&w); }
@@ -382,20 +384,20 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
   vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
   EventMouse *leave_event = create_event_mouse (MOUSE_LEAVE, EventContext (event));
   for (vector<WidgetImplP>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
-    (*it)->process_event (*leave_event);
+    internal_cast (**it).process_event (*leave_event);
   delete leave_event;
   /* send enter events */
   vector<WidgetImplP> entered_children = widget_difference (pierced, last_entered_children_);
   EventMouse *enter_event = create_event_mouse (MOUSE_ENTER, EventContext (event));
   for (vector<WidgetImplP>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
-    (*it)->process_event (*enter_event);
+    internal_cast (**it).process_event (*enter_event);
   delete enter_event;
   /* send actual move event */
   bool handled = false;
   EventMouse *move_event = create_event_mouse (MOUSE_MOVE, EventContext (event));
   for (vector<WidgetImplP>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     if (!handled && (*it)->sensitive())
-      handled = (*it)->process_event (*move_event);
+      handled = internal_cast (**it).process_event (*move_event);
   delete move_event;
   /* update entered children */
   last_entered_children_ = pierced;
@@ -419,7 +421,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   bool handled = false;
   for (vector<WidgetImplP>::reverse_iterator it = pierced.rbegin(); it != pierced.rend() && !handled; it++)
     if ((*it)->sensitive())
-      handled = (*it)->process_event (event);
+      handled = internal_cast (**it).process_event (event);
   return handled;
 }
 
@@ -428,47 +430,92 @@ WindowImpl::dispatch_button_press (const EventButton &bevent)
 {
   uint press_count = bevent.type - BUTTON_PRESS + 1;
   assert (press_count >= 1 && press_count <= 3);
-  /* figure all entered children */
+  // figure all entered children
   const vector<WidgetImplP> &pierced = last_entered_children_;
-  /* send actual event */
+  // event propagation, capture phase - capture_event(press_event) is always paired with capture_event(release_event) or reset/CANCELED
   bool handled = false;
-  for (vector<WidgetImplP>::const_reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
-    if (!handled && (*it)->sensitive())
-      {
-        ButtonState bs (&**it, bevent.button);
-        if (button_state_map_[bs] == 0)                /* no press delivered for <button> on <widget> yet */
-          {
-            button_state_map_[bs] = press_count;       /* record single press */
-            handled = (*it)->process_event (bevent);    // modifies last_entered_children_ + this
-          }
-      }
+  for (vector<WidgetImplP>::const_iterator it = pierced.begin(); !handled && it != pierced.end(); it++)
+    {
+      WidgetImpl &widget = **it;
+      if (widget.anchored() && widget.sensitive())
+        {
+          ButtonState bs (monotonic_counter(), widget, bevent.button, true);
+          if (button_state_map_[bs] == 0)                               // no press delivered for <button> on <widget> yet
+            {
+              button_state_map_[bs] = press_count;                      // record press of bevent.button for pairing
+              handled = internal_cast (widget).process_event (bevent, true);    // may modify last_entered_children_ + this
+            }
+        }
+    }
+  // event propagation, bubble phase - handle_event(press_event) is always paired with handle_event(release_event) or reset/CANCELED
+  for (vector<WidgetImplP>::const_reverse_iterator it = pierced.rbegin(); !handled && it != pierced.rend(); it++)
+    {
+      WidgetImpl &widget = **it;
+      if (widget.anchored() && widget.sensitive())
+        {
+          ButtonState bs (monotonic_counter(), widget, bevent.button);
+          if (button_state_map_[bs] == 0)                               // no press delivered for <button> on <widget> yet
+            {
+              button_state_map_[bs] = press_count;                      // record press of bevent.button for pairing
+              handled = internal_cast (widget).process_event (bevent);  // may modify last_entered_children_ + this
+            }
+        }
+    }
   return handled;
+}
+
+WindowImpl::ButtonStateMap::iterator
+WindowImpl::button_state_map_find_earliest (const uint button, const bool captured)
+{
+  ButtonStateMap::iterator earliest_it = button_state_map_.end();
+  uint64 earliest_serializer = ~uint64 (0);
+  // find first iterator matching arguments ordered by serializer
+  for (ButtonStateMap::iterator it = button_state_map_.begin(); it != button_state_map_.end(); ++it)
+    {
+      const ButtonState &bs = it->first;
+      if (bs.button == button && bs.captured == captured && bs.serializer < earliest_serializer)
+        {
+          earliest_it = it;
+          earliest_serializer = bs.serializer;
+        }
+    }
+  return earliest_it;
 }
 
 bool
 WindowImpl::dispatch_button_release (const EventButton &bevent)
 {
   bool handled = false;
- restart:
-  for (map<ButtonState,uint>::iterator it = button_state_map_.begin();
-       it != button_state_map_.end(); it++)
+  // event propagation, bubble phase - handle_event(release/CANCELED) for previous handle_event(press_event)
+  for (ButtonStateMap::iterator       it = button_state_map_find_earliest (bevent.button, false); // ordering implied by ButtonState.serializer
+       it != button_state_map_.end(); it = button_state_map_find_earliest (bevent.button, false))
     {
-      const ButtonState bs = it->first;
-      // uint press_count = it->second;
-      if (bs.button == bevent.button)
-        {
+      const ButtonState bs = it->first; // uint press_count = it->second;
 #if 0 // FIXME
-          if (press_count == 3)
-            bevent.type = BUTTON_3RELEASE;
-          else if (press_count == 2)
-            bevent.type = BUTTON_2RELEASE;
+      if (press_count == 3)
+        bevent.type = BUTTON_3RELEASE;
+      else if (press_count == 2)
+        bevent.type = BUTTON_2RELEASE;
+      // bevent.type = BUTTON_RELEASE;
 #endif
-          button_state_map_.erase (it);
-          handled |= bs.widget->process_event (bevent); // modifies button_state_map_ + this
-          goto restart; // restart bs.button search
-        }
+      button_state_map_.erase (it);
+      handled |= internal_cast (bs.widget).process_event (bevent, bs.captured); // modifies button_state_map_ + this
     }
-  // bevent.type = BUTTON_RELEASE;
+  // event propagation, capture phase - capture_event(release/CANCELED) for previous capture_event(press_event)
+  for (ButtonStateMap::iterator       it = button_state_map_find_earliest (bevent.button, true); // ordering implied by ButtonState.serializer
+       it != button_state_map_.end(); it = button_state_map_find_earliest (bevent.button, true))
+    {
+      const ButtonState bs = it->first; // uint press_count = it->second;
+#if 0 // FIXME
+      if (press_count == 3)
+        bevent.type = BUTTON_3RELEASE;
+      else if (press_count == 2)
+        bevent.type = BUTTON_2RELEASE;
+      // bevent.type = BUTTON_RELEASE;
+#endif
+      button_state_map_.erase (it);
+      handled |= internal_cast (bs.widget).process_event (bevent, bs.captured); // modifies button_state_map_ + this
+    }
   return handled;
 }
 
@@ -483,20 +530,20 @@ WindowImpl::cancel_widget_events (WidgetImpl *widget)
         {
           last_entered_children_.erase (last_entered_children_.begin() + i);
           EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context_);
-          current->process_event (*mevent);
+          internal_cast (*current).process_event (*mevent);
           delete mevent;
         }
     }
   /* cancel button press events */
   while (button_state_map_.begin() != button_state_map_.end())
     {
-      map<ButtonState,uint>::iterator it = button_state_map_.begin();
+      ButtonStateMap::iterator it = button_state_map_.begin();
       const ButtonState bs = it->first;
       button_state_map_.erase (it);
-      if (bs.widget == widget || !widget)
+      if (&bs.widget == widget || !widget)
         {
           EventButton *bevent = create_event_button (BUTTON_CANCELED, last_event_context_, bs.button);
-          bs.widget->process_event (*bevent); // modifies button_state_map_ + this
+          internal_cast (bs.widget).process_event (*bevent); // modifies button_state_map_ + this
           delete bevent;
         }
     }
@@ -538,7 +585,7 @@ WindowImpl::dispatch_leave_event (const EventMouse &mevent)
         {
           WidgetImplP widget = last_entered_children_.back();
           last_entered_children_.pop_back();
-          widget->process_event (mevent);
+          internal_cast (*widget).process_event (mevent);
         }
     }
   return false;
@@ -608,7 +655,7 @@ WindowImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_display_window_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_display_window_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
@@ -635,7 +682,7 @@ WindowImpl::dispatch_key_event (const Event &event)
         {
           WidgetImpl *grab_widget = get_grab();
           grab_widget = grab_widget ? grab_widget : this;
-          handled = grab_widget->process_event (*kevent);
+          handled = internal_cast (*grab_widget).process_event (*kevent);
         }
     }
   return handled;
@@ -646,7 +693,7 @@ WindowImpl::dispatch_data_event (const Event &event)
 {
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_display_window_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_display_window_event (event))
     return true;
   else if (event.type == CONTENT_REQUEST)
     {

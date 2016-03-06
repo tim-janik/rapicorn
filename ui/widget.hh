@@ -30,8 +30,6 @@ typedef std::weak_ptr<ContainerImpl>   ContainerImplW;
 /* --- event handler --- */
 class EventHandler : public virtual Aida::ImplicitBase {
   typedef Aida::Signal<bool (const Event&), Aida::CollectorWhile0<bool>> EventSignal;
-protected:
-  virtual bool  handle_event    (const Event    &event);
 public:
   explicit      EventHandler    ();
   EventSignal   sig_event;
@@ -39,6 +37,8 @@ public:
     RESET_ALL
   } ResetMode;
   virtual void  reset           (ResetMode       mode = RESET_ALL) = 0;
+  virtual bool  capture_event   (const Event    &event);
+  virtual bool  handle_event    (const Event    &event);
 };
 
 class WidgetImpl;
@@ -68,6 +68,8 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
   void                        data_context_changed ();
+  bool                        process_event                (const Event &event, bool capture = false);  // widget coordinates relative
+  bool                        process_display_window_event (const Event &event);  // display_window coordinates relative
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                foreach_recursive  (const std::function<void (WidgetImpl&)> &f);
@@ -265,9 +267,6 @@ public:
   /* public signals */
   Signal<void ()>                   sig_invalidate;
   Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
-  /* event handling */
-  bool                       process_event                (const Event &event);  // widget coordinates relative
-  bool                       process_display_window_event (const Event &event);  // display_window coordinates relative
   /* coordinate handling */
 protected:
   struct WidgetChain { WidgetImpl *widget; WidgetChain *next; WidgetChain() : widget (NULL), next (NULL) {} };

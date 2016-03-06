@@ -21,6 +21,12 @@ EventHandler::EventHandler() :
 {}
 
 bool
+EventHandler::capture_event (const Event &event)
+{
+  return false;
+}
+
+bool
 EventHandler::handle_event (const Event &event)
 {
   return false;
@@ -1076,12 +1082,17 @@ WidgetImpl::affine_to_display_window () /* widget => display_window affine */
 }
 
 bool
-WidgetImpl::process_event (const Event &event) /* widget coordinates relative */
+WidgetImpl::process_event (const Event &event, bool capture) // widget coordinates relative
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
-    handled = controller->sig_event.emit (event);
+    {
+      if (capture)
+        handled = controller->capture_event (event);
+      else
+        handled = controller->sig_event.emit (event);
+    }
   return handled;
 }
 
