@@ -78,7 +78,7 @@ private:
   vector<WidgetImplP>   widget_difference                       (const vector<WidgetImplP>    &clist, /* preserves order of clist */
                                                                  const vector<WidgetImplP>    &cminus);
   /* sizing */
-  void                  resize_window                           (const Allocation *new_area = NULL);
+  void                  resize_window                           (const Allocation *new_area);
   virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */

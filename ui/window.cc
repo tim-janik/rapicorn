@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
+#define DEBUG_RESIZE(...)     RAPICORN_KEY_DEBUG ("Resize", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -321,10 +322,10 @@ WindowImpl::resize_window (const Allocation *new_area)
  done:
   const uint64 stop = timestamp_realtime();
   Allocation area = new_area ? *new_area : allocated ? Allocation (0, 0, state.width, state.height) : Allocation (0, 0, rsize.width, rsize.height);
-  EDEBUG ("RESIZE: request=%s allocate=%s elapsed=%.3fms",
-          new_area ? "-" : string_format ("%.0fx%.0f", rsize.width, rsize.height).c_str(),
-          string_format ("%.0fx%.0f", area.width, area.height).c_str(),
-          (stop - start) / 1000.0);
+  DEBUG_RESIZE ("request=%s allocate=%s elapsed=%.3fms",
+                new_area ? "-" : string_format ("%.0fx%.0f", rsize.width, rsize.height).c_str(),
+                string_format ("%.0fx%.0f", area.width, area.height).c_str(),
+                (stop - start) / 1000.0);
 }
 
 void
@@ -728,6 +729,8 @@ WindowImpl::dispatch_win_size_event (const Event &event)
       pending_win_size_ = wevent->intermediate || has_queued_win_size();
       EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d", string_from_event_type (event.type),
               wevent->width, wevent->height, wevent->intermediate, pending_win_size_);
+      DEBUG_RESIZE ("%s: %.0fx%.0f intermediate=%d pending=%d", string_from_event_type (event.type),
+                    wevent->width, wevent->height, wevent->intermediate, pending_win_size_);
       const Allocation area = allocation();
       if (wevent->width != area.width || wevent->height != area.height)
         {
@@ -1052,7 +1055,7 @@ WindowImpl::resizing_dispatcher (const LoopState &state)
     {
       const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
       if (need_resize)
-        resize_window();
+        resize_window (NULL);
       return true;
     }
   return false;
@@ -1111,7 +1114,7 @@ WindowImpl::create_display_window ()
     {
       if (!display_window_)
         {
-          resize_window(); // ensure initial size requisition
+          resize_window (NULL); // ensure initial size requisition
           DisplayDriver *sdriver = DisplayDriver::retrieve_display_driver ("auto");
           if (sdriver)
             {
