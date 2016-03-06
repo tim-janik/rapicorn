@@ -1514,6 +1514,19 @@ WidgetImpl::leave_anchored ()
   data_context_changed();
 }
 
+String
+WidgetImpl::debug_name (const String &format)
+{
+  String s = format.empty() ? "%n" : format;
+  const UserSource us = Factory::factory_context_source (factory_context());
+  s = string_replace (s, "%f", us.filename);
+  s = string_replace (s, "%l", string_format ("%u", us.line));
+  s = string_replace (s, "%n", name());
+  s = string_replace (s, "%r", string_format ("%gx%g", requisition_.width, requisition_.height));
+  s = string_replace (s, "%a", allocation_.string());
+  return s;
+}
+
 static WidgetImpl *global_debug_dump_marker = NULL;
 
 String
