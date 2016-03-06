@@ -33,7 +33,7 @@ protected:
   virtual void          construct               () override;
   virtual void          dispose                 () override;
 public:
-  static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE - 1; ///< Execute resizes right before GUI updates.
+  static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE + 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
   virtual              ~WindowImpl              () override;
   virtual WindowImpl*   as_window_impl          ()              { return this; }
