@@ -41,11 +41,9 @@ class WidgetListImpl : public virtual MultiContainerImpl,
   uint                  selection_changed_freeze_ : 20;
   uint                  selection_mode_ : 8;
   uint                  selection_changed_pending_ : 1;
-  uint                  block_invalidate_ : 1;
   int                   first_row_, last_row_, multi_sel_range_start_;
   uint                  insertion_cursor_;
   void                  model_updated           (const UpdateRequest &ur);
-  virtual void          invalidate_parent       () override;
   WidgetImpl*           get_row_widget          (uint64 idx) const { return idx < widget_rows_.size() ? widget_rows_[idx].get() : NULL; }
   int64                 row_widget_index        (WidgetImpl &widget);
   void                  destroy_row             (uint64 index);

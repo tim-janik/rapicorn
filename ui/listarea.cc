@@ -99,7 +99,7 @@ static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Widge
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
-  selection_changed_freeze_ (0), selection_mode_ (uint64 (SelectionMode::SINGLE)), selection_changed_pending_ (false), block_invalidate_ (false),
+  selection_changed_freeze_ (0), selection_mode_ (uint64 (SelectionMode::SINGLE)), selection_changed_pending_ (false),
   first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1), insertion_cursor_ (0)
 {}
 
@@ -489,13 +489,6 @@ WidgetListImpl::invalidate_model (bool invalidate_heights, bool invalidate_widge
 {
   // FIXME: reset all cached row_heights_ here?
   invalidate();
-}
-
-void
-WidgetListImpl::invalidate_parent ()
-{
-  if (!block_invalidate_)
-    MultiContainerImpl::invalidate_parent();
 }
 
 void
