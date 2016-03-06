@@ -16,6 +16,7 @@ class SelectableItemImpl : public virtual SingleContainerImpl,
                            public virtual EventHandler {
 protected:
   virtual void  construct              () override;
+  virtual bool  capture_event          (const Event &event) override;
   virtual bool  handle_event           (const Event &event) override;
 public:
   explicit      SelectableItemImpl     ();

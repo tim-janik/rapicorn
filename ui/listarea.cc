@@ -34,6 +34,25 @@ SelectableItemImpl::selected (bool s)
 }
 
 bool
+SelectableItemImpl::capture_event (const Event &event)
+{
+  bool handled = false;
+  switch (event.type)
+    {
+    case BUTTON_PRESS:
+      if (dynamic_cast<const EventButton*> (&event)->button == 1)
+        {
+          selected (!selected());
+          handled = true;
+        }
+      break;
+    default:
+      break;
+    }
+  return handled;
+}
+
+bool
 SelectableItemImpl::handle_event (const Event &event)
 {
   bool handled = false;
@@ -41,13 +60,6 @@ SelectableItemImpl::handle_event (const Event &event)
     {
     case KEY_PRESS:
       if (dynamic_cast<const EventKey*> (&event)->key == KEY_space)
-        {
-          selected (!selected());
-          handled = true;
-        }
-      break;
-    case BUTTON_PRESS:
-      if (dynamic_cast<const EventButton*> (&event)->button == 1)
         {
           selected (!selected());
           handled = true;
