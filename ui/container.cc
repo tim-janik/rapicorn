@@ -675,9 +675,9 @@ ContainerImpl::render_recursive (RenderContext &rcontext)
       if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
         {
           if (child.test_any_flag (INVALID_REQUISITION))
-            critical ("rendering widget with invalid %s: %s (%p)", "requisition", child.name().c_str(), &child);
+            critical ("%s: rendering widget with invalid %s: %s", child.debug_name(), "requisition", child.debug_name ("%r"));
           if (child.test_any_flag (INVALID_ALLOCATION))
-            critical ("rendering widget with invalid %s: %s (%p)", "allocation", child.name().c_str(), &child);
+            critical ("%s: rendering widget with invalid %s: %s", child.debug_name(), "allocation", child.debug_name ("%a"));
           child.render_widget (rcontext);
         }
     }
@@ -885,16 +885,6 @@ ResizeContainerImpl::update_anchor_info ()
   anchor_info_.window = window_cast (widget);
 }
 
-static inline String
-impl_type (WidgetImpl *widget)
-{
-  String tag;
-  if (widget)
-    tag = Factory::factory_context_impl_type (widget->factory_context());
-  const size_t cpos = tag.rfind (':');
-  return cpos != String::npos ? tag.c_str() + cpos + 1 : tag;
-}
-
 void
 ResizeContainerImpl::idle_sizing ()
 {
@@ -904,7 +894,7 @@ ResizeContainerImpl::idle_sizing ()
     {
       ContainerImpl *pc = parent();
       if (pc && pc->test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
-        DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this), "pass upwards...");
+        DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), "pass upwards...");
       else
         {
           Allocation area = allocation();
@@ -924,10 +914,8 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
       area = *carea;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  const bool need_debugging = rapicorn_debug_check() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
-  if (need_debugging)
-    DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this),
-                  !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
+  DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this),
+                !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
   /* this is the core of the resizing loop. via Widget.tune_requisition(), we
    * allow widgets to adjust the requisition from within size_allocate().
    * whether the tuned requisition is honored at all, depends on
@@ -952,8 +940,8 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
         tunable_requisition_counter_--;
     }
   tunable_requisition_counter_ = 0;
-  if (need_debugging && !carea)
-    DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this), String ("result: " + area.string()).c_str());
+  if (!carea)
+    DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), String ("result: " + area.string()).c_str());
 }
 
 void
