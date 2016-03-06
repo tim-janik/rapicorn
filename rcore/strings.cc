@@ -848,6 +848,21 @@ string_strip (const String &input)
     return input.substr (a, b - a);
 }
 
+/// Replace substring @a marker in @a input with @a replacement, at most @a maxn times.
+String
+string_replace (const String &input, const String &marker, const String &replacement, size_t maxn)
+{
+  String s = input;
+  size_t i = s.find (marker);
+  while (i != String::npos && maxn-- > 0)
+    {
+      s = s.substr (0, i) + replacement + s.substr (i + marker.size());
+      i = s.find (marker, i + replacement.size());
+    }
+  return s;
+}
+
+
 /// Replace all occouranes of @a match in @a input with @a subst.
 String
 string_substitute_char (const String &input, const char match, const char subst)
