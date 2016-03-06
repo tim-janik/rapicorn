@@ -1875,7 +1875,7 @@ WidgetImpl::clip_area (const Allocation *clip)
 /** Return widget allocation area accounting for clip_area().
  *
  * For any rendering or event processing purposes, clipped_allocation() should be used over allocation().
- * The unclipped size allocation is just used by @a this widget internally for layouting pusposes, see also set_allocation().
+ * The unclipped size allocation is just used by @a this widget internally for layouting purposes, see also set_allocation().
  */
 Allocation
 WidgetImpl::clipped_allocation () const
@@ -1915,7 +1915,8 @@ WidgetImpl::tune_requisition (Requisition requisition)
  * Allocate the given @a area to @a this widget.
  * The size allocation is used by the widget for layouting of its contents.
  * That is, its rendering contents and children of a container will be constrained to the allocation() area.
- * The optional @a clip area provided constrains which part of the allocation will be rendered
+ * Normally, children are clipped to their parent's allocation, this can be overridden by
+ * passing a different @a clip area which constrains the part of the allocation to be rendered
  * and is sensitive for input event processing, see clipped_allocation().
  * This method clears the #INVALID_ALLOCATION flag and calls expose() on the widget as needed.
  */
@@ -1929,25 +1930,26 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   sarea.width  = CLAMP (sarea.width,  0, smax);
   sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
-  const Allocation oa = allocation();
-  const Rect *oc = clip_area(), oc_copy = oc ? *oc : Rect();
-  /* always reallocate to re-layout children */
+  const Allocation old_allocation = clipped_allocation();
+  const Rect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
+  // always reallocate to re-layout children
   change_flags_silently (INVALID_ALLOCATION, false); /* skip notification */
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  const bool changed = allocation_ != sarea;
+  Rect new_clip = clip ? *clip : area;
+  if (!clip && parent())
+    new_clip.intersect (parent()->clipped_allocation());
+  const bool allocation_changed = allocation_ != sarea || new_clip != old_clip;
   allocation_ = sarea;
-  clip_area (clip);     // invalidates *oc
-  size_allocate (allocation_, changed);
+  clip_area (new_clip == area ? NULL : &new_clip); // invalidates old clip_area()
+  size_allocate (allocation_, allocation_changed);
   Allocation a = allocation();
-  const bool need_expose = oa != a || oc != clip || test_any_flag (INVALID_CONTENT);
+  const bool need_expose = allocation_changed || test_any_flag (INVALID_CONTENT);
   change_flags_silently (INVALID_CONTENT, false); // skip notification
   // expose old area
   if (need_expose)
     {
-      Region region (oa);
-      if (oc)
-        region.intersect (oc_copy);
+      Region region (old_allocation);
       expose_internal (region); // don't intersect with new allocation
     }
   /* expose new area */
