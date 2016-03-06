@@ -18,15 +18,20 @@
     -->
   <Window id="test-dialog">
     <VBox>
-      <Label markup-text="Square Arrow:"/>
-      <HBox>
-	<Alignment hexpand="1"/> <!-- space eater -->
-	<RapicornTestContainer assert-width="200" assert-height="200">
-	  <arrow-frame center-child="0" vspread="1" height="200">
+      <Label markup-text="Square Arrow:" hscale="0"/>
+      <Table hscale="0" vscale="0" hexpand="1" vexpand="1">
+	<RapicornTestContainer assert-width="200" assert-height="200" hscale="0" vscale="0">
+	  <arrow-frame center-child="0" height="200">
 	    <Arrow arrow-dir="left" size-policy="width-from-height" height="33"/>
 	  </arrow-frame>
 	</RapicornTestContainer>
-      </HBox>
+	<RapicornTestContainer assert-width="200" assert-height="200" hscale="0" vscale="0"
+			       hposition="2" vposition="2">
+	  <arrow-frame center-child="0" width="200">
+	    <Arrow arrow-dir="down" size-policy="height-from-width" width="33"/>
+	  </arrow-frame>
+	</RapicornTestContainer>
+      </Table>
     </VBox>
   </Window>
 
