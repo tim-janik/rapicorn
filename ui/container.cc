@@ -772,18 +772,18 @@ ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
   const PackInfo &pi = child.pack_info();
   Allocation area = carea;
   /* pad allocation */
-  area.x += pi.left_spacing;
-  area.width -= pi.left_spacing + pi.right_spacing;
-  area.y += pi.top_spacing;
-  area.height -= pi.bottom_spacing + pi.top_spacing;
+  area.x += min (pi.left_spacing, area.width);
+  area.width -= min (pi.left_spacing + pi.right_spacing, area.width);
+  area.y += min (pi.top_spacing, area.height);
+  area.height -= min (pi.bottom_spacing + pi.top_spacing, area.height);
   /* expand/scale child */
-  if (area.width > rq.width && !child.hexpand())
+  if (area.width > rq.width)
     {
       int width = iround (rq.width + pi.hscale * (area.width - rq.width));
       area.x += iround (pi.halign * (area.width - width));
       area.width = width;
     }
-  if (area.height > rq.height && !child.vexpand())
+  if (area.height > rq.height)
     {
       int height = iround (rq.height + pi.vscale * (area.height - rq.height));
       area.y += iround (pi.valign * (area.height - height));
