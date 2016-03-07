@@ -895,15 +895,23 @@ ResizeContainerImpl::update_anchor_info ()
 }
 
 void
-ResizeContainerImpl::idle_sizing ()
+ResizeContainerImpl::check_resize_handler ()
 {
+  // always called via event loop
   assert_return (resizer_ != 0);
   resizer_ = 0;
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
+  check_resize();
+}
+
+void
+ResizeContainerImpl::check_resize ()
+{
   if (anchored() && visible() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       ContainerImpl *pc = parent();
       if (pc && pc->test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
-        DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), "pass upwards...");
+        DEBUG_RESIZE ("%12s: leaving check_resize to ancestor: %s", debug_name ("%n"), pc->debug_name ("%n"));
       else
         {
           Allocation area = allocation();
@@ -953,20 +961,16 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
 }
 
 void
-ResizeContainerImpl::invalidate_parent ()
+ResizeContainerImpl::invalidate (uint64 mask)
 {
-  if (anchored() && drawable())
+  SingleContainerImpl::invalidate (mask);
+  if (!resizer_ && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
-      if (!resizer_)
-        {
-          WindowImpl *w = get_window();
-          EventLoop *loop = w ? w->get_loop() : NULL;
-          if (loop)
-            resizer_ = loop->exec_callback (Aida::slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
-        }
-      return;
+      WindowImpl *w = get_window();
+      EventLoop *loop = w ? w->get_loop() : NULL;
+      if (loop)
+        resizer_ = loop->exec_callback (Aida::slot (*this, &ResizeContainerImpl::check_resize_handler), WindowImpl::PRIORITY_RESIZE);
     }
-  SingleContainerImpl::invalidate_parent();
 }
 
 MultiContainerImpl::MultiContainerImpl ()

@@ -29,6 +29,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   void                  uncross_focus           (WidgetImpl &fwidget);
 protected:
   void                  set_focus               (WidgetImpl *widget);
+  virtual void          check_resize            () override;
   virtual void          set_parent              (ContainerImpl *parent);
   virtual void          construct               () override;
   virtual void          dispose                 () override;
@@ -94,7 +95,6 @@ private:
   void                  clear_immediate_event                   ();
   bool                  immediate_event_dispatcher              (const LoopState &state);
   virtual bool          event_dispatcher                        (const LoopState &state);
-  virtual bool          resizing_dispatcher                     (const LoopState &state);
   virtual bool          drawing_dispatcher                      (const LoopState &state);
   virtual bool          command_dispatcher                      (const LoopState &state);
   virtual bool          custom_command                          (const String    &command_name,

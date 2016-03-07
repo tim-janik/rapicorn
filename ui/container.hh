@@ -110,11 +110,12 @@ class ResizeContainerImpl : public virtual SingleContainerImpl {
   uint                  tunable_requisition_counter_;
   uint                  resizer_;
   AnchorInfo            anchor_info_;
-  void                  idle_sizing             ();
   void                  update_anchor_info      ();
+  void                  check_resize_handler    ();
 protected:
-  virtual void          invalidate_parent       ();
-  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel);
+  virtual void          check_resize            ();
+  virtual void          invalidate              (uint64 mask) override;
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   void                  negotiate_size          (const Allocation *carea);
   explicit              ResizeContainerImpl     ();
   virtual              ~ResizeContainerImpl     ();

@@ -244,7 +244,6 @@ WindowImpl::WindowImpl() :
   WindowTrail::wenter (this);
   // create event loop (auto-starts)
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::resizing_dispatcher), PRIORITY_RESIZE);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
   loop_->flag_primary (false);
@@ -1044,21 +1043,13 @@ WindowImpl::clear_immediate_event ()
   immediate_event_hash_ = 0;
 }
 
-bool
-WindowImpl::resizing_dispatcher (const LoopState &state)
+void
+WindowImpl::check_resize()
 {
   const bool can_resize = !pending_win_size_ && display_window_;
   const bool need_resize = can_resize && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
-  if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return need_resize;
-  else if (state.phase == state.DISPATCH)
-    {
-      const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-      if (need_resize)
-        resize_window (NULL);
-      return true;
-    }
-  return false;
+  if (need_resize)
+    resize_window (NULL);
 }
 
 bool
