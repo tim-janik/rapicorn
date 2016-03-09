@@ -113,6 +113,7 @@ class ResizeContainerImpl : public virtual SingleContainerImpl {
   void                  update_anchor_info      ();
   void                  check_resize_handler    ();
 protected:
+  virtual void          invalidate_parent       () override;
   virtual void          check_resize            ();
   virtual void          invalidate              (uint64 mask) override;
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;

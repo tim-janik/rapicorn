@@ -973,6 +973,14 @@ ResizeContainerImpl::invalidate (uint64 mask)
     }
 }
 
+void
+ResizeContainerImpl::invalidate_parent()
+{
+  // skip invalidate_size(), since ResizeContainerImpl has its own handler
+  if (false)
+    SingleContainerImpl::invalidate_parent();
+}
+
 MultiContainerImpl::MultiContainerImpl ()
 {}
 
