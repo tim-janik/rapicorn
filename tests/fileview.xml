@@ -26,28 +26,32 @@
   </SelectableItem>
 
   <!-- widget list -->
-  <Table id="widget-list" >
+  <Rapicorn_ScrollArea id="widget-list" >
     <Argument name="model"/>
-    <Frame frame-type="in" hexpand="1" vexpand="1" hposition="0" vposition="1">
-      <VBox>
-	<HBox hexpand="1">
-	  <Button hexpand="1"><Label markup-text="Col-1"/></Button>
-	  <Button hexpand="1"><Label markup-text="Col-2"/></Button>
-	  <Button hexpand="1"><Label markup-text="Col-3"/></Button>
-	  <Button hexpand="1"><Label markup-text="Col-4"/></Button>
-	  <Button hexpand="1"><Label markup-text="Col-5"/></Button>
-	  <Button hexpand="1"><Label markup-text="Col-6"/></Button>
-	</HBox>
-	<ListArea model="@eval model"/>
-      </VBox>
-    </Frame>
-    <Alignment vposition="1" hposition="1" left-padding="2">
-      <VSlider vexpand="0" adjustment-source="ancestry-vertical"/>
-    </Alignment>
-    <Alignment vposition="2" hposition="0" top-padding="2">
-      <HSlider hexpand="0" adjustment-source="ancestry-horizontal" visible="1" />
-    </Alignment>
-  </Table>
+    <Table>
+      <Frame frame-type="in" hexpand="1" vexpand="1" hposition="0" vposition="1">
+	<VBox>
+	  <HBox hexpand="1">
+	    <Button hexpand="1"><Label markup-text="Col-1"/></Button>
+	    <Button hexpand="1"><Label markup-text="Col-2"/></Button>
+	    <Button hexpand="1"><Label markup-text="Col-3"/></Button>
+	    <Button hexpand="1"><Label markup-text="Col-4"/></Button>
+	    <Button hexpand="1"><Label markup-text="Col-5"/></Button>
+	    <Button hexpand="1"><Label markup-text="Col-6"/></Button>
+	  </HBox>
+	  <Rapicorn_ScrollPort name="scroll-container" vspread="1">
+	    <ListArea model="@eval model"/>
+	  </Rapicorn_ScrollPort>
+	</VBox>
+      </Frame>
+      <Alignment vposition="1" hposition="1" left-padding="2">
+	<VSlider vexpand="0" adjustment-source="ancestry-vertical"/>
+      </Alignment>
+      <Alignment vposition="2" hposition="0" top-padding="2">
+	<HSlider hexpand="0" adjustment-source="ancestry-horizontal" visible="1" />
+      </Alignment>
+    </Table>
+  </Rapicorn_ScrollArea>
 
   <!-- main dialog -->
   <Window id="main-dialog">
