@@ -305,6 +305,7 @@ public:
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
+  Allocation                 focus_view_area    () const;
   /* theming & appearance */
   ThemeInfo&            theme_info              () const;
   // colors

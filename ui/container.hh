@@ -28,6 +28,7 @@ struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface 
   void                widget_uncross_links  (WidgetImpl           &owner,
                                              WidgetImpl           &link);
   WidgetGroup*        retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create);
+  virtual Allocation  child_view_area       (const WidgetImpl &child);
 protected:
   virtual            ~ContainerImpl     ();
   virtual void        do_changed        (const String &name) override;

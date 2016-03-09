@@ -467,8 +467,8 @@ struct LesserWidgetByHBand {
   operator() (WidgetImpl *const &i1,
               WidgetImpl *const &i2) const
   {
-    const Allocation &a1 = i1->allocation();
-    const Allocation &a2 = i2->allocation();
+    const Allocation &a1 = i1->focus_view_area();
+    const Allocation &a2 = i2->focus_view_area();
     // sort widgets by horizontal bands first
     if (a1.y + a1.height <= a2.y)
       return true;
@@ -515,8 +515,8 @@ struct LesserWidgetByDirection {
               WidgetImpl *const &i2) const
   {
     // calculate widget distances along dir, dist >= 0 lies ahead
-    const Allocation &a1 = i1->allocation();
-    const Allocation &a2 = i2->allocation();
+    const Allocation &a1 = i1->focus_view_area();
+    const Allocation &a2 = i2->focus_view_area();
     double dd1 = directional_distance (a1);
     double dd2 = directional_distance (a2);
     // sort widgets along dir
@@ -560,7 +560,7 @@ ContainerImpl::move_focus (FocusDir fdir)
   if (children.empty())
     return false;
   // sort children according to direction and current focus
-  const Allocation &area = allocation();
+  const Allocation &area = focus_view_area();
   Point refpoint;
   switch (fdir)
     {
@@ -577,7 +577,7 @@ ContainerImpl::move_focus (FocusDir fdir)
       current = get_window()->get_focus();
       if (current)
         {
-          refpoint = rect_center (current->allocation());
+          refpoint = rect_center (current->focus_view_area());
           if (!children[0]->translate_from (*current, 1, &refpoint))
             return false; // compare current and children within the same coordinate system
         }
@@ -591,7 +591,7 @@ ContainerImpl::move_focus (FocusDir fdir)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
         for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
-          if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
+          if (lesseribd.directional_distance ((*it)->focus_view_area()) >= 0)
             children2.push_back (*it);
         children.swap (children2);
         stable_sort (children.begin(), children.end(), lesseribd);
@@ -602,7 +602,7 @@ ContainerImpl::move_focus (FocusDir fdir)
       current = get_window()->get_focus();
       if (current)
         {
-          refpoint = rect_center (current->allocation());
+          refpoint = rect_center (current->focus_view_area());
           if (!children[0]->translate_from (*current, 1, &refpoint))
             return false; // compare current and children within the same coordinate system
         }
@@ -616,7 +616,7 @@ ContainerImpl::move_focus (FocusDir fdir)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
         for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
-          if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
+          if (lesseribd.directional_distance ((*it)->focus_view_area()) >= 0)
             children2.push_back (*it);
         children.swap (children2);
         stable_sort (children.begin(), children.end(), lesseribd);
@@ -639,6 +639,12 @@ ContainerImpl::move_focus (FocusDir fdir)
       citer++;
     }
   return false;
+}
+
+Allocation
+ContainerImpl::child_view_area (const WidgetImpl &child)
+{
+  return child.clipped_allocation();
 }
 
 void

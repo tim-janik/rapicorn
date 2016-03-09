@@ -1923,6 +1923,16 @@ WidgetImpl::clipped_allocation () const
   return area;
 }
 
+/// Return the widget allocation area that is visible and needs consideration during focus movement.
+Allocation
+WidgetImpl::focus_view_area () const
+{
+  if (!parent_)
+    return clipped_allocation();
+  else
+    return parent_->child_view_area (*this);
+}
+
 bool
 WidgetImpl::tune_requisition (Requisition requisition)
 {
