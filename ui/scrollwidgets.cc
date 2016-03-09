@@ -196,7 +196,7 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
   WidgetImpl *fwidget = rfwidget;
   if (!fwidget)
     return;
-  /* list focus widgets between focus_widget and out immediate child */
+  /* list focus widgets between focus_widget and our immediate child */
   std::list<WidgetImpl*> fwidgets;
   while (fwidget)
     {
