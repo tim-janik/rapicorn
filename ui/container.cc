@@ -557,10 +557,10 @@ ContainerImpl::move_focus (FocusDir fdir)
   vector<WidgetImpl*> children;
   for (auto child : *this)
     children.push_back (&*child);
+  if (children.empty())
+    return false;
   // sort children according to direction and current focus
   const Allocation &area = allocation();
-  Point upper_left (area.x, area.y + area.height);
-  Point lower_right (area.x + area.width, area.y);
   Point refpoint;
   switch (fdir)
     {
@@ -575,7 +575,18 @@ ContainerImpl::move_focus (FocusDir fdir)
     case FocusDir::UP:
     case FocusDir::LEFT:
       current = get_window()->get_focus();
-      refpoint = current ? rect_center (current->allocation()) : lower_right;
+      if (current)
+        {
+          refpoint = rect_center (current->allocation());
+          if (!children[0]->translate_from (*current, 1, &refpoint))
+            return false; // compare current and children within the same coordinate system
+        }
+      else // use lower right as reference point
+        {
+          refpoint = Point (area.x + area.width, area.y + area.height);
+          if (!children[0]->translate_from (*this, 1, &refpoint))
+            return false; // compare lower right and children within the same coordinate system
+        }
       { // filter widgets with negative distance (not ahead in focus direction)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
@@ -589,7 +600,18 @@ ContainerImpl::move_focus (FocusDir fdir)
     case FocusDir::RIGHT:
     case FocusDir::DOWN:
       current = get_window()->get_focus();
-      refpoint = current ? rect_center (current->allocation()) : upper_left;
+      if (current)
+        {
+          refpoint = rect_center (current->allocation());
+          if (!children[0]->translate_from (*current, 1, &refpoint))
+            return false; // compare current and children within the same coordinate system
+        }
+      else // use upper left as reference point
+        {
+          refpoint = Point (area.x, area.y);
+          if (!children[0]->translate_from (*this, 1, &refpoint))
+            return false; // compare upper left and children within the same coordinate system
+        }
       { // filter widgets with negative distance (not ahead in focus direction)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
