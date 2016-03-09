@@ -98,7 +98,6 @@ static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Widge
 
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
-  hadjustment_ (NULL), vadjustment_ (NULL),
   selection_changed_freeze_ (0), selection_mode_ (uint64 (SelectionMode::SINGLE)), selection_changed_pending_ (false),
   first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1), insertion_cursor_ (0)
 {}
@@ -124,40 +123,6 @@ WidgetListImpl::hierarchy_changed (WidgetImpl *old_toplevel)
   MultiContainerImpl::hierarchy_changed (old_toplevel);
   if (anchored())
     queue_visual_update();
-}
-
-Adjustment&
-WidgetListImpl::hadjustment () const
-{
-  if (!hadjustment_)
-    hadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
-  return *hadjustment_;
-}
-
-Adjustment&
-WidgetListImpl::vadjustment () const
-{
-  if (!vadjustment_)
-    {
-      vadjustment_ = Adjustment::create (0, 0, 1, 0.01, 0.2);
-      WidgetListImpl &self = const_cast<WidgetListImpl&> (*this);
-      vadjustment_->sig_value_changed() += Aida::slot (self, &WidgetImpl::queue_visual_update);
-    }
-  return *vadjustment_;
-}
-
-Adjustment*
-WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source, const String &name)
-{
-  switch (adj_source)
-    {
-    case AdjustmentSourceType::ANCESTRY_HORIZONTAL:
-      return &hadjustment();
-    case AdjustmentSourceType::ANCESTRY_VERTICAL:
-      return &vadjustment();
-    default:
-      return NULL;
-    }
 }
 
 void

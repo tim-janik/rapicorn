@@ -2,7 +2,6 @@
 #ifndef __RAPICORN_LIST_AREA_HH__
 #define __RAPICORN_LIST_AREA_HH__
 
-#include <ui/adjustment.hh>
 #include <ui/container.hh>
 #include <ui/sizegroup.hh>
 #include <ui/layoutcontainers.hh>
@@ -29,14 +28,12 @@ typedef std::shared_ptr<SelectableItemImpl> SelectableItemImplP;
 
 class WidgetListImpl : public virtual MultiContainerImpl,
                        public virtual WidgetListIface,
-                       public virtual AdjustmentSource,
                        public virtual EventHandler
 {
   ListModelIfaceP        model_;
   String                 row_identifier_;
   vector<WidgetImplP>    widget_rows_; // FIXME: rename and merge w MultiContainer
   size_t                 conid_updated_;
-  mutable AdjustmentP    hadjustment_, vadjustment_;
   vector<WidgetGroupP>   size_groups_;
   uint                  selection_changed_freeze_ : 20;
   uint                  selection_mode_ : 8;
@@ -92,9 +89,6 @@ public:
   // == WidgetListImpl ==
   explicit              WidgetListImpl          ();
   virtual              ~WidgetListImpl          () override;
-  Adjustment&           hadjustment             () const;
-  Adjustment&           vadjustment             () const;
-  Adjustment*           get_adjustment          (AdjustmentSourceType adj_source, const String &name);
   int                   focus_row               ();
   bool                  grab_row_focus          (int next_focus, int old_focus = -1);
 };
