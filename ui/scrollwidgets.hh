@@ -23,8 +23,10 @@ public:
 class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler {
   Adjustment *hadjustment_, *vadjustment_;
   size_t conid_hadjustment_, conid_vadjustment_;
+  uint   fix_id_;
   void                          adjustment_changed      ();
   bool                          scroll                  (EventType scroll_dir);
+  void                          fix_adjustments         ();
 protected:
   virtual void                  hierarchy_changed       (WidgetImpl *old_toplevel) override;
   virtual void                  size_allocate           (Allocation area, bool changed) override;
@@ -35,6 +37,7 @@ protected:
   virtual void                  reset                   (ResetMode mode);
 public:
   explicit                      ScrollPortImpl          ();
+  virtual                      ~ScrollPortImpl          ();
 };
 
 } // Rapicorn
