@@ -159,12 +159,20 @@ ScrollPortImpl::size_allocate (Allocation area, bool changed)
     return;
   WidgetImpl &child = get_child();
   const Requisition rq = child.requisition();
-  area.x = 0; // 0-offset
-  area.y = 0; // 0-offset
-  area.width = rq.width;
-  area.height = rq.height;
-  child.set_allocation (area, &area); // clipping is done in render instead
-  area = child.allocation();
+  Allocation child_area;
+  child_area.x = 0; // 0-offset
+  child_area.y = 0; // 0-offset
+  if (child.hexpand())
+    child_area.width = max (rq.width, area.width);
+  else
+    child_area.width = rq.width;
+  if (child.vexpand())
+    child_area.height = max (rq.height, area.height);
+  else
+    child_area.height = rq.height;
+  const Allocation clip_area = child_area;
+  child_area = layout_child (child, child_area);
+  child.set_allocation (child_area, &clip_area); // clipping is done in render instead
   if (!fix_id_)
     {
       WindowImpl *window = get_window();
