@@ -37,7 +37,9 @@
 	    <Button hexpand="1"><Label markup-text="Col-3"/></Button>
 	  </HBox>
 	  <Rapicorn_ScrollPort name="scroll-container" hexpand="1" vspread="1">
-	    <ListArea hexpand="1" model="@eval model"/>
+	    <Ambience hexpand="1" normal-background="panel">
+	      <ListArea hexpand="1" model="@eval model"/>
+	    </Ambience>
 	  </Rapicorn_ScrollPort>
 	</VBox>
       </Frame>
