@@ -302,7 +302,9 @@ WindowImpl::resize_window (const Allocation *new_area)
   if (!display_window_)
     goto done;
   state = display_window_->get_state();
-  if (state.width <= 0 || state.height <= 0 || rsize.width > state.width || rsize.height > state.height)
+  if (state.width <= 0 || state.height <= 0 ||
+      ((rsize.width > state.width || rsize.height > state.height) &&
+       (config_.request_width != rsize.width || config_.request_height != rsize.height)))
     {
       config_.request_width = rsize.width;
       config_.request_height = rsize.height;
