@@ -1058,12 +1058,19 @@ bool
 WindowImpl::drawing_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return exposes_pending();
+    return !pending_win_size_ && exposes_pending();
   else if (state.phase == state.DISPATCH)
     {
       const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-      if (exposes_pending())
-        draw_now();
+      if (!pending_win_size_)
+        {
+          if (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+            critical ("%s: invalid %s: skipping redraw...", debug_name(),
+                      test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION) ? "REQUISITION&ALLOCATION" :
+                      test_any_flag (INVALID_REQUISITION) ? "REQUISITION" : "ALLOCATION");
+          if (exposes_pending())
+            draw_now();
+        }
       return true;
     }
   return false;
