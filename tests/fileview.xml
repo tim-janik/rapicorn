@@ -17,11 +17,13 @@
   <SelectableItem id="list-row" hexpand="1">
     <Argument name="index"/>
     <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
-      <HBox name="ListRowCavity" spacing="15" left-spacing="2">
-	<Label hexpand="1" name="list-label" markup-text="Hello; index="/>
-	<Label hexpand="1" markup-text="@eval index"/>
-	<Label hexpand="1" markup-text="more..."/>
-      </HBox>
+      <Ambience hexpand="1" active-background="blue">
+	<HBox name="ListRowCavity" spacing="15" left-spacing="2">
+	  <Label hsize-group="col1" hexpand="1" name="list-label" markup-text="Hello; index="/>
+	  <Label hsize-group="col2" hexpand="1" markup-text="@eval index"/>
+	  <Label hsize-group="col3" hexpand="1" markup-text="more..."/>
+	</HBox>
+      </Ambience>
     </FocusFrame>
   </SelectableItem>
 
@@ -32,9 +34,9 @@
       <Frame frame-type="in" hexpand="1" vexpand="1" hposition="0" vposition="1">
 	<VBox>
 	  <HBox hexpand="1">
-	    <Button hexpand="1"><Label markup-text="Col-1"/></Button>
-	    <Button hexpand="1"><Label markup-text="Col-2"/></Button>
-	    <Button hexpand="1"><Label markup-text="Col-3"/></Button>
+	    <Button hsize-group="col1" hexpand="1"><Label markup-text="Col-1"/></Button>
+	    <Button hsize-group="col3" hexpand="1"><Label markup-text="Col-2"/></Button>
+	    <Button hsize-group="col3" hexpand="1"><Label markup-text="Col-3"/></Button>
 	  </HBox>
 	  <Rapicorn_ScrollPort name="scroll-container" hexpand="1" vspread="1">
 	    <Ambience hexpand="1" normal-background="panel">
