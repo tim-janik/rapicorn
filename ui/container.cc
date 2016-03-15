@@ -885,6 +885,7 @@ SingleContainerImpl::~SingleContainerImpl()
     remove (*child_widget.get());
 }
 
+// == ResizeContainerImpl ==
 ResizeContainerImpl::ResizeContainerImpl() :
   tunable_requisition_counter_ (0), resizer_ (0)
 {
@@ -929,7 +930,8 @@ ResizeContainerImpl::check_resize_handler ()
   assert_return (resizer_ != 0);
   resizer_ = 0;
   const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-  check_resize();
+  if (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+    check_resize();
 }
 
 void
@@ -988,13 +990,15 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
   DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), String ("result: " + area.string()).c_str());
 }
 
+static const bool subtree_resizing = RAPICORN_FLIPPER ("subtree-resizing", "Enable resizing without propagation for ResizeContainerImpl subtrees.");
+
 void
 ResizeContainerImpl::invalidate (uint64 mask)
 {
   SingleContainerImpl::invalidate (mask);
-  if (!resizer_ && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+  WindowImpl *w = get_window();
+  if ((w == this || subtree_resizing) && !resizer_ && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
-      WindowImpl *w = get_window();
       EventLoop *loop = w ? w->get_loop() : NULL;
       if (loop)
         resizer_ = loop->exec_callback (Aida::slot (*this, &ResizeContainerImpl::check_resize_handler), WindowImpl::PRIORITY_RESIZE);
@@ -1005,10 +1009,11 @@ void
 ResizeContainerImpl::invalidate_parent()
 {
   // skip invalidate_size(), since ResizeContainerImpl has its own handler
-  if (false)
+  if (!subtree_resizing)
     SingleContainerImpl::invalidate_parent();
 }
 
+// == MultiContainerImpl ==
 MultiContainerImpl::MultiContainerImpl ()
 {}
 
