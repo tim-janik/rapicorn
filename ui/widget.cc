@@ -2044,7 +2044,7 @@ WidgetImpl::render_into (cairo_t *cr, const Region &region)
     }
 }
 
-/// Render widget's clipped allication area contents into the rendering context provided.
+/// Render widget's clipped allocation area contents into the rendering context provided.
 void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
