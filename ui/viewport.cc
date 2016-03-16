@@ -37,14 +37,6 @@ ViewportImpl::do_scrolled ()
 }
 
 Allocation
-ViewportImpl::child_viewport ()
-{
-  const Allocation &area = allocation();
-  const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();
-  return Allocation (xoffset, yoffset, area.width, area.height);
-}
-
-Allocation
 ViewportImpl::child_view_area (const WidgetImpl &child)
 {
   const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();

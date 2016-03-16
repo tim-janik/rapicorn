@@ -26,7 +26,6 @@ protected:
 public:
   Aida::Signal<void ()> sig_scrolled;
   void                  expose_child_region     (const Region &region);
-  Allocation            child_viewport          ();
   explicit              ViewportImpl            ();
   virtual              ~ViewportImpl            ();
 };
