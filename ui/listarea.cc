@@ -501,7 +501,7 @@ WidgetListImpl::size_request (Requisition &requisition)
     {
       if (!child || !child->visible())
         continue;
-      const Requisition crq = measure_child (*child);
+      const Requisition crq = size_request_child (*child);
       requisition.width = MAX (requisition.width, crq.width);
       requisition.height += crq.height;
       chspread |= child->hspread();
@@ -520,7 +520,7 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
     {
       if (!child || !child->visible())
         continue;
-      const Requisition crq = measure_child (*child);
+      const Requisition crq = size_request_child (*child);
       Allocation carea;
       carea.x = list_area.x;
       carea.width = list_area.width;
