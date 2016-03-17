@@ -6,8 +6,9 @@
 #include <string.h> // memcpy
 #include <algorithm>
 
-#define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
+#define EDEBUG(...)           RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
 #define DEBUG_RESIZE(...)     RAPICORN_KEY_DEBUG ("Resize", __VA_ARGS__)
+#define DEBUG_RENDER(...)     RAPICORN_KEY_DEBUG ("Render", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -288,7 +289,6 @@ WindowImpl::resize_window (const Allocation *new_area)
   assert_return (requisitions_tunable() == false);
   Requisition rsize;
   DisplayWindow::State state;
-  bool allocated = false;
 
   // negotiate sizes (new_area==NULL) and ensures window is allocated
   negotiate_size (new_area);
@@ -317,14 +317,13 @@ WindowImpl::resize_window (const Allocation *new_area)
     {
       Allocation area = Allocation (0, 0, state.width, state.height);
       negotiate_size (&area);
-      allocated = true;
     }
  done:
   const uint64 stop = timestamp_realtime();
-  Allocation area = new_area ? *new_area : allocated ? Allocation (0, 0, state.width, state.height) : Allocation (0, 0, rsize.width, rsize.height);
-  DEBUG_RESIZE ("request=%s allocate=%s elapsed=%.3fms",
-                new_area ? "-" : string_format ("%.0fx%.0f", rsize.width, rsize.height).c_str(),
-                string_format ("%.0fx%.0f", area.width, area.height).c_str(),
+  DEBUG_RESIZE ("request=%s allocate=%s pws=%d expose=%s elapsed=%.3fms",
+                new_area ? "-" : string_format ("%.0fx%.0f", requisition().width, requisition().height),
+                string_format ("%.0fx%.0f", allocation().width, allocation().height),
+                pending_win_size_, peek_expose_region().extents().string(),
                 (stop - start) / 1000.0);
 }
 
@@ -819,9 +818,9 @@ WindowImpl::draw_now ()
       // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
       loop_->exec_callback ([this] () { if (display_window_) sig_displayed.emit(); }, EventLoop::PRIORITY_UPDATE);
       const uint64 stop = timestamp_realtime();
-      EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
-              x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
-              (stop - start) / 1000.0);
+      DEBUG_RENDER ("%+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
+                    x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
+                    (stop - start) / 1000.0);
     }
   else
     discard_expose_region(); // nuke stale exposes
