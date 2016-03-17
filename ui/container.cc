@@ -540,6 +540,13 @@ rect_center (const Allocation &a)
   return Point (a.x + a.width * 0.5, a.y + a.height * 0.5);
 }
 
+static inline bool
+has_allocation (WidgetImpl *widget)
+{
+  const Allocation area = widget->allocation();
+  return area.width > 0 && area.height > 0;
+}
+
 bool
 ContainerImpl::move_focus (FocusDir fdir)
 {
@@ -556,7 +563,8 @@ ContainerImpl::move_focus (FocusDir fdir)
   // copy children
   vector<WidgetImpl*> children;
   for (auto child : *this)
-    children.push_back (&*child);
+    if (child->visible() && has_allocation (&*child))
+      children.push_back (&*child);
   if (children.empty())
     return false;
   // sort children according to direction and current focus
