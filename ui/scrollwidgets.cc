@@ -69,7 +69,8 @@ static const WidgetFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Scrol
 
 // == ScrollPortImpl ==
 ScrollPortImpl::ScrollPortImpl() :
-  hadjustment_ (NULL), vadjustment_ (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0), fix_id_ (0)
+  hadjustment_ (NULL), vadjustment_ (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0), fix_id_ (0),
+  sig_scrolled (Aida::slot (*this, &ScrollPortImpl::do_scrolled))
 {}
 
 void
@@ -143,13 +144,25 @@ ScrollPortImpl::fix_adjustments ()
     hadjustment_->constrain();
   if (vadjustment_)
     vadjustment_->constrain();
-  const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
-  const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
-  scroll_offsets (xoffset, yoffset); // syncronize offsets, before adjustment_changed() kicks in
   if (hadjustment_)
     hadjustment_->thaw();
   if (vadjustment_)
     vadjustment_->thaw();
+}
+
+void
+ScrollPortImpl::adjustment_changed()
+{
+  sig_scrolled.emit(); // FIXME: need to issue 0-distance move here
+}
+
+void
+ScrollPortImpl::do_scrolled ()
+{
+  if (0)
+    expose();
+  else
+    invalidate_size();
 }
 
 void
@@ -180,14 +193,6 @@ ScrollPortImpl::size_allocate (const Allocation area, bool changed)
       if (loop)
         fix_id_ = loop->exec_callback (Aida::slot (*this, &ScrollPortImpl::fix_adjustments), EventLoop::PRIORITY_NOW);
     }
-}
-
-void
-ScrollPortImpl::adjustment_changed()
-{
-  const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
-  const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
-  scroll_offsets (xoffset, yoffset);
 }
 
 void

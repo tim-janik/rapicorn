@@ -6,9 +6,7 @@
 
 namespace Rapicorn {
 
-ViewportImpl::ViewportImpl () :
-  xoffset_ (0), yoffset_ (0),
-  sig_scrolled (Aida::slot (*this, &ViewportImpl::do_scrolled))
+ViewportImpl::ViewportImpl ()
 {
   const_cast<AnchorInfo*> (force_anchor_info())->viewport = this;
 }
@@ -16,27 +14,6 @@ ViewportImpl::ViewportImpl () :
 ViewportImpl::~ViewportImpl ()
 {
   const_cast<AnchorInfo*> (force_anchor_info())->viewport = NULL;
-}
-
-void
-ViewportImpl::scroll_offsets (int deltax, int deltay)
-{
-  if (deltax != xoffset_ || deltay != yoffset_)
-    {
-      xoffset_ = deltax;
-      yoffset_ = deltay;
-      // FIXME: need to issue 0-distance move here
-      sig_scrolled.emit();
-    }
-}
-
-void
-ViewportImpl::do_scrolled ()
-{
-  if (0)
-    expose();
-  else
-    invalidate_size();
 }
 
 Affine

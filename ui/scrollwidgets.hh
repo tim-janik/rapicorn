@@ -27,6 +27,7 @@ class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler 
   void                          adjustment_changed      ();
   bool                          scroll                  (EventType scroll_dir);
   void                          fix_adjustments         ();
+  void                          do_scrolled             ();
 protected:
   virtual void                  hierarchy_changed       (WidgetImpl *old_toplevel) override;
   virtual void                  size_allocate           (Allocation area, bool changed) override;
@@ -36,6 +37,7 @@ protected:
   virtual bool                  handle_event            (const Event &event);
   virtual void                  reset                   (ResetMode mode);
 public:
+  Aida::Signal<void ()>         sig_scrolled;
   explicit                      ScrollPortImpl          ();
   virtual                      ~ScrollPortImpl          ();
 };
