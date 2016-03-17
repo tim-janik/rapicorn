@@ -623,8 +623,8 @@ ContainerImpl::move_focus (FocusDir fdir)
       stable_sort (children.begin(), children.end(), LesserWidgetByHBand());
       reverse (children.begin(), children.end());
       break;
-    case FocusDir::UP:
-    case FocusDir::LEFT:
+    case FocusDir::UP:    case FocusDir::LEFT:
+    case FocusDir::RIGHT: case FocusDir::DOWN:
       current = get_window()->get_focus();
       if (current)
         {
@@ -632,34 +632,18 @@ ContainerImpl::move_focus (FocusDir fdir)
           if (!children[0]->translate_from (*current, 1, &refpoint))
             return false; // compare current and children within the same coordinate system
         }
-      else // use lower right as reference point
+      else // use an entering corner as reference point
         {
-          refpoint = Point (area.x + area.width, area.y + area.height);
-          if (!children[0]->translate_from (*this, 1, &refpoint))
-            return false; // compare lower right and children within the same coordinate system
-        }
-      { // filter widgets with negative distance (not ahead in focus direction)
-        LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
-        vector<WidgetImpl*> children2;
-        for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
-          if (lesseribd.directional_distance (focus_view_area (*it)) >= 0)
-            children2.push_back (*it);
-        children.swap (children2);
-        stable_sort (children.begin(), children.end(), lesseribd);
-      }
-      break;
-    case FocusDir::RIGHT:
-    case FocusDir::DOWN:
-      current = get_window()->get_focus();
-      if (current)
-        {
-          refpoint = rect_center (focus_view_area (current));
-          if (!children[0]->translate_from (*current, 1, &refpoint))
-            return false; // compare current and children within the same coordinate system
-        }
-      else // use upper left as reference point
-        {
-          refpoint = Point (area.x, area.y);
+          switch (fdir)
+            {
+            case FocusDir::UP:   case FocusDir::LEFT:  // use lower right as reference point
+              refpoint = Point (area.x + area.width, area.y + area.height);
+              break;
+            case FocusDir::DOWN: case FocusDir::RIGHT: // use upper left as reference point
+              refpoint = Point (area.x, area.y);
+              break;
+            default: ; // silence compiler
+            }
           if (!children[0]->translate_from (*this, 1, &refpoint))
             return false; // compare upper left and children within the same coordinate system
         }
