@@ -467,8 +467,8 @@ struct LesserWidgetByHBand {
   operator() (WidgetImpl *const &i1,
               WidgetImpl *const &i2) const
   {
-    const Allocation &a1 = i1->focus_view_area();
-    const Allocation &a2 = i2->focus_view_area();
+    const Allocation &a1 = i1->allocation();
+    const Allocation &a2 = i2->allocation();
     // sort widgets by horizontal bands first
     if (a1.y + a1.height <= a2.y)
       return true;
