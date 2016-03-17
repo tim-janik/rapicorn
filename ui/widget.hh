@@ -69,7 +69,6 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
   void                        data_context_changed ();
   bool                        process_event                (const Event &event, bool capture = false);  // widget coordinates relative
-  bool                        process_display_window_event (const Event &event);  // display_window coordinates relative
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                foreach_recursive  (const std::function<void (WidgetImpl&)> &f);
@@ -270,8 +269,6 @@ public:
   /* coordinate handling */
 protected:
   struct WidgetChain { WidgetImpl *widget; WidgetChain *next; WidgetChain() : widget (NULL), next (NULL) {} };
-  Affine                     affine_to_display_window   ();                    // widget => display_window affine
-  Affine                     affine_from_display_window ();                    // display_window => widget affine
   // rendering
   class RenderContext;
   virtual void               render_widget             (RenderContext    &rcontext);
@@ -283,21 +280,6 @@ protected:
 public:
   void                       render_into               (cairo_t *cr, const Region &region);
   virtual bool               point                     (Point        p);            // widget coordinates relative
-  Point                      point_to_display_window   (Point        widget_point);   // widget coordinates relative
-  Point                      point_from_display_window (Point        window_point); // display_window coordinates relative
-  virtual bool               translate_from         (const WidgetImpl   &src_widget,
-                                                     const uint    n_points,
-                                                     Point        *points) const;
-  bool                       translate_to           (const uint    n_points,
-                                                     Point        *points,
-                                                     const WidgetImpl   &target_widget) const;
-  bool                       translate_from         (const WidgetImpl   &src_widget,
-                                                     const uint    n_rects,
-                                                     Rect         *rects) const;
-  bool                       translate_to           (const uint    n_rects,
-                                                     Rect         *rects,
-                                                     const WidgetImpl   &target_widget) const;
-  bool                       display_window_point   (Point        p);           // display_window coordinates relative
   /* public size accessors */
   virtual Requisition        requisition        ();                              // effective size requisition
   void                       set_allocation     (const Allocation &area,

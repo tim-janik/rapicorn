@@ -16,7 +16,6 @@ struct ClassDoctor {
     using WidgetImpl::set_flag;
     using WidgetImpl::unset_flag;
     using WidgetImpl::process_event;
-    using WidgetImpl::process_display_window_event;
   };
 };
 static ClassDoctor::WidgetImpl_& internal_cast (WidgetImpl &w) { return *static_cast<ClassDoctor::WidgetImpl_*> (&w); }
@@ -370,19 +369,19 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
   WidgetImpl* grab_widget = get_grab (&unconfined);
   if (grab_widget)
     {
-      if (unconfined or grab_widget->display_window_point (Point (event.x, event.y)))
+      if (unconfined or grab_widget->point (Point (event.x, event.y)))
         {
           pierced.push_back (shared_ptr_cast<WidgetImpl> (grab_widget));        // grab-widget receives all mouse events
           ContainerImpl *container = grab_widget->interface<ContainerImpl*>();
           if (container)                              /* deliver to hovered grab-widget children as well */
-            container->display_window_point_children (Point (event.x, event.y), pierced);
+            container->point_children (Point (event.x, event.y), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all mouse events
       if (entered_)
-        display_window_point_children (Point (event.x, event.y), pierced);
+        point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
   vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
@@ -419,7 +418,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all events
-      display_window_point_children (Point (event.x, event.y), pierced);
+      point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
   bool handled = false;
@@ -659,7 +658,7 @@ WindowImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_display_window_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
@@ -697,7 +696,7 @@ WindowImpl::dispatch_data_event (const Event &event)
 {
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_display_window_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_event (event))
     return true;
   else if (event.type == CONTENT_REQUEST)
     {
@@ -1212,7 +1211,6 @@ WindowImpl::synthesize_enter (double xalign,
   const Allocation &area = allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = point_to_display_window (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
@@ -1242,7 +1240,6 @@ WindowImpl::synthesize_click (WidgetIface &widgeti,
   const Allocation &area = widget.allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = widget.point_to_display_window (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;

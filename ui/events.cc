@@ -100,62 +100,6 @@ EventContext::operator= (const Event &event)
 }
 
 Event*
-create_event_transformed (const Event  &source_event,
-                          const Affine &affine)
-{
-  EventContext dcontext (source_event);
-  Point p = affine.point (Point (dcontext.x, dcontext.y));
-  dcontext.x = p.x;
-  dcontext.y = p.y;
-  switch (source_event.type)
-    {
-    case MOUSE_ENTER:
-    case MOUSE_MOVE:
-    case MOUSE_LEAVE:           return create_event_mouse (source_event.type, dcontext);
-    case BUTTON_PRESS:
-    case BUTTON_2PRESS:
-    case BUTTON_3PRESS:
-    case BUTTON_CANCELED:
-    case BUTTON_RELEASE:
-    case BUTTON_2RELEASE:
-    case BUTTON_3RELEASE:       return create_event_button (source_event.type, dcontext,
-                                                            dynamic_cast<const EventButton*> (&source_event)->button);
-    case FOCUS_IN:
-    case FOCUS_OUT:             return create_event_focus (source_event.type, dcontext);
-    case KEY_PRESS:
-    case KEY_CANCELED:
-    case KEY_RELEASE:
-      {
-        const EventKey *key_event = dynamic_cast<const EventKey*> (&source_event);
-        return create_event_key (source_event.type, dcontext, key_event->key, key_event->utf8input);
-      }
-    case CONTENT_DATA:
-    case CONTENT_CLEAR:
-    case CONTENT_REQUEST:
-      {
-        const EventData *data_event = dynamic_cast<const EventData*> (&source_event);
-        return create_event_data (source_event.type, dcontext, data_event->content_source, data_event->nonce,
-                                  data_event->data_type, data_event->data, data_event->request_id);
-      }
-    case SCROLL_UP:
-    case SCROLL_DOWN:
-    case SCROLL_LEFT:
-    case SCROLL_RIGHT:          return create_event_scroll (source_event.type, dcontext);
-    case CANCEL_EVENTS:         return create_event_cancellation (dcontext);
-    case WIN_SIZE:
-      {
-        const EventWinSize *source = dynamic_cast<const EventWinSize*> (&source_event);
-        return create_event_win_size (dcontext, affine.hexpansion() * source->width, affine.vexpansion() * source->height, source->intermediate);
-      }
-    case WIN_DELETE:            return create_event_win_delete (dcontext);
-    case WIN_DESTROY:           return create_event_win_destroy (dcontext);
-    case EVENT_NONE:
-    case EVENT_LAST:
-    default:                    fatal ("uncopyable event type: %s", string_from_event_type (source_event.type));
-    }
-}
-
-Event*
 create_event_cancellation (const EventContext &econtext)
 {
   Event *event = new EventImpl (CANCEL_EVENTS, econtext);

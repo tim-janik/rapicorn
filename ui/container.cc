@@ -340,12 +340,6 @@ ContainerImpl::remove (WidgetImpl &widget)
   return true;
 }
 
-Affine
-ContainerImpl::child_affine (const WidgetImpl &widget)
-{
-  return Affine(); // Identity
-}
-
 void
 ContainerImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
 {
@@ -627,26 +621,18 @@ ContainerImpl::move_focus (FocusDir fdir)
     case FocusDir::RIGHT: case FocusDir::DOWN:
       current = get_window()->get_focus();
       if (current)
-        {
-          refpoint = rect_center (focus_view_area (current));
-          if (!children[0]->translate_from (*current, 1, &refpoint))
-            return false; // compare current and children within the same coordinate system
-        }
+        refpoint = rect_center (focus_view_area (current));
       else // use an entering corner as reference point
-        {
-          switch (fdir)
-            {
-            case FocusDir::UP:   case FocusDir::LEFT:  // use lower right as reference point
-              refpoint = Point (area.x + area.width, area.y + area.height);
-              break;
-            case FocusDir::DOWN: case FocusDir::RIGHT: // use upper left as reference point
-              refpoint = Point (area.x, area.y);
-              break;
-            default: ; // silence compiler
-            }
-          if (!children[0]->translate_from (*this, 1, &refpoint))
-            return false; // compare upper left and children within the same coordinate system
-        }
+        switch (fdir)
+          {
+          case FocusDir::UP:   case FocusDir::LEFT:  // use lower right as reference point
+            refpoint = Point (area.x + area.width, area.y + area.height);
+            break;
+          case FocusDir::DOWN: case FocusDir::RIGHT: // use upper left as reference point
+            refpoint = Point (area.x, area.y);
+            break;
+          default: ; // silence compiler
+          }
       { // filter widgets with negative distance (not ahead in focus direction)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
@@ -686,7 +672,6 @@ ContainerImpl::expose_enclosure ()
       {
         WidgetImpl &child = *childp;
         Region cregion (child.clipped_allocation());
-        cregion.affine (child_affine (child).invert());
         region.subtract (cregion);
       }
   expose (region);
@@ -714,22 +699,14 @@ ContainerImpl::point_children (Point p, std::vector<WidgetImplP> &stack)
   for (auto childp : *this)
     {
       WidgetImpl &child = *childp;
-      Point cp = child_affine (child).point (p);
-      if (child.point (cp))
+      if (child.point (p))
         {
           stack.push_back (shared_ptr_cast<WidgetImpl> (&child));
           ContainerImpl *cc = child.as_container_impl();
           if (cc)
-            cc->point_children (cp, stack);
+            cc->point_children (p, stack);
         }
     }
-}
-
-// display_window coordinates relative
-void
-ContainerImpl::display_window_point_children (Point p, std::vector<WidgetImplP> &stack)
-{
-  point_children (point_from_display_window (p), stack);
 }
 
 void

@@ -224,11 +224,6 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
   for (WidgetImpl *widget : fwidgets)
     {
       Rect a = widget->allocation();
-      if (!translate_from (*widget, 1, &a))
-        {
-          fwidget = NULL; // no geographic descendant
-          break;
-        }
       if (a.width <= area.width && a.height <= area.height)
         {
           fwidget = widget;
@@ -246,8 +241,6 @@ ScrollPortImpl::scroll_to_child (WidgetImpl &widget)
   const Rect area = allocation();
   // adjust scroll area to widget's area
   Rect farea = widget.allocation();
-  if (!translate_from (widget, 1, &farea))
-    return;           // not geographic descendant
   if (0)
     printerr ("scroll-focus: area=%s farea=%s child=%p (%s)\n",
               area.string().c_str(), farea.string().c_str(), &widget,

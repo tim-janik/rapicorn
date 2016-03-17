@@ -16,12 +16,6 @@ ViewportImpl::~ViewportImpl ()
   const_cast<AnchorInfo*> (force_anchor_info())->viewport = NULL;
 }
 
-Affine
-ViewportImpl::child_affine (const WidgetImpl &widget)
-{
-  return AffineIdentity();
-}
-
 void
 ViewportImpl::expose_child_region (const Region &region)
 {
