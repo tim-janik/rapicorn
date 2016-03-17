@@ -58,8 +58,8 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   StyleImplP                  style_;
   HeritageP                   heritage_;
   FactoryContext             &factory_context_;
-  Allocation                  allocation_;
   Requisition                 requisition_;
+  Allocation                  allocation_, clip_area_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   ContainerImpl**             _parent_loc        () { return &parent_; }
@@ -113,6 +113,7 @@ protected:
     ALLOW_FOCUS            = 1ULL << 33, ///< Flag set by the widget user to indicate if a widget may or may not receive focus.
     NEEDS_FOCUS_INDICATOR  = 1ULL << 34, ///< Flag used for containers that need a focus-indicator to receive input focus.
     HAS_FOCUS_INDICATOR    = 1ULL << 35, ///< Flag set on #NEEDS_FOCUS_INDICATOR containers if a descendant provides a focus-indicator.
+    HAS_CLIP_AREA          = 1ULL << 36, ///< Flag indicating wether a clip_area() has been assigned or not.
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }

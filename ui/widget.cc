@@ -1716,29 +1716,21 @@ WidgetImpl::background ()
   return heritage()->background (state());
 }
 
-class ClipAreaDataKey : public DataKey<Allocation*> {
-  virtual void destroy (Allocation *clip) override
-  {
-    delete clip;
-  }
-};
-static ClipAreaDataKey clip_area_key;
-
 /// Return clipping area for rendering and event processing if one is set.
 const Allocation*
 WidgetImpl::clip_area () const
 {
-  return get_data (&clip_area_key);
+  return test_any_flag (HAS_CLIP_AREA) ? &clip_area_ : NULL;
 }
 
 /// Assign clipping area for rendering and event processing.
 void
 WidgetImpl::clip_area (const Allocation *clip)
 {
-  if (!clip)
-    delete_data (&clip_area_key);
-  else
-    set_data (&clip_area_key, new Rect (*clip));
+  const bool has_clip_area = clip != NULL;
+  clip_area_ = has_clip_area ? *clip : Rect();
+  if (has_clip_area != test_any_flag (HAS_CLIP_AREA))
+    change_flags_silently (HAS_CLIP_AREA, has_clip_area);
 }
 
 /** Return widget allocation area accounting for clip_area().
