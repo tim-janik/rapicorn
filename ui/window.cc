@@ -362,6 +362,8 @@ bool
 WindowImpl::dispatch_mouse_movement (const Event &event)
 {
   last_event_context_ = event;
+  // ensure coordinates are interpreted with correct allocations
+  ensure_resized();
   vector<WidgetImplP> pierced;
   /* figure all entered children */
   bool unconfined;
@@ -1046,12 +1048,18 @@ WindowImpl::clear_immediate_event ()
 }
 
 void
+WindowImpl::ensure_resized()
+{
+  if (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+    resize_window (NULL);
+}
+
+void
 WindowImpl::check_resize()
 {
   const bool can_resize = !pending_win_size_ && display_window_;
-  const bool need_resize = can_resize && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
-  if (need_resize)
-    resize_window (NULL);
+  if (can_resize)
+    ensure_resized();
 }
 
 bool
