@@ -105,6 +105,17 @@ Rect::ll_tangent () const
   return tangent_intersection (ul(), lr(), ll());
 }
 
+// Return rectangle intersection with or mapped onto @a bounds for non-intersections.
+Rect
+Rect::mapped_onto (const Rect &bounds) const
+{
+  const double x1 = clamp (x, bounds.x, bounds.x + bounds.width);
+  const double x2 = clamp (x + width, bounds.x, bounds.x + bounds.width);
+  const double y1 = clamp (y, bounds.y, bounds.y + bounds.height);
+  const double y2 = clamp (y + height, bounds.y, bounds.y + bounds.height);
+  return Rect (Point (x1, y1), Point (x2, y2));
+}
+
 String
 Rect::string() const
 {
