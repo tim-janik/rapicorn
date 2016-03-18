@@ -1,8 +1,8 @@
-usr/include/rapicorn-*
+usr/include/rapicorn-*/
 usr/bin/rapidres
 usr/share/man/man1/rapidres.1
-usr/bin/aidacc
-usr/lib/*/rapicorn-*/aida
 usr/lib/*/lib*.so
 usr/lib/*/pkgconfig/*
-# usr/share/pkgconfig/*
+usr/bin/aidacc
+usr/lib/*/rapicorn-*/aidacc/
+usr/lib/*/rapicorn-*/pyxx/
