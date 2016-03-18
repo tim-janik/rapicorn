@@ -1,11 +1,14 @@
 #!/bin/bash
 # Copyright (C) 2015 Tim Janik / MPL-2.0
 
-set -e
+set -e # abort on errors
 
 # die with descriptive error messages
 STARTPWD=`pwd`; SCRIPTNAME=`basename $0` ;
 function die { e="$1"; [[ $e =~ ^[0-9]+$ ]] && shift || e=127; echo "$SCRIPTNAME: fatal: $*" >&2; exit "$e" ; }
+
+# == chdir into rapicorn/ ==
+cd $(dirname $(readlink -f $0))
 
 # == config ==
 mkconfig() {
@@ -26,135 +29,10 @@ mkconfig() {
   echo PUBVERSION=$PUBVERSION
   COMMITID=`git rev-parse HEAD`
   echo COMMITID=$COMMITID
-  DCHMESSAGE="Automatic CI snapshot, git commit $COMMITID"
-  echo DCHMESSAGE="\"$DCHMESSAGE\""
+  CHANGELOGMSG="Automatic CI snapshot, git commit $COMMITID"
+  echo CHANGELOGMSG="\"$CHANGELOGMSG\""
 }
 
-# == pcreate [distribution] ==
-pcreate() {
-  set -x
-  CIDIR=`pwd`/cidir/ ; mkdir -p "$CIDIR"			########## cidir ##########
-  DIST="$1"; SOURCES="$2"
-  test -n "$1" || die "missing tarball"
-  sudo pbuilder create --distribution $DIST --debootstrapopts --variant=buildd
-  cat > $CIDIR/pcreate-cmds <<-__EOF
-	apt-get -y install apt-transport-https ca-certificates &&
-	  { ! fgrep -q 'NAME="Ubuntu"' /etc/os-release ||
-	      sed "/^deb /s/ main\b/ universe main/" -i /etc/apt/sources.list ; } &&
-	  echo "$SOURCES" | tee /etc/apt/sources.list.d/extra-sources.list &&
-	  apt-get update
-	__EOF
-  sudo pbuilder --login --save-after-login < $CIDIR/pcreate-cmds
-  rm -f $CIDIR/pcreate-cmds
-}
-
-# == pbuild <TARBALL> <DEBIANDIR/> ==
-pbuild() {
-  set -x
-  CIDIR=`pwd`/cidir/ ; mkdir -p "$CIDIR"			########## cidir ##########
-  test -n "$1" || die "missing tarball"
-  test -n "$2" || die "missing debian/"
-  mkconfig # PACKAGE, VERSION, ...
-  DEBVERSION="$VERSION$VCSREVISION"
-  # setup lintian for pbuilder
-  mkdir $CIDIR/.hooks
-  cat > $CIDIR/.hooks/B90lintian <<-__EOF
-	#!/bin/bash
-	set -e
-	test -x /usr/bin/lintian || apt-get -y install lintian
-	echo "Running lintian..."
-	su -c "lintian -I --show-overrides /tmp/buildd/*.changes; :" - pbuilder
-	__EOF
-  chmod +x $CIDIR/.hooks/B90lintian
-  # copy and extract tarball
-  mkdir $CIDIR/.xdest
-  TARBALL="$PACKAGE""_${DEBVERSION%-*}.orig.tar.${1##*.tar.}" # $1
-  cp "$1" $CIDIR/$TARBALL
-  # extract tarball and rename content directory
-  tar -C $CIDIR/.xdest/ -xf $CIDIR/$TARBALL
-  TARDIR=`ls $CIDIR/.xdest/` && test 1 = `echo $TARDIR | wc -l` &&
-    test -d $CIDIR/.xdest/$TARDIR || die "tarball must contain a single directory"
-  mv "$CIDIR/.xdest/$TARDIR" "$CIDIR/$PACKAGE-$VERSION"
-  TARDIR="$PACKAGE-$VERSION"
-  rmdir $CIDIR/.xdest
-  # copy debian/ into place
-  cp -a "$2/" "$CIDIR/$TARDIR/debian"
-  cd "$CIDIR/$TARDIR/"; pwd					########## cd ##########
-  DEBPACKAGE=`dpkg-parsechangelog --show-field Source`
-  test -n "$DEBVERSION" || DEBVERSION=`dpkg-parsechangelog --show-field Version`
-  DEBARCH="${ARCHITECTURE:-$(dpkg-architecture -qDEB_HOST_ARCH)}"
-  test "$PACKAGE" = "$DEBPACKAGE" || die "upstream vs debian package name mismatch: $PACKAGE == $DEBPACKAGE"
-  # update changelog
-  dch -v "$DEBVERSION" "$DCHMESSAGE"
-  dch -r "" # release build
-  cat debian/changelog
-  # pbuilder debuild
-  pdebuild --buildresult ./.. --debbuildopts -j`nproc` -- --hookdir $CIDIR/.hooks
-  cd $CIDIR 							########## cd ##########
-  rm -rf "$CIDIR/.hooks/" "$CIDIR/$TARDIR/"
-  pwd
-  ls -al
-}
-
-# == pdist ==
-pdist() {
-  # $@ contains required package list
-  mkconfig # PACKAGE, VERSION, ...
-  set -x
-  CIDIR=`pwd`/cidir/ ; mkdir -p "$CIDIR"			########## cidir ##########
-  exec > >(tee "cidir/citool-pdist.log") 2>&1
-  # pbuilder scripts, note the difference between $@ and \$@
-  cat > cidir/pdist-cmds-root <<-__EOF
-	#!/bin/bash
-	set -ex
-	export LOGNAME=root
-	STARTWD=\$PWD
-	cd "\$1"
-	groupadd -g \$3 -o ciuser
-	useradd -g ciuser -u \$2 -d /tmp -o ciuser
-	apt-get -y install $@
-	echo cidir/pdist-cmds-user "\$@" | su -p ciuser
-	__EOF
-  MAKE_J="make -j`nproc` V=$V"
-  MAKE="make V=$V"
-  cat > cidir/pdist-cmds-user <<-__EOF
-	#!/bin/bash
-	( set -ex
-	  # configure with user writable prefix
-	  test ! -x ./autogen.sh ||
-	    ./autogen.sh --prefix=`pwd`/_pdist_inst
-	  test -e ./Makefile ||
-	    ./configure --prefix=`pwd`/_pdist_inst
-	  # figure the name of the dist tarball
-	  ( # sed extracts all Makefile variable assignments (first line suffices)
-	    sed 's/\(^[	 ]*[0-9a-z_A-Z]\+[ 	]*:\?=.*\)\|\(.*\)/\1/' Makefile
-	    echo 'all: ; @echo \$(firstword \$(DIST_ARCHIVES))' ) > cidir/pdist-tmk
-	  DIST_TARBALL=\$(make -f cidir/pdist-tmk) || exit \$?
-	  echo DIST_TARBALL=\$DIST_TARBALL
-	  test -n "\$DIST_TARBALL"
-	  rm -f cidir/pdist-tmk
-	  # build, check and dist
-	  $MAKE_J
-	  $MAKE check
-	  $MAKE install
-	  $MAKE installcheck
-	  $MAKE dist
-	  $MAKE uninstall
-	  $MAKE clean
-	  set -e
-	  ls -l \$DIST_TARBALL
-	  mv -v \$DIST_TARBALL cidir/
-	) ; EX=\$?
-	# test 0 = \$EX || /bin/bash < /dev/tty > /dev/tty 2> /dev/tty
-	exit \$EX
-	__EOF
-  # pbuilder executes cmds-root which executes cmds-user
-  chmod +x cidir/pdist-cmds-user cidir/pdist-cmds-root
-  sudo pbuilder --execute --bindmounts $(readlink -f ./) -- \
-    cidir/pdist-cmds-root $PWD $(id -u) $(id -g)
-  rm -f cidir/pdist-cmds-user cidir/pdist-cmds-root cidir/citool-pdist.log
-  # cmds-user builds dist tarballs and moves those to cidir/
-}
 
 # == bintrayup ==
 bintrayup() {
@@ -190,7 +68,4 @@ bintrayup() {
 
 # == commands ==
 [[ "$1" != config ]]	|| { shift; mkconfig "$@" ; exit $? ; }
-[[ "$1" != pcreate ]] 	|| { shift; pcreate "$@" ; exit $? ; }
-[[ "$1" != pbuild ]]	|| { shift; pbuild "$@" ; exit $? ; }
-[[ "$1" != pdist ]]	|| { shift; pdist "$@" ; exit $? ; }
 [[ "$1" != bintrayup ]]	|| { shift; bintrayup "$@" ; exit $? ; }
