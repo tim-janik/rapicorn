@@ -6,7 +6,7 @@ The Rapicorn Toolkit
 [![Binary Download](https://api.bintray.com/packages/beast-team/deb/rapicorn/images/download.svg)](https://github.com/tim-janik/rapicorn/#binary-packages)
 
 
-# DESCRIPTION
+## DESCRIPTION
 
 Rapicorn is a graphical user interface (UI) toolkit for rapid development
 of user interfaces in C++ and Python. The user interface (UI) is designed
@@ -24,7 +24,7 @@ using data bindings and commands.
 	http://rapicorn.org/wiki/Rapicorn_Task_List#Roadmap
 
 
-# REQUIREMENTS
+## REQUIREMENTS
 
 Rapicorn has been successfully build on Ubuntu x86-32 and x86-64.
 A number of dependency packages need to be installed:
@@ -34,7 +34,7 @@ A number of dependency packages need to be installed:
 	  xvfb cython
 
 
-# INSTALLATION
+## INSTALLATION
 
 In short, Rapicorn needs to be built and installed with:
 
@@ -51,7 +51,7 @@ path setups. The following commands shows two examples:
 	make python-call-info -C cython/
 
 
-# SUPPORT
+## SUPPORT
 
 If you have any issues, please let us know in the issue tracker or
 the mailing list / web forum:
@@ -74,7 +74,7 @@ Documentation is provided online and locally (if installed in /usr):
 *   file:///usr/share/doc/rapicorn/html/index.html
 
 
-# BINARY PACKAGES
+## BINARY PACKAGES
 
 New source code pushed to the Rapicorn repository is automatically built
 and tested through a Travis-CI script. Successful continuous integration

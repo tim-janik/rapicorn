@@ -301,6 +301,10 @@ string_conversions (void)
              string_from_cquote (string_to_cquote (quotetests[i])).c_str());
   TCMP (string_substitute_char ("foo", '3', '4'), ==, "foo");
   TCMP (string_substitute_char ("foobar", 'o', '_'), ==, "f__bar");
+  TCMP (string_replace ("abc", "a", "A"), ==, "Abc");
+  TCMP (string_replace ("abc abc", "b", "BBB"), ==, "aBBBc aBBBc");
+  TCMP (string_replace ("abcabc", "c", "C", 1), ==, "abCabc");
+  TCMP (string_replace (".x.x.x.x.", "x", "xxx"), ==, ".xxx.xxx.xxx.xxx.");
   TCMP (string_to_double ("1.0"), ==, 1.0);
   TCMP (string_to_double ("0.5"), ==, 0.5);
   TCMP (string_to_double ("-1.0"), ==, -1.0);

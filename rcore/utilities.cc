@@ -159,6 +159,14 @@ timestamp_format (uint64 stamp)
   return r;
 }
 
+/// A monotonically increasing counter, increments are atomic and visible on all threads.
+uint64
+monotonic_counter ()
+{
+  static std::atomic<uint64> global_monotonic_counter { 4294967297 };
+  return global_monotonic_counter++;
+}
+
 // === Logging ===
 String
 pretty_file (const char *file_dir, const char *file)

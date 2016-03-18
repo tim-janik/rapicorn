@@ -78,6 +78,7 @@ String  string_hexdump                                   (const void *addr, size
 String  string_lstrip                                    (const String &input);
 String  string_rstrip                                    (const String &input);
 String  string_strip                                     (const String &input);
+String  string_replace                                   (const String &input, const String &marker, const String &replacement, size_t maxn = ~size_t (0));
 String  string_substitute_char                           (const String &input, const char match, const char subst);
 void    string_vector_lstrip       (StringVector &svector);
 void    string_vector_rstrip       (StringVector &svector);
