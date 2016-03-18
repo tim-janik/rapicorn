@@ -8,20 +8,20 @@ made with Rapicorn are composed of.
 
 @par Widget States
 The following is a list of states a widget can be in, a combination of multiple states may apply to a widget at any given time.
-- <b>Rapicorn::STATE_NORMAL - "normal"</b><br/> Ordinary widget state to start with, not activated, insensitive or otherwise special.
-- <b>Rapicorn::STATE_HOVER - "hover"</b><br/> Widget flag indicating that the mouse is over the widget.
-- <b>Rapicorn::STATE_PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
+- <b>Rapicorn::WidgetState::NORMAL - "normal"</b><br/> Ordinary widget state to start with, not activated, insensitive or otherwise special.
+- <b>Rapicorn::WidgetState::HOVER - "hover"</b><br/> Widget flag indicating that the mouse is over the widget.
+- <b>Rapicorn::WidgetState::PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
 - <b>(No state flag) - "focusable"</b>: A widget's ability to accept the input focus.
-- <b>Rapicorn::STATE_ACCELERATABLE - "acceleratable"</b><br/> Widget flag indicating the available of accelerators or mnemonic shortcuts.
-- <b>Rapicorn::STATE_DEFAULT - "default"</b><br/> Widget flag that enables widgets to receive the default activation.
-- <b>Rapicorn::STATE_SELECTED - "selected"</b><br/> Widget flag indicating that the widget is currently selected.
-- <b>Rapicorn::STATE_FOCUSED - "focused"</b><br/> Widget flag indicating that the widget is part of the focus chain, i.e. the widget or one of its descendants has the input focus.
-- <b>Rapicorn::STATE_INSENSITIVE - "insensitive"</b><br/> Widget flag that disables input event processing, see pointer_sensitive()
-- <b>Rapicorn::STATE_ACTIVE - "active"</b><br/> Widget flag used by widgets that can be activated or toggled.
-- <b>Rapicorn::STATE_RETAINED - "retained"</b><br/> Widget flag indicating that its activation state is held back, hidden or inconsistent.
-<!-- - <b>Rapicorn::STATE_RESERVED1 - "reserved1"</b><br/> Unspecified. -->
-<!-- - <b>Rapicorn::STATE_RESERVED2 - "reserved2"</b><br/> Unspecified. -->
-<!-- - <b>Rapicorn::STATE_RESERVED3 - "reserved3"</b><br/> Unspecified. -->
+- <b>Rapicorn::WidgetState::ACCELERATABLE - "acceleratable"</b><br/> Widget flag indicating the available of accelerators or mnemonic shortcuts.
+- <b>Rapicorn::WidgetState::DEFAULT - "default"</b><br/> Widget flag that enables widgets to receive the default activation.
+- <b>Rapicorn::WidgetState::SELECTED - "selected"</b><br/> Widget flag indicating that the widget is currently selected.
+- <b>Rapicorn::WidgetState::FOCUSED - "focused"</b><br/> Widget flag indicating that the widget is part of the focus chain, i.e. the widget or one of its descendants has the input focus.
+- <b>Rapicorn::WidgetState::INSENSITIVE - "insensitive"</b><br/> Widget flag that disables input event processing, see pointer_sensitive()
+- <b>Rapicorn::WidgetState::ACTIVE - "active"</b><br/> Widget flag used by widgets that can be activated or toggled.
+- <b>Rapicorn::WidgetState::RETAINED - "retained"</b><br/> Widget flag indicating that its activation state is held back, hidden or inconsistent.
+<!-- - <b>Rapicorn::WidgetState::RESERVED1 - "reserved1"</b><br/> Unspecified. -->
+<!-- - <b>Rapicorn::WidgetState::RESERVED2 - "reserved2"</b><br/> Unspecified. -->
+<!-- - <b>Rapicorn::WidgetState::RESERVED3 - "reserved3"</b><br/> Unspecified. -->
 
 Rationales for widget state ordering and matching precedence for rendering purposes:
 - In general, functional flags take precedence over style flags.
@@ -48,6 +48,6 @@ Keyboard shortcuts like Tab, Shift-Tab, Up, Down, Left, Right (sometimes in comb
 -# Rapicorn.Container generally keep track of the last child that had focus (the focus_child) or was part of the focus chain (an ancestor of the widget having focus).
 -# Onece focus moves on, the Container.focus_child is adjusted or unset. Some containers need to memorize the last focus child, the Container.focus_lost() method can be overridden for this purpose.
 -# The Window.auto_focus property controls whether a window contains an initially focused widget when it is shown.
--# The FOCUS_CHAIN flag is used to keep track of the current focus widget and its ancestry.
+-# The FocusDir::CHAIN flag is used to keep track of the current focus widget and its ancestry.
 
 */

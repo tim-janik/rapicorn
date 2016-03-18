@@ -27,7 +27,7 @@ public:
   void          draw_shadow             (int x, int y, int width, int height,
                                          Color outer_upper_left, Color inner_upper_left,
                                          Color inner_lower_right, Color outer_lower_right);
-  void          draw_dir_arrow          (double x, double y, double width, double height, Color c, DirType dir);
+  void          draw_dir_arrow          (double x, double y, double width, double height, Color c, Direction dir);
 };
 
 // == Cairo Utilities ==

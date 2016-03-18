@@ -74,19 +74,19 @@ protected:
   // flag handling
   bool                        change_flags_silently (uint64 mask, bool on);
   // State flags and widget flags
-  static_assert (STATE_NORMAL        == 0, "");
-  static_assert (STATE_HOVER         == 1 <<  0, ""); // Flag indicating "hover" state of a widget, see hover()
-  static_assert (STATE_PANEL         == 1 <<  1, "");
-  static_assert (STATE_ACCELERATABLE == 1 <<  2, "");
-  static_assert (STATE_DEFAULT       == 1 <<  3, "");
-  static_assert (STATE_SELECTED      == 1 <<  4, "");
-  static_assert (STATE_FOCUSED       == 1 <<  5, ""); // Focus chain flag, indicates if widget is (in ancestry of) the focus widget, see grab_focus()
-  static_assert (STATE_INSENSITIVE   == 1 <<  6, ""); // Widget flag that disables input event processing, see pointer_sensitive()
-  static_assert (STATE_ACTIVE        == 1 <<  7, ""); // Flag indicating state of an active widget, see also active()
-  static_assert (STATE_RETAINED      == 1 <<  8, "");
-  static_assert (STATE_RESERVED1     == 1 <<  9, "");
-  static_assert (STATE_RESERVED2     == 1 << 10, "");
-  static_assert (STATE_RESERVED3     == 1 << 11, "");
+  static_assert (uint64 (WidgetState::NORMAL)        == 0, "");
+  static_assert (uint64 (WidgetState::HOVER)         == 1 <<  0, ""); // Flag indicating "hover" state of a widget, see hover()
+  static_assert (uint64 (WidgetState::PANEL)         == 1 <<  1, "");
+  static_assert (uint64 (WidgetState::ACCELERATABLE) == 1 <<  2, "");
+  static_assert (uint64 (WidgetState::DEFAULT)       == 1 <<  3, "");
+  static_assert (uint64 (WidgetState::SELECTED)      == 1 <<  4, "");
+  static_assert (uint64 (WidgetState::FOCUSED)       == 1 <<  5, ""); // Focus chain flag, indicates if widget is (in ancestry of) the focus widget, see grab_focus()
+  static_assert (uint64 (WidgetState::INSENSITIVE)   == 1 <<  6, ""); // Widget flag that disables input event processing, see pointer_sensitive()
+  static_assert (uint64 (WidgetState::ACTIVE)        == 1 <<  7, ""); // Flag indicating state of an active widget, see also active()
+  static_assert (uint64 (WidgetState::RETAINED)      == 1 <<  8, "");
+  static_assert (uint64 (WidgetState::RESERVED1)     == 1 <<  9, "");
+  static_assert (uint64 (WidgetState::RESERVED2)     == 1 << 10, "");
+  static_assert (uint64 (WidgetState::RESERVED3)     == 1 << 11, "");
   enum {
     PARENT_INSENSITIVE        = 1 << 12, ///< Cached state used to propagate sensitivity on branches, see key_sensitive()
     PARENT_ACTIVE             = 1 << 13, ///< Flag set on children of an active container.
@@ -171,17 +171,17 @@ public:
   bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
   virtual bool                viewable          () const; // visible() && !UNVIEWABLE && !PARENT_UNVIEWABLE
   bool                        drawable          () const; // viewable() && clipped_allocation > 0
-  virtual bool                sensitive         () const { return !test_any_flag (STATE_INSENSITIVE | PARENT_INSENSITIVE); } ///< Indicates if widget can process input events
-  virtual void                sensitive         (bool b) { set_flag (STATE_INSENSITIVE, !b); }  ///< Toggle widget ability to process input events
+  virtual bool                sensitive         () const { return !test_any_flag (uint64 (WidgetState::INSENSITIVE) | PARENT_INSENSITIVE); } ///< Indicates if widget can process input events
+  virtual void                sensitive         (bool b) { set_flag (uint64 (WidgetState::INSENSITIVE), !b); }  ///< Toggle widget ability to process input events
   bool                        insensitive       () const { return !sensitive(); }               ///< Negation of sensitive()
   void                        insensitive       (bool b) { sensitive (!b); }                    ///< Negation of sensitive(bool)
   bool                        key_sensitive     () const;
   bool                        pointer_sensitive () const;
-  bool                        hover             () const { return test_any_flag (STATE_HOVER); } ///< Get widget "hover" state, see StateType::STATE_HOVER
-  virtual void                hover             (bool b) { set_flag (STATE_HOVER, b); } ///< Toggled with "hover" state of a widget
+  bool                        hover             () const { return test_any_flag (uint64 (WidgetState::HOVER)); } ///< Get widget "hover" state, see WidgetState::WidgetState::HOVER
+  virtual void                hover             (bool b) { set_flag (uint64 (WidgetState::HOVER), b); } ///< Toggled with "hover" state of a widget
   bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
-  bool                        active            () const { return test_any_flag (STATE_ACTIVE); } ///< Get the widget's StateType::STATE_ACTIVE.
-  virtual void                active            (bool b) { set_flag (STATE_ACTIVE, b); } ///< Toggled for active widgets (e.g. buttons).
+  bool                        active            () const { return test_any_flag (uint64 (WidgetState::ACTIVE)); } ///< Get the widget's WidgetState::WidgetState::ACTIVE.
+  virtual void                active            (bool b) { set_flag (uint64 (WidgetState::ACTIVE), b); } ///< Toggled for active widgets (e.g. buttons).
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
@@ -191,7 +191,7 @@ public:
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();
   void                        unset_focus       ();
-  virtual bool                move_focus        (FocusDirType fdir);
+  virtual bool                move_focus        (FocusDir fdir);
   virtual bool                activate          ();
   virtual bool                hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal expansion
   virtual void                hexpand           (bool b) { set_flag (HEXPAND, b); } ///< Allow horizontal expansion, see #VEXPAND
@@ -213,8 +213,8 @@ public:
   virtual void                name              (const String &str); ///< Set Widget name and "id"
   FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
-  ColorSchemeType             color_scheme      () const;
-  void                        color_scheme      (ColorSchemeType cst);
+  ColorScheme                 color_scheme      () const;
+  void                        color_scheme      (ColorScheme cst);
   /* override requisition */
   double                      width             () const;
   void                        width             (double w);
@@ -308,17 +308,17 @@ public:
   /* theming & appearance */
   ThemeInfo&            theme_info              () const;
   // colors
-  Color                 normal_bg               () { return state_color (STATE_NORMAL, 0); }
-  Color                 normal_fg               () { return state_color (STATE_NORMAL, 1); }
-  Color                 active_bg               () { return state_color (STATE_ACTIVE, 0); }
-  Color                 active_fg               () { return state_color (STATE_ACTIVE, 1); }
-  Color                 selected_bg             () { return state_color (STATE_SELECTED, 0); }
-  Color                 selected_fg             () { return state_color (STATE_SELECTED, 1); }
-  // Color                 focus_color             () { return state_color (FOCUS_COLOR); }
-  Color                 state_color             (StateType state, bool foreground, const String &detail = "");
+  Color                 normal_bg               () { return state_color (WidgetState::NORMAL, 0); }
+  Color                 normal_fg               () { return state_color (WidgetState::NORMAL, 1); }
+  Color                 active_bg               () { return state_color (WidgetState::ACTIVE, 0); }
+  Color                 active_fg               () { return state_color (WidgetState::ACTIVE, 1); }
+  Color                 selected_bg             () { return state_color (WidgetState::SELECTED, 0); }
+  Color                 selected_fg             () { return state_color (WidgetState::SELECTED, 1); }
+  // Color                 focus_color             () { return state_color (FocusDir::COLOR); }
+  Color                 state_color             (WidgetState state, bool foreground, const String &detail = "");
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
   // state colors
-  StateType             state                   () const;
+  WidgetState           state                   () const;
   Color                 foreground              ();
   Color                 background              ();
   // Color              black                   () { return theme_color (  0,   0,   0); }
@@ -349,11 +349,11 @@ protected:
 public:
   void                  find_adjustments        (AdjustmentSourceType adjsrc1,
                                                  Adjustment         **adj1,
-                                                 AdjustmentSourceType adjsrc2 = ADJUSTMENT_SOURCE_NONE,
+                                                 AdjustmentSourceType adjsrc2 = AdjustmentSourceType::NONE,
                                                  Adjustment         **adj2 = NULL,
-                                                 AdjustmentSourceType adjsrc3 = ADJUSTMENT_SOURCE_NONE,
+                                                 AdjustmentSourceType adjsrc3 = AdjustmentSourceType::NONE,
                                                  Adjustment         **adj3 = NULL,
-                                                 AdjustmentSourceType adjsrc4 = ADJUSTMENT_SOURCE_NONE,
+                                                 AdjustmentSourceType adjsrc4 = AdjustmentSourceType::NONE,
                                                  Adjustment         **adj4 = NULL);
 public: /* packing */
   struct PackInfo {

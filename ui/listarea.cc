@@ -48,7 +48,7 @@ WidgetListRowImpl::handle_event (const Event &event)
 WidgetListRowImpl::WidgetListRowImpl() :
   index_ (INT_MIN)
 {
-  color_scheme (COLOR_BASE);
+  color_scheme (ColorScheme::BASE);
 }
 
 void
@@ -71,7 +71,7 @@ WidgetListRowImpl::row_index (int i)
   index_ = i >= 0 ? i : INT_MIN;
   WidgetListImpl *list = widget_list();
   if (list && index_ >= 0)
-    color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
+    color_scheme (list->selected (index_) ? ColorScheme::SELECTED : ColorScheme::BASE);
   visible (index_ >= 0);
   changed ("row_index");
 }
@@ -94,7 +94,7 @@ WidgetListRowImpl::selected (bool s)
           list->toggle_selected (index_);
           changed ("selected");
         }
-      color_scheme (list->selected (index_) ? COLOR_SELECTED : COLOR_BASE);
+      color_scheme (list->selected (index_) ? ColorScheme::SELECTED : ColorScheme::BASE);
     }
 }
 
@@ -111,7 +111,7 @@ static const WidgetFactory<WidgetListImpl> widget_list_factory ("Rapicorn::Widge
 WidgetListImpl::WidgetListImpl() :
   model_ (NULL), conid_updated_ (0),
   hadjustment_ (NULL), vadjustment_ (NULL),
-  selection_mode_ (SELECTION_SINGLE), virtualized_pixel_scrolling_ (true),
+  selection_mode_ (SelectionMode::SINGLE), virtualized_pixel_scrolling_ (true),
   need_scroll_layout_ (false), block_invalidate_ (false),
   first_row_ (-1), last_row_ (-1), multi_sel_range_start_ (-1)
 {}
@@ -172,9 +172,9 @@ WidgetListImpl::get_adjustment (AdjustmentSourceType adj_source, const String &n
 {
   switch (adj_source)
     {
-    case ADJUSTMENT_SOURCE_ANCESTRY_HORIZONTAL:
+    case AdjustmentSourceType::ANCESTRY_HORIZONTAL:
       return &hadjustment();
-    case ADJUSTMENT_SOURCE_ANCESTRY_VERTICAL:
+    case AdjustmentSourceType::ANCESTRY_VERTICAL:
       return &vadjustment();
     default:
       return NULL;
@@ -314,7 +314,7 @@ WidgetListImpl::validate_selection (int fallback)
   int first = -1;
   switch (selection_mode())
     {
-    case SELECTION_NONE:                // nothing to select ever
+    case SelectionMode::NONE:                // nothing to select ever
       for (size_t i = 0; i < selection_.size(); i++)
         if (selection_[i])
           {
@@ -322,8 +322,8 @@ WidgetListImpl::validate_selection (int fallback)
             changed = true;
           }
       break;
-    case SELECTION_SINGLE:              // maintain a single selection at most
-    case SELECTION_BROWSE:              // always maintain a single selection
+    case SelectionMode::SINGLE:              // maintain a single selection at most
+    case SelectionMode::BROWSE:              // always maintain a single selection
       for (size_t i = 0; i < selection_.size(); i++)
         if (selection_[i])
           {
@@ -335,13 +335,13 @@ WidgetListImpl::validate_selection (int fallback)
                 changed = true;
               }
           }
-      if (selection_mode() == SELECTION_BROWSE && first < 0 && selection_.size() > 0)
+      if (selection_mode() == SelectionMode::BROWSE && first < 0 && selection_.size() > 0)
         {
           selection_[CLAMP (fallback, 0, ssize_t (selection_.size() - 1))] = true;
           changed = true;
         }
       break;
-    case SELECTION_MULTIPLE:            // allow any combination of selected rows
+    case SelectionMode::MULTIPLE:            // allow any combination of selected rows
       break;
     }
   return changed == false;
@@ -362,18 +362,18 @@ WidgetListImpl::model_updated (const UpdateRequest &urequest)
 {
   switch (urequest.kind)
     {
-    case UPDATE_READ:
+    case UpdateKind::READ:
       break;
-    case UPDATE_INSERTION:
+    case UpdateKind::INSERTION:
       destroy_range (urequest.rowspan.start, ~size_t (0));
       row_heights_.resize (model_->count(), -1);
       invalidate_model (true, true);
       break;
-    case UPDATE_CHANGE:
+    case UpdateKind::CHANGE:
       for (int64 i = urequest.rowspan.start; i < urequest.rowspan.start + urequest.rowspan.length; i++)
         update_row (i);
       break;
-    case UPDATE_DELETION:
+    case UpdateKind::DELETION:
       destroy_range (urequest.rowspan.start, ~size_t (0));
       row_heights_.resize (model_->count(), -1);
       invalidate_model (true, true);
@@ -533,7 +533,7 @@ WidgetListImpl::focus_lost ()
 }
 
 bool
-WidgetListImpl::move_focus (FocusDirType fdir)
+WidgetListImpl::move_focus (FocusDir fdir)
 {
   // check focus ability
   if (!visible() || !sensitive())
@@ -543,12 +543,12 @@ WidgetListImpl::move_focus (FocusDirType fdir)
   if (last_child && last_child->move_focus (fdir))      // refocus or row internal move_focus
     return true;
   // pick row for initial focus
-  if (!test_any_flag (STATE_FOCUSED))
+  if (!test_any_flag (uint64 (WidgetState::FOCUSED)))
     {
       const int last_focus = focus_row();               // -1 initially
       return grab_row_focus (MAX (0, last_focus));      // list focus-in
     }
-  // focus out for FOCUS_PREV and FOCUS_NEXT, cursor focus is handled via events
+  // focus out for FocusDir::PREV and FocusDir::NEXT, cursor focus is handled via events
   return false;                                         // list focus-out
 }
 
@@ -562,9 +562,9 @@ WidgetListImpl::change_selection (const int current, int previous, const bool to
   switch (selection_mode())
     {
       int sel, old;
-    case SELECTION_NONE:                // nothing to select ever
+    case SelectionMode::NONE:                // nothing to select ever
       break;
-    case SELECTION_BROWSE:              // always maintain a single selection
+    case SelectionMode::BROWSE:              // always maintain a single selection
       sel = MAX (0, current >= 0 ? current : previous);
       old = focus_row();
       if (sel != old)
@@ -575,7 +575,7 @@ WidgetListImpl::change_selection (const int current, int previous, const bool to
             toggle_selected (sel);
         }
       break;
-    case SELECTION_SINGLE:              // maintain a single selection at most
+    case SelectionMode::SINGLE:              // maintain a single selection at most
       if (!preserve || toggle)
         {
           sel = selected (current) ? current : -1;
@@ -584,7 +584,7 @@ WidgetListImpl::change_selection (const int current, int previous, const bool to
             toggle_selected (current);
         }
       break;
-    case SELECTION_MULTIPLE:            // allow any combination of selected rows
+    case SelectionMode::MULTIPLE:            // allow any combination of selected rows
       if (!preserve)
         deselect_all();
       if (current < 0)

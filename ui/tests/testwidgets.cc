@@ -160,9 +160,9 @@ test_idl_test_widget ()
   twidget.string_prop (""); TASSERT (twidget.string_prop() == "");
   twidget.string_prop ("5768trzg"); TASSERT (twidget.string_prop() == "5768trzg");
   twidget.string_prop ("äöü"); TASSERT (twidget.string_prop() == "äöü");
-  twidget.enum_prop (TEST_ENUM_VALUE1); TASSERT (twidget.enum_prop() == TEST_ENUM_VALUE1);
-  twidget.enum_prop (TEST_ENUM_VALUE2); TASSERT (twidget.enum_prop() == TEST_ENUM_VALUE2);
-  twidget.enum_prop (TEST_ENUM_VALUE3); TASSERT (twidget.enum_prop() == TEST_ENUM_VALUE3);
+  twidget.enum_prop (TestEnum::VALUE1); TASSERT (twidget.enum_prop() == TestEnum::VALUE1);
+  twidget.enum_prop (TestEnum::VALUE2); TASSERT (twidget.enum_prop() == TestEnum::VALUE2);
+  twidget.enum_prop (TestEnum::VALUE3); TASSERT (twidget.enum_prop() == TestEnum::VALUE3);
   Requisition r (123, 765);
   twidget.record_prop (r); TASSERT (twidget.record_prop().width == r.width && twidget.record_prop().height == r.height);
   StringSeq sl;

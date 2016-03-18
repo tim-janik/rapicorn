@@ -160,7 +160,7 @@ DisplayWindow::start_user_move (uint button, double root_x, double root_y)
 }
 
 void
-DisplayWindow::start_user_resize (uint button, double root_x, double root_y, AnchorType edge)
+DisplayWindow::start_user_resize (uint button, double root_x, double root_y, Anchor edge)
 {
   DisplayCommand *cmd = new DisplayCommand (DisplayCommand::URESIZE, this);
   cmd->button = button;
@@ -228,7 +228,7 @@ flag_name (uint64 flag)
     case DisplayWindow::ABOVE_ALL:	return "ABOVE_ALL";
     case DisplayWindow::BELOW_ALL:	return "BELOW_ALL";
     case DisplayWindow::ATTENTION:	return "ATTENTION";
-    case DisplayWindow::FOCUS_DECO:	return "FOCUS_DECO";
+    case DisplayWindow::FOCUS_DECO:	return "FocusDir::DECO";
     case DisplayWindow::DECORATED:	return "DECORATED";
     case DisplayWindow::MINIMIZABLE:	return "MINIMIZABLE";
     case DisplayWindow::MAXIMIZABLE:	return "MAXIMIZABLE";

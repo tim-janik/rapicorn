@@ -43,7 +43,7 @@ test_application_list_model_relay()
   TASSERT (aseq.size() == 0);
   aseq.append_back().set ("cell");
   TASSERT (aseq.size() == 1);
-  lmr->update (UpdateRequest (UPDATE_INSERTION, UpdateSpan (0, 1)));
+  lmr->update (UpdateRequest (UpdateKind::INSERTION, UpdateSpan (0, 1)));
   TASSERT (model->count() == 1);
   Any a = model->row (0);
   TASSERT (a.kind() == Aida::UNTYPED);
@@ -56,17 +56,17 @@ REGISTER_UITHREAD_TEST ("Server/Application ListModelRelay", test_application_li
 static void
 test_idl_enums()
 {
-  const Aida::EnumInfo einfo = Aida::enum_info<AnchorType>();
+  const Aida::EnumInfo einfo = Aida::enum_info<Anchor>();
   Aida::EnumValue ev;
-  ev = einfo.find_value (0); assert (ev.ident && ev.ident == String ("ANCHOR_NONE"));
-  ev = einfo.find_value ("ANCHOR_CENTER"); assert (ev.ident && ev.value == 1);
+  ev = einfo.find_value (0); assert (ev.ident); TCMP (ev.ident, ==, String ("NONE"));
+  ev = einfo.find_value ("CENTER"); assert (ev.ident); TCMP (ev.value, ==, 1);
   assert (einfo.flags_enum() == false);
-  ev = einfo.find_value ("ANCHOR_NORTH");
-  assert (ev.ident && ev.ident == String ("ANCHOR_NORTH"));
+  ev = einfo.find_value ("NORTH");
+  assert (ev.ident && ev.ident == String ("NORTH"));
   const uint64 evalue = einfo.value_from_string ("south-west");
-  assert (evalue == ANCHOR_SOUTH_WEST);
-  const Aida::EnumInfo sinfo = Aida::enum_info<StateType>();
-  ev = sinfo.find_value (STATE_INSENSITIVE); assert (ev.ident && ev.ident == String ("STATE_INSENSITIVE"));
+  assert (evalue == Anchor::SOUTH_WEST);
+  const Aida::EnumInfo sinfo = Aida::enum_info<WidgetState>();
+  ev = sinfo.find_value (WidgetState::INSENSITIVE); assert (ev.ident && ev.ident == String ("INSENSITIVE"));
   assert (sinfo.flags_enum() == true);
   //const uint64 smask = sinfo.value_from_string ("STATE_INSENSITIVE|STATE_HOVER|STATE_ACTIVE"); // FIXME
   //assert (smask == (STATE_INSENSITIVE | STATE_HOVER | STATE_ACTIVE));

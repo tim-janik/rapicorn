@@ -13,39 +13,39 @@ namespace Rapicorn {
 
 // == ArrowImpl ==
 ArrowImpl::ArrowImpl() :
-  dir_ (DIR_RIGHT)
+  dir_ (Direction::RIGHT)
 {}
 
 ArrowImpl::~ArrowImpl()
 {}
 
-DirType
+Direction
 ArrowImpl::arrow_dir () const
 {
   return dir_;
 }
 
 void
-ArrowImpl::arrow_dir (DirType dir)
+ArrowImpl::arrow_dir (Direction dir)
 {
   dir_ = dir;
   expose();
   changed ("arrow_dir");
 }
 
-static DataKey<SizePolicyType> size_policy_key;
+static DataKey<SizePolicy> size_policy_key;
 
-SizePolicyType
+SizePolicy
 ArrowImpl::size_policy () const
 {
-  SizePolicyType spol = get_data (&size_policy_key);
+  SizePolicy spol = get_data (&size_policy_key);
   return spol;
 }
 
 void
-ArrowImpl::size_policy (SizePolicyType spol)
+ArrowImpl::size_policy (SizePolicy spol)
 {
-  if (!spol)
+  if (spol == 0)
     delete_data (&size_policy_key);
   else
     set_data (&size_policy_key, spol);
@@ -63,10 +63,10 @@ ArrowImpl::size_request (Requisition &requisition)
 void
 ArrowImpl::size_allocate (Allocation area, bool changed)
 {
-  SizePolicyType spol = size_policy();
-  if (spol == SIZE_POLICY_WIDTH_FROM_HEIGHT)
+  SizePolicy spol = size_policy();
+  if (spol == SizePolicy::WIDTH_FROM_HEIGHT)
     tune_requisition (area.height, -1);
-  else if (spol == SIZE_POLICY_HEIGHT_FROM_WIDTH)
+  else if (spol == SizePolicy::HEIGHT_FROM_WIDTH)
     tune_requisition (-1, area.width);
 }
 
@@ -87,8 +87,8 @@ static const WidgetFactory<ArrowImpl> arrow_factory ("Rapicorn::Arrow");
 
 // == DotGrid ==
 DotGridImpl::DotGridImpl() :
-  normal_dot_ (FRAME_IN),
-  active_dot_ (FRAME_IN),
+  normal_dot_ (DrawFrame::IN),
+  active_dot_ (DrawFrame::IN),
   n_hdots_ (1), n_vdots_ (1),
   right_padding_dots_ (0), top_padding_dots_ (0),
   left_padding_dots_ (0), bottom_padding_dots_ (0)
@@ -97,20 +97,20 @@ DotGridImpl::DotGridImpl() :
 DotGridImpl::~DotGridImpl()
 {}
 
-FrameType
+DrawFrame
 DotGridImpl::dot_type () const
 {
   RAPICORN_ASSERT_UNREACHED();
 }
 
 void
-DotGridImpl::dot_type (FrameType ft)
+DotGridImpl::dot_type (DrawFrame ft)
 {
   normal_dot (ft);
   active_dot (ft);
 }
 
-FrameType
+DrawFrame
 DotGridImpl::current_dot ()
 {
   return ancestry_active() ? active_dot() : normal_dot();
@@ -123,28 +123,28 @@ u31 (int v)
 }
 
 void
-DotGridImpl::active_dot (FrameType ft)
+DotGridImpl::active_dot (DrawFrame ft)
 {
   active_dot_ = ft;
   expose();
   changed ("active_dot");
 }
 
-FrameType
+DrawFrame
 DotGridImpl::active_dot () const
 {
   return active_dot_;
 }
 
 void
-DotGridImpl::normal_dot (FrameType ft)
+DotGridImpl::normal_dot (DrawFrame ft)
 {
   normal_dot_ = ft;
   expose();
   changed ("normal_dot");
 }
 
-FrameType
+DrawFrame
 DotGridImpl::normal_dot () const
 {
   return normal_dot_;

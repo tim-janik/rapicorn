@@ -264,14 +264,14 @@ test_server (A1::MiniServerH server)
   assert (param_vstr->get_aux ("default") == "foobar");
   assert (param_vstr->get_aux ("hints") == "rw");
   // count
-  server.count (A1::TWO);
+  server.count (A1::CountEnum::TWO);
   a = param_count->get();
   assert (a.kind() == Aida::ENUM);
-  assert (a.get<A1::CountEnum>() == A1::TWO);
-  a.set (A1::THREE);
+  assert (a.get<A1::CountEnum>() == A1::CountEnum::TWO);
+  a.set (A1::CountEnum::THREE);
   assert (a.kind() == Aida::ENUM);
   param_count->set (a);
-  assert (server.count() == A1::THREE);
+  assert (server.count() == A1::CountEnum::THREE);
   assert (param_count->get_aux ("hints") == "rw");
   assert (param_count->get_aux<int> ("default") == 2);
   // XML serialize properties

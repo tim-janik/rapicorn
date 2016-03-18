@@ -178,13 +178,13 @@ public:
   bool          intersecting    (const Rect &r) const;
   Rect          intersection    (const Rect &r) const           { return Rect (*this).intersect (r); }
   bool          empty           () const;
-  Point         anchor_point    (AnchorType anchor);
+  Point         anchor_point    (Anchor anchor);
   Rect&         translate       (double deltax,
                                  double delty);
   Rect&         operator+       (const Point &p);
   Rect&         operator-       (const Point &p);
   String        string          () const;
-  static Rect   create_anchored (AnchorType anchor,
+  static Rect   create_anchored (Anchor anchor,
                                  double     width,
                                  double     height);
 };

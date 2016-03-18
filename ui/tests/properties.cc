@@ -31,10 +31,10 @@ class PropertyHost {
   void          string_prop (const String &v)      	{}
   String        const_string_prop () const   		{ return ""; }
   void          const_string_prop (const String &v) 	{}
-  FrameType     enum_prop () const              	{ return FRAME_NONE; }
-  void          enum_prop (FrameType ft)        	{}
-  FrameType     const_enum_prop () const        	{ return FRAME_NONE; }
-  void          const_enum_prop (FrameType ft)  	{}
+  DrawFrame     enum_prop () const              	{ return DrawFrame::NONE; }
+  void          enum_prop (DrawFrame ft)        	{}
+  DrawFrame     const_enum_prop () const        	{ return DrawFrame::NONE; }
+  void          const_enum_prop (DrawFrame ft)  	{}
 public:
   virtual      ~PropertyHost () {}
   virtual const PropertyList&

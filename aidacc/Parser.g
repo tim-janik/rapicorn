@@ -70,10 +70,15 @@ class YYGlobals (object):
     enum.set_location (*yy.scanner.get_pos())
     if as_flags:
       enum.set_combinable (True)
+    dups = set()
     for ev in enum_values:
       ident, label, blurb, number = ev
-      if number < -9223372036854775807 or number > +9223372036854775807:
-        raise Exception ("Invalid enum value: %d" % number)
+      if ident in dups:
+        raise NameError ('redefining enum member: %s' % ident)
+      else:
+        dups.add (ident)
+      if number < -9223372036854775808 or number > +9223372036854775807:
+        raise Exception ("Enum value out of range: %d" % number)
       enum.add_option (*ev)
     self.namespaces[-1].add_type (enum)
   def nsadd_record (self, name, rfields, fwddecl = False):
@@ -510,7 +515,7 @@ rule enumeration_rest:                          {{ evalues = [] }}
           ]
         )                                       {{ return evalues }}
 rule enumerator_decl:
-        IDENT                                   {{ l = [IDENT, None, "", ""]; AIn (IDENT) }}
+        IDENT                                   {{ l = [IDENT, None, "", ""]; AIc (IDENT) }}
         [ '='
           ( enumerator_args                     {{ l = [ IDENT ] + enumerator_args }}
           | expression                          {{ if TS (expression): l = [ None, expression ]; }}

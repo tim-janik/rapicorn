@@ -4,7 +4,7 @@ include $(top_srcdir)/Makefile.decl
 SUBDIRS = . # tests
 
 AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
-DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
+DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -DRAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC
 AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS) $(PYTHON_CPPFLAGS)
 AM_LDFLAGS  += $(PYTHON_LDFLAGS)
 

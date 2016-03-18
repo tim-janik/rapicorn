@@ -109,52 +109,52 @@ default_pango_cairo_font_options (PangoContext *pcontext,
 }
 
 static PangoAlignment
-pango_alignment_from_align_type (AlignType at)
+pango_alignment_from_align_type (Align at)
 {
   switch (at)
     {
     default:
-    case ALIGN_LEFT:    return PANGO_ALIGN_LEFT;
-    case ALIGN_CENTER:  return PANGO_ALIGN_CENTER;
-    case ALIGN_RIGHT:   return PANGO_ALIGN_RIGHT;
+    case Align::LEFT:    return PANGO_ALIGN_LEFT;
+    case Align::CENTER:  return PANGO_ALIGN_CENTER;
+    case Align::RIGHT:   return PANGO_ALIGN_RIGHT;
     }
 }
 
-static AlignType
+static Align
 align_type_from_pango_alignment (PangoAlignment pa)
 {
   switch (pa)
     {
     default:
-    case PANGO_ALIGN_LEFT:    return ALIGN_LEFT;
-    case PANGO_ALIGN_CENTER:  return ALIGN_CENTER;
-    case PANGO_ALIGN_RIGHT:   return ALIGN_RIGHT;
+    case PANGO_ALIGN_LEFT:    return Align::LEFT;
+    case PANGO_ALIGN_CENTER:  return Align::CENTER;
+    case PANGO_ALIGN_RIGHT:   return Align::RIGHT;
     }
 }
 
 static PangoEllipsizeMode
-pango_ellipsize_mode_from_ellipsize_type (EllipsizeType et)
+pango_ellipsize_mode_from_ellipsize_type (Ellipsize et)
 {
   switch (et)
     {
-      // case ELLIPSIZE_NONE: return PANGO_ELLIPSIZE_NONE;
-    case ELLIPSIZE_START:     return PANGO_ELLIPSIZE_START;
-    case ELLIPSIZE_MIDDLE:    return PANGO_ELLIPSIZE_MIDDLE;
+      // case Ellipsize::NONE: return PANGO_ELLIPSIZE_NONE;
+    case Ellipsize::START:     return PANGO_ELLIPSIZE_START;
+    case Ellipsize::MIDDLE:    return PANGO_ELLIPSIZE_MIDDLE;
     default:
-    case ELLIPSIZE_END:       return PANGO_ELLIPSIZE_END;
+    case Ellipsize::END:       return PANGO_ELLIPSIZE_END;
     }
 }
 
-static EllipsizeType
+static Ellipsize
 ellipsize_type_from_pango_ellipsize_mode (PangoEllipsizeMode em)
 {
   switch (em)
     {
-      // case PANGO_ELLIPSIZE_NONE:   return ELLIPSIZE_NONE;
-    case PANGO_ELLIPSIZE_START:       return ELLIPSIZE_START;
-    case PANGO_ELLIPSIZE_MIDDLE:      return ELLIPSIZE_MIDDLE;
+      // case PANGO_ELLIPSIZE_NONE:   return Ellipsize::NONE;
+    case PANGO_ELLIPSIZE_START:       return Ellipsize::START;
+    case PANGO_ELLIPSIZE_MIDDLE:      return Ellipsize::MIDDLE;
     default:
-    case PANGO_ELLIPSIZE_END:         return ELLIPSIZE_END;
+    case PANGO_ELLIPSIZE_END:         return Ellipsize::END;
     }
 }
 
@@ -214,9 +214,9 @@ class LayoutCache {
 public:
   PangoLayout*
   create_layout (String         font_description,
-                 AlignType      align,
+                 Align          align,
                  PangoWrapMode  pangowrap,
-                 EllipsizeType  ellipsize,
+                 Ellipsize      ellipsize,
                  int            indent,
                  int            spacing,
                  bool           single_paragraph)
@@ -590,9 +590,9 @@ class XmlToPango : Rapicorn::MarkupParser {
               if (pango_color_parse (&pcolor, col.c_str()))
                 pa = LazyColorAttr::create_preset_color (LazyColorAttr::background_klass(),
                                                          pcolor.red, pcolor.green, pcolor.blue,
-                                                         col, COLOR_BACKGROUND);
+                                                         col, ColorType::BACKGROUND);
               else
-                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::background_klass(), col, COLOR_BACKGROUND);
+                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::background_klass(), col, ColorType::BACKGROUND);
             }
           else if (col.size() && token == '1')
             {
@@ -600,9 +600,9 @@ class XmlToPango : Rapicorn::MarkupParser {
               if (pango_color_parse (&pcolor, col.c_str()))
                 pa = LazyColorAttr::create_preset_color (LazyColorAttr::foreground_klass(),
                                                          pcolor.red, pcolor.green, pcolor.blue,
-                                                         col, COLOR_FOREGROUND);
+                                                         col, ColorType::FOREGROUND);
               else
-                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::foreground_klass(), col, COLOR_FOREGROUND);
+                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::foreground_klass(), col, ColorType::FOREGROUND);
             }
         }
         break;

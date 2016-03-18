@@ -22,92 +22,91 @@ static __attribute__ ((unused)) Color darken    (Color color) { return adjust_co
 static __attribute__ ((unused)) Color alternate (Color color) { return adjust_color (color, 1.0, 0.98); } // tainting for even-odd alterations
 
 static Color
-state_color (Color     color,
-             StateType state,
-             ColorType ctype)
+state_color (Color color, WidgetState widget_state, ColorType ctype)
 {
   /* foreground colors remain stable across certain states */
   bool background_color = true;
   switch (ctype)
     {
-    case COLOR_FOREGROUND: case COLOR_FOCUS:
-    case COLOR_BLACK:      case COLOR_WHITE:
-    case COLOR_RED:        case COLOR_YELLOW:
-    case COLOR_GREEN:      case COLOR_CYAN:
-    case COLOR_BLUE:       case COLOR_MAGENTA:
+    case ColorType::FOREGROUND: case ColorType::FOCUS:
+    case ColorType::BLACK:      case ColorType::WHITE:
+    case ColorType::RED:        case ColorType::YELLOW:
+    case ColorType::GREEN:      case ColorType::CYAN:
+    case ColorType::BLUE:       case ColorType::MAGENTA:
       background_color = false;
     default: ;
     }
   Color c = color;
-  if (state & STATE_ACTIVE && background_color)
+  const uint64 state = uint64 (widget_state);
+  if (state & uint64 (WidgetState::ACTIVE) && background_color)
     c = adjust_color (c, 1.0, 0.8);
-  if (state & STATE_INSENSITIVE)
+  if (state & uint64 (WidgetState::INSENSITIVE))
     c = adjust_color (c, 0.8, 1.075);
-  if (state & STATE_HOVER && background_color &&
-      !(state & STATE_INSENSITIVE))     // ignore hover if insensitive
+  if (state & uint64 (WidgetState::HOVER) && background_color &&
+      !(state & uint64 (WidgetState::INSENSITIVE)))     // ignore hover if insensitive
     c = adjust_color (c, 1.2, 1.0);
   return c;
 }
 
 static Color
-colorset_normal (StateType state,
+colorset_normal (WidgetState state,
                  ColorType color_type)
 {
   switch (color_type)
     {
     default:
-    case COLOR_NONE:            return 0x00000000;
-    case COLOR_FOREGROUND:      return 0xff000000;
-    case COLOR_BACKGROUND:      return 0xffdfdcd8;
-    case COLOR_BACKGROUND_EVEN: return colorset_normal (state, COLOR_BACKGROUND);
-    case COLOR_BACKGROUND_ODD:  return alternate (colorset_normal (state, COLOR_BACKGROUND));
-    case COLOR_DARK:            return 0xff9f9c98;
-    case COLOR_DARK_SHADOW:     return adjust_color (colorset_normal (state, COLOR_DARK), 1, 0.9); // 0xff8f8c88
-    case COLOR_DARK_GLINT:      return adjust_color (colorset_normal (state, COLOR_DARK), 1, 1.1); // 0xffafaca8
-    case COLOR_LIGHT:           return 0xffdfdcd8;
-    case COLOR_LIGHT_SHADOW:    return adjust_color (colorset_normal (state, COLOR_LIGHT), 1, 0.93); // 0xffcfccc8
-    case COLOR_LIGHT_GLINT:     return adjust_color (colorset_normal (state, COLOR_LIGHT), 1, 1.07); // 0xffefece8
-    case COLOR_FOCUS:           return 0xff000060;
-    case COLOR_BLACK:           return 0xff000000;
-    case COLOR_WHITE:           return 0xffffffff;
-    case COLOR_RED:             return 0xffff0000;
-    case COLOR_YELLOW:          return 0xffffff00;
-    case COLOR_GREEN:           return 0xff00ff00;
-    case COLOR_CYAN:            return 0xff00ffff;
-    case COLOR_BLUE:            return 0xff0000ff;
-    case COLOR_MAGENTA:         return 0xffff00ff;
+    case ColorType::NONE:            return 0x00000000;
+    case ColorType::FOREGROUND:      return 0xff000000;
+    case ColorType::BACKGROUND:      return 0xffdfdcd8;
+    case ColorType::BACKGROUND_EVEN: return colorset_normal (state, ColorType::BACKGROUND);
+    case ColorType::BACKGROUND_ODD:  return alternate (colorset_normal (state, ColorType::BACKGROUND));
+    case ColorType::DARK:            return 0xff9f9c98;
+    case ColorType::DARK_SHADOW:     return adjust_color (colorset_normal (state, ColorType::DARK), 1, 0.9); // 0xff8f8c88
+    case ColorType::DARK_GLINT:      return adjust_color (colorset_normal (state, ColorType::DARK), 1, 1.1); // 0xffafaca8
+    case ColorType::LIGHT:           return 0xffdfdcd8;
+    case ColorType::LIGHT_SHADOW:    return adjust_color (colorset_normal (state, ColorType::LIGHT), 1, 0.93); // 0xffcfccc8
+    case ColorType::LIGHT_GLINT:     return adjust_color (colorset_normal (state, ColorType::LIGHT), 1, 1.07); // 0xffefece8
+    case ColorType::FOCUS:           return 0xff000060;
+    case ColorType::BLACK:           return 0xff000000;
+    case ColorType::WHITE:           return 0xffffffff;
+    case ColorType::RED:             return 0xffff0000;
+    case ColorType::YELLOW:          return 0xffffff00;
+    case ColorType::GREEN:           return 0xff00ff00;
+    case ColorType::CYAN:            return 0xff00ffff;
+    case ColorType::BLUE:            return 0xff0000ff;
+    case ColorType::MAGENTA:         return 0xffff00ff;
     }
 }
 
 static Color
-colorset_selected (StateType state,
+colorset_selected (WidgetState state,
                    ColorType color_type)
 {
   switch (color_type)
     {
-    case COLOR_FOREGROUND:      return 0xfffcfdfe;      // inactive: 0xff010203
-    case COLOR_BACKGROUND:      return 0xff2595e5;      // inactive: 0xff33aaff
-    case COLOR_BACKGROUND_EVEN: return colorset_selected (state, COLOR_BACKGROUND);
-    case COLOR_BACKGROUND_ODD:  return alternate (colorset_selected (state, COLOR_BACKGROUND));
+    case ColorType::FOREGROUND:      return 0xfffcfdfe;      // inactive: 0xff010203
+    case ColorType::BACKGROUND:      return 0xff2595e5;      // inactive: 0xff33aaff
+    case ColorType::BACKGROUND_EVEN: return colorset_selected (state, ColorType::BACKGROUND);
+    case ColorType::BACKGROUND_ODD:  return alternate (colorset_selected (state, ColorType::BACKGROUND));
     default:                    return colorset_normal (state, color_type);
     }
 }
 
 static Color
-colorset_base (StateType state,
+colorset_base (WidgetState state,
                ColorType color_type)
 {
   switch (color_type)
     {
-    case COLOR_FOREGROUND:      return 0xff101010;
-    case COLOR_BACKGROUND:      return 0xfff4f4f4;
-    case COLOR_BACKGROUND_EVEN: return colorset_base (state, COLOR_BACKGROUND);
-    case COLOR_BACKGROUND_ODD:  return alternate (colorset_base (state, COLOR_BACKGROUND));
+    case ColorType::FOREGROUND:      return 0xff101010;
+    case ColorType::BACKGROUND:      return 0xfff4f4f4;
+    case ColorType::BACKGROUND_EVEN: return colorset_base (state, ColorType::BACKGROUND);
+    case ColorType::BACKGROUND_ODD:  return alternate (colorset_base (state, ColorType::BACKGROUND));
     default:                    return colorset_normal (state, color_type);
     }
 }
 
-typedef Color (*ColorFunc) (StateType, ColorType);
+typedef Color (*ColorFunc) (WidgetState, ColorType);
 
 class Heritage::Internals {
   WidgetImpl &widget_;
@@ -123,7 +122,7 @@ public:
     return widget == widget_ && normal_cf == ncf && selected_cf == scf;
   }
   Color
-  get_color (const Heritage *heritage, StateType state, ColorType ct) const
+  get_color (const Heritage *heritage, WidgetState state, ColorType ct) const
   {
     if (selected.get() == heritage)
       return scf (state, ct);
@@ -149,33 +148,33 @@ Heritage::~Heritage ()
 }
 
 HeritageP
-Heritage::create_heritage (WindowImpl &window, WidgetImpl &widget, ColorSchemeType color_scheme)
+Heritage::create_heritage (WindowImpl &window, WidgetImpl &widget, ColorScheme color_scheme)
 {
   WindowImpl *iwindow = widget.get_window();
   assert (iwindow == &window);
   ColorFunc cnorm = colorset_normal, csel = colorset_selected;
   switch (color_scheme)
     {
-    case COLOR_BASE:            cnorm = colorset_base; break;
-    case COLOR_SELECTED:        cnorm = colorset_selected; break;
-    case COLOR_NORMAL: case COLOR_INHERIT: ;
+    case ColorScheme::BASE:            cnorm = colorset_base; break;
+    case ColorScheme::SELECTED:        cnorm = colorset_selected; break;
+    case ColorScheme::NORMAL: case ColorScheme::INHERIT: ;
     }
   Internals *internals = new Internals (widget, cnorm, csel);
   return FriendAllocator<Heritage>::make_shared (window, internals);
 }
 
 HeritageP
-Heritage::adapt_heritage (WidgetImpl &widget, ColorSchemeType color_scheme)
+Heritage::adapt_heritage (WidgetImpl &widget, ColorScheme color_scheme)
 {
   if (internals_)
     {
       ColorFunc cnorm = colorset_normal, csel = colorset_selected;
       switch (color_scheme)
         {
-        case COLOR_INHERIT:     return shared_from_this();
-        case COLOR_BASE:        cnorm = colorset_base; break;
-        case COLOR_SELECTED:    cnorm = colorset_selected; break;
-        case COLOR_NORMAL:      ;
+        case ColorScheme::INHERIT:     return shared_from_this();
+        case ColorScheme::BASE:        cnorm = colorset_base; break;
+        case ColorScheme::SELECTED:    cnorm = colorset_selected; break;
+        case ColorScheme::NORMAL:      ;
         }
       if (internals_->match (widget, cnorm, csel))
         return shared_from_this();
@@ -207,7 +206,7 @@ Heritage::selected ()
 }
 
 Color
-Heritage::get_color (StateType state,
+Heritage::get_color (WidgetState state,
                      ColorType color_type) const
 {
   Color c;
@@ -217,13 +216,13 @@ Heritage::get_color (StateType state,
 }
 
 Color
-Heritage::insensitive_ink (StateType state,
+Heritage::insensitive_ink (WidgetState state,
                            Color    *glintp) const
 {
   /* constrcut insensitive ink from a mixture of foreground and dark_color */
-  Color ink = get_color (state, COLOR_FOREGROUND);
-  ink.combine (get_color (state, COLOR_DARK), 0x80);
-  Color glint = get_color (state, COLOR_LIGHT);
+  Color ink = get_color (state, ColorType::FOREGROUND);
+  ink.combine (get_color (state, ColorType::DARK), 0x80);
+  Color glint = get_color (state, ColorType::LIGHT);
   if (glintp)
     *glintp = glint;
   return ink;
@@ -231,7 +230,7 @@ Heritage::insensitive_ink (StateType state,
 
 Color
 Heritage::resolve_color (const String  &color_name,
-                         StateType      state,
+                         WidgetState      state,
                          ColorType      color_type)
 {
   if (color_name[0] == '#')

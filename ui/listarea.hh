@@ -71,7 +71,7 @@ protected:
   virtual bool          handle_event            (const Event &event) override;
   virtual bool          row_event               (const Event &event, WidgetListRowImpl *lrow, int index) ;
   virtual void          reset                   (ResetMode mode) override;
-  virtual bool          move_focus              (FocusDirType fdir) override;
+  virtual bool          move_focus              (FocusDir fdir) override;
   virtual void          focus_lost              () override;
   bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
   void                  toggle_selected         (int row);

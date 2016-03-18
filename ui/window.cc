@@ -11,8 +11,8 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void widget_set_flag       (WidgetImpl &widget, uint32 flag) { widget.set_flag (flag, true); }
-  static void widget_unset_flag     (WidgetImpl &widget, uint32 flag) { widget.unset_flag (flag); }
+  static void widget_set_flag       (WidgetImpl &widget, uint64 flag) { widget.set_flag (flag, true); }
+  static void widget_unset_flag     (WidgetImpl &widget, uint64 flag) { widget.unset_flag (flag); }
 };
 
 WindowImpl&
@@ -145,7 +145,7 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
       WidgetImpl *widget = &fwidget;
       while (widget)
         {
-          ClassDoctor::widget_unset_flag (*widget, STATE_FOCUSED);
+          ClassDoctor::widget_unset_flag (*widget, uint64 (WidgetState::FOCUSED));
           ContainerImpl *fc = widget->parent();
           if (fc)
             fc->focus_lost();
@@ -174,7 +174,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
   set_data (&focus_widget_key, cfocus);
   while (widget)
     {
-      ClassDoctor::widget_set_flag (*widget, STATE_FOCUSED);
+      ClassDoctor::widget_set_flag (*widget, uint64 (WidgetState::FOCUSED));
       ContainerImpl *fc = widget->parent();
       if (fc)
         fc->set_focus_child (widget);
@@ -568,19 +568,19 @@ WindowImpl::dispatch_focus_event (const EventFocus &fevent)
 }
 
 bool
-WindowImpl::move_focus_dir (FocusDirType focus_dir)
+WindowImpl::move_focus_dir (FocusDir focus_dir)
 {
   WidgetImplP new_focus = NULL, old_focus = shared_ptr_cast<WidgetImpl> (get_focus());
 
   switch (focus_dir)
     {
-    case FOCUS_UP:   case FOCUS_DOWN:
-    case FOCUS_LEFT: case FOCUS_RIGHT:
+    case FocusDir::UP:   case FocusDir::DOWN:
+    case FocusDir::LEFT: case FocusDir::RIGHT:
       new_focus = old_focus;
       break;
     default: ;
     }
-  if (focus_dir && !move_focus (focus_dir))
+  if (focus_dir != FocusDir::NONE && !move_focus (focus_dir))
     {
       if (new_focus && new_focus->get_window() != this)
         new_focus = NULL;
@@ -591,7 +591,7 @@ WindowImpl::move_focus_dir (FocusDirType focus_dir)
       if (old_focus == new_focus)
         return false; // should have moved focus but failed
     }
-  if (old_focus && !get_focus() && (focus_dir == FOCUS_NEXT || focus_dir == FOCUS_PREV))
+  if (old_focus && !get_focus() && (focus_dir == FocusDir::NEXT || focus_dir == FocusDir::PREV))
     {
       // wrap around once Tab focus leaves window
       return move_focus (focus_dir);
@@ -610,9 +610,9 @@ WindowImpl::dispatch_key_event (const Event &event)
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
     {
-      FocusDirType fdir = key_value_to_focus_dir (kevent->key);
+      FocusDir fdir = key_value_to_focus_dir (kevent->key);
       ActivateKeyType activate = key_value_to_activation (kevent->key);
-      if (!handled && fdir)
+      if (!handled && fdir != FocusDir::NONE)
         {
           if (!move_focus_dir (fdir))
             notify_key_error();
@@ -1044,7 +1044,7 @@ WindowImpl::async_show()
     {
       // try to ensure initial focus
       if (auto_focus_ && !get_focus())
-        move_focus (FOCUS_NEXT);
+        move_focus (FocusDir::NEXT);
       // size request & show up
       display_window_->show();
       // figure if this is the first window triggered by the user startig an app
@@ -1066,7 +1066,7 @@ WindowImpl::create_display_window ()
           if (sdriver)
             {
               DisplayWindow::Setup setup;
-              setup.window_type = WINDOW_TYPE_NORMAL;
+              setup.window_type = WindowType::NORMAL;
               uint64 flags = DisplayWindow::ACCEPT_FOCUS | DisplayWindow::DELETABLE |
                              DisplayWindow::DECORATED | DisplayWindow::MINIMIZABLE | DisplayWindow::MAXIMIZABLE;
               setup.request_flags = DisplayWindow::Flags (flags);

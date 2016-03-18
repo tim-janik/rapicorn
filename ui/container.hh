@@ -37,7 +37,7 @@ protected:
   virtual void        unparent_child    (WidgetImpl           &widget);
   virtual void        dispose_widget    (WidgetImpl           &widget);
   virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
-  virtual bool        move_focus        (FocusDirType    fdir);
+  virtual bool        move_focus        (FocusDir              fdir);
   void                expose_enclosure  (); /* expose without children */
   void                change_unviewable (WidgetImpl &child, bool);
   virtual void        focus_lost        ()                              { set_focus_child (NULL); }

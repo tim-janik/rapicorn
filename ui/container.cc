@@ -487,10 +487,9 @@ struct LesserWidgetByHBand {
 };
 
 struct LesserWidgetByDirection {
-  FocusDirType dir;
+  FocusDir     dir;
   Point        anchor;
-  LesserWidgetByDirection (FocusDirType d,
-                         const Point &p) :
+  LesserWidgetByDirection (FocusDir d, const Point &p) :
     dir (d), anchor (p)
   {}
   double
@@ -498,13 +497,13 @@ struct LesserWidgetByDirection {
   {
     switch (dir)
       {
-      case FOCUS_RIGHT:
+      case FocusDir::RIGHT:
         return a.x - anchor.x;
-      case FOCUS_UP:
+      case FocusDir::UP:
         return anchor.y - (a.y + a.height);
-      case FOCUS_LEFT:
+      case FocusDir::LEFT:
         return anchor.x - (a.x + a.width);
-      case FOCUS_DOWN:
+      case FocusDir::DOWN:
         return a.y - anchor.y;
       default:
         return -1;      // unused
@@ -541,13 +540,13 @@ rect_center (const Allocation &a)
 }
 
 bool
-ContainerImpl::move_focus (FocusDirType fdir)
+ContainerImpl::move_focus (FocusDir fdir)
 {
   // check focus ability
   if (!visible() || !sensitive())
     return false;
   // focus self
-  if (!has_focus() && focusable() && !test_any_flag (STATE_FOCUSED))
+  if (!has_focus() && focusable() && !test_any_flag (uint64 (WidgetState::FOCUSED)))
     return grab_focus();
   // allow last focus descendant to handle movement
   WidgetImpl *last_child = get_data (&focus_child_key);
@@ -565,15 +564,15 @@ ContainerImpl::move_focus (FocusDirType fdir)
   switch (fdir)
     {
       WidgetImpl *current;
-    case FOCUS_NEXT:
+    case FocusDir::NEXT:
       stable_sort (children.begin(), children.end(), LesserWidgetByHBand());
       break;
-    case FOCUS_PREV:
+    case FocusDir::PREV:
       stable_sort (children.begin(), children.end(), LesserWidgetByHBand());
       reverse (children.begin(), children.end());
       break;
-    case FOCUS_UP:
-    case FOCUS_LEFT:
+    case FocusDir::UP:
+    case FocusDir::LEFT:
       current = get_window()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : lower_right;
       { // filter widgets with negative distance (not ahead in focus direction)
@@ -586,8 +585,8 @@ ContainerImpl::move_focus (FocusDirType fdir)
         stable_sort (children.begin(), children.end(), lesseribd);
       }
       break;
-    case FOCUS_RIGHT:
-    case FOCUS_DOWN:
+    case FocusDir::RIGHT:
+    case FocusDir::DOWN:
       current = get_window()->get_focus();
       refpoint = current ? rect_center (current->allocation()) : upper_left;
       { // filter widgets with negative distance (not ahead in focus direction)
@@ -600,10 +599,11 @@ ContainerImpl::move_focus (FocusDirType fdir)
         stable_sort (children.begin(), children.end(), lesseribd);
       }
       break;
+    case FocusDir::NONE: ;
     }
   // skip children beyond last focus descendant
   auto citer = children.begin();
-  if (last_child && (fdir == FOCUS_NEXT || fdir == FOCUS_PREV))
+  if (last_child && (fdir == FocusDir::NEXT || fdir == FocusDir::PREV))
     while (citer < children.end())
       if (last_child == *citer++)
         break;

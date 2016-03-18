@@ -376,25 +376,25 @@ key_value_is_accelerator (uint32 keysym)
   return true;
 }
 
-FocusDirType
+FocusDir
 key_value_to_focus_dir (uint32 keysym)
 {
   switch (keysym)
     {
-    case KEY_Tab: case KEY_KP_Tab:      return FOCUS_NEXT;
-    case KEY_ISO_Left_Tab:              return FOCUS_PREV;
-    case KEY_Right:                     return FOCUS_RIGHT;
-    case KEY_Up:                        return FOCUS_UP;
-    case KEY_Left:                      return FOCUS_LEFT;
-    case KEY_Down:                      return FOCUS_DOWN;
-    default:                            return FocusDirType (0);
+    case KEY_Tab: case KEY_KP_Tab:      return FocusDir::NEXT;
+    case KEY_ISO_Left_Tab:              return FocusDir::PREV;
+    case KEY_Right:                     return FocusDir::RIGHT;
+    case KEY_Up:                        return FocusDir::UP;
+    case KEY_Left:                      return FocusDir::LEFT;
+    case KEY_Down:                      return FocusDir::DOWN;
+    default:                            return FocusDir::NONE;
     }
 }
 
 bool
 key_value_is_focus_dir (uint32 keysym)
 {
-  return key_value_to_focus_dir (keysym) != 0;
+  return key_value_to_focus_dir (keysym) != FocusDir::NONE;
 }
 
 ActivateKeyType

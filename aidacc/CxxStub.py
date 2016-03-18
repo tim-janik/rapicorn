@@ -19,6 +19,41 @@ rapicornsignal_boilerplate = r"""
 #include <rapicorn-core.hh> // for rcore/signal.hh
 """
 
+common_boilerplate = r"""
+#define RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ(Enum)   \
+  bool constexpr operator== (Enum v, int64_t n) { return int64_t (v) == n; } \
+  bool constexpr operator== (int64_t n, Enum v) { return n == int64_t (v); } \
+  bool constexpr operator!= (Enum v, int64_t n) { return int64_t (v) != n; } \
+  bool constexpr operator!= (int64_t n, Enum v) { return n != int64_t (v); }
+#define RAPICORN_AIDA_FLAGS_DEFINE_ARITHMETIC_OPS(Enum)   \
+  static constexpr int64_t operator>> (Enum v, int64_t n) { return int64_t (v) >> n; } \
+  static constexpr int64_t operator<< (Enum v, int64_t n) { return int64_t (v) << n; } \
+  static constexpr int64_t operator^  (Enum v, int64_t n) { return int64_t (v) ^ n; } \
+  static constexpr int64_t operator^  (int64_t n, Enum v) { return n ^ int64_t (v); } \
+  static constexpr int64_t operator|  (Enum v, int64_t n) { return int64_t (v) | n; } \
+  static constexpr int64_t operator|  (int64_t n, Enum v) { return n | int64_t (v); } \
+  static constexpr int64_t operator&  (Enum v, int64_t n) { return int64_t (v) & n; } \
+  static constexpr int64_t operator&  (int64_t n, Enum v) { return n & int64_t (v); } \
+  static constexpr int64_t operator~  (Enum v)            { return ~int64_t (v); } \
+  static constexpr int64_t operator+  (Enum v)            { return +int64_t (v); } \
+  static constexpr int64_t operator-  (Enum v)            { return -int64_t (v); } \
+  static constexpr int64_t operator+  (Enum v, int64_t n) { return int64_t (v) + n; } \
+  static constexpr int64_t operator+  (int64_t n, Enum v) { return n + int64_t (v); } \
+  static constexpr int64_t operator-  (Enum v, int64_t n) { return int64_t (v) - n; } \
+  static constexpr int64_t operator-  (int64_t n, Enum v) { return n - int64_t (v); } \
+  static constexpr int64_t operator*  (Enum v, int64_t n) { return int64_t (v) * n; } \
+  static constexpr int64_t operator*  (int64_t n, Enum v) { return n * int64_t (v); } \
+  static constexpr int64_t operator/  (Enum v, int64_t n) { return int64_t (v) / n; } \
+  static constexpr int64_t operator/  (int64_t n, Enum v) { return n / int64_t (v); } \
+  static constexpr int64_t operator%  (Enum v, int64_t n) { return int64_t (v) % n; } \
+  static constexpr int64_t operator%  (int64_t n, Enum v) { return n % int64_t (v); }
+#ifdef    RAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC
+#define RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS        RAPICORN_AIDA_FLAGS_DEFINE_ARITHMETIC_OPS
+#else // !RAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC
+#define RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS(Enum)  /* no arithmetic ops */
+#endif // !RAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC
+"""
+
 def reindent (prefix, lines):
   return re.compile (r'^', re.M).sub (prefix, lines.rstrip())
 def backslash_quote (string):
@@ -411,11 +446,11 @@ class Generator:
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
       # number = self.c_long_postfix (number)
-      number = enum_ns + '::' + ident
+      number = enum_ns + '::' + enum_class + '::' + ident
       ident = cquote (ident)
       label = label if label else "NULL"
       blurb = blurb if blurb else "NULL"
-      s += '    { %s, %s, %s, %s },\n' % (number, ident, label, blurb)
+      s += '    { int64_t (%s), %s, %s, %s },\n' % (number, ident, label, blurb)
     s += '  };\n'
     """   template<> const EnumInfo& enum_info<X> () { return cached_enum_info ("X", 3, false, xvalues); } """
     s += '  return ::Rapicorn::Aida::EnumInfo::cached_enum_info ("%s", %s, %s);\n' % (c_typename, int (type_info.combinable), varray)
@@ -1104,20 +1139,17 @@ class Generator:
     s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
     return s
   def c_long_postfix (self, number):
-    num, minus = (-number, '-') if number < 0 else (number, '')
-    if num <= 2147483647:
-      return minus + str (num)
-    if num <= 9223372036854775807:
-      return minus + str (num) + 'LL'
-    if num <= 18446744073709551615:
-      return minus + str (num) + 'uLL'
-    return number # not a ULL?
+    if number >= 9223372036854775808:
+      return str (number) + 'u'
+    if number == -9223372036854775808:    # in C++ parsed as two tokens '-' '9223372036854775808'
+      return '(-9223372036854775807 - 1)' # avoid "integer constant is so large that it is unsigned"
+    return str (number)
   def generate_enum_decl (self, type_info):
     s = '\n'
     nm = type_info.name
     l = []
     s += '/// @cond GeneratedEnums\n'
-    s += 'enum %s {\n' % type_info.name
+    s += 'enum class %s : int64_t {\n' % type_info.name
     for opt in type_info.options:
       (ident, label, blurb, number) = opt
       s += '  %s = %s,' % (ident, self.c_long_postfix (number))
@@ -1129,11 +1161,11 @@ class Generator:
     s += '{ __p_ <<= Rapicorn::Aida::EnumValue (e); }\n'
     s += 'inline void operator>>= (Rapicorn::Aida::ProtoReader &__f_, %s &e) ' % nm
     s += '{ e = %s (__f_.pop_evalue()); }\n' % nm
+    s += 'RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_EQ (%s);\n' % nm
     if type_info.combinable: # enum as flags
-      s += 'inline %s  operator&  (%s  s1, %s s2) { return %s (s1 & Rapicorn::Aida::uint64 (s2)); }\n' % (nm, nm, nm, nm)
-      s += 'inline %s& operator&= (%s &s1, %s s2) { s1 = s1 & s2; return s1; }\n' % (nm, nm, nm)
-      s += 'inline %s  operator|  (%s  s1, %s s2) { return %s (s1 | Rapicorn::Aida::uint64 (s2)); }\n' % (nm, nm, nm, nm)
-      s += 'inline %s& operator|= (%s &s1, %s s2) { s1 = s1 | s2; return s1; }\n' % (nm, nm, nm)
+      s += 'RAPICORN_AIDA_FLAGS_DEFINE_ARITHMETIC_OPS (%s);\n' % nm
+    else:
+      s += 'RAPICORN_AIDA_ENUM_DEFINE_ARITHMETIC_OPS (%s);\n' % nm
     s += '/// @endcond\n'
     return s
   def generate_enum_info_specialization (self, type_info):
@@ -1208,6 +1240,7 @@ class Generator:
     if self.gen_serverhh:
       s += serverhh_boilerplate
       s += rapicornsignal_boilerplate
+    s += common_boilerplate
     if self.gen_servercc:
       s += text_expand (TmplFiles.CxxStub_server_cc) + '\n'
     if self.gen_clientcc:
