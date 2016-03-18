@@ -7,11 +7,9 @@ set -e # abort on errors
 STARTPWD=`pwd`; SCRIPTNAME=`basename $0` ;
 function die { e="$1"; [[ $e =~ ^[0-9]+$ ]] && shift || e=127; echo "$SCRIPTNAME: fatal: $*" >&2; exit "$e" ; }
 
-# == chdir into rapicorn/ ==
-cd $(dirname $(readlink -f $0))
-
 # == config ==
 mkconfig() {
+  pushd $(dirname $(readlink -f $0)) >/dev/null 	# cd rapicorn/
   # extract AC_INIT package and version
   test -z "$PACKAGE" &&
     PACKAGE=`sed -nr "/^AC_INIT\b/{ s/^[^(]*\([ 	]*([^,	 ]+).*/\1/; s/\[|]//g; p; }" configure.ac`
@@ -31,6 +29,7 @@ mkconfig() {
   echo COMMITID=$COMMITID
   CHANGELOGMSG="Automatic CI snapshot, git commit $COMMITID"
   echo CHANGELOGMSG="\"$CHANGELOGMSG\""
+  popd >/dev/null					# cd OLDPWD
 }
 
 
