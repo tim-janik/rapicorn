@@ -51,7 +51,7 @@ Description: UI toolkit for declarative user interface construction and SVG-base
 Package: python-rapicorn
 Section: python
 Architecture: any
-Depends: librapicorn-15-9 (= ${binary:Version}), ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Depends: librapicorn-15-9 (= ${binary:Version}), ${python:Depends}, python-enum34, ${shlibs:Depends}, ${misc:Depends}
 Provides: ${python:Provides}
 Description: UI toolkit for declarative user interface construction and SVG-based theming
  This package contains the Rapicorn Python module.
