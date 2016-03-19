@@ -1,0 +1,64 @@
+# This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
+
+# Pick distribution to start from
+FROM debian
+ENV DEBIAN_FRONTEND noninteractive
+
+# Maintainer information and contact information
+MAINTAINER Tim Janik <timj@gnu.org>
+ENV EMAIL rapicorn@googlegroups.com
+
+# Ensure uptodate distribution
+RUN apt-get update && apt-get -y install apt-utils && apt-get -y upgrade
+
+# Provide basic convenience commands
+RUN echo '\n' \
+    "\nalias ls='ls --color=auto' ; alias l='ls -al' ;" \
+    "\nalias grep='grep --color=auto' ; alias fgrep='fgrep --color=auto' ; alias egrep='egrep --color=auto' ;" \
+    '\nfunction regrep { (shopt -s globstar extglob; IFS=; set - ; /usr/bin/nice /bin/egrep --color=auto -d skip "") }' \
+    | tee -a /etc/bash.bashrc >> /root/.bashrc
+
+# Provide build essentials and dependencies
+RUN apt-get install -y \
+    build-essential devscripts lintian automake autoconf autoconf-archive libtool intltool git xvfb \
+    bison flex cython doxygen graphviz texlive-binaries pandoc \
+    libcairo2-dev libcroco3-dev libpango1.0-dev python2.7-dev libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev \
+    libreadline-dev python-all-dev python-enum34
+
+# Setup build environment with source code from local or remote location
+WORKDIR /usr/src/
+# Remote: clone for remote building
+RUN git clone https://github.com/tim-janik/rapicorn.git
+# Local:  clone for local testing
+#COPY rapicorn.git /tmp/rapicorn.git
+#RUN git clone /tmp/rapicorn.git
+
+# Build sources, run tests and create distribution tarball
+RUN cd rapicorn && \
+    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no && \
+    nice make -j4 && \
+    nice make check && \
+    nice make install && \
+    nice make installcheck && \
+    nice make dist && \
+    nice make uninstall && \
+    nice make clean && \
+    DIST_TARBALL=`echo *.tar.xz` && \
+    ls -l "$DIST_TARBALL"
+
+# Create packages as follows:
+# Eval configuration, prepare debian source tarball, prepare debian/ directory,
+# update 'changelog', install dependencies, build debian packages.
+RUN eval `rapicorn/buildtool.sh config` && \
+    DIST_TARBALL="$PACKAGE/$PACKAGE-$VERSION.tar.xz" && \
+    DEBVERSION="$VERSION$VCSREVISION" && \
+    DEB_TARBALL="$PACKAGE"_"${DEBVERSION%-*}.orig.tar.xz" && \
+    cp $DIST_TARBALL $DEB_TARBALL && tar xf $DEB_TARBALL && \
+    cd $PACKAGE-$VERSION/ && cp -r ../$PACKAGE/debian/ . && \
+    dch -v "$DEBVERSION" "$CHANGELOGMSG" && dch -r "" && cat debian/changelog && \
+    apt-get -y install $(dpkg-checkbuilddeps 2>&1 | sed 's/.*: //') && \
+    nice debuild -j`nproc` -rfakeroot -us -uc && \
+    cd .. && ls -al
+
+# nice -n19 docker build -f=.Dockerfile -t rapicorn .
+# docker run -ti --rm rapicorn /bin/bash
