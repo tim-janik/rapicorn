@@ -29,8 +29,9 @@ before_install:
   - $CC --version
 
 install:
+  - travis_retry git fetch --unshallow
   # Build and run tests, create packages
-  - sed "s|^FROM\\b.*|FROM $DOCKERDIST|" < .Dockerfile > Dockerfile
+  - sed "s&@DOCKERDIST@&$DOCKERDIST&" < .travis.docker > Dockerfile
   - docker build -t rapicorn .
 
 script:
