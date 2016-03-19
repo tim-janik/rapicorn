@@ -12,8 +12,8 @@ matrix:
   fast_finish: true
 
 env:
-  # global:
-  #   - BINTRAYUP=""
+  global:
+    - http_proxy=""
   matrix:
     - DOCKERDIST="debian:jessie" BINTRAYUP="debian"
     - DOCKERDIST="ubuntu:wily",  BINTRAYUP="ubuntu"
@@ -29,9 +29,11 @@ before_install:
   - $CC --version
 
 install:
+  # Complete history is required for VCSREVISION
   - travis_retry git fetch --unshallow
+  # Configure Dockerfile
+  - sed "s&@DOCKERDIST@&$DOCKERDIST&""g; ${http_proxy:+/^FROM\b/aENV http_proxy $http_proxy}" < .travis.docker > Dockerfile
   # Build and run tests, create packages
-  - sed "s&@DOCKERDIST@&$DOCKERDIST&" < .travis.docker > Dockerfile
   - docker build -t rapicorn .
 
 script:
