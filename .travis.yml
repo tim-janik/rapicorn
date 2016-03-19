@@ -8,11 +8,16 @@ dist: trusty
 sudo: required
 services: docker
 language: c
-
 matrix:
   fast_finish: true
-  include:
-    - env: DOCKERDIST=ubuntu:wily
+
+env:
+  # global:
+  #   - BINTRAYUP=""
+  matrix:
+    - DOCKERDIST="debian:jessie" BINTRAYUP="debian"
+    - DOCKERDIST="ubuntu:wily",  BINTRAYUP="ubuntu"
+    - DOCKERDIST="ubuntu:latest", BINTRAYUP=""
 
 before_install:
   - uname -a
@@ -30,8 +35,8 @@ install:
 
 script:
   # Upload packages
-  - docker run -ti --rm rapicorn /bin/bash -c \
-        "pwd && ls -al && rapicorn/buildtool.sh bintrayup beast-team vivid deb/rapicorn *.deb"
+  - test -z "$BINTRAYUP" || docker run -ti --rm rapicorn /bin/bash -c \
+        "pwd && ls -al && rapicorn/buildtool.sh bintrayup beast-team $BINTRAYUP deb/rapicorn *.deb"
   - docker ps -a
 
 after_success:
