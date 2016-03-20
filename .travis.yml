@@ -17,7 +17,7 @@ env:
   matrix:
     - DOCKERDIST="debian:jessie"  BINTRAYUP="jessie"
     - DOCKERDIST="ubuntu:wily",   BINTRAYUP="wily"
-    - DOCKERDIST="ubuntu:latest", BINTRAYUP=""
+    - DOCKERDIST="ubuntu:trusty", BINTRAYUP=""
 
 before_install:
   - uname -a
