@@ -39,7 +39,7 @@ install:
 script:
   # Upload packages
   - test -z "$BINTRAYUP" || docker run -ti --rm rapicorn /bin/bash -c \
-        "pwd && ls -al && rapicorn/buildtool.sh bintrayup beast-team $BINTRAYUP deb/rapicorn *.deb"
+        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $BINTRAYUP deb/rapicorn *.deb"
   - docker ps -a
 
 after_success:
