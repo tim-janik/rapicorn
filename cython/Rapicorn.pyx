@@ -1,7 +1,7 @@
 # This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0   -*-mode:python;-*-
 include "Aida.pyx"
 
-# Include "ui/clientapi.hh" for binding generation
+# Includes "ui/clientapi.hh" for binding generation
 cdef extern from "rapicorn.hh" namespace "Rapicorn":
   pass
 
@@ -9,7 +9,7 @@ cdef extern from "rapicorn.hh" namespace "Rapicorn":
 include "rapicorn-api.pyx"
 
 # Manual binding bits for rapicorn.hh
-cdef extern from "ui/clientapi.hh" namespace "Rapicorn":
+cdef extern from "rapicorn.hh" namespace "Rapicorn":
   Rapicorn__Application     Rapicorn__init_app "Rapicorn::init_app" (const String &application_name, int*, char**)
   void                      Rapicorn__program_argv0_init "Rapicorn::program_argv0_init" (const char *argv0)
   shared_ptr[Rapicorn__MainLoop] Rapicorn_ApplicationH_main_loop "Rapicorn::ApplicationH::main_loop" ()
