@@ -16,8 +16,9 @@ env:
     - http_proxy=""
   matrix:
     - DOCKERDIST="debian:jessie"  BINTRAYUP="jessie"
-    - DOCKERDIST="ubuntu:wily",   BINTRAYUP="wily"
     - DOCKERDIST="ubuntu:trusty", BINTRAYUP=""
+    - DOCKERDIST="ubuntu:wily",   BINTRAYUP="wily"
+    - DOCKERDIST="ubuntu:xenial", BINTRAYUP=""
 
 before_install:
   - uname -a
