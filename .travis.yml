@@ -15,8 +15,8 @@ env:
   global:
     - http_proxy=""
   matrix:
-    - DOCKERDIST="debian:jessie" BINTRAYUP="debian"
-    - DOCKERDIST="ubuntu:wily",  BINTRAYUP="ubuntu"
+    - DOCKERDIST="debian:jessie"  BINTRAYUP="jessie"
+    - DOCKERDIST="ubuntu:wily",   BINTRAYUP="wily"
     - DOCKERDIST="ubuntu:latest", BINTRAYUP=""
 
 before_install:
@@ -39,7 +39,7 @@ install:
 script:
   # Upload packages
   - test -z "$BINTRAYUP" || docker run -ti --rm rapicorn /bin/bash -c \
-        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $BINTRAYUP deb/rapicorn *.deb"
+        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $BINTRAYUP/rapicorn snapshot *.deb"
   - docker ps -a
 
 after_success:

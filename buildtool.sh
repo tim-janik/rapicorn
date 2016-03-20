@@ -37,10 +37,10 @@ mkconfig() {
 bintrayup() {
   set +x # avoid printing authentication secrets
   mkconfig >/dev/null # PACKAGE, VERSION, ...
-  ACCNAME="$1"; PKGDIST="$2"; PKGPATH="$3" # BINTRAY_APITOKEN set by caller
+  ACCNAME="$1"; PKGPATH="$2"; PKGDIST="$3" # BINTRAY_APITOKEN must be set by caller
   test -n "$ACCNAME" || die "missing bintray account"
-  test -n "$PKGDIST" || die "missing distribution"
   test -n "$PKGPATH" || die "missing package path"
+  test -n "$PKGDIST" || die "missing distribution"
   shift 3
   # create new bintray versoin
   REPOVERSION="$VERSION+git$TOTAL_COMMITS" # echo "REPOVERSION=$REPOVERSION"
