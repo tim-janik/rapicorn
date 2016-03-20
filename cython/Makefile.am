@@ -33,7 +33,7 @@ pymodules_LTLIBRARIES	   = Rapicorn.la
 nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	   = $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	   = $(AM_LDFLAGS) -no-undefined -module -avoid-version
-Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
+Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la $(PYTHON_LIBS)
 EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rapicorn-core.pyx
 CLEANFILES	          += Rapicorn.cc rapicorn-api.pyx
 
