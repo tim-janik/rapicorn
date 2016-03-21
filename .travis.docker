@@ -58,5 +58,5 @@ RUN eval `rapicorn/buildtool.sh config` && \
     nice debuild -j`nproc` -rfakeroot -us -uc && \
     cd .. && ls -al
 
-# nice -n19 docker build -f=.Dockerfile -t rapicorn .
+# nice -n19 docker build -t rapicorn .
 # docker run -ti --rm rapicorn /bin/bash
