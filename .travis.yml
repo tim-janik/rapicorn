@@ -13,12 +13,13 @@ matrix:
 
 env:
   global:
-    - http_proxy=""
+    #- http_proxy="http://example.com"
+    - bintray_url="https://dl.bintray.com/beast-team"
   matrix:
-    - DOCKERDIST="debian:jessie"  BINTRAYUP="jessie"
-    - DOCKERDIST="ubuntu:trusty", BINTRAYUP=""
-    - DOCKERDIST="ubuntu:wily",   BINTRAYUP="wily"
-    - DOCKERDIST="ubuntu:xenial", BINTRAYUP=""
+    - XFROM="debian:jessie" XUP="jessie"
+    - XFROM="ubuntu:trusty" XUP=""
+    - XFROM="ubuntu:wily"   XUP="wily"
+    - XFROM="ubuntu:xenial" XUP=""
 
 before_install:
   - uname -a
@@ -32,15 +33,15 @@ before_install:
 install:
   # Complete history is required for VCSREVISION
   - travis_retry git fetch --unshallow
-  # Configure Dockerfile
-  - sed "s&@DOCKERDIST@&$DOCKERDIST&""g; ${http_proxy:+/^FROM\b/aENV http_proxy $http_proxy}" < .travis.docker > Dockerfile
+  # Configure Dockerfile by substituting @VAR@ with $VAR
+  - ./buildtool.sh applyenv .travis.docker > Dockerfile
   # Build and run tests, create packages
   - docker build -t rapicorn .
 
 script:
   # Upload packages
-  - test -z "$BINTRAYUP" || docker run -ti --rm rapicorn /bin/bash -c \
-        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $BINTRAYUP/rapicorn snapshot *.deb"
+  - test -z "$XUP" || docker run -ti --rm rapicorn /bin/bash -c \
+        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $XUP/rapicorn snapshot *.deb"
   - docker ps -a
 
 after_success:

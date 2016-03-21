@@ -1,11 +1,13 @@
 # This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 
 # Pick distribution to start from
-FROM @DOCKERDIST@
-
-# Maintainer information and contact information
+FROM @XFROM@
 MAINTAINER Tim Janik <timj@gnu.org>
+
+# Carry over enviroment variables
 ENV EMAIL rapicorn@googlegroups.com
+ENV TRAVIS_JOB_NUMBER "@TRAVIS_JOB_NUMBER@"
+ENV http_proxy "@http_proxy@"
 
 # Automation tools and convenience commands
 ENV DEBIAN_FRONTEND noninteractive
