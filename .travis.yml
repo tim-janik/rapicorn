@@ -8,18 +8,21 @@ dist: trusty
 sudo: required
 services: docker
 language: c
-matrix:
-  fast_finish: true
 
 env:
   global:
     #- http_proxy="http://example.com"
     - bintray_url="https://dl.bintray.com/beast-team"
   matrix:
-    - XFROM="debian:jessie" XUP="jessie"
-    - XFROM="ubuntu:trusty" XUP="trusty"
-    - XFROM="ubuntu:wily"   XUP="wily"
-    - XFROM="ubuntu:xenial" XUP="xenial"
+    - XFROM="debian:jessie"  XUP="jessie"
+    - XFROM="debian:testing" XUP="testing"
+    - XFROM="ubuntu:trusty"  XUP="trusty"
+    - XFROM="ubuntu:wily"    XUP="wily"
+    - XFROM="ubuntu:xenial"  XUP="xenial"
+matrix:
+  fast_finish: true
+  allow_failures:
+    - env: XFROM="ubuntu:xenial"  XUP="xenial"
 
 before_install:
   - uname -a
