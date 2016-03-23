@@ -22,6 +22,7 @@ env:
 matrix:
   fast_finish: true
   allow_failures:
+    - env: XFROM="debian:testing" XUP="testing"
     - env: XFROM="ubuntu:xenial"  XUP="xenial"
 
 before_install:
