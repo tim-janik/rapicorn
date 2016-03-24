@@ -46,6 +46,13 @@ script:
   # Upload packages
   - test -z "$XUP" || docker run -ti --rm rapicorn /bin/bash -c \
         "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $XUP/rapicorn snapshot *.deb"
+  # Test package installation
+  - export RAPICORNREPO="$bintray_url/$XUP snapshot main" &&
+    docker run -ti --rm rapicorn /bin/bash -c \
+        "echo 'deb [trusted=yes] $RAPICORNREPO' |
+        tee /etc/apt/sources.list.d/bintray-beast-team.list &&
+        retry apt-get -y install apt-transport-https ca-certificates &&
+        retry apt-get update && retry apt-get -y install rapicorn"
   - docker ps -a
 
 after_success:
