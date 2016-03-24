@@ -37,13 +37,15 @@ before_install:
 install:
   # Complete history is required for VCSREVISION
   - travis_retry git fetch --unshallow
+  # Point BINTRAYREPO at the beast-time package repository
+  - export BINTRAYREPO="$bintray_url/$XUP snapshot main"
   # Configure Dockerfile by substituting @VAR@ with $VAR
   - ./buildtool.sh applyenv .travis.docker > Dockerfile
   # Build and run tests, create packages
   - docker build -t rapicorn .
   # Test package installation and removal locally
   - docker run -ti --rm rapicorn /bin/bash -c
-        "dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz &&
+        "set -x && dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz &&
         echo 'deb [trusted=yes] file:///usr/src ./' > /etc/apt/sources.list.d/usrsrc.list &&
         retry apt-get update && apt-get install -y rapicorn &&
         apt-get purge -y rapicorn && apt-get --purge -y autoremove"
@@ -53,9 +55,8 @@ script:
   - test -z "$XUP" || docker run -ti --rm rapicorn /bin/bash -c \
         "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $XUP/rapicorn snapshot *.deb"
   # Test package installation from remote location
-  - export RAPICORNREPO="$bintray_url/$XUP snapshot main" &&
-    docker run -ti --rm rapicorn /bin/bash -c \
-        "echo 'deb [trusted=yes] $RAPICORNREPO' |
+  - docker run -ti --rm rapicorn /bin/bash -c \
+        "set -x && echo 'deb [trusted=yes] $BINTRAYREPO' |
         tee /etc/apt/sources.list.d/bintray-beast-team.list &&
         retry apt-get -y install apt-transport-https ca-certificates &&
         retry apt-get update && retry apt-get -y install rapicorn"
