@@ -41,12 +41,18 @@ install:
   - ./buildtool.sh applyenv .travis.docker > Dockerfile
   # Build and run tests, create packages
   - docker build -t rapicorn .
+  # Test package installation and removal locally
+  - docker run -ti --rm rapicorn /bin/bash -c
+        "dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz &&
+        echo 'deb [trusted=yes] file:///usr/src ./' > /etc/apt/sources.list.d/usrsrc.list &&
+        retry apt-get update && apt-get install -y rapicorn &&
+        apt-get purge -y rapicorn && apt-get --purge -y autoremove"
 
 script:
   # Upload packages
   - test -z "$XUP" || docker run -ti --rm rapicorn /bin/bash -c \
         "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $XUP/rapicorn snapshot *.deb"
-  # Test package installation
+  # Test package installation from remote location
   - export RAPICORNREPO="$bintray_url/$XUP snapshot main" &&
     docker run -ti --rm rapicorn /bin/bash -c \
         "echo 'deb [trusted=yes] $RAPICORNREPO' |
