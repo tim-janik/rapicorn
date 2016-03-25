@@ -14,16 +14,17 @@ env:
     #- http_proxy="http://example.com"
     - bintray_url="https://dl.bintray.com/beast-team"
   matrix:
-    - XFROM="debian:jessie"  XUP="jessie"
-    - XFROM="debian:testing" XUP="testing"
-    - XFROM="ubuntu:trusty"  XUP="trusty"
-    - XFROM="ubuntu:wily"    XUP="wily"
-    - XFROM="ubuntu:xenial"  XUP="xenial"
+    # Distribution Name and Version
+    - DN="debian" DV="jessie"
+    - DN="debian" DV="testing"
+    - DN="ubuntu" DV="trusty"
+    - DN="ubuntu" DV="wily"
+    - DN="ubuntu" DV="xenial"
 matrix:
-  fast_finish: true
   allow_failures:
-    - env: XFROM="debian:testing" XUP="testing"
-    - env: XFROM="ubuntu:xenial"  XUP="xenial"
+    - env: DN="debian" DV="testing"
+    - env: DN="ubuntu" DV="xenial"
+  fast_finish: true
 
 before_install:
   - uname -a
@@ -35,10 +36,10 @@ before_install:
   - $CC --version
 
 install:
-  # Complete history is required for VCSREVISION
+  # Complete history is required for monotonic revisioning
   - travis_retry git fetch --unshallow
   # Point BINTRAYREPO at the beast-time package repository
-  - export BINTRAYREPO="$bintray_url/$XUP snapshot main"
+  - export BINTRAYREPO="$bintray_url/$DN $DV main"
   # Configure Dockerfile by substituting @VAR@ with $VAR
   - ./buildtool.sh applyenv .travis.docker > Dockerfile
   # Build and run tests, create packages
@@ -52,8 +53,8 @@ install:
 
 script:
   # Upload packages
-  - test -z "$XUP" || docker run -ti --rm rapicorn /bin/bash -c \
-        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $XUP/rapicorn snapshot *.deb"
+  - test -z "$DV" || docker run -ti --rm rapicorn /bin/bash -c \
+        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $DN/rapicorn $DV *.deb"
   # Test package installation from remote location
   - docker run -ti --rm rapicorn /bin/bash -c \
         "set -x && retry apt-get -y install apt-transport-https ca-certificates &&
