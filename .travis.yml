@@ -58,7 +58,7 @@ script:
   - sleep 60 # allow package index updates
   - docker run -ti --rm rapicorn /bin/bash -c \
         "set -x && retry apt-get -y install apt-transport-https ca-certificates &&
-        echo 'deb [trusted=yes] $BINTRAYREPO' | tee /etc/apt/sources.list.d/bintray-beast-team.list &&
+        echo '$BINTRAYREPO' | tee /etc/apt/sources.list.d/bintray-beast-team.list &&
         retry apt-get update && retry apt-get -y install rapicorn"
   - docker ps -a
 
