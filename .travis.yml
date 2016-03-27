@@ -14,18 +14,23 @@ env:
     #- http_proxy="http://example.com"
   matrix:
     # Distribution Name and Version
-    - DN="debian" DV="jessie"
-    - DN="debian" DV="testing"
-    - DN="ubuntu" DV="trusty"
-    - DN="ubuntu" DV="wily"
-    - DN="ubuntu" DV="xenial"
+    - DIST="debian:jessie"
+    - DIST="debian:testing"
+    - DIST="ubuntu:trusty"
+    - DIST="ubuntu:wily"
+    - DIST="ubuntu:xenial"
 matrix:
   allow_failures:
-    - env: DN="debian" DV="testing"
-    - env: DN="ubuntu" DV="xenial"
+    - env: DIST="debian:testing"
+    - env: DIST="ubuntu:xenial"
   fast_finish: true
 
 before_install:
+  # Build variable setup
+  - export DISTNAME="${DIST%:*}" DISTRELEASE="${DIST#*:}" # Example: DIST=debian:jessie DISTNAME=debian DISTRELEASE=jessie
+  - export BINTRAYREPO="deb [trusted=yes] https://dl.bintray.com/beast-team/deb $DISTRELEASE main"
+  - echo "DIST=$DIST DISTNAME=$DISTNAME DISTRELEASE=$DISTRELEASE BINTRAYREPO='$BINTRAYREPO'"
+  # Sample environment
   - uname -a
   - cat /etc/os-release
   - pwd
@@ -37,8 +42,6 @@ before_install:
 install:
   # Complete history is required for monotonic revisioning
   - travis_retry git fetch --unshallow
-  # Point BINTRAYREPO at the beast-time package repository
-  - export BINTRAYREPO="deb [trusted=yes] https://dl.bintray.com/beast-team/deb $DV main"
   # Configure Dockerfile by substituting @VAR@ with $VAR
   - ./buildtool.sh applyenv .travis.docker > Dockerfile
   # Build and run tests, create packages
@@ -52,8 +55,8 @@ install:
 
 script:
   # Upload packages
-  - test -z "$DV" || docker run -ti --rm rapicorn /bin/bash -c \
-        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team deb/rapicorn $DV *.deb"
+  - test -z "$DISTRELEASE" || docker run -ti --rm rapicorn /bin/bash -c \
+        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team deb/rapicorn $DISTRELEASE *.deb"
   # Test package installation from remote location
   - sleep 60 # allow package index updates
   - travis_retry docker run -ti --rm rapicorn /bin/bash -c \

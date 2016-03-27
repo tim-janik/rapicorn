@@ -1,7 +1,7 @@
 # This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 
 # Pick distribution to start from
-FROM @DN@:@DV@
+FROM @DIST@
 MAINTAINER Tim Janik <timj@gnu.org>
 
 # Carry over enviroment variables
@@ -50,7 +50,7 @@ RUN cd rapicorn && \
 # Create packages as follows:
 # Eval configuration, prepare debian source tarball, prepare debian/ directory,
 # update 'changelog', install dependencies, build debian packages.
-RUN eval `rapicorn/buildtool.sh config 0@DV@` && \
+RUN eval `rapicorn/buildtool.sh config` && \
     DIST_TARBALL="$PACKAGE/$PACKAGE-$UPSVERSION.tar.xz" && \
     DEB_TARBALL="$PACKAGE"_"${DEBVERSION%-*}.orig.tar.xz" && \
     cp $DIST_TARBALL $DEB_TARBALL && tar xf $DEB_TARBALL && \
