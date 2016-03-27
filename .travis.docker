@@ -6,6 +6,10 @@ MAINTAINER Tim Janik <timj@gnu.org>
 
 # Carry over enviroment variables
 ENV EMAIL rapicorn@googlegroups.com
+ENV DIST "@DIST@"
+ENV DISTNAME "@DISTNAME@"
+ENV DISTRELEASE "@DISTRELEASE@"
+ENV BINTRAYREPO "@BINTRAYREPO@"
 ENV TRAVIS_JOB_NUMBER "@TRAVIS_JOB_NUMBER@"
 ENV http_proxy "@http_proxy@"
 
