@@ -21,7 +21,6 @@ env:
     - DIST="ubuntu:xenial"
 matrix:
   allow_failures:
-    - env: DIST="debian:testing"
     - env: DIST="ubuntu:xenial"
   fast_finish: true
 
