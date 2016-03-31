@@ -12,6 +12,7 @@ language: c
 env:
   global:
     #- http_proxy="http://example.com"
+    - INTENT="deb" # build and upload deb packages
   matrix:
     # Distribution Name and Version
     - DIST="debian:jessie"
@@ -19,6 +20,7 @@ env:
     - DIST="ubuntu:trusty"
     - DIST="ubuntu:wily"
     - DIST="ubuntu:xenial"
+    - INTENT="distcheck" DIST="ubuntu:wily" # run and succeed in 'distcheck'
 matrix:
   allow_failures:
     - env: DIST="ubuntu:xenial"
@@ -45,20 +47,13 @@ install:
   - ./buildtool.sh applyenv .travis.docker > Dockerfile
   # Build and run tests, create packages
   - docker build -t rapicorn .
-  # Test package installation and removal locally
-  - docker run -ti --rm rapicorn /bin/bash -c
-        "set -x && dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz &&
-        echo 'deb [trusted=yes] file:///usr/src ./' > /etc/apt/sources.list.d/usrsrc.list &&
-        retry apt-get update && apt-get install -y rapicorn &&
-        apt-get purge -y rapicorn && apt-get --purge -y autoremove"
 
 script:
   # Upload packages
-  - test -z "$DISTRELEASE" || docker run -ti --rm rapicorn /bin/bash -c \
+  - [ $INTENT != deb ] || docker run -ti --rm rapicorn /bin/bash -c \
         "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team deb/rapicorn $DISTRELEASE *.deb"
   # Test package installation from remote location
-  - sleep 60 # allow package index updates
-  - travis_retry docker run -ti --rm rapicorn /bin/bash -c \
+  - [ $INTENT != deb ] || sleep 60 && travis_retry docker run -ti --rm rapicorn /bin/bash -c \
         "set -x && retry apt-get -y install apt-transport-https ca-certificates &&
         echo '$BINTRAYREPO' | tee /etc/apt/sources.list.d/bintray-beast-team.list &&
         retry apt-get update && retry apt-get -y install rapicorn"

@@ -12,6 +12,7 @@ ENV DISTRELEASE "@DISTRELEASE@"
 ENV BINTRAYREPO "@BINTRAYREPO@"
 ENV TRAVIS_JOB_NUMBER "@TRAVIS_JOB_NUMBER@"
 ENV http_proxy "@http_proxy@"
+ENV INTENT "@INTENT@"
 
 # Automation tools and convenience commands
 ENV DEBIAN_FRONTEND noninteractive
@@ -39,6 +40,7 @@ COPY .git /tmp/rapicorn.git
 RUN git clone /tmp/rapicorn.git
 
 # Build sources, run tests and create distribution tarball
+# Carry out distcheck test if desired
 RUN cd rapicorn && \
     nice ./autogen.sh --prefix=/usr --enable-devel-mode=no && \
     nice make -j4 && \
@@ -47,14 +49,17 @@ RUN cd rapicorn && \
     nice make installcheck && \
     nice make dist && \
     nice make uninstall && \
+    ( [ $INTENT = distcheck ] || exit 0 && \
+      nice make distcheck ) && \
     nice make clean && \
     DIST_TARBALL=`echo *.tar.xz` && \
     ls -l "$DIST_TARBALL"
 
-# Create packages as follows:
+# Create deb packages as follows:
 # Eval configuration, prepare debian source tarball, prepare debian/ directory,
 # update 'changelog', install dependencies, build debian packages.
-RUN eval `rapicorn/buildtool.sh config` && \
+RUN [ $INTENT = deb ] || exit 0 && \
+    eval `rapicorn/buildtool.sh config` && \
     DIST_TARBALL="$PACKAGE/$PACKAGE-$UPSVERSION.tar.xz" && \
     DEB_TARBALL="$PACKAGE"_"${DEBVERSION%-*}.orig.tar.xz" && \
     cp $DIST_TARBALL $DEB_TARBALL && tar xf $DEB_TARBALL && \
@@ -63,6 +68,13 @@ RUN eval `rapicorn/buildtool.sh config` && \
     retry apt-get -y install $(dpkg-checkbuilddeps 2>&1 | sed 's/.*: //') && \
     nice debuild -j`nproc` -rfakeroot -us -uc && \
     cd .. && ls -al
+
+# Test package installation and removal locally
+RUN [ $INTENT = deb ] || exit 0 && \
+    dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz && \
+    echo 'deb [trusted=yes] file:///usr/src ./' > /etc/apt/sources.list.d/usrsrc.list && \
+    retry apt-get update && apt-get install -y rapicorn && \
+    apt-get purge -y rapicorn && apt-get --purge -y autoremove
 
 # nice -n19 docker build -t rapicorn .
 # docker run -ti --rm rapicorn /bin/bash
