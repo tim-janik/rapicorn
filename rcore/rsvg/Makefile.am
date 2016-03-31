@@ -59,6 +59,6 @@ librsvg-enum-types.c: librsvg-enum-types.h $(rcore_rsvg_headers) Makefile
 	  $(rcore_rsvg_headers) ) > tmp-librsvg-enum-types.c \
 	&& cp tmp-librsvg-enum-types.c librsvg-enum-types.c \
 	&& rm -f tmp-librsvg-enum-types.c
-$(librapicorn_rsvg_@MAJOR@_la_SOURCES): librsvg-enum-types.h
+$(librapicorn_rsvg_@MAJOR@_la_SOURCES:%=$(srcdir)/%): librsvg-enum-types.h
 EXTRA_DIST += librsvg-enum-types.h librsvg-enum-types.c
 CLEANFILES += @INGIT@ librsvg-enum-types.h librsvg-enum-types.c
