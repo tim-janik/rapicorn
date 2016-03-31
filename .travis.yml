@@ -50,10 +50,10 @@ install:
 
 script:
   # Upload packages
-  - [ $INTENT != deb ] || docker run -ti --rm rapicorn /bin/bash -c \
+  - test $INTENT != deb || docker run -ti --rm rapicorn /bin/bash -c \
         "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team deb/rapicorn $DISTRELEASE *.deb"
   # Test package installation from remote location
-  - [ $INTENT != deb ] || sleep 60 && travis_retry docker run -ti --rm rapicorn /bin/bash -c \
+  - test $INTENT != deb || sleep 60 && travis_retry docker run -ti --rm rapicorn /bin/bash -c \
         "set -x && retry apt-get -y install apt-transport-https ca-certificates &&
         echo '$BINTRAYREPO' | tee /etc/apt/sources.list.d/bintray-beast-team.list &&
         retry apt-get update && retry apt-get -y install rapicorn"
