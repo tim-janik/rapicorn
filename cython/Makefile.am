@@ -53,8 +53,8 @@ CLEANFILES += aidapyxxcallers.hh
 # install-hook for __init__.py
 # cython gets confused about having an __init__.py in builddir, so we
 # keep it around under a different name.
-rapicornmodule-install-initpy:
-	$(INSTALL_DATA) __init__.py.in "$(DESTDIR)$(pymodulesdir)"/__init__.py
+rapicornmodule-install-initpy: $(srcdir)/__init__.py.in
+	$(INSTALL_DATA) $(srcdir)/__init__.py.in "$(DESTDIR)$(pymodulesdir)"/__init__.py
 	$(am__py_compile) --destdir "$(DESTDIR)" --basedir "$(pymodulesdir)" __init__.py
 install-data-hook: rapicornmodule-install-initpy
 rapicornmodule-uninstall-initpy: # see PEP-3147 for __pycache__
