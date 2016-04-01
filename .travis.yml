@@ -16,12 +16,12 @@ env:
   matrix:
     # distcheck: succeed in 'make distcheck'
     - INTENT="distcheck" DIST="ubuntu:wily"
-    # deb: build packages for distribution DIST
+    # deb: build packages for distribution $DIST
+    - DIST="ubuntu:wily"
     - DIST="debian:jessie"
     - DIST="debian:testing"
-    - DIST="ubuntu:trusty"
-    - DIST="ubuntu:wily"
     - DIST="ubuntu:xenial"
+    #- DIST="ubuntu:trusty" # not needed by Beast
 matrix:
   allow_failures:
     - env: DIST="ubuntu:xenial"
