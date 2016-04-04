@@ -3,6 +3,7 @@
 #include "strings.hh"
 #include <librsvg/rsvg.h>
 #include "main.hh"
+#include <regex>
 
 /* A note on coordinate system increments:
  * - Librsvg:  X to right, Y downwards.
@@ -131,6 +132,8 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
 struct FileImpl : public File {
   RsvgHandle           *handle_;
   String                name_;
+  StringVector          good_ids_;
+  std::set<String>      id_candidates_;
   explicit              FileImpl        (RsvgHandle *hh, const String &name) : handle_ (hh), name_ (name) {}
   /*dtor*/             ~FileImpl        () { if (handle_) g_object_unref (handle_); }
   virtual String        name            () const override { return name_; }
@@ -167,7 +170,20 @@ File::load (Blob svg_blob)
       errno = ENODATA;
       return fp;
     }
-  FileP fp (new FileImpl (handle, svg_blob.name()));
+  auto fp = std::make_shared<FileImpl> (handle, svg_blob.name());
+  // workaround for https://bugzilla.gnome.org/show_bug.cgi?id=764610 - missing rsvg_handle_list()
+  {
+    static const std::regex id_pattern ("\\bid=\"([^\"]+)\""); // find id="..." occourances
+    const String &input = svg_blob.string(); // l-value to pass into sregex_iterator
+    const std::sregex_iterator ids_end;
+    auto ids_begin = std::sregex_iterator (input.begin(), input.end(), id_pattern);
+    for (auto it = ids_begin; it != ids_end; ++it)
+      {
+        const std::smatch &match = *it;
+        const std::string &m = match[1];
+        fp->id_candidates_.insert (m);
+      }
+  }
   errno = 0;
   return fp;
 }
@@ -220,20 +236,14 @@ FileImpl::lookup (const String &elementid)
 StringVector
 FileImpl::list (const String &prefix)
 {
-  StringVector stv;
-  return_unless (handle_, stv);
-  GSList *ids = rsvg_handle_list (handle_);
-  while (ids)
+  if (good_ids_.empty() && !id_candidates_.empty())
     {
-      GSList *const node = ids;
-      ids = node->next;
-      gchar *id = (gchar*) node->data;
-      g_slist_free_1 (node);
-      if (strncmp (id, prefix.c_str(), prefix.size()) == 0)
-        stv.push_back (id);
-      g_free (id);
+      for (const String &candidate : id_candidates_)
+        if (rsvg_handle_has_sub (handle_, ("#" + candidate).c_str()))
+          good_ids_.push_back (candidate);
+      id_candidates_.clear();
     }
-  return stv;
+  return good_ids_;
 }
 
 // == Span ==
