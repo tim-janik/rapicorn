@@ -21,8 +21,7 @@ EXTRA_DIST        += data.cc testrcore1.outref
 
 TAPTESTS          += testrcore2
 testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
-testrcore2_LDADD   = $(LDADDS) $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.la \
-		     $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
+testrcore2_LDADD   = $(LDADDS) $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
 testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) $(AM_CXXFLAGS) # FIXME
 EXTRA_DIST        += testrcore2.outref
 
