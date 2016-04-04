@@ -1,10 +1,8 @@
 /* This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0 */
 #include "svg.hh"
-#include "../strings.hh"
-#include "rsvg.h"
-#include "rsvg-cairo.h"
-#include "rsvg-private.h"
-#include "../main.hh"
+#include "strings.hh"
+#include <librsvg/rsvg.h>
+#include "main.hh"
 
 /* A note on coordinate system increments:
  * - Librsvg:  X to right, Y downwards.
@@ -136,7 +134,6 @@ struct FileImpl : public File {
   explicit              FileImpl        (RsvgHandle *hh, const String &name) : handle_ (hh), name_ (name) {}
   /*dtor*/             ~FileImpl        () { if (handle_) g_object_unref (handle_); }
   virtual String        name            () const override { return name_; }
-  virtual void          dump_tree       () override;
   virtual ElementP      lookup          (const String &elementid) override;
   virtual StringVector  list            (const String &prefix) override;
 };
@@ -173,33 +170,6 @@ File::load (Blob svg_blob)
   FileP fp (new FileImpl (handle, svg_blob.name()));
   errno = 0;
   return fp;
-}
-
-static void
-dump_node (RsvgNode *self, int64 depth, int64 maxdepth)
-{
-  if (depth > maxdepth)
-    return;
-  for (int64 i = 0; i < depth; i++)
-    printerr (" ");
-  printerr ("<0x%02x/>\n", self->type);
-  for (uint i = 0; i < self->children->len; i++)
-    {
-      RsvgNode *child = (RsvgNode*) g_ptr_array_index (self->children, i);
-      dump_node (child, depth + 1, maxdepth);
-    }
-}
-
-void
-FileImpl::dump_tree ()
-{
-  if (handle_)
-    {
-      RsvgHandlePrivate *p = handle_->priv;
-      RsvgNode *node = p->treebase;
-      printerr ("\n%s:\n", p->title ? p->title->str : "???");
-      dump_node (node, 0, INT64_MAX);
-    }
 }
 
 /**
