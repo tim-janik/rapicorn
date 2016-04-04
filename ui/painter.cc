@@ -1,7 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "painter.hh"
 #include "blitfuncs.hh"
-#include "../rcore/rsvg/svg.hh"
+#include "../rcore/svg.hh"
 #include <algorithm>
 
 #define SVGDEBUG(...)   RAPICORN_KEY_DEBUG ("SVG", __VA_ARGS__)
