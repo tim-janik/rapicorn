@@ -5,7 +5,7 @@ SUBDIRS	     = . tests
 
 AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
 DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
-AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS)
+AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
@@ -26,7 +26,7 @@ rapicorn_cc_sources = $(sort	\
 					math.cc				unicode.cc   \
         xmlnode.cc	markup.cc					testutils.cc \
 			regex.cc  strings.cc	loop.cc		main.cc	memory.cc \
-	quicktimer.cc	randomhash.cc	thread.cc	\
+	quicktimer.cc	randomhash.cc	svg.cc	thread.cc	\
 )
 rapicorn_impl_headers = $(strip 	\
 	aidacxx.hh			\
@@ -37,6 +37,7 @@ rapicorn_generated_headers = $(strip	\
 	buildconfig.h			\
 )
 rapicorn_private_files = $(strip	\
+	svg.hh				\
 )
 
 # === libraries ===
