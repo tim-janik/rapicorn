@@ -80,8 +80,9 @@ enable_static=no ; enable_shared=yes
 MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
 
 # check for base package requirements early on
-PKG_CHECK_MODULES(CAIRO, [
+PKG_CHECK_MODULES(SVG_DEPENDENCIES, [
 	cairo		>= 1.10.0
+	librsvg-2.0	>= 2.40.2
 ])
 PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
 	cairo		>= 1.10.0
