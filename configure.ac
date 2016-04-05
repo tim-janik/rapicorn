@@ -5,11 +5,11 @@ builtin(include, ld-symbolic.m4)dnl # include special macros
 
 AC_PREREQ(2.57)
 # VERSION: MAJOR.MINOR.MICRO-RC:
-# * MICRO:           Increment with every release
-# * MINOR:           Increment for significant changes or ABI breaks, reset MICRO on increments
+# * MAJOR:           Increment on major API breaks, *forces* ABI break, resets MINOR, MICRO and ABI_VERSION
+# * MINOR:           Increment for significant changes or ABI breaks, resets MICRO
+# * MICRO:           Increment with every release, increments must *not* break ABI
 # * ABI_VERSION:     Record the latest version since ABI compatibility has been kept
-# * MAJOR:           Increment on major API breaks, enforces ABI breaks, reset MINOR, MICRO and ABI_VERSION
-# * ABI changes:     Reset ABI_VERSION to the current VERSION
+# * ABI changes:     Increment MAJOR or MINOR and reset ABI_VERSION to the current VERSION
 # * -RC:             Release candidate, may contain -rc[0-9]+ or nothing
 AC_INIT([rapicorn], [15.9.1])
 :;      ABI_VERSION=[15.9.1]
@@ -39,8 +39,8 @@ test "$ABI_MAJOR" = "$MAJOR" || {
 test "$ABI_MINOR" -le "$MINOR" || {
   AC_MSG_ERROR([ABI_VERSION must predate MINOR version: $ABI_MINOR <= $MINOR])
 }
-test "$ABI_MICRO" -le "$MICRO" -o "$ABI_MINOR" -lt "$MINOR" || {
-  AC_MSG_ERROR([ABI_VERSION must predate MINOR.MICRO version: $ABI_MINOR.$ABI_MICRO <= $MINOR.$MICRO])
+test "$ABI_MICRO" -eq 0 || {
+  AC_MSG_ERROR([ABI_VERSION must not indicate ABI break in MICRO releases: $ABI_MINOR.$ABI_MICRO <= $MINOR.0])
 }
 ABI_AGE=$(($MINOR - $ABI_MINOR))
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
