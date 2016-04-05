@@ -11,7 +11,7 @@ export VPATH # point builddir executables at srcdir to find their corresponding 
 noinst_PROGRAMS	 = $(EXAMPLES)
 noinst_DATA	 =
 EXAMPLES	 =
-LDADDS		 = $(top_builddir)/ui/librapicorn-@MAJOR@.la
+LDADDS		 = $(top_builddir)/ui/librapicorn-@MAJOR@.la $(SVG_DEPENDENCIES_LIBS)
 XML_FILES	 =
 EXTRA_DIST	+= $(XML_FILES)
 
@@ -30,7 +30,7 @@ texttest_LDADD	 = $(LDADDS)
 XML_FILES	+= texttest.xml
 EXAMPLES	+= graphics
 graphics_SOURCES = graphics.cc
-graphics_LDADD	 = $(LDADDS) $(CAIRO_LIBS)
+graphics_LDADD	 = $(LDADDS)
 XML_FILES	+= graphics.xml
 EXAMPLES	+= tour
 tour_SOURCES	 = tour.cc

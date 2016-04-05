@@ -3,7 +3,7 @@ Section: x11
 Priority: optional
 Maintainer: Tim Janik <timj@gnu.org>
 Build-Depends: debhelper (>= 9), autotools-dev, dh-python, intltool,
- libcairo2-dev, libcroco3-dev, libpango1.0-dev, libgdk-pixbuf2.0-dev, libreadline-dev,
+ librsvg2-dev, libpango1.0-dev, libreadline-dev,
  python, python-all-dev, cython, xvfb
 Build-Depends-Indep: doxygen
 Standards-Version: 3.9.6
@@ -36,7 +36,7 @@ Package: librapicorn-dev
 Section: libdevel
 Architecture: any
 Depends: librapicorn-15-9 (= ${binary:Version}),
- libcroco3-dev, libpango1.0-dev, libgdk-pixbuf2.0-dev,
+ librsvg2-dev, libpango1.0-dev,
  ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
 Description: UI toolkit for declarative user interface construction and SVG-based theming
  This package contains the Rapicorn include files.

@@ -80,8 +80,9 @@ enable_static=no ; enable_shared=yes
 MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
 
 # check for base package requirements early on
-PKG_CHECK_MODULES(CAIRO, [
+PKG_CHECK_MODULES(SVG_DEPENDENCIES, [
 	cairo		>= 1.10.0
+	librsvg-2.0	>= 2.40.2
 ])
 PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
 	cairo		>= 1.10.0
@@ -286,23 +287,6 @@ AC_DEFUN([RAPICORN_CXX_REQUIREMENTS],
     if test "$depversion_gnuc_match" != "ok" ; then
 	AC_MSG_ERROR([detected GNUC version too old])
     fi
-])
-
-dnl # RAPICORN_RSVG_REQUIREMENTS() - checks everything needed for embedding librsvg
-AC_DEFUN([RAPICORN_RSVG_REQUIREMENTS],
-[
-    AC_CHECK_FUNCS(strtok_r)
-    PKG_CHECK_MODULES(LIBXML,		[ libxml-2.0		>= 2.7.0  ])
-    PKG_CHECK_MODULES(LIBCROCO,		[ libcroco-0.6		>= 0.6.1  ])
-    PKG_CHECK_MODULES(CAIRO,		[ cairo			>= 1.2.4  ])
-    PKG_CHECK_MODULES(GIO,		[ gio-2.0		>= 2.24.0 ])
-    PKG_CHECK_MODULES(GDKPIXBUF,	[ gdk-pixbuf-2.0	>= 2.22.0 ])
-    PKG_CHECK_MODULES(PANGOCAIRO,	[ pangocairo		>= 1.30.0 ])
-    RAPICORN_RSVG_CFLAGS="$LIBXML_CFLAGS $LIBCROCO_CFLAGS $CAIRO_CFLAGS $GIO_CFLAGS $GDKPIXBUF_CFLAGS $PANGOCAIRO_CFLAGS"
-    RAPICORN_RSVG_LIBS="$LIBXML_LIBS $LIBCROCO_LIBS $CAIRO_LIBS $GIO_LIBS $GDKPIXBUF_LIBS $PANGOCAIRO_LIBS -lm"
-    AC_SUBST(RAPICORN_RSVG_CFLAGS)
-    AC_SUBST(RAPICORN_RSVG_LIBS)
-
 ])
 
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
@@ -524,7 +508,7 @@ AC_DEFUN([RAPICORN_REQUIREMENTS],
     RAPICORN_GUI_CFLAGS="$RAPICORN_GUI_CFLAGS $RAPICORN_CORE_CFLAGS"
     # libtool doesn't automatically figure that -pthread implies -lpthread
     RAPICORN_GUI_LIBS=`echo " $RAPICORN_GUI_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
-    RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS $RAPICORN_CORE_LIBS $RAPICORN_RSVG_LIBS $LIBZ"
+    RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS $RAPICORN_CORE_LIBS $LIBZ"
     AC_SUBST(RAPICORN_GUI_CFLAGS)
     AC_SUBST(RAPICORN_GUI_LIBS)
     AM_CONDITIONAL(WITH_PANGO, true)
@@ -612,7 +596,6 @@ RAPICORN_CORE_REQUIREMENTS
 RAPICORN_PYTHON_REQUIREMENTS
 RAPICORN_CYTHON_REQUIREMENTS
 RAPICORN_AIDA_REQUIREMENTS
-RAPICORN_RSVG_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 
@@ -624,7 +607,6 @@ po/Makefile.in
 data/Makefile
 rcore/Makefile
 rcore/buildconfig.h
-rcore/rsvg/Makefile
 rcore/tests/Makefile
 res/Makefile
 aidacc/Makefile

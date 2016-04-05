@@ -3,7 +3,7 @@
 #include "container.hh"
 #include "painter.hh"
 #include "factory.hh"
-#include "../rcore/rsvg/svg.hh" // Svg::Span
+#include "../rcore/svg.hh" // Svg::Span
 
 namespace Rapicorn {
 

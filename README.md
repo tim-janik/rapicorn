@@ -29,10 +29,9 @@ using data bindings and commands.
 Rapicorn has been successfully build on Ubuntu x86-32 and x86-64.
 A number of dependency packages need to be installed:
 
-	apt-get install intltool libcairo2-dev libpango1.0-dev python2.7-dev \
-	  libxml2-dev libgdk-pixbuf2.0-dev libreadline6-dev libcroco3-dev \
-	  xvfb cython
-
+    apt-get install intltool librsvg2-dev libpango1.0-dev libxml2-dev \
+      libreadline6-dev python2.7-dev python-enum34 \
+      xvfb cython doxygen graphviz texlive-binaries pandoc
 
 ## INSTALLATION
 

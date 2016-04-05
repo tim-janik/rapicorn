@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <algorithm>
 
-#include "../rsvg/svg.hh"
+#include "../svg.hh"
 
 #include "resources.cc"
 

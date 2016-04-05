@@ -59,7 +59,6 @@ typedef std::shared_ptr<File> FileP;            ///< Smart pointer to an Svg::Fi
 /// The File class represents a successfully loaded SVG file.
 class File {
 public:
-  virtual void      dump_tree () = 0;
   virtual ElementP     lookup (const String &elementid) = 0;   ///< Lookup an SVG element from an SVG File.
   virtual StringVector list   (const String &prefix = "") = 0; ///< List the element IDs in an SVG File.
   virtual String       name   () const = 0;                    ///< Provide the name of this file.

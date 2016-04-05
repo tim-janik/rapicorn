@@ -3,7 +3,7 @@
 #include "painter.hh"
 #include "factory.hh"
 #include <unordered_map>
-#include "../rcore/rsvg/svg.hh"
+#include "../rcore/svg.hh"
 
 #define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Theme", __VA_ARGS__)
 

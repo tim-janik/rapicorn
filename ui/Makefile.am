@@ -75,8 +75,7 @@ LDSCRIPT_MAP                        = $(top_srcdir)/rcore/ldscript.map
 librapicorn_@MAJOR@includedir       = $(includedir)/rapicorn-@MAJOR@/ui
 librapicorn_@MAJOR@include_HEADERS  = $(rapicorn_public_headers) $(rapicorn_generated_headers)
 librapicorn_@MAJOR@_la_SOURCES      = $(rapicorn_cc_sources)
-librapicorn_@MAJOR@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la ${LDSCRIPT_MAP} \
-					    $(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.la
+librapicorn_@MAJOR@_la_DEPENDENCIES = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la ${LDSCRIPT_MAP}
 librapicorn_@MAJOR@_la_LDFLAGS      = $(strip		\
 	$(AM_LDFLAGS) -no-undefined			\
 	-Wl,--version-script=${LDSCRIPT_MAP}		\
@@ -84,9 +83,8 @@ librapicorn_@MAJOR@_la_LDFLAGS      = $(strip		\
 ) # set libtool version and export symbols for resolving
 librapicorn_@MAJOR@_la_LIBADD       = $(strip			\
 	$(top_builddir)/rcore/librapicorncore-@MAJOR@.la	\
-	$(top_builddir)/rcore/rsvg/librapicorn-rsvg-@MAJOR@.la	\
-	$(LIBXML_LIBS) \
-	$(RAPICORN_GUI_LIBS) -lm \
+	$(RAPICORN_GUI_LIBS) $(SVG_DEPENDENCIES_LIBS)		\
+	$(LIBXML_LIBS) -lm					\
 ) # -lfreetype -lfontconfig
 EXTRA_DIST += $(rapicorn_private_files)
 # -- Build OBJECTS alphabetically --
