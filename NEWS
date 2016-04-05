@@ -1,5 +1,6 @@
 Rapicorn 16.0.0:	(2016-03-30)
 
+* Remove internal librsvg copy, require an installed librsvg-2.0.
 * Provide enum meta information for enum values stored in Any.
 * Provide change notification signals for Parameter.
 * Cleanup threads via atexit(3).
@@ -27,6 +28,7 @@ Rapicorn 16.0.0:	(2016-03-30)
 * Add PCG-32 which provides fast but well distributed pseudo random numbers.
 * Include a random_secret() in hash functions to avoid collision attacks.
 * Use Python enum classes and C++11 enum classes in IDL code generation.
+* Fixed shebang to reliably find Python2.7. [Milk Brewster]
 
 Rapicorn 15.09.0:	(2015-09-16)
 
