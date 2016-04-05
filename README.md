@@ -77,18 +77,21 @@ Documentation is provided online and locally (if installed in /usr):
 ## BINARY PACKAGES
 
 New source code pushed to the Rapicorn repository is automatically built
-and tested through a Travis-CI script. Successful continuous integration
-builds also create binary Debian packages
+and tested through a travis-ci script. Successful travis-ci builds also
+create binary Debian packages
 ([latest version](https://bintray.com/beast-team/deb/rapicorn/_latestVersion))
-which can be installed after adding an apt data source, example:
+which can be installed after adding an apt data source. Here is an example
+for Ubuntu wily, for other distributions substitute 'wily' with the name
+of one of our [release builds](https://bintray.com/beast-team/deb/):
 
     # Enable HTTPS transports for apt
-    apt-get -y install apt-transport-https ca-certificates
-    # Add and trust the beast-team packages on bintray.com
-    echo "deb [trusted=yes] https://dl.bintray.com/beast-team/deb vivid main" |
+    sudo apt-get -y install apt-transport-https ca-certificates
+    # Install the bintray key and add the beast-team packages
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
+    echo "deb [trusted=yes] https://dl.bintray.com/beast-team/deb wily main" |
       sudo tee -a /etc/apt/sources.list.d/beast-team.list
     # Update package list and install Rapicorn
-    apt-get update && apt-get -y install rapicorn
+    sudo apt-get update && apt-get -y install rapicorn
 
 Please note, that these packages and building from upstream source often
 introduces API or ABI incompatibilities that the shared-object library

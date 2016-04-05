@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # xmanifold.py - manifold argument sequences                   -*-mode:python-*-
 # Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0
 

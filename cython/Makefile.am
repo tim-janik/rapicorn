@@ -33,7 +33,7 @@ pymodules_LTLIBRARIES	   = Rapicorn.la
 nodist_Rapicorn_la_SOURCES = Rapicorn.cc	# nodist_ forces build time generation
 Rapicorn_la_CXXFLAGS	   = $(AM_CXXFLAGS) -Wno-redundant-decls -Wno-unused-function
 Rapicorn_la_LDFLAGS	   = $(AM_LDFLAGS) -no-undefined -module -avoid-version
-Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la
+Rapicorn_la_LIBADD	   = $(top_builddir)/ui/librapicorn-@MAJOR@.la $(PYTHON_LIBS)
 EXTRA_DIST	          += Rapicorn.pyx aidapyxxutils.hh Aida.pyx rapicorn-core.pyx
 CLEANFILES	          += Rapicorn.cc rapicorn-api.pyx
 
@@ -53,8 +53,8 @@ CLEANFILES += aidapyxxcallers.hh
 # install-hook for __init__.py
 # cython gets confused about having an __init__.py in builddir, so we
 # keep it around under a different name.
-rapicornmodule-install-initpy:
-	$(INSTALL_DATA) __init__.py.in "$(DESTDIR)$(pymodulesdir)"/__init__.py
+rapicornmodule-install-initpy: $(srcdir)/__init__.py.in
+	$(INSTALL_DATA) $(srcdir)/__init__.py.in "$(DESTDIR)$(pymodulesdir)"/__init__.py
 	$(am__py_compile) --destdir "$(DESTDIR)" --basedir "$(pymodulesdir)" __init__.py
 install-data-hook: rapicornmodule-install-initpy
 rapicornmodule-uninstall-initpy: # see PEP-3147 for __pycache__

@@ -1,4 +1,4 @@
-rapicorn (15.9.1+git5050-0) experimental; urgency=low
+rapicorn (15.9.1~git5050-0) experimental; urgency=low
 
   * Debian package build setup for Rapicorn, hosted at:
     https://github.com/tim-janik/rapicorn/

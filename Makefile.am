@@ -23,6 +23,11 @@ README: README.md
 	$(Q) $(PANDOC) -S -f markdown_github+pandoc_title_block-hard_line_breaks -t plain $< -o $@
 	$(Q) chmod a-w $@  # prevent accidental target file edits
 .SECONDARY: README.md # pacify make(1) when shipping README without README.md
+README.html: README.md
+	$(AM_V_GEN)
+	$(Q) rm -f $@      # work around read-only target files
+	$(Q) $(PANDOC) -s -S -f markdown_github+pandoc_title_block-hard_line_breaks -t html5 $< -o $@
+	$(Q) chmod a-w $@  # prevent accidental target file edits
 EXTRA_DIST   += $(maindocs_DATA)
 
 # === i18n tool files ===

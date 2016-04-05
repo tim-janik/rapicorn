@@ -80,8 +80,9 @@ trap 'rm -rf "$TMPFILE"' 0 HUP QUIT TRAP USR1 PIPE TERM
 RAPICORN_OUTPUT_TEST_REF=`basename "$1"`.outref
 RAPICORN_OUTPUT_TEST_LOG=`basename "$1"`.output
 check_reference_output() {
-  R="$RAPICORN_OUTPUT_TEST_REF"
   L="$RAPICORN_OUTPUT_TEST_LOG"
+  R="$RAPICORN_OUTPUT_TEST_REF"
+  test -e "$R" -o ! -e "$VPATH/$R" || R="$VPATH/$R"
   check="$TEST_NAME: match output: $RAPICORN_OUTPUT_TEST_REF"
   test ! \( -s "$L" -o -s "$R" \) || {
     test -e "$R" && OLD="$R" || OLD=/dev/null
