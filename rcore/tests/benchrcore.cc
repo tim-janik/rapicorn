@@ -188,8 +188,8 @@ test_random_numbers()
       const double rf = random_frange (989617512, 9876547656);
       TASSERT (rf >= 989617512 && rf < 9876547656);
     }
-  TASSERT (isnan (random_frange (NAN, 1)));
-  TASSERT (isnan (random_frange (0, NAN)));
+  TASSERT (std::isnan (random_frange (NAN, 1)));
+  TASSERT (std::isnan (random_frange (0, NAN)));
 #if 0 // example penalty paid in random_int64()
   size_t i, j = 0;
   for (i = 0; i < 100; i++)
