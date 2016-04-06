@@ -11,8 +11,8 @@ AC_PREREQ(2.57)
 # * ABI_VERSION:     Record the latest version since ABI compatibility has been kept
 # * ABI changes:     Increment MAJOR or MINOR and reset ABI_VERSION to the current VERSION
 # * -RC:             Release candidate, may contain -rc[0-9]+ or nothing
-AC_INIT([rapicorn], [15.9.1])
-:;      ABI_VERSION=[15.9.1]
+AC_INIT([rapicorn], [16.0.0])
+:;      ABI_VERSION=[16.0.0]
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information

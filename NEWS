@@ -1,4 +1,4 @@
-Rapicorn 16.0.0:	(2016-03-30)
+Rapicorn 16.0.0:	(2016-04-07)
 
 * Remove internal librsvg copy, require an installed librsvg-2.0.
 * Provide enum meta information for enum values stored in Any.
