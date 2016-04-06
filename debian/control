@@ -19,7 +19,7 @@ Depends: python-rapicorn (= ${binary:Version}),
 Description: UI toolkit for declarative user interface construction and SVG-based theming
  This package installs all rapicorn packages and provides the cli tool rapidrun.
 
-Package: librapicorn-15-9
+Package: librapicorn-16-0
 Section: libs
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
@@ -35,7 +35,7 @@ Description: UI toolkit for declarative user interface construction and SVG-base
 Package: librapicorn-dev
 Section: libdevel
 Architecture: any
-Depends: librapicorn-15-9 (= ${binary:Version}),
+Depends: librapicorn-16-0 (= ${binary:Version}),
  librsvg2-dev, libpango1.0-dev,
  ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
 Description: UI toolkit for declarative user interface construction and SVG-based theming
@@ -51,7 +51,7 @@ Description: UI toolkit for declarative user interface construction and SVG-base
 Package: python-rapicorn
 Section: python
 Architecture: any
-Depends: librapicorn-15-9 (= ${binary:Version}), ${python:Depends}, python-enum34, ${shlibs:Depends}, ${misc:Depends}
+Depends: librapicorn-16-0 (= ${binary:Version}), ${python:Depends}, python-enum34, ${shlibs:Depends}, ${misc:Depends}
 Provides: ${python:Provides}
 Description: UI toolkit for declarative user interface construction and SVG-based theming
  This package contains the Rapicorn Python module.

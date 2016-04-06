@@ -54,17 +54,7 @@ ETAGS:
 	$(MAKE) local-ETAGS -C ui/
 .PHONY: ETAGS
 
-# === API version check ===
-MAKE_API_CHECKSUM=$(strip							\
-	( $(MAKE) -C $(top_srcdir)/rcore/ $(AM_MAKEFLAGS) api-content &&		\
-	  $(MAKE) -C $(top_srcdir)/ui/   $(AM_MAKEFLAGS) api-content    ) | 	\
-	md5sum | sed 's/ .*//'							\
-)
-api-checksum:
-	$(MAKE_API_CHECKSUM)
-.PHONY: api-checksum
-distcheck-hook: # check API version upon make distcheck
-	$(MAKE) $(AM_MAKEFLAGS) -C $(top_srcdir)/
+# === Simple API build test ===
 installcheck-local:
 	$(Q) cd . \
 	&& echo '#include <rapicorn-core.hh>'				 > tmpx.cc \

@@ -1,3 +1,35 @@
+Rapicorn 16.0.0:	(2016-04-07)
+
+* Remove internal librsvg copy, require an installed librsvg-2.0.
+* Provide enum meta information for enum values stored in Any.
+* Provide change notification signals for Parameter.
+* Cleanup threads via atexit(3).
+* Added support for auxillary data on IDL sequence and record definitions.
+* Added compatibility code to downgrade cython requirement to 0.20.1 for trusty.
+* Added fixes for g++-4.8.4 and libtool >= 1.5.2.
+* Grow Any content to enable structured type and small string optimizations.
+* Remove remove Atomic<> in favour of the "Construct On First Use Idiom".
+* Improved exception specifications to satisfy cython-0.23.3.
+* Reduced unit testing time, individually and by tuning the benchmark timers.
+* Use xvfb-run(1) to run X11 related unit tests.
+* Support and use the TAP protocol for unit test evaluation.
+* New versioning: Releases increase MAJOR for major API changes.
+* New versioning: Releases increase MINOR in case of any ABI breaks.
+* New versioning: Releases increase MICRO for backwards compatibility.
+* New versioning: The MAJOR number ideally matches the release year.
+* The Python module alias remans 'Rapicorn', stored in Rapicorn_15/.
+* C++ namespace changed to 'Rapicorn', files install under 'rapicorn-$MAJOR'.
+* The librapicorn shared library supports installation of multiple versions.
+* Many build system fixes and integration of travis-ci builds.
+* Automatically built Debian packages are now on http://bintray.com/beast-team/.
+* The file debian/copyright now contains an accurate licensing account.
+* Install cython headers to allow IDL Python bindings outside Rapicorn.
+* Add AutoSeeder class to provide good non-deterministic seeding entropy.
+* Add PCG-32 which provides fast but well distributed pseudo random numbers.
+* Include a random_secret() in hash functions to avoid collision attacks.
+* Use Python enum classes and C++11 enum classes in IDL code generation.
+* Fixed shebang to reliably find Python2.7. [Milk Brewster]
+
 Rapicorn 15.09.0:	(2015-09-16)
 
 * Added theming support and $RAPICORN_THEME to override theme selection.
