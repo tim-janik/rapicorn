@@ -21,7 +21,7 @@ ENV http_proxy "@http_proxy@"
 RUN retry apt-get update && retry apt-get -y install apt-utils && retry apt-get -y upgrade && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
 
-# ENV BINTRAYREPO "@BINTRAYREPO@"
+# ENV BEASTAPTSOURCE "@BEASTAPTSOURCE@"
 
 # Provide build essentials and dependencies
 RUN retry apt-get install -y \
