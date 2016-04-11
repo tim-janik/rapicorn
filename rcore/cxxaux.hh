@@ -407,7 +407,7 @@ namespace Aida { class Any; } // needed for Has__aida_from_any__
 /// Has__aida_from_any__<T> - Check if @a T provides a member __aida_from_any__(const Any&).
 template<class, class = void> struct Has__aida_from_any__ : std::false_type {};
 template<class T>
-struct Has__aida_from_any__<T, void_t< decltype (std::declval<T>().__aida_from_any__ (Aida::Any())) >> : std::true_type {};
+struct Has__aida_from_any__<T, void_t< decltype (std::declval<T>().__aida_from_any__ (std::declval<Aida::Any>())) >> : std::true_type {};
 
 /// Has__aida_to_any__<T> - Check if @a T provides a member Has__aida_to_any__().
 template<class, class = void> struct Has__aida_to_any__ : std::false_type {};

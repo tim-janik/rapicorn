@@ -344,6 +344,12 @@ test_cxxaux()
   static_assert (IsComparable<FriendAllocator<SimpleType> >::value == true, "testing IsComparable");
   static_assert (IsComparable<int>::value == true, "testing IsComparable");
   static_assert (IsComparable<ComplexType>::value == false, "testing IsComparable");
+  // check Has__aida_from_any__
+  struct AnyConvertible {
+    void __aida_from_any__ (const Rapicorn::Aida::Any &any);
+  };
+  static_assert (Has__aida_from_any__<SimpleType>::value == false, "testing Has__aida_from_any__ == 0");
+  static_assert (Has__aida_from_any__<AnyConvertible>::value == true, "testing Has__aida_from_any__ == 1");
 }
 REGISTER_TEST ("Aida/Cxx Auxillaries", test_cxxaux);
 
