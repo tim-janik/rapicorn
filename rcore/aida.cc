@@ -1880,7 +1880,7 @@ public:
   virtual RemoteHandle remote_origin     () override;
   virtual size_t       signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) override;
   virtual bool         signal_disconnect (size_t signal_handler_id) override;
-  struct ClientOrbObject;
+  class ClientOrbObject;
   void
   client_orb_object_deleting (ClientOrbObject &coo)
   {

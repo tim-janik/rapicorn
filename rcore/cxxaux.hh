@@ -272,7 +272,8 @@ public:
  * @endcode
  */
 template<class T>
-struct FriendAllocator : std::allocator<T> {
+class FriendAllocator : public std::allocator<T> {
+public:
   /// Construct type @a C object, standard allocator requirement.
   template<typename C, typename... Args> static inline void
   construct (C *p, Args &&... args)
