@@ -1900,7 +1900,7 @@ public:
   public:
     explicit ClientOrbObject (uint64 orbid, ClientConnectionImpl &c) : OrbObject (orbid), client_connection_ (c) { assert (orbid); }
     virtual                  ~ClientOrbObject   () override          { client_connection_.client_orb_object_deleting (*this); }
-    virtual ClientConnection* client_connection ()                   { return &client_connection_; }
+    virtual ClientConnection* client_connection () override          { return &client_connection_; }
   };
 };
 
