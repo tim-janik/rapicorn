@@ -118,6 +118,7 @@ public:
     return cached_enum_info (cxx_demangle (typeid (EnumType).name()), false, 0, NULL);
   }
 };
+template<typename EnumType> const EnumInfo& enum_info (); // clang++ needs this extra prototype of the above friend
 
 template<typename EnumType> EnumType
 enum_value_from_string (const String &valuestring)      ///< Type-safe variant of EnumInfo.value_from_string().
