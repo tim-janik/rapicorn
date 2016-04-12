@@ -721,8 +721,9 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
   return any_dispatchable; // need to dispatch or recheck
 }
 
-struct SlaveLoop : public EventLoop {
+class SlaveLoop : public EventLoop {
   friend class FriendAllocator<SlaveLoop>;
+public:
   SlaveLoop (MainLoopP main) :
     EventLoop (*main)
   {}

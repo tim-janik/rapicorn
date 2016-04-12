@@ -83,7 +83,8 @@ Res::load<Blob> ()
 }
 
 // == BlobResource ==
-struct BlobResource {
+class BlobResource {
+public:
   virtual String        name            () = 0;
   virtual size_t        size            () = 0;
   virtual const char*   data            () = 0;
