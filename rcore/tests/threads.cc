@@ -149,7 +149,7 @@ template<typename V> static void
 test_atomic_counter (const int nthreads, int niters, V a, V b)
 {
   assert (0 == (nthreads & 1));
-  std::thread threads[nthreads];
+  RAPICORN_DECLARE_VLA (std::thread, threads, nthreads); // std::thread threads[nthreads];
   std::atomic<V> atomic_counter { 0 };
   for (int i = 0; i < nthreads; i++)
     {

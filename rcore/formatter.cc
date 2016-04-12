@@ -345,7 +345,7 @@ StringFormatter::render_format (const size_t last, const char *format)
   assert (last == nargs_);
   // allocate enough space to hold all directives possibly contained in format
   const size_t max_dirs = 1 + upper_directive_count (format);
-  Directive fdirs[max_dirs];
+  RAPICORN_DECLARE_VLA (Directive, fdirs, max_dirs); // Directive fdirs[max_dirs];
   // parse format into Directive stack
   size_t nextarg = 1, ndirs = 0;
   const char *p = format;

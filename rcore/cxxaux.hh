@@ -208,6 +208,11 @@ template<class... T0toN > using void_t = typename void_t__voider<T0toN...>::type
 #define RAPICORN_CLASS_NON_COPYABLE(ClassName)  \
   /*copy-ctor*/ ClassName  (const ClassName&) = delete; \
   ClassName&    operator=  (const ClassName&) = delete
+#ifdef __clang__ // clang++-3.8.0: work around 'variable length array of non-POD element type'
+#define RAPICORN_DECLARE_VLA(Type, var, count)          std::vector<Type> var (count)
+#else // sane c++
+#define RAPICORN_DECLARE_VLA(Type, var, count)          Type var[count]
+#endif
 
 // == Forward Declarations ==
 class Mutex;

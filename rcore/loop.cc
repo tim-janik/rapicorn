@@ -651,7 +651,7 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
   pfda.push (wakeup);
   // create pollable loop list
   const size_t nloops = loops_.size();
-  EventLoopP loops[nloops];
+  RAPICORN_DECLARE_VLA (EventLoopP, loops, nloops); // EventLoopP loops[nloops];
   for (size_t i = 0; i < nloops; i++)
     loops[i] = loops_[i];
   // collect
