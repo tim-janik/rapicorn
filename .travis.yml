@@ -12,14 +12,15 @@ language: c
 env:
   global:
     #- http_proxy="http://example.com"
-    - INTENT="deb" # default intent
+    - INTENT="package" # default intent
   matrix:
-    # deb: build packages for distribution $DIST
+    # package: build packages for distribution $DIST
     - DIST="ubuntu:wily"
     - DIST="debian:jessie"
     - DIST="debian:testing"
     - DIST="ubuntu:xenial"
     #- DIST="ubuntu:trusty" # not needed by Beast
+    - INTENT="clangbuild" DIST="ubuntu:wily"
     # distcheck: succeed in 'make distcheck'
     - INTENT="distcheck" DIST="ubuntu:wily"
 matrix:
@@ -29,10 +30,14 @@ matrix:
   fast_finish: true
 
 before_install:
-  # Build variable setup
-  - export DISTNAME="${DIST%:*}" DISTRELEASE="${DIST#*:}" # Example: DIST=debian:jessie DISTNAME=debian DISTRELEASE=jessie
-  - export BINTRAYREPO="deb [trusted=yes] https://dl.bintray.com/beast-team/deb $DISTRELEASE main"
-  - echo "INTENT=$INTENT DIST=$DIST DISTNAME=$DISTNAME DISTRELEASE=$DISTRELEASE BINTRAYREPO='$BINTRAYREPO'"
+  # buildtool.sh requires complete history for monotonic revisioning
+  - travis_retry git fetch --unshallow
+  # Build variable setup; example: DIST=debian:jessie DISTNAME=debian DISTRELEASE=jessie BTREPO=devel
+  # Uses `buildtool.sh` to determine the version dependent bintray repository name
+  - true &&
+    export DISTNAME="${DIST%:*}" DISTRELEASE="${DIST#*:}" BTREPO="`./buildtool.sh ifdevel devel deb`" &&
+    export BEASTAPTSOURCE="deb [trusted=yes] https://dl.bintray.com/beast-team/$BTREPO $DISTRELEASE main" &&
+    echo "INTENT=$INTENT DIST=$DIST DISTNAME=$DISTNAME DISTRELEASE=$DISTRELEASE BEASTAPTSOURCE='$BEASTAPTSOURCE'"
   # Sample environment
   - uname -a
   - cat /etc/os-release
@@ -43,8 +48,6 @@ before_install:
   - $CC --version
 
 install:
-  # Complete history is required for monotonic revisioning
-  - travis_retry git fetch --unshallow
   # Configure Dockerfile by substituting @VAR@ with $VAR
   - ./buildtool.sh applyenv .travis.docker > Dockerfile
   # Build and run tests, create packages
@@ -52,12 +55,12 @@ install:
 
 script:
   # Upload packages
-  - ([ $INTENT = deb ] || exit 0 && docker run -ti --rm rapicorn /bin/bash -c \
-        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team deb/rapicorn $DISTRELEASE *.deb")
+  - ([ $INTENT = package ] || exit 0 && docker run -ti --rm rapicorn /bin/bash -c \
+        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $BTREPO/rapicorn $DISTRELEASE *.deb")
   # Test package installation from remote location
-  - ([ $INTENT = deb ] || exit 0 && sleep 60 && travis_retry docker run -ti --rm rapicorn /bin/bash -c \
+  - ([ $INTENT = package ] || exit 0 && sleep 60 && travis_retry docker run -ti --rm rapicorn /bin/bash -c \
         "set -x && retry apt-get -y install apt-transport-https ca-certificates &&
-        echo '$BINTRAYREPO' | tee /etc/apt/sources.list.d/bintray-beast-team.list &&
+        echo '$BEASTAPTSOURCE' | tee /etc/apt/sources.list.d/beast-team.list &&
         retry apt-get update && retry apt-get -y install rapicorn")
   - docker ps -a
 

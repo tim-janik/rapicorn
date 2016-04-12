@@ -21,7 +21,7 @@ ENV http_proxy "@http_proxy@"
 RUN retry apt-get update && retry apt-get -y install apt-utils && retry apt-get -y upgrade && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
 
-# ENV BINTRAYREPO "@BINTRAYREPO@"
+# ENV BEASTAPTSOURCE "@BEASTAPTSOURCE@"
 
 # Provide build essentials and dependencies
 RUN retry apt-get install -y \
@@ -37,9 +37,17 @@ RUN cd /usr/src/ && git clone /tmp/rapicorn.git
 # Build sources in /usr/src/$PROJECT/
 WORKDIR /usr/src/rapicorn
 
+# Provide clang++ if needed
+ENV INTENT "@INTENT@"
+RUN [ $INTENT = clangbuild ] || exit 0 && \
+    retry apt-get install -y clang
+
 # Build sources, run tests and create distribution tarball
 # Carry out distcheck test if desired
-RUN nice ./autogen.sh --prefix=/usr --enable-devel-mode=no
+RUN [ $INTENT != clangbuild ] || exit 0 && \
+    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no
+RUN [ $INTENT = clangbuild ] || exit 0 && \
+    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no CC=clang CXX=clang++
 RUN nice make -j`nproc`
 RUN nice make check
 RUN nice make install
@@ -48,7 +56,6 @@ RUN nice make dist
 RUN nice make uninstall
 
 # Carry out distcheck test if desired
-ENV INTENT "@INTENT@"
 RUN [ $INTENT = distcheck ] || exit 0 && \
     nice make distcheck
 
@@ -64,7 +71,7 @@ WORKDIR /usr/src/
 # update 'changelog', install dependencies, build debian packages.
 ENV DISTRELEASE "@DISTRELEASE@"
 ENV TRAVIS_JOB_NUMBER "@TRAVIS_JOB_NUMBER@"
-RUN [ $INTENT = deb ] || exit 0 && \
+RUN [ $INTENT = package ] || exit 0 && \
     eval `rapicorn/buildtool.sh config` && \
     DIST_TARBALL="$PACKAGE/$PACKAGE-$UPSVERSION.tar.xz" && \
     DEB_TARBALL="$PACKAGE"_"${DEBVERSION%-*}.orig.tar.xz" && \
@@ -76,7 +83,7 @@ RUN [ $INTENT = deb ] || exit 0 && \
     cd .. && ls -al
 
 # Test package installation and removal locally
-RUN [ $INTENT = deb ] || exit 0 && \
+RUN [ $INTENT = package ] || exit 0 && \
     dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz && \
     echo 'deb [trusted=yes] file:///usr/src ./' > /etc/apt/sources.list.d/usrsrc.list && \
     retry apt-get update && apt-get install -y rapicorn && \

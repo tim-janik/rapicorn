@@ -127,7 +127,7 @@ any_test_get (const Any &a, int what)
     case 8:  i6 = a.get<int64_t>();           assert (i6 == -0xc0ffeec0ffeeLL);     break;
     case 9:  u6 = a.get<uint64_t>();          assert (u6 == 0xffffffffffffffffULL); break;
     case 10: s  = a.get<String>();            assert (s == "Test4test");            break;
-    case 11: d  = a.get<double>();            assert (d = test_double_value);       break;
+    case 11: d  = a.get<double>();            assert (d == test_double_value);      break;
     case 12: s  = a.get<Any>().get<String>(); assert (s == "SecondAny");            break;
     case 13: i6 = a.get<TestEnum>();          assert (i6 == TEST_COFFEE_COFFEE);    break;
     case 14:
@@ -344,6 +344,12 @@ test_cxxaux()
   static_assert (IsComparable<FriendAllocator<SimpleType> >::value == true, "testing IsComparable");
   static_assert (IsComparable<int>::value == true, "testing IsComparable");
   static_assert (IsComparable<ComplexType>::value == false, "testing IsComparable");
+  // check Has__aida_from_any__
+  struct AnyConvertible {
+    void __aida_from_any__ (const Rapicorn::Aida::Any &any);
+  };
+  static_assert (Has__aida_from_any__<SimpleType>::value == false, "testing Has__aida_from_any__ == 0");
+  static_assert (Has__aida_from_any__<AnyConvertible>::value == true, "testing Has__aida_from_any__ == 1");
 }
 REGISTER_TEST ("Aida/Cxx Auxillaries", test_cxxaux);
 

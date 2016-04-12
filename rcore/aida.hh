@@ -118,6 +118,7 @@ public:
     return cached_enum_info (cxx_demangle (typeid (EnumType).name()), false, 0, NULL);
   }
 };
+template<typename EnumType> const EnumInfo& enum_info (); // clang++ needs this extra prototype of the above friend
 
 template<typename EnumType> EnumType
 enum_value_from_string (const String &valuestring)      ///< Type-safe variant of EnumInfo.value_from_string().
@@ -367,11 +368,11 @@ public:
 class Any /// Generic value type that can hold values of all other types.
 {
   ///@cond
-  template<class ANY> struct AnyField : ANY { // We must wrap Any::Field into a template, because "Any" is not yet fully defined.
+  template<class Any> struct AnyField : Any { // We must wrap Any::Field into a template, because "Any" is not yet fully defined.
     std::string name;
     AnyField () = default;
     template<class V> inline
-    AnyField (const std::string &_name, V &&value) : ANY (::std::forward<V> (value)), name (_name) {}
+    AnyField (const std::string &_name, V &&value) : Any (::std::forward<V> (value)), name (_name) {}
   };
   struct PlaceHolder {
     virtual                      ~PlaceHolder() {}

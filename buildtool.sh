@@ -15,8 +15,6 @@ mkconfig() # print shell variables describing package, version, commit id, monot
   SCRIPTPATH=`readlink -f $0`
   SCRIPTDIR=`dirname "$SCRIPTPATH"`
   pushd "$SCRIPTDIR" >/dev/null 			# cd PACKAGE/
-  gitdir=`git rev-parse --git-dir`
-  test ! -s "$gitdir/shallow" || die 7 "missing history, run: git fetch --unshallow"
   # extract configure.ac:AC_INIT package and version
   test -r configure.ac || die 7 "missing configure.ac"
   test -z "$PACKAGE" &&
@@ -33,7 +31,13 @@ mkconfig() # print shell variables describing package, version, commit id, monot
     CHANGELOGMSG="Release snapshot, git commit $COMMITID"
   fi
   # upstream version details
-  TOTAL_COMMITS=`git rev-list --count HEAD` # count commits to provide a monotonically increasing revision
+  gitdir=`git rev-parse --git-dir`
+  if test -s "$gitdir/shallow" ; then
+    echo "$SCRIPTNAME: warning shallow repository, run: git fetch --unshallow" >&2
+    TOTAL_COMMITS='0'
+  else
+    TOTAL_COMMITS=`git rev-list --count HEAD` # count commits to provide a monotonically increasing revision
+  fi
   if $DEVELOPMENT ; then
     UPSDETAIL="~git$TOTAL_COMMITS" # sort *before* UPSDETAIL="" (pre-release candidates)
   else
@@ -50,16 +54,29 @@ mkconfig() # print shell variables describing package, version, commit id, monot
   cat <<-__EOF
 	PACKAGE=$PACKAGE
 	UPSVERSION=$UPSVERSION
-	UPSDETAIL=$UPSDETAIL
 	BUILDREV=$BUILDREV
-	UPLOADVERSION=$UPLOADVERSION
 	DEVELOPMENT=$DEVELOPMENT
-	TOTAL_COMMITS=$TOTAL_COMMITS
 	COMMITID=$COMMITID
 	CHANGELOGMSG="$CHANGELOGMSG"
+	__EOF
+  test $TOTAL_COMMITS = 0 || cat <<-__EOF
+	TOTAL_COMMITS=$TOTAL_COMMITS
+	UPSDETAIL=$UPSDETAIL
+	UPLOADVERSION=$UPLOADVERSION
 	DEBVERSION=$DEBVERSION
 	__EOF
   popd >/dev/null					# cd OLDPWD
+}
+
+# == ifdevel ==
+ifdevel() # Usage: ifdevel <develvalue> [alternative]
+{
+  mkconfig >/dev/null # PACKAGE, UPSVERSION, DEVELOPMENT, ...
+  if $DEVELOPMENT ; then
+    echo "$1"
+  else
+    echo "$2"
+  fi
 }
 
 # == bintrayup ==
@@ -120,5 +137,6 @@ applyenv() # Usage: applyenv <inputfile> [inputargs...]
 
 # == commands ==
 [[ "$1" != config ]]	|| { shift; mkconfig "$@" ; exit $? ; }
+[[ "$1" != ifdevel ]]	|| { shift; ifdevel "$@" ; exit $? ; }
 [[ "$1" != bintrayup ]]	|| { shift; bintrayup "$@" ; exit $? ; }
 [[ "$1" != applyenv ]]	|| { shift; applyenv "$@" ; exit $? ; }

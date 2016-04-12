@@ -33,9 +33,9 @@ public:
   explicit            Exception  (const String &s1, const String &s2 = String(), const String &s3 = String(), const String &s4 = String(),
                                   const String &s5 = String(), const String &s6 = String(), const String &s7 = String(), const String &s8 = String());
   void                set        (const String &s);
-  virtual const char* what       () const throw() { return reason ? reason : "out of memory"; }
+  virtual const char* what       () const noexcept { return reason ? reason : "out of memory"; }
   /*Copy*/            Exception  (const Exception &e);
-  /*Des*/             ~Exception () throw();
+  /*Des*/             ~Exception () noexcept;
 private:
   Exception&          operator=  (const Exception&);
   char *reason;

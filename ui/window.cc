@@ -956,10 +956,10 @@ WindowImpl::immediate_event_dispatcher (const LoopState &state)
 {
   switch (state.phase)
     {
-    case state.PREPARE:
-    case state.CHECK:
+    case LoopState::PREPARE:
+    case LoopState::CHECK:
       return true;
-    case state.DISPATCH:
+    case LoopState::DISPATCH:
       {
         const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
         event_dispatcher (state);

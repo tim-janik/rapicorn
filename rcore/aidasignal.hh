@@ -535,7 +535,7 @@ class AsyncSignal : protected Lib::AsyncSignal<SignalSignature>
     bool   operator-= (size_t connection_id)            { return signal_.disconnect (connection_id); }
   };
 public:
-  using BaseSignal::Emission;
+  using typename BaseSignal::Emission;
   using BaseSignal::emission;
   /// Signal constructor, supports a default callback as argument.
   AsyncSignal (const FutureFunction &method = FutureFunction()) : BaseSignal (method) {}

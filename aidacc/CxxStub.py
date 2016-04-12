@@ -564,7 +564,7 @@ class Generator:
       s += self.generate_class_aux_method_decls (type_info)
       s += self.generate_class_any_method_decls (type_info)
       if self.property_list:
-        s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ ();\n'
+        s += '  virtual ' + self.F ('const ' + self.property_list + '&') + '__aida_properties__ () override;\n'
     else: # G4STUB
       s += '  template<class RemoteHandle>\n'
       s += '  ' + self.F ('static %s' % classH) + 'down_cast (RemoteHandle smh) '

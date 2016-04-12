@@ -356,7 +356,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual void                          void_func             () = 0; 	///< See FirstInterface::void_func()
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
@@ -730,7 +730,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual bool                          dummy    () const = 0; 	///< See UIWidgetArea::dummy
   virtual void                          dummy    (bool) = 0; 	///< See UIWidgetArea::dummy
   virtual std::string                   on_click () const = 0; 	///< See UIWidgetArea::on_click
@@ -786,7 +786,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };
@@ -813,7 +813,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->I_ParentIface::__accept_accessor__ (__visitor_);
@@ -842,7 +842,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->I_ChildIface::__accept_accessor__ (__visitor_);
@@ -871,7 +871,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->I_DescendantIface::__accept_accessor__ (__visitor_);
@@ -935,7 +935,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual void                          simple_function   (int i = 9) = 0; 	///< See QuickIface::simple_function()
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
@@ -963,7 +963,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual void                          method_with_void           () = 0; 	///< See MethodTestInterface::method_with_void()
   virtual bool                          method_with_bools          (bool input,
                                                                     bool optval = 0) = 0; 	///< See MethodTestInterface::method_with_bools()
@@ -1013,7 +1013,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   typedef Rapicorn::Aida::Signal<void ()> Signal_void_result;
   typedef Rapicorn::Aida::AsyncSignal<bool ()> Signal_bool_result;
   typedef Rapicorn::Aida::AsyncSignal<int ()> Signal_int32_result;
@@ -1088,7 +1088,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   typedef Rapicorn::Aida::Signal<void (I_ChildInheritingSignalsIface &c, I_SignalTestInterfaceIface &p, const Rapicorn::Aida::Any &a, int i, const SrvT_QuickRecord &r, const SrvT_QuickSequence &s)> Signal_child_signal;
   Signal_child_signal sig_child_signal;
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
@@ -1119,7 +1119,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {
     this->I_SignalTestInterfaceIface::__accept_accessor__ (__visitor_);
@@ -1148,7 +1148,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual bool                          bool_prop      () const = 0; 	///< See PropertyTester::bool_prop
   virtual void                          bool_prop      (bool) = 0; 	///< See PropertyTester::bool_prop
   virtual int                           int32_prop     () const = 0; 	///< See PropertyTester::int32_prop
@@ -1212,7 +1212,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual std::string                   on_click   () const = 0; 	///< See ButtonArea::on_click
   virtual void                          on_click   (const std::string&) = 0; 	///< See ButtonArea::on_click
   virtual std::string                   on_click2  () const = 0; 	///< See ButtonArea::on_click2
@@ -1257,7 +1257,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual int                           pure_method        (double f) = 0; 	///< See PureMethods::pure_method()
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
@@ -1288,7 +1288,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual void                          args_from_other_namespace (const InterfaceTests::SrvT_QuickRecord &qr,
                                                                    RapicornAidaTest::ClickType qe,
                                                                    const OtherNamespace::SrvT_SomeRecord &sr) = 0; 	///< See NameTests::args_from_other_namespace()
@@ -1321,7 +1321,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   virtual double                        threshold () const = 0; 	///< See Compressor::threshold
   virtual void                          threshold (double) = 0; 	///< See Compressor::threshold
   virtual double                        ratio     () const = 0; 	///< See Compressor::ratio
@@ -1383,7 +1383,7 @@ public:
   virtual std::vector<std::string>      __aida_dir__       () const override;
   virtual Rapicorn::Aida::Any           __aida_get__       (const std::string &name) const override;
   virtual bool                          __aida_set__       (const std::string &name, const Rapicorn::Aida::Any &any) override;
-  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ ();
+  virtual const Rapicorn::Aida::PropertyList& __aida_properties__ () override;
   template<class Visitor> void  __accept_accessor__ (Visitor &__visitor_)
   {}
 };

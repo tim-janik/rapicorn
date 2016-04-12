@@ -208,6 +208,11 @@ template<class... T0toN > using void_t = typename void_t__voider<T0toN...>::type
 #define RAPICORN_CLASS_NON_COPYABLE(ClassName)  \
   /*copy-ctor*/ ClassName  (const ClassName&) = delete; \
   ClassName&    operator=  (const ClassName&) = delete
+#ifdef __clang__ // clang++-3.8.0: work around 'variable length array of non-POD element type'
+#define RAPICORN_DECLARE_VLA(Type, var, count)          std::vector<Type> var (count)
+#else // sane c++
+#define RAPICORN_DECLARE_VLA(Type, var, count)          Type var[count]
+#endif
 
 // == Forward Declarations ==
 class Mutex;
@@ -272,7 +277,8 @@ public:
  * @endcode
  */
 template<class T>
-struct FriendAllocator : std::allocator<T> {
+class FriendAllocator : public std::allocator<T> {
+public:
   /// Construct type @a C object, standard allocator requirement.
   template<typename C, typename... Args> static inline void
   construct (C *p, Args &&... args)
@@ -407,7 +413,7 @@ namespace Aida { class Any; } // needed for Has__aida_from_any__
 /// Has__aida_from_any__<T> - Check if @a T provides a member __aida_from_any__(const Any&).
 template<class, class = void> struct Has__aida_from_any__ : std::false_type {};
 template<class T>
-struct Has__aida_from_any__<T, void_t< decltype (std::declval<T>().__aida_from_any__ (Aida::Any())) >> : std::true_type {};
+struct Has__aida_from_any__<T, void_t< decltype (std::declval<T>().__aida_from_any__ (std::declval<Aida::Any>())) >> : std::true_type {};
 
 /// Has__aida_to_any__<T> - Check if @a T provides a member Has__aida_to_any__().
 template<class, class = void> struct Has__aida_to_any__ : std::false_type {};

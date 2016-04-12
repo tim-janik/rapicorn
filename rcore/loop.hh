@@ -44,13 +44,13 @@ class EventLoop;
 typedef std::shared_ptr<EventLoop> EventLoopP;
 class MainLoop;
 typedef std::shared_ptr<MainLoop> MainLoopP;
-class LoopState;
+struct LoopState;
 
 // === EventLoop ===
 /// Loop object, polling for events and executing callbacks in accordance.
 class EventLoop : public virtual std::enable_shared_from_this<EventLoop>
 {
-  class QuickPfdArray;          // pseudo vector<PollFD>
+  struct QuickPfdArray;         // pseudo vector<PollFD>
   friend class MainLoop;
 protected:
   typedef std::vector<EventSourceP> SourceList;
