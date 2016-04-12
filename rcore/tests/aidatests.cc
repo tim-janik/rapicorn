@@ -127,7 +127,7 @@ any_test_get (const Any &a, int what)
     case 8:  i6 = a.get<int64_t>();           assert (i6 == -0xc0ffeec0ffeeLL);     break;
     case 9:  u6 = a.get<uint64_t>();          assert (u6 == 0xffffffffffffffffULL); break;
     case 10: s  = a.get<String>();            assert (s == "Test4test");            break;
-    case 11: d  = a.get<double>();            assert (d = test_double_value);       break;
+    case 11: d  = a.get<double>();            assert (d == test_double_value);      break;
     case 12: s  = a.get<Any>().get<String>(); assert (s == "SecondAny");            break;
     case 13: i6 = a.get<TestEnum>();          assert (i6 == TEST_COFFEE_COFFEE);    break;
     case 14:
