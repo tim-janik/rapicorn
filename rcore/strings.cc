@@ -690,25 +690,31 @@ string_match_identifier (const String &ident1, const String &ident2)
 /// Extract the full function name from __PRETTY_FUNCTION__.
 /// See also RAPICORN_SIMPLE_FUNCTION.
 String
-string_from_pretty_function_name (const char *gnuc_pretty_function)
+string_from_pretty_function_name (const char *cxx_pretty_function)
 {
+  // get rid of g++'s anon prefixes
+  const String p1 = string_replace (cxx_pretty_function, "{anonymous}::", "");
+  // get rid of clang++'s anon prefixes
+  const String p2 = string_replace (p1, "(anonymous namespace)::", "");
+  const char *const pretty_function = p2.c_str();
   /* finding the function name is non-trivial in the presence of function pointer
    * return types. the following code assumes the function name preceedes the
    * first opening parenthesis not followed by a star.
    */
-  const char *op = strchr (gnuc_pretty_function, '(');
+  const char *op = strchr (pretty_function, '(');
   while (op && op[1] == '*')
     op = strchr (op + 1, '(');
   if (!op)
-    return gnuc_pretty_function;
+    return pretty_function;
   // *op == '(' && op[1] != '*'
   const char *last = op - 1;
-  while (last >= gnuc_pretty_function && strchr (" \t\n", *last))
-    last--;
-  if (last < gnuc_pretty_function)
-    return gnuc_pretty_function;
+  while (last >= pretty_function && strchr (" \t\n", *last))
+    last--; // skip spaces before '('
+  if (last < pretty_function)
+    return pretty_function;
+  // scan across function name characters
   const char *first = last;
-  while (first >= gnuc_pretty_function && strchr ("0123456789_ABCDEFGHIJKLMNOPQRSTUVWXYZ:abcdefghijklmnopqrstuvwxyz$", *first))
+  while (first >= pretty_function && strchr ("0123456789_ABCDEFGHIJKLMNOPQRSTUVWXYZ:abcdefghijklmnopqrstuvwxyz$", *first))
     first--;
   String result = String (first + 1, last - first);
   return result;

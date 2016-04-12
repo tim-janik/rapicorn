@@ -1,14 +1,14 @@
 
 ### ---> DataList Tests [START] <--- ###
-::StringKey::destroy: delete "RAPICORN";
-::MyKey::destroy: delete 4;
-::MyKey::destroy: delete 8;
-::MyKey::destroy: delete 9;
-::StringKey::destroy: delete "RAPICORN";
-::MyKey::destroy: delete 4;
-::MyKey::destroy: delete 8;
-::StringKey::destroy: delete "RAPICORN";
-::MyKey::destroy: delete 9;
+StringKey::destroy: delete "RAPICORN";
+MyKey::destroy: delete 4;
+MyKey::destroy: delete 8;
+MyKey::destroy: delete 9;
+StringKey::destroy: delete "RAPICORN";
+MyKey::destroy: delete 4;
+MyKey::destroy: delete 8;
+StringKey::destroy: delete "RAPICORN";
+MyKey::destroy: delete 9;
 ### ---> DataList Tests [DONE] <--- ###
 
 
