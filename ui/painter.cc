@@ -187,7 +187,9 @@ struct SvgImageBackend : public virtual ImagePainter::ImageBackend {
 public:
   SvgImageBackend (Svg::FileP svgf, Svg::ElementP svge, const Svg::Span (&hscale_spans)[3],
               const Svg::Span (&vscale_spans)[3], const Rect &fill_rect) :
-    svgf_ (svgf), svge_ (svge), fill_ (fill_rect), hscale_spans_ (hscale_spans), vscale_spans_ (vscale_spans)
+    svgf_ (svgf), svge_ (svge), fill_ (fill_rect),
+    hscale_spans_ { hscale_spans[0], hscale_spans[1], hscale_spans[2] },
+    vscale_spans_ { vscale_spans[0], vscale_spans[1], vscale_spans[2] }
   {
     SVGDEBUG ("SvgImage: id=%s hspans={ l=%u r=%u, l=%u r=%u, l=%u r=%u } vspans={ l=%u r=%u, l=%u r=%u, l=%u r=%u } fill=%s",
               svge_->info().id,
