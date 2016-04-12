@@ -37,9 +37,17 @@ RUN cd /usr/src/ && git clone /tmp/rapicorn.git
 # Build sources in /usr/src/$PROJECT/
 WORKDIR /usr/src/rapicorn
 
+# Provide clang++ if needed
+ENV INTENT "@INTENT@"
+RUN [ $INTENT = clangbuild ] || exit 0 && \
+    retry apt-get install -y clang
+
 # Build sources, run tests and create distribution tarball
 # Carry out distcheck test if desired
-RUN nice ./autogen.sh --prefix=/usr --enable-devel-mode=no
+RUN [ $INTENT != clangbuild ] || exit 0 && \
+    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no
+RUN [ $INTENT = clangbuild ] || exit 0 && \
+    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no CC=clang CXX=clang++
 RUN nice make -j`nproc`
 RUN nice make check
 RUN nice make install
@@ -48,7 +56,6 @@ RUN nice make dist
 RUN nice make uninstall
 
 # Carry out distcheck test if desired
-ENV INTENT "@INTENT@"
 RUN [ $INTENT = distcheck ] || exit 0 && \
     nice make distcheck
 

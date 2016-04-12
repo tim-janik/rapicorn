@@ -20,6 +20,7 @@ env:
     - DIST="debian:testing"
     - DIST="ubuntu:xenial"
     #- DIST="ubuntu:trusty" # not needed by Beast
+    - INTENT="clangbuild" DIST="ubuntu:wily"
     # distcheck: succeed in 'make distcheck'
     - INTENT="distcheck" DIST="ubuntu:wily"
 matrix:
