@@ -214,13 +214,14 @@ dnl # Check whether CC accepts OPTION and add to ENVVARIABLE
 AC_DEFUN([MC_CC_TRY_OPTION], [
 AC_MSG_CHECKING([if ${CC-cc} supports [$2]])
 echo >conftest.c;
-if ${CC-cc} $CFLAGS [$2] -c conftest.c >/dev/null 2>&1 ; then
+if ${CC-cc} $CFLAGS [$2] -c conftest.c >conftest.log 2>&1 &&
+   ! grep -qi 'warn.*[$2]' conftest.log ; then
     AC_MSG_RESULT(yes)
     MC_STR_CONTAINS($[$1], [$2], :, [$1]="$[$1] [$2]")
 else
     AC_MSG_RESULT(no)
 fi
-rm -fr conftest*
+rm -f conftest*
 ])dnl
 dnl # MC_CXX_TRY_OPTION(ENVVARIABLE, OPTION)
 dnl # Check whether CXX accepts OPTION and add to ENVVARIABLE
