@@ -114,8 +114,9 @@ class AppSource : public EventSource {
   check_primaries()
   {
     // seen_primary is merely a hint, need to check local and remote states
-    if (ApplicationH::the().finishable() &&  // remote
-        main_loop()->finishable() && loop_)            // local
+    if (main_loop() && main_loop()->finishable() &&     // local
+        ApplicationH::the().finishable() &&             // remote
+        main_loop()->finishable())                      // still finishable after remote call
       main_loop()->quit();
   }
   AppSource (Rapicorn::Aida::BaseConnection &connection) :
