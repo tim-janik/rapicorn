@@ -23,7 +23,7 @@ struct BBox {
   double x, y, width, height;
   explicit BBox      ();
   explicit BBox      (double, double, double, double);
-  String   to_string ();
+  String   to_string () const;
 };
 
 /// A simple POD to represent resizable lengths.
@@ -31,6 +31,8 @@ struct Span {
   size_t length;        ///< Length of this Span
   size_t resizable;     ///< Resizing flag (count) for this Span
   static ssize_t distribute (const size_t n_spans, Span *spans, ssize_t amount, size_t resizable_level);
+  String         to_string() const;
+  static String  to_string (size_t n, const Span *spans);
 };
 
 enum class RenderSize {

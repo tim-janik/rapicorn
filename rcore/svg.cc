@@ -29,7 +29,7 @@ BBox::BBox (double _x, double _y, double w, double h) :
 {}
 
 String
-BBox::to_string ()
+BBox::to_string () const
 {
   return string_format ("%.7g,%.7g,%.7g,%.7g", x, y, width, height);
 }
@@ -324,6 +324,25 @@ Span::distribute (const size_t n_spans, Span *spans, ssize_t amount, size_t resi
         rspans[i]->length -= 1;
     }
   return amount;
+}
+
+String
+Span::to_string() const
+{
+  return string_format ("%u,%u", length, resizable);
+}
+
+String
+Span::to_string (size_t n, const Span *spans)
+{
+  String s;
+  for (size_t i = 0; i < n; i++)
+    {
+      if (!s.empty())
+        s += ",";
+      s += "{" + spans[i].to_string() + "}";
+    }
+  return s;
 }
 
 ///< Render a stretched image by resizing horizontal/vertical parts (spans).
