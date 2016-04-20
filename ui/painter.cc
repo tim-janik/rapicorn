@@ -233,7 +233,7 @@ public:
   virtual void
   draw_image (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect)
   {
-    // stretch and render SVG image // FIXME: this should be cached
+    // stretch and render SVG image
     const size_t w = image_rect.width + 0.5, h = image_rect.height + 0.5;
     cairo_surface_t *img = svge_->stretch (w, h, ARRAY_SIZE (hscale_spans_), hscale_spans_, ARRAY_SIZE (vscale_spans_), vscale_spans_);
     CHECK_CAIRO_STATUS (cairo_surface_status (img));
