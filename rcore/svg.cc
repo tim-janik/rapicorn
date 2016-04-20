@@ -345,47 +345,86 @@ Span::to_string (size_t n, const Span *spans)
   return s;
 }
 
+/* Element::stretch renders an SVG element into a surface and then interpolates
+ * some parts to match the target image size. Prerendering is scaled up (per
+ * dimension) to avoid interpolation in case the target dimension has no fixed
+ * (non-interpolated) parts.
+ * TODO1: support adaptions to different DPI by applying a factor to the bbox dimensions and ?scale_factor.
+ * TODO2: test quality improvements by scaling up the prerendering so that interpolation only ever shrinks.
+ */
 ///< Render a stretched image by resizing horizontal/vertical parts (spans).
 cairo_surface_t*
 Element::stretch (const size_t image_width, const size_t image_height,
-                  const size_t n_hspans, const Span *svg_hspans,
-                  const size_t n_vspans, const Span *svg_vspans,
+                  size_t n_hspans, const Span *svg_hspans,
+                  size_t n_vspans, const Span *svg_vspans,
                   cairo_filter_t filter)
 {
   assert_return (image_width > 0 && image_height > 0, NULL);
+  assert_return (n_hspans >= 1 && n_vspans >= 1, NULL);
   // setup SVG element sizes
   const BBox bb = bbox();
-  const size_t svg_width = bb.width + 0.5, svg_height = bb.height + 0.5;
+  double hscale_factor = 1, vscale_factor = 1;
+  size_t svg_width = bb.width + 0.5, svg_height = bb.height + 0.5;
   // copy and distribute spans to match image size
   Span image_hspans[n_hspans], image_vspans[n_vspans];
+  bool hscalable = image_width != svg_width;
   ssize_t span_sum = 0;
   for (size_t i = 0; i < n_hspans; i++)
     {
       image_hspans[i] = svg_hspans[i];
       span_sum += svg_hspans[i].length;
+      if (svg_hspans[i].length && svg_hspans[i].resizable == 0)
+        hscalable = false;
     }
   assert_return (span_sum == bb.width, NULL);
-  ssize_t hremain = Span::distribute (n_hspans, image_hspans, image_width - svg_width, 1);
-  if (hremain < 0)
-    hremain = Span::distribute (n_hspans, image_hspans, hremain, 0); // shrink *any* segment
-  critical_unless (hremain == 0);
+  if (hscalable)
+    {
+      hscale_factor = image_width / double (svg_width);
+      svg_width = image_width;
+      n_hspans = 1;
+      image_hspans[0].length = svg_width;
+      image_hspans[0].resizable = 1;
+    }
+  else
+    {
+      ssize_t dremain = Span::distribute (n_hspans, image_hspans, image_width - svg_width, 1);
+      if (dremain < 0)
+        dremain = Span::distribute (n_hspans, image_hspans, dremain, 0); // shrink *any* segment
+      critical_unless (dremain == 0);
+    }
+  bool vscalable = image_height != svg_height;
   span_sum = 0;
   for (size_t i = 0; i < n_vspans; i++)
     {
       image_vspans[i] = svg_vspans[i];
       span_sum += svg_vspans[i].length;
+      if (svg_vspans[i].length && svg_vspans[i].resizable == 0)
+        vscalable = false;
     }
   assert_return (span_sum == bb.height, NULL);
-  ssize_t vremain = Span::distribute (n_vspans, image_vspans, image_height - svg_height, 1);
-  if (vremain < 0)
-    vremain = Span::distribute (n_vspans, image_vspans, vremain, 0); // shrink *any* segment
-  critical_unless (vremain == 0);
-  // render SVG image into svg_surface at original size
+  if (vscalable)
+    {
+      vscale_factor = image_height / double (svg_height);
+      svg_height = image_height;
+      n_vspans = 1;
+      image_vspans[0].length = svg_height;
+      image_vspans[0].resizable = 1;
+    }
+  else
+    {
+      ssize_t dremain = Span::distribute (n_vspans, image_vspans, image_height - svg_height, 1);
+      if (dremain < 0)
+        dremain = Span::distribute (n_vspans, image_vspans, dremain, 0); // shrink *any* segment
+      critical_unless (dremain == 0);
+    }
+  // render (scaled) SVG image into svg_surface at non-interpolated size
   cairo_surface_t *svg_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, svg_width, svg_height);
   assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (svg_surface), NULL);
-  const bool svg_rendered = render (svg_surface, Svg::RenderSize::STATIC, 1, 1);
+  const bool svg_rendered = render (svg_surface, Svg::RenderSize::ZOOM, hscale_factor, vscale_factor);
   critical_unless (svg_rendered == true);
-  // render svg_surface at image size by stretching resizable spans
+  if (hscalable && vscalable)
+    return svg_surface;
+  // stretch svg_surface to image size by interpolating the resizable spans
   cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, image_width, image_height);
   assert_return (CAIRO_STATUS_SUCCESS == cairo_surface_status (surface), NULL);
   cairo_t *cr = cairo_create (surface);
@@ -409,8 +448,8 @@ Element::stretch (const size_t image_width, const size_t image_height,
           cairo_set_source_surface (cr, svg_surface, 0, 0); // (ix,iy) are set in the matrix below
           cairo_matrix_t matrix;
           cairo_matrix_init_translate (&matrix, svg_hoffset, svg_voffset); // adjust image origin
-          const double xscale = svg_hspans[h].length / double (image_hspans[h].length);
-          const double yscale = svg_vspans[v].length / double (image_vspans[v].length);
+          const double xscale = hscalable ? 1.0 : svg_hspans[h].length / double (image_hspans[h].length);
+          const double yscale = vscalable ? 1.0 : svg_vspans[v].length / double (image_vspans[v].length);
           if (xscale != 1.0 || yscale != 1.0)
             {
               cairo_matrix_scale (&matrix, xscale, yscale);
