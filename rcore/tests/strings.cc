@@ -311,9 +311,9 @@ string_conversions (void)
   TCMP (string_to_double ("-0.5"), ==, -0.5);
   double tfloat;
   tfloat = string_to_double ("+NAN");
-  assert (isnan (tfloat) && std::signbit (tfloat) == 0);
+  assert (std::isnan (tfloat) && std::signbit (tfloat) == 0);
   tfloat = string_to_double ("-NAN");
-  assert (isnan (tfloat) && std::signbit (tfloat) == 1);
+  assert (std::isnan (tfloat) && std::signbit (tfloat) == 1);
   TCMP (string_capitalize ("fOO bar"), ==, "Foo Bar");
   TCMP (string_capitalize ("foo BAR BAZ", 2), ==, "Foo Bar BAZ");
 }
