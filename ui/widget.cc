@@ -1126,6 +1126,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
   if (controller)
     controller->reset();
   ContainerImpl* old_parent = parent();
+  const WidgetImplP guard_child = shared_ptr_cast<WidgetImpl*> (this);
   const ContainerImplP guard_parent = shared_ptr_cast<ContainerImpl*> (old_parent);
   if (old_parent)
     {
