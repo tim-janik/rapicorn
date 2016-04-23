@@ -69,6 +69,7 @@ public:
   QuickArray (uint n_reserved, Data *reserved) : data_ (reserved), n_elements_ (0), n_reserved_ (n_reserved), reserved_ (reserved) {}
   ~QuickArray()                         { if (LIKELY (data_) && UNLIKELY (data_ != reserved_)) free (data_); }
   uint        size       () const       { return n_elements_; }
+  uint        capacity   () const       { return MAX (n_elements_, n_reserved_); }
   bool        empty      () const       { return n_elements_ == 0; }
   Data*       data       () const       { return data_; }
   Data&       operator[] (uint n)       { return data_[n]; }
@@ -85,23 +86,31 @@ public:
   }
   void        push       (const Data &d)
   {
-    const uint idx = n_elements_++;
-    if (UNLIKELY (n_elements_ > n_reserved_))                 // reserved memory exceeded
-      {
-        const size_t sz = n_elements_ * sizeof (Data);
-        const bool migrate = UNLIKELY (data_ == reserved_);   // migrate from reserved to malloced
-        Data *mem = (Data*) (migrate ? malloc (sz) : realloc (data_, sz));
-        if (UNLIKELY (!mem))
-          fatal ("OOM");
-        if (migrate)
-          {
-            memcpy (mem, data_, sz - 1 * sizeof (Data));
-            reserved_ = NULL;
-            n_reserved_ = 0;
-          }
-        data_ = mem;
-      }
+    const uint idx = n_elements_;
+    resize (idx + 1);
     data_[idx] = d;
+  }
+  void        resize     (uint n)
+  {
+    if (n <= capacity())
+      {
+        n_elements_ = n;
+        return;
+      }
+    // n > n_reserved_ && n > n_elements_
+    const size_t sz = n * sizeof (Data);
+    const bool migrate_reserved = UNLIKELY (data_ == reserved_);        // migrate from reserved to malloced
+    Data *mem = (Data*) (migrate_reserved ? malloc (sz) : realloc (data_, sz));
+    if (UNLIKELY (!mem))
+      fatal ("OOM");
+    if (migrate_reserved)
+      {
+        memcpy (mem, data_, n_elements_ * sizeof (Data));
+        reserved_ = NULL;
+        n_reserved_ = 0;
+      }
+    data_ = mem;
+    n_elements_ = n;
   }
 };
 struct EventLoop::QuickPfdArray : public QuickArray<PollFD> {
