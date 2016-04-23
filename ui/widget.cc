@@ -472,7 +472,7 @@ WidgetImpl::query_selector (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   Selector::Selob *selob = Selector::Matcher::query_selector_first (selector, *sallocator.widget_selob (*this));
-  return shared_ptr_cast<WidgetIface> (selob ? sallocator.selob_widget (*selob) : NULL);
+  return shared_ptr_cast<WidgetIface*> (selob ? sallocator.selob_widget (*selob) : NULL);
 }
 
 WidgetSeq
@@ -485,7 +485,7 @@ WidgetImpl::query_selector_all (const String &selector)
     {
       WidgetImpl *widget = sallocator.selob_widget (**it);
       if (widget)
-        widgets.push_back (shared_ptr_cast<WidgetIface> (widget));
+        widgets.push_back (shared_ptr_cast<WidgetIface*> (widget));
     }
   return widgets;
 }
@@ -495,7 +495,7 @@ WidgetImpl::query_selector_unique (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   Selector::Selob *selob = Selector::Matcher::query_selector_unique (selector, *sallocator.widget_selob (*this));
-  return shared_ptr_cast<WidgetIface> (selob ? sallocator.selob_widget (*selob) : NULL);
+  return shared_ptr_cast<WidgetIface*> (selob ? sallocator.selob_widget (*selob) : NULL);
 }
 
 uint
@@ -782,7 +782,7 @@ WidgetImpl::data_context (ObjectIface &dcontext)
   ObjectIfaceP oip = get_data (&data_context_key);
   if (oip.get() != &dcontext)
     {
-      oip = shared_ptr_cast<ObjectIface> (&dcontext);
+      oip = shared_ptr_cast<ObjectIface*> (&dcontext);
       if (oip)
         set_data (&data_context_key, oip);
       else
@@ -1116,7 +1116,7 @@ WidgetImpl::point (Point p) /* widget coordinates relative */
 ContainerImplP
 WidgetImpl::parentp () const
 {
-  return shared_ptr_cast<ContainerImpl> (parent());
+  return shared_ptr_cast<ContainerImpl> (parent()); // throws bad_weak_ptr during parent's dtor
 }
 
 void
@@ -1126,6 +1126,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
   if (controller)
     controller->reset();
   ContainerImpl* old_parent = parent();
+  const WidgetImplP guard_child = shared_ptr_cast<WidgetImpl*> (this);
   const ContainerImplP guard_parent = shared_ptr_cast<ContainerImpl*> (old_parent);
   if (old_parent)
     {
