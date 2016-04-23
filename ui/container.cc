@@ -77,9 +77,9 @@ void
 ContainerImpl::widget_cross_unlink (WidgetImpl &owner, WidgetImpl &link, size_t link_id)
 {
   bool found_one = false;
-  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-  const WidgetImplP guard_owner = shared_ptr_cast<WidgetImpl> (&owner);
-  const WidgetImplP guard_link = shared_ptr_cast<WidgetImpl> (&link);
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
+  const WidgetImplP guard_owner = shared_ptr_cast<WidgetImpl*> (&owner);
+  const WidgetImplP guard_link = shared_ptr_cast<WidgetImpl*> (&link);
   /* _first_ check whether a currently uncrossing link (recursing from
    * container_uncross_link_R()) needs to be unlinked.
    */
@@ -111,9 +111,9 @@ ContainerImpl::widget_cross_unlink (WidgetImpl &owner, WidgetImpl &link, size_t 
 void
 ContainerImpl::widget_uncross_links (WidgetImpl &owner, WidgetImpl &link)
 {
-  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-  const WidgetImplP guard_owner = shared_ptr_cast<WidgetImpl> (&owner);
-  const WidgetImplP guard_link = shared_ptr_cast<WidgetImpl> (&link);
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
+  const WidgetImplP guard_owner = shared_ptr_cast<WidgetImpl*> (&owner);
+  const WidgetImplP guard_link = shared_ptr_cast<WidgetImpl*> (&link);
  restart_search:
   CrossLinks *clinks = get_data (&cross_links_key);
   for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
