@@ -17,8 +17,7 @@ main (int   argc,
   // request CPU for server thread
   StringVector iargs;
   iargs.push_back (string_format ("cpu-affinity=%d", mycpu));
-  // init test application
-  init_core_test (argv[0], &argc, argv, iargs);
+  // init application
   ApplicationH app = init_app (argv[0], &argc, argv, iargs);
   double calls = 0, slowest = 0, fastest = 9e+9;
   for (uint j = 0; j < 97; j++)
