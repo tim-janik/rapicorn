@@ -322,18 +322,21 @@ public:
 template<class Target, class Source> std::shared_ptr<typename std::remove_pointer<Target>::type>
 shared_ptr_cast (Source *object)
 {
+  if (!object)
+    return NULL;
+  // construct shared_ptr if possible
+  typedef decltype (object->shared_from_this()) ObjectP;
+  ObjectP sptr;
   if (std::is_pointer<Target>::value)
-    {
-      if (!object)
-        return NULL;
-      try {
-        return std::dynamic_pointer_cast<typename std::remove_pointer<Target>::type> (object->shared_from_this());
-      } catch (const std::bad_weak_ptr&) {
-        return NULL;
-      }
+    try {
+      sptr = object->shared_from_this();
+    } catch (const std::bad_weak_ptr&) {
+      return NULL;
     }
-  else // this may throw bad_weak_ptr
-    return !object ? NULL : std::dynamic_pointer_cast<typename std::remove_pointer<Target>::type> (object->shared_from_this());
+  else // for non-pointers, allow bad_weak_ptr exceptions
+    sptr = object->shared_from_this();
+  // cast into target shared_ptr<> type
+  return std::dynamic_pointer_cast<typename std::remove_pointer<Target>::type> (sptr);
 }
 /// See shared_ptr_cast(Source*).
 template<class Target, class Source> const std::shared_ptr<typename std::remove_pointer<Target>::type>
