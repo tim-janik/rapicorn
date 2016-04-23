@@ -45,6 +45,11 @@ typedef std::shared_ptr<EventLoop> EventLoopP;
 class MainLoop;
 typedef std::shared_ptr<MainLoop> MainLoopP;
 struct LoopState;
+#if     defined __G_LIB_H__ || defined DOXYGEN
+typedef ::GMainContext GlibGMainContext;
+#else
+struct GlibGMainContext; // dummy type
+#endif
 
 // === EventLoop ===
 /// Loop object, polling for events and executing callbacks in accordance.
@@ -127,6 +132,7 @@ class MainLoop : public EventLoop
   int8                  running_;
   int8                  has_quit_;
   int16                 quit_code_;
+  GlibGMainContext     *gcontext_;
   bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
   void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
@@ -146,6 +152,7 @@ public:
   EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
   static MainLoopP  create   ();
   inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
+  bool    set_g_main_context (GlibGMainContext *glib_main_context); ///< Set context to integrate with a GLib @a GMainContext loop.
 };
 
 // === LoopState ===
