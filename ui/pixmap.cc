@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <math.h>
 #include <cstring>
+#include <unistd.h>
 
 #define MAXDIM                          (20480) // MAXDIM*MAXDIM < 536870912
 #define ALIGN_SIZE(size,pow2align)      ((size + (pow2align - 1)) & -pow2align)
