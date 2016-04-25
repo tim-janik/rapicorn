@@ -223,6 +223,13 @@ test_paths()
   TCMP (Path::isdirname ("/"), ==, true);
   TCMP (Path::isdirname ("."), ==, true);
   TCMP (Path::isdirname (".."), ==, true);
+  TCMP (Path::expand_tilde (""), ==, "");
+  const char *env_home = getenv ("HOME");
+  if (env_home)
+    TCMP (Path::expand_tilde ("~"), ==, env_home);
+  const char *env_logname = getenv ("LOGNAME");
+  if (env_home && env_logname)
+    TCMP (Path::expand_tilde ("~" + String (env_logname)), ==, env_home);
 }
 REGISTER_TEST ("General/Path handling", test_paths);
 

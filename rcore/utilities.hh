@@ -127,6 +127,8 @@ String  realpath        (const String &path);
 String  abspath         (const String &path, const String &incwd = "");
 bool    isabs           (const String &path);
 bool    isdirname       (const String &path);
+String  expand_tilde    (const String &path);
+String  user_home       (const String &username = "");
 String  skip_root       (const String &path);
 String  join            (const String &frag0, const String &frag1, const String &frag2 = "", const String &frag3 = "",
                          const String &frag4 = "", const String &frag5 = "", const String &frag6 = "", const String &frag7 = "",

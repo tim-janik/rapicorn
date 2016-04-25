@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <sys/types.h>
+#include <pwd.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/types.h>  // gettid
@@ -266,6 +268,62 @@ debug_backtrace_showshot (size_t key)
   return btmsg;
 }
 
+// == CxxPasswd =
+struct CxxPasswd {
+  String pw_name, pw_passwd, pw_gecos, pw_dir, pw_shell;
+  uid_t pw_uid;
+  gid_t pw_gid;
+  CxxPasswd (String username = "");
+};
+
+CxxPasswd::CxxPasswd (String username) :
+  pw_uid (-1), pw_gid (-1)
+{
+  const int strbuf_size = 5 * 1024;
+  char strbuf[strbuf_size + 256]; // work around Darwin getpwnam_r overwriting buffer boundaries
+  struct passwd pwnambuf, *p = NULL;
+  if (username.empty())
+    {
+      int ret = 0;
+      errno = 0;
+      do
+        {
+          if (1) // HAVE_GETPWUID_R
+            ret = getpwuid_r (getuid(), &pwnambuf, strbuf, strbuf_size, &p);
+          else   // HAVE_GETPWUID
+            p = getpwuid (getuid());
+        }
+      while ((ret != 0 || p == NULL) && errno == EINTR);
+      if (ret != 0)
+        p = NULL;
+    }
+  else // !username.empty()
+    {
+      int ret = 0;
+      errno = 0;
+      do
+        {
+          if (1) // HAVE_GETPWNAM_R
+            ret = getpwnam_r (username.c_str(), &pwnambuf, strbuf, strbuf_size, &p);
+          else   // HAVE_GETPWNAM
+            p = getpwnam (username.c_str());
+        }
+      while ((ret != 0 || p == NULL) && errno == EINTR);
+      if (ret != 0)
+        p = NULL;
+    }
+  if (p)
+    {
+      pw_name = p->pw_name;
+      pw_passwd = p->pw_passwd;
+      pw_uid = p->pw_uid;
+      pw_gid = p->pw_gid;
+      pw_gecos = p->pw_gecos;
+      pw_dir = p->pw_dir;
+      pw_shell = p->pw_shell;
+    }
+}
+
 // == Development Helpers ==
 /**
  * @def RAPICORN_STRLOC()
@@ -385,6 +443,37 @@ isdirname (const String &path)
   if (l >= 3 && path[l-3] == RAPICORN_DIR_SEPARATOR && path[l-2] == '.' && path[l-1] == '.')
     return true;
   return false;
+}
+
+/// Get a @a user's home directory, uses $HOME if no @a username is given.
+String
+user_home (const String &username)
+{
+  if (username.empty())
+    {
+      // $HOME gets precedence over getpwnam(3), like '~/' vs '~username/' expansion
+      const char *homedir = getenv ("HOME");
+      if (homedir && isabs (homedir))
+        return homedir;
+    }
+  CxxPasswd pwn (username);
+  return pwn.pw_dir;
+}
+
+/// Expand a "~/" or "~user/" @a path which refers to user home directories.
+String
+expand_tilde (const String &path)
+{
+  if (path[0] != '~')
+    return path;
+  const size_t dir = path.find (RAPICORN_DIR_SEPARATOR);
+  String username;
+  if (dir != String::npos)
+    username = path.substr (1, dir - 1);
+  else
+    username = path.substr (1);
+  const String userhome = user_home (username);
+  return join (userhome, dir == String::npos ? "" : path.substr (dir));
 }
 
 String
