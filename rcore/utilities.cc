@@ -731,6 +731,34 @@ searchpath_split (const String &searchpath)
   return sv;
 }
 
+static bool
+is_searchpath_separator (const char c)
+{
+  return c == RAPICORN_SEARCHPATH_SEPARATOR || (c == ':' || c == ';');
+}
+
+/// Check if @a searchpath contains @a element, a trailing slash searches for directories.
+bool
+searchpath_contains (const String &searchpath, const String &element)
+{
+  const bool dirsearch = string_endswith (element, RAPICORN_DIR_SEPARATOR_S);
+  const String needle = dirsearch && element.size() > 1 ? element.substr (0, element.size() - 1) : element; // strip trailing slash
+  size_t pos = searchpath.find (needle);
+  while (pos != String::npos)
+    {
+      size_t end = pos + needle.size();
+      if (pos == 0 || is_searchpath_separator (searchpath[pos - 1]))
+        {
+          if (dirsearch && searchpath[end] == RAPICORN_DIR_SEPARATOR)
+            end++; // skip trailing slash in searchpath segment
+          if (searchpath[end] == 0 || is_searchpath_separator (searchpath[end]))
+            return true;
+        }
+      pos = searchpath.find (needle, end);
+    }
+  return false;
+}
+
 /// Find the first @a file in @a searchpath which matches @a mode (see check()).
 String
 searchpath_find (const String &searchpath, const String &file, const String &mode)
