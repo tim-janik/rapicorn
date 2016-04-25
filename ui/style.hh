@@ -12,6 +12,12 @@ class ThemeInfo;
 typedef std::shared_ptr<StyleImpl> StyleImplP;
 typedef std::shared_ptr<ThemeInfo> ThemeInfoP;
 
+// == Config ==
+class Config {
+public:
+  static String get (const String &setting, const String &fallback = "");
+};
+
 // == StyleImpl ==
 class StyleImpl : public std::enable_shared_from_this<StyleImpl> {
   ThemeInfoP    theme_info_;
