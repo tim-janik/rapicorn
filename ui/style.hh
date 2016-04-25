@@ -50,8 +50,8 @@ public:
   static ThemeInfoP fallback_theme ();
   virtual String    name           () = 0;
   // colors
-  virtual Color     fragment_color (const String &fragment, WidgetState state) = 0;
-  virtual Color     theme_color    (double hue360, double saturation100, double brightness100) = 0;
+  virtual Color     fragment_color (const String &fragment, WidgetState state);
+  virtual Color     theme_color    (double hue360, double saturation100, double brightness100);
 };
 
 } // Rapicorn

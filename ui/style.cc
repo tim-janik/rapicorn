@@ -109,28 +109,27 @@ StyleImpl::style_color (WidgetState state, StyleColor color_type, const String &
     }
 }
 
-// == FallbackTheme ==
-class FallbackTheme : public ThemeInfo {
-  friend class FriendAllocator<FallbackTheme>; // allows make_shared() access to ctor/dtor
-public:
-  virtual String name           () override        { return "Rapicorn::FallbackTheme"; }
-  virtual Color  fragment_color (const String &fragment, WidgetState state) override;
-  virtual Color  theme_color    (double hue360, double saturation100, double brightness100) override;
-};
-
+// == ThemeInfo ==
 Color
-FallbackTheme::fragment_color (const String &fragment, WidgetState state)
+ThemeInfo::fragment_color (const String &fragment, WidgetState state)
 {
   return fragment == "#fg" ? 0xff000000 : 0xffdfdcd8;
 }
 
 Color
-FallbackTheme::theme_color (double hue360, double saturation100, double brightness100)
+ThemeInfo::theme_color (double hue360, double saturation100, double brightness100)
 {
   Color c;
   c.set_hsv (hue360, saturation100 * 0.01, brightness100 * 0.01);
   return c.argb();
 }
+
+// == FallbackTheme ==
+class FallbackTheme : public ThemeInfo {
+  friend class FriendAllocator<FallbackTheme>; // allows make_shared() access to ctor/dtor
+public:
+  virtual String name           () override        { return "Rapicorn::FallbackTheme"; }
+};
 
 // == FileTheme ==
 class FileTheme : public ThemeInfo {
