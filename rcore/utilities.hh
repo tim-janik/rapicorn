@@ -147,8 +147,10 @@ char*   memread         (const String &filename,
 void    memfree         (char         *memread_mem);
 bool    memwrite        (const String &filename, size_t len, const uint8 *bytes);
 String  cwd             ();
-String       vpath_find        (const String &file, const String &mode = "e");
-String       searchpath_find  (const String &searchpath, const String &file, const String &mode = "e");
+String       vpath_find           (const String &file, const String &mode = "e");
+String       searchpath_find      (const String &searchpath, const String &file, const String &mode = "e");
+StringVector searchpath_list      (const String &searchpath, const String &mode = "e");
+String       searchpath_multiply  (const String &searchpath, const String &postfixes);
 StringVector searchpath_split (const String &searchpath);
 String       searchpath_join  (const String &frag0, const String &frag1, const String &frag2 = "", const String &frag3 = "",
                                const String &frag4 = "", const String &frag5 = "", const String &frag6 = "", const String &frag7 = "",

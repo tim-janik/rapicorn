@@ -731,6 +731,7 @@ searchpath_split (const String &searchpath)
   return sv;
 }
 
+/// Find the first @a file in @a searchpath which matches @a mode (see check()).
 String
 searchpath_find (const String &searchpath, const String &file, const String &mode)
 {
@@ -741,6 +742,17 @@ searchpath_find (const String &searchpath, const String &file, const String &mod
     if (check (join (sv[i], file), mode))
       return join (sv[i], file);
   return "";
+}
+
+/// Find all @a searchpath entries matching @a mode (see check()).
+StringVector
+searchpath_list (const String &searchpath, const String &mode)
+{
+  StringVector v;
+  for (const auto &file : searchpath_split (searchpath))
+    if (check (file, mode))
+      v.push_back (file);
+  return v;
 }
 
 static String
@@ -754,6 +766,17 @@ searchpath_join1 (const String &a, const String &b)
       b[0] == RAPICORN_SEARCHPATH_SEPARATOR)
     return a + b;
   return a + RAPICORN_SEARCHPATH_SEPARATOR_S + b;
+}
+
+/// Yield a new searchpath by combining each element of @a searchpath with each element of @a postfixes.
+String
+searchpath_multiply (const String &searchpath, const String &postfixes)
+{
+  String newpath;
+  for (const auto &e : searchpath_split (searchpath))
+    for (const auto &p : searchpath_split (postfixes))
+      newpath = searchpath_join1 (newpath, join (e, p));
+  return newpath;
 }
 
 String

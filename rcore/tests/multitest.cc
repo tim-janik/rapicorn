@@ -230,6 +230,9 @@ test_paths()
   const char *env_logname = getenv ("LOGNAME");
   if (env_home && env_logname)
     TCMP (Path::expand_tilde ("~" + String (env_logname)), ==, env_home);
+  TCMP (Path::searchpath_multiply ("/:/tmp", "foo:bar"), ==, "/foo:/bar:/tmp/foo:/tmp/bar");
+  const String abs__file__ = Path::abspath (__FILE__);
+  TCMP (Path::searchpath_list ("/:" + abs__file__, "e"), ==, StringVector ({ "/", abs__file__ }));
 }
 REGISTER_TEST ("General/Path handling", test_paths);
 
