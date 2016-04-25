@@ -112,6 +112,14 @@ public:
       }
     pthread_mutex_unlock (&thread_mutex_);
   }
+  bool
+  is_self()
+  {
+    pthread_mutex_lock (&thread_mutex_);
+    bool isself = thread_.native_handle() == pthread_self();
+    pthread_mutex_unlock (&thread_mutex_);
+    return isself;
+  }
   void
   join()
   {
@@ -317,6 +325,8 @@ uithread_shutdown()
   if (the_uithread && the_uithread->running())
     {
       the_uithread->queue_stop(); // stops ui thread main loop
+      if (the_uithread->is_self())
+        fatal ("RapicornInternal::%s: uithread shutdown called from within Rapicorn uithread", __func__);
       the_uithread->join();
     }
 }
