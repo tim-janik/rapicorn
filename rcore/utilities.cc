@@ -460,6 +460,46 @@ user_home (const String &username)
   return pwn.pw_dir;
 }
 
+/// Get the $XDG_DATA_HOME directory, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+data_home ()
+{
+  const char *var = getenv ("XDG_DATA_HOME");
+  if (var && isabs (var))
+    return var;
+  return expand_tilde ("~/.local/share");
+}
+
+/// Get the $XDG_CONFIG_HOME directory, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+config_home ()
+{
+  const char *var = getenv ("XDG_CONFIG_HOME");
+  if (var && isabs (var))
+    return var;
+  return expand_tilde ("~/.config");
+}
+
+/// Get the $XDG_CACHE_HOME directory, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+cache_home ()
+{
+  const char *var = getenv ("XDG_CACHE_HOME");
+  if (var && isabs (var))
+    return var;
+  return expand_tilde ("~/.cache");
+}
+
+/// Get the $XDG_RUNTIME_DIR directory, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+runtime_dir ()
+{
+  const char *var = getenv ("XDG_RUNTIME_DIR");
+  if (var && isabs (var))
+    return var;
+  return string_format ("/run/user/%u", getuid());
+}
+
 /// Expand a "~/" or "~user/" @a path which refers to user home directories.
 String
 expand_tilde (const String &path)

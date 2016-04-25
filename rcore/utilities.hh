@@ -129,6 +129,10 @@ bool    isabs           (const String &path);
 bool    isdirname       (const String &path);
 String  expand_tilde    (const String &path);
 String  user_home       (const String &username = "");
+String  data_home       ();
+String  config_home     ();
+String  cache_home      ();
+String  runtime_dir     ();
 String  skip_root       (const String &path);
 String  join            (const String &frag0, const String &frag1, const String &frag2 = "", const String &frag3 = "",
                          const String &frag4 = "", const String &frag5 = "", const String &frag6 = "", const String &frag7 = "",
