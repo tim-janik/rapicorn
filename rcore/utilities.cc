@@ -500,6 +500,61 @@ runtime_dir ()
   return string_format ("/run/user/%u", getuid());
 }
 
+/// Get the $XDG_CONFIG_DIRS directory list, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+config_dirs ()
+{
+  const char *var = getenv ("XDG_CONFIG_DIRS");
+  if (var && var[0])
+    return var;
+  else
+    return "/etc/xdg";
+}
+
+/// Get the $XDG_DATA_DIRS directory list, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+data_dirs ()
+{
+  const char *var = getenv ("XDG_DATA_DIRS");
+  if (var && var[0])
+    return var;
+  else
+    return "/usr/local/share:/usr/share";
+}
+
+static String
+access_config_names (const String *newval)
+{
+  static Mutex mutex;
+  ScopedLock<Mutex> locker (mutex);
+  static String cfg_names;
+  if (newval)
+    cfg_names = *newval;
+  if (cfg_names.empty())
+    {
+      String names = Path::basename (program_name());
+      if (program_alias() != names)
+        names = searchpath_join (names, program_alias());
+      return names;
+    }
+  else
+    return cfg_names;
+}
+
+/// Get config names as set with config_names(), if unset defaults to program_name() and program_alias().
+String
+config_names ()
+{
+  return access_config_names (NULL);
+}
+
+/// Set a colon separated list of names for this application to find configuration settings and files.
+void
+config_names (const String &names)
+{
+  access_config_names (&names);
+}
+
 /// Expand a "~/" or "~user/" @a path which refers to user home directories.
 String
 expand_tilde (const String &path)
