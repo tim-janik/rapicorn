@@ -48,6 +48,7 @@ protected:
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
   static Requisition  size_request_child (WidgetImpl &child, bool *hspread = NULL, bool *vspread = NULL);
   virtual void        selectable_child_changed (WidgetChain &chain);
+  void                set_child_parent (WidgetImpl &child, ContainerImpl *parent) { child.set_parent (parent); }
 public:
   virtual WidgetImplP*  begin             () const = 0;
   virtual WidgetImplP*  end               () const = 0;

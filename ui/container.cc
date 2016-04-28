@@ -11,11 +11,6 @@
 
 namespace Rapicorn {
 
-struct ClassDoctor {
-  static void widget_set_parent (WidgetImpl &widget, ContainerImpl *parent) { widget.set_parent (parent); }
-  static void widget_set_flag   (WidgetImpl &widget, uint64 flag, bool val) { widget.set_flag (flag, val); }
-};
-
 /* --- CrossLinks --- */
 struct CrossLink {
   WidgetImpl           *owner, *link;
@@ -170,17 +165,17 @@ ContainerImpl::uncross_descendant (WidgetImpl &descendant)
        * simply set parent() to NULL temporarily and with that cause
        * widget_has_ancestor() to return earlier.
        */
-      ContainerImpl *saved_parent = *_parent_loc();
-      *_parent_loc() = NULL;
+      ContainerImpl *saved_parent = NULL;
+      std::swap (saved_parent, this->parent_);
       for (CrossLink *last = NULL, *clink = clinks ? clinks->links : NULL; clink; last = clink, clink = last->next)
         if (widget_has_ancestor (clink->owner, widget) ||
             widget_has_ancestor (clink->link, widget))
           {
-            *_parent_loc() = saved_parent;
+            std::swap (saved_parent, this->parent_);
             container_uncross_link_R (clinks->container, last ? &last->next : &clinks->links);
             goto restart_search;
           }
-      *_parent_loc() = saved_parent;
+      std::swap (saved_parent, this->parent_);
     }
 }
 
@@ -364,9 +359,7 @@ ContainerImpl::dispose_widget (WidgetImpl &widget)
 }
 
 void
-ContainerImpl::repack_child (WidgetImpl       &widget,
-                             const PackInfo &orig,
-                             const PackInfo &pnew)
+ContainerImpl::repack_child (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew)
 {
   widget.invalidate_parent();
 }
@@ -689,7 +682,7 @@ void
 ContainerImpl::flag_descendant (WidgetImpl &widget, uint64 flag, bool onoff)
 {
   assert_return (widget.has_ancestor (*this)); // could be disabled for performance
-  ClassDoctor::widget_set_flag (widget, flag, onoff);
+  widget.set_flag (flag, onoff);
 }
 
 // window coordinates relative
@@ -853,7 +846,7 @@ SingleContainerImpl::add_child (WidgetImpl &widget)
     throw Exception ("invalid attempt to add child \"", widget.name(), "\" to single-child container \"", name(), "\" ",
                      "which already has a child \"", child_widget->name(), "\"");
   child_widget = shared_ptr_cast<WidgetImpl> (&widget);
-  ClassDoctor::widget_set_parent (widget, this);
+  set_child_parent (widget, this);
 }
 
 void
@@ -861,7 +854,7 @@ SingleContainerImpl::remove_child (WidgetImpl &widget)
 {
   const WidgetImplP guard_widget = child_widget;
   child_widget.reset();
-  ClassDoctor::widget_set_parent (widget, NULL);
+  set_child_parent (widget, NULL);
 }
 
 void
@@ -1038,7 +1031,7 @@ void
 MultiContainerImpl::add_child (WidgetImpl &widget)
 {
   widgets.push_back (shared_ptr_cast<WidgetImpl> (&widget));
-  ClassDoctor::widget_set_parent (widget, this);
+  set_child_parent (widget, this);
 }
 
 void
@@ -1068,7 +1061,7 @@ MultiContainerImpl::remove_child (WidgetImpl &widget)
     {
       const WidgetImplP guard_widget = widgets[index];
       widgets.erase (widgets.begin() + index);
-      ClassDoctor::widget_set_parent (widget, NULL);
+      set_child_parent (widget, NULL);
     }
   else
     assert_unreached();

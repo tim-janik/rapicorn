@@ -47,10 +47,10 @@ typedef std::weak_ptr<WidgetImpl>   WidgetImplW;
 /// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
 /// More details about widgets are covered in @ref Widget.
 class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
-  friend                      class ClassDoctor;
-  friend                      class ContainerImpl;
-  friend                      class SizeGroup;
   friend                      class WidgetGroup;
+  friend                      class SizeGroup;
+  friend                      class ContainerImpl;
+  friend                      class WindowImpl;
 public:
   struct AncestryCache;
 private:
@@ -64,7 +64,6 @@ private:
   Allocation                  allocation_, clip_area_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
-  ContainerImpl**             _parent_loc        () { return &parent_; }
   void                        acache_check       () const;
   void                        propagate_heritage ();
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
@@ -122,7 +121,6 @@ protected:
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
-  virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
   virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
@@ -145,8 +143,6 @@ protected:
   /* misc */
   virtual                    ~WidgetImpl        ();
   virtual void                construct         () override;
-  bool                        isconstructed     () const { return test_any_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
-  bool                        finalizing        () const { return test_any_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
   virtual void                set_parent        (ContainerImpl *parent);
   virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
   virtual bool                can_focus         () const; ///< Widget specific sentinel on wether it can currently receive input focus.
@@ -169,8 +165,11 @@ public:
   explicit                    WidgetImpl        ();
   virtual WindowImpl*         as_window_impl    ()              { return NULL; }
   virtual ContainerImpl*      as_container_impl ()              { return NULL; }
+  virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   bool                        test_all_flags    (uint64 mask) const { return (flags_ & mask) == mask; }
   bool                        test_any_flag     (uint64 mask) const { return (flags_ & mask) != 0; }
+  bool                        isconstructed     () const { return test_any_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
+  bool                        finalizing        () const { return test_any_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
   bool                        anchored          () const { return test_all_flags (ANCHORED); } ///< Get widget anchored state, see #ANCHORED
   virtual bool                visible           () const { return test_all_flags (VISIBLE); }  ///< Get widget visibility, see #VISIBLE
   virtual void                visible           (bool b) { set_flag (VISIBLE, b); }            ///< Toggle widget visibility
@@ -395,8 +394,7 @@ public:
 
 // == Implementations ==
 template<class C> typename WidgetImpl::InterfaceMatch<C>::Result
-WidgetImpl::interface (const String         &ident,
-                       const std::nothrow_t &nt) const
+WidgetImpl::interface (const String &ident, const std::nothrow_t &nt) const
 {
   InterfaceMatch<C> interface_match (ident);
   match_interface (1, 0, 1, interface_match);
@@ -404,8 +402,7 @@ WidgetImpl::interface (const String         &ident,
 }
 
 template<class C> typename WidgetImpl::InterfaceMatch<C>::Result
-WidgetImpl::parent_interface (const String         &ident,
-                            const std::nothrow_t &nt) const
+WidgetImpl::parent_interface (const String &ident, const std::nothrow_t &nt) const
 {
   InterfaceMatch<C> interface_match (ident);
   match_interface (0, 1, 0, interface_match);

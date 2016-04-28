@@ -154,7 +154,7 @@ SelobWidget::is_nth_child (int64 nth1based)
 Selob*
 SelobWidget::pseudo_selector (const String &ident, const String &arg, String &error)
 {
-  return ClassDoctor::widget_pseudo_selector (*this, *widget_, string_tolower (ident), arg, error);
+  return widget_->pseudo_selector (*this, string_tolower (ident), arg, error);
 }
 
 SelobAllocator::SelobAllocator ()
