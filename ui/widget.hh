@@ -71,8 +71,10 @@ private:
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
   void                        data_context_changed  ();
+  bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
 protected:
+  virtual bool                do_event              (const Event &event);
   virtual void                foreach_recursive     (const std::function<void (WidgetImpl&)> &f);
   virtual const AncestryCache* fetch_ancestry_cache ();
   // flag handling
@@ -389,11 +391,6 @@ public:
   template<class C> typename
   InterfaceMatch<C>::Result parent_interface (const String &ident = String(),
                                               const std::nothrow_t &nt = dothrow) const;
-protected:
-  virtual bool          do_event        (const Event &event);
-  static ContainerImpl* container_cast  (WidgetImpl *widget)    { return widget ? widget->as_container_impl() : NULL; }
-private:
-  bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
 
 // == Implementations ==

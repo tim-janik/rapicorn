@@ -419,6 +419,12 @@ WidgetImpl::provide_content (const String &data_type, const String &data, uint64
   return false;
 }
 
+static ContainerImpl*
+container_cast (WidgetImpl *widget)
+{
+  return widget ? widget->as_container_impl() : NULL;
+}
+
 size_t
 WidgetImpl::cross_link (WidgetImpl &link, const WidgetSlot &uncross)
 {
