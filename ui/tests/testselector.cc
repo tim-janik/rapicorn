@@ -574,7 +574,7 @@ test_selector_matching ()
   TASSERT (i1);
   TASSERT (i1->query_selector_all ("*").size() == 1);
 
-  app.remove_window (*window);
+  window->destroy();
   w = app.query_window ("#test-dialog");
   TASSERT (w == NULL);
 }

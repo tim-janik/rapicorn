@@ -13,7 +13,6 @@ namespace Rapicorn {
 
 /* --- Widget structures and forward decls --- */
 typedef Rect Allocation;
-class AnchorInfo;
 class SizeGroup;
 class WidgetGroup;
 class Adjustment;
@@ -52,9 +51,12 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   friend                      class ContainerImpl;
   friend                      class SizeGroup;
   friend                      class WidgetGroup;
+public:
+  struct AncestryCache;
+private:
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
-  const AnchorInfo           *ainfo_;
+  const AncestryCache        *acache_; // cache poninter may change for const this
   StyleImplP                  style_;
   HeritageP                   heritage_;
   FactoryContext             &factory_context_;
@@ -63,15 +65,16 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   ContainerImpl**             _parent_loc        () { return &parent_; }
+  void                        acache_check       () const;
   void                        propagate_heritage ();
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
-  void                        data_context_changed ();
-  bool                        process_event                (const Event &event, bool capture = false);  // widget coordinates relative
+  void                        data_context_changed  ();
+  bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
 protected:
-  const AnchorInfo*           force_anchor_info  () const;
-  virtual void                foreach_recursive  (const std::function<void (WidgetImpl&)> &f);
+  virtual void                foreach_recursive     (const std::function<void (WidgetImpl&)> &f);
+  virtual const AncestryCache* fetch_ancestry_cache ();
   // flag handling
   bool                        change_flags_silently (uint64 mask, bool on);
   // State flags and widget flags
@@ -150,7 +153,6 @@ protected:
   virtual void                set_user_data     (const String &name, const Any &any);
   virtual Any                 get_user_data     (const String &name);
   void                        heritage          (HeritageP heritage);
-  void                        anchored          (bool b) { set_flag (ANCHORED, b); }
   void                        enter_widget_group (const String &group_name, WidgetGroupType group_type);
   void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
   StringVector                list_widget_groups (WidgetGroupType group_type) const;
@@ -239,14 +241,13 @@ public:
   Command*                    lookup_command    (const String    &command_name);
   virtual const CommandList&  list_commands     ();
   WidgetImplP                 widgetp           () { return shared_ptr_cast<WidgetImpl> (this); }
-  /* parents */
   ContainerImpl*              parent            () const { return parent_; }
   ContainerImplP              parentp           () const;
   ContainerImpl*              root              () const;
   bool                        has_ancestor      (const WidgetImpl &ancestor) const;
   WidgetImpl*                 common_ancestor   (const WidgetImpl &other) const;
   WidgetImpl*                 common_ancestor   (const WidgetImpl *other) const { return common_ancestor (*other); }
-  const AnchorInfo*           anchor_info       () const { return RAPICORN_UNLIKELY (!anchored()) ? NULL : RAPICORN_LIKELY (ainfo_) ? ainfo_ : force_anchor_info(); }
+  const AncestryCache*        ancestry_cache       () const { if (RAPICORN_UNLIKELY (!acache_)) acache_check(); return acache_; }
   WindowImpl*                 get_window           () const;
   ViewportImpl*               get_viewport         () const;
   ResizeContainerImpl*        get_resize_container () const;
@@ -339,7 +340,7 @@ public:
                                                  Adjustment         **adj3 = NULL,
                                                  AdjustmentSourceType adjsrc4 = AdjustmentSourceType::NONE,
                                                  Adjustment         **adj4 = NULL);
-public: /* packing */
+  // packing
   struct PackInfo {
     double hposition, hspan, vposition, vspan;
     uint left_spacing, right_spacing, bottom_spacing, top_spacing;
@@ -377,8 +378,6 @@ public: /* packing */
 private:
   void               repack          (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&          pack_info       (bool create);
-  void               enter_anchored  ();
-  void               leave_anchored  ();
 public:
   virtual bool         match_selector        (const String &selector);
   virtual WidgetIfaceP query_selector        (const String &selector);
@@ -393,7 +392,6 @@ public:
 protected:
   virtual bool          do_event        (const Event &event);
   static ContainerImpl* container_cast  (WidgetImpl *widget)    { return widget ? widget->as_container_impl() : NULL; }
-  static WindowImpl*    window_cast     (WidgetImpl *widget)    { return widget ? widget->as_window_impl() : NULL; }
 private:
   bool                  match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
 };
@@ -401,7 +399,7 @@ private:
 // == Implementations ==
 template<class C> typename WidgetImpl::InterfaceMatch<C>::Result
 WidgetImpl::interface (const String         &ident,
-                     const std::nothrow_t &nt) const
+                       const std::nothrow_t &nt) const
 {
   InterfaceMatch<C> interface_match (ident);
   match_interface (1, 0, 1, interface_match);

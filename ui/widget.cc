@@ -52,7 +52,7 @@ WidgetIface::impl () const
 
 WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE),
-  parent_ (NULL), ainfo_ (NULL), style_ (StyleImpl::create (ThemeInfo::fallback_theme())), heritage_ (NULL),
+  parent_ (NULL), acache_ (NULL), style_ (StyleImpl::create (ThemeInfo::fallback_theme())), heritage_ (NULL),
   factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
@@ -272,7 +272,7 @@ WidgetImpl::unset_focus ()
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
-        WindowImpl::Internal::set_focus (*rwidget, NULL);
+        WindowImpl::WidgetImplFriend::set_focus (*rwidget, NULL);
     }
 }
 
@@ -286,11 +286,11 @@ WidgetImpl::grab_focus ()
   // unset old focus
   WindowImpl *rwidget = get_window();
   if (rwidget)
-    WindowImpl::Internal::set_focus (*rwidget, NULL);
+    WindowImpl::WidgetImplFriend::set_focus (*rwidget, NULL);
   // set new focus
   rwidget = get_window();
   if (rwidget && rwidget->get_focus() == NULL)
-    WindowImpl::Internal::set_focus (*rwidget, this);
+    WindowImpl::WidgetImplFriend::set_focus (*rwidget, this);
   return rwidget && rwidget->get_focus() == this;
 }
 
@@ -328,7 +328,7 @@ WidgetImpl::notify_key_error ()
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
       if (display_window)
         display_window->beep();
     }
@@ -347,7 +347,7 @@ WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const Stri
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
       if (display_window)
         {
           display_window->request_content (csource, nonce, data_type);
@@ -369,7 +369,7 @@ WidgetImpl::own_content (ContentSourceType content_source, uint64 nonce, const S
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
       if (display_window)
         {
           display_window->set_content_owner (content_source, nonce, data_types);
@@ -388,7 +388,7 @@ WidgetImpl::disown_content (ContentSourceType content_source, uint64 nonce)
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
       if (display_window)
         {
           display_window->set_content_owner (content_source, nonce, StringVector());
@@ -409,7 +409,7 @@ WidgetImpl::provide_content (const String &data_type, const String &data, uint64
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::Internal::display_window (*rwidget);
+      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
       if (display_window)
         {
           display_window->provide_content (data_type, data, request_id);
@@ -964,45 +964,61 @@ WidgetImpl::point (Point p) /* widget coordinates relative */
           p.y >= a.y && p.y < a.y + a.height);
 }
 
-ContainerImplP
-WidgetImpl::parentp () const
-{
-  return shared_ptr_cast<ContainerImpl> (parent()); // throws bad_weak_ptr during parent's dtor
-}
-
 void
 WidgetImpl::set_parent (ContainerImpl *pcontainer)
 {
+  assert_return (this != as_window_impl());
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     controller->reset();
   ContainerImpl* old_parent = parent();
   const WidgetImplP guard_child = shared_ptr_cast<WidgetImpl*> (this);
   const ContainerImplP guard_parent = shared_ptr_cast<ContainerImpl*> (old_parent);
+  static void (*const acache_reset) (WidgetImpl*) =
+    [] (WidgetImpl *widget)
+    {
+      widget->acache_ = NULL;
+      ContainerImpl *container = widget->as_container_impl();
+      if (container)
+        for (auto child : *container)
+          if (child->acache_)
+            acache_reset (&*child);
+    };
   if (old_parent)
     {
-      WindowImpl *rtoplevel = get_window();
+      assert_return (pcontainer == NULL);
+      WindowImpl *old_toplevel = get_window();
       invalidate();
       if (heritage())
         heritage (NULL);
       old_parent->unparent_child (*this);
       parent_ = NULL;
-      ainfo_ = NULL;
+      if (acache_)
+        acache_reset (this);
+      if (anchored())
+        {
+          assert_return (old_toplevel != NULL);
+          sig_hierarchy_changed.emit (old_toplevel);
+        }
       propagate_state (false); // propagate PARENT_VISIBLE, PARENT_INSENSITIVE
-      if (anchored() and rtoplevel)
-        sig_hierarchy_changed.emit (rtoplevel);
     }
   if (pcontainer)
     {
+      assert_return (old_parent == NULL);
       parent_ = pcontainer;
-      ainfo_ = NULL;
       if (parent_->heritage())
         heritage (parent_->heritage());
+      if (parent_->anchored() && !anchored())
+        sig_hierarchy_changed.emit (NULL);
       invalidate();
       propagate_state (true);
-      if (parent_->anchored() and !anchored())
-        sig_hierarchy_changed.emit (NULL);
     }
+}
+
+ContainerImplP
+WidgetImpl::parentp () const
+{
+  return shared_ptr_cast<ContainerImpl> (parent()); // throws bad_weak_ptr during parent's dtor
 }
 
 bool
@@ -1053,57 +1069,53 @@ WidgetImpl::root () const
 WindowImpl*
 WidgetImpl::get_window () const
 {
-  const AnchorInfo *ainfo = anchor_info();
-  if (ainfo)
-    return ainfo->window;
-  WidgetImpl *widget = const_cast<WidgetImpl*> (this);
-  while (widget->parent_)
-    widget = widget->parent_;
-  return widget->as_window_impl(); // NULL iff this is not type WindowImpl*
+  const AncestryCache *acache = ancestry_cache();
+  if (acache)
+    return acache->window;
+  WindowImpl *window = NULL;
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !window; widget = widget->parent())
+    window = widget->as_window_impl();
+  return window;
 }
 
 ViewportImpl*
 WidgetImpl::get_viewport () const
 {
-  const AnchorInfo *ainfo = anchor_info();
-  if (ainfo)
-    return ainfo->viewport;
-  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget; widget = widget->parent_)
-    {
-      ViewportImpl *v = dynamic_cast<ViewportImpl*> (widget);
-      if (v)
-        return v;
-    }
-  return NULL;
+  const AncestryCache *acache = ancestry_cache();
+  if (acache)
+    return acache->viewport;
+  ViewportImpl *viewport = NULL;
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !viewport; widget = widget->parent())
+    viewport = dynamic_cast<ViewportImpl*> (widget);
+  return viewport;
 }
 
 ResizeContainerImpl*
 WidgetImpl::get_resize_container () const
 {
-  const AnchorInfo *ainfo = anchor_info();
-  if (ainfo)
-    return ainfo->resize_container;
-  ResizeContainerImpl *rc = NULL;
-  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !rc; widget = widget->parent_)
-    rc = dynamic_cast<ResizeContainerImpl*> (widget);
-  return rc;
+  const AncestryCache *acache = ancestry_cache();
+  if (acache)
+    return acache->resize_container;
+  ResizeContainerImpl *resize_container = NULL;
+  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !resize_container; widget = widget->parent())
+    resize_container = dynamic_cast<ResizeContainerImpl*> (widget);
+  return resize_container;
 }
 
-const AnchorInfo*
-WidgetImpl::force_anchor_info () const
+void
+WidgetImpl::acache_check () const
 {
-  if (ainfo_)
-    return ainfo_;
-  // find resize container
-  ResizeContainerImpl *rc = NULL;
-  for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !rc; widget = widget->parent_)
-    rc = dynamic_cast<ResizeContainerImpl*> (widget);
-  static const AnchorInfo orphan_anchor_info;
-  const AnchorInfo *ainfo = rc ? rc->container_anchor_info() : &orphan_anchor_info;
-  const_cast<WidgetImpl*> (this)->ainfo_ = ainfo;
-  if (anchored())
-    assert (get_window() != NULL); // FIXME
-  return ainfo;
+  WidgetImpl *self = const_cast<WidgetImpl*> (this);
+  if (!acache_ && anchored())
+    self->acache_ = self->fetch_ancestry_cache();
+  else if (acache_ && !anchored())
+    self->acache_ = NULL;
+}
+
+const WidgetImpl::AncestryCache*
+WidgetImpl::fetch_ancestry_cache ()
+{
+  return parent_ ? parent_->ancestry_cache() : NULL;
 }
 
 /// WidgetGroup sprouts are turned into widget group objects for ANCHORED widgets
@@ -1341,33 +1353,36 @@ void
 WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
   if (anchored())
-    leave_anchored();
-  anchored (old_toplevel == NULL);
+    {
+      // leave anchored
+      assert_return (old_toplevel != NULL);
+      const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
+      for (auto wgroup : widget_groups)
+        wgroup->remove_widget (*this);
+      data_context_changed();
+    }
+  // assign anchored
+  const bool was_anchored = anchored();
+  set_flag (ANCHORED, WindowImpl::WidgetImplFriend::widget_is_anchored (*this)); // anchored = true/false
+  const bool hierarchy_anchor_changed = was_anchored != anchored();
+  assert_return (hierarchy_anchor_changed == true);
   if (anchored())
-    enter_anchored();
-}
-
-void
-WidgetImpl::enter_anchored ()
-{
-  auto *sprouts = get_data (&widget_group_sprouts_key);
-  if (sprouts)
-    for (const auto sprout : *sprouts)
-      {
-        WidgetGroup *wgroup = find_widget_group (sprout.group_name, sprout.group_type, true);
-        if (wgroup)
-          wgroup->add_widget (*this);
-      }
-  data_context_changed();
-}
-
-void
-WidgetImpl::leave_anchored ()
-{
-  const WidgetGroup::GroupVector widget_groups = WidgetGroup::list_groups (*this);
-  for (auto wgroup : widget_groups)
-    wgroup->remove_widget (*this);
-  data_context_changed();
+    {
+      // enter anchored
+      assert_return (old_toplevel == NULL);
+      assert_return (get_window() != NULL);
+      auto *sprouts = get_data (&widget_group_sprouts_key);
+      if (sprouts)
+        for (const auto sprout : *sprouts)
+          {
+            WidgetGroup *wgroup = find_widget_group (sprout.group_name, sprout.group_type, true);
+            if (wgroup)
+              wgroup->add_widget (*this);
+          }
+      data_context_changed();
+    }
+  else
+    acache_ = NULL; // reinforce acache_reset in case of intermittent assignment
 }
 
 String

@@ -894,39 +894,35 @@ SingleContainerImpl::~SingleContainerImpl()
 // == ResizeContainerImpl ==
 ResizeContainerImpl::ResizeContainerImpl() :
   tunable_requisition_counter_ (0), resizer_ (0)
-{
-  anchor_info_.resize_container = this;
-  update_anchor_info();
-}
+{}
 
 ResizeContainerImpl::~ResizeContainerImpl()
 {
   clear_exec (&resizer_);
-  anchor_info_.resize_container = NULL;
+  ancestry_cache_.resize_container = NULL;
+}
+
+const WidgetImpl::AncestryCache*
+ResizeContainerImpl::fetch_ancestry_cache ()
+{
+  ancestry_cache_.resize_container = this;
+  if (parent())
+    {
+      ancestry_cache_.viewport = parent()->get_viewport();
+      ancestry_cache_.window = parent()->get_window();
+    }
+  else
+    {
+      ancestry_cache_.viewport = NULL;
+      ancestry_cache_.window = NULL;
+    }
+  return &ancestry_cache_;
 }
 
 void
 ResizeContainerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
-  update_anchor_info();
   SingleContainerImpl::hierarchy_changed (old_toplevel);
-}
-
-void
-ResizeContainerImpl::update_anchor_info ()
-{
-  WidgetImpl *last, *widget;
-  anchor_info_.viewport = NULL;
-  // find first ViewportImpl
-  for (last = widget = this; widget && !anchor_info_.viewport; last = widget, widget = last->parent())
-    anchor_info_.viewport = dynamic_cast<ViewportImpl*> (widget);
-  // find topmost parent
-  widget = last;
-  while (widget)
-    last = widget, widget = last->parent();
-  widget = last;
-  // assign window iff one is found
-  anchor_info_.window = window_cast (widget);
 }
 
 void

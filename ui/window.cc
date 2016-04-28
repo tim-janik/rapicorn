@@ -233,15 +233,8 @@ WindowImpl::WindowImpl() :
 {
   config_.title = application_name();
   theme_info_ = ThemeInfo::fallback_theme();    // ensure valid theme_info_
-  const_cast<AnchorInfo*> (force_anchor_info())->window = this;
-  change_flags_silently (ANCHORED, true);       // window is always anchored
   set_flag (PARENT_INSENSITIVE, false);
   set_flag (PARENT_UNVIEWABLE, false);
-  struct Heritage : Rapicorn::Heritage {
-    using Rapicorn::Heritage::create_heritage;
-  };
-  heritage (Heritage::create_heritage (*this, *this, color_scheme()));
-  WindowTrail::wenter (this);
   // create event loop (auto-starts)
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
@@ -253,18 +246,33 @@ void
 WindowImpl::construct ()
 {
   ViewportImpl::construct();
-  ApplicationImpl::the().add_window (*this);
+  assert_return (has_children() == false);      // must be anchored before becoming parent
+  assert_return (get_window() && get_viewport());
+  struct Heritage : Rapicorn::Heritage {
+    using Rapicorn::Heritage::create_heritage;
+  };
+  heritage (Heritage::create_heritage (*this, *this, color_scheme()));
+  WindowTrail::wenter (this);
+  ApplicationImpl::WindowImplFriend::add_window (*this);
+  assert_return (anchored() == false);
+  sig_hierarchy_changed.emit (NULL);
+  assert_return (anchored() == true);
 }
 
 void
 WindowImpl::dispose ()
 {
-  ApplicationImpl::the().remove_window (*this);
+  assert_return (anchored() == true);
+  const bool was_listed = ApplicationImpl::WindowImplFriend::remove_window (*this);
+  assert_return (was_listed);
+  sig_hierarchy_changed.emit (this);
+  assert_return (anchored() == false);
 }
 
 WindowImpl::~WindowImpl()
 {
   WindowTrail::wleave (this);
+  change_flags_silently (ANCHORED, false);
   if (display_window_)
     {
       clear_immediate_event();
@@ -276,10 +284,18 @@ WindowImpl::~WindowImpl()
    */
   if (has_children())
     remove (get_child());
-  /* shutdown event loop */
+  // shutdown event loop
   loop_->destroy_loop();
-  /* this should be done last */
-  const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ViewportImpl::fetch_ancestry_cache());
+  ancestry_cache->window = NULL;
+}
+
+const WidgetImpl::AncestryCache*
+WindowImpl::fetch_ancestry_cache ()
+{
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ViewportImpl::fetch_ancestry_cache());
+  ancestry_cache->window = this;
+  return ancestry_cache;
 }
 
 void
@@ -777,8 +793,7 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
 bool
 WindowImpl::dispatch_win_destroy ()
 {
-  destroy_display_window();
-  dispose();
+  destroy();
   return true;
 }
 
@@ -1116,7 +1131,7 @@ WindowImpl::async_show()
 void
 WindowImpl::create_display_window ()
 {
-  if (!finalizing())
+  if (anchored())
     {
       if (!display_window_)
         {
@@ -1190,6 +1205,17 @@ WindowImpl::close ()
   destroy_display_window();
 }
 
+void
+WindowImpl::destroy ()
+{
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
+  if (anchored())
+    {
+      destroy_display_window();
+      dispose();
+    }
+}
+
 bool
 WindowImpl::snapshot (const String &pngname)
 {
@@ -1258,5 +1284,17 @@ WindowImpl::synthesize_delete ()
 }
 
 static const WidgetFactory<WindowImpl> window_factory ("Rapicorn::Window");
+
+// == WidgetImplFriend ==
+bool
+WindowImpl::WidgetImplFriend::widget_is_anchored (WidgetImpl &widget)
+{
+  if (widget.parent() && widget.parent()->anchored())
+    return true;
+  WindowImpl *window = widget.as_window_impl(); // fast cast
+  if (window && ApplicationImpl::WindowImplFriend::has_window (*window))
+    return true;
+  return false;
+}
 
 } // Rapicorn

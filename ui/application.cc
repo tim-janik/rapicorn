@@ -128,7 +128,7 @@ ApplicationImpl::finishable ()
 void
 ApplicationImpl::close_all ()
 {
-  vector<WindowIfaceP> candidates = windows_;
+  vector<WindowImplP> candidates = windows_;
   for (auto wip : candidates)
     {
       auto alive = find (windows_.begin(), windows_.end(), wip);
@@ -143,7 +143,7 @@ ApplicationImpl::query_window (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   vector<Selector::Selob*> input;
-  for (vector<WindowIfaceP>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
+  for (vector<WindowImplP>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
       WidgetImplP widget = shared_ptr_cast<WidgetImpl> (*it);
       if (widget)
@@ -160,7 +160,7 @@ ApplicationImpl::query_windows (const String &selector)
 {
   Selector::SelobAllocator sallocator;
   vector<Selector::Selob*> input;
-  for (vector<WindowIfaceP>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
+  for (vector<WindowImplP>::const_iterator it = windows_.begin(); it != windows_.end(); it++)
     {
       WidgetImplP widget = shared_ptr_cast<WidgetImpl> (*it);
       if (widget)
@@ -183,27 +183,9 @@ ApplicationImpl::list_windows ()
 }
 
 void
-ApplicationImpl::add_window (WindowIface &window)
-{
-  windows_.push_back (shared_ptr_cast<WindowIface> (&window));
-}
-
-void
 ApplicationImpl::lost_primaries()
 {
   sig_missing_primary.emit();
-}
-
-bool
-ApplicationImpl::remove_window (WindowIface &window)
-{
-  for (auto it = windows_.begin(); it != windows_.end(); ++it)
-    if (&window == &**it)
-      {
-        windows_.erase (it);
-        return true;
-      }
-  return false;
 }
 
 void
@@ -234,6 +216,37 @@ int64
 ApplicationImpl::test_hook ()
 {
   return RapicornInternal::server_app_test_hook();
+}
+
+// == WindowImplFriend ==
+void
+ApplicationImpl::WindowImplFriend::add_window (WindowImpl &window)
+{
+  ApplicationImpl &app = ApplicationImpl::the();
+  app.windows_.push_back (shared_ptr_cast<WindowImpl> (&window));
+}
+
+bool
+ApplicationImpl::WindowImplFriend::has_window (WindowIface &window)
+{
+  ApplicationImpl &app = ApplicationImpl::the();
+  for (auto it = app.windows_.begin(); it != app.windows_.end(); ++it)
+    if (&window == &**it)
+      return true;
+  return false;
+}
+
+bool
+ApplicationImpl::WindowImplFriend::remove_window (WindowImpl &window)
+{
+  ApplicationImpl &app = ApplicationImpl::the();
+  for (auto it = app.windows_.begin(); it != app.windows_.end(); ++it)
+    if (&window == &**it)
+      {
+        app.windows_.erase (it);
+        return true;
+      }
+  return false;
 }
 
 } // Rapicorn
