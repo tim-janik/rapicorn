@@ -138,7 +138,7 @@ struct FileImpl : public File {
   /*dtor*/             ~FileImpl        () { if (handle_) g_object_unref (handle_); }
   virtual String        name            () const override { return name_; }
   virtual ElementP      lookup          (const String &elementid) override;
-  virtual StringVector  list            (const String &prefix) override;
+  virtual StringVector  list            () override;
 };
 
 // == File ==
@@ -234,7 +234,7 @@ FileImpl::lookup (const String &elementid)
  * List all element IDs in an SVG file that start with @a prefix.
  */
 StringVector
-FileImpl::list (const String &prefix)
+FileImpl::list()
 {
   if (good_ids_.empty() && !id_candidates_.empty())
     {

@@ -720,7 +720,7 @@ ElementPainterImpl::state_element (WidgetState state)
     {
       // match an SVG element to state, xml ID syntax: <element id="elementname:active+insensitive"/>
       const String element = svg_fragment_.substr (svg_fragment_[0] == '#' ? 1 : 0); // strip initial hash
-      const String match = StyleIface::pick_fragment (element, state, size_painter_.list (element));
+      const String match = StyleIface::pick_fragment (element, state, size_painter_.list());
       if (!match.empty())
         return svg_source_ + "#" + match;
     }
