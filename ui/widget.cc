@@ -1725,6 +1725,18 @@ WidgetImpl::color_scheme (ColorScheme cst)
 }
 
 Color
+WidgetImpl::current_color (StyleColor color_type, const String &detail)
+{
+  return state_color (state(), color_type, detail);
+}
+
+Color
+WidgetImpl::state_color (WidgetState state, StyleColor color_type, const String &detail)
+{
+  return style()->state_color (state, color_type, detail);
+}
+
+Color
 WidgetImpl::foreground ()
 {
   return heritage()->foreground (state());

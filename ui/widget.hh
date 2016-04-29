@@ -289,30 +289,21 @@ public:
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
-  /* theming & appearance */
-  // colors
-  Color                 normal_bg               () { return state_color (WidgetState::NORMAL, 0); }
-  Color                 normal_fg               () { return state_color (WidgetState::NORMAL, 1); }
-  Color                 active_bg               () { return state_color (WidgetState::ACTIVE, 0); }
-  Color                 active_fg               () { return state_color (WidgetState::ACTIVE, 1); }
-  Color                 selected_bg             () { return state_color (WidgetState::SELECTED, 0); }
-  Color                 selected_fg             () { return state_color (WidgetState::SELECTED, 1); }
-  // Color                 focus_color             () { return state_color (FocusDir::COLOR); }
+  // theming & appearance
+  Color                 current_color           (StyleColor color_type, const String &detail = "");
+  Color                 state_color             (WidgetState state, StyleColor color_type, const String &detail = "");
+  Color                 normal_bg               () { return state_color (WidgetState::NORMAL, StyleColor::BACKGROUND); }
+  Color                 normal_fg               () { return state_color (WidgetState::NORMAL, StyleColor::FOREGROUND); }
+  Color                 active_bg               () { return state_color (WidgetState::ACTIVE, StyleColor::BACKGROUND); }
+  Color                 active_fg               () { return state_color (WidgetState::ACTIVE, StyleColor::FOREGROUND); }
+  Color                 selected_bg             () { return state_color (WidgetState::SELECTED, StyleColor::BACKGROUND); }
+  Color                 selected_fg             () { return state_color (WidgetState::SELECTED, StyleColor::FOREGROUND); }
   Color                 state_color             (WidgetState state, bool foreground, const String &detail = "");
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
-  // state colors
   WidgetState           state                   () const;
   StyleIfaceP           style                   () const;
   Color                 foreground              ();
   Color                 background              ();
-  // Color              black                   () { return theme_color (  0,   0,   0); }
-  // Color              white                   () { return theme_color (  0,   0, 100); }
-  // Color              red                     () { return theme_color (  0, 100, 100); }
-  // Color              yellow                  () { return theme_color ( 60, 100, 100); }
-  // Color              green                   () { return theme_color (120, 100, 100); }
-  // Color              cyan                    () { return theme_color (180, 100, 100); }
-  // Color              blue                    () { return theme_color (240, 100, 100); }
-  // Color              magenta                 () { return theme_color (300, 100, 100); }
   // old colors
   HeritageP             heritage                () const { return heritage_; }
   Color                 dark_color              () { return heritage()->dark_color (state()); }
