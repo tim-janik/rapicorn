@@ -709,37 +709,6 @@ ElementPainterImpl::svg_element (const String &fragment)
   changed ("svg_source");
 }
 
-static const WidgetState BROKEN = WidgetState (0x80000000);
-
-static WidgetState
-single_state_score (const String &state_string)
-{
-  switch (fnv1a_consthash64 (state_string.c_str()))
-    {
-    case fnv1a_consthash64 ("normal"):          return WidgetState::NORMAL;
-    case fnv1a_consthash64 ("hover"):           return WidgetState::HOVER;
-    case fnv1a_consthash64 ("panel"):           return WidgetState::PANEL;
-    case fnv1a_consthash64 ("acceleratable"):   return WidgetState::ACCELERATABLE;
-    case fnv1a_consthash64 ("default"):         return WidgetState::DEFAULT;
-    case fnv1a_consthash64 ("selected"):        return WidgetState::SELECTED;
-    case fnv1a_consthash64 ("focused"):         return WidgetState::FOCUSED;
-    case fnv1a_consthash64 ("insensitive"):     return WidgetState::INSENSITIVE;
-    case fnv1a_consthash64 ("active"):          return WidgetState::ACTIVE;
-    case fnv1a_consthash64 ("retained"):        return WidgetState::RETAINED;
-    default:                                    return BROKEN;
-    }
-}
-
-static uint64
-state_score (const String &state_string)
-{
-  StringVector sv = string_split (state_string, "+");
-  uint64 r = 0;
-  for (const String &s : sv)
-    r |= uint64 (single_state_score (s));
-  return r >= uint64 (BROKEN) ? 0 : r;
-}
-
 String
 ElementPainterImpl::state_element (WidgetState state)
 {
@@ -751,22 +720,7 @@ ElementPainterImpl::state_element (WidgetState state)
     {
       // match an SVG element to state, xml ID syntax: <element id="elementname:active+insensitive"/>
       const String element = svg_fragment_.substr (svg_fragment_[0] == '#' ? 1 : 0); // strip initial hash
-      const size_t colon = element.size();
-      String fallback, match;
-      size_t score = 0;
-      for (auto id : size_painter_.list (element))
-        if (id == element)                                  // element without state specification
-          fallback = id;
-        else if (id.size() > colon + 1 && id[colon] == ':') // element with state
-          {
-            const size_t s = state_score (id.substr (colon + 1));
-            if ((s & size_t (state)) == s && s > score)
-              {
-                match = id;
-                score = s;
-              }
-          }
-      match = match.empty() ? fallback : match;
+      const String match = StyleIface::pick_fragment (element, state, size_painter_.list (element));
       if (!match.empty())
         return svg_source_ + "#" + match;
     }

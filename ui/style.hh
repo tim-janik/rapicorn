@@ -47,6 +47,9 @@ public:
   virtual Color      state_color        (WidgetState state, StyleColor color_type, const String &detail = "") = 0;
   static StyleIfaceP load               (const String &theme_file);
   static StyleIfaceP fallback           ();
+  static WidgetState state_from_name    (const String &lower_case_state_name);
+  static uint64      state_from_list    (const String &state_list);
+  static String      pick_fragment      (const String &fragment, WidgetState state, const StringVector &fragment_list);
 };
 
 } // Rapicorn

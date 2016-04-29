@@ -145,6 +145,83 @@ StyleImpl::fragment_color (const String &fragment, WidgetState state)
   return color;
 }
 
+static const WidgetState INVALID_STATE = WidgetState (0x80000000);
+
+WidgetState
+StyleIface::state_from_name (const String &lower_case_state_name)
+{
+  switch (fnv1a_consthash64 (lower_case_state_name.c_str()))
+    {
+    case fnv1a_consthash64 ("normal"):          return WidgetState::NORMAL;
+    case fnv1a_consthash64 ("hover"):           return WidgetState::HOVER;
+    case fnv1a_consthash64 ("panel"):           return WidgetState::PANEL;
+    case fnv1a_consthash64 ("acceleratable"):   return WidgetState::ACCELERATABLE;
+    case fnv1a_consthash64 ("default"):         return WidgetState::DEFAULT;
+    case fnv1a_consthash64 ("selected"):        return WidgetState::SELECTED;
+    case fnv1a_consthash64 ("focused"):         return WidgetState::FOCUSED;
+    case fnv1a_consthash64 ("insensitive"):     return WidgetState::INSENSITIVE;
+    case fnv1a_consthash64 ("active"):          return WidgetState::ACTIVE;
+    case fnv1a_consthash64 ("retained"):        return WidgetState::RETAINED;
+    default:                                    return INVALID_STATE;
+    }
+}
+
+uint64
+StyleIface::state_from_list (const String &state_list)
+{
+  const StringVector sv = string_split_any (state_list, "+:"); // support '+' and CSS-like ':' as state list delimiters
+  /* Construct the WidgetState bits from a list of widget state names that can be used as a acroe
+   * to determine best matches for state list combinations.
+   * The WidgetState bit values are ordered by visual importance, so for competing matches, the
+   * one with the greatest visual importance (least loss of information) is picked. E.g. match:
+   * A: HOVER+SELECTED (score: 1+16=17) against
+   * B: HOVER+INSENSITIVE (score: 1+64*0=1) or
+   * C: SELECTED (score: 16=16).
+   * Note, B's "INSENSITIVE" flag should be ignored as it's not present in A, so C scores as
+   * highest match for A. C doesn't reflect the HOVER state in A (of little importance), but
+   * it does show that A is "SELECTED" (mildly important) and does not misleadingly indicate
+   * that A is "INSENSITIVE" (highest importance) as B would.
+   */
+  uint64 bits = 0;
+  for (const String &s : sv)
+    bits |= uint64 (state_from_name (s));           // the WidgetState flag values represent an importance score
+  return bits >= uint64 (INVALID_STATE) ? 0 : bits; // unmatched names cancel the entire score
+}
+
+String
+StyleIface::pick_fragment (const String &fragment, WidgetState state, const StringVector &fragment_list)
+{
+  // match an SVG element to state, xml ID syntax: <element id="elementname:active+insensitive"/>
+  const uint64 mismatch_threshold = uint64 (WidgetState::ACTIVE);
+  const String element = fragment[0] == '#' ? fragment.substr (1) : fragment; // strip initial hash
+  const size_t colon = element.size();                  // find element / state delimiter
+  String fallback, best_match;
+  uint64 best_score = 0, penalty_score = 0;
+  for (auto id : fragment_list)
+    {
+      if (id.size() < element.size() ||
+          (id.size() > element.size() && id[colon] != ':') ||
+          strncmp (id.data(), element.data(), element.size()) != 0)
+        continue;                                       // "elementname" must match
+      const bool has_states = id.size() > colon + 1 && id[colon] == ':';
+      if (!has_states)
+        fallback = id;                                  // save fallback in case no matches are found
+      const uint64 id_state = has_states ? state_from_list (id.substr (colon + 1)) : 0;
+      const uint64 id_score = id_state & state;         // score the *matching* WidgetState bits
+      const uint64 id_penalty = id_score ^ id_state;    // penalize mismatches
+      if (id_penalty >= mismatch_threshold)             // reject misleading states
+        continue;
+      if (id_score > best_score ||                      // better display of important bits
+          (id_score == best_score &&
+           id_penalty < penalty_score))                 // or improve by less fudging
+        {
+          best_match = id;
+          best_score = id_score;
+          penalty_score = id_penalty;
+        }
+    }
+  return best_match.empty() ? fallback : best_match;
+}
 
 // == StyleIface ==
 static std::map<const String, StyleIfaceP> style_file_cache;
