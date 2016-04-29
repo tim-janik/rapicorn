@@ -16,21 +16,6 @@ public:
   static String get (const String &setting, const String &fallback = "");
 };
 
-// == StyleColor ==
-enum class StyleColor {
-  NONE,
-  FOREGROUND,
-  BACKGROUND,
-  DARK,
-  DARK_SHADOW,
-  DARK_GLINT,
-  LIGHT,
-  LIGHT_SHADOW,
-  LIGHT_GLINT,
-  FOCUS_FG,
-  FOCUS_BG
-};
-
 // == StyleIface ==
 class StyleIface : public std::enable_shared_from_this<StyleIface> {
 public:

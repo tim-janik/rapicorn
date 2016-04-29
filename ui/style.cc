@@ -226,10 +226,10 @@ StyleIface::pick_fragment (const String &fragment, WidgetState state, const Stri
 Color
 StyleIface::resolve_color (const String &color_name, WidgetState state, StyleColor style_color)
 {
-  // Find ColorType enum value
-  Aida::EnumValue evalue = Aida::enum_info<ColorType>().find_value (color_name); // foreground, background, dark, light, etc
+  // Find StyleColor enum value
+  Aida::EnumValue evalue = Aida::enum_info<StyleColor>().find_value (color_name); // foreground, background, dark, light, etc
   if (evalue.ident)
-    return state_color (state, StyleColor (ColorType (evalue.value))); // FIXME: incompatible values
+    return state_color (state, StyleColor (evalue.value));
   // Eval #112233 style colors (dark blue)
   if (color_name[0] == '#' && color_name.size() == 7)
     {

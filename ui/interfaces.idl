@@ -51,7 +51,7 @@ enum Click {
 };
 
 /// Enum used to index various predefined colors.
-enum ColorType {
+enum StyleColor {
   NONE = 0,
   FOREGROUND,
   BACKGROUND,
@@ -63,15 +63,8 @@ enum ColorType {
   LIGHT,
   LIGHT_SHADOW,
   LIGHT_GLINT,
-  FOCUS,
-  BLACK,
-  WHITE,
-  RED,
-  YELLOW,
-  GREEN,
-  CYAN,
-  BLUE,
-  MAGENTA,
+  FOCUS_FG,
+  FOCUS_BG
 };
 
 /// Enum used to specify the color schemes of a Widget.
