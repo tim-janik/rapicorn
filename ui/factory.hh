@@ -34,6 +34,7 @@ String           factory_context_type      (FactoryContext &fc);
 const StringSeq& factory_context_tags      (FactoryContext &fc);
 UserSource       factory_context_source    (FactoryContext &fc);
 String           factory_context_impl_type (FactoryContext &fc);
+StyleIfaceP      factory_context_style     (FactoryContext &fc);
 
 // == Object Type Registration ==
 struct ObjectTypeFactory {

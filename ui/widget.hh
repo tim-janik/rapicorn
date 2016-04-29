@@ -303,6 +303,7 @@ public:
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
   // state colors
   WidgetState           state                   () const;
+  StyleIfaceP           style                   () const;
   Color                 foreground              ();
   Color                 background              ();
   // Color              black                   () { return theme_color (  0,   0,   0); }

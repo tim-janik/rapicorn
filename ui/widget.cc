@@ -206,6 +206,12 @@ WidgetImpl::set_flag (uint64 flag, bool on)
     }
 }
 
+StyleIfaceP
+WidgetImpl::style () const
+{
+  return Factory::factory_context_style (factory_context_);
+}
+
 WidgetState
 WidgetImpl::state () const
 {
