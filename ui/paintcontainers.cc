@@ -294,7 +294,7 @@ AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
     background_color = hover_background();
   else
     background_color = normal_background();
-  Color background = heritage()->resolve_color (background_color, WidgetState::NORMAL, ColorType::BACKGROUND);
+  Color background = style()->resolve_color (background_color, WidgetState::NORMAL, StyleColor::BACKGROUND);
   cairo_t *cr = cairo_context (rcontext, rect);
   CPainter painter (cr);
   if (background)

@@ -1313,7 +1313,7 @@ protected:
     if (insensitive())
       {
         const double ax = larea.x, ay = larea.y;
-        Color insensitive_glint, insensitive_ink = heritage()->insensitive_ink (state(), &insensitive_glint);
+        Color insensitive_glint, insensitive_ink = style()->insensitive_ink (state(), &insensitive_glint);
         /* render embossed text */
         larea.x = ax, larea.y = ay;
         render_text_gL (cr, larea, vdot_size, insensitive_glint);

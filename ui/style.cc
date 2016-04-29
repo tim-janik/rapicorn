@@ -223,6 +223,50 @@ StyleIface::pick_fragment (const String &fragment, WidgetState state, const Stri
   return best_match.empty() ? fallback : best_match;
 }
 
+Color
+StyleIface::resolve_color (const String &color_name, WidgetState state, StyleColor style_color)
+{
+  // Find ColorType enum value
+  Aida::EnumValue evalue = Aida::enum_info<ColorType>().find_value (color_name); // foreground, background, dark, light, etc
+  if (evalue.ident)
+    return state_color (state, StyleColor (ColorType (evalue.value))); // FIXME: incompatible values
+  // Eval #112233 style colors (dark blue)
+  if (color_name[0] == '#' && color_name.size() == 7)
+    {
+      const uint32 rgb = string_to_int (&color_name[1], NULL, 16);
+      Color c (0xff000000 | rgb);
+      return c;
+    }
+  // Eval #112233ff style colors (intransparent blue)
+  if (color_name[0] == '#' && color_name.size() == 9)
+    {
+      const uint32 rgba = string_to_int (&color_name[1], NULL, 16);
+      const uint32 rgb = (rgba >> 8), alpha = rgba & 0xff, argb = (alpha << 24) | rgb;
+      Color c (argb);
+      return c;
+    }
+  // Parse color names
+  Color parsed_color = Color::from_name (color_name);
+  if (parsed_color) // color != transparent black
+    return parsed_color;
+  return state_color (state, style_color);
+}
+
+Color
+StyleIface::insensitive_ink (WidgetState state, Color *glintp)
+{
+  // construct insensitive ink by mixing foreground and dark_color
+  Color ink = state_color (state, StyleColor::FOREGROUND);
+  ink.combine (state_color (state, StyleColor::DARK), 0x80);
+  if (glintp)
+    {
+      Color glint = state_color (state, StyleColor::LIGHT);
+      *glintp = glint;
+    }
+  return ink;
+}
+
+
 // == StyleIface ==
 static std::map<const String, StyleIfaceP> style_file_cache;
 

@@ -7,7 +7,6 @@
 #include <ui/region.hh>
 #include <ui/commands.hh>
 #include <ui/style.hh>
-#include <ui/heritage.hh>
 
 namespace Rapicorn {
 
@@ -57,14 +56,12 @@ private:
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AncestryCache        *acache_; // cache poninter may change for const this
-  HeritageP                   heritage_;
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
   Allocation                  allocation_, clip_area_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   void                        acache_check       () const;
-  void                        propagate_heritage ();
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
@@ -149,7 +146,6 @@ protected:
   virtual bool                custom_command    (const String &command_name, const StringSeq &command_args);
   virtual void                set_user_data     (const String &name, const Any &any);
   virtual Any                 get_user_data     (const String &name);
-  void                        heritage          (HeritageP heritage);
   void                        enter_widget_group (const String &group_name, WidgetGroupType group_type);
   void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
   StringVector                list_widget_groups (WidgetGroupType group_type) const;
@@ -304,8 +300,6 @@ public:
   StyleIfaceP           style                   () const;
   Color                 foreground              ();
   Color                 background              ();
-  // old colors
-  HeritageP             heritage                () const { return heritage_; }
   Color                 dark_color              ();
   Color                 dark_shadow             ();
   Color                 dark_glint              ();

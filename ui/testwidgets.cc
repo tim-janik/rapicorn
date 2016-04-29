@@ -248,7 +248,7 @@ TestContainerImpl::render (RenderContext &rcontext, const Rect &rect)
       IRect ia = allocation();
       cairo_t *cr = cairo_context (rcontext, rect);
       CPainter painter (cr);
-      painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, heritage()->black());
+      painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, style()->resolve_color ("black"));
     }
 
   Allocation rarea = get_window()->allocation();
