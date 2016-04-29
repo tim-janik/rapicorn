@@ -306,13 +306,13 @@ public:
   Color                 background              ();
   // old colors
   HeritageP             heritage                () const { return heritage_; }
-  Color                 dark_color              () { return heritage()->dark_color (state()); }
-  Color                 dark_shadow             () { return heritage()->dark_shadow (state()); }
-  Color                 dark_glint              () { return heritage()->dark_glint (state()); }
-  Color                 light_color             () { return heritage()->light_color (state()); }
-  Color                 light_shadow            () { return heritage()->light_shadow (state()); }
-  Color                 light_glint             () { return heritage()->light_glint (state()); }
-  Color                 focus_color             () { return heritage()->focus_color (state()); }
+  Color                 dark_color              ();
+  Color                 dark_shadow             ();
+  Color                 dark_glint              ();
+  Color                 light_color             ();
+  Color                 light_shadow            ();
+  Color                 light_glint             ();
+  Color                 focus_color             ();
   /* debugging/testing */
   virtual String        test_dump               ();
   String                debug_dump              (const String &flags = String());

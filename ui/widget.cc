@@ -1739,13 +1739,55 @@ WidgetImpl::state_color (WidgetState state, StyleColor color_type, const String 
 Color
 WidgetImpl::foreground ()
 {
-  return heritage()->foreground (state());
+  return state_color (state(), StyleColor::FOREGROUND);
 }
 
 Color
 WidgetImpl::background ()
 {
-  return heritage()->background (state());
+  return state_color (state(), StyleColor::BACKGROUND);
+}
+
+Color
+WidgetImpl::dark_color ()
+{
+  return state_color (state(), StyleColor::DARK);
+}
+
+Color
+WidgetImpl::dark_shadow ()
+{
+  return state_color (state(), StyleColor::DARK_SHADOW);
+}
+
+Color
+WidgetImpl::dark_glint ()
+{
+  return state_color (state(), StyleColor::DARK_GLINT);
+}
+
+Color
+WidgetImpl::light_color ()
+{
+  return state_color (state(), StyleColor::LIGHT);
+}
+
+Color
+WidgetImpl::light_shadow ()
+{
+  return state_color (state(), StyleColor::LIGHT_SHADOW);
+}
+
+Color
+WidgetImpl::light_glint ()
+{
+  return state_color (state(), StyleColor::LIGHT_GLINT);
+}
+
+Color
+WidgetImpl::focus_color ()
+{
+  return state_color (state(), StyleColor::FOCUS_BG);
 }
 
 /// Return clipping area for rendering and event processing if one is set.
