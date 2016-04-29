@@ -8,9 +8,7 @@ namespace Rapicorn {
 
 // == Decls ==
 class StyleIface;
-class ThemeInfo;
 typedef std::shared_ptr<StyleIface> StyleIfaceP;
-typedef std::shared_ptr<ThemeInfo> ThemeInfoP;
 
 // == Config ==
 class Config {
@@ -35,21 +33,6 @@ public:
   virtual Color      style_color        (WidgetState state, StyleColor color_type, const String &detail = "") = 0;
   static StyleIfaceP load               (const String &theme_file);
   static StyleIfaceP fallback           ();
-};
-
-// == ThemeInfo ==
-class ThemeInfo : public std::enable_shared_from_this<ThemeInfo> {
-  static ThemeInfoP find_theme     (const String &theme_name);
-protected:
-  virtual          ~ThemeInfo      ();
-public:
-  static ThemeInfoP load_theme     (const String &theme_identifier, bool from_env = false);
-  static ThemeInfoP theme_info     (const String &theme_name);
-  static ThemeInfoP fallback_theme ();
-  virtual String    name           () = 0;
-  // colors
-  virtual Color     fragment_color (const String &fragment, WidgetState state);
-  virtual Color     theme_color    (double hue360, double saturation100, double brightness100);
 };
 
 } // Rapicorn

@@ -1724,12 +1724,6 @@ WidgetImpl::color_scheme (ColorScheme cst)
     }
 }
 
-ThemeInfo&
-WidgetImpl::theme_info () const
-{
-  return *ThemeInfo::fallback_theme();
-}
-
 Color
 WidgetImpl::foreground ()
 {

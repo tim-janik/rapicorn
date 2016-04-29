@@ -290,7 +290,6 @@ public:
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
   /* theming & appearance */
-  ThemeInfo&            theme_info              () const;
   // colors
   Color                 normal_bg               () { return state_color (WidgetState::NORMAL, 0); }
   Color                 normal_fg               () { return state_color (WidgetState::NORMAL, 1); }

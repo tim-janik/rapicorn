@@ -223,7 +223,6 @@ WindowImpl::WindowImpl() :
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
   config_.title = application_name();
-  theme_info_ = ThemeInfo::fallback_theme();    // ensure valid theme_info_
   set_flag (PARENT_INSENSITIVE, false);
   set_flag (PARENT_UNVIEWABLE, false);
   // create event loop (auto-starts)
