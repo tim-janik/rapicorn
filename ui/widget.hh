@@ -57,7 +57,6 @@ private:
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AncestryCache        *acache_; // cache poninter may change for const this
-  StyleImplP                  style_;
   HeritageP                   heritage_;
   FactoryContext             &factory_context_;
   Requisition                 requisition_;

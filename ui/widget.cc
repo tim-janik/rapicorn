@@ -52,7 +52,7 @@ WidgetIface::impl () const
 
 WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE),
-  parent_ (NULL), acache_ (NULL), style_ (StyleImpl::create (ThemeInfo::fallback_theme())), heritage_ (NULL),
+  parent_ (NULL), acache_ (NULL), heritage_ (NULL),
   factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
@@ -206,12 +206,6 @@ WidgetImpl::set_flag (uint64 flag, bool on)
     }
 }
 
-bool
-WidgetImpl::grab_default () const
-{
-  return false;
-}
-
 WidgetState
 WidgetImpl::state () const
 {
@@ -227,6 +221,12 @@ WidgetImpl::state () const
   state = state | (active()      ? WidgetState::ACTIVE : s0);
   // WidgetState::RETAINED
   return WidgetState (state);
+}
+
+bool
+WidgetImpl::grab_default () const
+{
+  return false;
 }
 
 bool
@@ -643,7 +643,6 @@ WidgetImpl::~WidgetImpl()
       remove_exec (timer_id);
       set_data (&visual_update_key, uint (0));
     }
-  style_ = NULL;
 }
 
 Command*

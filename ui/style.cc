@@ -6,6 +6,7 @@
 #include "../rcore/svg.hh"
 
 #define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Theme", __VA_ARGS__)
+#define SDEBUG(...)     RAPICORN_KEY_DEBUG ("Style", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -48,6 +49,23 @@ Config::get (const String &setting, const String &fallback)
 }
 
 // == Colors ==
+static inline uint32
+cairo_image_surface_peek_argb (cairo_surface_t *surface, uint x, uint y)
+{
+  assert_return (surface != NULL, 0x00000000);
+  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, 0x00000000);
+  const uint height = cairo_image_surface_get_height (surface);
+  const uint width = cairo_image_surface_get_width (surface);
+  const uint stride = cairo_image_surface_get_stride (surface);
+  if (x < width && y < height)
+    {
+      const uint32 *pixels = (const uint32*) cairo_image_surface_get_data (surface);
+      const uint32 argb = pixels[stride / 4 * y + x];
+      return argb;
+    }
+  return 0x00000000;
+}
+
 static Color
 adjust_color (Color color, double saturation_factor, double value_factor)
 {
@@ -63,31 +81,25 @@ adjust_color (Color color, double saturation_factor, double value_factor)
 // static Color alternate (Color color) { return adjust_color (color, 1.0, 0.98); } // tainting for even-odd alterations
 
 // == StyleImpl ==
-StyleImpl::StyleImpl (ThemeInfoP theme_info) :
-  theme_info_ (theme_info)
-{
-  assert_return (theme_info != NULL);
-}
+class StyleImpl : public StyleIface {
+  Svg::FileP svg_file_;
+public:
+  explicit      StyleImpl       (Svg::FileP svgf);
+  virtual Color theme_color     (double hue360, double saturation100, double brightness100, const String &detail) override;
+  virtual Color style_color     (WidgetState state, StyleColor color_type, const String &detail) override;
+  Color         fragment_color  (const String &fragment, WidgetState state);
+};
 
-static std::map<ThemeInfoP, StyleImplP> style_impl_cache; /// FIXME: threadsafe?
-
-StyleImplP
-StyleImpl::create (ThemeInfoP theme_info)
-{
-  assert_return (theme_info != NULL, NULL);
-  StyleImplP style = style_impl_cache[theme_info];
-  if (!style)
-    {
-      style = FriendAllocator<StyleImpl>::make_shared (theme_info);
-      style_impl_cache[theme_info] = style;
-    }
-  return style;
-}
+StyleImpl::StyleImpl (Svg::FileP svgf) :
+  svg_file_ (svgf)
+{}
 
 Color
 StyleImpl::theme_color (double hue360, double saturation100, double brightness100, const String &detail)
 {
-  return theme_info_->theme_color (hue360, saturation100, brightness100);
+  Color c;
+  c.set_hsv (hue360, saturation100 * 0.01, brightness100 * 0.01);
+  return c.argb();
 }
 
 Color
@@ -95,8 +107,8 @@ StyleImpl::style_color (WidgetState state, StyleColor color_type, const String &
 {
   switch (color_type)
     {
-    case FOREGROUND:    return theme_info_->fragment_color ("#fg", state);
-    case BACKGROUND:    return theme_info_->fragment_color ("#bg", state);
+    case FOREGROUND:    return fragment_color ("fg", state);
+    case BACKGROUND:    return fragment_color ("bg", state);
     case DARK:          return 0xff9f9c98;
     case DARK_SHADOW:   return adjust_color (style_color (state, DARK, detail), 1, 0.9); // 0xff8f8c88
     case DARK_GLINT:    return adjust_color (style_color (state, DARK, detail), 1, 1.1); // 0xffafaca8
@@ -107,6 +119,80 @@ StyleImpl::style_color (WidgetState state, StyleColor color_type, const String &
     case FOCUS_BG:      return 0xff000060;
     default:            return 0x00000000; // silence warnings
     }
+}
+
+Color
+StyleImpl::fragment_color (const String &fragment, WidgetState state)
+{
+  Color color;
+  color = string_startswith (fragment, "fg") ? 0xff000000 : 0xffdfdcd8;
+  if (svg_file_)
+    {
+      ImagePainter painter (svg_file_, fragment);
+      Requisition size = painter.image_size ();
+      if (size.width >= 1 && size.height >= 1)
+        {
+          cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (size.width), iceil (size.height));
+          cairo_t *cr = cairo_create (surface);
+          Rect rect (0, 0, size.width, size.height);
+          painter.draw_image (cr, rect, rect);
+          const uint argb = cairo_image_surface_peek_argb (surface, size.width / 2, size.height / 2);
+          cairo_surface_destroy (surface);
+          cairo_destroy (cr);
+          color = argb;
+        }
+    }
+  return color;
+}
+
+
+// == StyleIface ==
+static std::map<const String, StyleIfaceP> style_file_cache;
+
+StyleIfaceP
+StyleIface::fallback()
+{
+  const String theme_file = "@res Rapicorn::FallbackTheme";
+  StyleIfaceP style = style_file_cache[theme_file];
+  if (!style)
+    {
+      Svg::FileP svgf;
+      style = FriendAllocator<StyleImpl>::make_shared (svgf);
+      style_file_cache[theme_file] = style;
+    }
+  return style;
+}
+
+StyleIfaceP
+StyleIface::load (const String &theme_file)
+{
+  StyleIfaceP style = style_file_cache[theme_file];
+  if (!style)
+    {
+      Svg::FileP svgf;
+      bool do_svg_file_io = false;
+      if (!string_startswith (theme_file, "@res"))
+        do_svg_file_io = RAPICORN_FLIPPER ("svg-file-io", "Rapicorn::Style: allow loading of SVG files from local file system.");
+      Blob blob;
+      if (do_svg_file_io)
+        blob = Blob::load (theme_file);
+      else
+        blob = Res (theme_file); // call this even if !startswith("@res") to preserve debug message about missing resource
+      if (string_endswith (blob.name(), ".svg"))
+        {
+          svgf = Svg::File::load (blob);
+          SDEBUG ("loading: %s: %s", theme_file, strerror (errno));
+        }
+      if (!svgf)
+        {
+          user_warning (UserSource (theme_file), "failed to load theme file \"%s\": %s", theme_file, strerror (ENOENT));
+          style = fallback();
+        }
+      else
+        style = FriendAllocator<StyleImpl>::make_shared (svgf);
+      style_file_cache[theme_file] = style;
+    }
+  return style;
 }
 
 // == ThemeInfo ==
@@ -152,23 +238,6 @@ Color
 FileTheme::theme_color (double hue360, double saturation100, double brightness100)
 {
   return fallback_theme()->theme_color (hue360, saturation100, brightness100);
-}
-
-static inline uint32
-cairo_image_surface_peek_argb (cairo_surface_t *surface, uint x, uint y)
-{
-  assert_return (surface != NULL, 0x00000000);
-  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, 0x00000000);
-  const uint height = cairo_image_surface_get_height (surface);
-  const uint width = cairo_image_surface_get_width (surface);
-  const uint stride = cairo_image_surface_get_stride (surface);
-  if (x < width && y < height)
-    {
-      const uint32 *pixels = (const uint32*) cairo_image_surface_get_data (surface);
-      const uint32 argb = pixels[stride / 4 * y + x];
-      return argb;
-    }
-  return 0x00000000;
 }
 
 FileTheme::FileTheme (const String &theme_name, const Blob &iniblob, bool local_files) :
