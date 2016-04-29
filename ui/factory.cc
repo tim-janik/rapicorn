@@ -807,14 +807,20 @@ initialize_factory_lazily (void)
   if (!initialized)
     {
       initialized++;
-      Blob blob = Res ("@res Rapicorn/foundation.xml");
-      Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL, NULL);
+      Blob blob;
+      String err;
+      blob = Res ("@res Rapicorn/foundation.xml");
+      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+      if (!err.empty())
+        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
       blob = Res ("@res Rapicorn/standard.xml");
-      Factory::parse_ui_data_internal ("Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL, NULL);
+      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+      if (!err.empty())
+        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
       blob = Res ("@res themes/Default.xml");
-      ThemeInfoP default_theme = ThemeInfo::load_theme ("Default");
-      assert (default_theme != NULL);
-      ThemeInfoP theme = ThemeInfo::load_theme ("$RAPICORN_THEME", true);
+      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+      if (!err.empty())
+        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
     }
 }
 
