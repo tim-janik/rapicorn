@@ -34,15 +34,6 @@ enum class StyleColor {
 // == StyleIface ==
 class StyleIface : public std::enable_shared_from_this<StyleIface> {
 public:
-  Color foreground      (WidgetState state) { return state_color (state, StyleColor::FOREGROUND); }
-  Color background      (WidgetState state) { return state_color (state, StyleColor::BACKGROUND); }
-  Color dark_color      (WidgetState state) { return state_color (state, StyleColor::DARK); }
-  Color dark_shadow     (WidgetState state) { return state_color (state, StyleColor::DARK_SHADOW); }
-  Color dark_glint      (WidgetState state) { return state_color (state, StyleColor::DARK_GLINT); }
-  Color light_color     (WidgetState state) { return state_color (state, StyleColor::LIGHT); }
-  Color light_shadow    (WidgetState state) { return state_color (state, StyleColor::LIGHT_SHADOW); }
-  Color light_glint     (WidgetState state) { return state_color (state, StyleColor::LIGHT_GLINT); }
-  Color focus_color     (WidgetState state) { return state_color (state, StyleColor::FOCUS_FG); }
   virtual Color      theme_color        (double hue360, double saturation100, double brightness100, const String &detail = "") = 0;
   virtual Color      state_color        (WidgetState state, StyleColor color_type, const String &detail = "") = 0;
   static StyleIfaceP load               (const String &theme_file);
