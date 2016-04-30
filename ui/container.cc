@@ -369,7 +369,7 @@ static DataKey<vector<FocusIndicator*>> focus_indicator_key;
 void
 ContainerImpl::register_focus_indicator (FocusIndicator &focus_indicator)
 {
-  assert_return (test_all_flags (NEEDS_FOCUS_INDICATOR));
+  assert_return (test_flag (NEEDS_FOCUS_INDICATOR));
   vector<FocusIndicator*> vfi = get_data (&focus_indicator_key);
   for (auto &existing_indicator : vfi)
     assert_return (existing_indicator != &focus_indicator);
@@ -402,7 +402,7 @@ void
 ContainerImpl::do_changed (const String &name)
 {
   WidgetImpl::do_changed (name);
-  if (test_all_flags (NEEDS_FOCUS_INDICATOR | HAS_FOCUS_INDICATOR) && name == "flags")
+  if (test_all (NEEDS_FOCUS_INDICATOR | HAS_FOCUS_INDICATOR) && name == "flags")
     {
       vector<FocusIndicator*> vfi = get_data (&focus_indicator_key);
       for (size_t i = 0; i < vfi.size(); i++)
@@ -584,7 +584,7 @@ ContainerImpl::move_focus (FocusDir fdir)
   if (!visible() || !sensitive())
     return false;
   // focus self
-  if (!has_focus() && focusable() && !test_any_flag (uint64 (WidgetState::FOCUSED)))
+  if (!has_focus() && focusable() && !test_flag (FOCUS_CHAIN))
     return grab_focus();
   // allow last focus descendant to handle movement
   WidgetImpl *last_child = get_data (&focus_child_key);
@@ -672,17 +672,9 @@ ContainerImpl::expose_enclosure ()
 
 /// Method toggled when a container child switches on- or off-screen, e.g. in a scrolling context
 void
-ContainerImpl::change_unviewable (WidgetImpl &child, bool b)
+ContainerImpl::stash_child (WidgetImpl &child, bool b)
 {
-  child.set_flag (UNVIEWABLE, b);
-}
-
-/// Adjust Widget flags on a descendant.
-void
-ContainerImpl::flag_descendant (WidgetImpl &widget, uint64 flag, bool onoff)
-{
-  assert_return (widget.has_ancestor (*this)); // could be disabled for performance
-  widget.set_flag (flag, onoff);
+  child.adjust_state (WidgetState::STASHED, b);
 }
 
 // window coordinates relative
@@ -710,9 +702,9 @@ ContainerImpl::render_recursive (RenderContext &rcontext)
       WidgetImpl &child = *childp;
       if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
         {
-          if (child.test_any_flag (INVALID_REQUISITION))
+          if (child.test_flag (INVALID_REQUISITION))
             critical ("%s: rendering widget with invalid %s: %s", child.debug_name(), "requisition", child.debug_name ("%r"));
-          if (child.test_any_flag (INVALID_ALLOCATION))
+          if (child.test_flag (INVALID_ALLOCATION))
             critical ("%s: rendering widget with invalid %s: %s", child.debug_name(), "allocation", child.debug_name ("%a"));
           child.render_widget (rcontext);
         }
@@ -925,17 +917,17 @@ ResizeContainerImpl::check_resize_handler ()
   assert_return (resizer_ != 0);
   resizer_ = 0;
   const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-  if (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+  if (test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
     check_resize();
 }
 
 void
 ResizeContainerImpl::check_resize ()
 {
-  if (anchored() && visible() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+  if (anchored() && visible() && test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       ContainerImpl *pc = parent();
-      if (pc && pc->test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+      if (pc && pc->test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
         DEBUG_RESIZE ("%12s: leaving check_resize to ancestor: %s", debug_name ("%n"), pc->debug_name ("%n"));
       else
         {
@@ -954,7 +946,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
   if (have_allocation)
     {
       area = *carea;
-      change_flags_silently (INVALID_ALLOCATION, true);
+      change_flags (INVALID_ALLOCATION, true); // skip notification
     }
   DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this),
                 !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
@@ -968,7 +960,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
    * a simulated annealing process yielding the final layout.
    */
   tunable_requisition_counter_ = 3;
-  while (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+  while (test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       const Requisition creq = requisition(); // unsets INVALID_REQUISITION
       if (!have_allocation)
@@ -988,11 +980,11 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
 static const bool subtree_resizing = RAPICORN_FLIPPER ("subtree-resizing", "Enable resizing without propagation for ResizeContainerImpl subtrees.");
 
 void
-ResizeContainerImpl::invalidate (uint64 mask)
+ResizeContainerImpl::invalidate (WidgetFlag mask)
 {
   SingleContainerImpl::invalidate (mask);
   WindowImpl *w = get_window();
-  if ((w == this || subtree_resizing) && !resizer_ && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+  if ((w == this || subtree_resizing) && !resizer_ && test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       EventLoop *loop = w ? w->get_loop() : NULL;
       if (loop)

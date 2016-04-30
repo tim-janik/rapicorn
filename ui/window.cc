@@ -137,12 +137,12 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
   assert_return (&fwidget == cfocus.focus_widget);
   if (cfocus.uncross_id)
     {
-      set_data (&focus_widget_key, CurrentFocus (cfocus.focus_widget, 0)); // reset cfocus.uncross_id
+      set_data (&focus_widget_key, CurrentFocus (cfocus.focus_widget, 0));      // reset cfocus.uncross_id
       cross_unlink (fwidget, cfocus.uncross_id);
       WidgetImpl *widget = &fwidget;
       while (widget)
         {
-          widget->unset_flag (uint64 (WidgetState::FOCUSED));
+          widget->set_flag (FOCUS_CHAIN, false);
           ContainerImpl *fc = widget->parent();
           if (fc)
             fc->focus_lost();
@@ -150,7 +150,8 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
         }
       cfocus = get_data (&focus_widget_key);
       assert_return (&fwidget == cfocus.focus_widget && cfocus.uncross_id == 0);
-      delete_data (&focus_widget_key);
+      delete_data (&focus_widget_key);                                          // reset cfocus.focus_widget
+      fwidget.adjust_state (WidgetState::FOCUSED, false);
     }
 }
 
@@ -171,12 +172,13 @@ WindowImpl::set_focus (WidgetImpl *widget)
   set_data (&focus_widget_key, cfocus);
   while (widget)
     {
-      widget->set_flag (uint64 (WidgetState::FOCUSED));
+      widget->set_flag (FOCUS_CHAIN, true);
       ContainerImpl *fc = widget->parent();
       if (fc)
         fc->set_focus_child (widget);
       widget = fc;
     }
+  cfocus.focus_widget->adjust_state (WidgetState::FOCUSED, true);
 }
 
 cairo_surface_t*
@@ -222,9 +224,8 @@ WindowImpl::WindowImpl() :
   display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
 {
+  inherited_state_ = 0;
   config_.title = application_name();
-  set_flag (PARENT_INSENSITIVE, false);
-  set_flag (PARENT_UNVIEWABLE, false);
   // create event loop (auto-starts)
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
@@ -258,7 +259,7 @@ WindowImpl::dispose ()
 WindowImpl::~WindowImpl()
 {
   WindowTrail::wleave (this);
-  change_flags_silently (ANCHORED, false);
+  assert_return (anchored() == false);
   if (display_window_)
     {
       clear_immediate_event();
@@ -817,7 +818,10 @@ WindowImpl::draw_now ()
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
       // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
-      loop_->exec_callback ([this] () { if (display_window_) sig_displayed.emit(); }, EventLoop::PRIORITY_UPDATE);
+      loop_->exec_callback ([this] () {
+          if (display_window_)
+            sig_displayed.emit();
+        }, EventLoop::PRIORITY_UPDATE);
       const uint64 stop = timestamp_realtime();
       DEBUG_RENDER ("%+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
                     x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
@@ -1049,7 +1053,7 @@ WindowImpl::clear_immediate_event ()
 void
 WindowImpl::ensure_resized()
 {
-  if (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+  if (test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
     resize_window (NULL);
 }
 
@@ -1071,10 +1075,10 @@ WindowImpl::drawing_dispatcher (const LoopState &state)
       const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
       if (!pending_win_size_)
         {
-          if (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+          if (test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
             critical ("%s: invalid %s: skipping redraw...", debug_name(),
-                      test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION) ? "REQUISITION&ALLOCATION" :
-                      test_any_flag (INVALID_REQUISITION) ? "REQUISITION" : "ALLOCATION");
+                      test_any (INVALID_REQUISITION | INVALID_ALLOCATION) ? "REQUISITION&ALLOCATION" :
+                      test_any (INVALID_REQUISITION) ? "REQUISITION" : "ALLOCATION");
           if (exposes_pending())
             draw_now();
         }

@@ -23,13 +23,13 @@ SelectableItemImpl::construct ()
 bool
 SelectableItemImpl::selected () const
 {
-  return test_any_flag (uint64 (WidgetState::SELECTED));
+  return test_state (WidgetState::SELECTED);
 }
 
 void
 SelectableItemImpl::selected (bool s)
 {
-  set_flag (uint64 (WidgetState::SELECTED), s);
+  adjust_state (WidgetState::SELECTED, s);
 }
 
 bool
@@ -268,7 +268,7 @@ bool
 WidgetListImpl::row_selected (uint64 idx) const
 {
   WidgetImpl *row = get_row_widget (idx);
-  return row && row->test_any_flag (uint64 (WidgetState::SELECTED));
+  return row && row->test_state (WidgetState::SELECTED);
 }
 
 void
@@ -542,7 +542,7 @@ WidgetListImpl::move_focus (FocusDir fdir)
   if (last_child && last_child->move_focus (fdir))      // refocus or row internal move_focus
     return true;
   // pick row for initial focus
-  if (!test_any_flag (uint64 (WidgetState::FOCUSED)))
+  if (!test_flag (FOCUS_CHAIN))
     {
       const int last_focus = focus_row();               // -1 initially
       return grab_row_focus (MAX (0, last_focus));      // list focus-in
