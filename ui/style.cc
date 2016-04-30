@@ -124,23 +124,23 @@ StyleImpl::state_color (WidgetState state, StyleColor color_type, const String &
 Color
 StyleImpl::fragment_color (const String &fragment, WidgetState state)
 {
-  Color color;
-  color = string_startswith (fragment, "fg") ? 0xff000000 : 0xffdfdcd8;
-  if (svg_file_)
+  // FIXME: this function very badly needs caching
+  Color color = string_startswith (fragment, "fg") ? 0xff000000 : 0xffdfdcd8;
+  const String match = svg_file_ ? StyleIface::pick_fragment (fragment, state, svg_file_->list()) : "";
+  if (match.empty())
+    return color;       // crude fallback
+  ImagePainter painter (svg_file_, match);
+  Requisition size = painter.image_size ();
+  if (size.width >= 1 && size.height >= 1)
     {
-      ImagePainter painter (svg_file_, fragment);
-      Requisition size = painter.image_size ();
-      if (size.width >= 1 && size.height >= 1)
-        {
-          cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (size.width), iceil (size.height));
-          cairo_t *cr = cairo_create (surface);
-          Rect rect (0, 0, size.width, size.height);
-          painter.draw_image (cr, rect, rect);
-          const uint argb = cairo_image_surface_peek_argb (surface, size.width / 2, size.height / 2);
-          cairo_surface_destroy (surface);
-          cairo_destroy (cr);
-          color = argb;
-        }
+      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (size.width), iceil (size.height));
+      cairo_t *cr = cairo_create (surface);
+      Rect rect (0, 0, size.width, size.height);
+      painter.draw_image (cr, rect, rect);
+      const uint argb = cairo_image_surface_peek_argb (surface, size.width / 2, size.height / 2);
+      cairo_surface_destroy (surface);
+      cairo_destroy (cr);
+      color = argb;
     }
   return color;
 }
@@ -203,7 +203,8 @@ StyleIface::pick_fragment (const String &fragment, WidgetState state, const Stri
           (id.size() > element.size() && id[colon] != ':') ||
           strncmp (id.data(), element.data(), element.size()) != 0)
         continue;                                       // "elementname" must match
-      const bool has_states = id.size() > colon + 1 && id[colon] == ':';
+      const bool has_states = id.size() > colon + 1 && id[colon] == ':' &&
+                              strcmp (&id[colon], ":normal") != 0;
       if (!has_states)
         fallback = id;                                  // save fallback in case no matches are found
       const uint64 id_state = has_states ? state_from_list (id.substr (colon + 1)) : 0;
