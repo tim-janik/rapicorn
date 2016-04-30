@@ -139,21 +139,25 @@ enum SizePolicy {
   HEIGHT_FROM_WIDTH,
 };
 
-/// Enum flags type to indicate Widget states.
+/// Flags indicating Widget states, all flags propagate from ancestors to children.
 flags enum WidgetState {
-  NORMAL          = 0,       ///< Widget factory / initial state.
-  HOVER           = 1 <<  0, ///< A pointing device (e.g. mouse) is above the Widget.
-  PANEL           = 1 <<  1, ///< Widget is rendered as part of a panel section.
-  ACCELERATABLE   = 1 <<  2, ///< Widget participates in mnemonic activation.
-  DEFAULT         = 1 <<  3, ///< Widget receives the default activation.
-  SELECTED        = 1 <<  4, ///< Widget is currently selected.
-  FOCUSED         = 1 <<  5, ///< Widget has the focus.
-  INSENSITIVE     = 1 <<  6, ///< Widget cannot process input events.
-  ACTIVE          = 1 <<  7, ///< Widget and its children are active or pressed.
-  RETAINED        = 1 <<  8, ///< Widget activation state is held back.
-  RESERVED1       = 1 <<  9,
-  RESERVED2       = 1 << 10,
-  RESERVED3       = 1 << 11,
+  NORMAL        = 0,       ///< Widget factory / initial state.
+  STATE1        = 1 <<  0,
+  ACCELERATABLE = 1 <<  1, ///< Widget participates in mnemonic activation.
+  HOVER         = 1 <<  2, ///< A pointing device (e.g. mouse) is above the Widget.
+  STATE2        = 1 <<  3,
+  PANEL         = 1 <<  4, ///< Widget is rendered as part of a panel section.
+  DEFAULT       = 1 <<  5, ///< Widget receives the default activation.
+  SELECTED      = 1 <<  6, ///< Widget is currently selected.
+  FOCUSED       = 1 <<  7, ///< Indicates if widget is (in the ancestry of) the focus widget.
+  INSENSITIVE   = 1 <<  8, ///< Widget cannot process input events.
+  STATE3        = 1 <<  9,
+  ACTIVE        = 1 << 10, ///< Widget and its children are active or pressed.
+  STATE4        = 1 << 11,
+  TOGGLED       = 1 << 12, ///< Widget is in an alternative switchable state.
+  RETAINED      = 1 << 13, ///< Widget alternative state is unspecified.
+  STATE6        = 1 << 14,
+  STASHED       = 1 << 15, ///< Widget is not viewable, it is concealed (taken offscreen) by an ancestor.
 };
 
 /// Enum type to discriminate various toplevel Window types.

@@ -161,6 +161,7 @@ StyleIface::state_from_name (const String &lower_case_state_name)
     case fnv1a_consthash64 ("focused"):         return WidgetState::FOCUSED;
     case fnv1a_consthash64 ("insensitive"):     return WidgetState::INSENSITIVE;
     case fnv1a_consthash64 ("active"):          return WidgetState::ACTIVE;
+    case fnv1a_consthash64 ("toggled"):         return WidgetState::TOGGLED;
     case fnv1a_consthash64 ("retained"):        return WidgetState::RETAINED;
     default:                                    return INVALID_STATE;
     }
