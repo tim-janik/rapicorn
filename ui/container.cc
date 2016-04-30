@@ -375,7 +375,7 @@ ContainerImpl::register_focus_indicator (FocusIndicator &focus_indicator)
     assert_return (existing_indicator != &focus_indicator);
   vfi.push_back (&focus_indicator);
   set_data (&focus_indicator_key, vfi);
-  set_flag (HAS_FOCUS_INDICATOR);
+  set_flag (HAS_FOCUS_INDICATOR, true);
 }
 
 void
@@ -391,7 +391,7 @@ ContainerImpl::unregister_focus_indicator (FocusIndicator &focus_indicator)
         else
           {
             delete_data (&focus_indicator_key);
-            unset_flag (HAS_FOCUS_INDICATOR);
+            set_flag (HAS_FOCUS_INDICATOR, false);
           }
         return;
       }
