@@ -67,14 +67,6 @@ enum StyleColor {
   FOCUS_BG
 };
 
-/// Enum used to specify the color schemes of a Widget.
-enum ColorScheme {
-  INHERIT = 0,    ///< Inherit color from parent component
-  NORMAL,         ///< Normal color specification
-  SELECTED,       ///< Color used for selected areas
-  BASE,           ///< Color used for text or scroll fields
-};
-
 /// Enum type for directional elements like arrows.
 enum Direction {
   NONE = 0,
@@ -289,7 +281,6 @@ interface Widget : Object {
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
   bool            allow_focus  = Bool (_("Allow Focus"), _("Whether this widget may receive input focus"), "rw");
-  ColorScheme     color_scheme = Enum (_("Color Scheme"), _("Color scheme to render this widget"), "rw");
   /// @name User Sizes and Size Groups
   String  hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
   String  vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");

@@ -30,7 +30,6 @@ void
 SelectableItemImpl::selected (bool s)
 {
   set_flag (uint64 (WidgetState::SELECTED), s);
-  color_scheme (s ? ColorScheme::SELECTED : ColorScheme::INHERIT);
 }
 
 bool

@@ -213,8 +213,6 @@ public:
   virtual void                name              (const String &str); ///< Set Widget name and "id"
   FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
-  ColorScheme                 color_scheme      () const;
-  void                        color_scheme      (ColorScheme cst);
   /* override requisition */
   double                      width             () const;
   void                        width             (double w);

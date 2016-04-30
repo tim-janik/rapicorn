@@ -1673,26 +1673,6 @@ WidgetImpl::user_source () const
   return Factory::factory_context_source (factory_context());
 }
 
-static DataKey<ColorScheme> widget_color_scheme_key;
-
-ColorScheme
-WidgetImpl::color_scheme () const
-{
-  return get_data (&widget_color_scheme_key);
-}
-
-void
-WidgetImpl::color_scheme (ColorScheme cst)
-{
-  if (cst != get_data (&widget_color_scheme_key))
-    {
-      if (cst == 0)
-        delete_data (&widget_color_scheme_key);
-      else
-        set_data (&widget_color_scheme_key, cst);
-    }
-}
-
 Color
 WidgetImpl::current_color (StyleColor color_type, const String &detail)
 {
