@@ -30,10 +30,13 @@ common_boilerplate = r"""
   static constexpr int64_t operator<< (Enum v, int64_t n) { return int64_t (v) << n; } \
   static constexpr int64_t operator^  (Enum v, int64_t n) { return int64_t (v) ^ n; } \
   static constexpr int64_t operator^  (int64_t n, Enum v) { return n ^ int64_t (v); } \
+  static constexpr Enum    operator^  (Enum v, Enum w)    { return Enum (int64_t (v) ^ w); } \
   static constexpr int64_t operator|  (Enum v, int64_t n) { return int64_t (v) | n; } \
   static constexpr int64_t operator|  (int64_t n, Enum v) { return n | int64_t (v); } \
+  static constexpr Enum    operator|  (Enum v, Enum w)    { return Enum (int64_t (v) | w); } \
   static constexpr int64_t operator&  (Enum v, int64_t n) { return int64_t (v) & n; } \
   static constexpr int64_t operator&  (int64_t n, Enum v) { return n & int64_t (v); } \
+  static constexpr Enum    operator&  (Enum v, Enum w)    { return Enum (int64_t (v) & w); } \
   static constexpr int64_t operator~  (Enum v)            { return ~int64_t (v); } \
   static constexpr int64_t operator+  (Enum v)            { return +int64_t (v); } \
   static constexpr int64_t operator-  (Enum v)            { return -int64_t (v); } \
