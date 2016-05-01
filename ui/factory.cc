@@ -192,12 +192,14 @@ UserSource
 factory_context_source (FactoryContext &fc)
 {
   const XmlNode *xnode = fc.xnode;
+#if 0
   if (!is_interface_node (*xnode)) // lookup definition node from child node
     {
       xnode = lookup_interface_node (xnode->name(), NULL, xnode);
       assert_return (xnode != NULL, UserSource (""));
     }
   assert_return (is_interface_node (*xnode), UserSource (""));
+#endif
   return UserSource ("WidgetFactory", xnode->parsed_file(), xnode->parsed_line());
 }
 
