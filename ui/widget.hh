@@ -298,7 +298,7 @@ public:
   /* debugging/testing */
   virtual String        test_dump               ();
   String                debug_dump              (const String &flags = String());
-  String                debug_name              (const String &format = "%n(%f:%l)");
+  String                debug_name              (const String &format = "") const;
 protected:
   void                  make_test_dump          (TestStream   &tstream);
   virtual void          dump_test_data          (TestStream   &tstream);
