@@ -343,8 +343,9 @@ ImagePainter::ImagePainter (Svg::FileP svgfile, const String &fragment)
 }
 
 void
-ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment)
+ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment_id)
 {
+  const String fragment = fragment_id[0] == '#' ? fragment_id : "#" + fragment_id;
   auto svge = svgfile ? svgfile->lookup (fragment) : Svg::Element::none();
   SVGDEBUG (" lookup: %s%s: %s", svgfile->name(), fragment, svge ? svge->bbox().to_string() : "failed");
   const Svg::BBox ibox = svge ? svge->bbox() : Svg::BBox();
