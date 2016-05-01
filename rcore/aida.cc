@@ -136,7 +136,34 @@ String
 EnumInfo::value_to_string (int64 value) const
 {
   const EnumValue ev = find_value (value);
-  return ev.ident ? ev.ident : string_format ("%d", value);
+  if (ev.ident)
+    return ev.ident;
+  return value_to_string (value, "+");
+}
+
+String
+EnumInfo::value_to_string (int64 value, const String &joiner) const
+{
+  // try exact match
+  for (size_t i = 0; i < n_values_; i++)
+    if (values_[i].value == value)
+      return values_[i].ident;
+  // try bit filling
+  int64 filled = 0;
+  std::vector<String> idents;
+  for (size_t i = 0; i < n_values_; i++)
+    if ((values_[i].value & ~value) == 0 &&     // must not set unrelated bits
+        (values_[i].value & ~filled) != 0)      // must fill new bits
+      {
+        idents.push_back (values_[i].ident);
+        filled |= values_[i].value;
+        if (filled == value)
+          break;
+      }
+  if (filled == value)
+    return string_join (joiner, idents);
+  // fallback
+  return string_format ("0x%x", value);
 }
 
 int64
