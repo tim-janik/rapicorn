@@ -150,6 +150,7 @@ export TSTDIFF = tstverify() { \
 ### eval $$TSTOCR 'PNGFILE' [REGEXPATTERNS...] - OCR-grep a PNG file for regular expressions
 export TSTOCR = tstocr() { IMG="$$1"; OUT=`basename "$$1".tocr`; shift; \
   gocr "$$IMG" > "$$OUT" 2>/dev/null && while [ -n "$$1" ] ; do \
+  $(if $(findstring 1, $(V)), echo OCR: ; cat "$$OUT" ; ,) \
   grep -qE -e "$$1" "$$OUT" ; _e=$$? ; \
   printf '  CHECK  %-64s%s\n' "$$MAKE_TARGET_FILE: $$1" "$${FAILOK:$$(($$_e?0:6)):6}" ; [ $$_e = 0 ] || exit $$_e ; \
   shift ; done || \
