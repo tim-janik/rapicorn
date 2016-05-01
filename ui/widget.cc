@@ -1758,7 +1758,7 @@ WidgetImpl::light_glint ()
 Color
 WidgetImpl::focus_color ()
 {
-  return state_color (state(), StyleColor::FOCUS_BG);
+  return state_color (state(), StyleColor::FOCUS_COLOR);
 }
 
 /// Return clipping area for rendering and event processing if one is set.

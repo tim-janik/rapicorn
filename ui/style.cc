@@ -118,8 +118,7 @@ StyleImpl::state_color (WidgetState state, StyleColor color_type, const String &
     case StyleColor::LIGHT:         return fragment_color ("light", state);
     case StyleColor::LIGHT_SHADOW:  return adjust_color (state_color (state, StyleColor::LIGHT, detail), 1, 0.93); // 0xffcfccc8
     case StyleColor::LIGHT_GLINT:   return adjust_color (state_color (state, StyleColor::LIGHT, detail), 1, 1.07); // 0xffefece8
-    case StyleColor::FOCUS_FG:      return fragment_color ("fg", WidgetState (uint64 (state) | WidgetState::FOCUSED));
-    case StyleColor::FOCUS_BG:      return fragment_color ("bg", WidgetState (uint64 (state) | WidgetState::FOCUSED));
+    case StyleColor::FOCUS_COLOR:   return fragment_color ("fc", state);
     default:                        return 0x00000000; // silence warnings
     }
 }

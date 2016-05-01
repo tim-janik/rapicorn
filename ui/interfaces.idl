@@ -63,8 +63,7 @@ enum StyleColor {
   LIGHT,
   LIGHT_SHADOW,
   LIGHT_GLINT,
-  FOCUS_FG,
-  FOCUS_BG
+  FOCUS_COLOR,
 };
 
 /// Enum type for directional elements like arrows.
