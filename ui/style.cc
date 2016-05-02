@@ -266,14 +266,11 @@ Color
 StyleIface::insensitive_ink (WidgetState state, Color *glintp)
 {
   // construct insensitive ink by mixing foreground and dark_color
-  Color ink = state_color (state, StyleColor::FOREGROUND);
-  ink.combine (state_color (state, StyleColor::DARK), 0x80);
+  Color fgink = state_color (state | WidgetState::INSENSITIVE, StyleColor::FOREGROUND);
+  Color glint = state_color (state | WidgetState::INSENSITIVE, StyleColor::LIGHT);
   if (glintp)
-    {
-      Color glint = state_color (state, StyleColor::LIGHT);
-      *glintp = glint;
-    }
-  return ink;
+    *glintp = glint;
+  return fgink;
 }
 
 
