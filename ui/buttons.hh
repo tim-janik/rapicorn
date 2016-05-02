@@ -11,18 +11,24 @@ class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual Button
                        public virtual EventHandler {
   uint          button_, repeater_, unpress_;
   Click         click_type_;
+  uint          can_toggle_ : 1;
   String        on_click_[3];
   virtual void          dump_private_data       (TestStream &tstream);
   bool                  activate_button_command (int button);
   bool                  activate_command        ();
   void                  activate_click          (int button, EventType etype);
 protected:
+  bool                  is_grabbing             ();
   virtual void          construct               () override;
   virtual void          reset                   (ResetMode mode = RESET_ALL);
   virtual bool          handle_event            (const Event &event);
 public:
   explicit              ButtonAreaImpl  ();
   virtual bool          activate_widget ();
+  virtual bool          can_toggle      () const override;
+  virtual void          can_toggle      (bool cantoggle) override;
+  virtual bool          toggled         () const override;
+  virtual void          toggled         (bool istoggled) override;
   virtual Click         click_type      () const override;
   virtual void          click_type      (Click click_type) override;
   virtual String        on_click        () const override;

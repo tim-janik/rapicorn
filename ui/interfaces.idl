@@ -455,6 +455,8 @@ interface VBox : Container {
  */
 interface ButtonArea : Container {
   Click         click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
+  bool          can_toggle      = Bool (_("Can Toggle"), _("Boolean indicating whether this button may be toggled"), "rw");
+  bool          toggled         = Bool (_("Toggled"), _("Boolean indicating whether this button is toggled and (and active) or not"), "rw");
   String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
   String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
   String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");

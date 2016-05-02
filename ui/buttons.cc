@@ -10,7 +10,7 @@ namespace Rapicorn {
 
 ButtonAreaImpl::ButtonAreaImpl() :
   button_ (0), repeater_ (0), unpress_ (0),
-  click_type_ (Click::ON_RELEASE)
+  click_type_ (Click::ON_RELEASE), can_toggle_ (0)
 {}
 
 void
@@ -19,6 +19,46 @@ ButtonAreaImpl::construct ()
   set_flag (NEEDS_FOCUS_INDICATOR, true); // prerequisite for focusable
   set_flag (ALLOW_FOCUS, true);
   SingleContainerImpl::construct();
+}
+
+bool
+ButtonAreaImpl::is_grabbing ()
+{
+  WindowImpl *window = get_window();
+  return window && window->is_grabbing (*this);
+}
+
+bool
+ButtonAreaImpl::can_toggle () const
+{
+  return can_toggle_;
+}
+
+void
+ButtonAreaImpl::can_toggle (bool cantoggle)
+{
+  if (can_toggle_ != cantoggle)
+    {
+      can_toggle_ = cantoggle;
+      changed ("can_toggle");
+    }
+}
+
+bool
+ButtonAreaImpl::toggled () const
+{
+  return test_state (WidgetState::TOGGLED);
+}
+
+void
+ButtonAreaImpl::toggled (bool istoggled)
+{
+  const bool nowtoggled = test_state (WidgetState::TOGGLED);
+  if (nowtoggled != istoggled && (can_toggle_ || nowtoggled))
+    {
+      adjust_state (WidgetState::TOGGLED, istoggled && can_toggle_);
+      changed ("toggled");
+    }
 }
 
 Click
@@ -97,7 +137,7 @@ ButtonAreaImpl::activate_widget ()
       if (!unpress_)
         {
           auto unpress_handler = [this, &view] () {
-            view.active (false);
+            view.active (is_grabbing());
             remove_exec (unpress_);
             unpress_ = 0;
             return false;
@@ -111,9 +151,12 @@ ButtonAreaImpl::activate_widget ()
 bool
 ButtonAreaImpl::activate_button_command (int button)
 {
-  if (button >= 1 && button <= 3 && on_click_[button - 1] != "")
+  if (button >= 1 && button <= 3)
     {
-      exec_command (on_click_[button - 1]);
+      if (can_toggle())
+        toggled (!toggled());
+      if (on_click_[button - 1] != "")
+        exec_command (on_click_[button - 1]);
       return true;
     }
   else
@@ -127,8 +170,7 @@ ButtonAreaImpl::activate_command()
 }
 
 void
-ButtonAreaImpl::activate_click (int       button,
-                                EventType etype)
+ButtonAreaImpl::activate_click (int button, EventType etype)
 {
   bool need_repeat = etype == BUTTON_PRESS && (click_type_ == Click::KEY_REPEAT || click_type_ == Click::SLOW_REPEAT || click_type_ == Click::FAST_REPEAT);
   bool need_click = need_repeat;
@@ -156,6 +198,9 @@ void
 ButtonAreaImpl::reset (ResetMode mode)
 {
   ButtonAreaImpl &view = *this;
+  WindowImpl *window = view.get_window();
+  if (window)
+    window->remove_grab (*this);
   view.active (false);
   remove_exec (unpress_);
   unpress_ = 0;
@@ -186,7 +231,7 @@ ButtonAreaImpl::handle_event (const Event &event)
       bevent = dynamic_cast<const EventButton*> (&event);
       if (!button_ and bevent->button >= 1 and bevent->button <= 3)
         {
-          bool inbutton = view.hover();
+          const bool inbutton = view.hover();
           button_ = bevent->button;
           view.active (true);
           if (inbutton)
@@ -204,7 +249,7 @@ ButtonAreaImpl::handle_event (const Event &event)
       bevent = dynamic_cast<const EventButton*> (&event);
       if (button_ == bevent->button)
         {
-          bool inbutton = view.hover();
+          const bool inbutton = view.hover();
           view.get_window()->remove_grab (*this);
           button_ = 0;
           // activation may recurse here
