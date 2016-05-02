@@ -50,9 +50,10 @@ public:
   // grab handling
   virtual void          add_grab                                (WidgetImpl &child, bool unconfined = false);
   void                  add_grab                                (WidgetImpl *child, bool unconfined = false);
-  virtual void          remove_grab                             (WidgetImpl &child);
-  void                  remove_grab                             (WidgetImpl *child);
+  virtual bool          remove_grab                             (WidgetImpl &child);
+  bool                  remove_grab                             (WidgetImpl *child);
   virtual WidgetImpl*   get_grab                                (bool                   *unconfined = NULL);
+  bool                  is_grabbing                             (WidgetImpl &descendant);
   // main loop
   virtual EventLoop*    get_loop                                ();
   // signals
