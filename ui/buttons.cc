@@ -184,8 +184,7 @@ ButtonAreaImpl::handle_event (const Event &event)
     case BUTTON_2PRESS:
     case BUTTON_3PRESS:
       bevent = dynamic_cast<const EventButton*> (&event);
-      if (!button_ and bevent->button >= 1 and bevent->button <= 3 and
-          on_click_[bevent->button - 1] != "")
+      if (!button_ and bevent->button >= 1 and bevent->button <= 3)
         {
           bool inbutton = view.hover();
           button_ = bevent->button;
