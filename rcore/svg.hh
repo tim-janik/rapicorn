@@ -18,11 +18,11 @@ struct Info {
   Info () : em (0), ex (0) {}
 };
 
-/// A BBox provides bounding box information for SVG elements.
-struct BBox {
-  double x, y, width, height;
-  explicit BBox      ();
-  explicit BBox      (double, double, double, double);
+/// A IBox provides integer box coordinates for SVG elements.
+struct IBox {
+  int x, y, width, height;
+  explicit IBox      ();
+  explicit IBox      (int x, int y, int w, int h);
   String   to_string () const;
 };
 
@@ -45,8 +45,8 @@ typedef std::shared_ptr<Element> ElementP;      ///< Smart pointer to an Svg::El
 class Element {
 public:
   virtual Info  info            () = 0;                 ///< Provides information on size units.
-  virtual BBox  bbox            () = 0;                 ///< Provides the bounding box of an element.
-  virtual BBox  ibox            () = 0;                 ///< Provides the ink box of an element, i.e. area with non-transparent pixels.
+  virtual IBox  bbox            () = 0;                 ///< Provides the bounding box of an element.
+  virtual IBox  ibox            () = 0;                 ///< Provides the ink box of an element, i.e. area with non-transparent pixels.
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize = RenderSize::ZOOM, double xscale = 1,
                                  double yscale = 1) = 0;///< Renders a scaled SVG element into a cairo_surface_t.
   cairo_surface_t* stretch      (size_t, size_t, size_t, const Span*,  size_t, const Span*, cairo_filter_t = CAIRO_FILTER_BILINEAR);

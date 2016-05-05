@@ -194,9 +194,9 @@ test_convert_svg2png()
     fatal ("Failed to load file: %s", svg_name);
   Svg::ElementP e = file->lookup ("#test-box");
   assert (e);
-  const Svg::BBox bbox = e->bbox();
+  const Svg::IBox bbox = e->bbox();
   assert (bbox.width && bbox.height);
-  Svg::BBox a = bbox;
+  Svg::IBox a = bbox;
   a.width *= 9;
   a.height *= 7;
   const int frame = 11, width = a.width + 2 * frame, height = a.height + 2 * frame;

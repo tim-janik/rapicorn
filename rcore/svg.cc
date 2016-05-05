@@ -20,18 +20,18 @@ namespace Rapicorn {
 /// @namespace Rapicorn::Svg The Rapicorn::Svg namespace provides functions for handling and rendering of SVG files and elements.
 namespace Svg {
 
-BBox::BBox () :
+IBox::IBox () :
   x (-1), y (-1), width (0), height (0)
 {}
 
-BBox::BBox (double _x, double _y, double w, double h) :
+IBox::IBox (int _x, int _y, int w, int h) :
   x (_x), y (_y), width (w), height (h)
 {}
 
 String
-BBox::to_string () const
+IBox::to_string () const
 {
-  return string_format ("%.7g,%.7g,%.7g,%.7g", x, y, width, height);
+  return string_format ("%+d%+d%+dx%d", x, y, width, height);
 }
 
 struct ElementImpl : public Element {
@@ -43,8 +43,8 @@ struct ElementImpl : public Element {
   explicit      ElementImpl     () : handle_ (NULL), ix_ (0), iy_ (0), iwidth_ (0), iheight_ (0), em_ (0), ex_ (0), is_measured_ (false) {}
   virtual      ~ElementImpl     ();
   virtual Info  info            ();
-  virtual BBox  bbox            ()                      { return ibox(); }
-  virtual BBox  ibox            ()                      { return BBox (ix_, iy_, iwidth_, iheight_); }
+  virtual IBox  bbox            ()                      { return ibox(); }
+  virtual IBox  ibox            ()                      { return IBox (ix_, iy_, iwidth_, iheight_); }
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale);
   void          measure_bbox    ();
 };
@@ -204,7 +204,7 @@ ElementImpl::measure_bbox()
       String fname = string_format ("xdbg%02x.png", dcounter++);
       printerr ("SVG: id=%s rsvg-bbox=%+d%+d%+dx%d measured-bbox=%s (%s)\n", id_,
                 dp.x, dp.y, dd.width, dd.height,
-                BBox (ix_, iy_, iwidth_, iheight_).to_string(), fname);
+                IBox (ix_, iy_, iwidth_, iheight_).to_string(), fname);
       unlink (fname.c_str());
       if (cairo_surface_write_to_png (surface, fname.c_str()) != CAIRO_STATUS_SUCCESS)
         unlink (fname.c_str());
@@ -454,9 +454,9 @@ Element::stretch (const size_t image_width, const size_t image_height,
   assert_return (image_width > 0 && image_height > 0, NULL);
   assert_return (n_hspans >= 1 && n_vspans >= 1, NULL);
   // setup SVG element sizes
-  const BBox bb = bbox();
+  const IBox bb = bbox();
   double hscale_factor = 1, vscale_factor = 1;
-  size_t svg_width = bb.width + 0.5, svg_height = bb.height + 0.5;
+  size_t svg_width = bb.width, svg_height = bb.height;
   // copy and distribute spans to match image size
   Span image_hspans[n_hspans], image_vspans[n_vspans];
   bool hscalable = image_width != svg_width;
