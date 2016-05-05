@@ -200,19 +200,19 @@ public:
               vscale_spans_[1].length, vscale_spans_[1].resizable,
               vscale_spans_[2].length, vscale_spans_[2].resizable,
               fill_.string());
-    const Svg::IBox bb = svge_->bbox();
+    const Svg::IBox ink = svge_->ibox();
     ssize_t hsum = 0;
     for (size_t i = 0; i < ARRAY_SIZE (hscale_spans_); i++)
       hsum += hscale_spans_[i].length;
-    critical_unless (hsum == bb.width);
+    critical_unless (hsum == ink.width);
     ssize_t vsum = 0;
     for (size_t i = 0; i < ARRAY_SIZE (vscale_spans_); i++)
       vsum += vscale_spans_[i].length;
-    critical_unless (vsum == bb.height);
-    critical_unless (fill_.x >= 0 && fill_.x < bb.width);
-    critical_unless (fill_.x + fill_.width <= bb.width);
-    critical_unless (fill_.y >= 0 && fill_.y < bb.height);
-    critical_unless (fill_.y + fill_.height <= bb.height);
+    critical_unless (vsum == ink.height);
+    critical_unless (fill_.x >= 0 && fill_.x < ink.width);
+    critical_unless (fill_.x + fill_.width <= ink.width);
+    critical_unless (fill_.y >= 0 && fill_.y < ink.height);
+    critical_unless (fill_.y + fill_.height <= ink.height);
   }
   virtual StringVector
   list()
@@ -222,8 +222,8 @@ public:
   virtual Requisition
   image_size ()
   {
-    const auto bbox = svge_->bbox();
-    return Requisition (bbox.width, bbox.height);
+    const auto ink = svge_->ibox();
+    return Requisition (ink.width, ink.height);
   }
   virtual Rect
   fill_area ()
@@ -347,8 +347,8 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment_id)
 {
   const String fragment = fragment_id[0] == '#' ? fragment_id : "#" + fragment_id;
   auto svge = svgfile ? svgfile->lookup (fragment) : Svg::Element::none();
-  SVGDEBUG (" lookup: %s%s: %s", svgfile->name(), fragment, svge ? svge->bbox().to_string() : "failed");
-  const Svg::IBox ebox = svge ? svge->bbox() : Svg::IBox();
+  SVGDEBUG (" lookup: %s%s: %s", svgfile->name(), fragment, svge ? svge->ibox().to_string() : "failed");
+  const Svg::IBox ebox = svge ? svge->ibox() : Svg::IBox();
   if (svge && ebox.width > 0 && ebox.height > 0)
     {
       Rect fill { 0, 0, double (ebox.width), double (ebox.height) };
@@ -369,9 +369,9 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment_id)
           auxe = svgfile->lookup (fragment_base + ".hscale" + fragment_state);
           if (auxe)
             {
-              const Svg::IBox bbox = auxe->bbox();
-              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->bbox().to_string());
-              const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
+              const Svg::IBox ink = auxe->ibox();
+              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->ibox().to_string());
+              const double bx1 = CLAMP (ink.x, ix1, ix2), bx2 = CLAMP (ink.x + ink.width, ix1, ix2);
               if (bx1 < bx2)
                 {
                   hscale_spans[0].resizable = 0, hscale_spans[0].length = bx1 - ix1;
@@ -382,9 +382,9 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment_id)
           auxe = svgfile->lookup (fragment_base + ".vscale" + fragment_state);
           if (auxe)
             {
-              const Svg::IBox bbox = auxe->bbox();
-              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->bbox().to_string());
-              const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
+              const Svg::IBox ink = auxe->ibox();
+              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->ibox().to_string());
+              const double by1 = CLAMP (ink.y, iy1, iy2), by2 = CLAMP (ink.y + ink.height, iy1, iy2);
               if (by1 < by2)
                 {
                   vscale_spans[0].resizable = 0, vscale_spans[0].length = by1 - iy1;
@@ -395,9 +395,9 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment_id)
           auxe = svgfile->lookup (fragment_base + ".hfill" + fragment_state);
           if (auxe)
             {
-              const Svg::IBox bbox = auxe->bbox();
-              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->bbox().to_string());
-              const double bx1 = CLAMP (bbox.x, ix1, ix2), bx2 = CLAMP (bbox.x + bbox.width, ix1, ix2);
+              const Svg::IBox ink = auxe->ibox();
+              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->ibox().to_string());
+              const double bx1 = CLAMP (ink.x, ix1, ix2), bx2 = CLAMP (ink.x + ink.width, ix1, ix2);
               if (bx1 < bx2)
                 {
                   fill.x = bx1 - ix1;
@@ -407,9 +407,9 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment_id)
           auxe = svgfile->lookup (fragment_base + ".vfill" + fragment_state);
           if (auxe)
             {
-              const Svg::IBox bbox = auxe->bbox();
-              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->bbox().to_string());
-              const double by1 = CLAMP (bbox.y, iy1, iy2), by2 = CLAMP (bbox.y + bbox.height, iy1, iy2);
+              const Svg::IBox ink = auxe->ibox();
+              SVGDEBUG ("    aux: %s%s: %s", svgfile->name(), auxe->info().id, auxe->ibox().to_string());
+              const double by1 = CLAMP (ink.y, iy1, iy2), by2 = CLAMP (ink.y + ink.height, iy1, iy2);
               if (by1 < by2)
                 {
                   fill.y = by1 - iy1;

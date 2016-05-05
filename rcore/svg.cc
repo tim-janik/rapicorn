@@ -474,9 +474,9 @@ Element::stretch (const size_t image_width, const size_t image_height,
   assert_return (image_width > 0 && image_height > 0, NULL);
   assert_return (n_hspans >= 1 && n_vspans >= 1, NULL);
   // setup SVG element sizes
-  const IBox bb = bbox();
+  const IBox ib = ibox();
   double hscale_factor = 1, vscale_factor = 1;
-  size_t svg_width = bb.width, svg_height = bb.height;
+  size_t svg_width = ib.width, svg_height = ib.height;
   // copy and distribute spans to match image size
   Span image_hspans[n_hspans], image_vspans[n_vspans];
   bool hscalable = image_width != svg_width;
@@ -488,7 +488,7 @@ Element::stretch (const size_t image_width, const size_t image_height,
       if (svg_hspans[i].length && svg_hspans[i].resizable == 0)
         hscalable = false;
     }
-  assert_return (span_sum == bb.width, NULL);
+  assert_return (span_sum == ib.width, NULL);
   if (hscalable)
     {
       hscale_factor = image_width / double (svg_width);
@@ -513,7 +513,7 @@ Element::stretch (const size_t image_width, const size_t image_height,
       if (svg_vspans[i].length && svg_vspans[i].resizable == 0)
         vscalable = false;
     }
-  assert_return (span_sum == bb.height, NULL);
+  assert_return (span_sum == ib.height, NULL);
   if (vscalable)
     {
       vscale_factor = image_height / double (svg_height);
