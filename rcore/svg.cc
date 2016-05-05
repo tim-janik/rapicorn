@@ -36,15 +36,17 @@ BBox::to_string () const
 
 struct ElementImpl : public Element {
   String        id_;
-  int           x_, y_, width_, height_, rw_, rh_; // relative to bottom_left
-  double        em_, ex_;
   RsvgHandle   *handle_;
-  explicit      ElementImpl     () : x_ (0), y_ (0), width_ (0), height_ (0), em_ (0), ex_ (0), handle_ (NULL) {}
+  int           x_, y_, width_, height_; // relative to bottom_left
+  double        em_, ex_;
+  bool          is_measured_;
+  explicit      ElementImpl     () : handle_ (NULL), x_ (0), y_ (0), width_ (0), height_ (0), em_ (0), ex_ (0), is_measured_ (false) {}
   virtual      ~ElementImpl     ();
   virtual Info  info            ();
   virtual BBox  bbox            ()                      { return BBox (x_, y_, width_, height_); }
   virtual BBox  ibox            ()                      { return bbox(); }
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale);
+  void          measure_bbox    ();
 };
 
 const ElementP
@@ -97,6 +99,135 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
   return rendered;
 }
 
+static inline uint32
+cairo_surface_scan_col (cairo_surface_t *surface, int x)
+{
+  assert_return (surface != NULL, 0x00000000);
+  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, 0x00000000);
+  const int width = cairo_image_surface_get_width (surface);
+  double xoff = 0, yoff = 0;
+  cairo_surface_get_device_offset (surface, &xoff, &yoff);
+  x += xoff;
+  assert_return (0 <= x && x < width, 0x00000000);
+  const int height = cairo_image_surface_get_height (surface);
+  const int stride = cairo_image_surface_get_stride (surface);
+  const uint32 *const pixels = (const uint32*) cairo_image_surface_get_data (surface);
+  for (int y = 0; y < height; y++)
+    {
+      const uint32 argb = pixels[stride / 4 * y + x];
+      if (argb & 0xff000000)
+        return argb;
+    }
+  return 0x00000000;
+}
+
+static inline uint32
+cairo_surface_scan_row (cairo_surface_t *surface, int y)
+{
+  assert_return (surface != NULL, 0x00000000);
+  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, 0x00000000);
+  const int height = cairo_image_surface_get_height (surface);
+  double xoff = 0, yoff = 0;
+  cairo_surface_get_device_offset (surface, &xoff, &yoff);
+  y += yoff;
+  assert_return (0 <= y && y < height, 0x00000000);
+  const int width = cairo_image_surface_get_width (surface);
+  const int stride = cairo_image_surface_get_stride (surface);
+  const uint32 *const pixels = (const uint32*) cairo_image_surface_get_data (surface);
+  for (int x = 0; x < width; x++)
+    {
+      const uint32 argb = pixels[stride / 4 * y + x];
+      if (argb & 0xff000000)
+        return argb;
+    }
+  return 0x00000000;
+}
+
+void
+ElementImpl::measure_bbox()
+{
+  return_unless (is_measured_ == false);
+  const char *cid = id_.empty() ? NULL : id_.c_str();
+  // inkscape uses 90 DPI for unit->pixel mapping and librsvg only renders stable at 90 DPI
+  rsvg_handle_set_dpi_x_y (handle_, 90, 90);
+  // get librsvg's bbox, unfortunately it's often not wide enough due to rounding errors
+  RsvgPositionData dp = { 0, 0 };
+  rsvg_handle_get_position_sub (handle_, &dp, cid);
+  x_ = dp.x;
+  y_ = dp.y;
+  RsvgDimensionData dd = { 0, 0, 0, 0 };
+  rsvg_handle_get_dimensions_sub (handle_, &dd, cid);
+  if (0) // adjust for rounding at the output stage, this'd work if dp/dd used doubles
+    {
+      width_ = int (dp.x + dd.width + 0.95) - x_;
+      height_ = int (dp.y + dd.height + 0.95) - y_;
+    }
+  else
+    {
+      width_ = dd.width;
+      height_ = dd.height;
+    }
+  em_ = dd.em;
+  ex_ = dd.ex;
+  // measure element size by peeking at output pixels
+#if 1
+  const int delta = 3; // fudge around origin
+  const int x = dp.x - delta, y = dp.y - delta;
+  const int width = MAX (dd.width, 8) * 1.5 + 0.9 + 2 * delta;   // add enough padding to make
+  const int height = MAX (dd.height, 8) * 1.5 + 0.9 + 2 * delta; // cut-offs highly unlikely
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+  assert_return (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  cairo_surface_set_device_offset (surface, -x, -y);
+  cairo_t *cr = cairo_create (surface);
+  assert_return (cairo_status (cr) == CAIRO_STATUS_SUCCESS);
+  const bool rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
+  assert_return (rendered);
+  for (x_ = x; x_ < dp.x; x_++)
+    if (cairo_surface_scan_col (surface, x_) != 0)
+      break;
+  for (y_ = y; y_ < dp.y; y_++)
+    if (cairo_surface_scan_row (surface, y_) != 0)
+      break;
+  int b;
+  for (b = x + width; b > dp.x + dd.width; b--)
+    if (cairo_surface_scan_col (surface, b - 1) != 0)
+      break;
+  width_ = b - x_;
+  for (b = y + height; b > dp.y + dd.height; b--)
+    if (cairo_surface_scan_row (surface, b - 1) != 0)
+      break;
+  height_ = b - y_;
+  if (false && // debug code
+      (width_ != dd.width || height_ != dd.height))
+    {
+      static int dcounter = 1;
+      String fname = string_format ("xdbg%02x.png", dcounter++);
+      printerr ("SVG: id=%s rsvg-bbox=%+d%+d%+dx%d measured-bbox=%s (%s)\n", id_,
+                dp.x, dp.y, dd.width, dd.height,
+                BBox (x_, y_, width_, height_).to_string(), fname);
+      unlink (fname.c_str());
+      if (cairo_surface_write_to_png (surface, fname.c_str()) != CAIRO_STATUS_SUCCESS)
+        unlink (fname.c_str());
+    }
+  cairo_destroy (cr);
+  cairo_surface_destroy (surface);
+#endif
+  // increase DPI to subsample bbox
+#if 0
+  const double dpi = 90, subsampling = 3.33; // subsample DPI to reduce librsvg rounding errors
+  rsvg_handle_set_dpi_x_y (handle_, dpi * subsampling, dpi * subsampling);
+  rsvg_handle_get_dimensions_sub (handle_, &dd, cid);
+  rsvg_handle_get_position_sub (handle_, &dp, cid);
+  x_ = dp.x / subsampling + 0.5;
+  y_ = dp.y / subsampling + 0.5;
+  width_ = dd.width / subsampling + 0.5;
+  height_ = dd.height / subsampling + 0.5;
+  rsvg_handle_set_dpi_x_y (handle_, 90, 90); // restore librsvg standard DPI
+#endif
+  // done
+  is_measured_ = true;
+}
+
 // == FileImpl ==
 struct FileImpl : public File {
   RsvgHandle           *handle_;
@@ -139,6 +270,7 @@ File::load (Blob svg_blob)
       errno = ENODATA;
       return fp;
     }
+  rsvg_handle_set_dpi_x_y (handle, 90, 90); // ensure 90 DPI for librsvg and inkscape content to work correctly
   auto fp = std::make_shared<FileImpl> (handle, svg_blob.name());
   // workaround for https://bugzilla.gnome.org/show_bug.cgi?id=764610 - missing rsvg_handle_list()
   {
@@ -167,9 +299,6 @@ FileImpl::lookup (const String &elementid)
   if (handle_)
     {
       RsvgHandle *handle = handle_;
-      RsvgDimensionData rd = { 0, 0, 0, 0 };
-      RsvgDimensionData dd = { 0, 0, 0, 0 };
-      RsvgPositionData dp = { 0, 0 };
       String fragment;
       const char *cid;
       if (elementid.empty() || elementid == "#")
@@ -179,27 +308,13 @@ FileImpl::lookup (const String &elementid)
       else if (elementid[0] != '#')
         fragment = "#" + elementid;     // add missing hash
       cid = fragment.empty() ? NULL : fragment.c_str();
-      rsvg_handle_get_dimensions (handle, &rd);         // FIXME: cache results
-      if (rd.width > 0 && rd.height > 0 &&
-          rsvg_handle_get_dimensions_sub (handle, &dd, cid) && dd.width > 0 && dd.height > 0 &&
-          rsvg_handle_get_position_sub (handle, &dp, cid))
+      if (!cid || rsvg_handle_has_sub (handle, cid))
         {
           ElementImpl *ei = new ElementImpl();
           ei->handle_ = handle;
           g_object_ref (ei->handle_);
-          ei->x_ = dp.x;
-          ei->y_ = dp.y;
-          ei->width_ = dd.width;
-          ei->height_ = dd.height;
-          ei->rw_ = rd.width;
-          ei->rh_ = rd.height;
-          ei->em_ = dd.em;
-          ei->ex_ = dd.ex;
           ei->id_ = fragment;
-          if (0)
-            printerr ("SVG: %s: bbox=%d,%d,%dx%d dim=%dx%d em=%f ex=%f\n",
-                      ei->id_.c_str(), ei->x_, ei->y_, ei->width_, ei->height_,
-                      ei->rw_, ei->rh_, ei->em_, ei->ex_);
+          ei->measure_bbox();
           return ElementP (ei);
         }
     }
