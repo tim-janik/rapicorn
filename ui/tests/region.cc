@@ -35,7 +35,65 @@ test_rect (void)
   TASSERT (r2 != r4);                                   // empty vs. non-empty
   TASSERT (r3 != r4);                                   // empty vs. non-empty
 }
-REGISTER_UITHREAD_TEST ("Region/rectangles", test_rect);
+REGISTER_UITHREAD_TEST ("Region/rectangle basics", test_rect);
+
+static void
+test_rect_intersections (void)
+{
+  const Rect m (Point (5, 15), Point (8, 18));
+  Rect a, p, r;
+  // mapped_onto lower left
+  p = Rect (Point (1, 1), Point (2, 2));
+  TCMP (p.intersecting (m), ==, false);
+  a = p.mapped_onto (m); r = Rect (5, 15, 0, 0);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto left
+  p = Rect (Point (3, 16), Point (4, 17));
+  TCMP (p.intersecting (m), ==, false);
+  a = p.mapped_onto (m); r = Rect (5, 16, 0, 1);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto upper left
+  p = Rect (Point (3, 26), Point (4, 27));
+  TCMP (p.intersecting (m), ==, false);
+  a = p.mapped_onto (m); r = Rect (5, 18, 0, 0);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto top
+  p = Rect (Point (6, 26), Point (7, 27));
+  TCMP (p.intersecting (m), ==, false);
+  a = p.mapped_onto (m); r = Rect (6, 18, 1, 0);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto upper right
+  p = Rect (Point (25, 26), Point (28, 27));
+  TCMP (p.intersecting (m), ==, false);
+  a = p.mapped_onto (m); r = Rect (8, 18, 0, 0);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto right
+  p = Rect (Point (23, 16), Point (24, 17));
+  TCMP (p.intersecting (m), ==, false);
+  a = p.mapped_onto (m); r = Rect (8, 16, 0, 1);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto lower right
+  p = Rect (Point (23, 1), Point (24, 2));
+  TCMP (p.intersecting (m), ==, false);
+  a = p.mapped_onto (m); r = Rect (8, 15, 0, 0);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto bottom
+  p = Rect (Point (6, 6), Point (7, 7));
+  TCMP (p.intersecting (m), ==, false);
+  a = p.mapped_onto (m); r = Rect (6, 15, 1, 0);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto inner
+  p = Rect (Point (6, 16), Point (7, 17));
+  TCMP (p.intersecting (m), ==, true);
+  a = p.mapped_onto (m); r = Rect (6, 16, 1, 1);
+  TCMP (a.string(), ==, r.string());
+  // mapped_onto outer
+  p = Rect (Point (0, 0), Point (100, 100));
+  TCMP (p.intersecting (m), ==, true);
+  a = p.mapped_onto (m); r = Rect (5, 15, 3, 3);
+  TCMP (a.string(), ==, r.string());
+}
+REGISTER_UITHREAD_TEST ("Region/rectangle intersection", test_rect_intersections);
 
 static void
 test_region_basics (void)

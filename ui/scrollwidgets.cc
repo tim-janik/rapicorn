@@ -69,7 +69,8 @@ static const WidgetFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Scrol
 
 // == ScrollPortImpl ==
 ScrollPortImpl::ScrollPortImpl() :
-  hadjustment_ (NULL), vadjustment_ (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0), fix_id_ (0)
+  hadjustment_ (NULL), vadjustment_ (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0), fix_id_ (0),
+  sig_scrolled (Aida::slot (*this, &ScrollPortImpl::do_scrolled))
 {}
 
 void
@@ -143,9 +144,6 @@ ScrollPortImpl::fix_adjustments ()
     hadjustment_->constrain();
   if (vadjustment_)
     vadjustment_->constrain();
-  const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
-  const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
-  scroll_offsets (xoffset, yoffset); // syncronize offsets, before adjustment_changed() kicks in
   if (hadjustment_)
     hadjustment_->thaw();
   if (vadjustment_)
@@ -153,15 +151,31 @@ ScrollPortImpl::fix_adjustments ()
 }
 
 void
-ScrollPortImpl::size_allocate (Allocation area, bool changed)
+ScrollPortImpl::adjustment_changed()
 {
-  if (!has_visible_child())
-    return;
+  sig_scrolled.emit(); // FIXME: need to issue 0-distance move here
+}
+
+void
+ScrollPortImpl::do_scrolled ()
+{
+  if (0)
+    expose();
+  else
+    invalidate_size();
+}
+
+void
+ScrollPortImpl::size_allocate (const Allocation area, bool changed)
+{
+  return_unless (has_visible_child());
+  const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
+  const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
   WidgetImpl &child = get_child();
   const Requisition rq = child.requisition();
   Allocation child_area;
-  child_area.x = 0; // 0-offset
-  child_area.y = 0; // 0-offset
+  child_area.x = area.x - xoffset;
+  child_area.y = area.y - yoffset;
   if (child.hexpand())
     child_area.width = max (rq.width, area.width);
   else
@@ -170,9 +184,8 @@ ScrollPortImpl::size_allocate (Allocation area, bool changed)
     child_area.height = max (rq.height, area.height);
   else
     child_area.height = rq.height;
-  const Allocation clip_area = child_area;
   child_area = layout_child (child, child_area);
-  child.set_allocation (child_area, &clip_area); // clipping is done in render instead
+  child.set_allocation (child_area);
   if (!fix_id_)
     {
       WindowImpl *window = get_window();
@@ -180,14 +193,6 @@ ScrollPortImpl::size_allocate (Allocation area, bool changed)
       if (loop)
         fix_id_ = loop->exec_callback (Aida::slot (*this, &ScrollPortImpl::fix_adjustments), EventLoop::PRIORITY_NOW);
     }
-}
-
-void
-ScrollPortImpl::adjustment_changed()
-{
-  const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
-  const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
-  scroll_offsets (xoffset, yoffset);
 }
 
 void
@@ -204,7 +209,7 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
   WidgetImpl *fwidget = rfwidget;
   if (!fwidget)
     return;
-  /* list focus widgets between focus_widget and our immediate child */
+  // list focus chain descendants between focus_widget and our immediate child
   std::list<WidgetImpl*> fwidgets;
   while (fwidget)
     {
@@ -213,17 +218,12 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
         break;
       fwidget = fwidget->parent();
     }
-  /* find the first focus descendant that fits the scroll area */
-  fwidget = rfwidget; /* fallback to innermost focus widget */
+  // find the first focus descendant that fits the scroll area
+  fwidget = rfwidget; // fallback to innermost focus widget
   const Rect area = allocation();
   for (WidgetImpl *widget : fwidgets)
     {
       Rect a = widget->allocation();
-      if (!translate_from (*widget, 1, &a))
-        {
-          fwidget = NULL; // no geographic descendant
-          break;
-        }
       if (a.width <= area.width && a.height <= area.height)
         {
           fwidget = widget;
@@ -239,15 +239,13 @@ void
 ScrollPortImpl::scroll_to_child (WidgetImpl &widget)
 {
   const Rect area = allocation();
-  /* adjust scroll area to widget's area */
+  // adjust scroll area to widget's area
   Rect farea = widget.allocation();
-  if (!translate_from (widget, 1, &farea))
-    return;           // not geographic descendant
   if (0)
     printerr ("scroll-focus: area=%s farea=%s child=%p (%s)\n",
               area.string().c_str(), farea.string().c_str(), &widget,
               widget.allocation().string().c_str());
-  /* calc new scroll position, giving precedence to lower left */
+  // calc new scroll position, giving precedence to lower left
   double deltax = 0, deltay = 0;
   if (farea.upper_x() > area.upper_x() + deltax)
     deltax += farea.upper_x() - (area.upper_x() + deltax);
@@ -257,7 +255,7 @@ ScrollPortImpl::scroll_to_child (WidgetImpl &widget)
     deltay += farea.upper_y() - (area.upper_y() + deltay);
   if (farea.y < area.y + deltay)
     deltay += farea.y - (area.y + deltay);
-  /* scroll to new position */
+  // scroll to new position
   hadjustment_->freeze();
   vadjustment_->freeze();
   if (deltax)

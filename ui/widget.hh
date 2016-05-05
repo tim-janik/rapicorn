@@ -58,8 +58,8 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   StyleImplP                  style_;
   HeritageP                   heritage_;
   FactoryContext             &factory_context_;
-  Allocation                  allocation_;
   Requisition                 requisition_;
+  Allocation                  allocation_, clip_area_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   ContainerImpl**             _parent_loc        () { return &parent_; }
@@ -69,7 +69,6 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
   void                        data_context_changed ();
   bool                        process_event                (const Event &event, bool capture = false);  // widget coordinates relative
-  bool                        process_display_window_event (const Event &event);  // display_window coordinates relative
 protected:
   const AnchorInfo*           force_anchor_info  () const;
   virtual void                foreach_recursive  (const std::function<void (WidgetImpl&)> &f);
@@ -114,6 +113,7 @@ protected:
     ALLOW_FOCUS            = 1ULL << 33, ///< Flag set by the widget user to indicate if a widget may or may not receive focus.
     NEEDS_FOCUS_INDICATOR  = 1ULL << 34, ///< Flag used for containers that need a focus-indicator to receive input focus.
     HAS_FOCUS_INDICATOR    = 1ULL << 35, ///< Flag set on #NEEDS_FOCUS_INDICATOR containers if a descendant provides a focus-indicator.
+    HAS_CLIP_AREA          = 1ULL << 36, ///< Flag indicating wether a clip_area() has been assigned or not.
   };
   void                        set_flag          (uint64 flag, bool on = true);
   void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
@@ -270,8 +270,6 @@ public:
   /* coordinate handling */
 protected:
   struct WidgetChain { WidgetImpl *widget; WidgetChain *next; WidgetChain() : widget (NULL), next (NULL) {} };
-  Affine                     affine_to_display_window   ();                    // widget => display_window affine
-  Affine                     affine_from_display_window ();                    // display_window => widget affine
   // rendering
   class RenderContext;
   virtual void               render_widget             (RenderContext    &rcontext);
@@ -283,21 +281,6 @@ protected:
 public:
   void                       render_into               (cairo_t *cr, const Region &region);
   virtual bool               point                     (Point        p);            // widget coordinates relative
-  Point                      point_to_display_window   (Point        widget_point);   // widget coordinates relative
-  Point                      point_from_display_window (Point        window_point); // display_window coordinates relative
-  virtual bool               translate_from         (const WidgetImpl   &src_widget,
-                                                     const uint    n_points,
-                                                     Point        *points) const;
-  bool                       translate_to           (const uint    n_points,
-                                                     Point        *points,
-                                                     const WidgetImpl   &target_widget) const;
-  bool                       translate_from         (const WidgetImpl   &src_widget,
-                                                     const uint    n_rects,
-                                                     Rect         *rects) const;
-  bool                       translate_to           (const uint    n_rects,
-                                                     Rect         *rects,
-                                                     const WidgetImpl   &target_widget) const;
-  bool                       display_window_point   (Point        p);           // display_window coordinates relative
   /* public size accessors */
   virtual Requisition        requisition        ();                              // effective size requisition
   void                       set_allocation     (const Allocation &area,
@@ -305,7 +288,6 @@ public:
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
-  Allocation                 focus_view_area    () const;
   /* theming & appearance */
   ThemeInfo&            theme_info              () const;
   // colors

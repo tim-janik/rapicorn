@@ -146,8 +146,6 @@ struct EventContext {
   EventContext& operator=    (const Event&);
 };
 
-Event*          create_event_transformed  (const Event        &event,
-                                           const Affine       &affine);
 Event*          create_event_cancellation (const EventContext &econtext);
 EventMouse*     create_event_mouse        (EventType           type,
                                            const EventContext &econtext);

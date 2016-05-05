@@ -940,147 +940,6 @@ WidgetImpl::heritage (HeritageP heritage)
     }
 }
 
-static bool
-translate_from_ancestor (WidgetImpl         *ancestor,
-                         const WidgetImpl   *child,
-                         const uint    n_points,
-                         Point        *points)
-{
-  if (child == ancestor)
-    return true;
-  ContainerImpl *pc = child->parent();
-  translate_from_ancestor (ancestor, pc, n_points, points);
-  Affine caffine = pc->child_affine (*child);
-  for (uint i = 0; i < n_points; i++)
-    points[i] = caffine.point (points[i]);
-  return true;
-}
-
-bool
-WidgetImpl::translate_from (const WidgetImpl   &src_widget,
-                      const uint    n_points,
-                      Point        *points) const
-{
-  WidgetImpl *ca = common_ancestor (src_widget);
-  if (!ca)
-    return false;
-  WidgetImpl *widget = const_cast<WidgetImpl*> (&src_widget);
-  while (widget != ca)
-    {
-      ContainerImpl *pc = widget->parent();
-      Affine affine = pc->child_affine (*widget);
-      affine.invert();
-      for (uint i = 0; i < n_points; i++)
-        points[i] = affine.point (points[i]);
-      widget = pc;
-    }
-  bool can_translate = translate_from_ancestor (ca, this, n_points, points);
-  if (!can_translate)
-    return false;
-  return true;
-}
-
-bool
-WidgetImpl::translate_to (const uint    n_points,
-                    Point        *points,
-                    const WidgetImpl   &target_widget) const
-{
-  return target_widget.translate_from (*this, n_points, points);
-}
-
-bool
-WidgetImpl::translate_from (const WidgetImpl   &src_widget,
-                      const uint    n_rects,
-                      Rect         *rects) const
-{
-  vector<Point> points;
-  for (uint i = 0; i < n_rects; i++)
-    {
-      points.push_back (rects[i].lower_left());
-      points.push_back (rects[i].lower_right());
-      points.push_back (rects[i].upper_left());
-      points.push_back (rects[i].upper_right());
-    }
-  if (!translate_from (src_widget, points.size(), &points[0]))
-    return false;
-  for (uint i = 0; i < n_rects; i++)
-    {
-      const Point &p1 = points[i * 4 + 0], &p2 = points[i * 4 + 1];
-      const Point &p3 = points[i * 4 + 2], &p4 = points[i * 4 + 3];
-      const Point ll = min (min (p1, p2), min (p3, p4));
-      const Point ur = max (max (p1, p2), max (p3, p4));
-      rects[i].x = ll.x;
-      rects[i].y = ll.y;
-      rects[i].width = ur.x - ll.x;
-      rects[i].height = ur.y - ll.y;
-    }
-  return true;
-}
-
-bool
-WidgetImpl::translate_to (const uint    n_rects,
-                    Rect         *rects,
-                    const WidgetImpl   &target_widget) const
-{
-  return target_widget.translate_from (*this, n_rects, rects);
-}
-
-Point
-WidgetImpl::point_from_display_window (Point window_point) /* window coordinates relative */
-{
-  Point p = window_point;
-  ContainerImpl *pc = parent();
-  if (pc)
-    {
-      const Affine &caffine = pc->child_affine (*this);
-      p = pc->point_from_display_window (p);  // to display_window coords
-      p = caffine * p;
-    }
-  return p;
-}
-
-Point
-WidgetImpl::point_to_display_window (Point widget_point) /* widget coordinates relative */
-{
-  Point p = widget_point;
-  ContainerImpl *pc = parent();
-  if (pc)
-    {
-      const Affine &caffine = pc->child_affine (*this);
-      p = caffine.ipoint (p);           // to parent coords
-      p = pc->point_to_display_window (p);
-    }
-  return p;
-}
-
-Affine
-WidgetImpl::affine_from_display_window () /* display_window => widget affine */
-{
-  Affine iaffine;
-  ContainerImpl *pc = parent();
-  if (pc)
-    {
-      const Affine &paffine = pc->affine_from_display_window();
-      const Affine &caffine = pc->child_affine (*this);
-      if (paffine.is_identity())
-        iaffine = caffine;
-      else if (caffine.is_identity())
-        iaffine = paffine;
-      else
-        iaffine = caffine * paffine;
-    }
-  return iaffine;
-}
-
-Affine
-WidgetImpl::affine_to_display_window () /* widget => display_window affine */
-{
-  Affine iaffine = affine_from_display_window();
-  if (!iaffine.is_identity())
-    iaffine = iaffine.invert();
-  return iaffine;
-}
-
 bool
 WidgetImpl::process_event (const Event &event, bool capture) // widget coordinates relative
 {
@@ -1094,32 +953,6 @@ WidgetImpl::process_event (const Event &event, bool capture) // widget coordinat
         handled = controller->sig_event.emit (event);
     }
   return handled;
-}
-
-bool
-WidgetImpl::process_display_window_event (const Event &event) /* display_window coordinates relative */
-{
-  bool handled = false;
-  EventHandler *controller = dynamic_cast<EventHandler*> (this);
-  if (controller)
-    {
-      const Affine &affine = affine_from_display_window();
-      if (affine.is_identity ())
-        handled = controller->sig_event.emit (event);
-      else
-        {
-          Event *ecopy = create_event_transformed (event, affine);
-          handled = controller->sig_event.emit (*ecopy);
-          delete ecopy;
-        }
-    }
-  return handled;
-}
-
-bool
-WidgetImpl::display_window_point (Point p) /* window coordinates relative */
-{
-  return point (point_from_display_window (p));
 }
 
 bool
@@ -1883,29 +1716,21 @@ WidgetImpl::background ()
   return heritage()->background (state());
 }
 
-class ClipAreaDataKey : public DataKey<Allocation*> {
-  virtual void destroy (Allocation *clip) override
-  {
-    delete clip;
-  }
-};
-static ClipAreaDataKey clip_area_key;
-
 /// Return clipping area for rendering and event processing if one is set.
 const Allocation*
 WidgetImpl::clip_area () const
 {
-  return get_data (&clip_area_key);
+  return test_any_flag (HAS_CLIP_AREA) ? &clip_area_ : NULL;
 }
 
 /// Assign clipping area for rendering and event processing.
 void
 WidgetImpl::clip_area (const Allocation *clip)
 {
-  if (!clip)
-    delete_data (&clip_area_key);
-  else
-    set_data (&clip_area_key, new Rect (*clip));
+  const bool has_clip_area = clip != NULL;
+  clip_area_ = has_clip_area ? *clip : Rect();
+  if (has_clip_area != test_any_flag (HAS_CLIP_AREA))
+    change_flags_silently (HAS_CLIP_AREA, has_clip_area);
 }
 
 /** Return widget allocation area accounting for clip_area().
@@ -1921,16 +1746,6 @@ WidgetImpl::clipped_allocation () const
   if (clip)
     area.intersect (*clip);
   return area;
-}
-
-/// Return the widget allocation area that is visible and needs consideration during focus movement.
-Allocation
-WidgetImpl::focus_view_area () const
-{
-  if (!parent_)
-    return clipped_allocation();
-  else
-    return parent_->child_view_area (*this);
 }
 
 bool
@@ -2044,7 +1859,7 @@ WidgetImpl::render_into (cairo_t *cr, const Region &region)
     }
 }
 
-/// Render widget's clipped allication area contents into the rendering context provided.
+/// Render widget's clipped allocation area contents into the rendering context provided.
 void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {

@@ -30,6 +30,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
 protected:
   void                  set_focus               (WidgetImpl *widget);
   virtual void          check_resize            () override;
+  void                  ensure_resized          ();
   virtual void          set_parent              (ContainerImpl *parent);
   virtual void          construct               () override;
   virtual void          dispose                 () override;

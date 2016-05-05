@@ -6,8 +6,9 @@
 #include <string.h> // memcpy
 #include <algorithm>
 
-#define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
+#define EDEBUG(...)           RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
 #define DEBUG_RESIZE(...)     RAPICORN_KEY_DEBUG ("Resize", __VA_ARGS__)
+#define DEBUG_RENDER(...)     RAPICORN_KEY_DEBUG ("Render", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -16,7 +17,6 @@ struct ClassDoctor {
     using WidgetImpl::set_flag;
     using WidgetImpl::unset_flag;
     using WidgetImpl::process_event;
-    using WidgetImpl::process_display_window_event;
   };
 };
 static ClassDoctor::WidgetImpl_& internal_cast (WidgetImpl &w) { return *static_cast<ClassDoctor::WidgetImpl_*> (&w); }
@@ -289,7 +289,6 @@ WindowImpl::resize_window (const Allocation *new_area)
   assert_return (requisitions_tunable() == false);
   Requisition rsize;
   DisplayWindow::State state;
-  bool allocated = false;
 
   // negotiate sizes (new_area==NULL) and ensures window is allocated
   negotiate_size (new_area);
@@ -318,14 +317,13 @@ WindowImpl::resize_window (const Allocation *new_area)
     {
       Allocation area = Allocation (0, 0, state.width, state.height);
       negotiate_size (&area);
-      allocated = true;
     }
  done:
   const uint64 stop = timestamp_realtime();
-  Allocation area = new_area ? *new_area : allocated ? Allocation (0, 0, state.width, state.height) : Allocation (0, 0, rsize.width, rsize.height);
-  DEBUG_RESIZE ("request=%s allocate=%s elapsed=%.3fms",
-                new_area ? "-" : string_format ("%.0fx%.0f", rsize.width, rsize.height).c_str(),
-                string_format ("%.0fx%.0f", area.width, area.height).c_str(),
+  DEBUG_RESIZE ("request=%s allocate=%s pws=%d expose=%s elapsed=%.3fms",
+                new_area ? "-" : string_format ("%.0fx%.0f", requisition().width, requisition().height),
+                string_format ("%.0fx%.0f", allocation().width, allocation().height),
+                pending_win_size_, peek_expose_region().extents().string(),
                 (stop - start) / 1000.0);
 }
 
@@ -362,25 +360,27 @@ bool
 WindowImpl::dispatch_mouse_movement (const Event &event)
 {
   last_event_context_ = event;
+  // ensure coordinates are interpreted with correct allocations
+  ensure_resized();
   vector<WidgetImplP> pierced;
   /* figure all entered children */
   bool unconfined;
   WidgetImpl* grab_widget = get_grab (&unconfined);
   if (grab_widget)
     {
-      if (unconfined or grab_widget->display_window_point (Point (event.x, event.y)))
+      if (unconfined or grab_widget->point (Point (event.x, event.y)))
         {
           pierced.push_back (shared_ptr_cast<WidgetImpl> (grab_widget));        // grab-widget receives all mouse events
           ContainerImpl *container = grab_widget->interface<ContainerImpl*>();
           if (container)                              /* deliver to hovered grab-widget children as well */
-            container->display_window_point_children (Point (event.x, event.y), pierced);
+            container->point_children (Point (event.x, event.y), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all mouse events
       if (entered_)
-        display_window_point_children (Point (event.x, event.y), pierced);
+        point_children (Point (event.x, event.y), pierced);
     }
   /* send leave events */
   vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
@@ -417,7 +417,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all events
-      display_window_point_children (Point (event.x, event.y), pierced);
+      point_children (Point (event.x, event.y), pierced);
     }
   /* send actual event */
   bool handled = false;
@@ -657,7 +657,7 @@ WindowImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_display_window_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
@@ -695,7 +695,7 @@ WindowImpl::dispatch_data_event (const Event &event)
 {
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_display_window_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_event (event))
     return true;
   else if (event.type == CONTENT_REQUEST)
     {
@@ -818,9 +818,9 @@ WindowImpl::draw_now ()
       // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
       loop_->exec_callback ([this] () { if (display_window_) sig_displayed.emit(); }, EventLoop::PRIORITY_UPDATE);
       const uint64 stop = timestamp_realtime();
-      EDEBUG ("RENDER: %+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
-              x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
-              (stop - start) / 1000.0);
+      DEBUG_RENDER ("%+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
+                    x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
+                    (stop - start) / 1000.0);
     }
   else
     discard_expose_region(); // nuke stale exposes
@@ -1046,12 +1046,18 @@ WindowImpl::clear_immediate_event ()
 }
 
 void
+WindowImpl::ensure_resized()
+{
+  if (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+    resize_window (NULL);
+}
+
+void
 WindowImpl::check_resize()
 {
   const bool can_resize = !pending_win_size_ && display_window_;
-  const bool need_resize = can_resize && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
-  if (need_resize)
-    resize_window (NULL);
+  if (can_resize)
+    ensure_resized();
 }
 
 bool
@@ -1204,7 +1210,6 @@ WindowImpl::synthesize_enter (double xalign,
   const Allocation &area = allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = point_to_display_window (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
@@ -1234,7 +1239,6 @@ WindowImpl::synthesize_click (WidgetIface &widgeti,
   const Allocation &area = widget.allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
-  p = widget.point_to_display_window (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;

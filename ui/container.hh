@@ -28,7 +28,6 @@ struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface 
   void                widget_uncross_links  (WidgetImpl           &owner,
                                              WidgetImpl           &link);
   WidgetGroup*        retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create);
-  virtual Allocation  child_view_area       (const WidgetImpl &child);
 protected:
   virtual            ~ContainerImpl     ();
   virtual void        do_changed        (const String &name) override;
@@ -65,10 +64,7 @@ public:
   bool                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL, 0); return remove (*widget); }
   void                  add             (WidgetImpl                   &widget);
   void                  add             (WidgetImpl                   *widget);
-  virtual Affine        child_affine    (const WidgetImpl             &widget); /* container => widget affine */
   virtual void          point_children  (Point                   p, /* widget coordinates relative */
-                                         std::vector<WidgetImplP>     &stack);
-  void    display_window_point_children (Point                   p, /* display_window coordinates relative */
                                          std::vector<WidgetImplP>     &stack);
   virtual ContainerImpl* as_container_impl ()                           { return this; }
   virtual void          render_recursive(RenderContext &rcontext);

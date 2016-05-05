@@ -177,6 +177,7 @@ public:
   Rect&         intersect       (const Rect &r);
   bool          intersecting    (const Rect &r) const;
   Rect          intersection    (const Rect &r) const           { return Rect (*this).intersect (r); }
+  Rect          mapped_onto     (const Rect &bounds) const;
   bool          empty           () const;
   Point         anchor_point    (Anchor anchor);
   Rect&         translate       (double deltax,
