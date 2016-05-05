@@ -85,14 +85,14 @@ class TextControllerImpl : public virtual SingleContainerImpl, public virtual Ev
   int        cursor_;
   TextMode   text_mode_;
   bool       allow_edits_;
-  TextBlockP cached_tblock_;
-  size_t     tblock_sig_;
+  TextBlock *internal_tblock_;
+  size_t     tblock_clink_, tblock_sig_;
   String     next_markup_;
-  uint       next_handler_;
   String     clipboard_;
   uint64     clipboard_nonce_, selection_nonce_, paste_nonce_;
   enum CursorMovement { NEXT_CHAR, PREV_CHAR, WARP_HOME, WARP_END, };
   TextBlock*            get_text_block          ();
+  void                  reset_text_block        (WidgetImpl &tblock);
   void                  update_text_block       ();
   bool                  move_cursor             (CursorMovement cm, const bool reset_selection);
   bool                  insert_literally        (const String &utf8text);
@@ -104,6 +104,7 @@ class TextControllerImpl : public virtual SingleContainerImpl, public virtual Ev
 protected:
   explicit              TextControllerImpl      ();
   virtual              ~TextControllerImpl      () override;
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   virtual void          construct               () override;
   virtual bool          can_focus               () const override;
   virtual void          reset                   (ResetMode mode = RESET_ALL) override;

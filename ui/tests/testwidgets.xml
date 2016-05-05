@@ -7,7 +7,7 @@
   <!-- alignment test -->
   <Window id="alignment-test">
     <Alignment left-padding="31" right-padding="22" top-padding="33" bottom-padding="34">
-      <RapicornTestWidget assert-left="31" assert-right="-22" assert-top="-33" assert-bottom="34"
+      <RapicornTestWidget assert-left="31" assert-right="-22" assert-top="33" assert-bottom="-34"
 	width="17" height="19" assert-width="17" assert-height="19" />
     </Alignment>
   </Window>

@@ -44,6 +44,7 @@ protected:
   virtual void        set_focus_child   (WidgetImpl *widget);
   virtual void        scroll_to_child   (WidgetImpl &widget);
   virtual void        dump_test_data    (TestStream &tstream);
+  static Requisition  measure_child     (WidgetImpl &child);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
   static Requisition  size_request_child (WidgetImpl &child, bool *hspread, bool *vspread);
 public:
@@ -126,17 +127,18 @@ class MultiContainerImpl : public virtual ContainerImpl {
   std::vector<WidgetImplP> widgets;
 protected:
   virtual              ~MultiContainerImpl      ();
-  virtual void          render                  (RenderContext&, const Rect&) {}
+  virtual void          render                  (RenderContext&, const Rect&) override {}
+  virtual void          add_child               (WidgetImpl   &widget) override;
+  virtual void          remove_child            (WidgetImpl   &widget) override;
+  explicit              MultiContainerImpl      ();
+public:
   virtual WidgetImplP*  begin                   () const override;
   virtual WidgetImplP*  end                     () const override;
-  virtual size_t        n_children              () { return widgets.size(); }
-  virtual WidgetImpl*   nth_child               (size_t nth) { return nth < widgets.size() ? widgets[nth].get() : NULL; }
-  virtual void          add_child               (WidgetImpl   &widget);
-  virtual void          remove_child            (WidgetImpl   &widget);
+  virtual size_t        n_children              () override           { return widgets.size(); }
+  virtual WidgetImpl*   nth_child               (size_t nth) override { return nth < widgets.size() ? widgets[nth].get() : NULL; }
   void                  raise_child             (WidgetImpl   &widget);
   void                  lower_child             (WidgetImpl   &widget);
   void                  remove_all_children     ();
-  explicit              MultiContainerImpl      ();
 };
 
 } // Rapicorn

@@ -71,22 +71,12 @@ TextBlock::plain_text () const
 // == TextControllerImpl ==
 TextControllerImpl::TextControllerImpl() :
   cursor_ (0), text_mode_ (TEXT_MODE_SINGLE_LINE), allow_edits_ (false),
-  cached_tblock_ (NULL), tblock_sig_ (0), next_handler_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
+  internal_tblock_ (NULL), tblock_clink_ (0), tblock_sig_ (0), clipboard_nonce_ (0), selection_nonce_ (0), paste_nonce_ (0)
 {}
 
 TextControllerImpl::~TextControllerImpl()
 {
-  if (next_handler_)
-    {
-      remove_exec (next_handler_);
-      next_handler_ = 0;
-    }
-  if (cached_tblock_)
-    {
-      cached_tblock_->sig_selection_changed() -= tblock_sig_;
-      tblock_sig_ = 0;
-      cached_tblock_ = NULL;
-    }
+  assert_return (internal_tblock_ == NULL); // only used while anchored
 }
 
 void
@@ -98,34 +88,62 @@ TextControllerImpl::construct()
   update_text_block();
 }
 
+void
+TextControllerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+{
+  this->SingleContainerImpl::hierarchy_changed (old_toplevel);
+  if (anchored() && !internal_tblock_)
+    get_text_block(); // setup internal_tblock_
+  if (!anchored() && internal_tblock_)
+    reset_text_block (*dynamic_cast<WidgetImpl*> (internal_tblock_));
+}
+
+void
+TextControllerImpl::reset_text_block (WidgetImpl &tblock)
+{
+  assert_return (dynamic_cast<WidgetImpl*> (internal_tblock_) == &tblock);
+  if (tblock_sig_)
+    internal_tblock_->sig_selection_changed() -= tblock_sig_;
+  tblock_sig_ = 0;
+  if (tblock_clink_)
+    {
+      widget_cross_unlink (*this, tblock, tblock_clink_);
+      tblock_clink_ = 0;
+    }
+  internal_tblock_ = NULL;
+}
+
 TextBlock*
 TextControllerImpl::get_text_block()
 {
-  // check if text block changed
+  return_unless (anchored(), NULL);
+  if (internal_tblock_)
+    return internal_tblock_;
+  // find or create new text block
+  const bool old_focusable = focusable(); // keep track for later change notification
+  if (internal_tblock_)
+    reset_text_block (*dynamic_cast<WidgetImpl*> (internal_tblock_));
+  // find/create a text block candidate
   TextBlock *candidate = interface<TextBlock*>();
-  if (candidate == &*cached_tblock_)
-    return candidate;
-  // if our text block changes, can_focus() and thus focusable() may change, ensure we notify about it
-  const bool old_focusable = focusable();
-  WidgetImplP thisp = widgetp(); // passing thisp to exec_now keeps a life reference in the lambda
-  auto update_focus = [thisp, this, old_focusable] () {
-    if (!finalizing() && old_focusable != focusable())
-      changed ("flags");
-  };
-  exec_now (update_focus);
-  // adjust to new text block
-  TextBlockP next_tblock = shared_ptr_cast<TextBlock> (candidate);
-  if (cached_tblock_)
-    cached_tblock_->sig_selection_changed() -= tblock_sig_;
-  cached_tblock_ = next_tblock;
-  if (cached_tblock_)
+  WidgetImpl *tbwidget = dynamic_cast<WidgetImpl*> (candidate);
+  if (!candidate || !tbwidget)
     {
-      tblock_sig_ = cached_tblock_->sig_selection_changed() += Aida::slot (this, &TextControllerImpl::selection_changed);
-      update_text_block(); // update new text block
+      WidgetImplP widgetp = Factory::create_ui_child (*this, "Rapicorn_TextBlock", StringVector());
+      tbwidget = widgetp.get();
+      candidate = tbwidget->interface<TextBlock*>();
+      assert_return (candidate != NULL, NULL);
     }
-  else
-    tblock_sig_ = 0;
-  return &*cached_tblock_;
+  // setup the new text block
+  internal_tblock_ = candidate;
+  tblock_clink_ = widget_cross_link (*this, *tbwidget, slot (*this, &TextControllerImpl::reset_text_block));
+  tblock_sig_ = internal_tblock_->sig_selection_changed() += slot (this, &TextControllerImpl::selection_changed);
+  update_text_block(); // configure text block properties
+  internal_tblock_->markup_text (next_markup_);
+  next_markup_.clear();
+  // ensure we notify about can_focus/focusable changes
+  if (old_focusable != focusable())
+    changed ("flags");
+  return &*internal_tblock_;
 }
 
 void
@@ -142,7 +160,7 @@ TextControllerImpl::update_text_block ()
 bool
 TextControllerImpl::can_focus () const
 {
-  return allow_edits_ && cached_tblock_ != NULL;
+  return allow_edits_ && internal_tblock_ != NULL;
 }
 
 void
@@ -497,32 +515,21 @@ void
 TextControllerImpl::set_markup (const String &text)
 {
   next_markup_ = text;
-  WidgetImplP thisp = widgetp(); // passing thisp to exec_now keeps a life reference in the lambda
-  auto update_markup = [thisp, this] () {
-    TextBlock *tblock = get_text_block();
-    if (!tblock && !finalizing())
-      {
-        WidgetImplP label = Factory::create_ui_child (*this, "Rapicorn_TextBlock", StringVector());
-        update_text_block();
-        tblock = &*cached_tblock_;
-      }
-    if (tblock)
-      {
-        tblock->markup_text (next_markup_);
-        next_markup_.clear();
-      }
-    next_handler_ = 0;
-  };
-  if (next_handler_ == 0)
-    next_handler_ = exec_now (update_markup);
+  const bool adjust_existing_tblock = internal_tblock_ != NULL;
+  TextBlock *tblock = get_text_block();
+  if (tblock && adjust_existing_tblock)
+    {
+      tblock->markup_text (next_markup_);
+      next_markup_.clear();
+    }
 }
 
 String
 TextControllerImpl::get_markup () const
 {
   String result;
-  if (next_handler_ == 0 && cached_tblock_)
-    result = cached_tblock_->markup_text();
+  if (internal_tblock_)
+    result = internal_tblock_->markup_text();
   else
     result = next_markup_;
   return result;
@@ -546,7 +553,7 @@ TextControllerImpl::set_mode (TextMode text_mode)
 {
   text_mode_ = text_mode;
   invalidate_size();
-  if (cached_tblock_)
+  if (internal_tblock_)
     {
       /* this method maybe called from (derived) ctors, when the factory context
        * isn't yet setup. so guard text_block access by cached value to prevent

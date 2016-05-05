@@ -79,7 +79,9 @@ REGISTER_UITHREAD_TEST ("labelmarkup/Test Markup Parser", test_markup_parser);
 static void
 test_text_markup()
 {
+  WindowImplP window = shared_ptr_cast<WindowImpl> (Factory::create_ui_widget ("Window"));
   WidgetImplP label = Factory::create_ui_widget ("Label");
+  window->add (*label); // Label needs Window context for text processing
   TOK();
   String test_markup =
     "Start "

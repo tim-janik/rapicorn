@@ -11,9 +11,12 @@
 namespace Rapicorn {
 
 struct ClassDoctor {
-  static void widget_set_flag       (WidgetImpl &widget, uint64 flag) { widget.set_flag (flag, true); }
-  static void widget_unset_flag     (WidgetImpl &widget, uint64 flag) { widget.unset_flag (flag); }
+  struct WidgetImpl_ : public WidgetImpl {
+    using WidgetImpl::set_flag;
+    using WidgetImpl::unset_flag;
+  };
 };
+static ClassDoctor::WidgetImpl_& internal_cast (WidgetImpl &w) { return *static_cast<ClassDoctor::WidgetImpl_*> (&w); }
 
 WindowImpl&
 WindowIface::impl ()
@@ -145,7 +148,7 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
       WidgetImpl *widget = &fwidget;
       while (widget)
         {
-          ClassDoctor::widget_unset_flag (*widget, uint64 (WidgetState::FOCUSED));
+          internal_cast (*widget).unset_flag (uint64 (WidgetState::FOCUSED));
           ContainerImpl *fc = widget->parent();
           if (fc)
             fc->focus_lost();
@@ -174,7 +177,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
   set_data (&focus_widget_key, cfocus);
   while (widget)
     {
-      ClassDoctor::widget_set_flag (*widget, uint64 (WidgetState::FOCUSED));
+      internal_cast (*widget).set_flag (uint64 (WidgetState::FOCUSED));
       ContainerImpl *fc = widget->parent();
       if (fc)
         fc->set_focus_child (widget);

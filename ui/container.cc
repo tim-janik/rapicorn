@@ -57,8 +57,8 @@ static Mutex        uncross_callback_stack_mutex;
 size_t
 ContainerImpl::widget_cross_link (WidgetImpl &owner, WidgetImpl &link, const WidgetSlot &uncross)
 {
-  assert (&owner != &link);
-  assert (owner.common_ancestor (link) == this); // could be disabled for performance
+  assert_return (&owner != &link, 0);
+  assert_return (owner.common_ancestor (link) == this, 0); // could be disabled for performance
   CrossLinks *clinks = get_data (&cross_links_key);
   if (!clinks)
     {
@@ -105,7 +105,7 @@ ContainerImpl::widget_cross_unlink (WidgetImpl &owner, WidgetImpl &link, size_t 
           }
     }
   if (!found_one)
-    throw Exception ("no cross link from \"" + owner.name() + "\" to \"" + link.name() + "\" on \"" + name() + "\" to remove");
+    critical ("no cross link from \"%s\" to \"%s\" on \"%s\" to remove", owner.name(), link.name(), name());
 }
 
 void
@@ -675,9 +675,9 @@ ContainerImpl::render_recursive (RenderContext &rcontext)
       if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
         {
           if (child.test_any_flag (INVALID_REQUISITION))
-            critical ("rendering widget with invalid %s: %s (%p)", "requisition", child.name().c_str(), &child);
+            critical ("%s: rendering widget with invalid %s: %s", child.debug_name(), "requisition", child.debug_name ("%r"));
           if (child.test_any_flag (INVALID_ALLOCATION))
-            critical ("rendering widget with invalid %s: %s (%p)", "allocation", child.name().c_str(), &child);
+            critical ("%s: rendering widget with invalid %s: %s", child.debug_name(), "allocation", child.debug_name ("%a"));
           child.render_widget (rcontext);
         }
     }
@@ -745,6 +745,17 @@ ContainerImpl::size_request_child (WidgetImpl &child, bool *hspread, bool *vspre
   return cr;
 }
 
+/// Calculate real requisition of a widget, including spacing/padding/alignment/etc.
+Requisition
+ContainerImpl::measure_child (WidgetImpl &child)
+{
+  const Requisition rq = child.requisition();
+  const PackInfo &pi = child.pack_info();
+  return Requisition (pi.left_spacing + rq.width + pi.right_spacing,
+                      pi.top_spacing + rq.height + pi.bottom_spacing);
+}
+
+/// Layout a widget with an area @a carea, including spacing/padding/alignment/etc.
 Allocation
 ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
 {
@@ -754,7 +765,7 @@ ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
   /* pad allocation */
   area.x += pi.left_spacing;
   area.width -= pi.left_spacing + pi.right_spacing;
-  area.y += pi.bottom_spacing;
+  area.y += pi.top_spacing;
   area.height -= pi.bottom_spacing + pi.top_spacing;
   /* expand/scale child */
   if (area.width > rq.width && !child.hexpand())
@@ -874,16 +885,6 @@ ResizeContainerImpl::update_anchor_info ()
   anchor_info_.window = window_cast (widget);
 }
 
-static inline String
-impl_type (WidgetImpl *widget)
-{
-  String tag;
-  if (widget)
-    tag = Factory::factory_context_impl_type (widget->factory_context());
-  const size_t cpos = tag.rfind (':');
-  return cpos != String::npos ? tag.c_str() + cpos + 1 : tag;
-}
-
 void
 ResizeContainerImpl::idle_sizing ()
 {
@@ -893,7 +894,7 @@ ResizeContainerImpl::idle_sizing ()
     {
       ContainerImpl *pc = parent();
       if (pc && pc->test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
-        DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this), "pass upwards...");
+        DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), "pass upwards...");
       else
         {
           Allocation area = allocation();
@@ -913,10 +914,8 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
       area = *carea;
       change_flags_silently (INVALID_ALLOCATION, true);
     }
-  const bool need_debugging = rapicorn_debug_check() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION);
-  if (need_debugging)
-    DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this),
-                  !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
+  DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this),
+                !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
   /* this is the core of the resizing loop. via Widget.tune_requisition(), we
    * allow widgets to adjust the requisition from within size_allocate().
    * whether the tuned requisition is honored at all, depends on
@@ -941,8 +940,8 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
         tunable_requisition_counter_--;
     }
   tunable_requisition_counter_ = 0;
-  if (need_debugging && !carea)
-    DEBUG_RESIZE ("%12s 0x%016x, %s", impl_type (this).c_str(), size_t (this), String ("result: " + area.string()).c_str());
+  if (!carea)
+    DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), String ("result: " + area.string()).c_str());
 }
 
 void
@@ -990,16 +989,34 @@ MultiContainerImpl::add_child (WidgetImpl &widget)
 void
 MultiContainerImpl::remove_child (WidgetImpl &widget)
 {
-  vector<WidgetImplP>::iterator it;
-  for (it = widgets.begin(); it != widgets.end(); it++)
-    if (it->get() == &widget)
-      {
-        const WidgetImplP guard_widget = *it;
-        widgets.erase (it);
-        ClassDoctor::widget_set_parent (widget, NULL);
-        return;
-      }
-  assert_unreached();
+  size_t index = ~size_t (0);
+  // often the last child is removed, so loop while looking at both ends
+  for (size_t i = 0; i < (widgets.size() + 1) / 2; i++)
+    {
+      const int i1 = i;
+      if (widgets[i1].get() == &widget)
+        {
+          index = i1;
+          break;
+        }
+      const int i2 = widgets.size() - (i + 1);
+      if (i2 <= i1)
+        break;
+      if (widgets[i2].get() == &widget)
+        {
+          index = i2;
+          break;
+        }
+    }
+  // actual removal
+  if (index < widgets.size())
+    {
+      const WidgetImplP guard_widget = widgets[index];
+      widgets.erase (widgets.begin() + index);
+      ClassDoctor::widget_set_parent (widget, NULL);
+    }
+  else
+    assert_unreached();
 }
 
 void

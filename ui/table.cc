@@ -824,7 +824,7 @@ TableLayoutImpl::size_allocate_pass2 ()
       child_area.width -= MIN (child_area.width, pi.left_spacing + pi.right_spacing);
       child_area.x += MIN (child_area.width, pi.left_spacing);
       child_area.height -= MIN (child_area.height, pi.bottom_spacing + pi.top_spacing);
-      child_area.y += MIN (child_area.height, pi.bottom_spacing);
+      child_area.y += MIN (child_area.height, pi.top_spacing);
       /* align and scale */
       if (child_area.width > crq.width)
         {
