@@ -101,7 +101,7 @@ ScrollPortImpl::fix_adjustments ()
 {
   assert_return (fix_id_ != 0);
   fix_id_ = 0;
-  if (!has_visible_child() || test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+  if (!has_visible_child() || test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
     return;
   /* size allocation negotiation may re-allocate the widget several times with new tentative sizes.
    * since some combinations could lead to the adjustments contraining the current scroll values

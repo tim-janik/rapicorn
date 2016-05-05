@@ -7,6 +7,7 @@
 
 #define TDEBUG(...)     RAPICORN_KEY_DEBUG ("Theme", __VA_ARGS__)
 #define SDEBUG(...)     RAPICORN_KEY_DEBUG ("Style", __VA_ARGS__)
+#define CDEBUG(...)     RAPICORN_KEY_DEBUG ("Color", __VA_ARGS__)
 
 namespace Rapicorn {
 
@@ -83,6 +84,8 @@ adjust_color (Color color, double saturation_factor, double value_factor)
 // == StyleImpl ==
 class StyleImpl : public StyleIface {
   Svg::FileP svg_file_;
+  typedef std::pair<String,WidgetState> FragmentStatePair;
+  std::map<FragmentStatePair,Color> color_cache_;
 public:
   explicit      StyleImpl       (Svg::FileP svgf);
   virtual Color theme_color     (double hue360, double saturation100, double brightness100, const String &detail) override;
@@ -109,14 +112,13 @@ StyleImpl::state_color (WidgetState state, StyleColor color_type, const String &
     {
     case StyleColor::FOREGROUND:    return fragment_color ("fg", state);
     case StyleColor::BACKGROUND:    return fragment_color ("bg", state);
-    case StyleColor::DARK:          return 0xff9f9c98;
+    case StyleColor::DARK:          return fragment_color ("dark", state);
     case StyleColor::DARK_SHADOW:   return adjust_color (state_color (state, StyleColor::DARK, detail), 1, 0.9); // 0xff8f8c88
     case StyleColor::DARK_GLINT:    return adjust_color (state_color (state, StyleColor::DARK, detail), 1, 1.1); // 0xffafaca8
-    case StyleColor::LIGHT:         return 0xffdfdcd8;
+    case StyleColor::LIGHT:         return fragment_color ("light", state);
     case StyleColor::LIGHT_SHADOW:  return adjust_color (state_color (state, StyleColor::LIGHT, detail), 1, 0.93); // 0xffcfccc8
     case StyleColor::LIGHT_GLINT:   return adjust_color (state_color (state, StyleColor::LIGHT, detail), 1, 1.07); // 0xffefece8
-    case StyleColor::FOCUS_FG:      return 0xff000060;
-    case StyleColor::FOCUS_BG:      return 0xff000060;
+    case StyleColor::FOCUS_COLOR:   return fragment_color ("fc", state);
     default:                        return 0x00000000; // silence warnings
     }
 }
@@ -124,24 +126,30 @@ StyleImpl::state_color (WidgetState state, StyleColor color_type, const String &
 Color
 StyleImpl::fragment_color (const String &fragment, WidgetState state)
 {
-  // FIXME: this function very badly needs caching
-  Color color = string_startswith (fragment, "fg") ? 0xff000000 : 0xffdfdcd8;
+  const FragmentStatePair fsp = std::make_pair (fragment, state);
+  auto it = color_cache_.find (fsp);
+  if (it != color_cache_.end())
+    return it->second; // pair of <FragmentStatePair,Color>
+  Color color = string_startswith (fragment, "fg") ? 0xff006600 : 0xffeebbee;
   const String match = svg_file_ ? StyleIface::pick_fragment (fragment, state, svg_file_->list()) : "";
-  if (match.empty())
-    return color;       // crude fallback
-  ImagePainter painter (svg_file_, match);
-  Requisition size = painter.image_size ();
-  if (size.width >= 1 && size.height >= 1)
+  if (!match.empty())
     {
-      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (size.width), iceil (size.height));
-      cairo_t *cr = cairo_create (surface);
-      Rect rect (0, 0, size.width, size.height);
-      painter.draw_image (cr, rect, rect);
-      const uint argb = cairo_image_surface_peek_argb (surface, size.width / 2, size.height / 2);
-      cairo_surface_destroy (surface);
-      cairo_destroy (cr);
-      color = argb;
+      ImagePainter painter (svg_file_, match);
+      Requisition size = painter.image_size ();
+      if (size.width >= 1 && size.height >= 1)
+        {
+          cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (size.width), iceil (size.height));
+          cairo_t *cr = cairo_create (surface);
+          Rect rect (0, 0, size.width, size.height);
+          painter.draw_image (cr, rect, rect);
+          const uint argb = cairo_image_surface_peek_argb (surface, size.width / 2, size.height / 2);
+          cairo_surface_destroy (surface);
+          cairo_destroy (cr);
+          color = argb;
+        }
     }
+  color_cache_[fsp] = color;
+  CDEBUG ("fragment=%-5s state=%s match='%s': color=%08x", fragment, Aida::enum_value_to_string (state), match, color.argb());
   return color;
 }
 
@@ -161,6 +169,7 @@ StyleIface::state_from_name (const String &lower_case_state_name)
     case fnv1a_consthash64 ("focused"):         return WidgetState::FOCUSED;
     case fnv1a_consthash64 ("insensitive"):     return WidgetState::INSENSITIVE;
     case fnv1a_consthash64 ("active"):          return WidgetState::ACTIVE;
+    case fnv1a_consthash64 ("toggled"):         return WidgetState::TOGGLED;
     case fnv1a_consthash64 ("retained"):        return WidgetState::RETAINED;
     default:                                    return INVALID_STATE;
     }
@@ -257,14 +266,11 @@ Color
 StyleIface::insensitive_ink (WidgetState state, Color *glintp)
 {
   // construct insensitive ink by mixing foreground and dark_color
-  Color ink = state_color (state, StyleColor::FOREGROUND);
-  ink.combine (state_color (state, StyleColor::DARK), 0x80);
+  Color fgink = state_color (state | WidgetState::INSENSITIVE, StyleColor::FOREGROUND);
+  Color glint = state_color (state | WidgetState::INSENSITIVE, StyleColor::LIGHT);
   if (glintp)
-    {
-      Color glint = state_color (state, StyleColor::LIGHT);
-      *glintp = glint;
-    }
-  return ink;
+    *glintp = glint;
+  return fgink;
 }
 
 

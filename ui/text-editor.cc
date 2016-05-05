@@ -82,8 +82,8 @@ TextControllerImpl::~TextControllerImpl()
 void
 TextControllerImpl::construct()
 {
-  set_flag (NEEDS_FOCUS_INDICATOR); // prerequisite for focusable
-  set_flag (ALLOW_FOCUS);
+  set_flag (NEEDS_FOCUS_INDICATOR, true); // prerequisite for focusable
+  set_flag (ALLOW_FOCUS, true);
   SingleContainerImpl::construct();
   update_text_block();
 }

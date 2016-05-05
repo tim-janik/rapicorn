@@ -110,6 +110,7 @@ public:
   template<typename T, REQUIRES< std::is_enum<T>::value > = true>
   String          value_to_string   (T     value) const                     { return value_to_string (int64 (value)); }
   String          value_to_string   (int64 value) const;
+  String          value_to_string   (int64 value, const String &joiner) const;
   /// Template to be specialised by introspectable enums.
   template<typename EnumType> friend
   const EnumInfo& enum_info         ()
@@ -126,6 +127,9 @@ enum_value_from_string (const String &valuestring)      ///< Type-safe variant o
 template<typename EnumType> String
 enum_value_to_string (EnumType evalue)                  ///< Type-safe variant of EnumInfo.value_to_string().
 { return Rapicorn::Aida::enum_info<EnumType>().value_to_string (evalue); }
+template<typename EnumType> String
+enum_value_to_string (EnumType evalue, const String &joiner) ///< Variant of enum_value_to_string() with value joiner.
+{ return Rapicorn::Aida::enum_info<EnumType>().value_to_string (int64 (evalue), joiner); }
 
 /// Split @a char_array at '\\0' and merge with @a v1 .. @a vf.
 std::vector<String> aux_vectors_combine (const char *char_array, size_t length, // Splits @a char_array at '\\0'

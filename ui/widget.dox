@@ -9,25 +9,26 @@ made with Rapicorn are composed of.
 @par Widget States
 The following is a list of states a widget can be in, a combination of multiple states may apply to a widget at any given time.
 - <b>Rapicorn::WidgetState::NORMAL - "normal"</b><br/> Ordinary widget state to start with, not activated, insensitive or otherwise special.
+- <b>Rapicorn::WidgetState::ACCELERATABLE - "acceleratable"</b><br/> Widget flag indicating the available of accelerators or mnemonic shortcuts.
 - <b>Rapicorn::WidgetState::HOVER - "hover"</b><br/> Widget flag indicating that the mouse is over the widget.
 - <b>Rapicorn::WidgetState::PANEL - "panel"</b><br/> Widget flag indicating that the widget is rendered as part of a panel section.
 - <b>(No state flag) - "focusable"</b>: A widget's ability to accept the input focus.
-- <b>Rapicorn::WidgetState::ACCELERATABLE - "acceleratable"</b><br/> Widget flag indicating the available of accelerators or mnemonic shortcuts.
 - <b>Rapicorn::WidgetState::DEFAULT - "default"</b><br/> Widget flag that enables widgets to receive the default activation.
 - <b>Rapicorn::WidgetState::SELECTED - "selected"</b><br/> Widget flag indicating that the widget is currently selected.
 - <b>Rapicorn::WidgetState::FOCUSED - "focused"</b><br/> Widget flag indicating that the widget is part of the focus chain, i.e. the widget or one of its descendants has the input focus.
 - <b>Rapicorn::WidgetState::INSENSITIVE - "insensitive"</b><br/> Widget flag that disables input event processing, see pointer_sensitive()
 - <b>Rapicorn::WidgetState::ACTIVE - "active"</b><br/> Widget flag used by widgets that can be activated or toggled.
 - <b>Rapicorn::WidgetState::RETAINED - "retained"</b><br/> Widget flag indicating that its activation state is held back, hidden or inconsistent.
-<!-- - <b>Rapicorn::WidgetState::RESERVED1 - "reserved1"</b><br/> Unspecified. -->
-<!-- - <b>Rapicorn::WidgetState::RESERVED2 - "reserved2"</b><br/> Unspecified. -->
-<!-- - <b>Rapicorn::WidgetState::RESERVED3 - "reserved3"</b><br/> Unspecified. -->
+- <b>Rapicorn::WidgetState::STASHED - "stashed"</b><br/> Widget flag used to hide child widgets by containers.
+<!-- - <b>Rapicorn::WidgetState::STATE* - "state*"</b><br/> Reserved for future uses. -->
 
 Rationales for widget state ordering and matching precedence for rendering purposes:
 - In general, functional flags take precedence over style flags.
+- <b>"acceleratable"</b>: Just for styling, takes least precedence, as it's usually a secondary indicator, next to a mnemonic displayed.
 - <b>"panel" / "hover"</b>: Panel rendering takes precedence, as hovering can be implemented via additional effects.
 - <b>"focusable" / "panel"</b>: Navigation information takes precedence over panel section styling.
-- <b>"default" / "acceleratable" / "focusable"</b>: Ordering occours according to higher specificity and use frequency.
+- <b>"acceleratable" / "default" / "focusable"</b>: Ordering occours according to higher specificity and use frequency.
+- <b>"default" / "selected"</b>: Selected states are usually more dynamic / shorter lived, so should probably take precedences.
 - <b>"insensitive" / "acceleratable"</b>: Insensitivity takes precedence because it disables navigation or activation abilities.
 - <b>"insensitive" / "selected"</b>: Insensitive widgets may be part of selection groups, but stay insensitive.
 - <b>"focused" / "selected"</b>: Focus chain indication needs to take precedence to allow focus navigation inside selections.

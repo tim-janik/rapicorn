@@ -53,14 +53,15 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
 public:
   struct AncestryCache;
 private:
-  uint64                      flags_;  // inlined for fast access
+  uint32                      widget_flags_; // WidgetFlag
+  uint16                      widget_state_; // WidgetState
+  uint16                      inherited_state_; // WidgetState
   ContainerImpl              *parent_; // inlined for fast access
   const AncestryCache        *acache_; // cache poninter may change for const this
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
   Allocation                  allocation_, clip_area_;
   Requisition                 inner_size_request (); // ungrouped size requisition
-  void                        propagate_state    (bool notify_changed);
   void                        acache_check       () const;
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
@@ -73,50 +74,36 @@ protected:
   virtual void                foreach_recursive     (const std::function<void (WidgetImpl&)> &f);
   virtual const AncestryCache* fetch_ancestry_cache ();
   // flag handling
-  bool                        change_flags_silently (uint64 mask, bool on);
-  // State flags and widget flags
-  static_assert (uint64 (WidgetState::NORMAL)        == 0, "");
-  static_assert (uint64 (WidgetState::HOVER)         == 1 <<  0, ""); // Flag indicating "hover" state of a widget, see hover()
-  static_assert (uint64 (WidgetState::PANEL)         == 1 <<  1, "");
-  static_assert (uint64 (WidgetState::ACCELERATABLE) == 1 <<  2, "");
-  static_assert (uint64 (WidgetState::DEFAULT)       == 1 <<  3, "");
-  static_assert (uint64 (WidgetState::SELECTED)      == 1 <<  4, "");
-  static_assert (uint64 (WidgetState::FOCUSED)       == 1 <<  5, ""); // Focus chain flag, indicates if widget is (in ancestry of) the focus widget, see grab_focus()
-  static_assert (uint64 (WidgetState::INSENSITIVE)   == 1 <<  6, ""); // Widget flag that disables input event processing, see pointer_sensitive()
-  static_assert (uint64 (WidgetState::ACTIVE)        == 1 <<  7, ""); // Flag indicating state of an active widget, see also active()
-  static_assert (uint64 (WidgetState::RETAINED)      == 1 <<  8, "");
-  static_assert (uint64 (WidgetState::RESERVED1)     == 1 <<  9, "");
-  static_assert (uint64 (WidgetState::RESERVED2)     == 1 << 10, "");
-  static_assert (uint64 (WidgetState::RESERVED3)     == 1 << 11, "");
-  enum {
-    PARENT_INSENSITIVE        = 1 << 12, ///< Cached state used to propagate sensitivity on branches, see key_sensitive()
-    PARENT_ACTIVE             = 1 << 13, ///< Flag set on children of an active container.
-    PARENT_RESERVED           = 1 << 14,
-    PARENT_UNVIEWABLE         = 1 << 15, ///< Cached state used to propagate viewability on branches, see also drawable()
-    VISIBLE                   = 1 << 16, ///< Flag set on widgets to be visible on screen, see visible()
-    ANCHORED                  = 1 << 17, ///< Flag set on widgets while its ancestry contains a Window, see hierarchy_changed()
-    HSHRINK                   = 1 << 18, ///< Flag set on widgets that handle horizontal shrinking well, see hshrink()
-    VSHRINK                   = 1 << 19, ///< Flag set on widgets that handle vertical shrinking well, see vshrink()
-    HEXPAND                   = 1 << 20, ///< Flag set on widgets that are useful to expand horizontally, see hexpand()
-    VEXPAND                   = 1 << 21, ///< Flag set on widgets that are useful to expand vertically, see vexpand()
-    HSPREAD                   = 1 << 22, ///< Flag set on widgets that should expand/shrink horizontally with window growth, see hspread()
-    VSPREAD                   = 1 << 23, ///< Flag set on widgets that should expand/shrink vertically with window growth, see vspread()
-    HSPREAD_CONTAINER         = 1 << 24, ///< Flag set on containers that contain hspread() widgets
-    VSPREAD_CONTAINER         = 1 << 25, ///< Flag set on containers that contain vspread() widgets
-    HAS_DEFAULT               = 1 << 26, ///< Flag indicating widget to receive default activation, see has_default()
-    UNVIEWABLE                = 1 << 27, ///< Flag set for container children for offscreen handling, see viewable()
-    INVALID_CONTENT           = 1 << 28, ///< Flag indicates that the widget's entire contents need to be repainted, see expose()
-    INVALID_ALLOCATION        = 1 << 29, ///< Flag indicates the need update widget's allocation, see set_allocation()
-    INVALID_REQUISITION       = 1 << 30, ///< Flag indicates the need update widget's size requisition, see requisition()
-    FINALIZING             = 1ULL << 31, ///< Flag used internally to short-cut destructor phase.
-    CONSTRUCTED            = 1ULL << 32, ///< Flag used internally to seal widget construction.
-    ALLOW_FOCUS            = 1ULL << 33, ///< Flag set by the widget user to indicate if a widget may or may not receive focus.
-    NEEDS_FOCUS_INDICATOR  = 1ULL << 34, ///< Flag used for containers that need a focus-indicator to receive input focus.
-    HAS_FOCUS_INDICATOR    = 1ULL << 35, ///< Flag set on #NEEDS_FOCUS_INDICATOR containers if a descendant provides a focus-indicator.
-    HAS_CLIP_AREA          = 1ULL << 36, ///< Flag indicating wether a clip_area() has been assigned or not.
+  enum WidgetFlag {
+    FINALIZING                = 1 <<  0, ///< Flag used internally to short-cut destructor phase.
+    CONSTRUCTED               = 1 <<  1, ///< Flag used internally to seal widget construction.
+    ANCHORED                  = 1 <<  2, ///< Flag set on widgets while its ancestry contains a Window, see hierarchy_changed()
+    VISIBLE                   = 1 <<  3, ///< Flag set on widgets to be visible on screen, see visible()
+    ALLOW_FOCUS               = 1 <<  4, ///< Flag set by the widget user to indicate if a widget may or may not receive focus.
+    FOCUS_CHAIN               = 1 <<  5, ///< Flag indicates if widget is (in the ancestry of) the focus widget.
+    NEEDS_FOCUS_INDICATOR     = 1 <<  6, ///< Flag used for containers that need a focus-indicator to receive input focus.
+    HAS_FOCUS_INDICATOR       = 1 <<  7, ///< Flag set on #NEEDS_FOCUS_INDICATOR containers if a descendant provides a focus-indicator.
+    HAS_DEFAULT               = 1 <<  8, ///< Flag indicating widget to receive default activation, see has_default()
+    HAS_CLIP_AREA             = 1 <<  9, ///< Flag indicating wether a clip_area() has been assigned or not.
+    INVALID_REQUISITION       = 1 << 10, ///< Flag indicates the need update widget's size requisition, see requisition()
+    INVALID_ALLOCATION        = 1 << 11, ///< Flag indicates the need update widget's allocation, see set_allocation()
+    INVALID_CONTENT           = 1 << 12, ///< Flag indicates that the widget's entire contents need to be repainted, see expose()
+    HSHRINK                   = 1 << 13, ///< Flag set on widgets that handle horizontal shrinking well, see hshrink()
+    VSHRINK                   = 1 << 14, ///< Flag set on widgets that handle vertical shrinking well, see vshrink()
+    HEXPAND                   = 1 << 15, ///< Flag set on widgets that are useful to expand horizontally, see hexpand()
+    VEXPAND                   = 1 << 16, ///< Flag set on widgets that are useful to expand vertically, see vexpand()
+    HSPREAD                   = 1 << 17, ///< Flag set on widgets that should expand/shrink horizontally with window growth, see hspread()
+    VSPREAD                   = 1 << 18, ///< Flag set on widgets that should expand/shrink vertically with window growth, see vspread()
+    HSPREAD_CONTAINER         = 1 << 19, ///< Flag set on containers that contain hspread() widgets
+    VSPREAD_CONTAINER         = 1 << 20, ///< Flag set on containers that contain vspread() widgets
   };
-  void                        set_flag          (uint64 flag, bool on = true);
-  void                        unset_flag        (uint64 flag)   { set_flag (flag, false); }
+  friend WidgetFlag           operator^         (WidgetFlag a, WidgetFlag b) { return WidgetFlag (uint64 (a) ^ uint64 (b)); }
+  friend WidgetFlag           operator|         (WidgetFlag a, WidgetFlag b) { return WidgetFlag (uint64 (a) | uint64 (b)); }
+  friend WidgetFlag           operator&         (WidgetFlag a, WidgetFlag b) { return WidgetFlag (uint64 (a) & uint64 (b)); }
+  bool                        change_flags      (WidgetFlag mask, bool on);
+  void                        set_flag          (WidgetFlag flag, bool on);
+  void                        adjust_state      (WidgetState state, bool on);
+  void                        propagate_state   (bool notify_changed);
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
   virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
@@ -161,29 +148,31 @@ public:
   virtual WindowImpl*         as_window_impl    ()              { return NULL; }
   virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
-  bool                        test_all_flags    (uint64 mask) const { return (flags_ & mask) == mask; }
-  bool                        test_any_flag     (uint64 mask) const { return (flags_ & mask) != 0; }
-  bool                        isconstructed     () const { return test_any_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
-  bool                        finalizing        () const { return test_any_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
-  bool                        anchored          () const { return test_all_flags (ANCHORED); } ///< Get widget anchored state, see #ANCHORED
-  virtual bool                visible           () const { return test_all_flags (VISIBLE); }  ///< Get widget visibility, see #VISIBLE
-  virtual void                visible           (bool b) { set_flag (VISIBLE, b); }            ///< Toggle widget visibility
+  bool                        test_flag         (WidgetFlag mask) const;
+  bool                        test_all          (WidgetFlag mask) const { return (widget_flags_ & mask) == mask; }
+  bool                        test_any          (WidgetFlag mask) const { return (widget_flags_ & mask) != 0; }
+  bool                        isconstructed     () const { return test_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
+  bool                        finalizing        () const { return test_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
+  bool                        anchored          () const { return test_flag (ANCHORED); }    ///< Get widget anchored state, see #ANCHORED
+  virtual bool                visible           () const { return test_flag (VISIBLE); }     ///< Get widget visibility, see #VISIBLE
+  virtual void                visible           (bool b) { set_flag (VISIBLE, b); }     ///< Toggle widget visibility
   bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
-  virtual bool                viewable          () const; // visible() && !UNVIEWABLE && !PARENT_UNVIEWABLE
+  bool                        stashed           () const { return test_state (WidgetState::STASHED); }
+  bool                        viewable          () const; // visible() && !STASHED
   bool                        drawable          () const; // viewable() && clipped_allocation > 0
-  virtual bool                sensitive         () const { return !test_any_flag (uint64 (WidgetState::INSENSITIVE) | PARENT_INSENSITIVE); } ///< Indicates if widget can process input events
-  virtual void                sensitive         (bool b) { set_flag (uint64 (WidgetState::INSENSITIVE), !b); }  ///< Toggle widget ability to process input events
+  virtual bool                sensitive         () const { return !test_state (WidgetState::INSENSITIVE); } ///< Indicates if widget can process input events
+  virtual void                sensitive         (bool b) { adjust_state (WidgetState::INSENSITIVE, !b); }   ///< Toggle widget ability to process input events
   bool                        insensitive       () const { return !sensitive(); }               ///< Negation of sensitive()
   void                        insensitive       (bool b) { sensitive (!b); }                    ///< Negation of sensitive(bool)
   bool                        key_sensitive     () const;
   bool                        pointer_sensitive () const;
-  bool                        hover             () const { return test_any_flag (uint64 (WidgetState::HOVER)); } ///< Get widget "hover" state, see WidgetState::WidgetState::HOVER
-  virtual void                hover             (bool b) { set_flag (uint64 (WidgetState::HOVER), b); } ///< Toggled with "hover" state of a widget
+  bool                        hover             () const { return test_state (WidgetState::HOVER); } ///< Get widget "hover" state, see WidgetState::WidgetState::HOVER
+  virtual void                hover             (bool b) { adjust_state (WidgetState::HOVER, b); }   ///< Toggled with "hover" state of a widget
   bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
-  bool                        active            () const { return test_any_flag (uint64 (WidgetState::ACTIVE)); } ///< Get the widget's WidgetState::WidgetState::ACTIVE.
-  virtual void                active            (bool b) { set_flag (uint64 (WidgetState::ACTIVE), b); } ///< Toggled for active widgets (e.g. buttons).
+  bool                        active            () const { return test_state (WidgetState::ACTIVE); } ///< Get the widget's WidgetState::ACTIVE flag.
+  virtual void                active            (bool b) { adjust_state (WidgetState::ACTIVE, b); }   ///< Toggled for active widgets (e.g. buttons).
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
-  bool                        has_default       () const { return test_any_flag (HAS_DEFAULT); }
+  bool                        has_default       () const { return test_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
   virtual bool                allow_focus       () const override; ///< Indicates if widget may receive input foucs.
   virtual void                allow_focus       (bool b) override; ///< Toggle if widget may receive input focus.
@@ -193,17 +182,17 @@ public:
   void                        unset_focus       ();
   virtual bool                move_focus        (FocusDir fdir);
   virtual bool                activate          ();
-  virtual bool                hexpand           () const { return test_any_flag (HEXPAND | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal expansion
+  virtual bool                hexpand           () const { return test_any (HEXPAND | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal expansion
   virtual void                hexpand           (bool b) { set_flag (HEXPAND, b); } ///< Allow horizontal expansion, see #VEXPAND
-  virtual bool                vexpand           () const { return test_any_flag (VEXPAND | VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical expansion
+  virtual bool                vexpand           () const { return test_any (VEXPAND | VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical expansion
   virtual void                vexpand           (bool b) { set_flag (VEXPAND, b); } ///< Allow vertical expansion, see #VEXPAND
-  virtual bool                hspread           () const { return test_any_flag (HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal spreading
+  virtual bool                hspread           () const { return test_any (HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal spreading
   virtual void                hspread           (bool b) { set_flag (HSPREAD, b); } ///< Allow horizontal spreading, see #HSPREAD
-  virtual bool                vspread           () const { return test_any_flag (VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical spreading
+  virtual bool                vspread           () const { return test_any (VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical spreading
   virtual void                vspread           (bool b) { set_flag (VSPREAD, b); } ///< Allow vertical spreading, see #VSPREAD
-  virtual bool                hshrink           () const { return test_any_flag (HSHRINK | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal shrinking flag
+  virtual bool                hshrink           () const { return test_any (HSHRINK | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal shrinking flag
   virtual void                hshrink           (bool b) { set_flag (HSHRINK, b); } ///< Allow horizontal shrinking, see #HSHRINK
-  virtual bool                vshrink           () const { return test_any_flag (VSHRINK | VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical shrinking flag
+  virtual bool                vshrink           () const { return test_any (VSHRINK | VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical shrinking flag
   virtual void                vshrink           (bool b) { set_flag (VSHRINK, b); } ///< Allow vertical shrinking, see #VSHRINK
   virtual String              hsize_group       () const;
   virtual void                hsize_group       (const String &group_list);
@@ -252,7 +241,7 @@ public:
   void                        uncross_links     (WidgetImpl &link);
   /* invalidation / changes */
   virtual void                changed           (const String &name) override;
-  virtual void                invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  virtual void                invalidate        (WidgetFlag mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()              { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
   void                        expose            (const Rect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
@@ -294,7 +283,8 @@ public:
   Color                 selected_fg             () { return state_color (WidgetState::SELECTED, StyleColor::FOREGROUND); }
   Color                 state_color             (WidgetState state, bool foreground, const String &detail = "");
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
-  WidgetState           state                   () const;
+  WidgetState           state                   () const { return WidgetState (widget_state_ | inherited_state_); } ///< Bit mask of WidgetState state flags.
+  bool                  test_state              (WidgetState bits) const { return (state() & bits) == bits; } ///< Test presence of all WidgetState @a bits.
   StyleIfaceP           style                   () const;
   Color                 foreground              ();
   Color                 background              ();
@@ -308,7 +298,7 @@ public:
   /* debugging/testing */
   virtual String        test_dump               ();
   String                debug_dump              (const String &flags = String());
-  String                debug_name              (const String &format = "%n(%f:%l)");
+  String                debug_name              (const String &format = "") const;
 protected:
   void                  make_test_dump          (TestStream   &tstream);
   virtual void          dump_test_data          (TestStream   &tstream);

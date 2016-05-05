@@ -7,7 +7,7 @@
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <VBox sensitive="1" spacing="5" hexpand="1">
 	<Label markup-text="Regular Text" />
-	<Label markup-text="Insensitive Text" sensitive="0" />
+	<Label markup-text="(Non) Insensitive Text" sensitive="1"/>
 	<Frame frame-type="in">
 	  <FocusFrame frame-type="none">
 	    <TextEditor markup-text="Editable Text Editor Text" />

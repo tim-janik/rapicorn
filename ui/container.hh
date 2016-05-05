@@ -39,8 +39,7 @@ protected:
   virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDir              fdir);
   void                expose_enclosure  (); /* expose without children */
-  void                change_unviewable (WidgetImpl &child, bool);
-  void                flag_descendant   (WidgetImpl &widget, uint64 flag, bool onoff);
+  void                stash_child       (WidgetImpl &child, bool);
   virtual void        focus_lost        ()                              { set_focus_child (NULL); }
   virtual void        set_focus_child   (WidgetImpl *widget);
   virtual void        scroll_to_child   (WidgetImpl &widget);
@@ -113,7 +112,7 @@ protected:
   virtual const AncestryCache* fetch_ancestry_cache () override;
   virtual void          invalidate_parent       () override;
   virtual void          check_resize            ();
-  virtual void          invalidate              (uint64 mask) override;
+  virtual void          invalidate              (WidgetFlag mask) override;
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   void                  negotiate_size          (const Allocation *carea);
   explicit              ResizeContainerImpl     ();
