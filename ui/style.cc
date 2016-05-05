@@ -201,11 +201,10 @@ String
 StyleIface::pick_fragment (const String &fragment, WidgetState state, const StringVector &fragment_list)
 {
   // match an SVG element to state, xml ID syntax: <element id="elementname:active+insensitive"/>
-  const uint64 mismatch_threshold = uint64 (WidgetState::ACTIVE);
   const String element = fragment[0] == '#' ? fragment.substr (1) : fragment; // strip initial hash
   const size_t colon = element.size();                  // find element / state delimiter
   String fallback, best_match;
-  uint64 best_score = 0, penalty_score = 0;
+  uint64 best_score = 0;
   for (auto id : fragment_list)
     {
       if (id.size() < element.size() ||
@@ -217,17 +216,15 @@ StyleIface::pick_fragment (const String &fragment, WidgetState state, const Stri
       if (!has_states)
         fallback = id;                                  // save fallback in case no matches are found
       const uint64 id_state = has_states ? state_from_list (id.substr (colon + 1)) : 0;
-      const uint64 id_score = id_state & state;         // score the *matching* WidgetState bits
-      const uint64 id_penalty = id_score ^ id_state;    // penalize mismatches
-      if (id_penalty >= mismatch_threshold)             // reject misleading states
+      if (id_state & ~uint64 (state))                   // reject misleading state indicators
         continue;
-      if (id_score > best_score ||                      // better display of important bits
+      const uint64 id_score = id_state & state;         // score the *matching* WidgetState bits
+      if (id_score > best_score ||                      // improve display of important bits
           (id_score == best_score &&
-           id_penalty < penalty_score))                 // or improve by less fudging
+           best_match.empty()))                         // initial best_match setup
         {
           best_match = id;
           best_score = id_score;
-          penalty_score = id_penalty;
         }
     }
   return best_match.empty() ? fallback : best_match;
