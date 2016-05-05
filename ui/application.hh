@@ -3,11 +3,12 @@
 #define __RAPICORN_APPLICATION_HH__
 
 #include <ui/commands.hh>
+#include <ui/window.hh>
 
 namespace Rapicorn {
 
 class ApplicationImpl : public ApplicationIface {
-  vector<WindowIfaceP> windows_;
+  vector<WindowImplP>  windows_;
   int                  tc_;
 public:
   explicit            ApplicationImpl        ();
@@ -24,8 +25,6 @@ public:
   virtual WindowIfaceP create_window         (const std::string &window_identifier,
                                               const StringSeq &arguments = StringSeq()) override;
   virtual bool        finishable             () override;
-  void                add_window             (WindowIface &window);
-  bool                remove_window          (WindowIface &window);
   virtual void        close_all              () override;
   virtual WindowIfaceP query_window          (const String &selector) override;
   virtual WindowList  query_windows          (const String &selector) override;
@@ -39,6 +38,12 @@ public:
   virtual int64       test_hook              () override;
   void                lost_primaries         ();
   static ApplicationImpl& the                ();
+  class WindowImplFriend {
+    friend            class WindowImpl;
+    static void       add_window             (WindowImpl &window);
+    static bool       has_window             (WindowIface &window);
+    static bool       remove_window          (WindowImpl &window);
+  };
 };
 typedef std::shared_ptr<ApplicationImpl> ApplicationImplP;
 

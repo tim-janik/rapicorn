@@ -355,10 +355,11 @@ interface Container : Widget {
 interface Window : Container {
   String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
   bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
-  bool          screen_viewable         ();
-  void          show                    ();
-  bool          closed                  ();
-  void          close                   ();
+  bool          screen_viewable         (); ///< Check whether the window is currently viewable on screen.
+  void          show                    (); ///< Show (display) a window so it appears on screen.
+  bool          closed                  (); ///< Check wether the window has been shown or is closed.
+  void          close                   (); ///< Close (hide) an on screen window.
+  void          destroy                 (); ///< Destroy and dispose a (possibly on screen) window.
   bool          snapshot                (String     pngname);
   signal bool   commands                (String     cmdname, StringSeq args);
   signal void   displayed               ();

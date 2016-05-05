@@ -28,12 +28,13 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   uint                  pending_expose_ : 1;
   void                  uncross_focus           (WidgetImpl &fwidget);
 protected:
+  virtual void          construct               () override;
+  virtual void          dispose                 () override;
+  virtual const AncestryCache* fetch_ancestry_cache () override;
   void                  set_focus               (WidgetImpl *widget);
   virtual void          check_resize            () override;
   void                  ensure_resized          ();
   virtual void          set_parent              (ContainerImpl *parent);
-  virtual void          construct               () override;
-  virtual void          dispose                 () override;
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE + 1; ///< Execute resizes right before GUI updates.
   explicit              WindowImpl              ();
@@ -58,19 +59,17 @@ public:
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
   /* WindowIface */
-  virtual bool          screen_viewable                         ();
-  virtual void          show                                    ();
-  virtual bool          closed                                  ();
-  virtual void          close                                   ();
-  virtual bool          snapshot                                (const String &pngname);
-  virtual bool          synthesize_enter                        (double xalign = 0.5,
-                                                                 double yalign = 0.5);
-  virtual bool          synthesize_leave                        ();
-  virtual bool          synthesize_click                        (WidgetIface &widget,
-                                                                 int        button,
-                                                                 double     xalign = 0.5,
-                                                                 double     yalign = 0.5);
-  virtual bool          synthesize_delete                       ();
+  virtual bool          screen_viewable                         () override;
+  virtual void          show                                    () override;
+  virtual bool          closed                                  () override;
+  virtual void          close                                   () override;
+  virtual void          destroy                                 () override;
+  virtual bool          snapshot                                (const String &pngname) override;
+  virtual bool          synthesize_enter                        (double xalign = 0.5, double yalign = 0.5) override;
+  virtual bool          synthesize_leave                        () override;
+  virtual bool          synthesize_click                        (WidgetIface &widget, int button,
+                                                                 double xalign = 0.5, double yalign = 0.5) override;
+  virtual bool          synthesize_delete                       () override;
   void                  draw_child                              (WidgetImpl &child);
 private:
   virtual void          remove_grab_widget                      (WidgetImpl               &child);
@@ -153,10 +152,11 @@ private:
   ButtonStateMap::iterator button_state_map_find_earliest (const uint button, const bool captured);
 public: // tailored member access for WidgetImpl
   /// @cond INTERNAL
-  class Internal {
+  class WidgetImplFriend {
     friend                class WidgetImpl; // only friends can access private class members
-    static DisplayWindow* display_window (WindowImpl &window)                     { return window.display_window_; }
-    static void           set_focus     (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
+    static DisplayWindow* display_window     (WindowImpl &window)                     { return window.display_window_; }
+    static void           set_focus          (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
+    static bool           widget_is_anchored (WidgetImpl &widget);
   };
   /// @endcond
 };

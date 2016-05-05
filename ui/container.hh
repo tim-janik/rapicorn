@@ -48,6 +48,7 @@ protected:
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
   static Requisition  size_request_child (WidgetImpl &child, bool *hspread = NULL, bool *vspread = NULL);
   virtual void        selectable_child_changed (WidgetChain &chain);
+  void                set_child_parent (WidgetImpl &child, ContainerImpl *parent) { child.set_parent (parent); }
 public:
   virtual WidgetImplP*  begin             () const = 0;
   virtual WidgetImplP*  end               () const = 0;
@@ -94,22 +95,22 @@ protected:
   explicit              SingleContainerImpl     ();
 };
 
-// == AnchorInfo ==
-struct AnchorInfo {
+// == AncestryCache ==
+struct WidgetImpl::AncestryCache {
   ResizeContainerImpl *resize_container;
   ViewportImpl        *viewport;
   WindowImpl          *window;
-  constexpr AnchorInfo() : resize_container (NULL), viewport (NULL), window (NULL) {}
+  constexpr AncestryCache() : resize_container (NULL), viewport (NULL), window (NULL) {}
 };
 
 // == Resize Container ==
 class ResizeContainerImpl : public virtual SingleContainerImpl {
   uint                  tunable_requisition_counter_;
   uint                  resizer_;
-  AnchorInfo            anchor_info_;
-  void                  update_anchor_info      ();
+  AncestryCache         ancestry_cache_;
   void                  check_resize_handler    ();
 protected:
+  virtual const AncestryCache* fetch_ancestry_cache () override;
   virtual void          invalidate_parent       () override;
   virtual void          check_resize            ();
   virtual void          invalidate              (uint64 mask) override;
@@ -119,7 +120,6 @@ protected:
   virtual              ~ResizeContainerImpl     ();
 public:
   bool                  requisitions_tunable    () const { return tunable_requisition_counter_ > 0; }
-  AnchorInfo*           container_anchor_info   () { return &anchor_info_; }
 };
 
 // == Multi Child Container ==

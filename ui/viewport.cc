@@ -7,13 +7,20 @@
 namespace Rapicorn {
 
 ViewportImpl::ViewportImpl ()
-{
-  const_cast<AnchorInfo*> (force_anchor_info())->viewport = this;
-}
+{}
 
 ViewportImpl::~ViewportImpl ()
 {
-  const_cast<AnchorInfo*> (force_anchor_info())->viewport = NULL;
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
+  ancestry_cache->viewport = NULL;
+}
+
+const WidgetImpl::AncestryCache*
+ViewportImpl::fetch_ancestry_cache ()
+{
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
+  ancestry_cache->viewport = this;
+  return ancestry_cache;
 }
 
 void

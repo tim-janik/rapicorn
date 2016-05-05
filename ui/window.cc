@@ -12,15 +12,6 @@
 
 namespace Rapicorn {
 
-struct ClassDoctor {
-  struct WidgetImpl_ : public WidgetImpl {
-    using WidgetImpl::set_flag;
-    using WidgetImpl::unset_flag;
-    using WidgetImpl::process_event;
-  };
-};
-static ClassDoctor::WidgetImpl_& internal_cast (WidgetImpl &w) { return *static_cast<ClassDoctor::WidgetImpl_*> (&w); }
-
 WindowImpl&
 WindowIface::impl ()
 {
@@ -151,7 +142,7 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
       WidgetImpl *widget = &fwidget;
       while (widget)
         {
-          internal_cast (*widget).unset_flag (uint64 (WidgetState::FOCUSED));
+          widget->unset_flag (uint64 (WidgetState::FOCUSED));
           ContainerImpl *fc = widget->parent();
           if (fc)
             fc->focus_lost();
@@ -180,7 +171,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
   set_data (&focus_widget_key, cfocus);
   while (widget)
     {
-      internal_cast (*widget).set_flag (uint64 (WidgetState::FOCUSED));
+      widget->set_flag (uint64 (WidgetState::FOCUSED));
       ContainerImpl *fc = widget->parent();
       if (fc)
         fc->set_focus_child (widget);
@@ -233,15 +224,8 @@ WindowImpl::WindowImpl() :
 {
   config_.title = application_name();
   theme_info_ = ThemeInfo::fallback_theme();    // ensure valid theme_info_
-  const_cast<AnchorInfo*> (force_anchor_info())->window = this;
-  change_flags_silently (ANCHORED, true);       // window is always anchored
   set_flag (PARENT_INSENSITIVE, false);
   set_flag (PARENT_UNVIEWABLE, false);
-  struct Heritage : Rapicorn::Heritage {
-    using Rapicorn::Heritage::create_heritage;
-  };
-  heritage (Heritage::create_heritage (*this, *this, color_scheme()));
-  WindowTrail::wenter (this);
   // create event loop (auto-starts)
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
   loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
@@ -253,18 +237,33 @@ void
 WindowImpl::construct ()
 {
   ViewportImpl::construct();
-  ApplicationImpl::the().add_window (*this);
+  assert_return (has_children() == false);      // must be anchored before becoming parent
+  assert_return (get_window() && get_viewport());
+  struct Heritage : Rapicorn::Heritage {
+    using Rapicorn::Heritage::create_heritage;
+  };
+  heritage (Heritage::create_heritage (*this, *this, color_scheme()));
+  WindowTrail::wenter (this);
+  ApplicationImpl::WindowImplFriend::add_window (*this);
+  assert_return (anchored() == false);
+  sig_hierarchy_changed.emit (NULL);
+  assert_return (anchored() == true);
 }
 
 void
 WindowImpl::dispose ()
 {
-  ApplicationImpl::the().remove_window (*this);
+  assert_return (anchored() == true);
+  const bool was_listed = ApplicationImpl::WindowImplFriend::remove_window (*this);
+  assert_return (was_listed);
+  sig_hierarchy_changed.emit (this);
+  assert_return (anchored() == false);
 }
 
 WindowImpl::~WindowImpl()
 {
   WindowTrail::wleave (this);
+  change_flags_silently (ANCHORED, false);
   if (display_window_)
     {
       clear_immediate_event();
@@ -276,10 +275,18 @@ WindowImpl::~WindowImpl()
    */
   if (has_children())
     remove (get_child());
-  /* shutdown event loop */
+  // shutdown event loop
   loop_->destroy_loop();
-  /* this should be done last */
-  const_cast<AnchorInfo*> (force_anchor_info())->window = NULL;
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ViewportImpl::fetch_ancestry_cache());
+  ancestry_cache->window = NULL;
+}
+
+const WidgetImpl::AncestryCache*
+WindowImpl::fetch_ancestry_cache ()
+{
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ViewportImpl::fetch_ancestry_cache());
+  ancestry_cache->window = this;
+  return ancestry_cache;
 }
 
 void
@@ -386,20 +393,20 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
   vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
   EventMouse *leave_event = create_event_mouse (MOUSE_LEAVE, EventContext (event));
   for (vector<WidgetImplP>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
-    internal_cast (**it).process_event (*leave_event);
+    (*it)->process_event (*leave_event);
   delete leave_event;
   /* send enter events */
   vector<WidgetImplP> entered_children = widget_difference (pierced, last_entered_children_);
   EventMouse *enter_event = create_event_mouse (MOUSE_ENTER, EventContext (event));
   for (vector<WidgetImplP>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
-    internal_cast (**it).process_event (*enter_event);
+    (*it)->process_event (*enter_event);
   delete enter_event;
   /* send actual move event */
   bool handled = false;
   EventMouse *move_event = create_event_mouse (MOUSE_MOVE, EventContext (event));
   for (vector<WidgetImplP>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
     if (!handled && (*it)->sensitive())
-      handled = internal_cast (**it).process_event (*move_event);
+      handled = (*it)->process_event (*move_event);
   delete move_event;
   /* update entered children */
   last_entered_children_ = pierced;
@@ -423,7 +430,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   bool handled = false;
   for (vector<WidgetImplP>::reverse_iterator it = pierced.rbegin(); it != pierced.rend() && !handled; it++)
     if ((*it)->sensitive())
-      handled = internal_cast (**it).process_event (event);
+      handled = (*it)->process_event (event);
   return handled;
 }
 
@@ -445,7 +452,7 @@ WindowImpl::dispatch_button_press (const EventButton &bevent)
           if (button_state_map_[bs] == 0)                               // no press delivered for <button> on <widget> yet
             {
               button_state_map_[bs] = press_count;                      // record press of bevent.button for pairing
-              handled = internal_cast (widget).process_event (bevent, true);    // may modify last_entered_children_ + this
+              handled = widget.process_event (bevent, true);    // may modify last_entered_children_ + this
             }
         }
     }
@@ -459,7 +466,7 @@ WindowImpl::dispatch_button_press (const EventButton &bevent)
           if (button_state_map_[bs] == 0)                               // no press delivered for <button> on <widget> yet
             {
               button_state_map_[bs] = press_count;                      // record press of bevent.button for pairing
-              handled = internal_cast (widget).process_event (bevent);  // may modify last_entered_children_ + this
+              handled = widget.process_event (bevent);  // may modify last_entered_children_ + this
             }
         }
     }
@@ -501,7 +508,7 @@ WindowImpl::dispatch_button_release (const EventButton &bevent)
       // bevent.type = BUTTON_RELEASE;
 #endif
       button_state_map_.erase (it);
-      handled |= internal_cast (bs.widget).process_event (bevent, bs.captured); // modifies button_state_map_ + this
+      handled |= bs.widget.process_event (bevent, bs.captured); // modifies button_state_map_ + this
     }
   // event propagation, capture phase - capture_event(release/CANCELED) for previous capture_event(press_event)
   for (ButtonStateMap::iterator       it = button_state_map_find_earliest (bevent.button, true); // ordering implied by ButtonState.serializer
@@ -516,7 +523,7 @@ WindowImpl::dispatch_button_release (const EventButton &bevent)
       // bevent.type = BUTTON_RELEASE;
 #endif
       button_state_map_.erase (it);
-      handled |= internal_cast (bs.widget).process_event (bevent, bs.captured); // modifies button_state_map_ + this
+      handled |= bs.widget.process_event (bevent, bs.captured); // modifies button_state_map_ + this
     }
   return handled;
 }
@@ -532,7 +539,7 @@ WindowImpl::cancel_widget_events (WidgetImpl *widget)
         {
           last_entered_children_.erase (last_entered_children_.begin() + i);
           EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context_);
-          internal_cast (*current).process_event (*mevent);
+          current->process_event (*mevent);
           delete mevent;
         }
     }
@@ -545,7 +552,7 @@ WindowImpl::cancel_widget_events (WidgetImpl *widget)
       if (&bs.widget == widget || !widget)
         {
           EventButton *bevent = create_event_button (BUTTON_CANCELED, last_event_context_, bs.button);
-          internal_cast (bs.widget).process_event (*bevent); // modifies button_state_map_ + this
+          bs.widget.process_event (*bevent); // modifies button_state_map_ + this
           delete bevent;
         }
     }
@@ -587,7 +594,7 @@ WindowImpl::dispatch_leave_event (const EventMouse &mevent)
         {
           WidgetImplP widget = last_entered_children_.back();
           last_entered_children_.pop_back();
-          internal_cast (*widget).process_event (mevent);
+          widget->process_event (mevent);
         }
     }
   return false;
@@ -657,7 +664,7 @@ WindowImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
   if (kevent && kevent->type == KEY_PRESS && this->key_sensitive())
@@ -684,7 +691,7 @@ WindowImpl::dispatch_key_event (const Event &event)
         {
           WidgetImpl *grab_widget = get_grab();
           grab_widget = grab_widget ? grab_widget : this;
-          handled = internal_cast (*grab_widget).process_event (*kevent);
+          handled = grab_widget->process_event (*kevent);
         }
     }
   return handled;
@@ -695,7 +702,7 @@ WindowImpl::dispatch_data_event (const Event &event)
 {
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
-  if (focus_widget && focus_widget->key_sensitive() && internal_cast (*focus_widget).process_event (event))
+  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_event (event))
     return true;
   else if (event.type == CONTENT_REQUEST)
     {
@@ -777,8 +784,7 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
 bool
 WindowImpl::dispatch_win_destroy ()
 {
-  destroy_display_window();
-  dispose();
+  destroy();
   return true;
 }
 
@@ -1116,7 +1122,7 @@ WindowImpl::async_show()
 void
 WindowImpl::create_display_window ()
 {
-  if (!finalizing())
+  if (anchored())
     {
       if (!display_window_)
         {
@@ -1190,6 +1196,17 @@ WindowImpl::close ()
   destroy_display_window();
 }
 
+void
+WindowImpl::destroy ()
+{
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
+  if (anchored())
+    {
+      destroy_display_window();
+      dispose();
+    }
+}
+
 bool
 WindowImpl::snapshot (const String &pngname)
 {
@@ -1258,5 +1275,17 @@ WindowImpl::synthesize_delete ()
 }
 
 static const WidgetFactory<WindowImpl> window_factory ("Rapicorn::Window");
+
+// == WidgetImplFriend ==
+bool
+WindowImpl::WidgetImplFriend::widget_is_anchored (WidgetImpl &widget)
+{
+  if (widget.parent() && widget.parent()->anchored())
+    return true;
+  WindowImpl *window = widget.as_window_impl(); // fast cast
+  if (window && ApplicationImpl::WindowImplFriend::has_window (*window))
+    return true;
+  return false;
+}
 
 } // Rapicorn
