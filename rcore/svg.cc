@@ -46,7 +46,7 @@ struct ElementImpl : public Element {
   virtual IBox  bbox            ()                      { return bbox_; }
   virtual IBox  ibox            ()                      { return ink_; }
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale);
-  void          measure_bbox    ();
+  void          measure_ink    ();
 };
 
 const ElementP
@@ -144,7 +144,7 @@ cairo_surface_scan_row (cairo_surface_t *surface, int y)
 }
 
 void
-ElementImpl::measure_bbox()
+ElementImpl::measure_ink()
 {
   return_unless (is_measured_ == false);
   const char *cid = id_.empty() ? NULL : id_.c_str();
@@ -334,7 +334,7 @@ FileImpl::lookup (const String &elementid)
           ei->handle_ = handle;
           g_object_ref (ei->handle_);
           ei->id_ = fragment;
-          ei->measure_bbox();
+          ei->measure_ink();
           return ElementP (ei);
         }
     }
