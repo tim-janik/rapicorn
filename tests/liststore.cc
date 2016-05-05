@@ -55,7 +55,6 @@ ListStore::insert (int first, const Any &any)
   assert_return (first >= 0 && first <= count());
   rows_.insert (rows_.begin() + first, any);
   sig_updates.emit (UpdateRequest (UpdateKind::INSERTION, UpdateSpan (first, 1)));
-  ApplicationH::the().test_counter_get();
 }
 
 void
@@ -65,7 +64,6 @@ ListStore::insert (int first, const AnySeq &aseq)
   for (size_t i = 0; i < aseq.size(); i++)
     rows_.insert (rows_.begin() + i, aseq[i]);
   sig_updates.emit (UpdateRequest (UpdateKind::INSERTION, UpdateSpan (first, aseq.size())));
-  ApplicationH::the().test_counter_get();
 }
 
 void
@@ -74,7 +72,6 @@ ListStore::update (int first, const Any &any)
   assert_return (first >= 0 && first < count());
   rows_[first] = any;
   sig_updates.emit (UpdateRequest (UpdateKind::CHANGE, UpdateSpan (first, 1)));
-  ApplicationH::the().test_counter_get();
 }
 
 void
@@ -85,7 +82,6 @@ ListStore::remove (int start, int length)
   return_unless (start + length <= count());
   rows_.erase (rows_.begin() + start, rows_.begin() + start + length);
   sig_updates.emit (UpdateRequest (UpdateKind::DELETION, UpdateSpan (start, 1)));
-  ApplicationH::the().test_counter_get();
 }
 
 } // anon

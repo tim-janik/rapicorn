@@ -575,12 +575,10 @@ interface TextEditor : Container {
   int32    request_digits = Range (_("Request Digits"), _("Number of digits to request space for."), "rw", 0, 65535, 2);
 };
 
-/// A container for WidgetList rows.
-/// See also the corresponding implementation class WidgetListRowImpl.
-/// @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
-interface WidgetListRow : Container {
-  bool  selected  = Bool (_("Selected"), _("Indicates wether this row is selected"), "rw");
-  int32 row_index = Range (_("Row Index"), _("Row number inside WidgetList"), "ro", MININT31, MAXINT31, 0);
+/// A container that supports the selected state.
+/// See also the corresponding implementation class SelectableItemImpl.
+interface SelectableItem : Container {
+  bool  selected  = Bool (_("Selected"), _("Indicates wether this container widget is selected"), "rw");
 };
 
 /** A list widget containing scrollable and selectable widgets.
@@ -589,17 +587,19 @@ interface WidgetListRow : Container {
  * @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
  */
 interface WidgetList : Container {
-  String        model           = String (_("Model"), _("Source locator for the data to be displayed (deprecated)."), "rw");
+  String        row_identifier  = String (_("Row Identifier"), _("Widget identifier to create list rows from."), "rw");
   SelectionMode selection_mode  = Enum (_("Selection Mode"), _("None - allow no selected rows<br/>"
                                                                "Single - allow a single selected row<br/>"
                                                                "Browse - always select a single row<br/>"
                                                                "Multiple - allow any row selection combinations<br/>"),
                                         "rw");
-  void          set_selection  (BoolSeq selection);
-  BoolSeq       get_selection  ();
-  void          select_range   (int32 first, int32 length);
-  void          unselect_range (int32 first, int32 length);
-  void          set_list_model (ListModel model);
+  signal void   selection_changed ();                       ///< This signal is emitted whenever the list selection changes.
+  BoolSeq       get_selection  ();                          ///< Retrieve a bit mask for all selected widgets.
+  void          set_selection  (BoolSeq selection);         ///< Reset the list of selected widgets according to a bit mask.
+  void          select_range   (int32 first, int32 length); ///< Select a range of widgets.
+  void          unselect_range (int32 first, int32 length); ///< Unselect a range of widgets.
+  void          bind_model     (ListModel model, String row_identifier);
+  Widget        create_row     (int64 index, String widget_identifier, StringSeq arguments = 0); ///< Add/replace row @a index with a new widget.
 };
 
 /** Application singleton.

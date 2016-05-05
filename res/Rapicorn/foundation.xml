@@ -10,6 +10,7 @@
   <Rapicorn_Factory id="RapicornButtonArea" factory-type="Rapicorn::ButtonArea"/>
   <Rapicorn_Factory id="RapicornDotGrid" factory-type="Rapicorn::DotGrid"/>
   <Rapicorn_Factory id="RapicornDrawable" factory-type="Rapicorn::Drawable"/>
+  <Rapicorn_Factory id="RapicornElementPainter" factory-type="Rapicorn::ElementPainter"/>
   <Rapicorn_Factory id="RapicornFocusFrame" factory-type="Rapicorn::FocusFrame"/>
   <Rapicorn_Factory id="RapicornFocusPainter" factory-type="Rapicorn::FocusPainter"/>
   <Rapicorn_Factory id="RapicornFrame" factory-type="Rapicorn::Frame"/>
@@ -17,12 +18,11 @@
   <Rapicorn_Factory id="RapicornImage" factory-type="Rapicorn::Image"/>
   <Rapicorn_Factory id="RapicornLabel" factory-type="Rapicorn::Label"/>
   <Rapicorn_Factory id="RapicornLayerPainter" factory-type="Rapicorn::LayerPainter"/>
+  <Rapicorn_Factory id="RapicornSelectableItem" factory-type="Rapicorn::SelectableItem"/>
   <Rapicorn_Factory id="RapicornSliderArea" factory-type="Rapicorn::SliderArea"/>
-  <Rapicorn_Factory id="RapicornElementPainter" factory-type="Rapicorn::ElementPainter"/>
   <Rapicorn_Factory id="RapicornTable" factory-type="Rapicorn::Table"/>
   <Rapicorn_Factory id="RapicornVBox" factory-type="Rapicorn::VBox"/>
   <Rapicorn_Factory id="RapicornWidgetList" factory-type="Rapicorn::WidgetList"/>
-  <Rapicorn_Factory id="RapicornWidgetListRow" factory-type="Rapicorn::WidgetListRow"/>
   <Rapicorn_Factory id="RapicornWindow" factory-type="Rapicorn::Window"/>
 
   <!-- Internal Factory Types -->

@@ -2,7 +2,6 @@
 #ifndef __RAPICORN_LIST_AREA_HH__
 #define __RAPICORN_LIST_AREA_HH__
 
-#include <ui/adjustment.hh>
 #include <ui/container.hh>
 #include <ui/sizegroup.hh>
 #include <ui/layoutcontainers.hh>
@@ -11,122 +10,87 @@
 
 namespace Rapicorn {
 
-class WidgetListImpl;
-
-class WidgetListRowImpl : public virtual SingleContainerImpl,
-                          public virtual WidgetListRowIface,
-                          public virtual EventHandler {
-  int             index_;
-  WidgetListImpl* widget_list          () const;
+class SelectableItemImpl : public virtual SingleContainerImpl,
+                           public virtual SelectableItemIface,
+                           public virtual EventHandler {
 protected:
   virtual void  construct              () override;
-  virtual void  dump_private_data      (TestStream &tstream) override;
+  virtual bool  capture_event          (const Event &event) override;
   virtual bool  handle_event           (const Event &event) override;
 public:
-  explicit      WidgetListRowImpl      ();
-  virtual int   row_index              () const override;
-  virtual void  row_index              (int i) override;
+  explicit      SelectableItemImpl     ();
   virtual bool  selected               () const override;
   virtual void  selected               (bool s) override;
   virtual void  reset                  (ResetMode mode = RESET_ALL) override;
 };
-typedef std::shared_ptr<WidgetListRowImpl> WidgetListRowImplP;
+typedef std::shared_ptr<SelectableItemImpl> SelectableItemImplP;
 
-/// @EXPERIMENTAL: The WidgetList and WidgetListRow designs are not finalised.
-struct ListRow {
-  vector<WidgetImplP> cols; // FIXME
-  WidgetListRowImplP lrow;
-  Allocation     area;
-  uint           allocated : 1;
-  ListRow() : lrow (NULL), allocated (0) {}
-};
 
 class WidgetListImpl : public virtual MultiContainerImpl,
                        public virtual WidgetListIface,
-                       public virtual AdjustmentSource,
                        public virtual EventHandler
 {
-  friend class WidgetListRowImpl;
-  typedef map<int64,ListRow*>  RowMap;
-  typedef std::deque<int>      SizeQueue;
   ListModelIfaceP        model_;
+  String                 row_identifier_;
+  vector<WidgetImplP>    widget_rows_; // FIXME: rename and merge w MultiContainer
   size_t                 conid_updated_;
-  vector<int>            row_heights_;
-  mutable AdjustmentP    hadjustment_, vadjustment_;
-  RowMap                 row_map_, off_map_;
-  vector<bool>           selection_;
   vector<WidgetGroupP>   size_groups_;
-  SelectionMode          selection_mode_;
-  bool                   virtualized_pixel_scrolling_;
-  bool                   need_scroll_layout_;
-  bool                   block_invalidate_;
+  uint                  selection_changed_freeze_ : 20;
+  uint                  selection_mode_ : 8;
+  uint                  selection_changed_pending_ : 1;
   int                   first_row_, last_row_, multi_sel_range_start_;
+  uint                  insertion_cursor_;
   void                  model_updated           (const UpdateRequest &ur);
-  void                  selection_changed       (int first, int length);
-  virtual void          invalidate_parent       () override;
+  WidgetImpl*           get_row_widget          (uint64 idx) const { return idx < widget_rows_.size() ? widget_rows_[idx].get() : NULL; }
+  int64                 row_widget_index        (WidgetImpl &widget);
+  void                  destroy_row             (uint64 index);
+  void                  row_select_range        (size_t first, size_t length, bool selected);
+  void                  row_select              (uint64 idx, bool selected) { row_select_range (idx, 1, selected); }
+  bool                  row_selected            (uint64 idx) const;
+  bool                  validate_selection      (int fallback = 0);
 protected:
+  class SelectionChangedGuard {
+    WidgetListImpl &wlist_;
+  public:
+    SelectionChangedGuard  (WidgetListImpl&);
+    ~SelectionChangedGuard ();
+  };
+  void                  notify_selection_changed();
+  void                  deselect_rows           ();
   void                  change_selection        (int current, int previous, bool toggle, bool range, bool preserve);
   bool                  key_press_event         (const EventKey &event);
-  bool                  button_event            (const EventButton &event, WidgetListRowImpl *lrow, int index);
+  bool                  button_event            (const EventButton &event, WidgetImpl *row, int index);
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
+  virtual void          size_request            (Requisition &requisition) override;
+  virtual void          size_allocate           (Allocation area, bool changed) override;
   virtual bool          handle_event            (const Event &event) override;
-  virtual bool          row_event               (const Event &event, WidgetListRowImpl *lrow, int index) ;
+  virtual bool          row_event               (const Event &event, WidgetImpl *row);
   virtual void          reset                   (ResetMode mode) override;
   virtual bool          move_focus              (FocusDir fdir) override;
   virtual void          focus_lost              () override;
-  bool                  selected                (int row) { return size_t (row) < selection_.size() && selection_[row]; }
-  void                  toggle_selected         (int row);
-  void                  deselect_all            ();
+  virtual void          add_child               (WidgetImpl &widget) override;
+  virtual void          remove_child            (WidgetImpl &widget) override;
+  virtual void          selectable_child_changed (WidgetChain &chain) override;
+  ssize_t               child_index             (WidgetImpl &widget) const;
+  void                  update_row              (uint64 index);
+  void                  invalidate_model        (bool invalidate_heights, bool invalidate_widgets);
 public:
   // == WidgetListIface ==
-  virtual std::string                   model           () const override;
-  virtual void                          model           (const std::string &modelurl) override;
   virtual SelectionMode                 selection_mode  () const override;
   virtual void                          selection_mode  (SelectionMode smode) override;
   virtual void                          set_selection   (const BoolSeq &selection) override;
   virtual BoolSeq                       get_selection   () override;
-  virtual void                          select_range    (int first, int length) override;
-  virtual void                          unselect_range  (int first, int length) override;
-  virtual void                          set_list_model  (ListModelIface &model) override;
+  virtual void                          select_range    (int first, int length) override { row_select_range (first, length, true); }
+  virtual void                          unselect_range  (int first, int length) override { row_select_range (first, length, false); }
+  virtual void                          bind_model      (ListModelIface &model, const String &row_identifier) override;
+  virtual std::string                   row_identifier  () const override;
+  virtual void                          row_identifier  (const std::string &row_identifier) override;
+  virtual WidgetIfaceP                  create_row      (int64 index, const String &widget_identifier, const StringSeq &arguments) override;
   // == WidgetListImpl ==
   explicit              WidgetListImpl          ();
   virtual              ~WidgetListImpl          () override;
-  bool                  validate_selection      (int fallback = 0);
-  bool                  has_selection           () const;
-  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
-  Adjustment&           hadjustment             () const;
-  Adjustment&           vadjustment             () const;
-  Adjustment*           get_adjustment          (AdjustmentSourceType adj_source,
-                                                 const String        &name);
-  void                  invalidate_model        (bool invalidate_heights,
-                                                 bool invalidate_widgets);
-  virtual void          visual_update           () override;
-  virtual void          size_request            (Requisition &requisition) override;
-  virtual void          size_allocate           (Allocation area, bool changed) override;
   int                   focus_row               ();
   bool                  grab_row_focus          (int next_focus, int old_focus = -1);
-  /* sizing and positioning */
-  int                   row_height              (int            nth_row);
-  void                  scroll_layout_preserving();
-  void                  cache_row               (ListRow *lr);
-  void                  destroy_row             (ListRow *lr);
-  void                  destroy_range           (size_t first, size_t bound);
-  void                  fill_row                (ListRow *lr, int row);
-  ListRow*              create_row              (uint64 row,
-                                                 bool   with_size_groups = true);
-  ListRow*              lookup_row              (int    row, bool maybe_cached = true);
-  ListRow*              fetch_row               (int    row);
-  void                  update_row              (int    row);
-  // == Scrolling Implementation ==
-  void          scroll_layout           ()                              { return virtualized_pixel_scrolling_ ? vscroll_layout() : pscroll_layout(); }
-  double        scroll_row_position     (const int r, const double a)   { return virtualized_pixel_scrolling_ ? vscroll_row_position (r, a) : pscroll_row_position (r, a); }
-  // == Virtualized Scrolling ==
-  void          vscroll_layout          ();
-  double        vscroll_row_position    (const int target_row, const double list_alignment);
-  int           vscroll_row_yoffset     (const double value, const int target_row);
-  int           vscroll_relative_row    (const int src_row, int pixel_delta);
-  // == Pixel Accurate Scrolling ==
-  void          pscroll_layout          ();
-  double        pscroll_row_position    (const int target_row, const double list_alignment);
 };
 
 } // Rapicorn
