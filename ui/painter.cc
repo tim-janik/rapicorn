@@ -175,7 +175,7 @@ struct ImagePainter::ImageBackend : public std::enable_shared_from_this<ImageBac
   virtual Requisition  image_size       () = 0;
   virtual Rect         fill_area        () = 0;
   virtual void         draw_image       (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect) = 0;
-  virtual StringVector list             (const String &prefix) = 0;
+  virtual StringVector list             () = 0;
 };
 
 // == SvgImageBackend ==
@@ -215,9 +215,9 @@ public:
     critical_unless (fill_.y + fill_.height <= bb.height);
   }
   virtual StringVector
-  list (const String &prefix)
+  list()
   {
-    return svgf_->list (prefix);
+    return svgf_->list();
   }
   virtual Requisition
   image_size ()
@@ -262,7 +262,7 @@ public:
     pixmap_ (pixmap)
   {}
   virtual StringVector
-  list (const String &prefix)
+  list()
   {
     return StringVector();
   }
@@ -430,9 +430,9 @@ ImagePainter::image_size ()
 }
 
 StringVector
-ImagePainter::list (const String &prefix)
+ImagePainter::list()
 {
-  return image_backend_ ? image_backend_->list (prefix) : StringVector();
+  return image_backend_ ? image_backend_->list() : StringVector();
 }
 
 Rect

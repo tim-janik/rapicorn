@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>  <!--*-mode: xml;-*-->
 <!-- This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0 -->
-<interfaces>
+<interfaces factory-svg="@res themes/Default.svg">
 
   <!-- Public Factory Types -->
   <Rapicorn_Factory id="RapicornAlignment" factory-type="Rapicorn::Alignment"/>

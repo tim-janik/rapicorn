@@ -288,15 +288,15 @@ class LazyColorAttr {
    * string back from span attributes.
    */
   PangoAttrColor pcolor;
-  String         cname;
-  ColorType      ctype;
+  String         color_name;
+  StyleColor     style_color;
 protected:
   static PangoAttribute*
   copy (const PangoAttribute *attr)
   {
     const LazyColorAttr *self = (const LazyColorAttr*) attr;
     const PangoAttrColor *cattr = &self->pcolor;
-    return create (attr->klass, cattr->color.red, cattr->color.green, cattr->color.blue, self->cname, self->ctype);
+    return create (attr->klass, cattr->color.red, cattr->color.green, cattr->color.blue, self->color_name, self->style_color);
   }
   static void
   destroy (PangoAttribute *attr)
@@ -309,15 +309,15 @@ protected:
          const PangoAttribute *attr2)
   {
     const LazyColorAttr *self1 = (const LazyColorAttr*) attr1, *self2 = (const LazyColorAttr*) attr2;
-    return self1->ctype == self2->ctype && self1->cname == self2->cname;
+    return self1->style_color == self2->style_color && self1->color_name == self2->color_name;
   }
   static PangoAttribute*
   create (const PangoAttrClass *klass,
           guint16               red,
           guint16               green,
           guint16               blue,
-          const String         &cname,
-          ColorType             ctype)
+          const String         &color_name,
+          StyleColor            style_color)
   {
     LazyColorAttr *self = new LazyColorAttr;
     PangoAttrColor *cattr = (PangoAttrColor*) self;
@@ -326,8 +326,8 @@ protected:
     cattr->color.red = red;
     cattr->color.green = green;
     cattr->color.blue = blue;
-    self->cname = cname;
-    self->ctype = ctype;
+    self->color_name = color_name;
+    self->style_color = style_color;
     return (PangoAttribute*) self;
   }
 public:
@@ -345,28 +345,28 @@ public:
   }
   static PangoAttribute*
   create_lazy_color (const PangoAttrClass *klass,
-                     const String         &cname,
-                     ColorType             ctype)
+                     const String         &color_name,
+                     StyleColor            style_color)
   {
     // 0xfd1bfe marks unresolved lazy colors
-    return create (klass, 0xfdfd, 0x1b1b, 0xfefe, cname, ctype);
+    return create (klass, 0xfdfd, 0x1b1b, 0xfefe, color_name, style_color);
   }
   static PangoAttribute*
   create_preset_color (const PangoAttrClass *klass,
                        guint16               red,
                        guint16               green,
                        guint16               blue,
-                       const String         &cname,
-                       ColorType             ctype)
+                       const String         &color_name,
+                       StyleColor            style_color)
   {
-    return create (klass, red, green, blue, cname, ctype);
+    return create (klass, red, green, blue, color_name, style_color);
   }
   static String
   get_name (const PangoAttribute *attr)
   {
     assert (attr->klass == foreground_klass() || attr->klass == background_klass());
     const LazyColorAttr *self = (const LazyColorAttr*) attr;
-    return self->cname;
+    return self->color_name;
   }
 };
 
@@ -590,9 +590,9 @@ class XmlToPango : Rapicorn::MarkupParser {
               if (pango_color_parse (&pcolor, col.c_str()))
                 pa = LazyColorAttr::create_preset_color (LazyColorAttr::background_klass(),
                                                          pcolor.red, pcolor.green, pcolor.blue,
-                                                         col, ColorType::BACKGROUND);
+                                                         col, StyleColor::BACKGROUND);
               else
-                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::background_klass(), col, ColorType::BACKGROUND);
+                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::background_klass(), col, StyleColor::BACKGROUND);
             }
           else if (col.size() && token == '1')
             {
@@ -600,9 +600,9 @@ class XmlToPango : Rapicorn::MarkupParser {
               if (pango_color_parse (&pcolor, col.c_str()))
                 pa = LazyColorAttr::create_preset_color (LazyColorAttr::foreground_klass(),
                                                          pcolor.red, pcolor.green, pcolor.blue,
-                                                         col, ColorType::FOREGROUND);
+                                                         col, StyleColor::FOREGROUND);
               else
-                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::foreground_klass(), col, ColorType::FOREGROUND);
+                pa = LazyColorAttr::create_lazy_color (LazyColorAttr::foreground_klass(), col, StyleColor::FOREGROUND);
             }
         }
         break;
@@ -1313,7 +1313,7 @@ protected:
     if (insensitive())
       {
         const double ax = larea.x, ay = larea.y;
-        Color insensitive_glint, insensitive_ink = heritage()->insensitive_ink (state(), &insensitive_glint);
+        Color insensitive_glint, insensitive_ink = style()->insensitive_ink (state(), &insensitive_glint);
         /* render embossed text */
         larea.x = ax, larea.y = ay;
         render_text_gL (cr, larea, vdot_size, insensitive_glint);

@@ -12,7 +12,6 @@
 #include <ui/evaluator.hh>
 #include <ui/events.hh>
 #include <ui/factory.hh>
-#include <ui/heritage.hh>
 #include <ui/image.hh>
 #include <ui/widget.hh>
 #include <ui/layoutcontainers.hh>

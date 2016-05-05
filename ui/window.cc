@@ -238,10 +238,6 @@ WindowImpl::construct ()
   ViewportImpl::construct();
   assert_return (has_children() == false);      // must be anchored before becoming parent
   assert_return (get_window() && get_viewport());
-  struct Heritage : Rapicorn::Heritage {
-    using Rapicorn::Heritage::create_heritage;
-  };
-  heritage (Heritage::create_heritage (*this, *this, color_scheme()));
   WindowTrail::wenter (this);
   ApplicationImpl::WindowImplFriend::add_window (*this);
   assert_return (anchored() == false);

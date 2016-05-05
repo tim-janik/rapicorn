@@ -138,7 +138,7 @@ struct FileImpl : public File {
   /*dtor*/             ~FileImpl        () { if (handle_) g_object_unref (handle_); }
   virtual String        name            () const override { return name_; }
   virtual ElementP      lookup          (const String &elementid) override;
-  virtual StringVector  list            (const String &prefix) override;
+  virtual StringVector  list            () override;
 };
 
 // == File ==
@@ -201,7 +201,15 @@ FileImpl::lookup (const String &elementid)
       RsvgDimensionData rd = { 0, 0, 0, 0 };
       RsvgDimensionData dd = { 0, 0, 0, 0 };
       RsvgPositionData dp = { 0, 0 };
-      const char *cid = elementid.empty() ? NULL : elementid.c_str();
+      String fragment;
+      const char *cid;
+      if (elementid.empty() || elementid == "#")
+        fragment = "";                  // pick root
+      else if (elementid[0] == '#')
+        fragment = elementid;           // hash included
+      else if (elementid[0] != '#')
+        fragment = "#" + elementid;     // add missing hash
+      cid = fragment.empty() ? NULL : fragment.c_str();
       rsvg_handle_get_dimensions (handle, &rd);         // FIXME: cache results
       if (rd.width > 0 && rd.height > 0 &&
           rsvg_handle_get_dimensions_sub (handle, &dd, cid) && dd.width > 0 && dd.height > 0 &&
@@ -218,9 +226,9 @@ FileImpl::lookup (const String &elementid)
           ei->rh_ = rd.height;
           ei->em_ = dd.em;
           ei->ex_ = dd.ex;
-          ei->id_ = elementid;
+          ei->id_ = fragment;
           if (0)
-            printerr ("SUB: %s: bbox=%d,%d,%dx%d dim=%dx%d em=%f ex=%f\n",
+            printerr ("SVG: %s: bbox=%d,%d,%dx%d dim=%dx%d em=%f ex=%f\n",
                       ei->id_.c_str(), ei->x_, ei->y_, ei->width_, ei->height_,
                       ei->rw_, ei->rh_, ei->em_, ei->ex_);
           return ElementP (ei);
@@ -234,7 +242,7 @@ FileImpl::lookup (const String &elementid)
  * List all element IDs in an SVG file that start with @a prefix.
  */
 StringVector
-FileImpl::list (const String &prefix)
+FileImpl::list()
 {
   if (good_ids_.empty() && !id_candidates_.empty())
     {

@@ -7,7 +7,6 @@
 #include <ui/region.hh>
 #include <ui/commands.hh>
 #include <ui/style.hh>
-#include <ui/heritage.hh>
 
 namespace Rapicorn {
 
@@ -57,14 +56,12 @@ private:
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AncestryCache        *acache_; // cache poninter may change for const this
-  HeritageP                   heritage_;
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
   Allocation                  allocation_, clip_area_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        propagate_state    (bool notify_changed);
   void                        acache_check       () const;
-  void                        propagate_heritage ();
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
@@ -149,7 +146,6 @@ protected:
   virtual bool                custom_command    (const String &command_name, const StringSeq &command_args);
   virtual void                set_user_data     (const String &name, const Any &any);
   virtual Any                 get_user_data     (const String &name);
-  void                        heritage          (HeritageP heritage);
   void                        enter_widget_group (const String &group_name, WidgetGroupType group_type);
   void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
   StringVector                list_widget_groups (WidgetGroupType group_type) const;
@@ -217,8 +213,6 @@ public:
   virtual void                name              (const String &str); ///< Set Widget name and "id"
   FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
-  ColorScheme                 color_scheme      () const;
-  void                        color_scheme      (ColorScheme cst);
   /* override requisition */
   double                      width             () const;
   void                        width             (double w);
@@ -289,39 +283,28 @@ public:
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
-  /* theming & appearance */
-  // colors
-  Color                 normal_bg               () { return state_color (WidgetState::NORMAL, 0); }
-  Color                 normal_fg               () { return state_color (WidgetState::NORMAL, 1); }
-  Color                 active_bg               () { return state_color (WidgetState::ACTIVE, 0); }
-  Color                 active_fg               () { return state_color (WidgetState::ACTIVE, 1); }
-  Color                 selected_bg             () { return state_color (WidgetState::SELECTED, 0); }
-  Color                 selected_fg             () { return state_color (WidgetState::SELECTED, 1); }
-  // Color                 focus_color             () { return state_color (FocusDir::COLOR); }
+  // theming & appearance
+  Color                 current_color           (StyleColor color_type, const String &detail = "");
+  Color                 state_color             (WidgetState state, StyleColor color_type, const String &detail = "");
+  Color                 normal_bg               () { return state_color (WidgetState::NORMAL, StyleColor::BACKGROUND); }
+  Color                 normal_fg               () { return state_color (WidgetState::NORMAL, StyleColor::FOREGROUND); }
+  Color                 active_bg               () { return state_color (WidgetState::ACTIVE, StyleColor::BACKGROUND); }
+  Color                 active_fg               () { return state_color (WidgetState::ACTIVE, StyleColor::FOREGROUND); }
+  Color                 selected_bg             () { return state_color (WidgetState::SELECTED, StyleColor::BACKGROUND); }
+  Color                 selected_fg             () { return state_color (WidgetState::SELECTED, StyleColor::FOREGROUND); }
   Color                 state_color             (WidgetState state, bool foreground, const String &detail = "");
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
-  // state colors
   WidgetState           state                   () const;
   StyleIfaceP           style                   () const;
   Color                 foreground              ();
   Color                 background              ();
-  // Color              black                   () { return theme_color (  0,   0,   0); }
-  // Color              white                   () { return theme_color (  0,   0, 100); }
-  // Color              red                     () { return theme_color (  0, 100, 100); }
-  // Color              yellow                  () { return theme_color ( 60, 100, 100); }
-  // Color              green                   () { return theme_color (120, 100, 100); }
-  // Color              cyan                    () { return theme_color (180, 100, 100); }
-  // Color              blue                    () { return theme_color (240, 100, 100); }
-  // Color              magenta                 () { return theme_color (300, 100, 100); }
-  // old colors
-  HeritageP             heritage                () const { return heritage_; }
-  Color                 dark_color              () { return heritage()->dark_color (state()); }
-  Color                 dark_shadow             () { return heritage()->dark_shadow (state()); }
-  Color                 dark_glint              () { return heritage()->dark_glint (state()); }
-  Color                 light_color             () { return heritage()->light_color (state()); }
-  Color                 light_shadow            () { return heritage()->light_shadow (state()); }
-  Color                 light_glint             () { return heritage()->light_glint (state()); }
-  Color                 focus_color             () { return heritage()->focus_color (state()); }
+  Color                 dark_color              ();
+  Color                 dark_shadow             ();
+  Color                 dark_glint              ();
+  Color                 light_color             ();
+  Color                 light_shadow            ();
+  Color                 light_glint             ();
+  Color                 focus_color             ();
   /* debugging/testing */
   virtual String        test_dump               ();
   String                debug_dump              (const String &flags = String());

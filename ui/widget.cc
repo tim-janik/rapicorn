@@ -52,7 +52,7 @@ WidgetIface::impl () const
 
 WidgetImpl::WidgetImpl () :
   flags_ (VISIBLE),
-  parent_ (NULL), acache_ (NULL), heritage_ (NULL),
+  parent_ (NULL), acache_ (NULL),
   factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
@@ -641,8 +641,6 @@ WidgetImpl::~WidgetImpl()
   WidgetGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);
-  if (heritage_)
-    heritage_ = NULL;
   uint timer_id = get_data (&visual_update_key);
   if (timer_id)
     {
@@ -927,30 +925,6 @@ WidgetImpl::height (double h)
   invalidate_size();
 }
 
-void
-WidgetImpl::propagate_heritage ()
-{
-  ContainerImpl *container = this->as_container_impl();
-  if (container)
-    for (auto child : *container)
-      child->heritage (heritage_);
-}
-
-void
-WidgetImpl::heritage (HeritageP heritage)
-{
-  HeritageP old_heritage = heritage_;
-  heritage_ = NULL;
-  if (heritage)
-    heritage_ = heritage->adapt_heritage (*this, color_scheme());
-  if (heritage_ != old_heritage)
-    {
-      old_heritage = NULL;
-      invalidate();
-      propagate_heritage ();
-    }
-}
-
 bool
 WidgetImpl::process_event (const Event &event, bool capture) // widget coordinates relative
 {
@@ -1000,8 +974,6 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       assert_return (pcontainer == NULL);
       WindowImpl *old_toplevel = get_window();
       invalidate();
-      if (heritage())
-        heritage (NULL);
       old_parent->unparent_child (*this);
       parent_ = NULL;
       if (acache_)
@@ -1017,8 +989,6 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
     {
       assert_return (old_parent == NULL);
       parent_ = pcontainer;
-      if (parent_->heritage())
-        heritage (parent_->heritage());
       if (parent_->anchored() && !anchored())
         sig_hierarchy_changed.emit (NULL);
       invalidate();
@@ -1703,37 +1673,70 @@ WidgetImpl::user_source () const
   return Factory::factory_context_source (factory_context());
 }
 
-static DataKey<ColorScheme> widget_color_scheme_key;
-
-ColorScheme
-WidgetImpl::color_scheme () const
+Color
+WidgetImpl::current_color (StyleColor color_type, const String &detail)
 {
-  return get_data (&widget_color_scheme_key);
+  return state_color (state(), color_type, detail);
 }
 
-void
-WidgetImpl::color_scheme (ColorScheme cst)
+Color
+WidgetImpl::state_color (WidgetState state, StyleColor color_type, const String &detail)
 {
-  if (cst != get_data (&widget_color_scheme_key))
-    {
-      if (cst == 0)
-        delete_data (&widget_color_scheme_key);
-      else
-        set_data (&widget_color_scheme_key, cst);
-      heritage (heritage()); // forces recalculation/adaption
-    }
+  return style()->state_color (state, color_type, detail);
 }
 
 Color
 WidgetImpl::foreground ()
 {
-  return heritage()->foreground (state());
+  return state_color (state(), StyleColor::FOREGROUND);
 }
 
 Color
 WidgetImpl::background ()
 {
-  return heritage()->background (state());
+  return state_color (state(), StyleColor::BACKGROUND);
+}
+
+Color
+WidgetImpl::dark_color ()
+{
+  return state_color (state(), StyleColor::DARK);
+}
+
+Color
+WidgetImpl::dark_shadow ()
+{
+  return state_color (state(), StyleColor::DARK_SHADOW);
+}
+
+Color
+WidgetImpl::dark_glint ()
+{
+  return state_color (state(), StyleColor::DARK_GLINT);
+}
+
+Color
+WidgetImpl::light_color ()
+{
+  return state_color (state(), StyleColor::LIGHT);
+}
+
+Color
+WidgetImpl::light_shadow ()
+{
+  return state_color (state(), StyleColor::LIGHT_SHADOW);
+}
+
+Color
+WidgetImpl::light_glint ()
+{
+  return state_color (state(), StyleColor::LIGHT_GLINT);
+}
+
+Color
+WidgetImpl::focus_color ()
+{
+  return state_color (state(), StyleColor::FOCUS_BG);
 }
 
 /// Return clipping area for rendering and event processing if one is set.

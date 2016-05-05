@@ -12,7 +12,7 @@ rapicorn_public_headers = $(strip	\
 	adjustment.hh	application.hh	arrangement.hh	\
 	binding.hh	buttons.hh	\
 	cmdlib.hh			commands.hh			container.hh	\
-	evaluator.hh	events.hh	factory.hh	heritage.hh	\
+	evaluator.hh	events.hh	factory.hh	\
 	image.hh	widget.hh			keysymbols.hh	\
 	layoutcontainers.hh	listarea.hh	models.hh	object.hh	\
 	paintcontainers.hh	painter.hh	paintwidgets.hh	primitives.hh	\
@@ -31,7 +31,7 @@ rapicorn_cc_sources = $(strip	serverglue.cc   clientglue.cc \
 	blit-mmx.cc	blitfuncs.cc	\
 	binding.cc	buttons.cc	\
 	cmdlib.cc			commands.cc			container.cc	\
-	evaluator.cc	events.cc	factory.cc	heritage.cc	\
+	evaluator.cc	events.cc	factory.cc	\
 	image.cc	widget.cc	\
 	layoutcontainers.cc	listarea.cc	models.cc	object.cc	\
 	paintcontainers.cc	painter.cc	paintwidgets.cc	primitives.cc	\
