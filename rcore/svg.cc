@@ -37,14 +37,14 @@ IBox::to_string () const
 struct ElementImpl : public Element {
   String        id_;
   RsvgHandle   *handle_;
-  int           ix_, iy_, iwidth_, iheight_; // ink box
+  IBox          bbox_, ink_; // bounding box and ink box
   double        em_, ex_;
   bool          is_measured_;
-  explicit      ElementImpl     () : handle_ (NULL), ix_ (0), iy_ (0), iwidth_ (0), iheight_ (0), em_ (0), ex_ (0), is_measured_ (false) {}
+  explicit      ElementImpl     () : handle_ (NULL), em_ (0), ex_ (0), is_measured_ (false) {}
   virtual      ~ElementImpl     ();
   virtual Info  info            ();
-  virtual IBox  bbox            ()                      { return ibox(); }
-  virtual IBox  ibox            ()                      { return IBox (ix_, iy_, iwidth_, iheight_); }
+  virtual IBox  bbox            ()                      { return bbox_; }
+  virtual IBox  ibox            ()                      { return ink_; }
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale);
   void          measure_bbox    ();
 };
@@ -85,13 +85,13 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
     {
     case RenderSize::STATIC:
       cairo_translate (cr, // shift sub into top_left and center extra space
-                       -ix_ + (iwidth_ * xscale - iwidth_) / 2.0,
-                       -iy_ + (iheight_ * yscale - iheight_) / 2.0);
+                       -ink_.x + (ink_.width * xscale - ink_.width) / 2.0,
+                       -ink_.y + (ink_.height * yscale - ink_.height) / 2.0);
       rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
       break;
     case RenderSize::ZOOM:
       cairo_scale (cr, xscale, yscale); // scale as requested
-      cairo_translate (cr, -ix_, -iy_); // shift sub into top_left of surface
+      cairo_translate (cr, -ink_.x, -ink_.y); // shift sub into top_left of surface
       rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
       break;
     }
@@ -153,19 +153,19 @@ ElementImpl::measure_bbox()
   // get librsvg's bbox, unfortunately it's often not wide enough due to rounding errors
   RsvgPositionData dp = { 0, 0 };
   rsvg_handle_get_position_sub (handle_, &dp, cid);
-  ix_ = dp.x;
-  iy_ = dp.y;
+  bbox_.x = dp.x;
+  bbox_.y = dp.y;
   RsvgDimensionData dd = { 0, 0, 0, 0 };
   rsvg_handle_get_dimensions_sub (handle_, &dd, cid);
   if (0) // adjust for rounding at the output stage, this'd work if dp/dd used doubles
     {
-      iwidth_ = int (dp.x + dd.width + 0.95) - ix_;
-      iheight_ = int (dp.y + dd.height + 0.95) - iy_;
+      bbox_.width = int (dp.x + dd.width + 0.95) - bbox_.x;
+      bbox_.height = int (dp.y + dd.height + 0.95) - bbox_.y;
     }
   else
     {
-      iwidth_ = dd.width;
-      iheight_ = dd.height;
+      bbox_.width = dd.width;
+      bbox_.height = dd.height;
     }
   em_ = dd.em;
   ex_ = dd.ex;
@@ -182,33 +182,53 @@ ElementImpl::measure_bbox()
   assert_return (cairo_status (cr) == CAIRO_STATUS_SUCCESS);
   const bool rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
   assert_return (rendered);
-  for (ix_ = x; ix_ < x + width; ix_++)
-    if (cairo_surface_scan_col (surface, ix_) != 0)
+  for (ink_.x = x; ink_.x < x + width; ink_.x++)
+    if (cairo_surface_scan_col (surface, ink_.x) != 0)
       break;
-  for (iy_ = y; iy_ < y + height; iy_++)
-    if (cairo_surface_scan_row (surface, iy_) != 0)
+  for (ink_.y = y; ink_.y < y + height; ink_.y++)
+    if (cairo_surface_scan_row (surface, ink_.y) != 0)
       break;
   int b;
-  for (b = x + width; b > ix_; b--)
+  for (b = x + width; b > ink_.x; b--)
     if (cairo_surface_scan_col (surface, b - 1) != 0)
       break;
-  iwidth_ = b - ix_;
-  for (b = y + height; b > iy_; b--)
+  ink_.width = b - ink_.x;
+  for (b = y + height; b > ink_.y; b--)
     if (cairo_surface_scan_row (surface, b - 1) != 0)
       break;
-  iheight_ = b - iy_;
+  ink_.height = b - ink_.y;
   if (false && // debug code
-      (iwidth_ != dd.width || iheight_ != dd.height))
+      (ink_.width != dd.width || ink_.height != dd.height))
     {
       static int dcounter = 1;
       String fname = string_format ("xdbg%02x.png", dcounter++);
       printerr ("SVG: id=%s rsvg-bbox=%+d%+d%+dx%d measured-bbox=%s (%s)\n", id_,
                 dp.x, dp.y, dd.width, dd.height,
-                IBox (ix_, iy_, iwidth_, iheight_).to_string(), fname);
+                ink_.to_string(), fname);
       unlink (fname.c_str());
       if (cairo_surface_write_to_png (surface, fname.c_str()) != CAIRO_STATUS_SUCCESS)
         unlink (fname.c_str());
     }
+  // grow bbox to cover ink
+  if (ink_.width && ink_.height)
+    {
+      if (ink_.x < bbox_.x)
+        {
+          bbox_.width += bbox_.x - ink_.x;
+          bbox_.x = ink_.x;
+        }
+      if (ink_.x + ink_.width > bbox_.x + bbox_.width)
+        bbox_.width = ink_.x + ink_.width - bbox_.x;
+      if (ink_.y < bbox_.y)
+        {
+          bbox_.height += bbox_.y - ink_.y;
+          bbox_.y = ink_.y;
+        }
+      if (ink_.y + ink_.height > bbox_.y + bbox_.height)
+        bbox_.height = ink_.y + ink_.height - bbox_.y;
+    }
+  else
+    ink_ = IBox (bbox_.x, bbox_.y, 0, 0);
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
 #endif
