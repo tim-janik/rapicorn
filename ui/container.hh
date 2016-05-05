@@ -40,6 +40,7 @@ protected:
   virtual bool        move_focus        (FocusDir              fdir);
   void                expose_enclosure  (); /* expose without children */
   void                change_unviewable (WidgetImpl &child, bool);
+  void                flag_descendant   (WidgetImpl &widget, uint64 flag, bool onoff);
   virtual void        focus_lost        ()                              { set_focus_child (NULL); }
   virtual void        set_focus_child   (WidgetImpl *widget);
   virtual void        scroll_to_child   (WidgetImpl &widget);
@@ -47,6 +48,7 @@ protected:
   static Requisition  measure_child     (WidgetImpl &child);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
   static Requisition  size_request_child (WidgetImpl &child, bool *hspread, bool *vspread);
+  virtual void        selectable_child_changed (WidgetChain &chain);
 public:
   virtual WidgetImplP*  begin             () const = 0;
   virtual WidgetImplP*  end               () const = 0;

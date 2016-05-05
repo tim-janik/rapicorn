@@ -13,6 +13,7 @@ namespace Rapicorn {
 
 struct ClassDoctor {
   static void widget_set_parent (WidgetImpl &widget, ContainerImpl *parent) { widget.set_parent (parent); }
+  static void widget_set_flag   (WidgetImpl &widget, uint64 flag, bool val) { widget.set_flag (flag, val); }
 };
 
 /* --- CrossLinks --- */
@@ -641,6 +642,14 @@ ContainerImpl::change_unviewable (WidgetImpl &child, bool b)
   child.set_flag (UNVIEWABLE, b);
 }
 
+/// Adjust Widget flags on a descendant.
+void
+ContainerImpl::flag_descendant (WidgetImpl &widget, uint64 flag, bool onoff)
+{
+  assert_return (widget.has_ancestor (*this)); // could be disabled for performance
+  ClassDoctor::widget_set_flag (widget, flag, onoff);
+}
+
 // window coordinates relative
 void
 ContainerImpl::point_children (Point p, std::vector<WidgetImplP> &stack)
@@ -706,6 +715,19 @@ ContainerImpl::dump_test_data (TestStream &tstream)
   WidgetImpl::dump_test_data (tstream);
   for (auto child : *this)
     child->make_test_dump (tstream);
+}
+
+void
+ContainerImpl::selectable_child_changed (WidgetChain &chain)
+{
+  ContainerImpl *container = parent();
+  if (container)
+    {
+      WidgetChain this_chain;
+      this_chain.widget = this;
+      this_chain.next = &chain;
+      container->selectable_child_changed (this_chain);
+    }
 }
 
 WidgetIfaceP
