@@ -20,33 +20,33 @@ namespace Rapicorn {
 /// @namespace Rapicorn::Svg The Rapicorn::Svg namespace provides functions for handling and rendering of SVG files and elements.
 namespace Svg {
 
-BBox::BBox () :
+IBox::IBox () :
   x (-1), y (-1), width (0), height (0)
 {}
 
-BBox::BBox (double _x, double _y, double w, double h) :
+IBox::IBox (int _x, int _y, int w, int h) :
   x (_x), y (_y), width (w), height (h)
 {}
 
 String
-BBox::to_string () const
+IBox::to_string () const
 {
-  return string_format ("%.7g,%.7g,%.7g,%.7g", x, y, width, height);
+  return string_format ("%+d%+d%+dx%d", x, y, width, height);
 }
 
 struct ElementImpl : public Element {
   String        id_;
-  int           x_, y_, width_, height_, rw_, rh_; // relative to bottom_left
-  double        em_, ex_;
   RsvgHandle   *handle_;
-  explicit      ElementImpl     () : x_ (0), y_ (0), width_ (0), height_ (0), em_ (0), ex_ (0), handle_ (NULL) {}
+  IBox          bbox_, ink_; // bounding box and ink box
+  double        em_, ex_;
+  bool          is_measured_;
+  explicit      ElementImpl     () : handle_ (NULL), em_ (0), ex_ (0), is_measured_ (false) {}
   virtual      ~ElementImpl     ();
   virtual Info  info            ();
-  virtual BBox  bbox            ()                      { return BBox (x_, y_, width_, height_); }
-  virtual BBox  enfolding_bbox  (BBox &inner);
-  virtual BBox  containee_bbox  ();
-  virtual BBox  containee_bbox  (BBox &_resized);
+  virtual IBox  bbox            ()                      { return bbox_; }
+  virtual IBox  ibox            ()                      { return ink_; }
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale);
+  void          measure_ink    ();
 };
 
 const ElementP
@@ -74,35 +74,6 @@ ElementImpl::info ()
   return i;
 }
 
-BBox
-ElementImpl::enfolding_bbox (BBox &containee)
-{
-  if (containee.width <= 0 || containee.height <= 0)
-    return bbox();
-  // FIXME: resize for _containee width/height
-  BBox a = BBox (x_, y_, containee.width + 4, containee.height + 4);
-  return a;
-}
-
-BBox
-ElementImpl::containee_bbox ()
-{
-  if (width_ <= 4 || height_ <= 4)
-    return BBox();
-  // FIXME: calculate _containee size
-  BBox a = BBox (x_ + 2, y_ + 2, width_ - 4, height_ - 4);
-  return a;
-}
-
-BBox
-ElementImpl::containee_bbox (BBox &resized)
-{
-  if (resized.width == width_ && resized.height == height_)
-    return bbox();
-  // FIXME: calculate _containee size when resized
-  return bbox();
-}
-
 bool
 ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale)
 {
@@ -114,18 +85,167 @@ ElementImpl::render (cairo_surface_t *surface, RenderSize rsize, double xscale, 
     {
     case RenderSize::STATIC:
       cairo_translate (cr, // shift sub into top_left and center extra space
-                       -x_ + (width_ * xscale - width_) / 2.0,
-                       -y_ + (height_ * yscale - height_) / 2.0);
+                       -ink_.x + (ink_.width * xscale - ink_.width) / 2.0,
+                       -ink_.y + (ink_.height * yscale - ink_.height) / 2.0);
       rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
       break;
     case RenderSize::ZOOM:
       cairo_scale (cr, xscale, yscale); // scale as requested
-      cairo_translate (cr, -x_, -y_); // shift sub into top_left of surface
+      cairo_translate (cr, -ink_.x, -ink_.y); // shift sub into top_left of surface
       rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
       break;
     }
   cairo_destroy (cr);
   return rendered;
+}
+
+static inline uint32
+cairo_surface_scan_col (cairo_surface_t *surface, int x)
+{
+  assert_return (surface != NULL, 0x00000000);
+  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, 0x00000000);
+  const int width = cairo_image_surface_get_width (surface);
+  double xoff = 0, yoff = 0;
+  cairo_surface_get_device_offset (surface, &xoff, &yoff);
+  x += xoff;
+  assert_return (0 <= x && x < width, 0x00000000);
+  const int height = cairo_image_surface_get_height (surface);
+  const int stride = cairo_image_surface_get_stride (surface);
+  const uint32 *const pixels = (const uint32*) cairo_image_surface_get_data (surface);
+  for (int y = 0; y < height; y++)
+    {
+      const uint32 argb = pixels[stride / 4 * y + x];
+      if (argb & 0xff000000)
+        return argb;
+    }
+  return 0x00000000;
+}
+
+static inline uint32
+cairo_surface_scan_row (cairo_surface_t *surface, int y)
+{
+  assert_return (surface != NULL, 0x00000000);
+  assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32, 0x00000000);
+  const int height = cairo_image_surface_get_height (surface);
+  double xoff = 0, yoff = 0;
+  cairo_surface_get_device_offset (surface, &xoff, &yoff);
+  y += yoff;
+  assert_return (0 <= y && y < height, 0x00000000);
+  const int width = cairo_image_surface_get_width (surface);
+  const int stride = cairo_image_surface_get_stride (surface);
+  const uint32 *const pixels = (const uint32*) cairo_image_surface_get_data (surface);
+  for (int x = 0; x < width; x++)
+    {
+      const uint32 argb = pixels[stride / 4 * y + x];
+      if (argb & 0xff000000)
+        return argb;
+    }
+  return 0x00000000;
+}
+
+void
+ElementImpl::measure_ink()
+{
+  return_unless (is_measured_ == false);
+  const char *cid = id_.empty() ? NULL : id_.c_str();
+  // inkscape uses 90 DPI for unit->pixel mapping and librsvg only renders stable at 90 DPI
+  rsvg_handle_set_dpi_x_y (handle_, 90, 90);
+  // get librsvg's bbox, unfortunately it's often not wide enough due to rounding errors
+  RsvgPositionData dp = { 0, 0 };
+  rsvg_handle_get_position_sub (handle_, &dp, cid);
+  bbox_.x = dp.x;
+  bbox_.y = dp.y;
+  RsvgDimensionData dd = { 0, 0, 0, 0 };
+  rsvg_handle_get_dimensions_sub (handle_, &dd, cid);
+  if (0) // adjust for rounding at the output stage, this'd work if dp/dd used doubles
+    {
+      bbox_.width = int (dp.x + dd.width + 0.95) - bbox_.x;
+      bbox_.height = int (dp.y + dd.height + 0.95) - bbox_.y;
+    }
+  else
+    {
+      bbox_.width = dd.width;
+      bbox_.height = dd.height;
+    }
+  em_ = dd.em;
+  ex_ = dd.ex;
+  // measure element size by peeking at output pixels
+#if 1
+  const int delta = 3; // fudge around origin
+  const int x = dp.x - delta, y = dp.y - delta;
+  const int width = MAX (dd.width, 8) * 1.5 + 0.9 + 2 * delta;   // add enough padding to make
+  const int height = MAX (dd.height, 8) * 1.5 + 0.9 + 2 * delta; // cut-offs highly unlikely
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+  assert_return (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  cairo_surface_set_device_offset (surface, -x, -y);
+  cairo_t *cr = cairo_create (surface);
+  assert_return (cairo_status (cr) == CAIRO_STATUS_SUCCESS);
+  const bool rendered = rsvg_handle_render_cairo_sub (handle_, cr, cid);
+  assert_return (rendered);
+  for (ink_.x = x; ink_.x < x + width; ink_.x++)
+    if (cairo_surface_scan_col (surface, ink_.x) != 0)
+      break;
+  for (ink_.y = y; ink_.y < y + height; ink_.y++)
+    if (cairo_surface_scan_row (surface, ink_.y) != 0)
+      break;
+  int b;
+  for (b = x + width; b > ink_.x; b--)
+    if (cairo_surface_scan_col (surface, b - 1) != 0)
+      break;
+  ink_.width = b - ink_.x;
+  for (b = y + height; b > ink_.y; b--)
+    if (cairo_surface_scan_row (surface, b - 1) != 0)
+      break;
+  ink_.height = b - ink_.y;
+  if (false && // debug code
+      (ink_.width != dd.width || ink_.height != dd.height))
+    {
+      static int dcounter = 1;
+      String fname = string_format ("xdbg%02x.png", dcounter++);
+      printerr ("SVG: id=%s rsvg-bbox=%+d%+d%+dx%d measured-bbox=%s (%s)\n", id_,
+                dp.x, dp.y, dd.width, dd.height,
+                ink_.to_string(), fname);
+      unlink (fname.c_str());
+      if (cairo_surface_write_to_png (surface, fname.c_str()) != CAIRO_STATUS_SUCCESS)
+        unlink (fname.c_str());
+    }
+  // grow bbox to cover ink
+  if (ink_.width && ink_.height)
+    {
+      if (ink_.x < bbox_.x)
+        {
+          bbox_.width += bbox_.x - ink_.x;
+          bbox_.x = ink_.x;
+        }
+      if (ink_.x + ink_.width > bbox_.x + bbox_.width)
+        bbox_.width = ink_.x + ink_.width - bbox_.x;
+      if (ink_.y < bbox_.y)
+        {
+          bbox_.height += bbox_.y - ink_.y;
+          bbox_.y = ink_.y;
+        }
+      if (ink_.y + ink_.height > bbox_.y + bbox_.height)
+        bbox_.height = ink_.y + ink_.height - bbox_.y;
+    }
+  else
+    ink_ = IBox (bbox_.x, bbox_.y, 0, 0);
+  cairo_destroy (cr);
+  cairo_surface_destroy (surface);
+#endif
+  // increase DPI to subsample bbox
+#if 0
+  const double dpi = 90, subsampling = 3.33; // subsample DPI to reduce librsvg rounding errors
+  rsvg_handle_set_dpi_x_y (handle_, dpi * subsampling, dpi * subsampling);
+  rsvg_handle_get_dimensions_sub (handle_, &dd, cid);
+  rsvg_handle_get_position_sub (handle_, &dp, cid);
+  x_ = dp.x / subsampling + 0.5;
+  y_ = dp.y / subsampling + 0.5;
+  width_ = dd.width / subsampling + 0.5;
+  height_ = dd.height / subsampling + 0.5;
+  rsvg_handle_set_dpi_x_y (handle_, 90, 90); // restore librsvg standard DPI
+#endif
+  // done
+  is_measured_ = true;
 }
 
 // == FileImpl ==
@@ -170,6 +290,7 @@ File::load (Blob svg_blob)
       errno = ENODATA;
       return fp;
     }
+  rsvg_handle_set_dpi_x_y (handle, 90, 90); // ensure 90 DPI for librsvg and inkscape content to work correctly
   auto fp = std::make_shared<FileImpl> (handle, svg_blob.name());
   // workaround for https://bugzilla.gnome.org/show_bug.cgi?id=764610 - missing rsvg_handle_list()
   {
@@ -198,9 +319,6 @@ FileImpl::lookup (const String &elementid)
   if (handle_)
     {
       RsvgHandle *handle = handle_;
-      RsvgDimensionData rd = { 0, 0, 0, 0 };
-      RsvgDimensionData dd = { 0, 0, 0, 0 };
-      RsvgPositionData dp = { 0, 0 };
       String fragment;
       const char *cid;
       if (elementid.empty() || elementid == "#")
@@ -210,27 +328,13 @@ FileImpl::lookup (const String &elementid)
       else if (elementid[0] != '#')
         fragment = "#" + elementid;     // add missing hash
       cid = fragment.empty() ? NULL : fragment.c_str();
-      rsvg_handle_get_dimensions (handle, &rd);         // FIXME: cache results
-      if (rd.width > 0 && rd.height > 0 &&
-          rsvg_handle_get_dimensions_sub (handle, &dd, cid) && dd.width > 0 && dd.height > 0 &&
-          rsvg_handle_get_position_sub (handle, &dp, cid))
+      if (!cid || rsvg_handle_has_sub (handle, cid))
         {
           ElementImpl *ei = new ElementImpl();
           ei->handle_ = handle;
           g_object_ref (ei->handle_);
-          ei->x_ = dp.x;
-          ei->y_ = dp.y;
-          ei->width_ = dd.width;
-          ei->height_ = dd.height;
-          ei->rw_ = rd.width;
-          ei->rh_ = rd.height;
-          ei->em_ = dd.em;
-          ei->ex_ = dd.ex;
           ei->id_ = fragment;
-          if (0)
-            printerr ("SVG: %s: bbox=%d,%d,%dx%d dim=%dx%d em=%f ex=%f\n",
-                      ei->id_.c_str(), ei->x_, ei->y_, ei->width_, ei->height_,
-                      ei->rw_, ei->rh_, ei->em_, ei->ex_);
+          ei->measure_ink();
           return ElementP (ei);
         }
     }
@@ -370,9 +474,9 @@ Element::stretch (const size_t image_width, const size_t image_height,
   assert_return (image_width > 0 && image_height > 0, NULL);
   assert_return (n_hspans >= 1 && n_vspans >= 1, NULL);
   // setup SVG element sizes
-  const BBox bb = bbox();
+  const IBox ib = ibox();
   double hscale_factor = 1, vscale_factor = 1;
-  size_t svg_width = bb.width + 0.5, svg_height = bb.height + 0.5;
+  size_t svg_width = ib.width, svg_height = ib.height;
   // copy and distribute spans to match image size
   Span image_hspans[n_hspans], image_vspans[n_vspans];
   bool hscalable = image_width != svg_width;
@@ -384,7 +488,7 @@ Element::stretch (const size_t image_width, const size_t image_height,
       if (svg_hspans[i].length && svg_hspans[i].resizable == 0)
         hscalable = false;
     }
-  assert_return (span_sum == bb.width, NULL);
+  assert_return (span_sum == ib.width, NULL);
   if (hscalable)
     {
       hscale_factor = image_width / double (svg_width);
@@ -409,7 +513,7 @@ Element::stretch (const size_t image_width, const size_t image_height,
       if (svg_vspans[i].length && svg_vspans[i].resizable == 0)
         vscalable = false;
     }
-  assert_return (span_sum == bb.height, NULL);
+  assert_return (span_sum == ib.height, NULL);
   if (vscalable)
     {
       vscale_factor = image_height / double (svg_height);
