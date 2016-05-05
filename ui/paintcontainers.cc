@@ -745,26 +745,36 @@ ElementPainterImpl::state_element (WidgetState state)
 {
   if (!size_painter_)
     size_painter_ = ImagePainter (svg_source_);
-  return_unless (size_painter_ && svg_fragment_.size() && svg_fragment_[0] == '#', "");
-  // match an SVG element to state, ID syntax: <element id="elementname:active+insensitive"/>
-  const String element = svg_fragment_.substr (1); // fragment without initial hash symbol
-  const size_t colon = element.size();
-  String fallback, match;
-  size_t score = 0;
-  for (auto id : size_painter_.list (element))
-    if (id == element)                                  // element without state specification
-      fallback = id;
-    else if (id.size() > colon + 1 && id[colon] == ':') // element with state
-      {
-        const size_t s = state_score (id.substr (colon + 1));
-        if ((s & state) == s && s > score)
+  if (size_painter_ && svg_fragment_.empty())
+    return svg_source_;
+  else if (size_painter_ && !svg_fragment_.empty())
+    {
+      // match an SVG element to state, xml ID syntax: <element id="elementname:active+insensitive"/>
+      const String element = svg_fragment_.substr (svg_fragment_[0] == '#' ? 1 : 0); // strip initial hash
+      const size_t colon = element.size();
+      String fallback, match;
+      size_t score = 0;
+      for (auto id : size_painter_.list (element))
+        if (id == element)                                  // element without state specification
+          fallback = id;
+        else if (id.size() > colon + 1 && id[colon] == ':') // element with state
           {
-            match = id;
-            score = s;
+            const size_t s = state_score (id.substr (colon + 1));
+            if ((s & size_t (state)) == s && s > score)
+              {
+                match = id;
+                score = s;
+              }
           }
-      }
-  match = match.empty() ? fallback : match;
-  return svg_source_ + "#" + match;
+      match = match.empty() ? fallback : match;
+      if (!match.empty())
+        return svg_source_ + "#" + match;
+    }
+  if (!svg_source_.empty() && !size_painter_)
+    user_warning (user_source(), "failed to lookup SVG: %s", svg_source_);
+  else if (!svg_source_.empty() && !svg_fragment_.empty())
+    user_warning (user_source(), "failed to lookup SVG element: %s %s", svg_source_, svg_fragment_);
+  return "";
 }
 
 WidgetState
@@ -786,8 +796,6 @@ void
 ElementPainterImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  if (has_visible_child())
-    requisition = size_request_child (get_child(), &chspread, &cvspread);
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
   if (!size_painter_)
@@ -796,8 +804,17 @@ ElementPainterImpl::size_request (Requisition &requisition)
   const Rect fill = size_painter_.fill_area();
   assert_return (fill.x + fill.width <= image_size.width);
   assert_return (fill.y + fill.height <= image_size.height);
-  requisition.width += image_size.width - fill.width;
-  requisition.height += image_size.height - fill.height;
+  if (has_visible_child())
+    {
+      requisition = size_request_child (get_child(), &chspread, &cvspread);
+      requisition.width += image_size.width - fill.width;
+      requisition.height += image_size.height - fill.height;
+    }
+  else
+    {
+      requisition.width = image_size.width;
+      requisition.height = image_size.height;
+    }
 }
 
 void
