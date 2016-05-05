@@ -1,4 +1,5 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
+#include <glib.h> // for g_main_context_*
 #include "loop.hh"
 #include "strings.hh"
 #include <sys/poll.h>
@@ -69,6 +70,7 @@ public:
   QuickArray (uint n_reserved, Data *reserved) : data_ (reserved), n_elements_ (0), n_reserved_ (n_reserved), reserved_ (reserved) {}
   ~QuickArray()                         { if (LIKELY (data_) && UNLIKELY (data_ != reserved_)) free (data_); }
   uint        size       () const       { return n_elements_; }
+  uint        capacity   () const       { return MAX (n_elements_, n_reserved_); }
   bool        empty      () const       { return n_elements_ == 0; }
   Data*       data       () const       { return data_; }
   Data&       operator[] (uint n)       { return data_[n]; }
@@ -85,23 +87,31 @@ public:
   }
   void        push       (const Data &d)
   {
-    const uint idx = n_elements_++;
-    if (UNLIKELY (n_elements_ > n_reserved_))                 // reserved memory exceeded
-      {
-        const size_t sz = n_elements_ * sizeof (Data);
-        const bool migrate = UNLIKELY (data_ == reserved_);   // migrate from reserved to malloced
-        Data *mem = (Data*) (migrate ? malloc (sz) : realloc (data_, sz));
-        if (UNLIKELY (!mem))
-          fatal ("OOM");
-        if (migrate)
-          {
-            memcpy (mem, data_, sz - 1 * sizeof (Data));
-            reserved_ = NULL;
-            n_reserved_ = 0;
-          }
-        data_ = mem;
-      }
+    const uint idx = n_elements_;
+    resize (idx + 1);
     data_[idx] = d;
+  }
+  void        resize     (uint n)
+  {
+    if (n <= capacity())
+      {
+        n_elements_ = n;
+        return;
+      }
+    // n > n_reserved_ && n > n_elements_
+    const size_t sz = n * sizeof (Data);
+    const bool migrate_reserved = UNLIKELY (data_ == reserved_);        // migrate from reserved to malloced
+    Data *mem = (Data*) (migrate_reserved ? malloc (sz) : realloc (data_, sz));
+    if (UNLIKELY (!mem))
+      fatal ("OOM");
+    if (migrate_reserved)
+      {
+        memcpy (mem, data_, n_elements_ * sizeof (Data));
+        reserved_ = NULL;
+        n_reserved_ = 0;
+      }
+    data_ = mem;
+    n_elements_ = n;
   }
 };
 struct EventLoop::QuickPfdArray : public QuickArray<PollFD> {
@@ -295,7 +305,7 @@ EventLoop::wakeup ()
 // === MainLoop ===
 MainLoop::MainLoop() :
   EventLoop (*this), // sets *this as MainLoop on self
-  rr_index_ (0), running_ (false), has_quit_ (false), quit_code_ (0)
+  rr_index_ (0), running_ (false), has_quit_ (false), quit_code_ (0), gcontext_ (NULL)
 {
   ScopedLock<Mutex> locker (main_loop_->mutex());
   const int err = eventfd_.open();
@@ -319,6 +329,7 @@ MainLoop::create ()
 
 MainLoop::~MainLoop()
 {
+  set_g_main_context (NULL); // acquires mutex_
   ScopedLock<Mutex> locker (mutex_);
   if (main_loop_)
     kill_loops_Lm();
@@ -469,6 +480,52 @@ MainLoop::pending()
   LoopState state;
   EventLoopP main_loop_guard = shared_ptr_cast<EventLoop> (this);
   return iterate_loops_Lm (state, false, false);
+}
+
+bool
+MainLoop::set_g_main_context (GlibGMainContext *glib_main_context)
+{
+  ScopedLock<Mutex> locker (mutex_);
+  if (glib_main_context)
+    {
+      if (gcontext_)
+        return false;
+      if (!g_main_context_acquire (glib_main_context))
+        return false;
+      gcontext_ = g_main_context_ref (glib_main_context);
+    }
+  else if (gcontext_)
+    {
+      glib_main_context = gcontext_;
+      gcontext_ = NULL;
+      g_main_context_release (glib_main_context);
+      g_main_context_unref (glib_main_context);
+    }
+  return true;
+}
+
+static GPollFD*
+mk_gpollfd (PollFD *pfd)
+{
+  GPollFD *gpfd = (GPollFD*) pfd;
+  static_assert (sizeof (GPollFD) == sizeof (PollFD), "");
+  static_assert (sizeof (gpfd->fd) == sizeof (pfd->fd), "");
+  static_assert (sizeof (gpfd->events) == sizeof (pfd->events), "");
+  static_assert (sizeof (gpfd->revents) == sizeof (pfd->revents), "");
+  static_assert (offsetof (GPollFD, fd) == offsetof (PollFD, fd), "");
+  static_assert (offsetof (GPollFD, events) == offsetof (PollFD, events), "");
+  static_assert (offsetof (GPollFD, revents) == offsetof (PollFD, revents), "");
+  static_assert (PollFD::IN == int (G_IO_IN), "");
+  static_assert (PollFD::PRI == int (G_IO_PRI), "");
+  static_assert (PollFD::OUT == int (G_IO_OUT), "");
+  // static_assert (PollFD::RDNORM == int (G_IO_RDNORM), "");
+  // static_assert (PollFD::RDBAND == int (G_IO_RDBAND), "");
+  // static_assert (PollFD::WRNORM == int (G_IO_WRNORM), "");
+  // static_assert (PollFD::WRBAND == int (G_IO_WRBAND), "");
+  static_assert (PollFD::ERR == int (G_IO_ERR), "");
+  static_assert (PollFD::HUP == int (G_IO_HUP), "");
+  static_assert (PollFD::NVAL == int (G_IO_NVAL), "");
+  return gpfd;
 }
 
 void
@@ -650,28 +707,49 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
   const uint wakeup_idx = 0; // wakeup_idx = pfda.size();
   pfda.push (wakeup);
   // create pollable loop list
-  const size_t nloops = loops_.size();
-  RAPICORN_DECLARE_VLA (EventLoopP, loops, nloops); // EventLoopP loops[nloops];
-  for (size_t i = 0; i < nloops; i++)
+  const size_t nrloops = loops_.size(); // number of Rapicorn loops, *without* gcontext_
+  RAPICORN_DECLARE_VLA (EventLoopP, loops, nrloops); // EventLoopP loops[nrloops];
+  for (size_t i = 0; i < nrloops; i++)
     loops[i] = loops_[i];
   // collect
   state.phase = state.COLLECT;
   state.seen_primary = false;
-  for (size_t i = 0; i < nloops; i++)
+  for (size_t i = 0; i < nrloops; i++)
     loops[i]->collect_sources_Lm (state);
   // prepare
   bool any_dispatchable = false;
   bool priority_ascension = false;      // flag for priority elevation between loops
   state.phase = state.PREPARE;
   state.current_time_usecs = timestamp_realtime();
-  bool dispatchable[nloops];
-  for (size_t i = 0; i < nloops; i++)
+  bool dispatchable[nrloops + 1];        // +1 for gcontext_
+  for (size_t i = 0; i < nrloops; i++)
     {
       dispatchable[i] = loops[i]->prepare_sources_Lm (state, &timeout_usecs, pfda);
       any_dispatchable |= dispatchable[i];
       if (UNLIKELY (loops[i]->dispatch_priority_ >= PRIORITY_ASCENT) && dispatchable[i])
         priority_ascension = true;
     }
+  // prepare GLib
+  const int gfirstfd = pfda.size();
+  int gpriority = INT32_MIN;
+  if (RAPICORN_UNLIKELY (gcontext_))
+    {
+      dispatchable[nrloops] = g_main_context_prepare (gcontext_, &gpriority) != 0;
+      any_dispatchable |= dispatchable[nrloops];
+      int gtimeout = INT32_MAX;
+      pfda.resize (pfda.capacity());
+      int gnfds = g_main_context_query (gcontext_, gpriority, &gtimeout, mk_gpollfd (&pfda[gfirstfd]), pfda.size() - gfirstfd);
+      while (gnfds >= 0 && size_t (gnfds) != pfda.size() - gfirstfd)
+        {
+          pfda.resize (gfirstfd + gnfds);
+          gtimeout = INT32_MAX;
+          gnfds = g_main_context_query (gcontext_, gpriority, &gtimeout, mk_gpollfd (&pfda[gfirstfd]), pfda.size() - gfirstfd);
+        }
+      if (gtimeout >= 0)
+        timeout_usecs = MIN (timeout_usecs, gtimeout * int64 (1000));
+    }
+  else
+    dispatchable[nrloops] = false;
   // poll file descriptors
   int64 timeout_msecs = timeout_usecs / 1000;
   if (timeout_usecs > 0 && timeout_msecs <= 0)
@@ -691,28 +769,41 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
   // check
   state.phase = state.CHECK;
   state.current_time_usecs = timestamp_realtime();
-  for (size_t i = 0; i < nloops; i++)
+  for (size_t i = 0; i < nrloops; i++)
     {
       dispatchable[i] |= loops[i]->check_sources_Lm (state, pfda);
       any_dispatchable |= dispatchable[i];
       if (UNLIKELY (loops[i]->dispatch_priority_ >= PRIORITY_ASCENT) && dispatchable[i])
         priority_ascension = true;
     }
+  // check GLib
+  if (RAPICORN_UNLIKELY (gcontext_))
+    {
+      dispatchable[nrloops] = g_main_context_check (gcontext_, gpriority, mk_gpollfd (&pfda[gfirstfd]), pfda.size() - gfirstfd);
+      any_dispatchable |= dispatchable[nrloops];
+    }
   // dispatch
   if (may_dispatch && any_dispatchable)
     {
-      size_t index, i = nloops;
+      const size_t gloop = RAPICORN_UNLIKELY (gcontext_) && dispatchable[nrloops] ? 1 : 0;
+      const size_t maxloops = nrloops + gloop; // +1 for gcontext_
+      size_t index, i = maxloops;
       do        // find next dispatchable loop in round-robin fashion
-        index = rr_index_++ % nloops;
+        index = rr_index_++ % maxloops;
       while ((!dispatchable[index] ||
-              (priority_ascension && loops[index]->dispatch_priority_ < PRIORITY_ASCENT)) && i--);
+              (priority_ascension && (index >= nrloops || // no priority_ascension support for gcontext_
+                                      loops[index]->dispatch_priority_ < PRIORITY_ASCENT))) &&
+             i--);
       state.phase = state.DISPATCH;
-      loops[index]->dispatch_source_Lm (state); // passes on shared_ptr to keep alive wihle locked
+      if (index >= nrloops)
+        g_main_context_dispatch (gcontext_);
+      else
+        loops[index]->dispatch_source_Lm (state); // passes on shared_ptr to keep alive wihle locked
     }
   // cleanup
   state.phase = state.NONE;
   main_mutex.unlock();
-  for (size_t i = 0; i < nloops; i++)
+  for (size_t i = 0; i < nrloops; i++)
     {
       loops[i]->unpoll_sources_U(); // unlocked
       loops[i] = NULL; // dtor, unlocked
