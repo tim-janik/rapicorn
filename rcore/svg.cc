@@ -43,9 +43,7 @@ struct ElementImpl : public Element {
   virtual      ~ElementImpl     ();
   virtual Info  info            ();
   virtual BBox  bbox            ()                      { return BBox (x_, y_, width_, height_); }
-  virtual BBox  enfolding_bbox  (BBox &inner);
-  virtual BBox  containee_bbox  ();
-  virtual BBox  containee_bbox  (BBox &_resized);
+  virtual BBox  ibox            ()                      { return bbox(); }
   virtual bool  render          (cairo_surface_t *surface, RenderSize rsize, double xscale, double yscale);
 };
 
@@ -72,35 +70,6 @@ ElementImpl::info ()
   i.em = em_;
   i.ex = ex_;
   return i;
-}
-
-BBox
-ElementImpl::enfolding_bbox (BBox &containee)
-{
-  if (containee.width <= 0 || containee.height <= 0)
-    return bbox();
-  // FIXME: resize for _containee width/height
-  BBox a = BBox (x_, y_, containee.width + 4, containee.height + 4);
-  return a;
-}
-
-BBox
-ElementImpl::containee_bbox ()
-{
-  if (width_ <= 4 || height_ <= 4)
-    return BBox();
-  // FIXME: calculate _containee size
-  BBox a = BBox (x_ + 2, y_ + 2, width_ - 4, height_ - 4);
-  return a;
-}
-
-BBox
-ElementImpl::containee_bbox (BBox &resized)
-{
-  if (resized.width == width_ && resized.height == height_)
-    return bbox();
-  // FIXME: calculate _containee size when resized
-  return bbox();
 }
 
 bool
