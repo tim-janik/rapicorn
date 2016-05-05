@@ -11,6 +11,7 @@ class ViewportImpl : public virtual ResizeContainerImpl {
   Region                expose_region_;        // maintained in child coord space
   int                   xoffset_, yoffset_;
   void                  collapse_expose_region  ();
+  virtual Allocation    child_view_area         (const WidgetImpl &child);
 protected:
   virtual Affine        child_affine            (const WidgetImpl &widget);
   const Region&         peek_expose_region      () const { return expose_region_; }

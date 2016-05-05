@@ -16,20 +16,11 @@ AlignmentImpl::~AlignmentImpl ()
 void
 AlignmentImpl::size_request (Requisition &requisition)
 {
-  /// @BUG: account for child's PackInfo like SingleContainerImpl::size_request
   bool chspread = false, cvspread = false;
-  if (has_children())
-    {
-      WidgetImpl &child = get_child();
-      if (child.visible())
-        {
-          Requisition cr = child.requisition();
-          requisition.width = left_padding() + cr.width + right_padding();
-          requisition.height = bottom_padding() + cr.height + top_padding();
-          chspread = child.hspread();
-          cvspread = child.vspread();
-        }
-    }
+  if (has_visible_child())
+    requisition = size_request_child (get_child(), &chspread, &cvspread);
+  requisition.width += left_padding() + right_padding();
+  requisition.height += top_padding() + bottom_padding();
   set_flag (HSPREAD_CONTAINER, chspread);
   set_flag (VSPREAD_CONTAINER, cvspread);
 }
@@ -37,30 +28,17 @@ AlignmentImpl::size_request (Requisition &requisition)
 void
 AlignmentImpl::size_allocate (Allocation area, bool changed)
 {
-  /// @BUG: account for child's PackInfo like SingleContainerImpl::size_allocate
   if (!has_visible_child())
     return;
   WidgetImpl &child = get_child();
-  Requisition rq = child.requisition();
-  /* pad allocation */
-  area.x += left_padding();
-  area.width -= left_padding() + right_padding();
-  area.y += top_padding();
-  area.height -= bottom_padding() + top_padding();
-  /* expand/scale child */
-  if (area.width > rq.width && !child.hexpand())
-    {
-      int width = iround (rq.width + child.hscale() * (area.width - rq.width));
-      area.x += iround (child.halign() * (area.width - width));
-      area.width = width;
-    }
-  if (area.height > rq.height && !child.vexpand())
-    {
-      int height = iround (rq.height + child.vscale() * (area.height - rq.height));
-      area.y += iround (child.valign() * (area.height - height));
-      area.height = height;
-    }
-  child.set_allocation (area);
+  // pad allocation
+  area.x += min (left_padding(), area.width);
+  area.width -= min (area.width, left_padding() + right_padding());
+  area.y += min (top_padding(), area.height);
+  area.height -= min (area.height, bottom_padding() + top_padding());
+  // expand/scale child
+  Allocation child_area = layout_child (child, area);
+  child.set_allocation (child_area);
 }
 
 static inline int
@@ -140,7 +118,6 @@ AlignmentImpl::padding (int c)
   right_padding (v);
   bottom_padding (v);
   top_padding (v);
-  invalidate();
 }
 
 static const WidgetFactory<AlignmentImpl> alignment_factory ("Rapicorn::Alignment");

@@ -28,6 +28,7 @@ struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface 
   void                widget_uncross_links  (WidgetImpl           &owner,
                                              WidgetImpl           &link);
   WidgetGroup*        retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create);
+  virtual Allocation  child_view_area       (const WidgetImpl &child);
 protected:
   virtual            ~ContainerImpl     ();
   virtual void        do_changed        (const String &name) override;
@@ -45,9 +46,8 @@ protected:
   virtual void        set_focus_child   (WidgetImpl *widget);
   virtual void        scroll_to_child   (WidgetImpl &widget);
   virtual void        dump_test_data    (TestStream &tstream);
-  static Requisition  measure_child     (WidgetImpl &child);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
-  static Requisition  size_request_child (WidgetImpl &child, bool *hspread, bool *vspread);
+  static Requisition  size_request_child (WidgetImpl &child, bool *hspread = NULL, bool *vspread = NULL);
   virtual void        selectable_child_changed (WidgetChain &chain);
 public:
   virtual WidgetImplP*  begin             () const = 0;
@@ -111,11 +111,13 @@ class ResizeContainerImpl : public virtual SingleContainerImpl {
   uint                  tunable_requisition_counter_;
   uint                  resizer_;
   AnchorInfo            anchor_info_;
-  void                  idle_sizing             ();
   void                  update_anchor_info      ();
+  void                  check_resize_handler    ();
 protected:
-  virtual void          invalidate_parent       ();
-  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel);
+  virtual void          invalidate_parent       () override;
+  virtual void          check_resize            ();
+  virtual void          invalidate              (uint64 mask) override;
+  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   void                  negotiate_size          (const Allocation *carea);
   explicit              ResizeContainerImpl     ();
   virtual              ~ResizeContainerImpl     ();

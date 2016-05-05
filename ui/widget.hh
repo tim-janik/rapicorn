@@ -100,8 +100,8 @@ protected:
     VSHRINK                   = 1 << 19, ///< Flag set on widgets that handle vertical shrinking well, see vshrink()
     HEXPAND                   = 1 << 20, ///< Flag set on widgets that are useful to expand horizontally, see hexpand()
     VEXPAND                   = 1 << 21, ///< Flag set on widgets that are useful to expand vertically, see vexpand()
-    HSPREAD                   = 1 << 22, ///< Flag set on widgets that should expand horizontally with window growth, see hspread()
-    VSPREAD                   = 1 << 23, ///< Flag set on widgets that should expand vertically with window growth, see vspread()
+    HSPREAD                   = 1 << 22, ///< Flag set on widgets that should expand/shrink horizontally with window growth, see hspread()
+    VSPREAD                   = 1 << 23, ///< Flag set on widgets that should expand/shrink vertically with window growth, see vspread()
     HSPREAD_CONTAINER         = 1 << 24, ///< Flag set on containers that contain hspread() widgets
     VSPREAD_CONTAINER         = 1 << 25, ///< Flag set on containers that contain vspread() widgets
     HAS_DEFAULT               = 1 << 26, ///< Flag indicating widget to receive default activation, see has_default()
@@ -203,9 +203,9 @@ public:
   virtual void                hspread           (bool b) { set_flag (HSPREAD, b); } ///< Allow horizontal spreading, see #HSPREAD
   virtual bool                vspread           () const { return test_any_flag (VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical spreading
   virtual void                vspread           (bool b) { set_flag (VSPREAD, b); } ///< Allow vertical spreading, see #VSPREAD
-  virtual bool                hshrink           () const { return test_any_flag (HSHRINK); } ///< Get horizontal shrinking flag
+  virtual bool                hshrink           () const { return test_any_flag (HSHRINK | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal shrinking flag
   virtual void                hshrink           (bool b) { set_flag (HSHRINK, b); } ///< Allow horizontal shrinking, see #HSHRINK
-  virtual bool                vshrink           () const { return test_any_flag (VSHRINK); } ///< Get vertical shrinking flag
+  virtual bool                vshrink           () const { return test_any_flag (VSHRINK | VSPREAD | VSPREAD_CONTAINER); } ///< Get vertical shrinking flag
   virtual void                vshrink           (bool b) { set_flag (VSHRINK, b); } ///< Allow vertical shrinking, see #VSHRINK
   virtual String              hsize_group       () const;
   virtual void                hsize_group       (const String &group_list);
@@ -257,8 +257,8 @@ public:
   void                        uncross_links     (WidgetImpl &link);
   /* invalidation / changes */
   virtual void                changed           (const String &name) override;
-  void                        invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
-  void                        invalidate_size   ()                      { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
+  virtual void                invalidate        (uint64 mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  void                        invalidate_size   ()              { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
   void                        expose            (const Rect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
   void                        expose            (const Region &region);
@@ -305,6 +305,7 @@ public:
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
+  Allocation                 focus_view_area    () const;
   /* theming & appearance */
   ThemeInfo&            theme_info              () const;
   // colors

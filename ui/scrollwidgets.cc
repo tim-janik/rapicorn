@@ -69,7 +69,7 @@ static const WidgetFactory<ScrollAreaImpl> scroll_area_factory ("Rapicorn::Scrol
 
 // == ScrollPortImpl ==
 ScrollPortImpl::ScrollPortImpl() :
-  hadjustment_ (NULL), vadjustment_ (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0)
+  hadjustment_ (NULL), vadjustment_ (NULL), conid_hadjustment_ (0), conid_vadjustment_ (0), fix_id_ (0)
 {}
 
 void
@@ -96,29 +96,18 @@ ScrollPortImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 }
 
 void
-ScrollPortImpl::size_allocate (Allocation area, bool changed)
+ScrollPortImpl::fix_adjustments ()
 {
-  if (!has_visible_child())
+  assert_return (fix_id_ != 0);
+  fix_id_ = 0;
+  if (!has_visible_child() || test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     return;
+  /* size allocation negotiation may re-allocate the widget several times with new tentative sizes.
+   * since some combinations could lead to the adjustments contraining the current scroll values
+   * undesirably and loosing the last scroll position, we fix up the adjustments once the dust settled.
+   */
   WidgetImpl &child = get_child();
-  Requisition rq = child.requisition();
-  if (rq.width < area.width)
-    {
-      area.x += (area.width - rq.width) / 2;
-      area.width = rq.width;
-    }
-  if (rq.height < area.height)
-    {
-      area.y += (area.height - rq.height) / 2;
-      area.height = rq.height;
-    }
-  // FIXME: allocation (area);
-  area.x = 0; /* 0-offset */
-  area.y = 0; /* 0-offset */
-  area.width = rq.width;
-  area.height = rq.height;
-  child.set_allocation (area);
-  area = child.allocation();
+  const Allocation area = child.allocation();
   const double small_step = 10;
   if (hadjustment_)
     {
@@ -154,13 +143,43 @@ ScrollPortImpl::size_allocate (Allocation area, bool changed)
     hadjustment_->constrain();
   if (vadjustment_)
     vadjustment_->constrain();
+  const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
+  const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
+  scroll_offsets (xoffset, yoffset); // syncronize offsets, before adjustment_changed() kicks in
   if (hadjustment_)
     hadjustment_->thaw();
   if (vadjustment_)
     vadjustment_->thaw();
-  const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
-  const int yoffset = vadjustment_ ? iround (vadjustment_->value()) : 0;
-  scroll_offsets (xoffset, yoffset); // syncronize offsets, before adjustment_changed() kicks in
+}
+
+void
+ScrollPortImpl::size_allocate (Allocation area, bool changed)
+{
+  if (!has_visible_child())
+    return;
+  WidgetImpl &child = get_child();
+  const Requisition rq = child.requisition();
+  Allocation child_area;
+  child_area.x = 0; // 0-offset
+  child_area.y = 0; // 0-offset
+  if (child.hexpand())
+    child_area.width = max (rq.width, area.width);
+  else
+    child_area.width = rq.width;
+  if (child.vexpand())
+    child_area.height = max (rq.height, area.height);
+  else
+    child_area.height = rq.height;
+  const Allocation clip_area = child_area;
+  child_area = layout_child (child, child_area);
+  child.set_allocation (child_area, &clip_area); // clipping is done in render instead
+  if (!fix_id_)
+    {
+      WindowImpl *window = get_window();
+      EventLoop *loop = window ? window->get_loop() : NULL;
+      if (loop)
+        fix_id_ = loop->exec_callback (Aida::slot (*this, &ScrollPortImpl::fix_adjustments), EventLoop::PRIORITY_NOW);
+    }
 }
 
 void
@@ -185,7 +204,7 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
   WidgetImpl *fwidget = rfwidget;
   if (!fwidget)
     return;
-  /* list focus widgets between focus_widget and out immediate child */
+  /* list focus widgets between focus_widget and our immediate child */
   std::list<WidgetImpl*> fwidgets;
   while (fwidget)
     {
@@ -296,6 +315,11 @@ ScrollPortImpl::handle_event (const Event &event)
 void
 ScrollPortImpl::reset (ResetMode mode)
 {}
+
+ScrollPortImpl::~ScrollPortImpl()
+{
+  clear_exec (&fix_id_);
+}
 
 static const WidgetFactory<ScrollPortImpl> scroll_port_factory ("Rapicorn::ScrollPort");
 

@@ -467,8 +467,8 @@ struct LesserWidgetByHBand {
   operator() (WidgetImpl *const &i1,
               WidgetImpl *const &i2) const
   {
-    const Allocation &a1 = i1->allocation();
-    const Allocation &a2 = i2->allocation();
+    const Allocation &a1 = i1->focus_view_area();
+    const Allocation &a2 = i2->focus_view_area();
     // sort widgets by horizontal bands first
     if (a1.y + a1.height <= a2.y)
       return true;
@@ -515,8 +515,8 @@ struct LesserWidgetByDirection {
               WidgetImpl *const &i2) const
   {
     // calculate widget distances along dir, dist >= 0 lies ahead
-    const Allocation &a1 = i1->allocation();
-    const Allocation &a2 = i2->allocation();
+    const Allocation &a1 = i1->focus_view_area();
+    const Allocation &a2 = i2->focus_view_area();
     double dd1 = directional_distance (a1);
     double dd2 = directional_distance (a2);
     // sort widgets along dir
@@ -557,10 +557,10 @@ ContainerImpl::move_focus (FocusDir fdir)
   vector<WidgetImpl*> children;
   for (auto child : *this)
     children.push_back (&*child);
+  if (children.empty())
+    return false;
   // sort children according to direction and current focus
-  const Allocation &area = allocation();
-  Point upper_left (area.x, area.y + area.height);
-  Point lower_right (area.x + area.width, area.y);
+  const Allocation &area = focus_view_area();
   Point refpoint;
   switch (fdir)
     {
@@ -575,12 +575,23 @@ ContainerImpl::move_focus (FocusDir fdir)
     case FocusDir::UP:
     case FocusDir::LEFT:
       current = get_window()->get_focus();
-      refpoint = current ? rect_center (current->allocation()) : lower_right;
+      if (current)
+        {
+          refpoint = rect_center (current->focus_view_area());
+          if (!children[0]->translate_from (*current, 1, &refpoint))
+            return false; // compare current and children within the same coordinate system
+        }
+      else // use lower right as reference point
+        {
+          refpoint = Point (area.x + area.width, area.y + area.height);
+          if (!children[0]->translate_from (*this, 1, &refpoint))
+            return false; // compare lower right and children within the same coordinate system
+        }
       { // filter widgets with negative distance (not ahead in focus direction)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
         for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
-          if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
+          if (lesseribd.directional_distance ((*it)->focus_view_area()) >= 0)
             children2.push_back (*it);
         children.swap (children2);
         stable_sort (children.begin(), children.end(), lesseribd);
@@ -589,12 +600,23 @@ ContainerImpl::move_focus (FocusDir fdir)
     case FocusDir::RIGHT:
     case FocusDir::DOWN:
       current = get_window()->get_focus();
-      refpoint = current ? rect_center (current->allocation()) : upper_left;
+      if (current)
+        {
+          refpoint = rect_center (current->focus_view_area());
+          if (!children[0]->translate_from (*current, 1, &refpoint))
+            return false; // compare current and children within the same coordinate system
+        }
+      else // use upper left as reference point
+        {
+          refpoint = Point (area.x, area.y);
+          if (!children[0]->translate_from (*this, 1, &refpoint))
+            return false; // compare upper left and children within the same coordinate system
+        }
       { // filter widgets with negative distance (not ahead in focus direction)
         LesserWidgetByDirection lesseribd = LesserWidgetByDirection (fdir, refpoint);
         vector<WidgetImpl*> children2;
         for (vector<WidgetImpl*>::const_iterator it = children.begin(); it != children.end(); it++)
-          if (lesseribd.directional_distance ((*it)->allocation()) >= 0)
+          if (lesseribd.directional_distance ((*it)->focus_view_area()) >= 0)
             children2.push_back (*it);
         children.swap (children2);
         stable_sort (children.begin(), children.end(), lesseribd);
@@ -617,6 +639,12 @@ ContainerImpl::move_focus (FocusDir fdir)
       citer++;
     }
   return false;
+}
+
+Allocation
+ContainerImpl::child_view_area (const WidgetImpl &child)
+{
+  return child.clipped_allocation();
 }
 
 void
@@ -750,29 +778,16 @@ ContainerImpl::remove_widget (WidgetIface &child) // ContainerIface method
     remove (widget);
 }
 
+/// Calculate real requisition of a widget, including spacing/padding/alignment/etc.
 Requisition
 ContainerImpl::size_request_child (WidgetImpl &child, bool *hspread, bool *vspread)
 {
-  bool chspread = false, cvspread = false;
-  Requisition cr = child.requisition ();
-  const PackInfo &pi = child.pack_info();
-  cr.width += pi.left_spacing + pi.right_spacing;
-  cr.height += pi.bottom_spacing + pi.top_spacing;
-  chspread = child.hspread();
-  cvspread = child.vspread();
   if (hspread)
-    *hspread = chspread;
+    *hspread = child.hspread();
   if (vspread)
-    *vspread = cvspread;
-  return cr;
-}
-
-/// Calculate real requisition of a widget, including spacing/padding/alignment/etc.
-Requisition
-ContainerImpl::measure_child (WidgetImpl &child)
-{
-  const Requisition rq = child.requisition();
+    *vspread = child.vspread();
   const PackInfo &pi = child.pack_info();
+  const Requisition rq = child.requisition();
   return Requisition (pi.left_spacing + rq.width + pi.right_spacing,
                       pi.top_spacing + rq.height + pi.bottom_spacing);
 }
@@ -785,18 +800,18 @@ ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
   const PackInfo &pi = child.pack_info();
   Allocation area = carea;
   /* pad allocation */
-  area.x += pi.left_spacing;
-  area.width -= pi.left_spacing + pi.right_spacing;
-  area.y += pi.top_spacing;
-  area.height -= pi.bottom_spacing + pi.top_spacing;
+  area.x += min (pi.left_spacing, area.width);
+  area.width -= min (pi.left_spacing + pi.right_spacing, area.width);
+  area.y += min (pi.top_spacing, area.height);
+  area.height -= min (pi.bottom_spacing + pi.top_spacing, area.height);
   /* expand/scale child */
-  if (area.width > rq.width && !child.hexpand())
+  if (area.width > rq.width)
     {
       int width = iround (rq.width + pi.hscale * (area.width - rq.width));
       area.x += iround (pi.halign * (area.width - width));
       area.width = width;
     }
-  if (area.height > rq.height && !child.vexpand())
+  if (area.height > rq.height)
     {
       int height = iround (rq.height + pi.vscale * (area.height - rq.height));
       area.y += iround (pi.valign * (area.height - height));
@@ -870,6 +885,7 @@ SingleContainerImpl::~SingleContainerImpl()
     remove (*child_widget.get());
 }
 
+// == ResizeContainerImpl ==
 ResizeContainerImpl::ResizeContainerImpl() :
   tunable_requisition_counter_ (0), resizer_ (0)
 {
@@ -908,15 +924,24 @@ ResizeContainerImpl::update_anchor_info ()
 }
 
 void
-ResizeContainerImpl::idle_sizing ()
+ResizeContainerImpl::check_resize_handler ()
 {
+  // always called via event loop
   assert_return (resizer_ != 0);
   resizer_ = 0;
-  if (anchored() && drawable())
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
+  if (test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+    check_resize();
+}
+
+void
+ResizeContainerImpl::check_resize ()
+{
+  if (anchored() && visible() && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
       ContainerImpl *pc = parent();
       if (pc && pc->test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
-        DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), "pass upwards...");
+        DEBUG_RESIZE ("%12s: leaving check_resize to ancestor: %s", debug_name ("%n"), pc->debug_name ("%n"));
       else
         {
           Allocation area = allocation();
@@ -962,27 +987,33 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
         tunable_requisition_counter_--;
     }
   tunable_requisition_counter_ = 0;
-  if (!carea)
-    DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), String ("result: " + area.string()).c_str());
+  DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), String ("result: " + area.string()).c_str());
+}
+
+static const bool subtree_resizing = RAPICORN_FLIPPER ("subtree-resizing", "Enable resizing without propagation for ResizeContainerImpl subtrees.");
+
+void
+ResizeContainerImpl::invalidate (uint64 mask)
+{
+  SingleContainerImpl::invalidate (mask);
+  WindowImpl *w = get_window();
+  if ((w == this || subtree_resizing) && !resizer_ && test_any_flag (INVALID_REQUISITION | INVALID_ALLOCATION))
+    {
+      EventLoop *loop = w ? w->get_loop() : NULL;
+      if (loop)
+        resizer_ = loop->exec_callback (Aida::slot (*this, &ResizeContainerImpl::check_resize_handler), WindowImpl::PRIORITY_RESIZE);
+    }
 }
 
 void
-ResizeContainerImpl::invalidate_parent ()
+ResizeContainerImpl::invalidate_parent()
 {
-  if (anchored() && drawable())
-    {
-      if (!resizer_)
-        {
-          WindowImpl *w = get_window();
-          EventLoop *loop = w ? w->get_loop() : NULL;
-          if (loop)
-            resizer_ = loop->exec_callback (Aida::slot (*this, &ResizeContainerImpl::idle_sizing), WindowImpl::PRIORITY_RESIZE);
-        }
-      return;
-    }
-  SingleContainerImpl::invalidate_parent();
+  // skip invalidate_size(), since ResizeContainerImpl has its own handler
+  if (!subtree_resizing)
+    SingleContainerImpl::invalidate_parent();
 }
 
+// == MultiContainerImpl ==
 MultiContainerImpl::MultiContainerImpl ()
 {}
 

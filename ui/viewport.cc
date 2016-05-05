@@ -44,6 +44,18 @@ ViewportImpl::child_viewport ()
   return Allocation (xoffset, yoffset, area.width, area.height);
 }
 
+Allocation
+ViewportImpl::child_view_area (const WidgetImpl &child)
+{
+  const int xoffset = scroll_offset_x(), yoffset = scroll_offset_y();
+  Allocation view = allocation();
+  view.x = xoffset;
+  view.y = yoffset;
+  Allocation area = child.clipped_allocation();
+  area.intersect (view);
+  return area;
+}
+
 Affine
 ViewportImpl::child_affine (const WidgetImpl &widget)
 {
