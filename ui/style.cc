@@ -9,6 +9,44 @@
 
 namespace Rapicorn {
 
+// == Config ==
+static StringVector
+user_ini_files()
+{
+  /* INI file search order:
+   * 1. ${XDG_CONFIG_HOME:-~/.config}/application/rapicorn.ini
+   * 2. ${XDG_CONFIG_HOME:-~/.config}/rapicorn/config.ini
+   * 3. ${XDG_CONFIG_DIRS} * /application/rapicorn.ini
+   * 4. ${XDG_CONFIG_DIRS} * /rapicorn/config.ini
+   * 5. /etc/application/rapicorn.ini
+   * 6. /etc/rapicorn/config.ini
+   */
+  String config_searchpaths = Path::searchpath_join (Path::config_home(), Path::config_dirs());
+  if (!Path::searchpath_contains (config_searchpaths, "/etc/"))
+    config_searchpaths = Path::searchpath_join (config_searchpaths, "/etc");
+  String config_files = Path::searchpath_multiply (Path::config_names(), "rapicorn.ini");
+  config_files = Path::searchpath_join (config_files, "rapicorn/config.ini");
+  config_searchpaths = Path::searchpath_multiply (config_searchpaths, config_files);
+  StringVector inifiles = Path::searchpath_list (config_searchpaths, "r");
+  return inifiles;
+}
+
+String
+Config::get (const String &setting, const String &fallback)
+{
+  static const StringVector ini_file_names = user_ini_files();
+  static vector<IniFile*> ini_files (ini_file_names.size());
+  String value;
+  for (size_t i = 0; i < ini_files.size(); i++)
+    {
+      if (!ini_files[i])
+        ini_files[i] = new IniFile (Blob::load (ini_file_names[i]));
+      if (ini_files[i]->has_value (setting, &value))
+        return value;
+    }
+  return fallback;
+}
+
 // == Colors ==
 static Color
 adjust_color (Color color, double saturation_factor, double value_factor)

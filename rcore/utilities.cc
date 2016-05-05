@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <sys/types.h>
+#include <pwd.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/types.h>  // gettid
@@ -266,6 +268,62 @@ debug_backtrace_showshot (size_t key)
   return btmsg;
 }
 
+// == CxxPasswd =
+struct CxxPasswd {
+  String pw_name, pw_passwd, pw_gecos, pw_dir, pw_shell;
+  uid_t pw_uid;
+  gid_t pw_gid;
+  CxxPasswd (String username = "");
+};
+
+CxxPasswd::CxxPasswd (String username) :
+  pw_uid (-1), pw_gid (-1)
+{
+  const int strbuf_size = 5 * 1024;
+  char strbuf[strbuf_size + 256]; // work around Darwin getpwnam_r overwriting buffer boundaries
+  struct passwd pwnambuf, *p = NULL;
+  if (username.empty())
+    {
+      int ret = 0;
+      errno = 0;
+      do
+        {
+          if (1) // HAVE_GETPWUID_R
+            ret = getpwuid_r (getuid(), &pwnambuf, strbuf, strbuf_size, &p);
+          else   // HAVE_GETPWUID
+            p = getpwuid (getuid());
+        }
+      while ((ret != 0 || p == NULL) && errno == EINTR);
+      if (ret != 0)
+        p = NULL;
+    }
+  else // !username.empty()
+    {
+      int ret = 0;
+      errno = 0;
+      do
+        {
+          if (1) // HAVE_GETPWNAM_R
+            ret = getpwnam_r (username.c_str(), &pwnambuf, strbuf, strbuf_size, &p);
+          else   // HAVE_GETPWNAM
+            p = getpwnam (username.c_str());
+        }
+      while ((ret != 0 || p == NULL) && errno == EINTR);
+      if (ret != 0)
+        p = NULL;
+    }
+  if (p)
+    {
+      pw_name = p->pw_name;
+      pw_passwd = p->pw_passwd;
+      pw_uid = p->pw_uid;
+      pw_gid = p->pw_gid;
+      pw_gecos = p->pw_gecos;
+      pw_dir = p->pw_dir;
+      pw_shell = p->pw_shell;
+    }
+}
+
 // == Development Helpers ==
 /**
  * @def RAPICORN_STRLOC()
@@ -385,6 +443,132 @@ isdirname (const String &path)
   if (l >= 3 && path[l-3] == RAPICORN_DIR_SEPARATOR && path[l-2] == '.' && path[l-1] == '.')
     return true;
   return false;
+}
+
+/// Get a @a user's home directory, uses $HOME if no @a username is given.
+String
+user_home (const String &username)
+{
+  if (username.empty())
+    {
+      // $HOME gets precedence over getpwnam(3), like '~/' vs '~username/' expansion
+      const char *homedir = getenv ("HOME");
+      if (homedir && isabs (homedir))
+        return homedir;
+    }
+  CxxPasswd pwn (username);
+  return pwn.pw_dir;
+}
+
+/// Get the $XDG_DATA_HOME directory, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+data_home ()
+{
+  const char *var = getenv ("XDG_DATA_HOME");
+  if (var && isabs (var))
+    return var;
+  return expand_tilde ("~/.local/share");
+}
+
+/// Get the $XDG_CONFIG_HOME directory, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+config_home ()
+{
+  const char *var = getenv ("XDG_CONFIG_HOME");
+  if (var && isabs (var))
+    return var;
+  return expand_tilde ("~/.config");
+}
+
+/// Get the $XDG_CACHE_HOME directory, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+cache_home ()
+{
+  const char *var = getenv ("XDG_CACHE_HOME");
+  if (var && isabs (var))
+    return var;
+  return expand_tilde ("~/.cache");
+}
+
+/// Get the $XDG_RUNTIME_DIR directory, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+runtime_dir ()
+{
+  const char *var = getenv ("XDG_RUNTIME_DIR");
+  if (var && isabs (var))
+    return var;
+  return string_format ("/run/user/%u", getuid());
+}
+
+/// Get the $XDG_CONFIG_DIRS directory list, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+config_dirs ()
+{
+  const char *var = getenv ("XDG_CONFIG_DIRS");
+  if (var && var[0])
+    return var;
+  else
+    return "/etc/xdg";
+}
+
+/// Get the $XDG_DATA_DIRS directory list, see: https://specifications.freedesktop.org/basedir-spec/latest
+String
+data_dirs ()
+{
+  const char *var = getenv ("XDG_DATA_DIRS");
+  if (var && var[0])
+    return var;
+  else
+    return "/usr/local/share:/usr/share";
+}
+
+static String
+access_config_names (const String *newval)
+{
+  static Mutex mutex;
+  ScopedLock<Mutex> locker (mutex);
+  static String cfg_names;
+  if (newval)
+    cfg_names = *newval;
+  if (cfg_names.empty())
+    {
+      String names = Path::basename (program_name());
+      if (program_alias() != names)
+        names = searchpath_join (names, program_alias());
+      return names;
+    }
+  else
+    return cfg_names;
+}
+
+/// Get config names as set with config_names(), if unset defaults to program_name() and program_alias().
+String
+config_names ()
+{
+  return access_config_names (NULL);
+}
+
+/// Set a colon separated list of names for this application to find configuration settings and files.
+void
+config_names (const String &names)
+{
+  access_config_names (&names);
+}
+
+/// Expand a "~/" or "~user/" @a path which refers to user home directories.
+String
+expand_tilde (const String &path)
+{
+  if (path[0] != '~')
+    return path;
+  const size_t dir = path.find (RAPICORN_DIR_SEPARATOR);
+  String username;
+  if (dir != String::npos)
+    username = path.substr (1, dir - 1);
+  else
+    username = path.substr (1);
+  const String userhome = user_home (username);
+  return join (userhome, dir == String::npos ? "" : path.substr (dir));
 }
 
 String
@@ -602,6 +786,35 @@ searchpath_split (const String &searchpath)
   return sv;
 }
 
+static bool
+is_searchpath_separator (const char c)
+{
+  return c == RAPICORN_SEARCHPATH_SEPARATOR || (c == ':' || c == ';');
+}
+
+/// Check if @a searchpath contains @a element, a trailing slash searches for directories.
+bool
+searchpath_contains (const String &searchpath, const String &element)
+{
+  const bool dirsearch = string_endswith (element, RAPICORN_DIR_SEPARATOR_S);
+  const String needle = dirsearch && element.size() > 1 ? element.substr (0, element.size() - 1) : element; // strip trailing slash
+  size_t pos = searchpath.find (needle);
+  while (pos != String::npos)
+    {
+      size_t end = pos + needle.size();
+      if (pos == 0 || is_searchpath_separator (searchpath[pos - 1]))
+        {
+          if (dirsearch && searchpath[end] == RAPICORN_DIR_SEPARATOR)
+            end++; // skip trailing slash in searchpath segment
+          if (searchpath[end] == 0 || is_searchpath_separator (searchpath[end]))
+            return true;
+        }
+      pos = searchpath.find (needle, end);
+    }
+  return false;
+}
+
+/// Find the first @a file in @a searchpath which matches @a mode (see check()).
 String
 searchpath_find (const String &searchpath, const String &file, const String &mode)
 {
@@ -612,6 +825,17 @@ searchpath_find (const String &searchpath, const String &file, const String &mod
     if (check (join (sv[i], file), mode))
       return join (sv[i], file);
   return "";
+}
+
+/// Find all @a searchpath entries matching @a mode (see check()).
+StringVector
+searchpath_list (const String &searchpath, const String &mode)
+{
+  StringVector v;
+  for (const auto &file : searchpath_split (searchpath))
+    if (check (file, mode))
+      v.push_back (file);
+  return v;
 }
 
 static String
@@ -625,6 +849,17 @@ searchpath_join1 (const String &a, const String &b)
       b[0] == RAPICORN_SEARCHPATH_SEPARATOR)
     return a + b;
   return a + RAPICORN_SEARCHPATH_SEPARATOR_S + b;
+}
+
+/// Yield a new searchpath by combining each element of @a searchpath with each element of @a postfixes.
+String
+searchpath_multiply (const String &searchpath, const String &postfixes)
+{
+  String newpath;
+  for (const auto &e : searchpath_split (searchpath))
+    for (const auto &p : searchpath_split (postfixes))
+      newpath = searchpath_join1 (newpath, join (e, p));
+  return newpath;
 }
 
 String

@@ -223,6 +223,21 @@ test_paths()
   TCMP (Path::isdirname ("/"), ==, true);
   TCMP (Path::isdirname ("."), ==, true);
   TCMP (Path::isdirname (".."), ==, true);
+  TCMP (Path::expand_tilde (""), ==, "");
+  const char *env_home = getenv ("HOME");
+  if (env_home)
+    TCMP (Path::expand_tilde ("~"), ==, env_home);
+  const char *env_logname = getenv ("LOGNAME");
+  if (env_home && env_logname)
+    TCMP (Path::expand_tilde ("~" + String (env_logname)), ==, env_home);
+  TCMP (Path::searchpath_multiply ("/:/tmp", "foo:bar"), ==, "/foo:/bar:/tmp/foo:/tmp/bar");
+  const String abs__file__ = Path::abspath (__FILE__);
+  TCMP (Path::searchpath_list ("/:" + abs__file__, "e"), ==, StringVector ({ "/", abs__file__ }));
+  TCMP (Path::searchpath_contains ("/foo/:/bar", "/"), ==, false);
+  TCMP (Path::searchpath_contains ("/foo/:/bar", "/foo"), ==, false); // false because "/foo" is file search
+  TCMP (Path::searchpath_contains ("/foo/:/bar", "/foo/"), ==, true); // true because "/foo/" is dir search
+  TCMP (Path::searchpath_contains ("/foo/:/bar", "/bar"), ==, true); // file search matches /bar
+  TCMP (Path::searchpath_contains ("/foo/:/bar", "/bar/"), ==, true); // dir search matches /bar
 }
 REGISTER_TEST ("General/Path handling", test_paths);
 
