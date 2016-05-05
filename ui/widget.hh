@@ -57,7 +57,6 @@ private:
   uint64                      flags_;  // inlined for fast access
   ContainerImpl              *parent_; // inlined for fast access
   const AncestryCache        *acache_; // cache poninter may change for const this
-  StyleImplP                  style_;
   HeritageP                   heritage_;
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
@@ -291,7 +290,6 @@ public:
   Allocation                 clipped_allocation () const;
   const Allocation*          clip_area          () const;
   /* theming & appearance */
-  ThemeInfo&            theme_info              () const;
   // colors
   Color                 normal_bg               () { return state_color (WidgetState::NORMAL, 0); }
   Color                 normal_fg               () { return state_color (WidgetState::NORMAL, 1); }
@@ -304,6 +302,7 @@ public:
   Color                 theme_color             (double hue360, double saturation100, double brightness100, const String &detail = "");
   // state colors
   WidgetState           state                   () const;
+  StyleIfaceP           style                   () const;
   Color                 foreground              ();
   Color                 background              ();
   // Color              black                   () { return theme_color (  0,   0,   0); }

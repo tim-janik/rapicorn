@@ -90,7 +90,7 @@ lookup_interface_node (const String &identifier, InterfaceFileP *ifacepp, const 
 }
 
 static bool
-check_interface_node (const XmlNode &xnode)
+is_interface_node (const XmlNode &xnode)
 {
   const XmlNode *parent = xnode.parent();
   return parent && !parent->parent() && parent->name() == "interfaces";
@@ -104,6 +104,7 @@ struct FactoryContext {
   const XmlNode *xnode;
   StringSeq     *type_tags;
   String         type;
+  StyleIfaceP    style;
   FactoryContext (const XmlNode *xn) : xnode (xn), type_tags (NULL) {}
 };
 static std::map<const XmlNode*, FactoryContext*> factory_context_map; /// @TODO: Make factory_context_map threadsafe
@@ -168,7 +169,7 @@ String
 factory_context_name (FactoryContext &fc)
 {
   const XmlNode &xnode = *fc.xnode;
-  if (check_interface_node (xnode))
+  if (is_interface_node (xnode))
     return xnode.get_attribute ("id");
   else
     return xnode.name();
@@ -178,12 +179,12 @@ String
 factory_context_type (FactoryContext &fc)
 {
   const XmlNode *xnode = fc.xnode;
-  if (!check_interface_node (*xnode)) // lookup definition node from child node
+  if (!is_interface_node (*xnode)) // lookup definition node from child node
     {
       xnode = lookup_interface_node (xnode->name(), NULL, xnode);
       assert_return (xnode != NULL, "");
     }
-  assert_return (check_interface_node (*xnode), "");
+  assert_return (is_interface_node (*xnode), "");
   return xnode->get_attribute ("id");
 }
 
@@ -191,27 +192,54 @@ UserSource
 factory_context_source (FactoryContext &fc)
 {
   const XmlNode *xnode = fc.xnode;
-  if (!check_interface_node (*xnode)) // lookup definition node from child node
+  if (!is_interface_node (*xnode)) // lookup definition node from child node
     {
       xnode = lookup_interface_node (xnode->name(), NULL, xnode);
       assert_return (xnode != NULL, UserSource (""));
     }
-  assert_return (check_interface_node (*xnode), UserSource (""));
+  assert_return (is_interface_node (*xnode), UserSource (""));
   return UserSource ("WidgetFactory", xnode->parsed_file(), xnode->parsed_line());
+}
+
+StyleIfaceP
+factory_context_style (FactoryContext &fc)
+{
+  if (!fc.style)
+    {
+      const XmlNode *xnode = fc.xnode;
+      if (!is_interface_node (*xnode)) // lookup definition node from child node
+        {
+          xnode = lookup_interface_node (xnode->name(), NULL, xnode);
+          assert_return (xnode && is_interface_node (*xnode), fc.style);
+        }
+      String factory_svg;
+      while (xnode)
+        {
+          const XmlNode *inode = xnode->parent(); // <interfaces/>
+          assert_return (inode && inode->name() == "interfaces", fc.style);
+          factory_svg = inode->get_attribute ("factory-svg");
+          if (!factory_svg.empty())
+            break;
+          const String parent_name = xnode->name();
+          xnode = lookup_interface_node (parent_name, NULL, xnode);
+        }
+      fc.style = factory_svg.empty() ? StyleIface::fallback() : StyleIface::load (factory_svg);
+    }
+  return fc.style;
 }
 
 static void
 factory_context_list_types (StringVector &types, const XmlNode *xnode, const bool need_ids, const bool need_variants)
 {
   assert_return (xnode != NULL);
-  if (!check_interface_node (*xnode)) // lookup definition node from child node
+  if (!is_interface_node (*xnode)) // lookup definition node from child node
     {
       xnode = lookup_interface_node (xnode->name(), NULL, xnode);
       assert_return (xnode != NULL);
     }
   while (xnode)
     {
-      assert_return (check_interface_node (*xnode));
+      assert_return (is_interface_node (*xnode));
       if (need_ids)
         types.push_back (xnode->get_attribute ("id"));
       const String parent_name = xnode->name();
@@ -779,14 +807,20 @@ initialize_factory_lazily (void)
   if (!initialized)
     {
       initialized++;
-      Blob blob = Res ("@res Rapicorn/foundation.xml");
-      Factory::parse_ui_data_internal ("Rapicorn/foundation.xml", blob.size(), blob.data(), "", NULL, NULL);
+      Blob blob;
+      String err;
+      blob = Res ("@res Rapicorn/foundation.xml");
+      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+      if (!err.empty())
+        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
       blob = Res ("@res Rapicorn/standard.xml");
-      Factory::parse_ui_data_internal ("Rapicorn/standard.xml", blob.size(), blob.data(), "", NULL, NULL);
+      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+      if (!err.empty())
+        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
       blob = Res ("@res themes/Default.xml");
-      ThemeInfoP default_theme = ThemeInfo::load_theme ("Default");
-      assert (default_theme != NULL);
-      ThemeInfoP theme = ThemeInfo::load_theme ("$RAPICORN_THEME", true);
+      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+      if (!err.empty())
+        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
     }
 }
 

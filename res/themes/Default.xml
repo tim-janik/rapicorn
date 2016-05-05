@@ -12,9 +12,9 @@
   <RapicornDefaultButton        id="DefaultButton"/>
   <RapicornDotGrid              id="DotGrid"/>
   <RapicornDrawable             id="Drawable"/>
-  <RapicornElementPainter       id="ElementPainter" svg-source="@eval theme_svg_file"/>
+  <RapicornElementPainter       id="ElementPainter"/>
   <RapicornFocusFrame           id="FocusFrame"/>
-  <RapicornFocusPainter         id="FocusPainter" svg-source="@eval theme_svg_file"/>
+  <RapicornFocusPainter         id="FocusPainter"/>
   <RapicornFrame                id="Frame"/>
   <RapicornHBox                 id="HBox"/>
   <RapicornHSlider              id="HSlider"/>
