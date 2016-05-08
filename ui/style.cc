@@ -9,6 +9,8 @@
 #define SDEBUG(...)     RAPICORN_KEY_DEBUG ("Style", __VA_ARGS__)
 #define CDEBUG(...)     RAPICORN_KEY_DEBUG ("Color", __VA_ARGS__)
 
+static const bool do_file_io = RAPICORN_FLIPPER ("file-io", "Rapicorn::Style: allow loading of files from local file system.");
+
 namespace Rapicorn {
 
 // == Config ==
@@ -91,6 +93,7 @@ public:
   virtual Color theme_color     (double hue360, double saturation100, double brightness100, const String &detail) override;
   virtual Color state_color     (WidgetState state, StyleColor color_type, const String &detail) override;
   Color         fragment_color  (const String &fragment, WidgetState state);
+  virtual Svg::FileP svg_file   () { return svg_file_; }
 };
 
 StyleImpl::StyleImpl (Svg::FileP svgf) :
@@ -153,6 +156,7 @@ StyleImpl::fragment_color (const String &fragment, WidgetState state)
   return color;
 }
 
+// == StyleIface ==
 static const WidgetState INVALID_STATE = WidgetState (0x80000000);
 
 WidgetState
@@ -270,8 +274,6 @@ StyleIface::insensitive_ink (WidgetState state, Color *glintp)
   return fgink;
 }
 
-
-// == StyleIface ==
 static std::map<const String, StyleIfaceP> style_file_cache;
 
 StyleIfaceP
@@ -288,33 +290,43 @@ StyleIface::fallback()
   return style;
 }
 
+Blob
+StyleIface::load_res (const String &resource)
+{
+  const bool need_file_io = !string_startswith (resource, "@res");
+  Blob blob;
+  errno = ENOENT;
+  if (need_file_io && do_file_io)
+    blob = Blob::load (resource);
+  else
+    blob = Res (resource); // call this in any case to preserve debug message about missing resources
+  SDEBUG ("loading: %s: %s", resource, strerror (errno));
+  return blob;
+}
+
+Svg::FileP
+StyleIface::load_svg (const String &resource)
+{
+  Blob blob = load_res (resource);
+  errno = 0;
+  Svg::FileP svgf = Svg::File::load (blob);
+  const int errno_ = errno;
+  if (!svgf)
+    user_warning (UserSource (resource), "failed to load SVG file \"%s\": %s", resource, strerror (errno_));
+  return svgf;
+}
+
 StyleIfaceP
 StyleIface::load (const String &theme_file)
 {
   StyleIfaceP style = style_file_cache[theme_file];
   if (!style)
     {
-      Svg::FileP svgf;
-      bool do_svg_file_io = false;
-      if (!string_startswith (theme_file, "@res"))
-        do_svg_file_io = RAPICORN_FLIPPER ("svg-file-io", "Rapicorn::Style: allow loading of SVG files from local file system.");
-      Blob blob;
-      if (do_svg_file_io)
-        blob = Blob::load (theme_file);
-      else
-        blob = Res (theme_file); // call this even if !startswith("@res") to preserve debug message about missing resource
-      if (string_endswith (blob.name(), ".svg"))
-        {
-          svgf = Svg::File::load (blob);
-          SDEBUG ("loading: %s: %s", theme_file, strerror (errno));
-        }
-      if (!svgf)
-        {
-          user_warning (UserSource (theme_file), "failed to load theme file \"%s\": %s", theme_file, strerror (ENOENT));
-          style = fallback();
-        }
-      else
+      Svg::FileP svgf = load_svg (theme_file);
+      if (svgf)
         style = FriendAllocator<StyleImpl>::make_shared (svgf);
+      else
+        style = fallback();
       style_file_cache[theme_file] = style;
     }
   return style;

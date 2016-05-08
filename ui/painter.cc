@@ -1,6 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "painter.hh"
 #include "blitfuncs.hh"
+#include "style.hh"
 #include "../rcore/svg.hh"
 #include <algorithm>
 
@@ -314,26 +315,21 @@ ImagePainter::ImagePainter (const String &resource_identifier)
   const ssize_t hashpos = resource_identifier.find ('#');
   const String fragment = hashpos < 0 ? "" : resource_identifier.substr (hashpos);
   const String resource = hashpos < 0 ? resource_identifier : resource_identifier.substr (0, hashpos);
-  Blob blob;
-  bool do_svg_file_io = false;
-  if (!string_startswith (resource, "@res"))
-    do_svg_file_io = RAPICORN_FLIPPER ("svg-file-io", "Rapicorn::ImagePainter: allow loading of SVG files from local file system.");
-  if (do_svg_file_io)
-    blob = Blob::load (resource);
-  else
-    blob = Res (resource); // call this even if !startswith("@res") to preserve debug message about missing resource
-  if (string_endswith (blob.name(), ".svg"))
+  if (string_endswith (resource, ".svg"))
     {
-      auto svgf = Svg::File::load (blob);
-      SVGDEBUG ("loading: %s: %s", resource, strerror (errno));
+      Svg::FileP svgf = StyleIface::load_svg (resource);
       if (svgf)
         svg_file_setup (svgf, fragment);
     }
-  else if (blob)
+  else
     {
-      auto pixmap = Pixmap (blob);
-      if (pixmap.width() && pixmap.height())
-        image_backend_ = std::make_shared<PixmapImageBackend> (pixmap);
+      Blob blob = StyleIface::load_res (resource);
+      if (blob)
+        {
+          auto pixmap = Pixmap (blob);
+          if (pixmap.width() && pixmap.height())
+            image_backend_ = std::make_shared<PixmapImageBackend> (pixmap);
+        }
     }
 }
 
