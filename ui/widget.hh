@@ -103,7 +103,7 @@ protected:
   bool                        change_flags      (WidgetFlag mask, bool on);
   void                        set_flag          (WidgetFlag flag, bool on);
   void                        adjust_state      (WidgetState state, bool on);
-  void                        propagate_state   (bool notify_changed);
+  void                        propagate_state   (WidgetState prev_state);
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
   virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
