@@ -7,12 +7,6 @@
 
 #define SVGDEBUG(...)   RAPICORN_KEY_DEBUG ("SVG", __VA_ARGS__)
 
-#define CHECK_CAIRO_STATUS(status)      do {    \
-  cairo_status_t ___s = (status);               \
-  if (___s != CAIRO_STATUS_SUCCESS)             \
-    SVGDEBUG ("%s: %s", cairo_status_to_string (___s), #status);        \
-  } while (0)
-
 namespace Rapicorn {
 
 // == CPainter ==
@@ -237,7 +231,7 @@ public:
     // stretch and render SVG image
     const size_t w = image_rect.width + 0.5, h = image_rect.height + 0.5;
     cairo_surface_t *img = svge_->stretch (w, h, ARRAY_SIZE (hscale_spans_), hscale_spans_, ARRAY_SIZE (vscale_spans_), vscale_spans_);
-    CHECK_CAIRO_STATUS (cairo_surface_status (img));
+    assert_return (img && cairo_surface_status (img) == CAIRO_STATUS_SUCCESS);
     // render context rectangle
     Rect rect = image_rect;
     rect.intersect (render_rect);
