@@ -51,8 +51,9 @@ public:
   Rect          fill_area       ();     ///< Retrieve fill area of the image, equals width and height if unknown.
   /// Render image into cairo context transformed into @a image_rect, clipped by @a render_rect.
   void          draw_image      (cairo_t *cairo_context, const Rect &render_rect, const Rect &image_rect);
+  void          reset           ();     ///< Empties the image to be painted, image_size() will return 0x0 after reset.
   ImagePainter& operator=       (const ImagePainter &ip);       ///< Assign an ImagePainter.
-  explicit      operator bool   () const; ///< Returns wether image_size() yields 0 for either dimension.
+  explicit      operator bool   () const; ///< Returns wether image_size() yields non-0 for both dimension.
 };
 
 } // Rapicorn

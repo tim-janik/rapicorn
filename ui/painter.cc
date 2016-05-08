@@ -450,6 +450,12 @@ ImagePainter::draw_image (cairo_t *cairo_context, const Rect &render_rect, const
     image_backend_->draw_image (cairo_context, render_rect, image_rect);
 }
 
+void
+ImagePainter::reset ()
+{
+  image_backend_ = NULL;
+}
+
 ImagePainter&
 ImagePainter::operator= (const ImagePainter &ip)
 {
