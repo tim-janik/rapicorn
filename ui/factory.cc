@@ -314,14 +314,13 @@ class Builder {
   WidgetImplP   build_scope      (const String &caller_location, const XmlNode *factory_context_node);
   WidgetImplP   build_widget     (const XmlNode *node, Evaluator &env, const XmlNode *factory_context_node, Flags bflags);
   static String canonify_dashes  (const String &key);
+  explicit           Builder             (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node);
+  static WidgetImplP build_from_factory  (const XmlNode *factory_node, const StringVector &attr_names,
+                                          const StringVector &attr_values, const XmlNode *factory_context_node);
 public:
-  explicit           Builder            (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node);
-  static WidgetImplP eval_and_build     (const String &widget_identifier,
-                                         const StringVector &call_names, const StringVector &call_values, const String &call_location);
-  static WidgetImplP build_from_factory (const XmlNode *factory_node,
-                                         const StringVector &attr_names, const StringVector &attr_values,
-                                         const XmlNode *factory_context_node);
-  static bool widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier);
+  static WidgetImplP eval_and_build      (const String &widget_identifier,
+                                          const StringVector &call_names, const StringVector &call_values, const String &call_location);
+  static bool        widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier);
 };
 
 Builder::Builder (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node) :
