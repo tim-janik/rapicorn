@@ -284,6 +284,8 @@ interface Widget : Object {
   String          name         = String (_("Name"), _("Identification name of the widget"), "rw");
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
+  bool            toggled      = Bool (_("Toggled"), _("Whether this widget is in a toggled (alternative) state"), "rw");
+  bool            retained     = Bool (_("Retained"), _("Whether this widgets toggled state is unspecified"), "rw");
   bool            allow_focus  = Bool (_("Allow Focus"), _("Whether this widget may receive input focus"), "rw");
   /// @name User Sizes and Size Groups
   String  hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
@@ -457,7 +459,6 @@ interface VBox : Container {
 interface ButtonArea : Container {
   Click         click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
   bool          can_toggle      = Bool (_("Can Toggle"), _("Boolean indicating whether this button may be toggled"), "rw");
-  bool          toggled         = Bool (_("Toggled"), _("Boolean indicating whether this button is toggled and (and active) or not"), "rw");
   String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
   String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
   String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");

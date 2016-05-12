@@ -29,6 +29,12 @@ ButtonAreaImpl::is_grabbing ()
 }
 
 bool
+ButtonAreaImpl::may_toggle () const
+{
+  return can_toggle_ || test_state (WidgetState::TOGGLED) || test_state (WidgetState::RETAINED);
+}
+
+bool
 ButtonAreaImpl::can_toggle () const
 {
   return can_toggle_;
