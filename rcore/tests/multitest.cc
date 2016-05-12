@@ -149,6 +149,11 @@ test_regex (void)
   TCMP (Regex::match_simple ("Lion", "Lion", Regex::EXTENDED | Regex::ANCHORED, Regex::MATCH_NORMAL), ==, true);
   TCMP (Regex::match_simple ("Ok", "<TEXT>Close</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL), ==, false);
   TCMP (Regex::match_simple ("\\bOk", "<TEXT>Ok</TEXT>", Regex::COMPILE_NORMAL, Regex::MATCH_NORMAL), ==, true);
+  const char end_tags_pattern[] = "</[buis]|br|tt|font|larger|smaller|fg|bg>";
+  const char sample_markup[] = "The <I>quick</I> <B>brown</B> <U>fox</U> jumps";
+  TCMP (Regex::match_simple (end_tags_pattern, sample_markup, Regex::CASELESS, Regex::MATCH_NORMAL), ==, true);
+  const char nomarkup[] = "<.XXX> No <_>real</_> text: 5 < 7 && 3 > 2 </.XXX>";
+  TCMP (Regex::match_simple (end_tags_pattern, nomarkup, Regex::CASELESS, Regex::MATCH_NORMAL), ==, false);
 }
 REGISTER_TEST ("General/Regex Tests", test_regex);
 
