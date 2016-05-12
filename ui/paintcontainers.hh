@@ -146,6 +146,21 @@ public:
   virtual       ~FocusPainterImpl () override;
 };
 
+class ShapePainterImpl : public virtual SingleContainerImpl, public virtual ShapePainterIface {
+  String        shape_style_normal_;
+  Allocation    fill_area_;
+protected:
+  virtual WidgetState  render_state    () const;
+  virtual void         size_request    (Requisition &requisition) override;
+  virtual void         size_allocate   (Allocation area, bool changed) override;
+  virtual void         render          (RenderContext &rcontext, const Rect &rect) override;
+public:
+  explicit       ShapePainterImpl     ();
+  virtual       ~ShapePainterImpl     () override;
+  virtual String shape_style_normal   () const override                 { return shape_style_normal_; }
+  virtual void   shape_style_normal   (const String &kind) override;
+};
+
 } // Rapicorn
 
 #endif  /* __RAPICORN_PAINT_CONTAINERS_HH__ */

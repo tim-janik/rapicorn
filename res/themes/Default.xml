@@ -21,6 +21,7 @@
   <RapicornImage                id="Image"/>
   <RapicornLabel                id="Label"/>
   <RapicornLayerPainter         id="LayerPainter"/>
+  <RapicornShapePainter         id="ShapePainter"/>
   <RapicornScrollArea           id="ScrollArea"/>
   <RapicornSelectableItem       id="SelectableItem"/>
   <RapicornSliderArea           id="SliderArea"/>

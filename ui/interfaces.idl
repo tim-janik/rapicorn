@@ -535,6 +535,12 @@ interface Image : Widget {
   Pixbuf        pixbuf;
 };
 
+/// This is a simple widget that can paint radio marks.
+/// See also the corresponding implementation class ShapePainterImpl.
+interface ShapePainter : Container {
+  String shape_style_normal  = String (_("Shape Style Normal"), _("Shape style for WidgetState::NORMAL."), "rw");
+};
+
 /// The ElementPainter widget displays state dependent SVG image elements and places its child within the fill area.
 /// State dependent paintings work by picking an SVG @a element from @a source. Variants of the element ID that have
 /// widget states appended (e.g. "ID:active") and match the WidgetState of @a this are preferred.
