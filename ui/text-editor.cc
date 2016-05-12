@@ -596,6 +596,22 @@ LabelImpl::changes (ChangesType changes_flags)
 }
 
 String
+LabelImpl::text () const
+{
+  assert_unreached();
+}
+
+void
+LabelImpl::text (const String &string)
+{
+  const char end_tags_pattern[] = "</[buis]|br|tt|font|larger|smaller|fg|bg>";
+  if (Regex::match_simple (end_tags_pattern, string, Regex::CASELESS, Regex::MATCH_NORMAL))
+    markup_text (string);
+  else
+    plain_text (string);
+}
+
+String
 LabelImpl::markup_text () const
 {
   return get_markup();
