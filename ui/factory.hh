@@ -49,6 +49,7 @@ public:
   virtual ObjectImplP   create_object     (FactoryContext           &fc) const = 0;
   virtual void          type_name_list    (std::vector<const char*> &names) const = 0;
   inline String         type_name         () const                          { return qualified_type; }
+  static void           fabricated        (WidgetImpl&);
 };
 
 } // Factory

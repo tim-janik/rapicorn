@@ -30,6 +30,7 @@ struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface 
   WidgetGroup*        retrieve_widget_group (const String &group_name, WidgetGroupType group_type, bool force_create);
 protected:
   virtual            ~ContainerImpl     ();
+  virtual void        fabricated        () override;
   virtual void        do_changed        (const String &name) override;
   virtual void        add_child         (WidgetImpl           &widget) = 0;
   virtual void        repack_child      (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew);

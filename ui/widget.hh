@@ -50,6 +50,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   friend                      class SizeGroup;
   friend                      class ContainerImpl;
   friend                      class WindowImpl;
+  friend                      class RapicornInternal::ImplementationHelper;
 public:
   struct AncestryCache;
 private:
@@ -71,6 +72,7 @@ private:
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
   virtual bool                may_toggle            () const;
 protected:
+  virtual void                fabricated            (); ///< Method called on all widgets after creation via Factory.
   virtual bool                do_event              (const Event &event);
   virtual void                foreach_recursive     (const std::function<void (WidgetImpl&)> &f);
   virtual const AncestryCache* fetch_ancestry_cache ();

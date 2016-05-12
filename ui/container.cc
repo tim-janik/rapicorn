@@ -219,6 +219,14 @@ container_uncross_link_R (ContainerImpl *container, CrossLink **clinkp, bool not
 ContainerImpl::~ContainerImpl ()
 {}
 
+void
+ContainerImpl::fabricated ()
+{
+  WidgetImpl::fabricated();
+  for (auto child : *this)
+    child->fabricated();
+}
+
 typedef vector<WidgetGroupP> WidgetGroups;
 class WidgetGroupsKey : public DataKey<WidgetGroups*> {
   virtual void destroy (WidgetGroups *widget_groups) override
