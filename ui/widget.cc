@@ -196,6 +196,8 @@ WidgetImpl::adjust_state (WidgetState mask, bool on)
       this_chain.next = NULL;
       parent()->selectable_child_changed (this_chain);
     }
+  if (((state() ^ old_state) & WidgetState::TOGGLED) != 0)
+    WidgetGroup::toggled_widget (*this);
 }
 
 /// Apply @a mask to widget_flags_ and return if flags changed.

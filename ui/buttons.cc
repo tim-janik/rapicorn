@@ -4,6 +4,7 @@
 #include "painter.hh"
 #include "factory.hh"
 #include "window.hh"
+#include "sizegroup.hh"
 #include <unistd.h>
 
 namespace Rapicorn {
@@ -83,23 +84,6 @@ ButtonAreaImpl::can_toggle (bool cantoggle)
     {
       can_toggle_ = cantoggle;
       changed ("can_toggle");
-    }
-}
-
-bool
-ButtonAreaImpl::toggled () const
-{
-  return test_state (WidgetState::TOGGLED);
-}
-
-void
-ButtonAreaImpl::toggled (bool istoggled)
-{
-  const bool nowtoggled = test_state (WidgetState::TOGGLED);
-  if (nowtoggled != istoggled && (can_toggle_ || nowtoggled))
-    {
-      adjust_state (WidgetState::TOGGLED, istoggled && can_toggle_);
-      changed ("toggled");
     }
 }
 
@@ -312,5 +296,32 @@ ButtonAreaImpl::handle_event (const Event &event)
 }
 
 static const WidgetFactory<ButtonAreaImpl> button_area_factory ("Rapicorn::ButtonArea");
+
+// == RadioButtonImpl ==
+RadioButtonImpl::RadioButtonImpl ()
+{
+  can_toggle (true);
+}
+
+String
+RadioButtonImpl::radio_group () const
+{
+  return radio_group_;
+}
+
+void
+RadioButtonImpl::radio_group (const String &gname)
+{
+  const String group_name = string_substitute_char (gname, ',', '-'); // avoid multi-group syntax
+  sync_widget_groups (group_name, WIDGET_GROUP_RADIO);
+}
+
+bool
+RadioButtonImpl::may_toggle () const
+{
+  return test_state (WidgetState::RETAINED) || RadioGroup::widget_may_toggle (*this);
+}
+
+static const WidgetFactory<RadioButtonImpl> radio_button_factory ("Rapicorn::RadioButton");
 
 } // Rapicorn

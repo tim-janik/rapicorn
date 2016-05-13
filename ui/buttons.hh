@@ -30,8 +30,6 @@ public:
   virtual bool          activate_widget ();
   virtual bool          can_toggle      () const override;
   virtual void          can_toggle      (bool cantoggle) override;
-  virtual bool          toggled         () const override;
-  virtual void          toggled         (bool istoggled) override;
   virtual Click         click_type      () const override;
   virtual void          click_type      (Click click_type) override;
   virtual String        on_click        () const override;
@@ -42,6 +40,16 @@ public:
   virtual void          on_click3       (const String &command) override;
   virtual String        label           () const override;
   virtual void          label           (const String &text) override;
+};
+
+class RadioButtonImpl : public virtual ButtonAreaImpl, public virtual RadioButtonIface {
+  String                radio_group_;
+protected:
+  virtual bool          may_toggle      () const override;
+public:
+  explicit              RadioButtonImpl ();
+  virtual String        radio_group     () const override;
+  virtual void          radio_group     (const String &gname) override;
 };
 
 } // Rapicorn
