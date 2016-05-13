@@ -10,7 +10,7 @@ namespace Rapicorn {
 
 ButtonAreaImpl::ButtonAreaImpl() :
   button_ (0), repeater_ (0), unpress_ (0),
-  click_type_ (Click::ON_RELEASE), can_toggle_ (0)
+  click_type_ (Click::ON_RELEASE), can_toggle_ (0), label_ (NULL)
 {}
 
 void
@@ -19,6 +19,42 @@ ButtonAreaImpl::construct ()
   set_flag (NEEDS_FOCUS_INDICATOR, true); // prerequisite for focusable
   set_flag (ALLOW_FOCUS, true);
   SingleContainerImpl::construct();
+}
+
+void
+ButtonAreaImpl::fabricated ()
+{
+  SingleContainerImpl::fabricated();
+  if (label_ && !label_->empty() && !child_container().has_children())
+    {
+      StringVector arguments = Strings ("text=" + *label_);
+      WidgetImplP widget = Factory::create_ui_child (*this, "Label", arguments, true /*autoadd*/);
+    }
+}
+
+ButtonAreaImpl::~ButtonAreaImpl ()
+{
+  if (label_)
+    {
+      delete label_;
+      label_ = NULL;
+    }
+}
+
+String
+ButtonAreaImpl::label () const
+{
+  return label_ ? *label_ : "";
+}
+
+void
+ButtonAreaImpl::label (const String &text)
+{
+  String *next = new String (text);
+  if (label_)
+    delete label_;
+  label_ = next;
+  changed ("label");
 }
 
 bool
