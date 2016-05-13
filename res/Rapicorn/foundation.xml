@@ -18,6 +18,7 @@
   <Rapicorn_Factory id="RapicornImage" factory-type="Rapicorn::Image"/>
   <Rapicorn_Factory id="RapicornLabel" factory-type="Rapicorn::Label"/>
   <Rapicorn_Factory id="RapicornLayerPainter" factory-type="Rapicorn::LayerPainter"/>
+  <Rapicorn_Factory id="RapicornRadioButton" factory-type="Rapicorn::RadioButton"/>
   <Rapicorn_Factory id="RapicornSelectableItem" factory-type="Rapicorn::SelectableItem"/>
   <Rapicorn_Factory id="RapicornShapePainter" factory-type="Rapicorn::ShapePainter"/>
   <Rapicorn_Factory id="RapicornSliderArea" factory-type="Rapicorn::SliderArea"/>
