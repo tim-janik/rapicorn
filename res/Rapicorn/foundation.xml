@@ -3,50 +3,50 @@
 <interfaces factory-svg="@res themes/Default.svg">
 
   <!-- Public Factory Types -->
-  <Rapicorn_Factory id="RapicornAlignment" factory-type="Rapicorn::Alignment"/>
-  <Rapicorn_Factory id="RapicornAmbience" factory-type="Rapicorn::Ambience"/>
-  <Rapicorn_Factory id="RapicornArrangement" factory-type="Rapicorn::Arrangement"/>
-  <Rapicorn_Factory id="RapicornArrow" factory-type="Rapicorn::Arrow"/>
-  <Rapicorn_Factory id="RapicornButtonArea" factory-type="Rapicorn::ButtonArea"/>
-  <Rapicorn_Factory id="RapicornDotGrid" factory-type="Rapicorn::DotGrid"/>
-  <Rapicorn_Factory id="RapicornDrawable" factory-type="Rapicorn::Drawable"/>
-  <Rapicorn_Factory id="RapicornElementPainter" factory-type="Rapicorn::ElementPainter"/>
-  <Rapicorn_Factory id="RapicornFocusFrame" factory-type="Rapicorn::FocusFrame"/>
-  <Rapicorn_Factory id="RapicornFocusPainter" factory-type="Rapicorn::FocusPainter"/>
-  <Rapicorn_Factory id="RapicornFrame" factory-type="Rapicorn::Frame"/>
-  <Rapicorn_Factory id="RapicornHBox" factory-type="Rapicorn::HBox"/>
-  <Rapicorn_Factory id="RapicornImage" factory-type="Rapicorn::Image"/>
-  <Rapicorn_Factory id="RapicornLabel" factory-type="Rapicorn::Label"/>
-  <Rapicorn_Factory id="RapicornLayerPainter" factory-type="Rapicorn::LayerPainter"/>
-  <Rapicorn_Factory id="RapicornRadioButton" factory-type="Rapicorn::RadioButton"/>
-  <Rapicorn_Factory id="RapicornSelectableItem" factory-type="Rapicorn::SelectableItem"/>
-  <Rapicorn_Factory id="RapicornShapePainter" factory-type="Rapicorn::ShapePainter"/>
-  <Rapicorn_Factory id="RapicornSliderArea" factory-type="Rapicorn::SliderArea"/>
-  <Rapicorn_Factory id="RapicornTable" factory-type="Rapicorn::Table"/>
-  <Rapicorn_Factory id="RapicornVBox" factory-type="Rapicorn::VBox"/>
-  <Rapicorn_Factory id="RapicornWidgetList" factory-type="Rapicorn::WidgetList"/>
-  <Rapicorn_Factory id="RapicornWindow" factory-type="Rapicorn::Window"/>
+  <Rapicorn_Factory declare="RapicornAlignment" factory-type="Rapicorn::Alignment"/>
+  <Rapicorn_Factory declare="RapicornAmbience" factory-type="Rapicorn::Ambience"/>
+  <Rapicorn_Factory declare="RapicornArrangement" factory-type="Rapicorn::Arrangement"/>
+  <Rapicorn_Factory declare="RapicornArrow" factory-type="Rapicorn::Arrow"/>
+  <Rapicorn_Factory declare="RapicornButtonArea" factory-type="Rapicorn::ButtonArea"/>
+  <Rapicorn_Factory declare="RapicornDotGrid" factory-type="Rapicorn::DotGrid"/>
+  <Rapicorn_Factory declare="RapicornDrawable" factory-type="Rapicorn::Drawable"/>
+  <Rapicorn_Factory declare="RapicornElementPainter" factory-type="Rapicorn::ElementPainter"/>
+  <Rapicorn_Factory declare="RapicornFocusFrame" factory-type="Rapicorn::FocusFrame"/>
+  <Rapicorn_Factory declare="RapicornFocusPainter" factory-type="Rapicorn::FocusPainter"/>
+  <Rapicorn_Factory declare="RapicornFrame" factory-type="Rapicorn::Frame"/>
+  <Rapicorn_Factory declare="RapicornHBox" factory-type="Rapicorn::HBox"/>
+  <Rapicorn_Factory declare="RapicornImage" factory-type="Rapicorn::Image"/>
+  <Rapicorn_Factory declare="RapicornLabel" factory-type="Rapicorn::Label"/>
+  <Rapicorn_Factory declare="RapicornLayerPainter" factory-type="Rapicorn::LayerPainter"/>
+  <Rapicorn_Factory declare="RapicornRadioButton" factory-type="Rapicorn::RadioButton"/>
+  <Rapicorn_Factory declare="RapicornSelectableItem" factory-type="Rapicorn::SelectableItem"/>
+  <Rapicorn_Factory declare="RapicornShapePainter" factory-type="Rapicorn::ShapePainter"/>
+  <Rapicorn_Factory declare="RapicornSliderArea" factory-type="Rapicorn::SliderArea"/>
+  <Rapicorn_Factory declare="RapicornTable" factory-type="Rapicorn::Table"/>
+  <Rapicorn_Factory declare="RapicornVBox" factory-type="Rapicorn::VBox"/>
+  <Rapicorn_Factory declare="RapicornWidgetList" factory-type="Rapicorn::WidgetList"/>
+  <Rapicorn_Factory declare="RapicornWindow" factory-type="Rapicorn::Window"/>
 
   <!-- Internal Factory Types -->
-  <Rapicorn_Factory id="Rapicorn_ScrollArea" factory-type="Rapicorn::ScrollArea"/>
-  <Rapicorn_Factory id="Rapicorn_ScrollPort" factory-type="Rapicorn::ScrollPort"/>
-  <Rapicorn_Factory id="Rapicorn_SliderSkid" factory-type="Rapicorn::SliderSkid"/>
-  <Rapicorn_Factory id="Rapicorn_SliderTrough" factory-type="Rapicorn::SliderTrough"/>
-  <Rapicorn_Factory id="Rapicorn_TextBlock" factory-type="Rapicorn::TextPango"/>
-  <Rapicorn_Factory id="Rapicorn_TextEditor" factory-type="Rapicorn::TextEditor"/>
-  <Rapicorn_Factory id="Rapicorn_TextLabel" factory-type="Rapicorn::Label"/>
-  <Rapicorn_Factory id="RapicornIdlTestWidget" factory-type="Rapicorn::IdlTestWidget"/>
-  <Rapicorn_Factory id="RapicornTestBox" factory-type="Rapicorn::TestBox"/>
-  <Rapicorn_Factory id="RapicornTestContainer" factory-type="Rapicorn::TestContainer"/>
-  <RapicornTestContainer id="RapicornTestWidget" paint-allocation="1" width="10" height="10"/>
+  <Rapicorn_Factory declare="Rapicorn_ScrollArea" factory-type="Rapicorn::ScrollArea"/>
+  <Rapicorn_Factory declare="Rapicorn_ScrollPort" factory-type="Rapicorn::ScrollPort"/>
+  <Rapicorn_Factory declare="Rapicorn_SliderSkid" factory-type="Rapicorn::SliderSkid"/>
+  <Rapicorn_Factory declare="Rapicorn_SliderTrough" factory-type="Rapicorn::SliderTrough"/>
+  <Rapicorn_Factory declare="Rapicorn_TextBlock" factory-type="Rapicorn::TextPango"/>
+  <Rapicorn_Factory declare="Rapicorn_TextEditor" factory-type="Rapicorn::TextEditor"/>
+  <Rapicorn_Factory declare="Rapicorn_TextLabel" factory-type="Rapicorn::Label"/>
+  <Rapicorn_Factory declare="RapicornIdlTestWidget" factory-type="Rapicorn::IdlTestWidget"/>
+  <Rapicorn_Factory declare="RapicornTestBox" factory-type="Rapicorn::TestBox"/>
+  <Rapicorn_Factory declare="RapicornTestContainer" factory-type="Rapicorn::TestContainer"/>
+  <RapicornTestContainer declare="RapicornTestWidget" paint-allocation="1" width="10" height="10"/>
 
   <!-- Composite Factory Types -->
-  <Rapicorn_TextEditor id="RapicornTextEditor" child-container="focus-frame">
+  <Rapicorn_TextEditor declare="RapicornTextEditor" child-container="focus-frame">
     <RapicornFocusFrame name="focus-frame" frame-type="none" />
   </Rapicorn_TextEditor>
 
   <!-- Buttons -->
-  <ButtonArea id="RapicornButton" child-container="child-area" >
+  <ButtonArea declare="RapicornButton" child-container="child-area" >
     <Argument name="center-child" default="1" />
     <Frame normal-frame="out" active-frame="in" >
       <Ambience
@@ -58,7 +58,7 @@
       </Ambience>
     </Frame>
   </ButtonArea>
-  <ButtonArea id="RapicornUnfocusedButton" child-container="child-area" >
+  <ButtonArea declare="RapicornUnfocusedButton" child-container="child-area" >
     <Argument name="center-child" default="1" />
     <Frame normal-frame="out" active-frame="in" >
       <Ambience
@@ -68,7 +68,7 @@
       </Ambience>
     </Frame>
   </ButtonArea>
-  <Frame id="RapicornDefaultButton" child-container="child-area" frame-type="in" >
+  <Frame declare="RapicornDefaultButton" child-container="child-area" frame-type="in" >
     <Argument name="on-click" />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
       <Button name="child-area" on-click="@eval on_click"/>
@@ -76,7 +76,7 @@
   </Frame>
 
   <!-- HSlider -->
-  <SliderArea id="RapicornHSlider">
+  <SliderArea declare="RapicornHSlider">
     <Frame normal-frame="in" vexpand="1" hexpand="1" height="18">
       <HBox vexpand="1">
 	<UnfocusedButton on-click="decrement" on-click2="page-decrement" click-type="fast-repeat" vexpand="1" center-child="0" >
@@ -101,7 +101,7 @@
   </SliderArea>
 
   <!-- VSlider -->
-  <SliderArea id="RapicornVSlider">
+  <SliderArea declare="RapicornVSlider">
     <Frame normal-frame="in" vexpand="1" hexpand="1" width="18">
       <VBox hexpand="1">
 	<UnfocusedButton on-click="decrement" on-click2="page-increment" click-type="fast-repeat" hexpand="1" center-child="0" >
@@ -126,7 +126,7 @@
   </SliderArea>
 
   <!-- ScrollArea -->
-  <Alignment id="RapicornScrollArea" child-container="scroll-container">
+  <Alignment declare="RapicornScrollArea" child-container="scroll-container">
     <Rapicorn_ScrollArea>
       <Table>
 	<Alignment hexpand="1" vexpand="1" hposition="0" hspan="1" vposition="0" vspan="1" width="0" height="0"

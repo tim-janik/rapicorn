@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- arrow sizing test -->
-  <Frame id="arrow-frame" child-container="child-area" >
+  <Frame declare="arrow-frame" child-container="child-area" >
     <Argument name="center-child" default="1" />
     <Alignment name="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child"
 	       left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
@@ -16,7 +16,7 @@
        The TestContainer then asserts that the arrow really is allocated with
        a width based on its height.
     -->
-  <Window id="test-dialog">
+  <Window declare="test-dialog">
     <VBox>
       <Label markup-text="Square Arrow:" hscale="0"/>
       <Table hscale="0" vscale="0" hexpand="1" vexpand="1">

@@ -3,12 +3,12 @@
 <interfaces>
 
   <!-- property test -->
-  <RapicornTestWidget id="property-test" assert_value="foobar">
+  <RapicornTestWidget declare="property-test" assert_value="foobar">
     <RapicornTestWidget.value>foobar</RapicornTestWidget.value>
   </RapicornTestWidget>
 
   <!-- test dialog -->
-  <Window id="test-dialog">
+  <Window declare="test-dialog">
     <Argument name="zonk" default="zonking"/>
     <Alignment padding="10">
       <VBox>

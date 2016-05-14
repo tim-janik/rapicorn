@@ -102,12 +102,12 @@ Evaluator::canonify_name (const String &key) /* chars => [A-Za-z0-9_] */
 }
 
 String
-Evaluator::canonify_key (const String &key) /* canonify, id=>name, strip leading '_' */
+Evaluator::canonify_key (const String &key) /* canonify, declare=>name, strip leading '_' */
 {
   /* skip gettext prefix */
   String s = key[0] == '_' ? String (key, 1) : key;
   /* canonify aliases */
-  if (s == "id")
+  if (s == "declare")
     return "name";
   return canonify_name (s);
 }

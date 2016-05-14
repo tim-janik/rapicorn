@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- test dialog -->
-  <DefaultButton id="MiniButton" width="400" >
+  <DefaultButton declare="MiniButton" width="400" >
     <Label plain-text="Mini Button" />
   </DefaultButton>
 

@@ -2,7 +2,7 @@
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
 <interfaces>
 
-  <Window id="test-dialog">
+  <Window declare="test-dialog">
     <VBox>
 
       <Label markup-text="Horizontal Alignment, Horizontal Scale,"/>

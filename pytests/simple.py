@@ -10,7 +10,7 @@ import sys
 
 # Define main window Widget Tree
 simple_window_widgets = """
-  <Window id="simple-window">
+  <Window declare="simple-window">
     <Button on-click="CLICK">
       <Label markup-text="Hello Simple World!" />
     </Button>

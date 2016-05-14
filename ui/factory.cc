@@ -63,15 +63,15 @@ register_interface_file (String file_name, const XmlNodeP root, const ArgumentLi
   for (auto dnode : root->children())
     if (dnode->istext() == false)
       {
-        const String id = dnode->get_attribute ("id");
-        if (id.empty())
+        const String declare = dnode->get_attribute ("declare");
+        if (declare.empty())
           {
             if (definitions)
               definitions->resize (reset_size);
-            return string_format ("%s: interface definition without id: <%s/>", node_location (dnode), dnode->name());
+            return string_format ("%s: interface definition without declare: <%s/>", node_location (dnode), dnode->name());
           }
         if (definitions)
-          definitions->push_back (id);
+          definitions->push_back (declare);
       }
   interface_file_list.insert (interface_file_list.begin(), ifile);
   FDEBUG ("%s: registering %d interfaces", file_name, root->children().size());
@@ -84,8 +84,8 @@ lookup_interface_node (const String &identifier, InterfaceFileP *ifacepp, const 
   for (auto ifile : interface_file_list)
     for (auto node : ifile->root->children())
       {
-        const String id = node->get_attribute ("id");
-        if (id == identifier)
+        const String declare = node->get_attribute ("declare");
+        if (declare == identifier)
           {
             if (ifacepp)
               *ifacepp = ifile;
@@ -176,7 +176,7 @@ factory_context_name (FactoryContext &fc)
 {
   const XmlNode &xnode = *fc.xnode;
   if (is_interface_node (xnode))
-    return xnode.get_attribute ("id");
+    return xnode.get_attribute ("declare");
   else
     return xnode.name();
 }
@@ -191,7 +191,7 @@ factory_context_type (FactoryContext &fc)
       assert_return (xnode != NULL, "");
     }
   assert_return (is_interface_node (*xnode), "");
-  return xnode->get_attribute ("id");
+  return xnode->get_attribute ("declare");
 }
 
 UserSource
@@ -249,7 +249,7 @@ factory_context_list_types (StringVector &types, const XmlNode *xnode, const boo
     {
       assert_return (is_interface_node (*xnode));
       if (need_ids)
-        types.push_back (xnode->get_attribute ("id"));
+        types.push_back (xnode->get_attribute ("declare"));
       const String parent_name = xnode->name();
       const XmlNode *last = xnode;
       xnode = lookup_interface_node (parent_name, NULL, xnode);
@@ -404,14 +404,14 @@ Builder::build_from_factory (const XmlNode *factory_node,
 {
   assert_return (factory_context_node != NULL, NULL);
   // extract arguments
-  String factory_id, factory_type;
+  String factory_declare, factory_type;
   for (size_t i = 0; i < attr_names.size(); i++)
-    if (attr_names[i] == "id")
-      factory_id = attr_values[i];
+    if (attr_names[i] == "declare")
+      factory_declare = attr_values[i];
     else if (attr_names[i] == "factory_type")
       factory_type = attr_values[i];
   // sanity check factory node
-  if (factory_node->name() != "Rapicorn_Factory" || factory_id.empty() || factory_id[0] == '@' ||
+  if (factory_node->name() != "Rapicorn_Factory" || factory_declare.empty() || factory_declare[0] == '@' ||
       attr_names.size() != 2 || factory_node->list_attributes().size() != 2 || factory_node->children().size() != 0)
     {
       critical ("%s: invalid factory node: %s", node_location (factory_node), factory_node->name());
@@ -438,7 +438,7 @@ Builder::build_from_factory (const XmlNode *factory_node,
     {
       widget = shared_ptr_cast<WidgetImpl> (object);
       if (widget)
-        widget->name (factory_id);
+        widget->name (factory_declare);
       else
         critical ("%s: %s yields non-widget: %s", node_location (factory_node), factory_node->name(), object->typeid_name());
     }
@@ -449,7 +449,7 @@ void
 Builder::eval_args (Evaluator &env, const StringVector &in_names, const StringVector &in_values, const XmlNode *errnode,
                     StringVector &out_names, StringVector &out_values, String *child_container_name, const Flags bflags)
 {
-  const bool dissallow_id = bflags & SCOPE_CHILD;
+  const bool dissallow_declare = bflags & SCOPE_CHILD;
   out_names.reserve (in_names.size());
   out_values.reserve (in_values.size());
   for (size_t i = 0; i < in_names.size(); i++)
@@ -467,8 +467,8 @@ Builder::eval_args (Evaluator &env, const StringVector &in_names, const StringVe
         rvalue = ivalue;
       if (child_container_name && cname == "child_container")
         *child_container_name = rvalue;
-      else if (dissallow_id && cname == "id" && errnode)
-        critical ("%s: invalid 'id' attribute for inner node: <%s/>", node_location (errnode), errnode->name());
+      else if (dissallow_declare && cname == "declare" && errnode)
+        critical ("%s: invalid 'declare' attribute for inner node: <%s/>", node_location (errnode), errnode->name());
       else
         {
           out_names.push_back (cname);
@@ -505,7 +505,7 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
     if (cnode->name() == "Argument")
       {
         const String aname = canonify_dashes (cnode->get_attribute ("name")); // canonify argument name
-        if (aname.empty() || aname == "id" || aname == "name")
+        if (aname.empty() || aname == "declare" || aname == "name")
           critical ("%s: %s argument name: \"%s\"",
                     node_location (cnode),
                     cnode->has_attribute ("name") ? "invalid" : "missing",
@@ -525,7 +525,7 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
       if (scope_consumed_.at (i))
         continue;
       const String &rawname = scope_names_[i], &cvalue = scope_values_.at (i);
-      if (rawname == "name" || rawname == "id")
+      if (rawname == "name" || rawname == "declare")
         {
           name_argument = cvalue;
           scope_consumed_[i] = true;
@@ -548,7 +548,7 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
   // allow outer scopes to override Argument values
   for (Builder *outer = this->outer_; outer; outer = outer->outer_)
     for (size_t i = 0; i < outer->scope_names_.size(); i++)
-      if (!outer->scope_consumed_.at (i) && outer->scope_names_[i] != "id" && outer->scope_names_[i] != "name" &&
+      if (!outer->scope_consumed_.at (i) && outer->scope_names_[i] != "declare" && outer->scope_names_[i] != "name" &&
           outer->scope_names_[i].find (':') == String::npos) // ignore namespaced attributes
         {
           const String outer_cname = canonify_dashes (outer->scope_names_[i]);

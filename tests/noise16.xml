@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- test dialog -->
-  <Window id="test-dialog">
+  <Window declare="test-dialog">
     <RapicornTestBox snapshot_file="xtmp-noise16.png">
       <!-- Only display the image, without any shading, border, etc to allow pixel comparisons -->
       <Image hspread="1" vspread="1" source="noise16.png" />

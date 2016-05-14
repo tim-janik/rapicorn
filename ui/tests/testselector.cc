@@ -584,7 +584,7 @@ static const char test_dialog_xml[] =
   "<?xml version='1.0' encoding='UTF-8'?>\n"
   "<interfaces>\n"
   // test-dialog
-  "<Window id='test-dialog'>\n"
+  "<Window declare='test-dialog'>\n"
   "  <Ambience normal-lighting='upper-left'>\n"
   "    <Alignment padding='5'>\n"
   "      <VBox spacing='3' hexpand='1'>\n"

@@ -3,37 +3,37 @@
 <interfaces factory-svg="@res themes/Default.svg">
 
   <!-- Default Theme -->
-  <RapicornAlignment            id="Alignment"/>
-  <RapicornAmbience             id="Ambience"/>
-  <RapicornArrangement          id="Arrangement"/>
-  <RapicornArrow                id="Arrow"/>
-  <RapicornButton               id="Button"/>
-  <RapicornButtonArea           id="ButtonArea"/>
-  <RapicornDefaultButton        id="DefaultButton"/>
-  <RapicornDotGrid              id="DotGrid"/>
-  <RapicornDrawable             id="Drawable"/>
-  <RapicornElementPainter       id="ElementPainter"/>
-  <RapicornFocusFrame           id="FocusFrame"/>
-  <RapicornFocusPainter         id="FocusPainter"/>
-  <RapicornFrame                id="Frame"/>
-  <RapicornHBox                 id="HBox"/>
-  <RapicornHSlider              id="HSlider"/>
-  <RapicornImage                id="Image"/>
-  <RapicornLabel                id="Label"/>
-  <RapicornLayerPainter         id="LayerPainter"/>
-  <RapicornShapePainter         id="ShapePainter"/>
-  <RapicornScrollArea           id="ScrollArea"/>
-  <RapicornSelectableItem       id="SelectableItem"/>
-  <RapicornSliderArea           id="SliderArea"/>
-  <RapicornTable                id="Table"/>
-  <RapicornTextEditor           id="TextEditor"/>
-  <RapicornUnfocusedButton      id="UnfocusedButton"/>
-  <RapicornVBox                 id="VBox"/>
-  <RapicornVSlider              id="VSlider"/>
-  <RapicornWidgetList           id="WidgetList"/>
-  <RapicornWindow               id="Window"/>
+  <RapicornAlignment            declare="Alignment"/>
+  <RapicornAmbience             declare="Ambience"/>
+  <RapicornArrangement          declare="Arrangement"/>
+  <RapicornArrow                declare="Arrow"/>
+  <RapicornButton               declare="Button"/>
+  <RapicornButtonArea           declare="ButtonArea"/>
+  <RapicornDefaultButton        declare="DefaultButton"/>
+  <RapicornDotGrid              declare="DotGrid"/>
+  <RapicornDrawable             declare="Drawable"/>
+  <RapicornElementPainter       declare="ElementPainter"/>
+  <RapicornFocusFrame           declare="FocusFrame"/>
+  <RapicornFocusPainter         declare="FocusPainter"/>
+  <RapicornFrame                declare="Frame"/>
+  <RapicornHBox                 declare="HBox"/>
+  <RapicornHSlider              declare="HSlider"/>
+  <RapicornImage                declare="Image"/>
+  <RapicornLabel                declare="Label"/>
+  <RapicornLayerPainter         declare="LayerPainter"/>
+  <RapicornShapePainter         declare="ShapePainter"/>
+  <RapicornScrollArea           declare="ScrollArea"/>
+  <RapicornSelectableItem       declare="SelectableItem"/>
+  <RapicornSliderArea           declare="SliderArea"/>
+  <RapicornTable                declare="Table"/>
+  <RapicornTextEditor           declare="TextEditor"/>
+  <RapicornUnfocusedButton      declare="UnfocusedButton"/>
+  <RapicornVBox                 declare="VBox"/>
+  <RapicornVSlider              declare="VSlider"/>
+  <RapicornWidgetList           declare="WidgetList"/>
+  <RapicornWindow               declare="Window"/>
 
-  <RapicornRadioButton id="RadioButton" child-container="child-area">
+  <RapicornRadioButton declare="RadioButton" child-container="child-area">
     <HBox>
       <ShapePainter width="15" height="15" shape_style_normal="circle"/>
       <Alignment vscale="0" vexpand="1">

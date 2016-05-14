@@ -21,7 +21,7 @@ def show_and_display (win): # show and run main loop until the window is fully d
 # = SizeGroup Tests =
 # create wide and a tall buttons that are resized via size groups
 decls = """
-<Window id="SGWindow">
+<Window declare="SGWindow">
   <VBox>
     <Label markup-text="Horizontal SizeGroup:"/>
     <Frame>

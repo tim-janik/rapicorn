@@ -2,7 +2,7 @@
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
 <interfaces>
 
-  <Window id="main-test">
+  <Window declare="main-test">
     <Argument name="defaultvalue17" default="@eval 10 + 7"/>
     <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
       <VBox spacing="5">

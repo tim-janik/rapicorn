@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- Frames -->
-  <HBox id="frame-test" spacing="10">
+  <HBox declare="frame-test" spacing="10">
     <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
 	    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
 		    <Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in"><Frame frame-type="in">
@@ -61,7 +61,7 @@
   </HBox>
 
   <!-- test dialog -->
-  <Window id="graphics-dialog" title="Rapicorn Example: Graphics">
+  <Window declare="graphics-dialog" title="Rapicorn Example: Graphics">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="3" >

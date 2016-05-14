@@ -7,7 +7,7 @@ using namespace Rapicorn;
 static void
 add_button_row (ContainerH area, uint row)
 {
-  WidgetH child = area.create_widget ("button-row", Strings ("id=row#" + string_from_uint (row)));
+  WidgetH child = area.create_widget ("button-row", Strings ("declare=row#" + string_from_uint (row)));
   ContainerH brow = ContainerH::down_cast (child);
   for (uint i = 0; i < 50; i++)
     {

@@ -7,7 +7,7 @@ app = Rapicorn.init_app ("Test Rapicorn Bindings")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """
-  <Window id="example-bind-py">
+  <Window declare="example-bind-py">
     <Alignment padding="15">
       <VBox spacing="30">
         <HBox>

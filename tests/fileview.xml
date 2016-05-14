@@ -3,9 +3,9 @@
 <interfaces>
 
   <!-- old list construction -->
-  <WidgetList id="ListArea">
+  <WidgetList declare="ListArea">
   </WidgetList>
-  <RapicornWidgetListRow id="WidgetListRow" child-container="ListRowCavity" hexpand="1">
+  <RapicornWidgetListRow declare="WidgetListRow" child-container="ListRowCavity" hexpand="1">
     <Ambience normal-background="background" lighting="none" shade="none">
       <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
 	<HBox name="ListRowCavity"/>
@@ -14,7 +14,7 @@
   </RapicornWidgetListRow>
 
   <!-- list items/rows -->
-  <SelectableItem id="list-row" hexpand="1">
+  <SelectableItem declare="list-row" hexpand="1">
     <Argument name="index"/>
     <FocusFrame hexpand="1" tight-focus="true" frame-type="none">
       <Ambience hexpand="1" active-background="blue">
@@ -28,7 +28,7 @@
   </SelectableItem>
 
   <!-- widget list -->
-  <Rapicorn_ScrollArea id="widget-list" >
+  <Rapicorn_ScrollArea declare="widget-list" >
     <Argument name="model"/>
     <Table>
       <Frame frame-type="in" hexpand="1" vexpand="1" hposition="0" vposition="1">
@@ -55,7 +55,7 @@
   </Rapicorn_ScrollArea>
 
   <!-- main dialog -->
-  <Window id="main-dialog">
+  <Window declare="main-dialog">
     <Argument name="list_model"/>
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">

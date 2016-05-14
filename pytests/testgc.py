@@ -30,10 +30,10 @@ app = Rapicorn.init_app ("Test Rapicorn GC")
 # Define the elements of the dialog window to be displayed.
 hello_window = """
 <interfaces>
-  <Window id="testgc-py">
+  <Window declare="testgc-py">
     <Table name="container"/>
   </Window>
-  <RapicornIdlTestWidget id="testwidget"/>
+  <RapicornIdlTestWidget declare="testwidget"/>
 </interfaces>
 """
 

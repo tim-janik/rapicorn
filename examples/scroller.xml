@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- main dialog -->
-  <Window id="main-shell" child-container="scroll-box" width="800" height="600" >
+  <Window declare="main-shell" child-container="scroll-box" width="800" height="600" >
     <Argument name="test-value1" default="2"/>
     <Argument name="test-value2"/>
     <Ambience normal-lighting="upper-left">
@@ -16,7 +16,7 @@
   </Window>
 
   <!-- Button definition -->
-  <Button id="test-button" on-click="dummy">
+  <Button declare="test-button" on-click="dummy">
     <Argument name="test-button-text" default="ClickMe" />
     <Label>
       <Label.markup-text eval-element="Expr">
@@ -26,7 +26,7 @@
   </Button>
 
   <!-- Button row -->
-  <HBox id="button-row" spacing="5" >
+  <HBox declare="button-row" spacing="5" >
   </HBox>
 
 </interfaces>

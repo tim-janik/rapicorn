@@ -11,7 +11,7 @@ print "  " + __file__,
 # Define main window Widget Tree
 my_window_xml = """
 <interfaces>
-  <Window id="my-window">
+  <Window declare="my-window">
     <VBox>
       <Button hexpand="1" on-click="Window::close()">
         <Label markup-text="Quit"/>

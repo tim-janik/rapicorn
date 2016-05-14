@@ -9,7 +9,7 @@ app = Rapicorn.init_app ("Hello Rapicorn")
 
 # Define the elements of the dialog window to be displayed.
 hello_window = """
-  <Window id="hello-window">
+  <Window declare="hello-window">
     <Alignment padding="15">
       <VBox spacing="30">
         <Label markup-text="Hello World!"/>

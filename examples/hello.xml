@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- main window -->
-  <Window id="main-window" title="Rapicorn Hello World Example">
+  <Window declare="main-window" title="Rapicorn Hello World Example">
     <OuterShell>
       <Label>
 	<Label.markup-text>
