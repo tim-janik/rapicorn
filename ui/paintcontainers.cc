@@ -938,4 +938,237 @@ FocusPainterImpl::render_state () const
 
 static const WidgetFactory<FocusPainterImpl> focus_painter_factory ("Rapicorn::FocusPainter");
 
+// == ShapePainterImpl ==
+ShapePainterImpl::ShapePainterImpl ()
+{}
+
+ShapePainterImpl::~ShapePainterImpl ()
+{}
+
+void
+ShapePainterImpl::shape_style_normal (const String &kind)
+{
+  String val = string_strip (kind);
+  return_unless (val != shape_style_normal_);
+  shape_style_normal_ = val;
+  invalidate();
+  changed ("shape_style_normal");
+}
+
+WidgetState
+ShapePainterImpl::render_state () const
+{
+  return state();
+}
+
+void
+ShapePainterImpl::size_request (Requisition &requisition)
+{
+  bool chspread = false, cvspread = false;
+  set_flag (HSPREAD_CONTAINER, chspread);
+  set_flag (VSPREAD_CONTAINER, cvspread);
+  const int thickness = 1;
+  requisition.width = 2 * thickness + 2 * thickness;
+  requisition.height = 2 * thickness + 2 * thickness;
+  if (has_visible_child())
+    {
+      const Requisition child_requisition = size_request_child (get_child(), &chspread, &cvspread);
+      requisition.width += child_requisition.width;
+      requisition.height += child_requisition.height;
+    }
+  else
+    { // dummy size
+      requisition.width += 4 * thickness;
+      requisition.height += 4 * thickness;
+    }
+}
+
+void
+ShapePainterImpl::size_allocate (Allocation area, bool changed)
+{
+  const int thickness = 1; // FIXME: query viewport for thickness
+  fill_area_ = area;
+  fill_area_.x += MIN (area.width / 2, 2 * thickness);
+  fill_area_.width -= MIN (area.width, 2 * thickness + 2 * thickness);
+  fill_area_.y += MIN (area.height / 2, 2 * thickness);
+  fill_area_.height -= MIN (area.height, 2 * thickness + 2 * thickness);
+  if (has_visible_child())
+    {
+      WidgetImpl &child = get_child();
+      const Allocation child_area = layout_child (child, fill_area_);
+      child.set_allocation (child_area);
+    }
+}
+
+static void
+draw_gradient_fill (cairo_t *cr, cairo_pattern_t *pat, Color start_color, Color end_color, bool hard_gradient)
+{
+  cairo_pattern_add_color_stop_rgba (pat, .0, start_color.red1(), start_color.green1(), start_color.blue1(), start_color.alpha1());
+  if (hard_gradient)
+    {
+      cairo_pattern_add_color_stop_rgba (pat, 0.5, start_color.red1(), start_color.green1(), start_color.blue1(), start_color.alpha1());
+      cairo_pattern_add_color_stop_rgba (pat, 0.50001, end_color.red1(), end_color.green1(), end_color.blue1(), end_color.alpha1());
+    }
+  cairo_pattern_add_color_stop_rgba (pat, 1., end_color.red1(), end_color.green1(), end_color.blue1(), end_color.alpha1());
+  cairo_set_source (cr, pat);
+  cairo_fill (cr);
+}
+
+static bool
+in_list (int needle, const int *list, size_t length)
+{
+  for (size_t j = 0; j < length; j++)
+    if (needle == list[j])
+      return true;
+  return false;
+}
+
+static void
+draw_star (cairo_t *cr, double x, double y, double width, double height, Color start_color, Color end_color, bool retained)
+{
+  const double points[] = {
+    0.500000, 1.000000, // top peak
+    0.654508, 0.670820,
+    1.000000, 0.618034, // right peak
+    0.750000, 0.361803,
+    0.809017, 0.000000, // bottom right
+    0.500000, 0.170820,
+    0.190983, 0.000000, // bottom left
+    0.250000, 0.361803,
+    0.000000, 0.618034, // left peak
+    0.345492, 0.670820, // gradient start
+  };
+  const double *gradient_start = points + 18;
+  const double gradient_end[2] = { 0.5, 0.5 };
+  const int skip_peaks[] = { 1, 2, 3, 7, 8, 9 }; // peak points to skip for retained mode
+  for (size_t i = 0; i < ARRAY_SIZE (points); i+= 2)
+    {
+      if (retained && in_list (i / 2, skip_peaks, ARRAY_SIZE (skip_peaks)))
+        continue;
+      const double px = x + points[i] * width, py = y + (1.0 - points[i + 1]) * height;
+      cairo_line_to (cr, px, py);
+    }
+  cairo_pattern_t *pat = cairo_pattern_create_linear (x + width * gradient_start[0], y + height * (1 - gradient_start[1]),
+                                                      x + width * gradient_end[0], y + height * (1 - gradient_end[1]));
+  draw_gradient_fill (cr, pat, start_color, end_color, false);
+  cairo_pattern_destroy (pat);
+}
+
+static void
+draw_retained (cairo_t *cr, double x, double y, double width, double height, Color start_color, Color end_color)
+{
+  const double th = MIN (1, MIN (width, height) * 0.5); // th = thickness
+  const double midx = x + width * 0.5, topy = y, bottomy = y + height;
+  cairo_move_to (cr, midx - th, topy);
+  cairo_line_to (cr, midx + th, topy);
+  cairo_line_to (cr, midx + th, bottomy);
+  cairo_line_to (cr, midx - th, bottomy);
+  cairo_close_path (cr);
+  cairo_pattern_t *pat = cairo_pattern_create_linear (x + width * 0.5, y, x + width * 0.5, y + height);
+  draw_gradient_fill (cr, pat, start_color, end_color, false);
+  cairo_pattern_destroy (pat);
+}
+
+static void
+draw_circle (cairo_t *cr, double x, double y, double width, double height, Color start_color, Color end_color, bool retained)
+{
+  if (retained)
+    return draw_retained (cr, x, y, width, height, start_color, end_color);
+  const double r = MIN (width, height) * 0.5;
+  cairo_arc (cr, x + width / 2, y + height / 2, r, 0, 2 * M_PI);
+  const double q = 0.7, s = 1 - q;
+  cairo_pattern_t *pat = cairo_pattern_create_linear (x + width * s, y + height * s, x + width * q, y + height * q);
+  draw_gradient_fill (cr, pat, start_color, end_color, false);
+  cairo_pattern_destroy (pat);
+}
+
+static void
+draw_diamond (cairo_t *cr, double x, double y, double width, double height, Color start_color, Color end_color, bool retained)
+{
+  if (retained)
+    return draw_retained (cr, x, y, width, height, start_color, end_color);
+  const double th = MIN (1, MIN (width, height) * 0.5), d = 0.5 * th; // th = thickness
+  const double midx = x + width * 0.5, leftx = x, rightx = x + width;
+  const double midy = y + height * 0.5, topy = y, bottomy = y + height;
+  cairo_move_to (cr, midx - d, topy);           cairo_rel_line_to (cr, th, 0);
+  cairo_line_to (cr, rightx, midy - d);         cairo_rel_line_to (cr, 0, th);
+  cairo_line_to (cr, midx + d, bottomy);        cairo_rel_line_to (cr, -th, 0);
+  cairo_line_to (cr, leftx, midy + d);          cairo_rel_line_to (cr, 0, -th);
+  cairo_close_path (cr);
+  cairo_pattern_t *pat = cairo_pattern_create_linear (x + width * 0.5, y, x + width * 0.5, y + height);
+  draw_gradient_fill (cr, pat, start_color, end_color, true);
+  cairo_pattern_destroy (pat);
+}
+
+static void
+draw_square (cairo_t *cr, double x, double y, double width, double height, Color start_color, Color end_color, bool retained)
+{
+  if (retained)
+    return draw_retained (cr, x, y, width, height, start_color, end_color);
+  const double leftx = x, rightx = x + width;
+  const double topy = y, bottomy = y + height;
+  cairo_move_to (cr, leftx,  topy);
+  cairo_line_to (cr, rightx, topy);
+  cairo_line_to (cr, rightx, bottomy);
+  cairo_line_to (cr, leftx,  bottomy);
+  cairo_close_path (cr);
+  cairo_pattern_t *pat = cairo_pattern_create_linear (leftx, topy, rightx, bottomy);
+  draw_gradient_fill (cr, pat, start_color, end_color, true);
+  cairo_pattern_destroy (pat);
+}
+
+void
+ShapePainterImpl::render (RenderContext &rcontext, const Rect &rect)
+{
+  return_unless (fill_area_.width > 0 && fill_area_.height > 0);
+  std::function<void (cairo_t*, double, double, double, double, Color, Color, bool)> draw_shape;
+  const WidgetState rstate = render_state();
+  const bool draw_retained = (rstate & WidgetState::RETAINED) != 0;
+  const bool draw_mark = draw_retained || (rstate & WidgetState::TOGGLED) != 0;
+  const String shape_style = shape_style_normal_;
+  if (shape_style == "circle")
+    draw_shape = draw_circle;
+  else if (shape_style == "diamond")
+    draw_shape = draw_diamond;
+  else if (shape_style == "square")
+    draw_shape = draw_square;
+  else if (shape_style == "star")
+    draw_shape = draw_star;
+  else
+    return;
+  const int thickness = 1;
+  const Allocation area = allocation();
+  cairo_t *cr = cairo_context (rcontext, rect);
+  int r = MIN (area.width, area.height) / 2;
+  int cx = area.x + area.width * 0.5 + 0.5, cy = area.y + area.height * 0.5 + 0.5;
+  Color col1, col2;
+  // outer shape
+  col1 = style()->state_color (rstate, StyleColor::DARK_GLINT);
+  col2 = style()->state_color (rstate, StyleColor::LIGHT_GLINT);
+  draw_shape (cr, cx - r, cy - r, 2 * r, 2 * r, col1, col2, false);
+  // inner shape
+  r -= thickness;
+  col1 = style()->state_color (rstate, StyleColor::DARK);
+  col2 = style()->state_color (rstate, StyleColor::LIGHT);
+  draw_shape (cr, cx - r, cy - r, 2 * r, 2 * r, col1, col2, false);
+  // panel bg
+  if (!draw_mark || r > 2 * thickness) // if space is too tight, give draw_mark precedence
+    {
+      r -= thickness;
+      col1 = style()->state_color (rstate | WidgetState::PANEL, StyleColor::BACKGROUND);
+      col2 = style()->state_color (rstate | WidgetState::PANEL, StyleColor::BACKGROUND);
+      draw_shape (cr, cx - r, cy - r, 2 * r, 2 * r, col1, col2, false);
+    }
+  // inner spot
+  r -= thickness;
+  if (draw_mark)
+    {
+      col1 = style()->state_color (rstate | WidgetState::PANEL, StyleColor::MARK);
+      col2 = style()->state_color (rstate | WidgetState::PANEL, StyleColor::MARK);
+      draw_shape (cr, cx - r, cy - r, 2 * r, 2 * r, col1, col2, draw_retained);
+    }
+}
+
+static const WidgetFactory<ShapePainterImpl> shape_painter_factory ("Rapicorn::ShapePainter");
+
 } // Rapicorn

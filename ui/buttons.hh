@@ -17,6 +17,7 @@ class ButtonAreaImpl : public virtual SingleContainerImpl, public virtual Button
   bool                  activate_button_command (int button);
   bool                  activate_command        ();
   void                  activate_click          (int button, EventType etype);
+  virtual bool          may_toggle              () const override;
 protected:
   bool                  is_grabbing             ();
   virtual void          construct               () override;

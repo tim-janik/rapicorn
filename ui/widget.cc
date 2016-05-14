@@ -328,6 +328,82 @@ WidgetImpl::move_focus (FocusDir fdir)
 }
 
 bool
+WidgetImpl::may_toggle () const
+{
+  return false;
+}
+
+/// Get the widget's WidgetState::ACTIVE flag.
+bool
+WidgetImpl::active () const
+{
+  return test_state (WidgetState::ACTIVE);
+}
+
+/// Toggled for active widgets (e.g. buttons).
+void
+WidgetImpl::active (bool b)
+{
+  const WidgetState old_state = state();
+  adjust_state (WidgetState::ACTIVE, b);
+  if (old_state != state())
+    changed ("active");
+}
+
+/// Indicates if widget can process input events
+bool
+WidgetImpl::sensitive () const
+{
+  return !test_state (WidgetState::INSENSITIVE);
+}
+
+/// Toggle widget ability to process input events
+void
+WidgetImpl::sensitive (bool b)
+{
+  const WidgetState old_state = state();
+  adjust_state (WidgetState::INSENSITIVE, !b);
+  if (old_state != state())
+    changed ("sensitive");
+}
+
+bool
+WidgetImpl::toggled () const
+{
+  return test_state (WidgetState::TOGGLED);
+}
+
+void
+WidgetImpl::toggled (bool b)
+{
+  if (may_toggle())
+    {
+      const WidgetState old_state = state();
+      adjust_state (WidgetState::TOGGLED, b);
+      if (old_state != state())
+        changed ("toggled");
+    }
+}
+
+bool
+WidgetImpl::retained () const
+{
+  return test_state (WidgetState::RETAINED);
+}
+
+void
+WidgetImpl::retained (bool b)
+{
+  if (may_toggle())
+    {
+      const WidgetState old_state = state();
+      adjust_state (WidgetState::RETAINED, b);
+      if (old_state != state())
+        changed ("retained");
+    }
+}
+
+bool
 WidgetImpl::activate_widget ()
 {
   return false;

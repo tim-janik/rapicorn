@@ -69,6 +69,7 @@ private:
   void                        data_context_changed  ();
   bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
+  virtual bool                may_toggle            () const;
 protected:
   virtual bool                do_event              (const Event &event);
   virtual void                foreach_recursive     (const std::function<void (WidgetImpl&)> &f);
@@ -160,8 +161,12 @@ public:
   bool                        stashed           () const { return test_state (WidgetState::STASHED); }
   bool                        viewable          () const; // visible() && !STASHED
   bool                        drawable          () const; // viewable() && clipped_allocation > 0
-  virtual bool                sensitive         () const { return !test_state (WidgetState::INSENSITIVE); } ///< Indicates if widget can process input events
-  virtual void                sensitive         (bool b) { adjust_state (WidgetState::INSENSITIVE, !b); }   ///< Toggle widget ability to process input events
+  virtual bool                sensitive         () const override;
+  virtual void                sensitive         (bool b) override;
+  virtual bool                toggled           () const override;
+  virtual void                toggled           (bool b) override;
+  virtual bool                retained          () const override;
+  virtual void                retained          (bool b) override;
   bool                        insensitive       () const { return !sensitive(); }               ///< Negation of sensitive()
   void                        insensitive       (bool b) { sensitive (!b); }                    ///< Negation of sensitive(bool)
   bool                        key_sensitive     () const;
@@ -169,8 +174,8 @@ public:
   bool                        hover             () const { return test_state (WidgetState::HOVER); } ///< Get widget "hover" state, see WidgetState::WidgetState::HOVER
   virtual void                hover             (bool b) { adjust_state (WidgetState::HOVER, b); }   ///< Toggled with "hover" state of a widget
   bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
-  bool                        active            () const { return test_state (WidgetState::ACTIVE); } ///< Get the widget's WidgetState::ACTIVE flag.
-  virtual void                active            (bool b) { adjust_state (WidgetState::ACTIVE, b); }   ///< Toggled for active widgets (e.g. buttons).
+  bool                        active            () const;
+  virtual void                active            (bool b);
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;

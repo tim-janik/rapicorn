@@ -79,9 +79,9 @@ adjust_color (Color color, double saturation_factor, double value_factor)
   color.set_hsv (hue, MIN (1, saturation), MIN (1, value));
   return color;
 }
+
 // static Color lighten   (Color color) { return adjust_color (color, 1.0, 1.1); }
 // static Color darken    (Color color) { return adjust_color (color, 1.0, 0.9); }
-// static Color alternate (Color color) { return adjust_color (color, 1.0, 0.98); } // tainting for even-odd alterations
 
 // == StyleImpl ==
 class StyleImpl : public StyleIface {
@@ -115,6 +115,8 @@ StyleImpl::state_color (WidgetState state, StyleColor color_type, const String &
     {
     case StyleColor::FOREGROUND:    return fragment_color ("fg", state);
     case StyleColor::BACKGROUND:    return fragment_color ("bg", state);
+    case StyleColor::BACKGROUND_EVEN: return fragment_color ("bg", state);
+    case StyleColor::BACKGROUND_ODD:  return adjust_color (fragment_color ("bg", state), 1.0, 0.98);
     case StyleColor::DARK:          return fragment_color ("dark", state);
     case StyleColor::DARK_SHADOW:   return adjust_color (state_color (state, StyleColor::DARK, detail), 1, 0.9); // 0xff8f8c88
     case StyleColor::DARK_GLINT:    return adjust_color (state_color (state, StyleColor::DARK, detail), 1, 1.1); // 0xffafaca8
@@ -122,6 +124,7 @@ StyleImpl::state_color (WidgetState state, StyleColor color_type, const String &
     case StyleColor::LIGHT_SHADOW:  return adjust_color (state_color (state, StyleColor::LIGHT, detail), 1, 0.93); // 0xffcfccc8
     case StyleColor::LIGHT_GLINT:   return adjust_color (state_color (state, StyleColor::LIGHT, detail), 1, 1.07); // 0xffefece8
     case StyleColor::FOCUS_COLOR:   return fragment_color ("fc", state);
+    case StyleColor::MARK:          return fragment_color ("mark", state);
     default:                        return 0x00000000; // silence warnings
     }
 }
@@ -133,7 +136,7 @@ StyleImpl::fragment_color (const String &fragment, WidgetState state)
   auto it = color_cache_.find (fsp);
   if (it != color_cache_.end())
     return it->second; // pair of <FragmentStatePair,Color>
-  Color color = string_startswith (fragment, "fg") ? 0xff006600 : 0xffeebbee;
+  Color color = string_startswith (fragment, "fg") || string_startswith (fragment, "mark") ? 0xff006600 : 0xffeebbee;
   const String match = svg_file_ ? StyleIface::pick_fragment (fragment, state, svg_file_->list()) : "";
   if (!match.empty())
     {
