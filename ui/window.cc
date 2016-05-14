@@ -895,14 +895,14 @@ WindowImpl::add_grab (WidgetImpl &child,
   // grab_stack_changed(); // FIXME: re-enable this, once grab_stack_changed() synthesizes from idler
 }
 
-void
+bool
 WindowImpl::remove_grab (WidgetImpl *child)
 {
-  assert_return (child != NULL);
-  remove_grab (*child);
+  assert_return (child != NULL, false);
+  return remove_grab (*child);
 }
 
-void
+bool
 WindowImpl::remove_grab (WidgetImpl &child)
 {
   for (int i = grab_stack_.size() - 1; i >= 0; i--)
@@ -910,9 +910,9 @@ WindowImpl::remove_grab (WidgetImpl &child)
       {
         grab_stack_.erase (grab_stack_.begin() + i);
         grab_stack_changed();
-        return;
+        return true;
       }
-  throw Exception ("no such child in grab stack: ", child.name());
+  return false;
 }
 
 WidgetImpl*
@@ -926,6 +926,15 @@ WindowImpl::get_grab (bool *unconfined)
         return &*grab_stack_[i].widget;
       }
   return NULL;
+}
+
+bool
+WindowImpl::is_grabbing (WidgetImpl &descendant)
+{
+  for (size_t i = 0; i < grab_stack_.size(); i++)
+    if (grab_stack_[i].widget == &descendant)
+      return true;
+  return false;
 }
 
 void
