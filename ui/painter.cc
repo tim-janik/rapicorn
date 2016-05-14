@@ -1,16 +1,11 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "painter.hh"
 #include "blitfuncs.hh"
+#include "style.hh"
 #include "../rcore/svg.hh"
 #include <algorithm>
 
 #define SVGDEBUG(...)   RAPICORN_KEY_DEBUG ("SVG", __VA_ARGS__)
-
-#define CHECK_CAIRO_STATUS(status)      do {    \
-  cairo_status_t ___s = (status);               \
-  if (___s != CAIRO_STATUS_SUCCESS)             \
-    SVGDEBUG ("%s: %s", cairo_status_to_string (___s), #status);        \
-  } while (0)
 
 namespace Rapicorn {
 
@@ -236,7 +231,7 @@ public:
     // stretch and render SVG image
     const size_t w = image_rect.width + 0.5, h = image_rect.height + 0.5;
     cairo_surface_t *img = svge_->stretch (w, h, ARRAY_SIZE (hscale_spans_), hscale_spans_, ARRAY_SIZE (vscale_spans_), vscale_spans_);
-    CHECK_CAIRO_STATUS (cairo_surface_status (img));
+    assert_return (img && cairo_surface_status (img) == CAIRO_STATUS_SUCCESS);
     // render context rectangle
     Rect rect = image_rect;
     rect.intersect (render_rect);
@@ -314,26 +309,21 @@ ImagePainter::ImagePainter (const String &resource_identifier)
   const ssize_t hashpos = resource_identifier.find ('#');
   const String fragment = hashpos < 0 ? "" : resource_identifier.substr (hashpos);
   const String resource = hashpos < 0 ? resource_identifier : resource_identifier.substr (0, hashpos);
-  Blob blob;
-  bool do_svg_file_io = false;
-  if (!string_startswith (resource, "@res"))
-    do_svg_file_io = RAPICORN_FLIPPER ("svg-file-io", "Rapicorn::ImagePainter: allow loading of SVG files from local file system.");
-  if (do_svg_file_io)
-    blob = Blob::load (resource);
-  else
-    blob = Res (resource); // call this even if !startswith("@res") to preserve debug message about missing resource
-  if (string_endswith (blob.name(), ".svg"))
+  if (string_endswith (resource, ".svg"))
     {
-      auto svgf = Svg::File::load (blob);
-      SVGDEBUG ("loading: %s: %s", resource, strerror (errno));
+      Svg::FileP svgf = StyleIface::load_svg (resource);
       if (svgf)
         svg_file_setup (svgf, fragment);
     }
-  else if (blob)
+  else
     {
-      auto pixmap = Pixmap (blob);
-      if (pixmap.width() && pixmap.height())
-        image_backend_ = std::make_shared<PixmapImageBackend> (pixmap);
+      Blob blob = StyleIface::load_res (resource);
+      if (blob)
+        {
+          auto pixmap = Pixmap (blob);
+          if (pixmap.width() && pixmap.height())
+            image_backend_ = std::make_shared<PixmapImageBackend> (pixmap);
+        }
     }
 }
 
@@ -448,6 +438,12 @@ ImagePainter::draw_image (cairo_t *cairo_context, const Rect &render_rect, const
 {
   if (image_backend_)
     image_backend_->draw_image (cairo_context, render_rect, image_rect);
+}
+
+void
+ImagePainter::reset ()
+{
+  image_backend_ = NULL;
 }
 
 ImagePainter&

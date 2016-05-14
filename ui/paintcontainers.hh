@@ -105,31 +105,39 @@ protected:
 };
 
 class ElementPainterImpl : public virtual SingleContainerImpl, public virtual ElementPainterIface {
-  String         svg_source_, svg_fragment_;
-  ImagePainter   size_painter_, state_painter_;
-  String         cached_painter_;
-  String         current_element     ();
-  String         state_element       (WidgetState state);
+  String        svg_source_, element_, filler_, match_states_;
+  Svg::FileP    cached_file_;
+  ImagePainter  size_painter_, element_painter_, filler_painter_;
+  Allocation    fill_area_;
+  void          reset_cache            ();
+  bool          load_painters          ();
 protected:
-  virtual WidgetState element_state  () const;
-  virtual void      do_changed       (const String &name) override;
-  virtual void      size_request     (Requisition &requisition) override;
-  virtual void      size_allocate    (Allocation area, bool changed) override;
-  virtual void      render           (RenderContext &rcontext, const Rect &rect) override;
+  virtual WidgetState  render_state    () const;
+  ImagePainter         size_painter    ();
+  ImagePainter         element_painter ();
+  ImagePainter         filler_painter  ();
+  virtual void         do_changed      (const String &name) override;
+  virtual void         size_request    (Requisition &requisition) override;
+  virtual void         size_allocate   (Allocation area, bool changed) override;
+  virtual void         render          (RenderContext &rcontext, const Rect &rect) override;
 public:
   explicit       ElementPainterImpl   ();
   virtual       ~ElementPainterImpl   () override;
   virtual String svg_source           () const override                 { return svg_source_; }
-  virtual void   svg_source           (const String &source) override;
-  virtual String svg_element          () const override                 { return svg_fragment_; }
-  virtual void   svg_element          (const String &element) override;
+  virtual void   svg_source           (const String &svgfile) override;
+  virtual String element              () const override                 { return element_; }
+  virtual void   element              (const String &fragment) override;
+  virtual String filler               () const override                 { return filler_; }
+  virtual void   filler               (const String &fragment) override;
+  virtual String match_states         () const override                 { return match_states_; }
+  virtual void   match_states         (const String &kind) override;
 };
 
 class FocusPainterImpl : public virtual ElementPainterImpl, public virtual FocusPainterIface, public virtual FocusIndicator {
   ContainerImpl *focus_container_;
   bool           container_has_focus_, tight_;
 protected:
-  virtual WidgetState element_state            () const override;
+  virtual WidgetState render_state             () const override;
   virtual void      set_focus_child            (WidgetImpl *widget) override;
   virtual void      hierarchy_changed          (WidgetImpl *old_toplevel) override;
   virtual void      focusable_container_change (ContainerImpl &focus_container) override;

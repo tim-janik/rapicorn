@@ -9,6 +9,8 @@
 #define SDEBUG(...)     RAPICORN_KEY_DEBUG ("Style", __VA_ARGS__)
 #define CDEBUG(...)     RAPICORN_KEY_DEBUG ("Color", __VA_ARGS__)
 
+static const bool do_file_io = RAPICORN_FLIPPER ("file-io", "Rapicorn::Style: allow loading of files from local file system.");
+
 namespace Rapicorn {
 
 // == Config ==
@@ -91,6 +93,7 @@ public:
   virtual Color theme_color     (double hue360, double saturation100, double brightness100, const String &detail) override;
   virtual Color state_color     (WidgetState state, StyleColor color_type, const String &detail) override;
   Color         fragment_color  (const String &fragment, WidgetState state);
+  virtual Svg::FileP svg_file   () { return svg_file_; }
 };
 
 StyleImpl::StyleImpl (Svg::FileP svgf) :
@@ -153,6 +156,7 @@ StyleImpl::fragment_color (const String &fragment, WidgetState state)
   return color;
 }
 
+// == StyleIface ==
 static const WidgetState INVALID_STATE = WidgetState (0x80000000);
 
 WidgetState
@@ -201,11 +205,10 @@ String
 StyleIface::pick_fragment (const String &fragment, WidgetState state, const StringVector &fragment_list)
 {
   // match an SVG element to state, xml ID syntax: <element id="elementname:active+insensitive"/>
-  const uint64 mismatch_threshold = uint64 (WidgetState::ACTIVE);
   const String element = fragment[0] == '#' ? fragment.substr (1) : fragment; // strip initial hash
   const size_t colon = element.size();                  // find element / state delimiter
   String fallback, best_match;
-  uint64 best_score = 0, penalty_score = 0;
+  uint64 best_score = 0;
   for (auto id : fragment_list)
     {
       if (id.size() < element.size() ||
@@ -217,17 +220,15 @@ StyleIface::pick_fragment (const String &fragment, WidgetState state, const Stri
       if (!has_states)
         fallback = id;                                  // save fallback in case no matches are found
       const uint64 id_state = has_states ? state_from_list (id.substr (colon + 1)) : 0;
-      const uint64 id_score = id_state & state;         // score the *matching* WidgetState bits
-      const uint64 id_penalty = id_score ^ id_state;    // penalize mismatches
-      if (id_penalty >= mismatch_threshold)             // reject misleading states
+      if (id_state & ~uint64 (state))                   // reject misleading state indicators
         continue;
-      if (id_score > best_score ||                      // better display of important bits
+      const uint64 id_score = id_state & state;         // score the *matching* WidgetState bits
+      if (id_score > best_score ||                      // improve display of important bits
           (id_score == best_score &&
-           id_penalty < penalty_score))                 // or improve by less fudging
+           best_match.empty()))                         // initial best_match setup
         {
           best_match = id;
           best_score = id_score;
-          penalty_score = id_penalty;
         }
     }
   return best_match.empty() ? fallback : best_match;
@@ -273,8 +274,6 @@ StyleIface::insensitive_ink (WidgetState state, Color *glintp)
   return fgink;
 }
 
-
-// == StyleIface ==
 static std::map<const String, StyleIfaceP> style_file_cache;
 
 StyleIfaceP
@@ -291,33 +290,43 @@ StyleIface::fallback()
   return style;
 }
 
+Blob
+StyleIface::load_res (const String &resource)
+{
+  const bool need_file_io = !string_startswith (resource, "@res");
+  Blob blob;
+  errno = ENOENT;
+  if (need_file_io && do_file_io)
+    blob = Blob::load (resource);
+  else
+    blob = Res (resource); // call this in any case to preserve debug message about missing resources
+  SDEBUG ("loading: %s: %s", resource, strerror (errno));
+  return blob;
+}
+
+Svg::FileP
+StyleIface::load_svg (const String &resource)
+{
+  Blob blob = load_res (resource);
+  errno = 0;
+  Svg::FileP svgf = Svg::File::load (blob);
+  const int errno_ = errno;
+  if (!svgf)
+    user_warning (UserSource (resource), "failed to load SVG file \"%s\": %s", resource, strerror (errno_));
+  return svgf;
+}
+
 StyleIfaceP
 StyleIface::load (const String &theme_file)
 {
   StyleIfaceP style = style_file_cache[theme_file];
   if (!style)
     {
-      Svg::FileP svgf;
-      bool do_svg_file_io = false;
-      if (!string_startswith (theme_file, "@res"))
-        do_svg_file_io = RAPICORN_FLIPPER ("svg-file-io", "Rapicorn::Style: allow loading of SVG files from local file system.");
-      Blob blob;
-      if (do_svg_file_io)
-        blob = Blob::load (theme_file);
-      else
-        blob = Res (theme_file); // call this even if !startswith("@res") to preserve debug message about missing resource
-      if (string_endswith (blob.name(), ".svg"))
-        {
-          svgf = Svg::File::load (blob);
-          SDEBUG ("loading: %s: %s", theme_file, strerror (errno));
-        }
-      if (!svgf)
-        {
-          user_warning (UserSource (theme_file), "failed to load theme file \"%s\": %s", theme_file, strerror (ENOENT));
-          style = fallback();
-        }
-      else
+      Svg::FileP svgf = load_svg (theme_file);
+      if (svgf)
         style = FriendAllocator<StyleImpl>::make_shared (svgf);
+      else
+        style = fallback();
       style_file_cache[theme_file] = style;
     }
   return style;

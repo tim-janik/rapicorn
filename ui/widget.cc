@@ -135,23 +135,26 @@ WidgetImpl::pointer_sensitive () const
 
 /// Unconditionally propagate widget state changes like WidgetState bits, ANCHORED, etc
 void
-WidgetImpl::propagate_state (bool notify_changed)
+WidgetImpl::propagate_state (WidgetState prev_state)
 {
   ContainerImpl *const container = as_container_impl();
-  const bool self_is_window_impl = UNLIKELY (parent_ == NULL) && container && as_window_impl();
   const bool was_viewable = viewable();
-  const uint64 stash_invisible = visible() ? 0 : uint64 (WidgetState::STASHED);
+  const WidgetState stash_invisible = visible() ? WidgetState (0) : WidgetState::STASHED;
   if (parent())
-    inherited_state_ = parent()->state() | stash_invisible;
+    inherited_state_ = uint64 (parent()->state() | stash_invisible);
   else
-    inherited_state_ = self_is_window_impl ? stash_invisible : uint64 (WidgetState::STASHED);
+    {
+      const bool self_is_window_impl = UNLIKELY (parent_ == NULL) && container && as_window_impl();
+      inherited_state_ = uint64 (self_is_window_impl ? stash_invisible : WidgetState::STASHED);
+    }
+  return_unless (prev_state != state());
   if (was_viewable != viewable())
-    invalidate();               // changing viewable() forces invalidation, regardless of notify_changed
+    invalidate();       // changing viewable() forces invalidation, regardless of notify_changed
+  if (!finalizing())
+    changed ("state");  // changed() does not imply invalidate(), see above
   if (container)
     for (auto child : *container)
-      child->propagate_state (notify_changed);
-  if (notify_changed && !finalizing())
-    sig_changed.emit ("");      // changed() does not imply invalidate(), see above
+      child->propagate_state (child->state());
 }
 
 /// Toggle @a mask to be @a on by changing widget_state_ and propagating to children.
@@ -159,7 +162,7 @@ void
 WidgetImpl::adjust_state (WidgetState mask, bool on)
 {
   assert_return ((mask & (mask - 1)) == 0);     // single bit check
-  const uint64 old_state = uint64 (state());    // widget_state_ | inherited_state_
+  const WidgetState old_state = state();        // widget_state_ | inherited_state_
   const uint64 old_widget_state = widget_state_;
   if (on)
     widget_state_ = widget_state_ | mask;
@@ -171,7 +174,7 @@ WidgetImpl::adjust_state (WidgetState mask, bool on)
   if (bits_changed)
     {
       expose();
-      propagate_state (false);
+      propagate_state (old_state);
       if (bits_changed & repacking_mask)
         {
           const PackInfo &pa = pack_info();
@@ -212,26 +215,22 @@ WidgetImpl::change_flags (WidgetFlag mask, bool on)
 void
 WidgetImpl::set_flag (WidgetFlag flag, bool on)
 {
-  assert ((flag & (flag - 1)) == 0); // single bit check
+  assert ((flag & (flag - 1)) == 0);            // single bit check
+  const WidgetState old_state = state();        // widget_state_ | inherited_state_
   const bool flags_changed = change_flags (flag, on);
-  const uint64 propagate_flag_mask = VISIBLE | HAS_DEFAULT;
   const uint64 repack_flag_mask = HSHRINK | HEXPAND | HSPREAD | HSPREAD_CONTAINER |
                                   VSHRINK | VEXPAND | VSPREAD | VSPREAD_CONTAINER |
                                   ALLOW_FOCUS | HAS_FOCUS_INDICATOR | HAS_DEFAULT | VISIBLE;
   if (flags_changed)
     {
-      if (flag & propagate_flag_mask)
-        {
-          expose();
-          propagate_state (false); // mirros !VISIBLE as STASHED
-        }
+      changed ("flags");
       if (flag & repack_flag_mask)
         {
+          invalidate_parent();  // ensure we request resize
           const PackInfo &pa = pack_info();
           repack (pa, pa);      // includes invalidate();
-          invalidate_parent();  // ensure we request resize
         }
-      changed ("flags");
+      propagate_state (old_state); // mirror !VISIBLE as STASHED
     }
 }
 
@@ -973,6 +972,7 @@ void
 WidgetImpl::set_parent (ContainerImpl *pcontainer)
 {
   assert_return (this != as_window_impl());
+  const WidgetState old_state = state();        // widget_state_ | inherited_state_
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
   if (controller)
     controller->reset();
@@ -999,7 +999,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       if (acache_)
         acache_reset (this);
       inherited_state_ = uint64 (WidgetState::STASHED);
-      propagate_state (false); // propagate PARENT_VISIBLE, PARENT_INSENSITIVE
+      propagate_state (old_state); // propagate PARENT_VISIBLE, PARENT_INSENSITIVE
       if (anchored())
         {
           assert_return (old_toplevel != NULL);
@@ -1011,7 +1011,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       assert_return (old_parent == NULL);
       parent_ = pcontainer;
       inherited_state_ = 0;
-      propagate_state (true);
+      propagate_state (old_state);
       if (parent_->anchored() && !anchored())
         sig_hierarchy_changed.emit (NULL);
       invalidate();

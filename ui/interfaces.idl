@@ -532,10 +532,14 @@ interface Image : Widget {
 };
 
 /// The ElementPainter widget displays state dependent SVG image elements and places its child within the fill area.
+/// State dependent paintings work by picking an SVG @a element from @a source. Variants of the element ID that have
+/// widget states appended (e.g. "ID:active") and match the WidgetState of @a this are preferred.
 /// See also the corresponding implementation class ElementPainterImpl.
 interface ElementPainter : Container {
-  String svg_source           = String (_("SVG Source"), _("Source for the SVG element used for painting and as fill area."), "rw");
-  String svg_element          = String (_("SVG Element"), _("Base name of the SVG element without state dependent postfixes."), "rw");
+  String svg_source   = String (_("SVG Source"), _("SVG image file providing elements to be painted."), "rw");
+  String element      = String (_("SVG Element"), _("ID of a state-dependent SVG element to paint and define the child fill area."), "rw");
+  String filler       = String (_("SVG Filler"), _("ID of a state-dependent SVG element used to to paint the fill area."), "rw");
+  String match_states = String (_("Match States"), _("Use 'none' to avoid state dependent element variants, defaults to 'all'."), "rw");
 };
 
 /// The FocusPainter container decorates its single child according to focus changes.
