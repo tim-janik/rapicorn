@@ -70,8 +70,9 @@ private:
   void                        data_context_changed  ();
   bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
-  virtual bool                widget_maybe_toggled  () const;
-  virtual bool                widget_maybe_selected () const;
+  void                        widget_propagate_state (WidgetState prev_state);
+  virtual bool                widget_maybe_toggled   () const;
+  virtual bool                widget_maybe_selected  () const;
 protected:
   virtual void                fabricated            (); ///< Method called on all widgets after creation via Factory.
   virtual bool                do_event              (const Event &event);
@@ -106,7 +107,6 @@ protected:
   friend WidgetFlag           operator&         (WidgetFlag a, WidgetFlag b) { return WidgetFlag (uint64 (a) & uint64 (b)); }
   bool                        change_flags      (WidgetFlag mask, bool on);
   void                        set_flag          (WidgetFlag flag, bool on);
-  void                        propagate_state   (WidgetState prev_state);
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
   virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().

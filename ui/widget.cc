@@ -141,7 +141,7 @@ WidgetImpl::pointer_sensitive () const
 
 /// Unconditionally propagate widget state changes like WidgetState bits, ANCHORED, etc
 void
-WidgetImpl::propagate_state (WidgetState prev_state)
+WidgetImpl::widget_propagate_state (const WidgetState prev_state)
 {
   ContainerImpl *const container = as_container_impl();
   const bool was_viewable = viewable();
@@ -153,40 +153,12 @@ WidgetImpl::propagate_state (WidgetState prev_state)
       const bool self_is_window_impl = UNLIKELY (parent_ == NULL) && container && as_window_impl();
       inherited_state_ = uint64 (self_is_window_impl ? stash_invisible : WidgetState::STASHED);
     }
-  return_unless (prev_state != state());
+  const uint64 bits_changed = uint64 (prev_state) ^ state();
+  return_unless (bits_changed != 0);
   if (was_viewable != viewable())
-    invalidate();       // changing viewable() forces invalidation, regardless of notify_changed
+    invalidate();       // changing viewable() forces invalidation
   if (!finalizing())
-    changed ("state");  // changed() does not imply invalidate(), see above
-  if (container)
-    for (auto child : *container)
-      child->propagate_state (child->state());
-}
-
-/// Toggle @a mask to be @a on by changing widget_state_ and propagating to children.
-void
-WidgetImpl::widget_adjust_state (WidgetState mask, bool on)
-{
-  assert_return ((mask & (mask - 1)) == 0);     // single bit check
-  const WidgetState old_state = state();        // widget_state_ | inherited_state_
-  const uint64 old_widget_state = widget_state_;
-  if (on)
-    widget_state_ = widget_state_ | mask;
-  else
-    widget_state_ &= ~uint64 (mask);
-  const uint64 bits_changed = (old_state ^ state()) | (old_widget_state ^ widget_state_);
-  const uint64 avoid_repacking = 0 | WidgetState::HOVER | WidgetState::INSENSITIVE;
-  const uint64 repacking_mask = ~avoid_repacking;
-  if (bits_changed)
     {
-      expose();
-      propagate_state (old_state);
-      if (bits_changed & repacking_mask)
-        {
-          const PackInfo &pa = pack_info();
-          repack (pa, pa);      // includes invalidate();
-          invalidate_parent();  // ensure we request resize
-        }
       changed ("state");
       if (bits_changed & WidgetState::ACCELERATABLE)
         changed ("acceleratable");
@@ -210,6 +182,36 @@ WidgetImpl::widget_adjust_state (WidgetState mask, bool on)
         changed ("retained");
       if (bits_changed & WidgetState::STASHED)
         changed ("stashed");
+    }
+  if (container)
+    for (auto child : *container)
+      child->widget_propagate_state (child->state());
+}
+
+/// Toggle @a mask to be @a on by changing widget_state_ and propagating to children.
+void
+WidgetImpl::widget_adjust_state (WidgetState mask, bool on)
+{
+  assert_return ((mask & (mask - 1)) == 0);     // single bit check
+  const WidgetState old_state = state();        // widget_state_ | inherited_state_
+  const uint64 old_widget_state = widget_state_;
+  if (on)
+    widget_state_ = widget_state_ | mask;
+  else
+    widget_state_ &= ~uint64 (mask);
+  const uint64 bits_changed = (old_state ^ state()) | (old_widget_state ^ widget_state_);
+  const uint64 avoid_repacking = 0 | WidgetState::HOVER | WidgetState::INSENSITIVE;
+  const uint64 repacking_mask = ~avoid_repacking;
+  if (bits_changed)
+    {
+      expose();
+      widget_propagate_state (old_state);
+      if (bits_changed & repacking_mask)
+        {
+          const PackInfo &pa = pack_info();
+          repack (pa, pa);      // includes invalidate();
+          invalidate_parent();  // ensure we request resize
+        }
     }
   if (parent() && (WidgetState::SELECTED & bits_changed))
     {
@@ -260,7 +262,7 @@ WidgetImpl::set_flag (WidgetFlag flag, bool on)
           const PackInfo &pa = pack_info();
           repack (pa, pa);      // includes invalidate();
         }
-      propagate_state (old_state); // mirror !VISIBLE as STASHED
+      widget_propagate_state (old_state); // mirror !VISIBLE as STASHED
     }
 }
 
@@ -1189,7 +1191,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       if (acache_)
         acache_reset (this);
       inherited_state_ = uint64 (WidgetState::STASHED);
-      propagate_state (old_state); // propagate PARENT_VISIBLE, PARENT_INSENSITIVE
+      widget_propagate_state (old_state); // propagate PARENT_VISIBLE, PARENT_INSENSITIVE
       if (anchored())
         {
           assert_return (old_toplevel != NULL);
@@ -1201,7 +1203,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       assert_return (old_parent == NULL);
       parent_ = pcontainer;
       inherited_state_ = 0;
-      propagate_state (old_state);
+      widget_propagate_state (old_state);
       if (parent_->anchored() && !anchored())
         sig_hierarchy_changed.emit (NULL);
       invalidate();
