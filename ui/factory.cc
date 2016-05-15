@@ -172,7 +172,7 @@ ObjectTypeFactory::sanity_check_identifier (const char *namespaced_ident)
 
 // == Public factory_context API ==
 String
-factory_context_name (FactoryContext &fc)
+factory_context_id (FactoryContext &fc)
 {
   const XmlNode &xnode = *fc.xnode;
   if (is_interface_node (xnode))

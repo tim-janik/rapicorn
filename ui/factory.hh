@@ -29,7 +29,7 @@ bool        check_ui_window     (const String           &widget_identifier);
 
 typedef map<String,String>       VariableMap;
 
-String           factory_context_name      (FactoryContext &fc);
+String           factory_context_id        (FactoryContext &fc);
 String           factory_context_type      (FactoryContext &fc);
 const StringSeq& factory_context_tags      (FactoryContext &fc);
 UserSource       factory_context_source    (FactoryContext &fc);

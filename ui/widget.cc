@@ -1547,7 +1547,7 @@ WidgetImpl::dump_private_data (TestStream &tstream)
   const Allocation *carea = clip_area();
   tstream.dump ("clip_area", carea ? carea->string() : "");
   tstream.dump ("factory_context", string_format ("{ id=%s, type=%s, impl=%s }",
-                                                  Factory::factory_context_name (factory_context()),
+                                                  Factory::factory_context_id (factory_context()),
                                                   Factory::factory_context_type (factory_context()),
                                                   Factory::factory_context_impl_type (factory_context())));
 }
@@ -1758,7 +1758,7 @@ WidgetImpl::id () const
 {
   String s = get_data (&widget_id_key);
   if (s.empty())
-    return Factory::factory_context_name (factory_context());
+    return Factory::factory_context_id (factory_context());
   else
     return s;
 }
