@@ -589,6 +589,7 @@ interface TextEditor : Container {
 /// See also the corresponding implementation class SelectableItemImpl.
 interface SelectableItem : Container {
   bool  selected  = Bool (_("Selected"), _("Indicates wether this container widget is selected"), "rw");
+  int32 button   = Range (_("Button"), _("Which button may toggle the SELECTED state"), "rw", 0, 65535, 1);
 };
 
 /** A list widget containing scrollable and selectable widgets.

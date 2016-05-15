@@ -13,6 +13,7 @@ namespace Rapicorn {
 class SelectableItemImpl : public virtual SingleContainerImpl,
                            public virtual SelectableItemIface,
                            public virtual EventHandler {
+  int32 button_;
 protected:
   virtual void  construct              () override;
   virtual bool  capture_event          (const Event &event) override;
@@ -21,6 +22,8 @@ public:
   explicit      SelectableItemImpl     ();
   virtual bool  selected               () const override;
   virtual void  selected               (bool s) override;
+  virtual int32 button                 () const override;
+  virtual void  button                 (int32 b) override;
   virtual void  reset                  (ResetMode mode = RESET_ALL) override;
 };
 typedef std::shared_ptr<SelectableItemImpl> SelectableItemImplP;

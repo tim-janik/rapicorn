@@ -9,7 +9,8 @@
 namespace Rapicorn {
 
 // == SelectableItemImpl ==
-SelectableItemImpl::SelectableItemImpl ()
+SelectableItemImpl::SelectableItemImpl () :
+  button_ (1)
 {}
 
 void
@@ -18,6 +19,22 @@ SelectableItemImpl::construct ()
   set_flag (NEEDS_FOCUS_INDICATOR, true); // prerequisite for focusable
   set_flag (ALLOW_FOCUS, true);
   SingleContainerImpl::construct();
+}
+
+int32
+SelectableItemImpl::button () const
+{
+  return button_;
+}
+
+void
+SelectableItemImpl::button (int32 b)
+{
+  if (b != button_)
+    {
+      button_ = b;
+      changed ("button");
+    }
 }
 
 bool
