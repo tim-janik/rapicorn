@@ -20,7 +20,7 @@ public:
   virtual void          scroll_to       (double x, double y) override;
 };
 
-class ScrollPortImpl : public virtual ViewportImpl, public virtual EventHandler {
+class ScrollPortImpl : public virtual ResizeContainerImpl, public virtual EventHandler {
   Adjustment *hadjustment_, *vadjustment_;
   size_t conid_hadjustment_, conid_vadjustment_;
   uint   fix_id_;
