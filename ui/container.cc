@@ -678,11 +678,11 @@ ContainerImpl::expose_enclosure ()
   expose (region);
 }
 
-/// Method toggled when a container child switches on- or off-screen, e.g. in a scrolling context
+/// Method for container implementation to switch a child on- or off-screen, e.g. in a scrolling context.
 void
 ContainerImpl::stash_child (WidgetImpl &child, bool b)
 {
-  child.adjust_state (WidgetState::STASHED, b);
+  child.widget_adjust_state (WidgetState::STASHED, b);
 }
 
 // window coordinates relative

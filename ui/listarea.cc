@@ -38,15 +38,9 @@ SelectableItemImpl::button (int32 b)
 }
 
 bool
-SelectableItemImpl::selected () const
+SelectableItemImpl::widget_maybe_selected() const
 {
-  return test_state (WidgetState::SELECTED);
-}
-
-void
-SelectableItemImpl::selected (bool s)
-{
-  adjust_state (WidgetState::SELECTED, s);
+  return true;
 }
 
 bool

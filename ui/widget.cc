@@ -165,7 +165,7 @@ WidgetImpl::propagate_state (WidgetState prev_state)
 
 /// Toggle @a mask to be @a on by changing widget_state_ and propagating to children.
 void
-WidgetImpl::adjust_state (WidgetState mask, bool on)
+WidgetImpl::widget_adjust_state (WidgetState mask, bool on)
 {
   assert_return ((mask & (mask - 1)) == 0);     // single bit check
   const WidgetState old_state = state();        // widget_state_ | inherited_state_
@@ -188,6 +188,28 @@ WidgetImpl::adjust_state (WidgetState mask, bool on)
           invalidate_parent();  // ensure we request resize
         }
       changed ("state");
+      if (bits_changed & WidgetState::ACCELERATABLE)
+        changed ("acceleratable");
+      if (bits_changed & WidgetState::HOVER)
+        changed ("hover");
+      if (bits_changed & WidgetState::PANEL)
+        changed ("panel");
+      if (bits_changed & WidgetState::DEFAULT)
+        changed ("receives_default");
+      if (bits_changed & WidgetState::SELECTED)
+        changed ("selected");
+      if (bits_changed & WidgetState::FOCUSED)
+        changed ("focused");
+      if (bits_changed & WidgetState::INSENSITIVE)
+        changed ("insensitive");
+      if (bits_changed & WidgetState::ACTIVE)
+        changed ("active");
+      if (bits_changed & WidgetState::TOGGLED)
+        changed ("toggled");
+      if (bits_changed & WidgetState::RETAINED)
+        changed ("retained");
+      if (bits_changed & WidgetState::STASHED)
+        changed ("stashed");
     }
   if (parent() && (WidgetState::SELECTED & bits_changed))
     {
@@ -336,43 +358,125 @@ WidgetImpl::move_focus (FocusDir fdir)
 }
 
 bool
-WidgetImpl::may_toggle () const
+WidgetImpl::acceleratable () const
+{
+  return test_state (WidgetState::ACCELERATABLE);
+}
+
+void
+WidgetImpl::acceleratable (bool b)
+{
+  widget_adjust_state (WidgetState::ACCELERATABLE, b);
+}
+
+bool
+WidgetImpl::hover () const
+{
+  return test_state (WidgetState::HOVER);
+}
+
+void
+WidgetImpl::hover (bool b)
+{
+  widget_adjust_state (WidgetState::HOVER, b);
+}
+
+bool
+WidgetImpl::panel () const
+{
+  return test_state (WidgetState::PANEL);
+}
+
+void
+WidgetImpl::panel (bool b)
+{
+  widget_adjust_state (WidgetState::PANEL, b);
+}
+
+bool
+WidgetImpl::receives_default () const
+{
+  return test_state (WidgetState::DEFAULT);
+}
+
+void
+WidgetImpl::receives_default (bool b)
+{
+  widget_adjust_state (WidgetState::DEFAULT, b);
+}
+
+bool
+WidgetImpl::widget_maybe_selected () const
 {
   return false;
 }
 
-/// Get the widget's WidgetState::ACTIVE flag.
+bool
+WidgetImpl::selected () const
+{
+  return test_state (WidgetState::SELECTED);
+}
+
+void
+WidgetImpl::selected (bool b)
+{
+  widget_adjust_state (WidgetState::SELECTED, b);
+}
+
+bool
+WidgetImpl::focused () const
+{
+  return test_state (WidgetState::FOCUSED);
+}
+
+void
+WidgetImpl::focused (bool b)
+{
+  assert_unreached();
+}
+
+bool
+WidgetImpl::insensitive () const
+{
+  return test_state (WidgetState::INSENSITIVE);
+}
+
+void
+WidgetImpl::insensitive (bool b)
+{
+  widget_adjust_state (WidgetState::INSENSITIVE, b);
+}
+
+/// Return if this widget and all its ancestors are not insensitive.
+bool
+WidgetImpl::sensitive () const
+{
+  return (state() & WidgetState::INSENSITIVE) == 0;
+}
+
+/// Adjust the @a insensitive property.
+void
+WidgetImpl::sensitive (bool b)
+{
+  insensitive (!b);
+}
+
 bool
 WidgetImpl::active () const
 {
   return test_state (WidgetState::ACTIVE);
 }
 
-/// Toggled for active widgets (e.g. buttons).
 void
 WidgetImpl::active (bool b)
 {
-  const WidgetState old_state = state();
-  adjust_state (WidgetState::ACTIVE, b);
-  if (old_state != state())
-    changed ("active");
+  widget_adjust_state (WidgetState::ACTIVE, b);
 }
 
-/// Indicates if widget can process input events
 bool
-WidgetImpl::sensitive () const
+WidgetImpl::widget_maybe_toggled () const
 {
-  return !test_state (WidgetState::INSENSITIVE);
-}
-
-/// Toggle widget ability to process input events
-void
-WidgetImpl::sensitive (bool b)
-{
-  const WidgetState old_state = state();
-  adjust_state (WidgetState::INSENSITIVE, !b);
-  if (old_state != state())
-    changed ("sensitive");
+  return false;
 }
 
 bool
@@ -384,13 +488,8 @@ WidgetImpl::toggled () const
 void
 WidgetImpl::toggled (bool b)
 {
-  if (may_toggle())
-    {
-      const WidgetState old_state = state();
-      adjust_state (WidgetState::TOGGLED, b);
-      if (old_state != state())
-        changed ("toggled");
-    }
+  if (widget_maybe_toggled())
+    widget_adjust_state (WidgetState::TOGGLED, b);
 }
 
 bool
@@ -402,13 +501,20 @@ WidgetImpl::retained () const
 void
 WidgetImpl::retained (bool b)
 {
-  if (may_toggle())
-    {
-      const WidgetState old_state = state();
-      adjust_state (WidgetState::RETAINED, b);
-      if (old_state != state())
-        changed ("retained");
-    }
+  if (widget_maybe_toggled())
+    widget_adjust_state (WidgetState::RETAINED, b);
+}
+
+bool
+WidgetImpl::stashed () const
+{
+  return test_state (WidgetState::STASHED);
+}
+
+void
+WidgetImpl::stashed (bool b)
+{
+  widget_adjust_state (WidgetState::STASHED, b);
 }
 
 bool

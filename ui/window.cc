@@ -151,7 +151,7 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
       cfocus = get_data (&focus_widget_key);
       assert_return (&fwidget == cfocus.focus_widget && cfocus.uncross_id == 0);
       delete_data (&focus_widget_key);                                          // reset cfocus.focus_widget
-      fwidget.adjust_state (WidgetState::FOCUSED, false);
+      fwidget.widget_adjust_state (WidgetState::FOCUSED, false);
     }
 }
 
@@ -178,7 +178,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
         fc->set_focus_child (widget);
       widget = fc;
     }
-  cfocus.focus_widget->adjust_state (WidgetState::FOCUSED, true);
+  cfocus.focus_widget->widget_adjust_state (WidgetState::FOCUSED, true);
 }
 
 cairo_surface_t*

@@ -64,12 +64,14 @@ private:
   Allocation                  allocation_, clip_area_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        acache_check       () const;
+  void                        widget_adjust_state       (WidgetState state, bool on);
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        data_context_changed  ();
   bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
-  virtual bool                may_toggle            () const;
+  virtual bool                widget_maybe_toggled  () const;
+  virtual bool                widget_maybe_selected () const;
 protected:
   virtual void                fabricated            (); ///< Method called on all widgets after creation via Factory.
   virtual bool                do_event              (const Event &event);
@@ -104,7 +106,6 @@ protected:
   friend WidgetFlag           operator&         (WidgetFlag a, WidgetFlag b) { return WidgetFlag (uint64 (a) & uint64 (b)); }
   bool                        change_flags      (WidgetFlag mask, bool on);
   void                        set_flag          (WidgetFlag flag, bool on);
-  void                        adjust_state      (WidgetState state, bool on);
   void                        propagate_state   (WidgetState prev_state);
   // resizing, requisition and allocation
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
@@ -157,32 +158,43 @@ public:
   bool                        isconstructed     () const { return test_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
   bool                        finalizing        () const { return test_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
   bool                        anchored          () const { return test_flag (ANCHORED); }    ///< Get widget anchored state, see #ANCHORED
-  virtual bool                visible           () const { return test_flag (VISIBLE); }     ///< Get widget visibility, see #VISIBLE
-  virtual void                visible           (bool b) { set_flag (VISIBLE, b); }     ///< Toggle widget visibility
-  bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
-  bool                        stashed           () const { return test_state (WidgetState::STASHED); }
-  bool                        viewable          () const; // visible() && !STASHED
-  bool                        drawable          () const; // viewable() && clipped_allocation > 0
-  virtual bool                sensitive         () const override;
-  virtual void                sensitive         (bool b) override;
+  virtual bool                acceleratable     () const override;      ///< See Widget::acceleratable and WidgetState::ACCELERATABLE
+  virtual void                acceleratable     (bool b) override;      ///< See Widget::acceleratable and WidgetState::ACCELERATABLE
+  virtual bool                hover             () const override;
+  virtual void                hover             (bool b) override;
+  virtual bool                panel             () const override;
+  virtual void                panel             (bool b) override;
+  virtual bool                receives_default  () const override;
+  virtual void                receives_default  (bool b) override;
+  virtual bool                selected          () const override;
+  virtual void                selected          (bool b) override;
+  virtual bool                focused           () const override;
+  virtual void                focused           (bool b) override;
+  virtual bool                insensitive       () const override;
+  virtual void                insensitive       (bool b) override;
+  bool                        sensitive         () const;
+  void                        sensitive         (bool b);
+  virtual bool                active            () const override;
+  virtual void                active            (bool b) override;
   virtual bool                toggled           () const override;
   virtual void                toggled           (bool b) override;
   virtual bool                retained          () const override;
   virtual void                retained          (bool b) override;
-  bool                        insensitive       () const { return !sensitive(); }               ///< Negation of sensitive()
-  void                        insensitive       (bool b) { sensitive (!b); }                    ///< Negation of sensitive(bool)
+  virtual bool                stashed           () const override;
+  virtual void                stashed           (bool b) override;
+  virtual bool                visible           () const override { return test_flag (VISIBLE); }     ///< Get widget visibility, see #VISIBLE
+  virtual void                visible           (bool b) override { set_flag (VISIBLE, b); }     ///< Toggle widget visibility
+  virtual bool                allow_focus       () const override; ///< Indicates if widget may receive input foucs.
+  virtual void                allow_focus       (bool b) override; ///< Toggle if widget may receive input focus.
+  bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
+  bool                        viewable          () const; // visible() && !STASHED
+  bool                        drawable          () const; // viewable() && clipped_allocation > 0
   bool                        key_sensitive     () const;
   bool                        pointer_sensitive () const;
-  bool                        hover             () const { return test_state (WidgetState::HOVER); } ///< Get widget "hover" state, see WidgetState::WidgetState::HOVER
-  virtual void                hover             (bool b) { adjust_state (WidgetState::HOVER, b); }   ///< Toggled with "hover" state of a widget
   bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
-  bool                        active            () const;
-  virtual void                active            (bool b);
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
   bool                        has_default       () const { return test_flag (HAS_DEFAULT); }
   bool                        grab_default      () const;
-  virtual bool                allow_focus       () const override; ///< Indicates if widget may receive input foucs.
-  virtual void                allow_focus       (bool b) override; ///< Toggle if widget may receive input focus.
   bool                        focusable         () const; ///< Returns true if @a this widget participates in input focus selection.
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();

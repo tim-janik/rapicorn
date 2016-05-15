@@ -5,9 +5,9 @@
   <!-- test dialog -->
   <Window declare="main-shell" auto_focus="0">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
-      <VBox sensitive="1" spacing="5" hexpand="1">
+      <VBox insensitive="0" spacing="5" hexpand="1">
 	<Label markup-text="Regular Text" />
-	<Label markup-text="(Non) Insensitive Text" sensitive="1"/>
+	<Label markup-text="(Non) Insensitive Text" insensitive="0"/>
 	<Frame frame-type="in">
 	  <FocusFrame frame-type="none">
 	    <TextEditor markup-text="Editable Text Editor Text" />

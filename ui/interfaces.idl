@@ -281,12 +281,20 @@ sequence WidgetSeq { Widget  widgets; };
 /// Widget is the base type for all UI elements.
 /// See also the corresponding implementation class WidgetImpl.
 interface Widget : Object {
-  String          id           = String (_("ID"), _("Widget identifier, useful in selector matches"), "rw");
-  bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
-  bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
-  bool            toggled      = Bool (_("Toggled"), _("Whether this widget is in a toggled (alternative) state"), "rw");
-  bool            retained     = Bool (_("Retained"), _("Whether this widgets toggled state is unspecified"), "rw");
-  bool            allow_focus  = Bool (_("Allow Focus"), _("Whether this widget may receive input focus"), "rw");
+  String id               = String (_("ID"), _("Widget identifier, useful in selector matches"), "rw");
+  bool   acceleratable    = Bool (_("Acceleratable"), _("Whether this widget has an activatable mnemonic"), "rw");
+  bool   hover            = Bool (_("Hover"), _("Whether this widget currently contains a pointing device"), "rw");
+  bool   panel            = Bool (_("Panel"), _("Whether this widget is rendered as part of a panel section"), "rw");
+  bool   receives_default = Bool (_("Receives Default"), _("Whether this widget receives default activation"), "rw");
+  bool   selected         = Bool (_("Selected"), _("Whether this widget is currently selected"), "rw");
+  bool   focused          = Bool (_("Focused"), _("Whether this widget is (in the ancestry of) the focus widget"), "r");
+  bool   insensitive      = Bool (_("Insensitive"), _("Whether this widget is insensitive (not receives events)"), "rw");
+  bool   active           = Bool (_("Active"), _("Whether this widget is currently active (e.g. depressed)"), "rw");
+  bool   toggled          = Bool (_("Toggled"), _("Whether this widget is in a toggled (alternative) state"), "rw");
+  bool   retained         = Bool (_("Retained"), _("Whether this widgets toggled state is unspecified"), "rw");
+  bool   stashed          = Bool (_("Stashed"), _("Whether this widget is stashed, hidden by its container"), "r");
+  bool   visible          = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
+  bool   allow_focus      = Bool (_("Allow Focus"), _("Whether this widget may receive input focus"), "rw");
   /// @name User Sizes and Size Groups
   String  hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
   String  vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
@@ -588,7 +596,6 @@ interface TextEditor : Container {
 /// A container that supports the selected state.
 /// See also the corresponding implementation class SelectableItemImpl.
 interface SelectableItem : Container {
-  bool  selected  = Bool (_("Selected"), _("Indicates wether this container widget is selected"), "rw");
   int32 button   = Range (_("Button"), _("Which button may toggle the SELECTED state"), "rw", 0, 65535, 1);
 };
 

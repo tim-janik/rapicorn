@@ -66,7 +66,7 @@ ButtonAreaImpl::is_grabbing ()
 }
 
 bool
-ButtonAreaImpl::may_toggle () const
+ButtonAreaImpl::widget_maybe_toggled () const
 {
   return can_toggle_ || test_state (WidgetState::TOGGLED) || test_state (WidgetState::RETAINED);
 }
@@ -317,7 +317,7 @@ RadioButtonImpl::radio_group (const String &gname)
 }
 
 bool
-RadioButtonImpl::may_toggle () const
+RadioButtonImpl::widget_maybe_toggled () const
 {
   return test_state (WidgetState::RETAINED) || RadioGroup::widget_may_toggle (*this);
 }
