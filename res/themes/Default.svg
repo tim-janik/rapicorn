@@ -23,6 +23,17 @@
   <defs
      id="defs4">
     <linearGradient
+       id="linearGradient4546">
+      <stop
+         id="stop4548"
+         offset="0"
+         style="stop-color:#ffffff;stop-opacity:1;" />
+      <stop
+         id="stop4550"
+         offset="1"
+         style="stop-color:#f0f0f0;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
        id="linearGradient4534">
       <stop
          style="stop-color:#8f8c88;stop-opacity:1;"
@@ -370,6 +381,26 @@
          offset="1"
          id="stop4199-5" />
     </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4546"
+       id="linearGradient5335"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-2.50002352,-70.4999669)"
+       x1="32"
+       y1="1045.36218"
+       x2="32"
+       y2="1039.36218" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4546"
+       id="linearGradient5436"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-5.2e-7,-1.2641293e-6)"
+       x1="32"
+       y1="1045.36218"
+       x2="32"
+       y2="1039.36218" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -379,8 +410,8 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="4"
-     inkscape:cx="43.7038242"
-     inkscape:cy="48.4657609"
+     inkscape:cx="53.7038242"
+     inkscape:cy="58.4657609"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -1126,6 +1157,72 @@
        y="977.362183"
        rx="0"
        ry="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:1.768565416px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       x="18.327635"
+       y="983.28473"
+       id="text4419-7-9"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4421-6-2"
+         x="18.327635"
+         y="983.28473"
+         style="font-size:2px">:toggled</tspan></text>
+    <rect
+       style="fill:url(#linearGradient5335);fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="checkmark:normal"
+       width="7"
+       height="7"
+       x="28.9999771"
+       y="968.362183"
+       rx="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.664964676px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       x="18.838625"
+       y="971.33386"
+       id="text4419-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4421-5"
+         x="18.838625"
+         y="971.33386"
+         style="font-size:2px">checked</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.664964676px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       x="26.238373"
+       y="963.33386"
+       id="text4419-5-2"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4421-5-2"
+         x="26.238373"
+         y="963.33386"
+         style="font-size:2px">checkmark</tspan></text>
+    <g
+       id="checkmark:toggled"
+       transform="translate(-12.500023,-1.49999962)">
+      <g
+         transform="translate(10,-54.999983)"
+         id="button.9:active-0-8">
+        <rect
+           style="fill:url(#linearGradient5436);fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect4490-6-8"
+           width="7"
+           height="7"
+           x="31.5"
+           y="1038.86218"
+           rx="0" />
+      </g>
+      <path
+         sodipodi:nodetypes="ccccccccc"
+         inkscape:connector-curvature="0"
+         id="rect5440"
+         d="m 41.5,987.465478 1.4839574,-0.753018 c 0.3952562,0.410583 0.8007527,0.781192 1.2792206,1.762062 0.673141,-1.469117 1.9822984,-3.633914 2.8474452,-4.611156 L 48.5,983.8622 c -1.2049824,1.75103 -2.4343606,4.28135 -3.1948944,6.372889 L 43.7639277,990.8622 C 43.1398386,989.425129 42.8937984,989.062449 41.5,987.465688 Z"
+         style="opacity:1;fill:#062d13;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.764150941" />
+    </g>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:1.768565416px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
