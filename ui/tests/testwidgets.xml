@@ -37,7 +37,7 @@
 	      </VBox>
 	    </Frame>
 	    <ScrollArea hspread="1" vspread="1">
-	      <Label name="scroll-text">
+	      <Label id="scroll-text">
 		<Label.markup-text>
 		  <larger><larger><larger><larger>
 			  Some Large Scroll Text
@@ -47,7 +47,7 @@
 	    </ScrollArea>
 	  </VBox>
 	  <Frame>
-	    <Arrow name="special-arrow" arrow-dir="right" />
+	    <Arrow id="special-arrow" arrow-dir="right" />
 	  </Frame>
 	  <HBox spacing="5" homogeneous="0" >
 	    <Button hexpand="1" on-click='Widget::print ("ok")' > <Label markup-text="Ok"/> </Button>

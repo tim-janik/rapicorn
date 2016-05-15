@@ -84,8 +84,8 @@
 	  <Alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" hscale="1">
 	    <HBox spacing="5" homogeneous="0" >
 	      <Button hexpand="1" on-click='Widget::print ("ok")' > <Label markup-text="Ok"/> </Button>
-	      <Button name="TDumpButton" hexpand="1" on-click="testdump" > <Label markup-text="Test Dump"/> </Button>
-	      <Button name="CloseButton" hexpand="1" on-click="Window::close()" > <Label markup-text="Close"/> </Button>
+	      <Button id="TDumpButton" hexpand="1" on-click="testdump" > <Label markup-text="Test Dump"/> </Button>
+	      <Button id="CloseButton" hexpand="1" on-click="Window::close()" > <Label markup-text="Close"/> </Button>
 	    </HBox>
 	  </Alignment>
 	</VBox>

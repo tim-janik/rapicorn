@@ -38,7 +38,7 @@
       <ShapePainter width="15" height="15" shape_style_normal="circle"/>
       <Alignment vscale="0" vexpand="1">
 	<FocusFrame frame-type="none">
-	  <Alignment name="child-area" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1"/>
+	  <Alignment id="child-area" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1"/>
 	</FocusFrame>
       </Alignment>
     </HBox>

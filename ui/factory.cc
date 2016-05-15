@@ -498,14 +498,14 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
   assert_return (factory_context_node != NULL, NULL);
   // create environment for @eval
   Evaluator env;
-  String name_argument; // target name for this scope widget
+  String id_argument; // target id for this scope widget
   // extract <Argument/> defaults from definition
   StringVector argument_names, argument_values;
   for (const XmlNodeP cnode : dnode_->children())
     if (cnode->name() == "Argument")
       {
         const String aname = canonify_dashes (cnode->get_attribute ("name")); // canonify argument name
-        if (aname.empty() || aname == "declare" || aname == "name")
+        if (aname.empty() || aname == "declare" || aname == "id")
           critical ("%s: %s argument name: \"%s\"",
                     node_location (cnode),
                     cnode->has_attribute ("name") ? "invalid" : "missing",
@@ -525,9 +525,9 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
       if (scope_consumed_.at (i))
         continue;
       const String &rawname = scope_names_[i], &cvalue = scope_values_.at (i);
-      if (rawname == "name" || rawname == "declare")
+      if (rawname == "id" || rawname == "declare")
         {
-          name_argument = cvalue;
+          id_argument = cvalue;
           scope_consumed_[i] = true;
           continue;
         }
@@ -548,7 +548,7 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
   // allow outer scopes to override Argument values
   for (Builder *outer = this->outer_; outer; outer = outer->outer_)
     for (size_t i = 0; i < outer->scope_names_.size(); i++)
-      if (!outer->scope_consumed_.at (i) && outer->scope_names_[i] != "declare" && outer->scope_names_[i] != "name" &&
+      if (!outer->scope_consumed_.at (i) && outer->scope_names_[i] != "declare" && outer->scope_names_[i] != "id" &&
           outer->scope_names_[i].find (':') == String::npos) // ignore namespaced attributes
         {
           const String outer_cname = canonify_dashes (outer->scope_names_[i]);
@@ -571,8 +571,8 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
   if (!widget)
     return NULL;
   // assign caller properties ('consumed' values have been used as Argument values)
-  if (!name_argument.empty())
-    widget->name (name_argument);
+  if (!id_argument.empty())
+    widget->name (id_argument);
   for (size_t i = 0; i < scope_names_.size(); i++)
     if (!scope_consumed_.at (i))
       {

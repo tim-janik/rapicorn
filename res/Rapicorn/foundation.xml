@@ -42,7 +42,7 @@
 
   <!-- Composite Factory Types -->
   <Rapicorn_TextEditor declare="RapicornTextEditor" child-container="focus-frame">
-    <RapicornFocusFrame name="focus-frame" frame-type="none" />
+    <RapicornFocusFrame id="focus-frame" frame-type="none" />
   </Rapicorn_TextEditor>
 
   <!-- Buttons -->
@@ -53,7 +53,7 @@
 	normal-lighting="upper-left" active-lighting="lower-right" hover-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" active-shade="none" hover-shade="diffuse" insensitive-shade="none">
 	<FocusFrame frame-type="none">
-	  <Alignment name="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+	  <Alignment id="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
 	</FocusFrame>
       </Ambience>
     </Frame>
@@ -64,14 +64,14 @@
       <Ambience
 	normal-lighting="upper-left" active-lighting="lower-right" hover-lighting="upper-left" insensitive-lighting="none"
 	normal-shade="none" active-shade="none" hover-shade="diffuse" insensitive-shade="none">
-	<Alignment name="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
+	<Alignment id="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child" left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
       </Ambience>
     </Frame>
   </ButtonArea>
   <Frame declare="RapicornDefaultButton" child-container="child-area" frame-type="in" >
     <Argument name="on-click" />
     <Alignment left-padding="2" right-padding="2" bottom-padding="2" top-padding="2" >
-      <Button name="child-area" on-click="@eval on_click"/>
+      <Button id="child-area" on-click="@eval on_click"/>
     </Alignment>
   </Frame>
 
@@ -132,8 +132,8 @@
 	<Alignment hexpand="1" vexpand="1" hposition="0" hspan="1" vposition="0" vspan="1" width="0" height="0"
 	  left-padding="2" right-padding="3" bottom-padding="2" top-padding="2">
 	  <Frame frame-type="in" hscale="0" vscale="0">
-	    <Rapicorn_ScrollPort name="scroll-container">
-	      <!-- <Ambience name="scroll-container" normal-lighting="upper-left"/> -->
+	    <Rapicorn_ScrollPort id="scroll-container">
+	      <!-- <Ambience id="scroll-container" normal-lighting="upper-left"/> -->
 	    </Rapicorn_ScrollPort>
 	  </Frame>
 	</Alignment>

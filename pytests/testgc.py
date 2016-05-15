@@ -31,7 +31,7 @@ app = Rapicorn.init_app ("Test Rapicorn GC")
 hello_window = """
 <interfaces>
   <Window declare="testgc-py">
-    <Table name="container"/>
+    <Table id="container"/>
   </Window>
   <RapicornIdlTestWidget declare="testwidget"/>
 </interfaces>

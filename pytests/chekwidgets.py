@@ -26,18 +26,18 @@ decls = """
     <Label markup-text="Horizontal SizeGroup:"/>
     <Frame>
       <HBox>
-        <Button name="wide1" hsize-group="HGroupedWidgets">
+        <Button id="wide1" hsize-group="HGroupedWidgets">
           <Label markup-text="Wide Button"/></Button>
-        <Button name="tall1" hsize-group="HGroupedWidgets">
+        <Button id="tall1" hsize-group="HGroupedWidgets">
           <Label markup-text="T<br/>a<br/>l<br/>l<br/> <br/>B<br/>u<br/>t<br/>t<br/>o<br/>n"/></Button>
       </HBox>
     </Frame>
     <Label markup-text="Vertical SizeGroup:"/>
     <Frame>
       <HBox>
-        <Button name="wide2" vsize-group="VGroupedWidgets">
+        <Button id="wide2" vsize-group="VGroupedWidgets">
           <Label markup-text="Wide Button"/></Button>
-        <Button name="tall2" vsize-group="VGroupedWidgets">
+        <Button id="tall2" vsize-group="VGroupedWidgets">
           <Label markup-text="T<br/>a<br/>l<br/>l<br/> <br/>B<br/>u<br/>t<br/>t<br/>o<br/>n"/></Button>
       </HBox>
     </Frame>

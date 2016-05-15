@@ -5,7 +5,7 @@
   <!-- arrow sizing test -->
   <Frame declare="arrow-frame" child-container="child-area" >
     <Argument name="center-child" default="1" />
-    <Alignment name="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child"
+    <Alignment id="child-area" vscale="@eval not 1*center_child" hscale="@eval not 1*center_child"
 	       left-padding="1" right-padding="1" bottom-padding="1" top-padding="1" />
   </Frame>
   <!-- This test reconstructs auto-expanding arrows like they are used in

@@ -9,7 +9,7 @@
     <Ambience normal-lighting="upper-left">
       <VBox>
 	<ScrollArea hspread="1" vspread="1">
-	  <VBox name="scroll-box" spacing="5" />
+	  <VBox id="scroll-box" spacing="5" />
 	</ScrollArea>
       </VBox>
     </Ambience>
