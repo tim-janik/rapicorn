@@ -328,7 +328,7 @@ TestBoxImpl::make_snapshot ()
       cairo_status_t wstatus = cairo_surface_write_to_png (isurface, snapshot_file_.c_str());
       cairo_surface_destroy (isurface);
       String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
-      printerr ("%s: wrote %s: %s\n", name().c_str(), snapshot_file_.c_str(), err.c_str());
+      printerr ("%s: wrote %s: %s\n", id(), snapshot_file_, err);
     }
   if (handler_id_)
     {

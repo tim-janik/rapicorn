@@ -393,7 +393,7 @@ Builder::fabricate_widget (const String &widget_identifier,
   // finish fabrication
   if (widget)
     RapicornInternal::ImplementationHelper::fabricated (*widget);
-  FDEBUG ("%s: built widget '%s': %s", node_location (builder.dnode_), widget_identifier, widget ? widget->name() : "<null>");
+  FDEBUG ("%s: built widget '%s': %s", node_location (builder.dnode_), widget_identifier, widget ? widget->id() : "<null>");
   return widget;
 }
 
@@ -438,7 +438,7 @@ Builder::build_from_factory (const XmlNode *factory_node,
     {
       widget = shared_ptr_cast<WidgetImpl> (object);
       if (widget)
-        widget->name (factory_declare);
+        widget->id (factory_declare);
       else
         critical ("%s: %s yields non-widget: %s", node_location (factory_node), factory_node->name(), object->typeid_name());
     }
@@ -572,7 +572,7 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
     return NULL;
   // assign caller properties ('consumed' values have been used as Argument values)
   if (!id_argument.empty())
-    widget->name (id_argument);
+    widget->id (id_argument);
   for (size_t i = 0; i < scope_names_.size(); i++)
     if (!scope_consumed_.at (i))
       {
@@ -580,7 +580,7 @@ Builder::build_scope (const String &caller_location, const XmlNode *factory_cont
         if (try_set_property (*widget, cname, cvalue))
           scope_consumed_[i] = true;
         else
-          critical ("%s: widget %s: unknown property: %s", caller_location, widget->name(), cname);
+          critical ("%s: widget %s: unknown property: %s", caller_location, widget->id(), cname);
       }
   // assign child container
   if (child_container_)
@@ -663,7 +663,7 @@ Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode
     }
   ContainerImpl *container = NULL;
   // find child container within scope
-  if (!child_container_name_.empty() && child_container_name_ == widget->name())
+  if (!child_container_name_.empty() && child_container_name_ == widget->id())
     {
       ContainerImpl *cc = widget->as_container_impl();
       if (cc)
@@ -694,7 +694,7 @@ Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode
         if (child)
           try {
             // be verbose...
-            FDEBUG ("%s: built child '%s': %s", node_location (cnode), cnode->name(), child ? child->name() : "<null>");
+            FDEBUG ("%s: built child '%s': %s", node_location (cnode), cnode->name(), child ? child->id() : "<null>");
             container->add (*child);
           } catch (std::exception &exc) {
             critical ("%s: adding %s to parent failed: %s", node_location (cnode), cnode->name(), exc.what());

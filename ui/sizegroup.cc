@@ -60,7 +60,7 @@ WidgetGroup::remove_widget (WidgetImpl &widget)
       }
   if (!found_one)
     {
-      critical ("attempt to remove unknown widget (%s) from group: %p", widget.name().c_str(), this);
+      critical ("attempt to remove unknown widget (%s) from group: %p", widget.id().c_str(), this);
       return;
     }
   // remove group from widget's list */
@@ -74,7 +74,7 @@ WidgetGroup::remove_widget (WidgetImpl &widget)
         break;
       }
   if (!found_one)
-    fatal ("failed to remove size group (%p) from widget: %s", this, widget.name().c_str());
+    fatal ("failed to remove size group (%p) from widget: %s", this, widget.id());
   if (wgv.size() == 0)
     widget.delete_data (&widget_group_key);
   else

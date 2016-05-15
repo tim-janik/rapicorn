@@ -402,7 +402,7 @@ test_query (int line, WidgetIfaceP iroot, const String &selector, ssize_t expect
       else
         for (size_t i = 0; i < query_all.size(); i++)
           printerr ("%s:%d:%s(expect=%d): %s: %s (%p)\n", __FILE__, line, i ? string_canonify (__func__, "", " ").c_str() : __func__,
-                    expect, string_to_cquote (selector).c_str(), query_all[i]->name().c_str(), query_all[i]);
+                    expect, string_to_cquote (selector), query_all[i]->id(), query_all[i]);
     }
 
   TASSERT_AT (line, expect == 0 || query_first != NULL);

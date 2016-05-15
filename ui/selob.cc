@@ -22,7 +22,7 @@ SelobWidget::~SelobWidget ()
 String
 SelobWidget::get_id ()
 {
-  return widget_->name();
+  return widget_->id();
 }
 
 String

@@ -281,7 +281,7 @@ sequence WidgetSeq { Widget  widgets; };
 /// Widget is the base type for all UI elements.
 /// See also the corresponding implementation class WidgetImpl.
 interface Widget : Object {
-  String          name         = String (_("Name"), _("Identification name of the widget"), "rw");
+  String          id           = String (_("ID"), _("Widget identifier, useful in selector matches"), "rw");
   bool            visible      = Bool (_("Visible"),   _("Whether this widget is visible"), "rw");
   bool            sensitive    = Bool (_("Sensitive"), _("Whether this widget is sensitive (receives events)"), "rw");
   bool            toggled      = Bool (_("Toggled"), _("Whether this widget is in a toggled (alternative) state"), "rw");

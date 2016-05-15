@@ -205,8 +205,8 @@ public:
   virtual void                hsize_group       (const String &group_list);
   virtual String              vsize_group       () const;
   virtual void                vsize_group       (const String &group_list);
-  virtual String              name              () const;            ///< Get Widget name or "id"
-  virtual void                name              (const String &str); ///< Set Widget name and "id"
+  virtual String              id                () const;            ///< Get Widget id
+  virtual void                id                (const String &str); ///< Set Widget id
   FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
   /* override requisition */

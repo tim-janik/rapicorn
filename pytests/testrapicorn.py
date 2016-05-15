@@ -28,11 +28,11 @@ app.load_string (my_window_xml)                 # load widget tree
 window = app.create_window ('my-window')        # create main window
 
 # property testing
-assert window.name == "my-window"
-window.name = "frob17"  ; assert window.name == "frob17"        # testing derived property
-window.name = "window1" ; assert window.name == "window1"
-window.title = "foo"    ; assert window.title == "foo"          # testing narrowed property
-window.title = "bar"    ; assert window.title == "bar"
+assert window.id == "my-window"
+window.id = "frob17"  ; assert window.id == "frob17"    # testing derived property
+window.id = "window1" ; assert window.id == "window1"
+window.title = "foo"  ; assert window.title == "foo"    # testing narrowed property
+window.title = "bar"  ; assert window.title == "bar"
 for i in (9999, 22, 778, 0, 1, 2, 3, 123):
   window.width = i ; assert window.width == i
 # enum testing
