@@ -44,7 +44,7 @@ inline int64 RAPICORN_CONST
 dtoi64 (double d)
 {
   /* this relies on the hardware default round-to-nearest */
-#if defined __i386__ && defined __GNUC__
+#if defined __GNUC__ && (defined __i386__ || defined __amd64__)
   int64 r;
   __asm__ volatile ("fistpll %0"
                     : "=m" (r)
