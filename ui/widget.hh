@@ -44,9 +44,10 @@ typedef std::shared_ptr<WidgetImpl> WidgetImplP;
 typedef std::weak_ptr<WidgetImpl>   WidgetImplW;
 
 struct PackInfo {
-  double hposition, hspan, vposition, vspan;
-  int left_spacing, right_spacing, bottom_spacing, top_spacing;
-  double halign, hscale, valign, vscale;
+  float hposition, hspan, vposition, vspan;
+  float halign, hscale, valign, vscale;
+  int32 left_spacing : 16, right_spacing : 16, bottom_spacing : 16, top_spacing : 16;
+  int32 ovr_width : 16, ovr_height : 16;
 };
 
 /// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
@@ -230,12 +231,7 @@ public:
   virtual void                id                (const String &str); ///< Set Widget id
   FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
-  /* override requisition */
-  double                      width             () const;
-  void                        width             (double w);
-  double                      height            () const;
-  void                        height            (double h);
-  /* properties */
+  // properties
   Property*                   lookup_property   (const String    &property_name);
   String                      get_property      (const String    &property_name);
   void                        set_property      (const String    &property_name,
@@ -342,35 +338,39 @@ public:
                                                  AdjustmentSourceType adjsrc4 = AdjustmentSourceType::NONE,
                                                  Adjustment         **adj4 = NULL);
   // packing
-  const PackInfo&    pack_info       () const   { return pack_info_ ? *pack_info_ : default_pack_info; }
-  double             hposition       () const   { return pack_info ().hposition; }
-  void               hposition       (double d);
-  double             hspan           () const   { return pack_info ().hspan; }
-  void               hspan           (double d);
-  double             vposition       () const   { return pack_info ().vposition; }
-  void               vposition       (double d);
-  double             vspan           () const   { return pack_info ().vspan; }
-  void               vspan           (double d);
-  int                left_spacing    () const   { return pack_info ().left_spacing; }
-  void               left_spacing    (int s);
-  int                right_spacing   () const   { return pack_info ().right_spacing; }
-  void               right_spacing   (int s);
-  int                bottom_spacing  () const   { return pack_info ().bottom_spacing; }
-  void               bottom_spacing  (int s);
-  int                top_spacing     () const   { return pack_info ().top_spacing; }
-  void               top_spacing     (int s);
-  double             halign          () const   { return pack_info ().halign; }
-  void               halign          (double f);
-  double             hscale          () const   { return pack_info ().hscale; }
-  void               hscale          (double f);
-  double             valign          () const   { return pack_info ().valign; }
-  void               valign          (double f);
-  double             vscale          () const   { return pack_info ().vscale; }
-  void               vscale          (double f);
-  double             hanchor         () const   { return halign(); } // mirrors halign
-  void               hanchor         (double a) { halign (a); }      // mirrors halign
-  double             vanchor         () const   { return valign(); } // mirrors valign
-  void               vanchor         (double a) { valign (a); }      // mirrors valign
+  const PackInfo&    pack_info       () const           { return pack_info_ ? *pack_info_ : default_pack_info; }
+  virtual int        width           () const override  { return pack_info ().ovr_width; }
+  virtual void       width           (int w) override;
+  virtual int        height          () const override  { return pack_info ().ovr_height; }
+  virtual void       height          (int h) override;
+  virtual double     hposition       () const override  { return pack_info ().hposition; }
+  virtual void       hposition       (double d) override;
+  virtual double     hspan           () const override  { return pack_info ().hspan; }
+  virtual void       hspan           (double d) override;
+  virtual double     vposition       () const override  { return pack_info ().vposition; }
+  virtual void       vposition       (double d) override;
+  virtual double     vspan           () const override  { return pack_info ().vspan; }
+  virtual void       vspan           (double d) override;
+  virtual int        left_spacing    () const override  { return pack_info ().left_spacing; }
+  virtual void       left_spacing    (int s) override;
+  virtual int        right_spacing   () const override  { return pack_info ().right_spacing; }
+  virtual void       right_spacing   (int s) override;
+  virtual int        bottom_spacing  () const override  { return pack_info ().bottom_spacing; }
+  virtual void       bottom_spacing  (int s) override;
+  virtual int        top_spacing     () const override  { return pack_info ().top_spacing; }
+  virtual void       top_spacing     (int s) override;
+  virtual double     halign          () const override  { return pack_info ().halign; }
+  virtual void       halign          (double f) override;
+  virtual double     hscale          () const override  { return pack_info ().hscale; }
+  virtual void       hscale          (double f) override;
+  virtual double     valign          () const override  { return pack_info ().valign; }
+  virtual void       valign          (double f) override;
+  virtual double     vscale          () const override  { return pack_info ().vscale; }
+  virtual void       vscale          (double f) override;
+  virtual double     hanchor         () const override  { return halign(); } // mirrors halign
+  virtual void       hanchor         (double a) override { halign (a); }     // mirrors halign
+  virtual double     vanchor         () const override  { return valign(); } // mirrors valign
+  virtual void       vanchor         (double a) override { valign (a); }     // mirrors valign
 public:
   virtual bool         match_selector        (const String &selector);
   virtual WidgetIfaceP query_selector        (const String &selector);

@@ -10,6 +10,8 @@ namespace Rapicorn {
 Const MAXINT32   = +4294967295;
 Const MAXINT31   = +2147483647;
 Const MININT31   = -2147483648;
+Const MAXINT16   = +65535;
+Const MAXINT15   = +32767;
 Const MAXFLOAT64 = 1.7976931348623157e+308;
 
 /// Enum used to specify how adjustments are picked from Widget ancestry.
@@ -298,8 +300,8 @@ interface Widget : Object {
   /// @name User Sizes and Size Groups
   String  hsize_group = String (_("Horizontal Size Group"), _("Group name for widgets requesting the same horizontal size"), "rw");
   String  vsize_group = String (_("Vertical Size Group"), _("Group name for widgets requesting the same vertical size"), "rw");
-  float64 width  = Range (_("Requested Width"),  _("The width to request from its container for this widget, -1=automatic"),  "rw", -1, MAXINT31);
-  float64 height = Range (_("Requested Height"), _("The height to request from its container for this widget, -1=automatic"), "rw", -1, MAXINT31);
+  int32   width  = Range (_("Requested Width"),  _("The width to request from its container for this widget, -1=automatic"),  "rw", -1, MAXINT15);
+  int32   height = Range (_("Requested Height"), _("The height to request from its container for this widget, -1=automatic"), "rw", -1, MAXINT15);
   Requisition requisition ();                   ///< Get the current effective size requisition
   /// @name Widget Packing Properties
   bool    hexpand = Bool (_("Horizontal Expand"), _("Whether to expand this widget horizontally"), "rw");
@@ -318,10 +320,10 @@ interface Widget : Object {
   float64 hscale = Range (_("Horizontal Scale"),     _("Fractional horizontal expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
   float64 valign = Range (_("Vertical Alignment"),   _("Vertical position within extra space when unexpanded, 0=bottom, 1=top"), "Prw", 0, 1, 0.5);
   float64 vscale = Range (_("Vertical Scale"),       _("Fractional vertical expansion within extra space, 0=unexpanded, 1=expanded"), "Prw", 0, 1, 0.5);
-  int32   left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the widget's left side"),   "Prw", 0, 65535, 3);
-  int32   right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the widget's right side"),  "Prw", 0, 65535, 3);
-  int32   bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the widget's bottom side"), "Prw", 0, 65535, 3);
-  int32   top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the widget's top side"),    "Prw", 0, 65535, 3);
+  int32   left_spacing   = Range (_("Left Spacing"),   _("Amount of spacing to add at the widget's left side"),   "Prw", 0, MAXINT15, 3);
+  int32   right_spacing  = Range (_("Right Spacing"),  _("Amount of spacing to add at the widget's right side"),  "Prw", 0, MAXINT15, 3);
+  int32   bottom_spacing = Range (_("Bottom Spacing"), _("Amount of spacing to add at the widget's bottom side"), "Prw", 0, MAXINT15, 3);
+  int32   top_spacing    = Range (_("Top Spacing"),    _("Amount of spacing to add at the widget's top side"),    "Prw", 0, MAXINT15, 3);
   /// @name Widget Selector API
   bool            match_selector          (String selector);     ///< Check if selector matches this widget.
   Widget          query_selector          (String selector);     ///< Returns first selector match.

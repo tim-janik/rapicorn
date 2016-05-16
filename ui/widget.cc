@@ -259,8 +259,8 @@ WidgetImpl::set_flag (WidgetFlag flag, bool on)
       if (flag & repack_flag_mask)
         {
           invalidate_parent();  // ensure we request resize
-          const PackInfo &pa = pack_info();
-          repack (pa, pa);      // includes invalidate();
+          const PackInfo &pi = pack_info();
+          repack (pi, pi);      // includes invalidate();
         }
       widget_propagate_state (old_state); // mirror !VISIBLE as STASHED
     }
@@ -1106,42 +1106,6 @@ static class OvrKey : public DataKey<Requisition> {
   }
 } override_requisition;
 
-/// Get overriding widget size requisition width (-1 if unset).
-double
-WidgetImpl::width () const
-{
-  Requisition ovr = get_data (&override_requisition);
-  return ovr.width >= 0 ? ovr.width : -1;
-}
-
-/// Override widget size requisition width (use -1 to unset).
-void
-WidgetImpl::width (double w)
-{
-  Requisition ovr = get_data (&override_requisition);
-  ovr.width = w >= 0 ? w : -1;
-  set_data (&override_requisition, ovr);
-  invalidate_size();
-}
-
-/// Get overriding widget size requisition height (-1 if unset).
-double
-WidgetImpl::height () const
-{
-  Requisition ovr = get_data (&override_requisition);
-  return ovr.height >= 0 ? ovr.height : -1;
-}
-
-/// Override widget size requisition height (use -1 to unset).
-void
-WidgetImpl::height (double h)
-{
-  Requisition ovr = get_data (&override_requisition);
-  ovr.height = h >= 0 ? h : -1;
-  set_data (&override_requisition, ovr);
-  invalidate_size();
-}
-
 bool
 WidgetImpl::process_event (const Event &event, bool capture) // widget coordinates relative
 {
@@ -1696,8 +1660,9 @@ WidgetImpl::repack (const PackInfo &orig, const PackInfo &pnew)
 
 const PackInfo WidgetImpl::default_pack_info = {
   0,   1,   0, 1,       // hposition, hspan, vposition, vspan
-  0,   0,   0, 0,       // left_spacing, right_spacing, bottom_spacing, top_spacing
   0.5, 1, 0.5, 1,       // halign, hscale, valign, vscale
+  0,   0,   0, 0,       // left_spacing, right_spacing, bottom_spacing, top_spacing
+  -1, -1,               // ovr_width, ovr_height
 };
 
 PackInfo&
@@ -1744,7 +1709,7 @@ void
 WidgetImpl::left_spacing (int s)
 {
   PackInfo &pa = widget_pack_info(), op = pa;
-  pa.left_spacing = MAX (0, s);
+  pa.left_spacing = CLAMP (s, 0, 32767);
   repack (op, pa);
 }
 
@@ -1752,7 +1717,7 @@ void
 WidgetImpl::right_spacing (int s)
 {
   PackInfo &pa = widget_pack_info(), op = pa;
-  pa.right_spacing = MAX (0, s);
+  pa.right_spacing = CLAMP (s, 0, 32767);
   repack (op, pa);
 }
 
@@ -1760,7 +1725,7 @@ void
 WidgetImpl::bottom_spacing (int s)
 {
   PackInfo &pa = widget_pack_info(), op = pa;
-  pa.bottom_spacing = MAX (0, s);
+  pa.bottom_spacing = CLAMP (s, 0, 32767);
   repack (op, pa);
 }
 
@@ -1768,7 +1733,25 @@ void
 WidgetImpl::top_spacing (int s)
 {
   PackInfo &pa = widget_pack_info(), op = pa;
-  pa.top_spacing = MAX (0, s);
+  pa.top_spacing = CLAMP (s, 0, 32767);
+  repack (op, pa);
+}
+
+/// Override widget size requisition width (use -1 to unset).
+void
+WidgetImpl::width (int w)
+{
+  PackInfo &pa = widget_pack_info(), op = pa;
+  pa.ovr_width = w >= 0 ? MIN (w, 32767) : -1;
+  repack (op, pa);
+}
+
+/// Override widget size requisition height (use -1 to unset).
+void
+WidgetImpl::height (int h)
+{
+  PackInfo &pa = widget_pack_info(), op = pa;
+  pa.ovr_height = h >= 0 ? MIN (h, 32767) : -1;
   repack (op, pa);
 }
 
