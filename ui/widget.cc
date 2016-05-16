@@ -52,8 +52,8 @@ WidgetIface::impl () const
 
 WidgetImpl::WidgetImpl () :
   widget_flags_ (VISIBLE), widget_state_ (uint64 (WidgetState::NORMAL)), inherited_state_ (uint64 (WidgetState::STASHED)),
-  parent_ (NULL), acache_ (NULL),
-  factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
+  parent_ (NULL), acache_ (NULL), factory_context_ (ctor_factory_context()), pack_info_ (NULL),
+  sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
 
@@ -857,6 +857,12 @@ WidgetImpl::~WidgetImpl()
     {
       remove_exec (timer_id);
       set_data (&visual_update_key, uint (0));
+    }
+  if (pack_info_)
+    {
+      PackInfo *delme = pack_info_;
+      pack_info_ = NULL;
+      delete delme;
     }
 }
 
@@ -1681,41 +1687,31 @@ WidgetImpl::find_adjustments (AdjustmentSourceType adjsrc1,
 }
 
 void
-WidgetImpl::repack (const PackInfo &orig,
-              const PackInfo &pnew)
+WidgetImpl::repack (const PackInfo &orig, const PackInfo &pnew)
 {
   if (parent())
     parent()->repack_child (*this, orig, pnew);
   invalidate();
 }
 
-WidgetImpl::PackInfo&
-WidgetImpl::pack_info (bool create)
+const PackInfo WidgetImpl::default_pack_info = {
+  0,   1,   0, 1,       // hposition, hspan, vposition, vspan
+  0,   0,   0, 0,       // left_spacing, right_spacing, bottom_spacing, top_spacing
+  0.5, 1, 0.5, 1,       // halign, hscale, valign, vscale
+};
+
+PackInfo&
+WidgetImpl::widget_pack_info()
 {
-  static const PackInfo pack_info_defaults = {
-    0,   1,   0, 1,     /* hposition, hspan, vposition, vspan */
-    0,   0,   0, 0,     /* left_spacing, right_spacing, bottom_spacing, top_spacing */
-    0.5, 1, 0.5, 1,     /* halign, hscale, valign, vscale */
-  };
-  static DataKey<PackInfo*> pack_info_key;
-  PackInfo *pi = get_data (&pack_info_key);
-  if (!pi)
-    {
-      if (create)
-        {
-          pi = new PackInfo (pack_info_defaults);
-          set_data (&pack_info_key, pi);
-        }
-      else /* read-only access */
-        pi = const_cast<PackInfo*> (&pack_info_defaults);
-    }
-  return *pi;
+  if (!pack_info_)
+    pack_info_ = new PackInfo (default_pack_info);
+  return *pack_info_;
 }
 
 void
 WidgetImpl::hposition (double d)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.hposition = d;
   repack (op, pa);
 }
@@ -1723,7 +1719,7 @@ WidgetImpl::hposition (double d)
 void
 WidgetImpl::hspan (double d)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.hspan = MAX (1, d);
   repack (op, pa);
 }
@@ -1731,7 +1727,7 @@ WidgetImpl::hspan (double d)
 void
 WidgetImpl::vposition (double d)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.vposition = d;
   repack (op, pa);
 }
@@ -1739,7 +1735,7 @@ WidgetImpl::vposition (double d)
 void
 WidgetImpl::vspan (double d)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.vspan = MAX (1, d);
   repack (op, pa);
 }
@@ -1747,7 +1743,7 @@ WidgetImpl::vspan (double d)
 void
 WidgetImpl::left_spacing (int s)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.left_spacing = MAX (0, s);
   repack (op, pa);
 }
@@ -1755,7 +1751,7 @@ WidgetImpl::left_spacing (int s)
 void
 WidgetImpl::right_spacing (int s)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.right_spacing = MAX (0, s);
   repack (op, pa);
 }
@@ -1763,7 +1759,7 @@ WidgetImpl::right_spacing (int s)
 void
 WidgetImpl::bottom_spacing (int s)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.bottom_spacing = MAX (0, s);
   repack (op, pa);
 }
@@ -1771,7 +1767,7 @@ WidgetImpl::bottom_spacing (int s)
 void
 WidgetImpl::top_spacing (int s)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.top_spacing = MAX (0, s);
   repack (op, pa);
 }
@@ -1779,7 +1775,7 @@ WidgetImpl::top_spacing (int s)
 void
 WidgetImpl::halign (double f)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.halign = CLAMP (f, 0, 1);
   repack (op, pa);
 }
@@ -1787,7 +1783,7 @@ WidgetImpl::halign (double f)
 void
 WidgetImpl::hscale (double f)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.hscale = f;
   repack (op, pa);
 }
@@ -1795,7 +1791,7 @@ WidgetImpl::hscale (double f)
 void
 WidgetImpl::valign (double f)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.valign = CLAMP (f, 0, 1);
   repack (op, pa);
 }
@@ -1803,7 +1799,7 @@ WidgetImpl::valign (double f)
 void
 WidgetImpl::vscale (double f)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.vscale = f;
   repack (op, pa);
 }

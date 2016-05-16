@@ -43,6 +43,12 @@ class WidgetImpl;
 typedef std::shared_ptr<WidgetImpl> WidgetImplP;
 typedef std::weak_ptr<WidgetImpl>   WidgetImplW;
 
+struct PackInfo {
+  double hposition, hspan, vposition, vspan;
+  int left_spacing, right_spacing, bottom_spacing, top_spacing;
+  double halign, hscale, valign, vscale;
+};
+
 /// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
 /// More details about widgets are covered in @ref Widget.
 class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
@@ -54,6 +60,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
 public:
   struct AncestryCache;
 private:
+  static const PackInfo       default_pack_info;
   uint32                      widget_flags_; // WidgetFlag
   uint16                      widget_state_; // WidgetState
   uint16                      inherited_state_; // WidgetState
@@ -62,6 +69,7 @@ private:
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
   Allocation                  allocation_, clip_area_;
+  PackInfo                   *pack_info_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        acache_check       () const;
   void                        widget_adjust_state       (WidgetState state, bool on);
@@ -71,6 +79,8 @@ private:
   bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
   void                        widget_propagate_state (WidgetState prev_state);
+  void                        repack                 (const PackInfo &orig, const PackInfo &pnew);
+  PackInfo&                   widget_pack_info       ();
   virtual bool                widget_maybe_toggled   () const;
   virtual bool                widget_maybe_selected  () const;
 protected:
@@ -332,12 +342,7 @@ public:
                                                  AdjustmentSourceType adjsrc4 = AdjustmentSourceType::NONE,
                                                  Adjustment         **adj4 = NULL);
   // packing
-  struct PackInfo {
-    double hposition, hspan, vposition, vspan;
-    int left_spacing, right_spacing, bottom_spacing, top_spacing;
-    double halign, hscale, valign, vscale;
-  };
-  const PackInfo&    pack_info       () const   { return const_cast<WidgetImpl*> (this)->pack_info (false); }
+  const PackInfo&    pack_info       () const   { return pack_info_ ? *pack_info_ : default_pack_info; }
   double             hposition       () const   { return pack_info ().hposition; }
   void               hposition       (double d);
   double             hspan           () const   { return pack_info ().hspan; }
@@ -366,9 +371,6 @@ public:
   void               hanchor         (double a) { halign (a); }      // mirrors halign
   double             vanchor         () const   { return valign(); } // mirrors valign
   void               vanchor         (double a) { valign (a); }      // mirrors valign
-private:
-  void               repack          (const PackInfo &orig, const PackInfo &pnew);
-  PackInfo&          pack_info       (bool create);
 public:
   virtual bool         match_selector        (const String &selector);
   virtual WidgetIfaceP query_selector        (const String &selector);

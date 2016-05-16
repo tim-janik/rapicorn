@@ -70,13 +70,13 @@ TableImpl::insert_rows (int first_row, int nrows)
 
 // == TableLayoutImpl ==
 static uint
-left_attach (const WidgetImpl::PackInfo &pi)
+left_attach (const PackInfo &pi)
 {
   return iround (MAX (0, pi.hposition));
 }
 
 static uint
-right_attach (const WidgetImpl::PackInfo &pi)
+right_attach (const PackInfo &pi)
 {
   double r = pi.hposition + pi.hspan;
   double l = left_attach (pi);
@@ -84,13 +84,13 @@ right_attach (const WidgetImpl::PackInfo &pi)
 }
 
 static uint
-bottom_attach (const WidgetImpl::PackInfo &pi)
+bottom_attach (const PackInfo &pi)
 {
   return iround (MAX (0, pi.vposition));
 }
 
 static uint
-top_attach (const WidgetImpl::PackInfo &pi)
+top_attach (const PackInfo &pi)
 {
   double t = pi.vposition + pi.vspan;
   double b = bottom_attach (pi);
