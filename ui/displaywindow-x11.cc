@@ -562,8 +562,8 @@ DisplayWindowX11::process_event (const XEvent &xevent)
       break; }
     case Expose: {
       const XExposeEvent &xev = xevent.xexpose;
-      std::vector<DRect> rectangles;
-      expose_region_.add (DRect (Point (xev.x, xev.y), xev.width, xev.height));
+      std::vector<IRect> rectangles;
+      expose_region_.add (IRect (xev.x, xev.y, xev.width, xev.height));
       if (pending_exposes_)
         pending_exposes_--;
       if (!pending_exposes_ && xev.count == 0)
@@ -937,14 +937,14 @@ DisplayWindowX11::force_update (Window window)
     }
 }
 
-static DRect
+static IRect
 cairo_image_surface_coverage (cairo_surface_t *surface)
 {
   int w = cairo_image_surface_get_width (surface);
   int h = cairo_image_surface_get_height (surface);
   double x_offset = 0, y_offset = 0;
   cairo_surface_get_device_offset (surface, &x_offset, &y_offset);
-  return DRect (Point (x_offset, y_offset), w, h);
+  return IRect (x_offset, y_offset, w, h);
 }
 
 void
@@ -953,7 +953,7 @@ DisplayWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region
   CHECK_CAIRO_STATUS (surface);
   if (!window_)
     return;
-  const DRect fullwindow = DRect (0, 0, state_.width, state_.height);
+  const IRect fullwindow = IRect (0, 0, state_.width, state_.height);
   if (region.count_rects() == 1 && fullwindow == region.extents() && fullwindow == cairo_image_surface_coverage (surface))
     {
       // special case, surface matches exactly the entire window
@@ -967,10 +967,10 @@ DisplayWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region
         expose_surface_ = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, state_.width, state_.height);
       cairo_t *cr = cairo_create (expose_surface_);
       // clip to region
-      vector<DRect> rects;
-      region.list_rects (rects);
-      for (size_t i = 0; i < rects.size(); i++)
-        cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+      vector<DRect> drects;
+      region.list_rects (drects);
+      for (size_t i = 0; i < drects.size(); i++)
+        cairo_rectangle (cr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
       cairo_clip (cr);
       // render onto expose_surface_
       cairo_set_source_surface (cr, surface, 0, 0);
@@ -1001,13 +1001,13 @@ DisplayWindowX11::blit_expose_region()
   cairo_t *xcr = cairo_create (xsurface);
   CHECK_CAIRO_STATUS (xcr);
   // clip to expose_region_
-  vector<DRect> rects;
-  expose_region_.list_rects (rects);
+  vector<DRect> drects;
+  expose_region_.list_rects (drects);
   uint coverage = 0;
-  for (size_t i = 0; i < rects.size(); i++)
+  for (size_t i = 0; i < drects.size(); i++)
     {
-      cairo_rectangle (xcr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-      coverage += rects[i].width * rects[i].height;
+      cairo_rectangle (xcr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
+      coverage += drects[i].width * drects[i].height;
     }
   cairo_clip (xcr);
   // paint expose_region_
@@ -1019,10 +1019,10 @@ DisplayWindowX11::blit_expose_region()
   // debugging info
   if (rapicorn_debug_check())
     {
-      const DRect extents = expose_region_.extents();
+      const IRect extents = expose_region_.extents();
       VDEBUG ("BlitS: S=%u w=%u e=%+d%+d%+dx%d nrects=%u coverage=%.1f%%", blit_serial, window_,
               int (extents.x), int (extents.y), int (extents.width), int (extents.height),
-              rects.size(), coverage * 100.0 / (state_.width * state_.height));
+              drects.size(), coverage * 100.0 / (state_.width * state_.height));
     }
   // cleanup
   expose_region_.clear();

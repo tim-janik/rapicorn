@@ -71,7 +71,7 @@ ArrowImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-ArrowImpl::render (RenderContext &rcontext, const DRect &rect)
+ArrowImpl::render (RenderContext &rcontext, const IRect &rect)
 {
   IRect ia = allocation();
   int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
@@ -249,7 +249,7 @@ DotGridImpl::size_allocate (Allocation area, bool changed)
 {}
 
 void
-DotGridImpl::render (RenderContext &rcontext, const DRect &rect)
+DotGridImpl::render (RenderContext &rcontext, const IRect &rect)
 {
   const int ythick = 1, xthick = 1;
   int n_hdots = n_hdots_, n_vdots = n_vdots_;
@@ -345,7 +345,7 @@ DrawableImpl::draw_rect (int x, int y, const Pixbuf &pixbuf)
 }
 
 void
-DrawableImpl::render (RenderContext &rcontext, const DRect &rect)
+DrawableImpl::render (RenderContext &rcontext, const IRect &rect)
 {
   const uint size = 10;
   const Allocation &area = allocation();

@@ -40,7 +40,7 @@ public:
   virtual              ~WindowImpl              () override;
   virtual WindowImpl*   as_window_impl          ()              { return this; }
   WidgetImpl*           get_focus               () const;
-  cairo_surface_t*      create_snapshot         (const DRect  &subarea);
+  cairo_surface_t*      create_snapshot         (const IRect  &subarea);
   static  void          forcefully_close_all    ();
   // properties
   virtual String        title                   () const override;
@@ -84,7 +84,7 @@ private:
   virtual void          beep                                    ();
   /* rendering */
   virtual void          draw_now                                ();
-  virtual void          render                                  (RenderContext &rcontext, const DRect &rect);
+  virtual void          render                                  (RenderContext &rcontext, const IRect &rect);
   /* display_window ops */
   virtual void          create_display_window                    ();
   virtual bool          has_display_window                       ();

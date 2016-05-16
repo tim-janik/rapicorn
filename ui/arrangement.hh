@@ -10,7 +10,7 @@ class ArrangementImpl : public virtual MultiContainerImpl, public virtual Arrang
   Point         origin_;
   float         origin_hanchor_;
   float         origin_vanchor_;
-  DRect         child_area_;
+  IRect         child_area_;
 public:
   explicit       ArrangementImpl ();
   virtual       ~ArrangementImpl ();
@@ -23,11 +23,11 @@ public:
   virtual void   origin_hanchor  (double) override;
   virtual double origin_vanchor  () const override;
   virtual void   origin_vanchor  (double) override;
-  virtual DRect  child_area      ();
+  virtual IRect  child_area      ();
 protected:
   virtual void   size_request            (Requisition &requisition);
   virtual void   size_allocate           (Allocation area, bool changed);
-  Allocation     local_child_allocation  (WidgetImpl &child, double width, double height);
+  Allocation     local_child_allocation  (WidgetImpl &child, int width, int height);
 };
 
 } // Rapicorn

@@ -182,7 +182,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
 }
 
 cairo_surface_t*
-WindowImpl::create_snapshot (const DRect &subarea)
+WindowImpl::create_snapshot (const IRect &subarea)
 {
   const Allocation area = allocation();
   Region region = area;
@@ -799,15 +799,15 @@ WindowImpl::draw_now ()
   if (display_window_)
     {
       const uint64 start = timestamp_realtime();
-      DRect area = allocation();
+      IRect area = allocation();
       assert_return (area.x == 0 && area.y == 0);
       // determine invalidated rendering region
       Region region = area;
       region.intersect (peek_expose_region());
       discard_expose_region();
       // rendering rectangle
-      DRect rrect = region.extents();
-      const int x1 = ifloor (rrect.x), y1 = ifloor (rrect.y), x2 = iceil (rrect.x + rrect.width), y2 = iceil (rrect.y + rrect.height);
+      IRect rrect = region.extents();
+      const int x1 = rrect.x, y1 = rrect.y, x2 = rrect.x + rrect.width, y2 = rrect.y + rrect.height;
       cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, x2 - x1, y2 - y1);
       cairo_surface_set_device_offset (surface, -x1, -y1);
       critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
@@ -832,16 +832,16 @@ WindowImpl::draw_now ()
 }
 
 void
-WindowImpl::render (RenderContext &rcontext, const DRect &rect)
+WindowImpl::render (RenderContext &rcontext, const IRect &rect)
 {
   // paint background
   Color col = background();
   cairo_t *cr = cairo_context (rcontext, rect);
   cairo_set_source_rgba (cr, col.red1(), col.green1(), col.blue1(), col.alpha1());
-  vector<DRect> rects;
-  rendering_region (rcontext).list_rects (rects);
-  for (size_t i = 0; i < rects.size(); i++)
-    cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+  vector<DRect> drects;
+  rendering_region (rcontext).list_rects (drects);
+  for (size_t i = 0; i < drects.size(); i++)
+    cairo_rectangle (cr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
   cairo_clip (cr);
   cairo_paint (cr);
   ViewportImpl::render (rcontext, rect);

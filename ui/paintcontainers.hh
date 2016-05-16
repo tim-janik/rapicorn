@@ -13,7 +13,7 @@ class AmbienceImpl : public virtual SingleContainerImpl, public virtual Ambience
   Lighting normal_shade_, hover_shade_, active_shade_, insensitive_shade_;
 protected:
   void                 render_shade            (cairo_t *cairo, int x, int y, int width, int height, Lighting st);
-  virtual void         render                  (RenderContext &rcontext, const DRect &rect) override;
+  virtual void         render                  (RenderContext &rcontext, const IRect &rect) override;
 public:
   explicit             AmbienceImpl            ();
   virtual             ~AmbienceImpl            () override;
@@ -60,7 +60,7 @@ protected:
   virtual void      do_changed      (const String &name) override;
   virtual void      size_request    (Requisition &requisition) override;
   virtual void      size_allocate   (Allocation area, bool changed) override;
-  virtual void      render          (RenderContext &rcontext, const DRect &rect) override;
+  virtual void      render          (RenderContext &rcontext, const IRect &rect) override;
 public: // FrameIface
   explicit          FrameImpl       ();
   virtual          ~FrameImpl       () override;
@@ -101,7 +101,6 @@ public:
 protected:
   virtual void   size_request            (Requisition &requisition);
   virtual void   size_allocate           (Allocation area, bool changed);
-  Allocation     local_child_allocation  (WidgetImpl &child, double width, double height);
 };
 
 class ElementPainterImpl : public virtual SingleContainerImpl, public virtual ElementPainterIface {
@@ -119,7 +118,7 @@ protected:
   virtual void         do_changed      (const String &name) override;
   virtual void         size_request    (Requisition &requisition) override;
   virtual void         size_allocate   (Allocation area, bool changed) override;
-  virtual void         render          (RenderContext &rcontext, const DRect &rect) override;
+  virtual void         render          (RenderContext &rcontext, const IRect &rect) override;
 public:
   explicit       ElementPainterImpl   ();
   virtual       ~ElementPainterImpl   () override;
@@ -153,7 +152,7 @@ protected:
   virtual WidgetState  render_state    () const;
   virtual void         size_request    (Requisition &requisition) override;
   virtual void         size_allocate   (Allocation area, bool changed) override;
-  virtual void         render          (RenderContext &rcontext, const DRect &rect) override;
+  virtual void         render          (RenderContext &rcontext, const IRect &rect) override;
 public:
   explicit       ShapePainterImpl     ();
   virtual       ~ShapePainterImpl     () override;

@@ -220,10 +220,10 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
     }
   // find the first focus descendant that fits the scroll area
   fwidget = rfwidget; // fallback to innermost focus widget
-  const DRect area = allocation();
+  const IRect area = allocation();
   for (WidgetImpl *widget : fwidgets)
     {
-      DRect a = widget->allocation();
+      IRect a = widget->allocation();
       if (a.width <= area.width && a.height <= area.height)
         {
           fwidget = widget;
@@ -238,9 +238,9 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
 void
 ScrollPortImpl::scroll_to_child (WidgetImpl &widget)
 {
-  const DRect area = allocation();
+  const IRect area = allocation();
   // adjust scroll area to widget's area
-  DRect farea = widget.allocation();
+  IRect farea = widget.allocation();
   if (0)
     printerr ("scroll-focus: area=%s farea=%s child=%p (%s)\n",
               area.string().c_str(), farea.string().c_str(), &widget,

@@ -1954,7 +1954,7 @@ void
 WidgetImpl::clip_area (const Allocation *clip)
 {
   const bool has_clip_area = clip != NULL;
-  clip_area_ = has_clip_area ? *clip : DRect();
+  clip_area_ = has_clip_area ? *clip : IRect();
   if (has_clip_area != test_flag (HAS_CLIP_AREA))
     change_flags (HAS_CLIP_AREA, has_clip_area);
 }
@@ -2021,7 +2021,7 @@ WidgetImpl::tune_requisition (Requisition requisition)
 void
 WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
 {
-  Allocation sarea (iround (area.x), iround (area.y), iround (area.width), iround (area.height));
+  Allocation sarea = area;
   const double smax = 4503599627370496.; // 52bit precision is maximum for doubles
   sarea.x      = CLAMP (sarea.x, -smax, smax);
   sarea.y      = CLAMP (sarea.y, -smax, smax);
@@ -2029,12 +2029,12 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
   const Allocation old_allocation = clipped_allocation();
-  const DRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
+  const IRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
   // always reallocate to re-layout children
   change_flags (INVALID_ALLOCATION, false); // skip notification
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  DRect new_clip = clip ? *clip : area;
+  IRect new_clip = clip ? *clip : area;
   if (!clip && parent())
     new_clip.intersect (parent()->clipped_allocation());
   const bool allocation_changed = allocation_ != sarea || new_clip != old_clip;
@@ -2063,7 +2063,7 @@ class WidgetImpl::RenderContext {
   friend class WidgetImpl;
   vector<cairo_surface_t*> surfaces;
   Region                   render_area;
-  DRect                   *hierarchical_clip;
+  IRect                   *hierarchical_clip;
   vector<cairo_t*>         cairos;
 public:
   explicit      RenderContext() : hierarchical_clip (NULL) {}
@@ -2081,10 +2081,10 @@ WidgetImpl::render_into (cairo_t *cr, const Region &region)
     {
       render_widget (rcontext);
       cairo_save (cr);
-      vector<DRect> rects;
-      rcontext.render_area.list_rects (rects);
-      for (size_t i = 0; i < rects.size(); i++)
-        cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+      vector<DRect> drects;
+      rcontext.render_area.list_rects (drects);
+      for (size_t i = 0; i < drects.size(); i++)
+        cairo_rectangle (cr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
       cairo_clip (cr);
       for (size_t i = 0; i < rcontext.surfaces.size(); i++)
         {
@@ -2101,10 +2101,10 @@ void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
-  DRect area = clipped_allocation();
-  DRect *saved_hierarchical_clip = rcontext.hierarchical_clip;
-  DRect newclip;
-  const DRect *clip = clip_area();
+  IRect area = clipped_allocation();
+  IRect *saved_hierarchical_clip = rcontext.hierarchical_clip;
+  IRect newclip;
+  const IRect *clip = clip_area();
   if (clip)
     {
       newclip = *clip;
@@ -2124,7 +2124,7 @@ WidgetImpl::render_widget (RenderContext &rcontext)
 }
 
 void
-WidgetImpl::render (RenderContext &rcontext, const DRect &rect)
+WidgetImpl::render (RenderContext &rcontext, const IRect &rect)
 {}
 
 void
@@ -2140,7 +2140,7 @@ WidgetImpl::rendering_region (RenderContext &rcontext) const
 cairo_t*
 WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
 {
-  DRect rect = area;
+  IRect rect = area;
   if (area == Allocation (-1, -1, 0, 0))
     rect = clipped_allocation();
   if (rcontext.hierarchical_clip)
@@ -2149,9 +2149,9 @@ WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
   if (empty_dummy)
     rect.width = rect.height = 1;
   assert_return (rect.width > 0 && rect.height > 0, NULL);
-  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (rect.width), iceil (rect.height));
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, rect.width, rect.height);
   if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
-    critical ("%s: failed to create ARGB32 cairo surface with %dx%d pixels: %s\n", __func__, iceil (rect.width), iceil (rect.height),
+    critical ("%s: failed to create ARGB32 cairo surface with %dx%d pixels: %s\n", __func__, rect.width, rect.height,
               cairo_status_to_string (cairo_surface_status (surface)));
   cairo_surface_set_device_offset (surface, -rect.x, -rect.y);
   cairo_t *cr = cairo_create (surface);

@@ -24,7 +24,7 @@ CPainter::draw_border (int x, int y, int width, int height, Color border, const 
   cairo_set_line_width (cr, line_width);
   if (width && height)
     {
-      DRect r (x + l2, y + l2, width - 1, height - 1);
+      IRect r (x + l2, y + l2, width - 1, height - 1);
       cairo_set_source_rgba (cr, border.red1(), border.green1(), border.blue1(), border.alpha1());
       cairo_rectangle (cr, r.x, r.y, r.width, r.height);
       cairo_set_dash (cr, dashes.data(), dashes.size(), dash_offset);
@@ -168,8 +168,8 @@ cairo_surface_from_pixmap (Pixmap pixmap)
 struct ImagePainter::ImageBackend : public std::enable_shared_from_this<ImageBackend> {
   virtual             ~ImageBackend     () {}
   virtual Requisition  image_size       () = 0;
-  virtual DRect        fill_area        () = 0;
-  virtual void         draw_image       (cairo_t *cairo_context, const DRect &render_rect, const DRect &image_rect) = 0;
+  virtual IRect        fill_area        () = 0;
+  virtual void         draw_image       (cairo_t *cairo_context, const IRect &render_rect, const IRect &image_rect) = 0;
   virtual StringVector list             () = 0;
 };
 
@@ -177,11 +177,11 @@ struct ImagePainter::ImageBackend : public std::enable_shared_from_this<ImageBac
 struct SvgImageBackend : public virtual ImagePainter::ImageBackend {
   Svg::FileP      svgf_;
   Svg::ElementP   svge_;
-  const DRect     fill_;
+  const IRect     fill_;
   const Svg::Span hscale_spans_[3], vscale_spans_[3];
 public:
   SvgImageBackend (Svg::FileP svgf, Svg::ElementP svge, const Svg::Span (&hscale_spans)[3],
-              const Svg::Span (&vscale_spans)[3], const DRect &fill_rect) :
+              const Svg::Span (&vscale_spans)[3], const IRect &fill_rect) :
     svgf_ (svgf), svge_ (svge), fill_ (fill_rect),
     hscale_spans_ { hscale_spans[0], hscale_spans[1], hscale_spans[2] },
     vscale_spans_ { vscale_spans[0], vscale_spans[1], vscale_spans[2] }
@@ -220,20 +220,20 @@ public:
     const auto ink = svge_->ibox();
     return Requisition (ink.width, ink.height);
   }
-  virtual DRect
+  virtual IRect
   fill_area ()
   {
     return fill_;
   }
   virtual void
-  draw_image (cairo_t *cairo_context, const DRect &render_rect, const DRect &image_rect)
+  draw_image (cairo_t *cairo_context, const IRect &render_rect, const IRect &image_rect)
   {
     // stretch and render SVG image
     const size_t w = image_rect.width + 0.5, h = image_rect.height + 0.5;
     cairo_surface_t *img = svge_->stretch (w, h, ARRAY_SIZE (hscale_spans_), hscale_spans_, ARRAY_SIZE (vscale_spans_), vscale_spans_);
     assert_return (img && cairo_surface_status (img) == CAIRO_STATUS_SUCCESS);
     // render context rectangle
-    DRect rect = image_rect;
+    IRect rect = image_rect;
     rect.intersect (render_rect);
     return_unless (rect.width > 0 && rect.height > 0);
     cairo_save (cairo_context); cairo_t *cr = cairo_context;
@@ -266,15 +266,15 @@ public:
   {
     return Requisition (pixmap_.width(), pixmap_.height());
   }
-  virtual DRect
+  virtual IRect
   fill_area ()
   {
-    return DRect (0, 0, pixmap_.width(), pixmap_.height());
+    return IRect (0, 0, pixmap_.width(), pixmap_.height());
   }
   virtual void
-  draw_image (cairo_t *cairo_context, const DRect &render_rect, const DRect &image_rect)
+  draw_image (cairo_t *cairo_context, const IRect &render_rect, const IRect &image_rect)
   {
-    DRect rect = image_rect;
+    IRect rect = image_rect;
     rect.intersect (render_rect);
     return_unless (rect.width > 0 && rect.height > 0);
     cairo_surface_t *isurface = cairo_surface_from_pixmap (pixmap_);
@@ -341,7 +341,7 @@ ImagePainter::svg_file_setup (Svg::FileP svgfile, const String &fragment_id)
   const Svg::IBox ebox = svge ? svge->ibox() : Svg::IBox();
   if (svge && ebox.width > 0 && ebox.height > 0)
     {
-      DRect fill { 0, 0, double (ebox.width), double (ebox.height) };
+      IRect fill { 0, 0, ebox.width, ebox.height };
       Svg::Span hscale_spans[3] = { { 0, 0 }, { 0, 0 }, { 0, 0 } };
       hscale_spans[1].length = ebox.width;
       hscale_spans[1].resizable = 1;
@@ -426,15 +426,15 @@ ImagePainter::list()
   return image_backend_ ? image_backend_->list() : StringVector();
 }
 
-DRect
+IRect
 ImagePainter::fill_area ()
 {
-  return image_backend_ ? image_backend_->fill_area() : DRect();
+  return image_backend_ ? image_backend_->fill_area() : IRect();
 }
 
 /// Render image into cairo context transformed into @a image_rect, clipped by @a render_rect.
 void
-ImagePainter::draw_image (cairo_t *cairo_context, const DRect &render_rect, const DRect &image_rect)
+ImagePainter::draw_image (cairo_t *cairo_context, const IRect &render_rect, const IRect &image_rect)
 {
   if (image_backend_)
     image_backend_->draw_image (cairo_context, render_rect, image_rect);

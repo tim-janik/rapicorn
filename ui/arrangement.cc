@@ -71,15 +71,13 @@ ArrangementImpl::origin_vanchor (double align)
 }
 
 Allocation
-ArrangementImpl::local_child_allocation (WidgetImpl &child,
-                                         double    width,
-                                         double    height)
+ArrangementImpl::local_child_allocation (WidgetImpl &child, int width, int height)
 {
   Requisition requisition = child.requisition();
   const PackInfo &pi = child.pack_info();
   Allocation area;
-  area.width = iceil (requisition.width);
-  area.height = iceil (requisition.height);
+  area.width = requisition.width;
+  area.height = requisition.height;
   double origin_x = width * origin_hanchor_ - origin_.x;
   double origin_y = height * origin_vanchor_ - origin_.y;
   area.x = iround (origin_x + pi.hposition - pi.halign * area.width);
@@ -87,27 +85,27 @@ ArrangementImpl::local_child_allocation (WidgetImpl &child,
   if (width > 0 && child.hexpand())
     {
       area.x = 0;
-      area.width = iround (width);
+      area.width = width;
     }
   if (height > 0 && child.vexpand())
     {
       area.y = 0;
-      area.height = iround (height);
+      area.height = height;
     }
   return area;
 }
 
-DRect
+IRect
 ArrangementImpl::child_area ()
 {
-  DRect rect; /* empty */
+  IRect rect; /* empty */
   Allocation parea = allocation();
   for (auto childp : *this)
     {
       WidgetImpl &child = *childp;
       Allocation area = local_child_allocation (child, parea.width, parea.height);
-      rect.rect_union (DRect (Point (area.x, area.y), 1, 1));
-      rect.rect_union (DRect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
+      rect.rect_union (IRect (area.x, area.y, 1, 1));
+      rect.rect_union (IRect (area.x + area.width - 1, area.y + area.height - 1, 1, 1));
     }
   return rect;
 }
@@ -115,7 +113,7 @@ ArrangementImpl::child_area ()
 void
 ArrangementImpl::size_request (Requisition &requisition)
 {
-  DRect rect; /* empty */
+  IRect rect; /* empty */
   bool chspread = false, cvspread = false, need_origin = false;
   for (auto childp : *this)
     {
@@ -127,12 +125,12 @@ ArrangementImpl::size_request (Requisition &requisition)
       chspread |= child.hspread();
       cvspread |= child.vspread();
       Allocation area = local_child_allocation (child, 0, 0);
-      rect.rect_union (DRect (Point (area.x, area.y), 1, 1));
-      rect.rect_union (DRect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
+      rect.rect_union (IRect (area.x, area.y, 1, 1));
+      rect.rect_union (IRect (area.x + area.width - 1, area.y + area.height - 1, 1, 1));
       need_origin = true;
     }
   if (need_origin)
-    rect.rect_union (DRect (Point (0, 0), 1, 1));
+    rect.rect_union (IRect (0, 0, 1, 1));
   double side1, side2;
   /* calculate size requisition in the west and east of anchor */
   side1 = MAX (-rect.x, 0);
