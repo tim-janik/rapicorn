@@ -82,11 +82,12 @@ private:
   void                        data_context_changed  ();
   bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
-  void                        widget_propagate_state (WidgetState prev_state);
   void                        repack                 (const PackInfo &orig, const PackInfo &pnew);
   PackInfo&                   widget_pack_info       ();
+  void                        widget_propagate_state (WidgetState prev_state);
   virtual bool                widget_maybe_toggled   () const;
   virtual bool                widget_maybe_selected  () const;
+  void                        invalidate_all         ()              { widget_invalidate (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT); }
 protected:
   virtual void                fabricated            (); ///< Method called on all widgets after creation via Factory.
   virtual bool                do_event              (const Event &event);
@@ -122,6 +123,7 @@ protected:
   bool                        change_flags      (WidgetFlag mask, bool on);
   void                        set_flag          (WidgetFlag flag, bool on);
   // resizing, requisition and allocation
+  virtual void                widget_invalidate      (WidgetFlag mask); // FIXME: make private
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
   virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
   virtual void                invalidate_parent ();
@@ -266,14 +268,16 @@ public:
   void                        cross_unlink      (WidgetImpl &link, size_t link_id);
   void                        uncross_links     (WidgetImpl &link);
   /* invalidation / changes */
-  virtual void                changed           (const String &name) override;
-  virtual void                invalidate        (WidgetFlag mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
-  void                        invalidate_size   ()              { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
-  void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
-  void                        expose            (const IRect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
-  void                        expose            (const Region &region);
-  void                        queue_visual_update  ();
-  void                        force_visual_update  ();
+  void                  expose                  () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
+  void                  expose                  (const IRect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
+  void                  expose                  (const Region &region);
+  virtual void          changed                 (const String &name) override;
+  void                  invalidate_content      ()              { widget_invalidate (INVALID_CONTENT); }
+  void                  invalidate_requisition  ()              { widget_invalidate (INVALID_REQUISITION); }
+  void                  invalidate_allocation   ()              { widget_invalidate (INVALID_ALLOCATION); }
+  void                  invalidate_size         ()              { widget_invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
+  void                  queue_visual_update     ();
+  void                  force_visual_update     ();
   /* public signals */
   Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
   /* coordinate handling */

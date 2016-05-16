@@ -463,7 +463,8 @@ void
 WidgetListImpl::invalidate_model (bool invalidate_heights, bool invalidate_widgets)
 {
   // FIXME: reset all cached row_heights_ here?
-  invalidate();
+  invalidate_size();
+  invalidate_content();
 }
 
 void

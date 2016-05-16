@@ -10,7 +10,8 @@ void
 ImageImpl::pixbuf (const Pixbuf &pixbuf)
 {
   image_painter_ = ImagePainter (Pixmap (pixbuf));
-  invalidate();
+  invalidate_size();
+  invalidate_content();
 }
 
 Pixbuf
@@ -26,7 +27,8 @@ ImageImpl::broken_image()
   image_painter_ = ImagePainter (icon);
   if (!image_painter_)
     critical ("missing stock: broken-image");
-  invalidate();
+  invalidate_size();
+  invalidate_content();
 }
 
 void
@@ -36,7 +38,8 @@ ImageImpl::source (const String &image_url)
   image_painter_ = ImagePainter (source_);
   if (!image_painter_)
     broken_image();
-  invalidate();
+  invalidate_size();
+  invalidate_content();
 }
 
 String
@@ -54,7 +57,8 @@ ImageImpl::stock (const String &stock_id)
   image_painter_ = ImagePainter (stock_icon);
   if (!image_painter_)
     broken_image();
-  invalidate();
+  invalidate_size();
+  invalidate_content();
 }
 
 String

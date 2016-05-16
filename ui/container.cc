@@ -307,9 +307,6 @@ ContainerImpl::add (WidgetImpl &widget)
   } catch (...) {
     throw;
   }
-  /* can invalidate etc. the fully setup widget now */
-  widget.invalidate();
-  invalidate();
 }
 
 void
@@ -327,11 +324,6 @@ ContainerImpl::remove (WidgetImpl &widget)
   ContainerImpl *container = widget.parent();
   if (!container)
     return false;
-  if (widget.visible())
-    {
-      widget.invalidate();
-      invalidate();
-    }
   ContainerImpl *dcontainer = container;
   while (dcontainer)
     {
@@ -339,7 +331,6 @@ ContainerImpl::remove (WidgetImpl &widget)
       dcontainer = dcontainer->parent();
     }
   container->remove_child (widget);
-  widget.invalidate();
   return true;
 }
 
@@ -424,6 +415,8 @@ void
 ContainerImpl::unparent_child (WidgetImpl &widget)
 {
   const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
+  if (widget.visible())
+    invalidate_requisition();
   if (&widget == get_data (&focus_child_key))
     delete_data (&focus_child_key);
   ContainerImpl *ancestor = this;
@@ -988,9 +981,9 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
 static const bool subtree_resizing = RAPICORN_FLIPPER ("subtree-resizing", "Enable resizing without propagation for ResizeContainerImpl subtrees.");
 
 void
-ResizeContainerImpl::invalidate (WidgetFlag mask)
+ResizeContainerImpl::widget_invalidate (WidgetFlag mask)
 {
-  SingleContainerImpl::invalidate (mask);
+  this->SingleContainerImpl::widget_invalidate (mask);
   WindowImpl *w = get_window();
   if ((w == this || subtree_resizing) && !resizer_ && test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
     {
@@ -1078,7 +1071,8 @@ MultiContainerImpl::raise_child (WidgetImpl &widget)
             std::shared_ptr<WidgetImpl> widgetp = widgets[i];
             widgets.erase (widgets.begin() + i);
             widgets.push_back (widgetp);
-            invalidate();
+            if (widget.viewable())
+              widget.expose();
           }
         break;
       }
@@ -1095,7 +1089,8 @@ MultiContainerImpl::lower_child (WidgetImpl &widget)
             std::shared_ptr<WidgetImpl> widgetp = widgets[i];
             widgets.erase (widgets.begin() + i);
             widgets.insert (widgets.begin(), widgetp);
-            invalidate();
+            if (widget.viewable())
+              widget.expose();
           }
         break;
       }

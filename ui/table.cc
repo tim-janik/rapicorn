@@ -138,7 +138,7 @@ TableLayoutImpl::resize_table (uint n_cols, uint n_rows)
   n_cols = MAX (n_cols, 1);
   if (n_rows == rows_.size() && n_cols == cols_.size())
     return;
-  /* grow as children require */
+  // grow as children require
   if (n_rows < rows_.size() || n_cols < cols_.size())
     for (auto child : *this)
       {
@@ -146,7 +146,7 @@ TableLayoutImpl::resize_table (uint n_cols, uint n_rows)
         n_rows = MAX (n_rows, top_attach (pi));
         n_cols = MAX (n_cols, right_attach (pi));
       }
-  /* resize rows and cols */
+  // resize rows and cols
   bool need_row_invalidate = false, need_col_invalidate = false;
   if (n_rows != rows_.size())
     {
@@ -165,7 +165,7 @@ TableLayoutImpl::resize_table (uint n_cols, uint n_rows)
       need_col_invalidate = true;
     }
   if (need_row_invalidate || need_col_invalidate)
-    invalidate();
+    invalidate_requisition();
 }
 
 void
@@ -189,8 +189,11 @@ TableLayoutImpl::expand_table (const uint first_col, const uint n_cols, const ui
 void
 TableLayoutImpl::homogeneous (bool h)
 {
-  homogeneous_widgets_ = h;
-  invalidate();
+  if (homogeneous_widgets_ != h)
+    {
+      homogeneous_widgets_ = h;
+      invalidate_size();
+    }
 }
 
 void
@@ -199,7 +202,7 @@ TableLayoutImpl::col_spacing (uint16 cspacing)
   default_col_spacing_ = cspacing;
   for (uint col = 0; col < cols_.size(); col++)
     cols_[col].spacing = default_col_spacing_;
-  invalidate();
+  invalidate_requisition();
 }
 
 void
@@ -208,7 +211,7 @@ TableLayoutImpl::row_spacing (uint16 rspacing)
   default_row_spacing_ = rspacing;
   for (uint row = 0; row < rows_.size(); row++)
     rows_[row].spacing = default_row_spacing_;
-  invalidate();
+  invalidate_requisition();
 }
 
 TableLayoutImpl::~TableLayoutImpl()

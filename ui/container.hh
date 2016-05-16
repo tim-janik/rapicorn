@@ -109,11 +109,11 @@ class ResizeContainerImpl : public virtual SingleContainerImpl {
   uint                  resizer_;
   AncestryCache         ancestry_cache_;
   void                  check_resize_handler    ();
+  virtual void          widget_invalidate       (WidgetFlag mask) override;
 protected:
   virtual const AncestryCache* fetch_ancestry_cache () override;
   virtual void          invalidate_parent       () override;
   virtual void          check_resize            ();
-  virtual void          invalidate              (WidgetFlag mask) override;
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   void                  negotiate_size          (const Allocation *carea);
   explicit              ResizeContainerImpl     ();

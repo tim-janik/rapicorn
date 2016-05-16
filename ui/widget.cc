@@ -155,7 +155,7 @@ WidgetImpl::widget_propagate_state (const WidgetState prev_state)
   const uint64 bits_changed = uint64 (prev_state) ^ state();
   return_unless (bits_changed != 0);
   if (was_viewable != viewable())
-    invalidate();       // changing viewable() forces invalidation
+    invalidate_all();   // changing viewable() forces invalidation
   if (!finalizing())
     {
       changed ("state");
@@ -1154,7 +1154,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
     {
       assert_return (pcontainer == NULL);
       WindowImpl *old_toplevel = get_window();
-      invalidate();
+      invalidate_all();
       old_parent->unparent_child (*this);
       parent_ = NULL;
       if (acache_)
@@ -1175,7 +1175,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       widget_propagate_state (old_state);
       if (parent_->anchored() && !anchored())
         sig_hierarchy_changed.emit (NULL);
-      invalidate();
+      invalidate_all();
     }
 }
 
@@ -1396,7 +1396,7 @@ WidgetImpl::invalidate_parent ()
 }
 
 void
-WidgetImpl::invalidate (WidgetFlag mask)
+WidgetImpl::widget_invalidate (WidgetFlag mask)
 {
   return_unless (0 == (mask & ~(INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT)));
   return_unless (mask != 0);
@@ -1645,9 +1645,9 @@ WidgetImpl::find_adjustments (AdjustmentSourceType adjsrc1,
 void
 WidgetImpl::repack (const PackInfo &orig, const PackInfo &pnew)
 {
+  invalidate_size();
   if (parent())
     parent()->repack_child (*this, orig, pnew);
-  invalidate();
 }
 
 const PackInfo WidgetImpl::default_pack_info = {

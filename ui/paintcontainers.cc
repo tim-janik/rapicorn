@@ -337,8 +337,13 @@ FrameImpl::tap_tight_focus (int onoffx)
 {
   if (onoffx >= 0)
     {
-      tight_focus_ = onoffx != 0;
-      invalidate();
+      const bool onoff = onoffx != 0;
+      if (onoff != tight_focus_)
+        {
+          tight_focus_ = onoff;
+          invalidate_size();
+          invalidate_content();
+        }
     }
   return tight_focus_;
 }
@@ -417,9 +422,13 @@ FrameImpl::overlap_child () const
 void
 FrameImpl::overlap_child (bool ovc)
 {
-  overlap_child_ = ovc;
-  invalidate();
-  changed ("overlap_child");
+  if (overlap_child_ != ovc)
+    {
+      overlap_child_ = ovc;
+      invalidate_size();
+      invalidate_content();
+      changed ("overlap_child");
+    }
 }
 
 DrawFrame
@@ -688,7 +697,8 @@ ElementPainterImpl::svg_source (const String &resource)
   return_unless (val != svg_source_);
   svg_source_ = val;
   reset_cache();
-  invalidate();
+  invalidate_size();
+  invalidate_content();
   changed ("svg_source");
 }
 
@@ -699,7 +709,8 @@ ElementPainterImpl::element (const String &fragment)
   return_unless (val != element_);
   element_ = val;
   reset_cache();
-  invalidate();
+  invalidate_size();
+  invalidate_content();
   changed ("element");
 }
 
@@ -710,7 +721,8 @@ ElementPainterImpl::filler (const String &fragment)
   return_unless (val != filler_);
   filler_ = val;
   reset_cache();
-  invalidate();
+  invalidate_size();
+  invalidate_content();
   changed ("filler");
 }
 
@@ -721,7 +733,8 @@ ElementPainterImpl::match_states (const String &kind)
   return_unless (val != match_states_);
   match_states_ = val;
   reset_cache();
-  invalidate();
+  invalidate_size();
+  invalidate_content();
   changed ("match");
 }
 
@@ -862,7 +875,7 @@ ElementPainterImpl::do_changed (const String &name)
     {
       element_painter_.reset();
       filler_painter_.reset();
-      invalidate (INVALID_CONTENT);
+      invalidate_content();
     }
 }
 
@@ -951,7 +964,8 @@ ShapePainterImpl::shape_style_normal (const String &kind)
   String val = string_strip (kind);
   return_unless (val != shape_style_normal_);
   shape_style_normal_ = val;
-  invalidate();
+  invalidate_size();
+  invalidate_content();
   changed ("shape_style_normal");
 }
 
