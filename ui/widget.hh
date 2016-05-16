@@ -14,6 +14,8 @@ namespace Rapicorn {
 typedef IRect Allocation;
 class SizeGroup;
 class WidgetGroup;
+typedef std::shared_ptr<WidgetGroup> WidgetGroupP;
+typedef std::vector<WidgetGroupP> WidgetGroupVector;
 class Adjustment;
 class ResizeContainerImpl;
 class WindowImpl;
@@ -48,6 +50,7 @@ struct PackInfo {
   float halign, hscale, valign, vscale;
   int32 left_spacing : 16, right_spacing : 16, bottom_spacing : 16, top_spacing : 16;
   int32 ovr_width : 16, ovr_height : 16;
+  WidgetGroupVector widget_groups;
 };
 
 /// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.

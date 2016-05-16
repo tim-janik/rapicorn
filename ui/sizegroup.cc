@@ -25,12 +25,10 @@ WidgetGroup::~WidgetGroup()
   assert (widgets_.size() == 0);
 }
 
-static DataKey<WidgetGroup::GroupVector> widget_group_key;
-
-vector<WidgetGroupP>
+const vector<WidgetGroupP>&
 WidgetGroup::list_groups (const WidgetImpl &widget)
 {
-  return widget.get_data (&widget_group_key);
+  return widget.pack_info().widget_groups;
 }
 
 void
@@ -39,9 +37,8 @@ WidgetGroup::add_widget (WidgetImpl &widget)
   // add widget to group's list
   widgets_.push_back (&widget);
   // add group to widget's list
-  GroupVector wgv = widget.get_data (&widget_group_key);
+  WidgetGroupVector &wgv = widget.widget_pack_info().widget_groups;
   wgv.push_back (shared_ptr_cast<WidgetGroup> (this));
-  widget.set_data (&widget_group_key, wgv);
   adding_widget (widget);
 }
 
@@ -65,8 +62,8 @@ WidgetGroup::remove_widget (WidgetImpl &widget)
     }
   // remove group from widget's list */
   found_one = false;
-  GroupVector wgv = widget.get_data (&widget_group_key);
-  for (uint i = 0; i < wgv.size(); i++)
+  WidgetGroupVector &wgv = widget.widget_pack_info().widget_groups;
+  for (size_t i = 0; i < wgv.size(); i++)
     if (this == &*wgv[i])
       {
         wgv.erase (wgv.begin() + i);
@@ -75,10 +72,6 @@ WidgetGroup::remove_widget (WidgetImpl &widget)
       }
   if (!found_one)
     fatal ("failed to remove size group (%p) from widget: %s", this, widget.id());
-  if (wgv.size() == 0)
-    widget.delete_data (&widget_group_key);
-  else
-    widget.set_data (&widget_group_key, wgv);
 }
 
 void
