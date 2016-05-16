@@ -138,7 +138,8 @@ struct _RapicornRegion {
 #define REGION_SZOF(n) (sizeof(RegDataRec) + ((n) * sizeof(BoxRec)))
 
 #define ErrorF(...) fprintf (stderr, __VA_ARGS__)
-#define good(reg) do { if (!miValidRegion(reg)) { ErrorF ("InvalidRegion: %p:\n", reg); miPrintRegion (reg); } assert(miValidRegion(reg)); } while (0)
+#define good(reg)       do { assert(miValidRegion(reg)); } while (0)
+// good(reg) do { if (!miValidRegion(reg)) { ErrorF ("InvalidRegion: %p:\n", reg); miPrintRegion (reg); } assert(miValidRegion(reg)); } while (0)
 
 /*
  * The functions in this file implement the Region abstraction used extensively
