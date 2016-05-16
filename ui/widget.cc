@@ -53,7 +53,6 @@ WidgetIface::impl () const
 WidgetImpl::WidgetImpl () :
   widget_flags_ (VISIBLE), widget_state_ (uint64 (WidgetState::NORMAL)), inherited_state_ (uint64 (WidgetState::STASHED)),
   parent_ (NULL), acache_ (NULL), factory_context_ (ctor_factory_context()), pack_info_ (NULL),
-  sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
 
@@ -1404,22 +1403,15 @@ WidgetImpl::invalidate (WidgetFlag mask)
   const bool had_invalid_content = test_flag (INVALID_CONTENT);
   const bool had_invalid_allocation = test_flag (INVALID_ALLOCATION);
   const bool had_invalid_requisition = test_flag (INVALID_REQUISITION);
-  bool emit_invalidated = false;
   if (!had_invalid_content && (mask & INVALID_CONTENT))
-    {
-      expose();
-      emit_invalidated = true;
-    }
+    expose();
   change_flags (mask, true);
   if ((!had_invalid_requisition && (mask & INVALID_REQUISITION)) ||
       (!had_invalid_allocation && (mask & INVALID_ALLOCATION)))
     {
       invalidate_parent(); // need new size-request from parent
       WidgetGroup::invalidate_widget (*this);
-      emit_invalidated = true;
     }
-  if (emit_invalidated && anchored())
-    sig_invalidate.emit();
 }
 
 /// Determine "internal" size requisition of a widget, including overrides, excluding groupings.
@@ -1792,10 +1784,6 @@ WidgetImpl::do_changed (const String &name)
 {
   ObjectImpl::do_changed (name);
 }
-
-void
-WidgetImpl::do_invalidate()
-{}
 
 bool
 WidgetImpl::do_event (const Event &event)

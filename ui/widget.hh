@@ -129,7 +129,6 @@ protected:
   bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (int new_width, int new_height);
   /* signal methods */
-  virtual void                do_invalidate     ();
   virtual void                do_changed        (const String &name) override;
   /* idlers & timers */
   uint                        exec_fast_repeater   (const EventLoop::BoolSlot &sl);
@@ -276,7 +275,6 @@ public:
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
   /* public signals */
-  Signal<void ()>                   sig_invalidate;
   Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
   /* coordinate handling */
 protected:
