@@ -334,7 +334,7 @@ public:
   // packing
   struct PackInfo {
     double hposition, hspan, vposition, vspan;
-    uint left_spacing, right_spacing, bottom_spacing, top_spacing;
+    int left_spacing, right_spacing, bottom_spacing, top_spacing;
     double halign, hscale, valign, vscale;
   };
   const PackInfo&    pack_info       () const   { return const_cast<WidgetImpl*> (this)->pack_info (false); }
