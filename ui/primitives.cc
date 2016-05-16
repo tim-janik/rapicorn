@@ -2,10 +2,10 @@
 #include "primitives.hh"
 #include "utilities.hh"
 #include "blitfuncs.hh"
-#include <stdio.h>
 
 namespace Rapicorn {
 
+// == DRect ==
 static inline double
 dsqr (double x)
 {
@@ -119,9 +119,7 @@ DRect::mapped_onto (const DRect &bounds) const
 String
 DRect::string() const
 {
-  char buffer[128];
-  sprintf (buffer, "((%.17g, %.17g), %.17g, %.17g)", x, y, width, height);
-  return String (buffer);
+  return string_format ("((%.17g, %.17g), %.17g, %.17g)", x, y, width, height);
 }
 
 Point
@@ -151,12 +149,41 @@ DRect::create_anchored (Anchor anchor, double width, double height)
   return b;
 }
 
+// == IRect ==
+String
+IRect::string() const
+{
+  return string_format ("((%d, %d), %d, %d)", x, y, width, height);
+}
+
+double
+IRect::dist2 (const Point &p) const
+{
+  return DRect (*this).dist2 (p);
+}
+
+double
+IRect::dist (const Point &p) const
+{
+  return DRect (*this).dist (p);
+}
+
+// Return rectangle intersection with or mapped onto @a bounds for non-intersections.
+IRect
+IRect::mapped_onto (const IRect &bounds) const
+{
+  const double x1 = clamp (x, bounds.x, bounds.x + bounds.width);
+  const double x2 = clamp (x + width, bounds.x, bounds.x + bounds.width);
+  const double y1 = clamp (y, bounds.y, bounds.y + bounds.height);
+  const double y2 = clamp (y + height, bounds.y, bounds.y + bounds.height);
+  return IRect (x1, y1, x2 - x1, y2 - y1);
+}
+
+// == Color ==
 String
 Color::string() const
 {
-  char buffer[128];
-  sprintf (buffer, "{.rgba=0x%08x}", argb());
-  return String (buffer);
+  return string_format ("{.rgba=0x%08x}", argb());
 }
 
 void
@@ -526,13 +553,11 @@ Color::from_name (const String &color_name)
   return 0x00000000;
 }
 
+// == Affine ==
 String
 Affine::string() const
 {
-  char buffer[6 * 64 + 128];
-  sprintf (buffer, "{ { %.17g, %.17g, %.17g }, { %.17g, %.17g, %.17g } }",
-           xx, xy, xz, yx, yy, yz);
-  return String (buffer);
+  return string_format ("{ { %.17g, %.17g, %.17g }, { %.17g, %.17g, %.17g } }", xx, xy, xz, yx, yy, yz);
 }
 
 Affine

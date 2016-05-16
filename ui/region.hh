@@ -30,6 +30,7 @@ public: /* rectangles are represented at 64bit integer precision */
   explicit      Region            ();                           ///< Construct an empty Region.
   /*Con*/       Region            (const Region &region);       ///< Copy-construct a Region.
   /*Con*/       Region            (const DRect  &rectangle);    ///< Construct a Region covering @a rectangle.
+  /*Con*/       Region            (const IRect  &rectangle);    ///< Construct a Region covering @a rectangle.
   /*Con*/       Region            (const Point  &pt1,
                                    const Point  &pt2);          ///< Construct a Region covering a rectangle defined by two points.
   Region&       operator=         (const Region &region);       ///< Region assignment.
@@ -42,10 +43,12 @@ public: /* rectangles are represented at 64bit integer precision */
   bool          contains          (const Point  &point) const;  ///< Test if @a point is inside Region.
   bool          contains          (double x, double y) const    { return contains (Point (x, y)); } ///< Point test with coordinates.
   ContainedType contains          (const DRect  &rect) const;   ///< Returns if Region covers @a rect fully, partially or not at all.
+  ContainedType contains          (const IRect  &rect) const;   ///< Returns if Region covers @a rect fully, partially or not at all.
   ContainedType contains          (const Region &other) const;  ///< Returns if Region covers @a other fully, partially or not at all.
   void          list_rects        (vector<DRect> &rects) const; ///< Provides a list of rectangles that define Region.
   uint          count_rects       () const;                     ///< Provides the number of rectangles that cover Region.
   void          add               (const DRect  &rect);         ///< Adds a rectangle to the Region.
+  void          add               (const IRect  &rect);         ///< Adds a rectangle to the Region.
   void          add               (const Region &other);        ///< Causes Region to contain the union with @a other.
   void          subtract          (const Region &subtrahend);   ///< Removes @a subtrahend from Region.
   void          intersect         (const Region &other);        ///< Causes Region to contain the intersection with @a other.

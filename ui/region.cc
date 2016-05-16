@@ -63,6 +63,13 @@ Region::Region (const DRect &src)
   _rapicorn_region_union_rect (REGION (this), &box);
 }
 
+Region::Region (const IRect &src)
+{
+  _rapicorn_region_init (REGION (this), sizeof (region_));
+  RapicornRegionBox box = rect2box (src);
+  _rapicorn_region_union_rect (REGION (this), &box);
+}
+
 Region::Region (const Point          &rect_p1,
                 const Point          &rect_p2)
 {
@@ -141,6 +148,16 @@ Region::contains (const DRect &rect) const
 }
 
 Region::ContainedType
+Region::contains (const IRect &rect) const
+{
+  RapicornRegionBox box = rect2box (rect);
+  RAPICORN_STATIC_ASSERT (OUTSIDE == (int) RAPICORN_REGION_OUTSIDE);
+  RAPICORN_STATIC_ASSERT (INSIDE  == (int) RAPICORN_REGION_INSIDE);
+  RAPICORN_STATIC_ASSERT (PARTIAL == (int) RAPICORN_REGION_PARTIAL);
+  return ContainedType (_rapicorn_region_rect_in (REGION (this), &box));
+}
+
+Region::ContainedType
 Region::contains (const Region &other) const
 {
   return ContainedType (_rapicorn_region_region_in (REGION (this), REGION (&other)));
@@ -168,6 +185,13 @@ Region::count_rects () const
 
 void
 Region::add (const DRect &rect)
+{
+  RapicornRegionBox box = rect2box (rect);
+  _rapicorn_region_union_rect (REGION (this), &box);
+}
+
+void
+Region::add (const IRect &rect)
 {
   RapicornRegionBox box = rect2box (rect);
   _rapicorn_region_union_rect (REGION (this), &box);
