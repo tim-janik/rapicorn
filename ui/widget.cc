@@ -1502,17 +1502,6 @@ WidgetImpl::requisition ()
   return SizeGroup::widget_requisition (*this);
 }
 
-bool
-WidgetImpl::tune_requisition (double new_width, double new_height)
-{
-  Requisition req = requisition();
-  if (new_width >= 0)
-    req.width = new_width;
-  if (new_height >= 0)
-    req.height = new_height;
-  return tune_requisition (req);
-}
-
 void
 WidgetImpl::expose_internal (const Region &region)
 {
@@ -1983,6 +1972,17 @@ WidgetImpl::clipped_allocation () const
   if (clip)
     area.intersect (*clip);
   return area;
+}
+
+bool
+WidgetImpl::tune_requisition (int new_width, int new_height)
+{
+  Requisition req = requisition();
+  if (new_width >= 0)
+    req.width = new_width;
+  if (new_height >= 0)
+    req.height = new_height;
+  return tune_requisition (req);
 }
 
 bool

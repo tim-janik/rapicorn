@@ -776,7 +776,7 @@ public:
                                 pango_ellipsize_mode_from_ellipsize_type (pstate.ellipsize));
     pango_layout_get_extents (layout_, NULL, &rect);
     rapicorn_pango_mutex.unlock();
-    tune_requisition (-1, ceil (1 + UNITS2PIXELS (rect.height)));
+    tune_requisition (-1, iceil (1 + UNITS2PIXELS (rect.height)));
     scroll_to_cursor();
   }
 protected:

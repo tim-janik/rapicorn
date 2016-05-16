@@ -269,8 +269,8 @@ interface ListModelRelay : Object {
 
 /// Requisition information, providing requisition @a width and @a height.
 record Requisition {
-  float64 width;          ///< Request width.
-  float64 height;         ///< Request height.
+  int32 width;  ///< Requested width.
+  int32 height; ///< Requested height.
 };
 
 interface Widget;

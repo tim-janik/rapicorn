@@ -113,8 +113,7 @@ protected:
   virtual void                invalidate_parent ();
   void                        clip_area         (const Allocation *clip);
   bool                        tune_requisition  (Requisition  requisition);
-  bool                        tune_requisition  (double       new_width,
-                                                 double       new_height);
+  bool                        tune_requisition  (int new_width, int new_height);
   /* signal methods */
   virtual void                do_invalidate     ();
   virtual void                do_changed        (const String &name) override;
