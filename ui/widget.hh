@@ -11,7 +11,7 @@
 namespace Rapicorn {
 
 /* --- Widget structures and forward decls --- */
-typedef Rect Allocation;
+typedef DRect Allocation;
 class SizeGroup;
 class WidgetGroup;
 class Adjustment;
@@ -262,7 +262,7 @@ public:
   virtual void                invalidate        (WidgetFlag mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()              { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
-  void                        expose            (const Rect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
+  void                        expose            (const DRect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
   void                        expose            (const Region &region);
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
@@ -276,7 +276,7 @@ protected:
   class RenderContext;
   virtual void               render_widget             (RenderContext    &rcontext);
   virtual void               render_recursive          (RenderContext    &rcontext);
-  virtual void               render                    (RenderContext    &rcontext, const Rect &rect) = 0;
+  virtual void               render                    (RenderContext    &rcontext, const DRect &rect) = 0;
   const Region&              rendering_region          (RenderContext    &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
                                                         const Allocation &area = Allocation (-1, -1, 0, 0));

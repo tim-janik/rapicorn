@@ -1954,7 +1954,7 @@ void
 WidgetImpl::clip_area (const Allocation *clip)
 {
   const bool has_clip_area = clip != NULL;
-  clip_area_ = has_clip_area ? *clip : Rect();
+  clip_area_ = has_clip_area ? *clip : DRect();
   if (has_clip_area != test_flag (HAS_CLIP_AREA))
     change_flags (HAS_CLIP_AREA, has_clip_area);
 }
@@ -2029,12 +2029,12 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
   const Allocation old_allocation = clipped_allocation();
-  const Rect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
+  const DRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
   // always reallocate to re-layout children
   change_flags (INVALID_ALLOCATION, false); // skip notification
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  Rect new_clip = clip ? *clip : area;
+  DRect new_clip = clip ? *clip : area;
   if (!clip && parent())
     new_clip.intersect (parent()->clipped_allocation());
   const bool allocation_changed = allocation_ != sarea || new_clip != old_clip;
@@ -2063,7 +2063,7 @@ class WidgetImpl::RenderContext {
   friend class WidgetImpl;
   vector<cairo_surface_t*> surfaces;
   Region                   render_area;
-  Rect                    *hierarchical_clip;
+  DRect                   *hierarchical_clip;
   vector<cairo_t*>         cairos;
 public:
   explicit      RenderContext() : hierarchical_clip (NULL) {}
@@ -2081,7 +2081,7 @@ WidgetImpl::render_into (cairo_t *cr, const Region &region)
     {
       render_widget (rcontext);
       cairo_save (cr);
-      vector<Rect> rects;
+      vector<DRect> rects;
       rcontext.render_area.list_rects (rects);
       for (size_t i = 0; i < rects.size(); i++)
         cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
@@ -2101,10 +2101,10 @@ void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
-  Rect area = clipped_allocation();
-  Rect *saved_hierarchical_clip = rcontext.hierarchical_clip;
-  Rect newclip;
-  const Rect *clip = clip_area();
+  DRect area = clipped_allocation();
+  DRect *saved_hierarchical_clip = rcontext.hierarchical_clip;
+  DRect newclip;
+  const DRect *clip = clip_area();
   if (clip)
     {
       newclip = *clip;
@@ -2124,7 +2124,7 @@ WidgetImpl::render_widget (RenderContext &rcontext)
 }
 
 void
-WidgetImpl::render (RenderContext &rcontext, const Rect &rect)
+WidgetImpl::render (RenderContext &rcontext, const DRect &rect)
 {}
 
 void
@@ -2140,7 +2140,7 @@ WidgetImpl::rendering_region (RenderContext &rcontext) const
 cairo_t*
 WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
 {
-  Rect rect = area;
+  DRect rect = area;
   if (area == Allocation (-1, -1, 0, 0))
     rect = clipped_allocation();
   if (rcontext.hierarchical_clip)

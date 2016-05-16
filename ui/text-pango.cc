@@ -947,7 +947,7 @@ protected:
   virtual bool
   mark_to_coord (double x, double y)
   {
-    Rect area = layout_area (NULL);
+    DRect area = layout_area (NULL);
     if (area.width >= 1 && area.height >= 1)
       {
         int xmark = -1, trailing = -1;
@@ -1117,11 +1117,7 @@ protected:
     cairo_restore (cr);
   }
   void
-  render_cursor_gL (cairo_t      *cairo,
-                    Color         col,
-                    Rect          layout_rect,
-                    double        layout_x,
-                    double        layout_y)
+  render_cursor_gL (cairo_t *cairo, Color col, DRect layout_rect, double layout_x, double layout_y)
   {
     // const char *ptext = pango_layout_get_text (layout_);
     PangoRectangle crect1, crect2, irect, lrect;
@@ -1165,7 +1161,7 @@ protected:
     if (cursor_ < 0)
       return;
     uint vdot_size;
-    Rect layout_rect = layout_area (&vdot_size);
+    DRect layout_rect = layout_area (&vdot_size);
     rapicorn_pango_mutex.lock();
     PangoRectangle irect, lrect, crect1, crect2;
     pango_layout_get_extents (layout_, &irect, &lrect);
@@ -1180,14 +1176,11 @@ protected:
     scoffset_ = MAX (0, scoffset_); /* un-"indent" */
   }
   void
-  render_text_gL (cairo_t      *cairo,
-                  Rect          layout_rect,
-                  int           dot_size,
-                  Color         fg)
+  render_text_gL (cairo_t *cairo, DRect layout_rect, int dot_size, Color fg)
   {
     if (dot_size)
       {
-        Rect area = allocation();
+        DRect area = allocation();
         area.height -= MIN (area.height, layout_rect.height); // draw vdots beneth layout
         if (area.height > 0) // some partially visible lines have been clipped
           {
@@ -1212,13 +1205,13 @@ protected:
     double ly = 0;
     render_cursor_gL (cairo, fg, layout_rect, lx, ly);
   }
-  Rect
+  DRect
   layout_area (uint *vdot_size)
   {
     /* FIXME: once PANGO_VERSION_CHECK (1, 19, 3) succeeds, this
      * should use pango_layout_set_height() instead.
      */
-    Rect area = allocation();
+    DRect area = allocation();
     rapicorn_pango_mutex.lock();
     /* measure layout size */
     PangoRectangle lrect = { 0, 0 };
@@ -1298,12 +1291,12 @@ protected:
       sig_selection_changed.emit();
   }
   virtual void
-  render (RenderContext &rcontext, const Rect &rect)
+  render (RenderContext &rcontext, const DRect &rect)
   {
     uint vdot_size = 0;
-    Rect larea = layout_area (&vdot_size);
+    DRect larea = layout_area (&vdot_size);
     RDEBUG ("rendering label 0x%016x at %3.f%% coverage: %s", size_t (this),
-            larea.area() > 0 ? Rect (rect).intersect (larea).area() / larea.area() * 100 : 0, peek_text (NULL));
+            larea.area() > 0 ? DRect (rect).intersect (larea).area() / larea.area() * 100 : 0, peek_text (NULL));
     if (larea.width < 1) // allowed: larea.height < 1
       return;
     /* render text */

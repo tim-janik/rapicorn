@@ -78,7 +78,7 @@ ImageImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-ImageImpl::render (RenderContext &rcontext, const Rect &rect)
+ImageImpl::render (RenderContext &rcontext, const DRect &rect)
 {
   image_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
 }

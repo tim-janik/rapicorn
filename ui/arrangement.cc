@@ -97,17 +97,17 @@ ArrangementImpl::local_child_allocation (WidgetImpl &child,
   return area;
 }
 
-Rect
+DRect
 ArrangementImpl::child_area ()
 {
-  Rect rect; /* empty */
+  DRect rect; /* empty */
   Allocation parea = allocation();
   for (auto childp : *this)
     {
       WidgetImpl &child = *childp;
       Allocation area = local_child_allocation (child, parea.width, parea.height);
-      rect.rect_union (Rect (Point (area.x, area.y), 1, 1));
-      rect.rect_union (Rect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
+      rect.rect_union (DRect (Point (area.x, area.y), 1, 1));
+      rect.rect_union (DRect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
     }
   return rect;
 }
@@ -115,7 +115,7 @@ ArrangementImpl::child_area ()
 void
 ArrangementImpl::size_request (Requisition &requisition)
 {
-  Rect rect; /* empty */
+  DRect rect; /* empty */
   bool chspread = false, cvspread = false, need_origin = false;
   for (auto childp : *this)
     {
@@ -127,12 +127,12 @@ ArrangementImpl::size_request (Requisition &requisition)
       chspread |= child.hspread();
       cvspread |= child.vspread();
       Allocation area = local_child_allocation (child, 0, 0);
-      rect.rect_union (Rect (Point (area.x, area.y), 1, 1));
-      rect.rect_union (Rect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
+      rect.rect_union (DRect (Point (area.x, area.y), 1, 1));
+      rect.rect_union (DRect (Point (area.x + area.width - 1, area.y + area.height - 1), 1, 1));
       need_origin = true;
     }
   if (need_origin)
-    rect.rect_union (Rect (Point (0, 0), 1, 1));
+    rect.rect_union (DRect (Point (0, 0), 1, 1));
   double side1, side2;
   /* calculate size requisition in the west and east of anchor */
   side1 = MAX (-rect.x, 0);

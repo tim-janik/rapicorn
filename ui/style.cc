@@ -146,7 +146,7 @@ StyleImpl::fragment_color (const String &fragment, WidgetState state)
         {
           cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (size.width), iceil (size.height));
           cairo_t *cr = cairo_create (surface);
-          Rect rect (0, 0, size.width, size.height);
+          DRect rect (0, 0, size.width, size.height);
           painter.draw_image (cr, rect, rect);
           const uint argb = cairo_image_surface_peek_argb (surface, size.width / 2, size.height / 2);
           cairo_surface_destroy (surface);

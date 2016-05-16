@@ -241,7 +241,7 @@ TestContainerImpl::assert_value (const char *assertion_name, double value, doubl
 }
 
 void
-TestContainerImpl::render (RenderContext &rcontext, const Rect &rect)
+TestContainerImpl::render (RenderContext &rcontext, const DRect &rect)
 {
   if (paint_allocation_)
     {
@@ -338,7 +338,7 @@ TestBoxImpl::make_snapshot ()
 }
 
 void
-TestBoxImpl::render (RenderContext &rcontext, const Rect &rect)
+TestBoxImpl::render (RenderContext &rcontext, const DRect &rect)
 {
   if (!handler_id_)
     {
@@ -470,7 +470,7 @@ IdlTestWidgetImpl::size_allocate (Allocation area, bool changed)
 {}
 
 void
-IdlTestWidgetImpl::render (RenderContext &rcontext, const Rect &rect)
+IdlTestWidgetImpl::render (RenderContext &rcontext, const DRect &rect)
 {}
 
 static const WidgetFactory<IdlTestWidgetImpl> test_widget_factory ("Rapicorn::IdlTestWidget");

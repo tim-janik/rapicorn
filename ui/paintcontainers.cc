@@ -279,7 +279,7 @@ AmbienceImpl::render_shade (cairo_t *cairo, int x, int y, int width, int height,
 }
 
 void
-AmbienceImpl::render (RenderContext &rcontext, const Rect &rect)
+AmbienceImpl::render (RenderContext &rcontext, const DRect &rect)
 {
   IRect ia = allocation();
   const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
@@ -466,7 +466,7 @@ FrameImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-FrameImpl::render (RenderContext &rcontext, const Rect &rect)
+FrameImpl::render (RenderContext &rcontext, const DRect &rect)
 {
   IRect ia = allocation();
   int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
@@ -791,7 +791,7 @@ ElementPainterImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
   Requisition image_size;
-  Rect fill;
+  DRect fill;
   if (load_painters())
     {
       image_size = size_painter_.image_size ();
@@ -821,7 +821,7 @@ ElementPainterImpl::size_allocate (Allocation area, bool changed)
   if (size_painter_)
     {
       const Requisition image_size = size_painter_.image_size ();
-      Rect fill = size_painter_.fill_area();
+      DRect fill = size_painter_.fill_area();
       assert_return (fill.x + fill.width <= image_size.width);
       assert_return (fill.y + fill.height <= image_size.height);
       Svg::Span spans[3] = { { 0, 0 }, { 0, 1 }, { 0, 0 } };
@@ -867,7 +867,7 @@ ElementPainterImpl::do_changed (const String &name)
 }
 
 void
-ElementPainterImpl::render (RenderContext &rcontext, const Rect &rect)
+ElementPainterImpl::render (RenderContext &rcontext, const DRect &rect)
 {
   load_painters();
   if (element_painter_)
@@ -1118,7 +1118,7 @@ draw_square (cairo_t *cr, double x, double y, double width, double height, Color
 }
 
 void
-ShapePainterImpl::render (RenderContext &rcontext, const Rect &rect)
+ShapePainterImpl::render (RenderContext &rcontext, const DRect &rect)
 {
   return_unless (fill_area_.width > 0 && fill_area_.height > 0);
   std::function<void (cairo_t*, double, double, double, double, Color, Color, bool)> draw_shape;

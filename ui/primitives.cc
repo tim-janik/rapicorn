@@ -13,7 +13,7 @@ dsqr (double x)
 }
 
 double
-Rect::dist2 (const Point &p) const
+DRect::dist2 (const Point &p) const
 {
   if (p.x <= x)
     {
@@ -39,7 +39,7 @@ Rect::dist2 (const Point &p) const
 }
 
 double
-Rect::dist (const Point &p) const
+DRect::dist (const Point &p) const
 {
   if (p.x <= x)
     {
@@ -82,42 +82,42 @@ tangent_intersection (Point l1, Point l2, Point c)
 }
 
 Point
-Rect::ul_tangent () const
+DRect::ul_tangent () const
 {
   return tangent_intersection (ll(), ur(), ul());
 }
 
 Point
-Rect::ur_tangent () const
+DRect::ur_tangent () const
 {
   return tangent_intersection (ul(), lr(), ur());
 }
 
 Point
-Rect::lr_tangent () const
+DRect::lr_tangent () const
 {
   return tangent_intersection (ll(), ur(), lr());
 }
 
 Point
-Rect::ll_tangent () const
+DRect::ll_tangent () const
 {
   return tangent_intersection (ul(), lr(), ll());
 }
 
 // Return rectangle intersection with or mapped onto @a bounds for non-intersections.
-Rect
-Rect::mapped_onto (const Rect &bounds) const
+DRect
+DRect::mapped_onto (const DRect &bounds) const
 {
   const double x1 = clamp (x, bounds.x, bounds.x + bounds.width);
   const double x2 = clamp (x + width, bounds.x, bounds.x + bounds.width);
   const double y1 = clamp (y, bounds.y, bounds.y + bounds.height);
   const double y2 = clamp (y + height, bounds.y, bounds.y + bounds.height);
-  return Rect (Point (x1, y1), Point (x2, y2));
+  return DRect (Point (x1, y1), Point (x2, y2));
 }
 
 String
-Rect::string() const
+DRect::string() const
 {
   char buffer[128];
   sprintf (buffer, "((%.17g, %.17g), %.17g, %.17g)", x, y, width, height);
@@ -125,7 +125,7 @@ Rect::string() const
 }
 
 Point
-Rect::anchor_point (Anchor anchor)
+DRect::anchor_point (Anchor anchor)
 {
   switch (anchor)
     {
@@ -142,12 +142,10 @@ Rect::anchor_point (Anchor anchor)
     }
 }
 
-Rect
-Rect::create_anchored (Anchor anchor,
-                       double     width,
-                       double     height)
+DRect
+DRect::create_anchored (Anchor anchor, double width, double height)
 {
-  Rect b (Point (0, 0), abs (width), abs (height)); /* SOUTH_WEST */
+  DRect b (Point (0, 0), abs (width), abs (height)); /* SOUTH_WEST */
   Point delta = b.anchor_point (anchor);
   b.translate (-delta.x, -delta.y);
   return b;
