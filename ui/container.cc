@@ -360,7 +360,8 @@ ContainerImpl::dispose_widget (WidgetImpl &widget)
 void
 ContainerImpl::repack_child (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew)
 {
-  widget.invalidate_parent();
+  // we must check the requisition if child packing properties changed
+  invalidate_requisition();
 }
 
 static DataKey<vector<FocusIndicator*>> focus_indicator_key;
@@ -947,7 +948,7 @@ ResizeContainerImpl::negotiate_size (const Allocation *carea)
   if (have_allocation)
     {
       area = *carea;
-      change_flags (INVALID_ALLOCATION, true); // skip notification
+      invalidate_allocation();
     }
   DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this),
                 !carea ? "probe..." : String ("assign: " + carea->string()).c_str());

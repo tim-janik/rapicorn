@@ -120,8 +120,8 @@ protected:
   friend WidgetFlag           operator^         (WidgetFlag a, WidgetFlag b) { return WidgetFlag (uint64 (a) ^ uint64 (b)); }
   friend WidgetFlag           operator|         (WidgetFlag a, WidgetFlag b) { return WidgetFlag (uint64 (a) | uint64 (b)); }
   friend WidgetFlag           operator&         (WidgetFlag a, WidgetFlag b) { return WidgetFlag (uint64 (a) & uint64 (b)); }
-  bool                        change_flags      (WidgetFlag mask, bool on);
   void                        set_flag          (WidgetFlag flag, bool on);
+  bool                        change_flags_silently  (WidgetFlag mask, bool on);
   // resizing, requisition and allocation
   virtual void                widget_invalidate      (WidgetFlag mask); // FIXME: make private
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
@@ -132,6 +132,8 @@ protected:
   bool                        tune_requisition  (int new_width, int new_height);
   /* signal methods */
   virtual void                do_changed        (const String &name) override;
+  enum class WidgetChange { NONE, VIEWABLE, STATE, FLAGS, CHILD_ADDED, CHILD_REMOVED };
+  virtual WidgetFlag          change_invalidation   (WidgetChange type, uint64 bits);
   /* idlers & timers */
   uint                        exec_fast_repeater   (const EventLoop::BoolSlot &sl);
   uint                        exec_slow_repeater   (const EventLoop::BoolSlot &sl);
