@@ -2011,36 +2011,38 @@ WidgetImpl::tune_requisition (Requisition requisition)
  * This method clears the #INVALID_ALLOCATION flag and calls expose() on the widget as needed.
  */
 void
-WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
+WidgetImpl::set_allocation (const Allocation &area, const Allocation *const clip)
 {
   Allocation sarea = area;
-  /* remember old area */
+  // capture old allocation area
   const Allocation old_allocation = clipped_allocation();
   const IRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
-  // always reallocate to re-layout children
-  change_flags_silently (INVALID_ALLOCATION, false);
+  // determine new allocation area
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  IRect new_clip = clip ? *clip : area;
+  IRect new_clip = clip ? *clip : sarea;
   if (!clip && parent())
     new_clip.intersect (parent()->clipped_allocation());
   const bool allocation_changed = allocation_ != sarea || new_clip != old_clip;
-  allocation_ = sarea;
-  clip_area (new_clip == area ? NULL : &new_clip); // invalidates old clip_area()
-  size_allocate (allocation_, allocation_changed);
-  Allocation a = allocation();
-  // expose old area
-  if (allocation_changed)
+  if (test_flag (INVALID_ALLOCATION) || allocation_changed)
     {
-      Region region (old_allocation);
-      expose_unclipped (region); // don't intersect with new allocation
+      change_flags_silently (INVALID_ALLOCATION, false);
+      allocation_ = sarea;
+      clip_area (new_clip == area ? NULL : &new_clip);  // invalidates old clip_area()
+      size_allocate (allocation_, allocation_changed);  // causes re-layout of immediate children
+      // expose old area
+      if (allocation_changed)
+        {
+          Region region (old_allocation);
+          expose_unclipped (region);                    // don't intersect with new allocation
+        }
+      // expose new area
+      if (allocation_changed)
+        invalidate_content();
+      SZDEBUG ("size allocation: 0x%016x:%s: %s => %s", size_t (this),
+               Factory::factory_context_type (factory_context()), id(),
+               allocation().string());
     }
-  /* expose new area */
-  if (allocation_changed)
-    expose();
-  SZDEBUG ("size allocation: 0x%016x:%s: %s => %s", size_t (this),
-           Factory::factory_context_type (factory_context()), id(),
-           a.string());
 }
 
 // == rendering ==
