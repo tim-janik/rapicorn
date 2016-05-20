@@ -2021,11 +2021,6 @@ void
 WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
 {
   Allocation sarea = area;
-  const double smax = 4503599627370496.; // 52bit precision is maximum for doubles
-  sarea.x      = CLAMP (sarea.x, -smax, smax);
-  sarea.y      = CLAMP (sarea.y, -smax, smax);
-  sarea.width  = CLAMP (sarea.width,  0, smax);
-  sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
   const Allocation old_allocation = clipped_allocation();
   const IRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
