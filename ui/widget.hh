@@ -77,7 +77,7 @@ private:
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        acache_check       () const;
   void                        widget_adjust_state       (WidgetState state, bool on);
-  void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
+  void                        expose_unclipped   (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
   void                        data_context_changed  ();
   bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
@@ -126,7 +126,6 @@ protected:
   virtual void                widget_invalidate      (WidgetFlag mask); // FIXME: make private
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
   virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
-  virtual void                invalidate_parent ();
   void                        clip_area         (const Allocation *clip);
   bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (int new_width, int new_height);

@@ -1414,33 +1414,20 @@ WidgetImpl::changed (const String &name)
 }
 
 void
-WidgetImpl::invalidate_parent ()
-{
-  /* propagate (size) invalidation from children to parents */
-  WidgetImpl *p = parent();
-  if (p)
-    p->invalidate_size();
-}
-
-void
 WidgetImpl::widget_invalidate (WidgetFlag mask)
 {
   return_unless (0 == (mask & ~(INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT)));
   return_unless (mask != 0);
   const bool had_invalid_content = test_flag (INVALID_CONTENT);
-  const bool had_invalid_allocation = test_flag (INVALID_ALLOCATION);
   const bool had_invalid_requisition = test_flag (INVALID_REQUISITION);
-  if (!had_invalid_content && (mask & INVALID_CONTENT))
-    expose();
-  if (!had_invalid_content && (mask & INVALID_CONTENT))
-    invalidate_parent(); // FIXME: this is only needed b/c expose() doesn't queue a redraw atm
   change_flags_silently (mask, true);
-  if ((!had_invalid_requisition && (mask & INVALID_REQUISITION)) ||
-      (!had_invalid_allocation && (mask & INVALID_ALLOCATION)))
-    {
-      invalidate_parent(); // need new size-request from parent
-      WidgetGroup::invalidate_widget (*this);
-    }
+  if (!had_invalid_content && test_flag (INVALID_CONTENT))
+    expose();
+  if (!had_invalid_requisition && test_flag (INVALID_REQUISITION))
+    WidgetGroup::invalidate_widget (*this);
+  WindowImpl *window = get_window();
+  if (window)
+    window->queue_resize_redraw();
 }
 
 /// Determine "internal" size requisition of a widget, including overrides, excluding groupings.
@@ -1473,6 +1460,9 @@ WidgetImpl::inner_size_request()
         {
           requisition_ = inner;
           widget_invalidate (INVALID_ALLOCATION);
+          WidgetImpl *p = parent();
+          if (p)
+            p->invalidate_requisition(); // parent needs to recheck size once a child changed size
         }
     }
   return visible() ? requisition_ : Requisition();
@@ -1498,7 +1488,7 @@ WidgetImpl::requisition ()
 }
 
 void
-WidgetImpl::expose_internal (const Region &region)
+WidgetImpl::expose_unclipped (const Region &region)
 {
   if (!region.empty())
     {
@@ -1513,16 +1503,15 @@ WidgetImpl::expose_internal (const Region &region)
  *
  * Cause the given @a region of @a this widget to be rerendered.
  * The region is constrained to the clipped_allocation().
- * This method sets the #INVALID_CONTENT flag.
  */
 void
 WidgetImpl::expose (const Region &region) // widget relative
 {
-  if (drawable() && !test_flag (INVALID_CONTENT))
+  if (drawable())
     {
       Region r (clipped_allocation());
       r.intersect (region);
-      expose_internal (r);
+      expose_unclipped (r);
     }
 }
 
@@ -1990,7 +1979,7 @@ WidgetImpl::tune_requisition (Requisition requisition)
   WidgetImpl *p = parent();
   if (p && !test_flag (INVALID_REQUISITION))
     {
-      ResizeContainerImpl *rc = p->get_resize_container();
+      WindowImpl *rc = get_window();
       if (rc && rc->requisitions_tunable())
         {
           Requisition ovr (width(), height());
@@ -1999,7 +1988,11 @@ WidgetImpl::tune_requisition (Requisition requisition)
           if (requisition.width != requisition_.width || requisition.height != requisition_.height)
             {
               requisition_ = requisition;
-              invalidate_parent(); // need new size-request on parent
+              /* once a child changes size, its parent needs to:
+               * - check the parent size, it might have changed
+               * - reallocate the child, possibly changing the previous allocation
+               */
+              p->invalidate_size();
               return true;
             }
         }
@@ -2036,16 +2029,14 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   clip_area (new_clip == area ? NULL : &new_clip); // invalidates old clip_area()
   size_allocate (allocation_, allocation_changed);
   Allocation a = allocation();
-  const bool need_expose = allocation_changed || test_flag (INVALID_CONTENT);
-  change_flags_silently (INVALID_CONTENT, false);
   // expose old area
-  if (need_expose)
+  if (allocation_changed)
     {
       Region region (old_allocation);
-      expose_internal (region); // don't intersect with new allocation
+      expose_unclipped (region); // don't intersect with new allocation
     }
   /* expose new area */
-  if (need_expose)
+  if (allocation_changed)
     expose();
   SZDEBUG ("size allocation: 0x%016x:%s: %s => %s", size_t (this),
            Factory::factory_context_type (factory_context()), id(),
@@ -2088,6 +2079,7 @@ WidgetImpl::render_into (cairo_t *cr, const Region &region)
         }
       cairo_restore (cr);
     }
+  set_flag (INVALID_CONTENT, false);
 }
 
 /// Render widget's clipped allocation area contents into the rendering context provided.

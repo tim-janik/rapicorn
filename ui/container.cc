@@ -879,13 +879,11 @@ SingleContainerImpl::~SingleContainerImpl()
 }
 
 // == ResizeContainerImpl ==
-ResizeContainerImpl::ResizeContainerImpl() :
-  tunable_requisition_counter_ (0), resizer_ (0)
+ResizeContainerImpl::ResizeContainerImpl()
 {}
 
 ResizeContainerImpl::~ResizeContainerImpl()
 {
-  clear_exec (&resizer_);
   ancestry_cache_.resize_container = NULL;
 }
 
@@ -913,93 +911,12 @@ ResizeContainerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 }
 
 void
-ResizeContainerImpl::check_resize_handler ()
-{
-  // always called via event loop
-  assert_return (resizer_ != 0);
-  resizer_ = 0;
-  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-  if (test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
-    check_resize();
-}
-
-void
-ResizeContainerImpl::check_resize ()
-{
-  if (anchored() && visible() && test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
-    {
-      ContainerImpl *pc = parent();
-      if (pc && pc->test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
-        DEBUG_RESIZE ("%12s: leaving check_resize to ancestor: %s", debug_name ("%n"), pc->debug_name ("%n"));
-      else
-        {
-          Allocation area = allocation();
-          negotiate_size (&area);
-        }
-    }
-}
-
-void
-ResizeContainerImpl::negotiate_size (const Allocation *carea)
-{
-  assert_return (requisitions_tunable() == false); // prevent recursion
-  const bool have_allocation = carea != NULL;
-  Allocation area;
-  if (have_allocation)
-    {
-      area = *carea;
-      invalidate_allocation();
-    }
-  DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this),
-                !carea ? "probe..." : String ("assign: " + carea->string()).c_str());
-  /* this is the core of the resizing loop. via Widget.tune_requisition(), we
-   * allow widgets to adjust the requisition from within size_allocate().
-   * whether the tuned requisition is honored at all, depends on
-   * tunable_requisition_counter_.
-   * currently, we simply freeze the allocation after 3 iterations. for the
-   * future it's possible to honor the tuned requisition only partially or
-   * proportionally as tunable_requisition_counter_ decreases, so to mimick
-   * a simulated annealing process yielding the final layout.
-   */
-  tunable_requisition_counter_ = 3;
-  while (test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
-    {
-      const Requisition creq = requisition(); // unsets INVALID_REQUISITION
-      if (!have_allocation)
-        {
-          // seed allocation from requisition
-          area.width = creq.width;
-          area.height = creq.height;
-        }
-      set_allocation (area); // unsets INVALID_ALLOCATION, may re-::invalidate_size()
-      if (tunable_requisition_counter_)
-        tunable_requisition_counter_--;
-    }
-  tunable_requisition_counter_ = 0;
-  DEBUG_RESIZE ("%12s 0x%016x, %s", debug_name ("%n"), size_t (this), String ("result: " + area.string()).c_str());
-}
-
-static const bool subtree_resizing = RAPICORN_FLIPPER ("subtree-resizing", "Enable resizing without propagation for ResizeContainerImpl subtrees.");
-
-void
 ResizeContainerImpl::widget_invalidate (WidgetFlag mask)
 {
   this->SingleContainerImpl::widget_invalidate (mask);
   WindowImpl *w = get_window();
-  if ((w == this || subtree_resizing) && !resizer_ && test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
-    {
-      EventLoop *loop = w ? w->get_loop() : NULL;
-      if (loop)
-        resizer_ = loop->exec_callback (Aida::slot (*this, &ResizeContainerImpl::check_resize_handler), WindowImpl::PRIORITY_RESIZE);
-    }
-}
-
-void
-ResizeContainerImpl::invalidate_parent()
-{
-  // skip invalidate_size(), since ResizeContainerImpl has its own handler
-  if (!subtree_resizing)
-    SingleContainerImpl::invalidate_parent();
+  if (w)
+    w->queue_resize_redraw();
 }
 
 // == MultiContainerImpl ==

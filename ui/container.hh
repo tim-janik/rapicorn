@@ -105,21 +105,13 @@ struct WidgetImpl::AncestryCache {
 
 // == Resize Container ==
 class ResizeContainerImpl : public virtual SingleContainerImpl {
-  uint                  tunable_requisition_counter_;
-  uint                  resizer_;
   AncestryCache         ancestry_cache_;
-  void                  check_resize_handler    ();
   virtual void          widget_invalidate       (WidgetFlag mask) override;
 protected:
   virtual const AncestryCache* fetch_ancestry_cache () override;
-  virtual void          invalidate_parent       () override;
-  virtual void          check_resize            ();
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
-  void                  negotiate_size          (const Allocation *carea);
   explicit              ResizeContainerImpl     ();
   virtual              ~ResizeContainerImpl     ();
-public:
-  bool                  requisitions_tunable    () const { return tunable_requisition_counter_ > 0; }
 };
 
 // == Multi Child Container ==
