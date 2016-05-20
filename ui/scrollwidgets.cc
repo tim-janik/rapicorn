@@ -43,13 +43,13 @@ ScrollAreaImpl::get_adjustment (AdjustmentSourceType adj_source, const String &n
 double
 ScrollAreaImpl::x_offset ()
 {
-  return round (hadjustment().value());
+  return hadjustment().value();
 }
 
 double
 ScrollAreaImpl::y_offset ()
 {
-  return round (vadjustment().value());
+  return vadjustment().value();
 }
 
 void
