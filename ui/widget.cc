@@ -1418,10 +1418,9 @@ WidgetImpl::widget_invalidate (WidgetFlag mask)
 {
   return_unless (0 == (mask & ~(INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT)));
   return_unless (mask != 0);
-  const bool had_invalid_content = test_flag (INVALID_CONTENT);
   const bool had_invalid_requisition = test_flag (INVALID_REQUISITION);
   change_flags_silently (mask, true);
-  if (!had_invalid_content && test_flag (INVALID_CONTENT))
+  if (test_flag (INVALID_CONTENT))
     expose();
   if (!had_invalid_requisition && test_flag (INVALID_REQUISITION))
     WidgetGroup::invalidate_widget (*this);
