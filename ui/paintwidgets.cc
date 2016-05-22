@@ -344,7 +344,7 @@ DrawableImpl::draw_rect (int x, int y, const Pixbuf &pixbuf)
       x_ = 0;
       y_ = 0;
     }
-  expose();
+  invalidate_content();
 }
 
 void
