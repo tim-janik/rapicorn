@@ -1134,7 +1134,7 @@ static class OvrKey : public DataKey<Requisition> {
 } override_requisition;
 
 bool
-WidgetImpl::process_event (const Event &event, bool capture) // widget coordinates relative
+WidgetImpl::process_event (const Event &event, bool capture) // viewport coordinates
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
@@ -1148,8 +1148,9 @@ WidgetImpl::process_event (const Event &event, bool capture) // widget coordinat
   return handled;
 }
 
+/// Check if widget contains Point @a p in parent-relative coordinates.
 bool
-WidgetImpl::point (Point p) /* widget coordinates relative */
+WidgetImpl::point (Point p)
 {
   const Allocation a = clipped_allocation();
   return (drawable() &&
@@ -1983,7 +1984,7 @@ WidgetImpl::tune_requisition (Requisition requisition)
   return false;
 }
 
-/** Set size allocation of a widget.
+/** Set parent-relative size allocation of a widget.
  *
  * Allocate the given @a area to @a this widget.
  * The size allocation is used by the widget for layouting of its contents.
@@ -1993,7 +1994,7 @@ WidgetImpl::tune_requisition (Requisition requisition)
  * This method clears the #INVALID_ALLOCATION flag and calls expose() on the widget as needed.
  */
 void
-WidgetImpl::set_allocation (const Allocation &area)
+WidgetImpl::set_child_allocation (const Allocation &area)
 {
   Allocation sarea = area;
   // capture old allocation area
@@ -2006,7 +2007,7 @@ WidgetImpl::set_allocation (const Allocation &area)
     {
       change_flags_silently (INVALID_ALLOCATION, false);
       allocation_ = sarea;
-      size_allocate (allocation_, allocation_changed);  // causes re-layout of immediate children
+      size_allocate (allocation(), allocation_changed);  // causes re-layout of immediate children
       // expose old area
       if (allocation_changed)
         {

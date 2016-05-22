@@ -469,8 +469,7 @@ FrameImpl::size_allocate (Allocation area, bool changed)
           carea.height -= 2 * thickness;
         }
       WidgetImpl &child = get_child();
-      Allocation child_area = layout_child (child, carea);
-      child.set_allocation (child_area);
+      layout_child_allocation (child, carea);
     }
 }
 
@@ -675,8 +674,7 @@ LayerPainterImpl::size_allocate (Allocation area, bool changed)
       WidgetImpl &child = *childp;
       if (!child.visible())
         continue;
-      Allocation carea = layout_child (child, area);
-      child.set_allocation (carea);
+      layout_child_allocation (child, area);
     }
 }
 
@@ -862,8 +860,7 @@ ElementPainterImpl::size_allocate (Allocation area, bool changed)
   if (has_visible_child())
     {
       WidgetImpl &child = get_child();
-      const Allocation child_area = layout_child (child, fill_area_);
-      child.set_allocation (child_area);
+      layout_child_allocation (child, fill_area_);
     }
 }
 
@@ -1009,8 +1006,7 @@ ShapePainterImpl::size_allocate (Allocation area, bool changed)
   if (has_visible_child())
     {
       WidgetImpl &child = get_child();
-      const Allocation child_area = layout_child (child, fill_area_);
-      child.set_allocation (child_area);
+      layout_child_allocation (child, fill_area_);
     }
 }
 

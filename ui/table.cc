@@ -842,7 +842,7 @@ TableLayoutImpl::size_allocate_pass2 ()
           child_area.height = height;
         }
       /* allocate child */
-      child->set_allocation (child_area);
+      child->set_child_allocation (child_area);
     }
 }
 

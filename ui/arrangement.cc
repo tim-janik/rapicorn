@@ -162,7 +162,7 @@ ArrangementImpl::size_allocate (Allocation area, bool changed)
       carea.x += area.x;
       carea.y += area.y;
       /* allocate child */
-      child.set_allocation (carea);
+      child.set_child_allocation (carea);
     }
 }
 

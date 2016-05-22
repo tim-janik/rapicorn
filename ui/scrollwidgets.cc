@@ -185,8 +185,7 @@ ScrollPortImpl::size_allocate (const Allocation area, bool changed)
     child_area.height = max (rq.height, area.height);
   else
     child_area.height = rq.height;
-  child_area = layout_child (child, child_area);
-  child.set_allocation (child_area);
+  layout_child_allocation (child, child_area);
   if (!fix_id_)
     {
       WindowImpl *window = get_window();

@@ -796,6 +796,14 @@ ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
   return area;
 }
 
+/// Shorthand for set_child_allocation() and layout_child()
+void
+ContainerImpl::layout_child_allocation (WidgetImpl &child, const Allocation &carea)
+{
+  const Allocation child_area = layout_child (child, carea);
+  child.set_child_allocation (child_area);
+}
+
 SingleContainerImpl::SingleContainerImpl () :
   child_widget (NULL)
 {}
@@ -851,7 +859,7 @@ SingleContainerImpl::size_allocate (Allocation area, bool changed)
     {
       WidgetImpl &child = get_child();
       Allocation child_area = layout_child (child, area);
-      child.set_allocation (child_area);
+      child.set_child_allocation (child_area);
     }
 }
 

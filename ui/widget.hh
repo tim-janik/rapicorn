@@ -295,10 +295,11 @@ public:
   void                       compose_into              (cairo_t *cr, const vector<IRect> &irects);
   virtual bool               point                     (Point        p);            // widget coordinates relative
   /* public size accessors */
-  virtual Requisition        requisition        ();                              // effective size requisition
-  void                       set_allocation     (const Allocation &area); // assign new allocation
-  const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
-  Allocation                 clipped_allocation () const;
+  virtual Requisition        requisition          ();                              // effective size requisition
+  void                       set_child_allocation (const Allocation &area); // assign parent-relative allocation
+  const Allocation&          child_allocation     () const { return allocation_; } ///< Parent relative allocation, see also allocation().
+  Allocation                 allocation           () const { return Allocation (0, 0, allocation_.width, allocation_.height); } ///< Widget relative allocation.
+  Allocation                 clipped_allocation   () const;
   // theming & appearance
   Color                 current_color           (StyleColor color_type, const String &detail = "");
   Color                 state_color             (WidgetState state, StyleColor color_type, const String &detail = "");

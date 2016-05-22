@@ -217,7 +217,7 @@ SliderTroughImpl::reallocate_child ()
       area.y += round (nvalue() * (area.height - rq.height));
       area.height = round (rq.height);
     }
-  child.set_allocation (area);
+  child.set_child_allocation (area);
 }
 
 void

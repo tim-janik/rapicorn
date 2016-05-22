@@ -1062,7 +1062,7 @@ WindowImpl::check_widget_allocation (WidgetImpl &widget)
       return INVALID_REQUISITION;
     }
   if (widget.test_flag (INVALID_ALLOCATION))
-    widget.set_allocation (widget.allocation()); // clears INVALID_ALLOCATION
+    widget.set_child_allocation (widget.child_allocation()); // clears INVALID_ALLOCATION
   uint64 invalidation_flags = 0;
   ContainerImpl *container = widget.as_container_impl();
   if (container)
@@ -1097,7 +1097,7 @@ WindowImpl::negotiate_sizes (const Allocation *new_window_area)
   // assign new size allocation if provided
   tunable_requisition_counter_ = 3;
   if (new_window_area)
-    set_allocation (*new_window_area);
+    set_child_allocation (*new_window_area);
   /* negotiate and allocate sizes, initially allow tuning and re-allocations:
    * - widgets can tune_requisition() during size_allocate() to negotiate width
    *   for height or vice versa.
@@ -1112,11 +1112,11 @@ WindowImpl::negotiate_sizes (const Allocation *new_window_area)
       if (test_flag (INVALID_ALLOCATION))
         {
           if (new_window_area)
-            set_allocation (allocation());
+            set_child_allocation (child_allocation());
           else
             {
               const Requisition rsize = requisition();
-              set_allocation (Allocation (0, 0, rsize.width, rsize.height));
+              set_child_allocation (Allocation (0, 0, rsize.width, rsize.height));
             }
         }
       do

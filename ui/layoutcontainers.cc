@@ -37,8 +37,8 @@ AlignmentImpl::size_allocate (Allocation area, bool changed)
   area.y += min (top_padding(), area.height);
   area.height -= min (area.height, bottom_padding() + top_padding());
   // expand/scale child
-  Allocation child_area = layout_child (child, area);
-  child.set_allocation (child_area);
+  const Allocation child_area = layout_child (child, area);
+  child.set_child_allocation (child_area);
 }
 
 static inline int
