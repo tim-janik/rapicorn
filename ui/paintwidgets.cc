@@ -315,9 +315,12 @@ DrawableImpl::size_request (Requisition &requisition)
 void
 DrawableImpl::size_allocate (Allocation area, bool changed)
 {
-  pixbuf_ = Pixbuf();
-  x_ = 0;
-  y_ = 0;
+  if (false) // clear out, can lead to flicker
+    {
+      pixbuf_ = Pixbuf();
+      x_ = 0;
+      y_ = 0;
+    }
   sig_redraw.emit (area.x, area.y, area.width, area.height);
 }
 
