@@ -3,6 +3,7 @@
 #include "application.hh"
 #include "factory.hh"
 #include "uithread.hh"
+#include "rcore/cairoutils.hh"
 #include <string.h> // memcpy
 #include <algorithm>
 
@@ -184,15 +185,15 @@ WindowImpl::set_focus (WidgetImpl *widget)
 cairo_surface_t*
 WindowImpl::create_snapshot (const IRect &subarea)
 {
-  const Allocation area = allocation();
-  Region region = area;
-  region.intersect (subarea);
+  const IRect rect = subarea.intersection (allocation());
   cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
-  critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+  CAIRO_CHECK_STATUS (surface);
   cairo_surface_set_device_offset (surface, -subarea.x, -subarea.y);
   cairo_t *cr = cairo_create (surface);
-  critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
-  render_into (cr, region);
+  CAIRO_CHECK_STATUS (cr);
+  vector<IRect> irects;
+  irects.push_back (rect);
+  compose_into (cr, irects);
   cairo_destroy (cr);
   return surface;
 }
@@ -754,15 +755,23 @@ WindowImpl::draw_now ()
       Region region = area;
       region.intersect (peek_expose_region());
       discard_expose_region();
-      // rendering rectangle
+      // create compose surface extents
       IRect rrect = region.extents();
       const int x1 = rrect.x, y1 = rrect.y, x2 = rrect.x + rrect.width, y2 = rrect.y + rrect.height;
       cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, x2 - x1, y2 - y1);
       cairo_surface_set_device_offset (surface, -x1, -y1);
-      critical_unless (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS);
+      CAIRO_CHECK_STATUS (surface);
       cairo_t *cr = cairo_create (surface);
-      critical_unless (CAIRO_STATUS_SUCCESS == cairo_status (cr));
-      render_into (cr, region);
+      CAIRO_CHECK_STATUS (cr);
+      // test code
+      cairo_rectangle (cr, area.x, area.y, area.width, area.height);
+      cairo_set_source_rgb (cr, 0, 0, 1);
+      cairo_paint (cr);
+      // compose into region rectangles
+      vector<IRect> irects;
+      region.list_rects (irects);
+      compose_into (cr, irects);
+      // and blit contents onto the screen
       display_window_->blit_surface (surface, region);
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
@@ -793,7 +802,6 @@ WindowImpl::render (RenderContext &rcontext)
     cairo_rectangle (cr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
   cairo_clip (cr);
   cairo_paint (cr);
-  ViewportImpl::render (rcontext);
 }
 
 void
@@ -1172,7 +1180,10 @@ WindowImpl::resize_redraw (const Allocation *new_window_area, bool resize_only)
   if (resize_only)
     need_resize_ = true;                                // must redraw later
   else if (!need_resize_ && !pending_win_size_ && (exposes_pending() || invalidation_flags & INVALID_CONTENT))
-    draw_now();
+    {
+      render_widget();
+      draw_now();
+    }
   const uint64 stop = timestamp_realtime();
   DEBUG_RESIZE ("request=%s allocate=%s pws=%d expose=%s resize_elapsed=%.3fms redraw_elapsed=%.3fms nresize=%d",
                 new_window_area ? "-" : string_format ("%.0fx%.0f", requisition().width, requisition().height),

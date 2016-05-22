@@ -74,6 +74,7 @@ private:
   Requisition                 requisition_;
   Allocation                  allocation_, clip_area_;
   PackInfo                   *pack_info_;
+  cairo_surface_t            *cached_surface_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        acache_check       () const;
   void                        widget_adjust_state       (WidgetState state, bool on);
@@ -87,6 +88,7 @@ private:
   void                        widget_propagate_state (WidgetState prev_state);
   virtual bool                widget_maybe_toggled   () const;
   virtual bool                widget_maybe_selected  () const;
+  void                        widget_render_recursive (const IRect &ancestry_clip);
   void                        invalidate_all         ()              { widget_invalidate (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT); }
 protected:
   virtual void                fabricated            (); ///< Method called on all widgets after creation via Factory.
@@ -286,14 +288,12 @@ protected:
   struct WidgetChain { WidgetImpl *widget; WidgetChain *next; WidgetChain() : widget (NULL), next (NULL) {} };
   // rendering
   class RenderContext;
-  virtual void               render_widget             (RenderContext    &rcontext);
-  virtual void               render_recursive          (RenderContext    &rcontext);
-  virtual void               render                    (RenderContext    &rcontext) = 0;
-  const Region&              rendering_region          (RenderContext    &rcontext) const;
-  virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
-                                                        const Allocation &area = Allocation (-1, -1, 0, 0));
+  void                       render_widget             ();
+  virtual void               render                    (RenderContext &rcontext) = 0;
+  Region                     rendering_region          (RenderContext &rcontext) const;
+  virtual cairo_t*           cairo_context             (RenderContext &rcontext);
 public:
-  void                       render_into               (cairo_t *cr, const Region &region);
+  void                       compose_into              (cairo_t *cr, const vector<IRect> &irects);
   virtual bool               point                     (Point        p);            // widget coordinates relative
   /* public size accessors */
   virtual Requisition        requisition        ();                              // effective size requisition

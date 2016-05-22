@@ -68,7 +68,6 @@ public:
   virtual void          point_children  (Point                   p, /* widget coordinates relative */
                                          std::vector<WidgetImplP>     &stack);
   virtual ContainerImpl* as_container_impl ()                           { return this; }
-  virtual void          render_recursive(RenderContext &rcontext);
   void                  debug_tree      (String indent = String());
   // ContainerIface
   virtual WidgetIfaceP create_widget    (const String &widget_identifier, const StringSeq &args) override;
