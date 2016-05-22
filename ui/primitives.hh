@@ -203,6 +203,7 @@ struct IRect {
   bool          operator!=      (const DRect &other) const                      { return !operator== (other); }
   IRect&        intersect       (const IRect &r);
   bool          intersecting    (const IRect &r) const;
+  IRect         intersection    (const IRect &r) const                          { return IRect (*this).intersect (r); }
   IRect&        assign          (int32 cx, int32 cy, int32 cwidth, int32 cheight);
   bool          empty           () const                                        { return !width || !height; }
   int32         upper_x         () const                                        { return x + width; }
