@@ -781,11 +781,11 @@ WindowImpl::draw_now ()
 }
 
 void
-WindowImpl::render (RenderContext &rcontext, const IRect &rect)
+WindowImpl::render (RenderContext &rcontext)
 {
   // paint background
   Color col = background();
-  cairo_t *cr = cairo_context (rcontext, rect);
+  cairo_t *cr = cairo_context (rcontext);
   cairo_set_source_rgba (cr, col.red1(), col.green1(), col.blue1(), col.alpha1());
   vector<DRect> drects;
   rendering_region (rcontext).list_rects (drects);
@@ -793,7 +793,7 @@ WindowImpl::render (RenderContext &rcontext, const IRect &rect)
     cairo_rectangle (cr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
   cairo_clip (cr);
   cairo_paint (cr);
-  ViewportImpl::render (rcontext, rect);
+  ViewportImpl::render (rcontext);
 }
 
 void

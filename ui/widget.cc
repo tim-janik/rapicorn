@@ -2088,7 +2088,6 @@ void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
-  IRect area = clipped_allocation();
   IRect *saved_hierarchical_clip = rcontext.hierarchical_clip;
   IRect newclip;
   const IRect *clip = clip_area();
@@ -2099,8 +2098,7 @@ WidgetImpl::render_widget (RenderContext &rcontext)
         newclip.intersect (*saved_hierarchical_clip);
       rcontext.hierarchical_clip = &newclip;
     }
-  area.intersect (rendering_region (rcontext).extents());
-  render (rcontext, area);
+  render (rcontext);
   render_recursive (rcontext);
   rcontext.hierarchical_clip = saved_hierarchical_clip;
   while (rcontext.cairos.size() > n_cairos)
@@ -2111,7 +2109,7 @@ WidgetImpl::render_widget (RenderContext &rcontext)
 }
 
 void
-WidgetImpl::render (RenderContext &rcontext, const IRect &rect)
+WidgetImpl::render (RenderContext &rcontext)
 {}
 
 void

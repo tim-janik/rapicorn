@@ -277,12 +277,12 @@ TestContainerImpl::assert_value (const char *assertion_name, double value, doubl
 }
 
 void
-TestContainerImpl::render (RenderContext &rcontext, const IRect &rect)
+TestContainerImpl::render (RenderContext &rcontext)
 {
   if (paint_allocation_)
     {
       IRect ia = allocation();
-      cairo_t *cr = cairo_context (rcontext, rect);
+      cairo_t *cr = cairo_context (rcontext);
       CPainter painter (cr);
       painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, style()->resolve_color ("black"));
     }
@@ -378,7 +378,7 @@ TestBoxImpl::make_snapshot ()
 }
 
 void
-TestBoxImpl::render (RenderContext &rcontext, const IRect &rect)
+TestBoxImpl::render (RenderContext &rcontext)
 {
   if (!handler_id_)
     {
@@ -510,7 +510,7 @@ IdlTestWidgetImpl::size_allocate (Allocation area, bool changed)
 {}
 
 void
-IdlTestWidgetImpl::render (RenderContext &rcontext, const IRect &rect)
+IdlTestWidgetImpl::render (RenderContext &rcontext)
 {}
 
 static const WidgetFactory<IdlTestWidgetImpl> test_widget_factory ("Rapicorn::IdlTestWidget");

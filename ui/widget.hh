@@ -288,7 +288,7 @@ protected:
   class RenderContext;
   virtual void               render_widget             (RenderContext    &rcontext);
   virtual void               render_recursive          (RenderContext    &rcontext);
-  virtual void               render                    (RenderContext    &rcontext, const IRect &rect) = 0;
+  virtual void               render                    (RenderContext    &rcontext) = 0;
   const Region&              rendering_region          (RenderContext    &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
                                                         const Allocation &area = Allocation (-1, -1, 0, 0));
