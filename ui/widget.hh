@@ -72,7 +72,7 @@ private:
   const AncestryCache        *acache_; // cache poninter may change for const this
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
-  Allocation                  allocation_, clip_area_;
+  Allocation                  allocation_;
   PackInfo                   *pack_info_;
   cairo_surface_t            *cached_surface_;
   Requisition                 inner_size_request (); // ungrouped size requisition
@@ -106,7 +106,7 @@ protected:
     NEEDS_FOCUS_INDICATOR     = 1 <<  6, ///< Flag used for containers that need a focus-indicator to receive input focus.
     HAS_FOCUS_INDICATOR       = 1 <<  7, ///< Flag set on #NEEDS_FOCUS_INDICATOR containers if a descendant provides a focus-indicator.
     HAS_DEFAULT               = 1 <<  8, ///< Flag indicating widget to receive default activation, see has_default()
-    HAS_CLIP_AREA             = 1 <<  9, ///< Flag indicating wether a clip_area() has been assigned or not.
+    /* unused = 1 <<  9, */
     INVALID_REQUISITION       = 1 << 10, ///< Flag indicates the need update widget's size requisition, see requisition()
     INVALID_ALLOCATION        = 1 << 11, ///< Flag indicates the need update widget's allocation, see set_allocation()
     INVALID_CONTENT           = 1 << 12, ///< Flag indicates that the widget's entire contents need to be repainted, see expose()
@@ -128,7 +128,6 @@ protected:
   virtual void                widget_invalidate      (WidgetFlag mask); // FIXME: make private
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
   virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
-  void                        clip_area         (const Allocation *clip);
   bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (int new_width, int new_height);
   /* signal methods */
@@ -205,7 +204,7 @@ public:
   virtual void                allow_focus       (bool b) override; ///< Toggle if widget may receive input focus.
   bool                        ancestry_visible  () const; ///< Check if ancestry is fully visible.
   bool                        viewable          () const; // visible() && !STASHED
-  bool                        drawable          () const; // viewable() && clipped_allocation > 0
+  bool                        drawable          () const; // viewable() && allocation > 0
   bool                        key_sensitive     () const;
   bool                        pointer_sensitive () const;
   bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
@@ -297,11 +296,9 @@ public:
   virtual bool               point                     (Point        p);            // widget coordinates relative
   /* public size accessors */
   virtual Requisition        requisition        ();                              // effective size requisition
-  void                       set_allocation     (const Allocation &area,
-                                                 const Allocation *clip = NULL); // assign new allocation
+  void                       set_allocation     (const Allocation &area); // assign new allocation
   const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
   Allocation                 clipped_allocation () const;
-  const Allocation*          clip_area          () const;
   // theming & appearance
   Color                 current_color           (StyleColor color_type, const String &detail = "");
   Color                 state_color             (WidgetState state, StyleColor color_type, const String &detail = "");

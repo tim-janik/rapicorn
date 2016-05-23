@@ -1625,8 +1625,6 @@ WidgetImpl::dump_private_data (TestStream &tstream)
 {
   tstream.dump ("requisition", string_format ("(%.17g, %.17g)", requisition().width, requisition().height));
   tstream.dump ("allocation", allocation().string());
-  const Allocation *carea = clip_area();
-  tstream.dump ("clip_area", carea ? carea->string() : "");
   tstream.dump ("factory_context", string_format ("{ id=%s, type=%s, impl=%s }",
                                                   Factory::factory_context_id (factory_context()),
                                                   Factory::factory_context_type (factory_context()),
@@ -1930,23 +1928,6 @@ WidgetImpl::focus_color ()
   return state_color (state(), StyleColor::FOCUS_COLOR);
 }
 
-/// Return clipping area for rendering and event processing if one is set.
-const Allocation*
-WidgetImpl::clip_area () const
-{
-  return test_flag (HAS_CLIP_AREA) ? &clip_area_ : NULL;
-}
-
-/// Assign clipping area for rendering and event processing.
-void
-WidgetImpl::clip_area (const Allocation *clip)
-{
-  const bool has_clip_area = clip != NULL;
-  clip_area_ = has_clip_area ? *clip : IRect();
-  if (has_clip_area != test_flag (HAS_CLIP_AREA))
-    change_flags_silently (HAS_CLIP_AREA, has_clip_area);
-}
-
 /** Return widget allocation area accounting for clip_area().
  *
  * For any rendering or event processing purposes, clipped_allocation() should be used over allocation().
@@ -1956,9 +1937,11 @@ Allocation
 WidgetImpl::clipped_allocation () const
 {
   Allocation area = allocation();
+#if 0 // FIXME
   const Allocation *clip = clip_area();
   if (clip)
     area.intersect (*clip);
+#endif
   return area;
 }
 
@@ -2005,30 +1988,24 @@ WidgetImpl::tune_requisition (Requisition requisition)
  * Allocate the given @a area to @a this widget.
  * The size allocation is used by the widget for layouting of its contents.
  * That is, its rendering contents and children of a container will be constrained to the allocation() area.
- * Normally, children are clipped to their parent's allocation, this can be overridden by
- * passing a different @a clip area which constrains the part of the allocation to be rendered
- * and is sensitive for input event processing, see clipped_allocation().
+ * Normally, children are clipped to their parent's allocation, which constrains the part of the
+ * allocation that is to be rendered and is sensitive for input event processing, see clipped_allocation().
  * This method clears the #INVALID_ALLOCATION flag and calls expose() on the widget as needed.
  */
 void
-WidgetImpl::set_allocation (const Allocation &area, const Allocation *const clip)
+WidgetImpl::set_allocation (const Allocation &area)
 {
   Allocation sarea = area;
   // capture old allocation area
   const Allocation old_allocation = clipped_allocation();
-  const IRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
   // determine new allocation area
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  IRect new_clip = clip ? *clip : sarea;
-  if (!clip && parent())
-    new_clip.intersect (parent()->clipped_allocation());
-  const bool allocation_changed = allocation_ != sarea || new_clip != old_clip;
+  const bool allocation_changed = allocation_ != sarea;
   if (test_flag (INVALID_ALLOCATION) || allocation_changed)
     {
       change_flags_silently (INVALID_ALLOCATION, false);
       allocation_ = sarea;
-      clip_area (new_clip == area ? NULL : &new_clip);  // invalidates old clip_area()
       size_allocate (allocation_, allocation_changed);  // causes re-layout of immediate children
       // expose old area
       if (allocation_changed)
@@ -2192,20 +2169,15 @@ WidgetImpl::cairo_context (RenderContext &rcontext)
   return rcontext.cairo;
 }
 
-/// Return wether a widget is viewable(), not #STASHED and has a non-0 clipped allocation
+/// Return wether a widget is viewable() and not #STASHED.
 bool
 WidgetImpl::drawable () const
 {
   if (viewable() && allocation_.width > 0 && allocation_.height > 0)
     {
-      const Allocation *clip = clip_area();
-      if (clip)
-        {
-          Allocation carea = allocation_;
-          carea.intersect (*clip);
-          if (carea.width <= 0 || carea.height <= 0)
-            return false;
-        }
+      const Allocation carea = clipped_allocation();
+      if (carea.width <= 0 || carea.height <= 0)
+        return false;
       return true;
     }
   return false;
