@@ -89,6 +89,7 @@ private:
   virtual bool                widget_maybe_toggled   () const;
   virtual bool                widget_maybe_selected  () const;
   void                        widget_render_recursive (const IRect &ancestry_clip);
+  void                        widget_compose_into     (cairo_t *cr, const vector<IRect> &view_rects, int x_offset, int y_offset);
   void                        invalidate_all         ()              { widget_invalidate (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT); }
 protected:
   virtual void                fabricated            (); ///< Method called on all widgets after creation via Factory.
@@ -292,7 +293,7 @@ protected:
   Region                     rendering_region          (RenderContext &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext &rcontext);
 public:
-  void                       compose_into              (cairo_t *cr, const vector<IRect> &irects);
+  void                       compose_into              (cairo_t *cr, const vector<IRect> &view_rects);
   virtual bool               point                     (Point        p);            // widget coordinates relative
   /* public size accessors */
   virtual Requisition        requisition          ();                              // effective size requisition

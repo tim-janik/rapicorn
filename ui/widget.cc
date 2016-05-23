@@ -2043,36 +2043,43 @@ public:
 };
 
 void
-WidgetImpl::compose_into (cairo_t *cr, const vector<IRect> &irects)
+WidgetImpl::widget_compose_into (cairo_t *cr, const vector<IRect> &view_rects, int x_offset, int y_offset)
 {
   ContainerImpl *container = as_container_impl();
+  const Allocation view_area = Allocation (x_offset + allocation_.x, y_offset + allocation_.y, allocation_.width, allocation_.height);
   // clipping rectangles for this and descendants
-  vector<IRect> crects;
+  vector<IRect> clip_rects;
   if (cached_surface_ || (container && container->has_children()))
-    for (size_t i = 0; i < irects.size(); i++)
+    for (size_t i = 0; i < view_rects.size(); i++)
       {
-        IRect rect = irects[i];
-        rect.intersect (allocation_);
+        IRect rect = view_rects[i];
+        rect.intersect (view_area);
         if (!rect.empty())
-          crects.push_back (rect);
+          clip_rects.push_back (rect);
       }
-  if (cached_surface_ && crects.size())
+  if (cached_surface_ && clip_rects.size())
     {
       cairo_save (cr);
       // clip to rectangles
-      for (size_t i = 0; i < crects.size(); i++)
-        cairo_rectangle (cr, crects[i].x, crects[i].y, crects[i].width, crects[i].height);
+      for (size_t i = 0; i < clip_rects.size(); i++)
+        cairo_rectangle (cr, clip_rects[i].x, clip_rects[i].y, clip_rects[i].width, clip_rects[i].height);
       cairo_clip (cr);
       // compose widget surface OVER
-      cairo_set_source_surface (cr, cached_surface_, 0, 0);
+      cairo_set_source_surface (cr, cached_surface_, view_area.x, view_area.y);
       cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
       cairo_paint_with_alpha (cr, 1.0);
       // done
       cairo_restore (cr);
     }
-  if (container && crects.size())
+  if (container && clip_rects.size())
     for (auto &child : *container)
-      child->compose_into (cr, crects);
+      child->widget_compose_into (cr, clip_rects, view_area.x, view_area.y);
+}
+
+void
+WidgetImpl::compose_into (cairo_t *cr, const vector<IRect> &view_rects)
+{
+  widget_compose_into (cr, view_rects, 0, 0);
 }
 
 /// Render widget contents and contents of all viewable descendants.
