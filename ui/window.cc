@@ -1044,7 +1044,7 @@ WindowImpl::check_widget_requisition (WidgetImpl &widget, bool discard_tuned)
   if (container)
     for (auto &child : *container)
       invalidation_flags |= check_widget_requisition (*child, discard_tuned);
-  if (widget.test_flag (INVALID_REQUISITION))
+  if (widget.test_any (INVALID_REQUISITION))
     widget.requisition();               // does size_request and clears INVALID_REQUISITION
   invalidation_flags |= widget.widget_flags_ & (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   return WidgetFlag (invalidation_flags);
@@ -1061,7 +1061,7 @@ WindowImpl::check_widget_allocation (WidgetImpl &widget)
        */
       return INVALID_REQUISITION;
     }
-  if (widget.test_flag (INVALID_ALLOCATION))
+  if (widget.test_any (INVALID_ALLOCATION))
     widget.set_child_allocation (widget.child_allocation()); // clears INVALID_ALLOCATION
   uint64 invalidation_flags = 0;
   ContainerImpl *container = widget.as_container_impl();
@@ -1109,7 +1109,7 @@ WindowImpl::negotiate_sizes (const Allocation *new_window_area)
    */
   for (/**/; tunable_requisition_counter_; tunable_requisition_counter_--)
     {
-      if (test_flag (INVALID_ALLOCATION))
+      if (test_any (INVALID_ALLOCATION))
         {
           if (new_window_area)
             set_child_allocation (child_allocation());

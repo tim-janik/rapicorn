@@ -554,7 +554,7 @@ WidgetListImpl::move_focus (FocusDir fdir)
   if (last_child && last_child->move_focus (fdir))      // refocus or row internal move_focus
     return true;
   // pick row for initial focus
-  if (!test_flag (FOCUS_CHAIN))
+  if (!test_any (FOCUS_CHAIN))
     {
       const int last_focus = focus_row();               // -1 initially
       return grab_row_focus (MAX (0, last_focus));      // list focus-in

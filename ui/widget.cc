@@ -293,14 +293,6 @@ WidgetImpl::set_flag (WidgetFlag flag, bool on)
     }
 }
 
-bool
-WidgetImpl::test_flag (WidgetFlag mask) const
-{
-  assert ((mask & (mask - 1)) == 0); // single bit check
-  return test_all (mask);
-}
-
-
 StyleIfaceP
 WidgetImpl::style () const
 {
@@ -316,7 +308,7 @@ WidgetImpl::grab_default () const
 bool
 WidgetImpl::allow_focus () const
 {
-  return test_flag (ALLOW_FOCUS);
+  return test_any (ALLOW_FOCUS);
 }
 
 void
@@ -340,7 +332,7 @@ WidgetImpl::focusable () const
 bool
 WidgetImpl::has_focus () const
 {
-  if (test_flag (FOCUS_CHAIN))
+  if (test_any (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -352,7 +344,7 @@ WidgetImpl::has_focus () const
 void
 WidgetImpl::unset_focus ()
 {
-  if (test_flag (FOCUS_CHAIN))
+  if (test_any (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -1456,11 +1448,11 @@ WidgetImpl::widget_invalidate (WidgetFlag mask)
 {
   return_unless (0 == (mask & ~(INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT)));
   return_unless (mask != 0);
-  const bool had_invalid_requisition = test_flag (INVALID_REQUISITION);
+  const bool had_invalid_requisition = test_any (INVALID_REQUISITION);
   change_flags_silently (mask, true);
-  if (test_flag (INVALID_CONTENT))
+  if (test_any (INVALID_CONTENT))
     expose();
-  if (!had_invalid_requisition && test_flag (INVALID_REQUISITION))
+  if (!had_invalid_requisition && test_any (INVALID_REQUISITION))
     WidgetGroup::invalidate_widget (*this);
   WindowImpl *window = get_window();
   if (window)
@@ -1475,7 +1467,7 @@ WidgetImpl::inner_size_request()
    * requisition invalidation during the size_request phase, widget implementations
    * have to ensure we're not looping endlessly
    */
-  while (test_flag (INVALID_REQUISITION))
+  while (test_any (INVALID_REQUISITION))
     {
       change_flags_silently (INVALID_REQUISITION, false);
       Requisition inner; // 0,0
@@ -1997,7 +1989,7 @@ bool
 WidgetImpl::tune_requisition (Requisition requisition)
 {
   WidgetImpl *p = parent();
-  if (p && !test_flag (INVALID_REQUISITION))
+  if (p && !test_any (INVALID_REQUISITION))
     {
       WindowImpl *rc = get_window();
       if (rc && rc->requisitions_tunable())
@@ -2039,7 +2031,7 @@ WidgetImpl::set_child_allocation (const Allocation &area)
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
   const bool allocation_changed = child_allocation_ != sarea;
-  if (test_flag (INVALID_ALLOCATION) || allocation_changed)
+  if (test_any (INVALID_ALLOCATION) || allocation_changed)
     {
       change_flags_silently (INVALID_ALLOCATION, false);
       // expose old area
@@ -2129,9 +2121,9 @@ WidgetImpl::render_widget ()
 void
 WidgetImpl::widget_render_recursive (const IRect &ancestry_clip)
 {
-  if (test_flag (INVALID_REQUISITION))
+  if (test_any (INVALID_REQUISITION))
     critical ("%s: rendering widget with invalid %s: %s", debug_name(), "requisition", debug_name ("%r"));
-  if (test_flag (INVALID_ALLOCATION))
+  if (test_any (INVALID_ALLOCATION))
     critical ("%s: rendering widget with invalid %s: %s", debug_name(), "allocation", debug_name ("%a"));
   // abort if we're clipped
   const IRect clip_rect = allocation().intersection (ancestry_clip);
@@ -2142,7 +2134,7 @@ WidgetImpl::widget_render_recursive (const IRect &ancestry_clip)
     for (auto &child : *container)
       child->widget_render_recursive (clip_rect);
   // render contents on demand only
-  return_unless (test_flag (INVALID_CONTENT) == true);
+  return_unless (test_any (INVALID_CONTENT) == true);
   // dispose of previous scene...
   if (cached_surface_)
     {

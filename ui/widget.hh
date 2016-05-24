@@ -169,12 +169,11 @@ public:
   virtual WindowImpl*         as_window_impl    ()              { return NULL; }
   virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
-  bool                        test_flag         (WidgetFlag mask) const;
   bool                        test_all          (WidgetFlag mask) const { return (widget_flags_ & mask) == mask; }
   bool                        test_any          (WidgetFlag mask) const { return (widget_flags_ & mask) != 0; }
-  bool                        isconstructed     () const { return test_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
-  bool                        finalizing        () const { return test_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
-  bool                        anchored          () const { return test_flag (ANCHORED); }    ///< Get widget anchored state, see #ANCHORED
+  bool                        isconstructed     () const { return test_any (CONSTRUCTED); } ///< Check if widget is properly constructed.
+  bool                        finalizing        () const { return test_any (FINALIZING); }  ///< Check if the last widget reference is lost.
+  bool                        anchored          () const { return test_any (ANCHORED); }    ///< Get widget anchored state, see #ANCHORED
   virtual bool                acceleratable     () const override;      ///< See Widget::acceleratable and WidgetState::ACCELERATABLE
   virtual void                acceleratable     (bool b) override;      ///< See Widget::acceleratable and WidgetState::ACCELERATABLE
   virtual bool                hover             () const override;
@@ -199,7 +198,7 @@ public:
   virtual void                retained          (bool b) override;
   virtual bool                stashed           () const override;
   virtual void                stashed           (bool b) override;
-  virtual bool                visible           () const override { return test_flag (VISIBLE); }     ///< Get widget visibility, see #VISIBLE
+  virtual bool                visible           () const override { return test_any (VISIBLE); }     ///< Get widget visibility, see #VISIBLE
   virtual void                visible           (bool b) override { set_flag (VISIBLE, b); }     ///< Toggle widget visibility
   virtual bool                allow_focus       () const override; ///< Indicates if widget may receive input foucs.
   virtual void                allow_focus       (bool b) override; ///< Toggle if widget may receive input focus.
@@ -210,7 +209,7 @@ public:
   bool                        pointer_sensitive () const;
   bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
-  bool                        has_default       () const { return test_flag (HAS_DEFAULT); }
+  bool                        has_default       () const { return test_any (HAS_DEFAULT); }
   bool                        grab_default      () const;
   bool                        focusable         () const; ///< Returns true if @a this widget participates in input focus selection.
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.

@@ -369,7 +369,7 @@ static DataKey<vector<FocusIndicator*>> focus_indicator_key;
 void
 ContainerImpl::register_focus_indicator (FocusIndicator &focus_indicator)
 {
-  assert_return (test_flag (NEEDS_FOCUS_INDICATOR));
+  assert_return (test_any (NEEDS_FOCUS_INDICATOR));
   vector<FocusIndicator*> vfi = get_data (&focus_indicator_key);
   for (auto &existing_indicator : vfi)
     assert_return (existing_indicator != &focus_indicator);
@@ -589,7 +589,7 @@ ContainerImpl::move_focus (FocusDir fdir)
   if (!visible() || !sensitive())
     return false;
   // focus self
-  if (!has_focus() && focusable() && !test_flag (FOCUS_CHAIN))
+  if (!has_focus() && focusable() && !test_any (FOCUS_CHAIN))
     return grab_focus();
   // allow last focus descendant to handle movement
   WidgetImpl *last_child = get_data (&focus_child_key);

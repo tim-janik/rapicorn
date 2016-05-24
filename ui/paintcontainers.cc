@@ -568,7 +568,7 @@ FocusFrameImpl::hierarchy_changed (WidgetImpl *old_toplevel)
   if (anchored())
     {
       ContainerImpl *container = parent();
-      while (container && !container->test_flag (NEEDS_FOCUS_INDICATOR))
+      while (container && !container->test_any (NEEDS_FOCUS_INDICATOR))
         container = container->parent();
       focus_container_ = container;
       container_has_focus_ = focus_container_ && focus_container_->has_focus();
@@ -909,7 +909,7 @@ FocusPainterImpl::hierarchy_changed (WidgetImpl *old_toplevel)
   if (anchored())
     {
       ContainerImpl *container = parent();
-      while (container && !container->test_flag (NEEDS_FOCUS_INDICATOR))
+      while (container && !container->test_any (NEEDS_FOCUS_INDICATOR))
         container = container->parent();
       focus_container_ = container;
       container_has_focus_ = focus_container_ && focus_container_->has_focus();
