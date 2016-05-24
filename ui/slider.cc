@@ -331,8 +331,10 @@ SliderSkidImpl::reset (ResetMode mode)
 bool
 SliderSkidImpl::handle_event (const Event &event)
 {
+  const Allocation slider_allocation = rect_to_viewport (allocation());
   bool handled = false, proper_release = false;
   SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
+  const Allocation trough_allocation = trough.rect_to_viewport (trough.allocation());
   Adjustment &adj = *trough.adjustment();
   switch (event.type)
     {
@@ -353,9 +355,10 @@ SliderSkidImpl::handle_event (const Event &event)
           get_window()->add_grab (this, true);
           handled = true;
           coffset_ = 0;
-          double ep = vertical_skid() ? event.y : event.x;
-          double cp = vertical_skid() ? ep - allocation().y : ep - allocation().x;
-          double clength = vertical_skid() ? allocation().height : allocation().width;
+          const Point viewport_point = Point (event.x, event.y);
+          double ep = vertical_skid() ? viewport_point.y : viewport_point.x;
+          double cp = vertical_skid() ? ep - slider_allocation.y : ep - slider_allocation.x;
+          double clength = vertical_skid() ? slider_allocation.height : slider_allocation.width;
           if (cp >= 0 && cp < clength)
             coffset_ = cp / clength;
           else
@@ -363,7 +366,7 @@ SliderSkidImpl::handle_event (const Event &event)
               coffset_ = 0.5;
               // confine offset to not slip the skid off trough boundaries
               cp = ep - clength * coffset_;
-              const Allocation &ta = trough.allocation();
+              const Allocation &ta = trough_allocation;
               double start_slip = (vertical_skid() ? ta.y : ta.x) - cp;
               double tlength = vertical_skid() ? ta.y + ta.height : ta.x + ta.width;
               double end_slip = cp + clength - tlength;
@@ -378,12 +381,13 @@ SliderSkidImpl::handle_event (const Event &event)
     case MOUSE_MOVE:
       if (button_)
         {
-          double ep = vertical_skid() ? event.y : event.x;
-          const Allocation &ta = trough.allocation();
+          const Point viewport_point = Point (event.x, event.y);
+          double ep = vertical_skid() ? viewport_point.y : viewport_point.x;
+          const Allocation &ta = trough_allocation;
           double tp = vertical_skid() ? ta.y : ta.x;
           double pos = ep - tp;
           double tlength = vertical_skid() ? ta.height : ta.width;
-          double clength = vertical_skid() ? allocation().height : allocation().width;
+          double clength = vertical_skid() ? slider_allocation.height : slider_allocation.width;
           tlength -= clength;
           pos -= coffset_ * clength;
           if (tlength > 0)

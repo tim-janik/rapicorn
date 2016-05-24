@@ -287,10 +287,11 @@ TestContainerImpl::render (RenderContext &rcontext)
       painter.draw_filled_rect (ia.x, ia.y, ia.width, ia.height, style()->resolve_color ("black"));
     }
 
-  Allocation rarea = get_window()->allocation();
-  double width = allocation().width, height = allocation().height;
-  double x1 = allocation().x, x2 = rarea.width - x1 - width;
-  double y1 = allocation().y, y2 = rarea.height - y1 - height;
+  const Allocation rarea = get_window()->allocation();
+  const Allocation varea = rect_to_viewport (allocation());
+  double width = varea.width, height = varea.height;
+  double x1 = varea.x, x2 = rarea.width - x1 - width;
+  double y1 = varea.y, y2 = rarea.height - y1 - height;
   assert_value ("assert-bottom", assert_bottom_, y1, y2);
   assert_value ("assert-right",  assert_right_,  x1, x2);
   assert_value ("assert-top",    assert_top_,    y1, y2);
@@ -364,7 +365,7 @@ TestBoxImpl::make_snapshot ()
   WindowImpl *wwidget = get_window();
   if (snapshot_file_ != "" && wwidget)
     {
-      cairo_surface_t *isurface = wwidget->create_snapshot (allocation());
+      cairo_surface_t *isurface = wwidget->create_snapshot (rect_to_viewport (allocation()));
       cairo_status_t wstatus = cairo_surface_write_to_png (isurface, snapshot_file_.c_str());
       cairo_surface_destroy (isurface);
       String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);

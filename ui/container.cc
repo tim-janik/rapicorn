@@ -679,19 +679,21 @@ ContainerImpl::stash_child (WidgetImpl &child, bool b)
   child.widget_adjust_state (WidgetState::STASHED, b);
 }
 
-// window coordinates relative
+/// List all descendants in stacking order which contain Point @a widget_point.
 void
-ContainerImpl::point_children (Point p, std::vector<WidgetImplP> &stack)
+ContainerImpl::point_descendants (Point widget_point, std::vector<WidgetImplP> &stack) const
 {
   for (auto childp : *this)
     {
-      WidgetImpl &child = *childp;
+      const WidgetImpl &child = *childp;
+      const Allocation child_allocation = child.child_allocation();
+      const Point p (widget_point.x - child_allocation.x, widget_point.y - child_allocation.y);
       if (child.point (p))
         {
           stack.push_back (shared_ptr_cast<WidgetImpl> (&child));
-          ContainerImpl *cc = child.as_container_impl();
+          const ContainerImpl *cc = const_cast<WidgetImpl*> (&child)->as_container_impl();
           if (cc)
-            cc->point_children (p, stack);
+            cc->point_descendants (p, stack);
         }
     }
 }

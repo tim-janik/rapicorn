@@ -1148,14 +1148,50 @@ WidgetImpl::process_event (const Event &event, bool capture) // viewport coordin
   return handled;
 }
 
-/// Check if widget contains Point @a p in parent-relative coordinates.
+/// Check if Point @a widget_point lies within widget.
 bool
-WidgetImpl::point (Point p)
+WidgetImpl::point (Point widget_point) const
 {
-  const Allocation a = clipped_allocation();
-  return (drawable() &&
-          p.x >= a.x && p.x < a.x + a.width &&
-          p.y >= a.y && p.y < a.y + a.height);
+  const Allocation a = allocation();
+  return (visible() &&
+          widget_point.x >= a.x && widget_point.x < a.x + a.width &&
+          widget_point.y >= a.y && widget_point.y < a.y + a.height);
+}
+
+/// Convert Point from ViewportImpl to WidgetImpl coordinates.
+Point
+WidgetImpl::point_from_viewport (Point viewport_point) const
+{
+  // translate ViewportImpl to parent
+  const Point ppoint = parent_ ? parent_->point_from_viewport (viewport_point) : viewport_point;
+  // translate parent to widget
+  return Point (ppoint.x - allocation_.x, ppoint.y - allocation_.y);
+}
+
+/// Convert Point from WidgetImpl to ViewportImpl coordinates.
+Point
+WidgetImpl::point_to_viewport (Point widget_point) const
+{
+  // translate widget to parent
+  const Point ppoint (widget_point.x + allocation_.x, widget_point.y + allocation_.y);
+  // translate parent to ViewportImpl
+  return parent_ ? parent_->point_to_viewport (ppoint) : ppoint;
+}
+
+/// Convert IRect from ViewportImpl to WidgetImpl coordinates.
+IRect
+WidgetImpl::rect_from_viewport (IRect viewport_rect) const
+{
+  const Point widget_point = point_from_viewport (Point (viewport_rect.x, viewport_rect.y));
+  return IRect (iround (widget_point.x), iround (widget_point.y), viewport_rect.width, viewport_rect.height);
+}
+
+/// Convert IRect from WidgetImpl to ViewportImpl coordinates.
+IRect
+WidgetImpl::rect_to_viewport (IRect widget_rect) const
+{
+  const Point viewport_point = point_to_viewport (Point (widget_rect.x, widget_rect.y));
+  return IRect (iround (viewport_point.x), iround (viewport_point.y), widget_rect.width, widget_rect.height);
 }
 
 void

@@ -66,10 +66,9 @@ public:
   bool                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL, 0); return remove (*widget); }
   void                  add             (WidgetImpl                   &widget);
   void                  add             (WidgetImpl                   *widget);
-  virtual void          point_children  (Point                   p, /* widget coordinates relative */
-                                         std::vector<WidgetImplP>     &stack);
+  void                   point_descendants (Point widget_point, std::vector<WidgetImplP> &stack) const;
   virtual ContainerImpl* as_container_impl ()                           { return this; }
-  void                  debug_tree      (String indent = String());
+  void                   debug_tree        (String indent = String());
   // ContainerIface
   virtual WidgetIfaceP create_widget    (const String &widget_identifier, const StringSeq &args) override;
   virtual void         remove_widget    (WidgetIface &child) override;

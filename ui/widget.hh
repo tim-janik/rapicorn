@@ -294,7 +294,13 @@ protected:
   virtual cairo_t*           cairo_context             (RenderContext &rcontext);
 public:
   void                       compose_into              (cairo_t *cr, const vector<IRect> &view_rects);
-  virtual bool               point                     (Point        p);            // widget coordinates relative
+  bool                       point                     (Point widget_point) const;
+  Point                      point_from_viewport       (Point viewport_point) const;
+  Point                      point_to_viewport         (Point widget_point) const;
+  IRect                      rect_from_viewport        (IRect viewport_rect) const;
+  IRect                      rect_to_viewport          (IRect widget_rect) const;
+  template<class Event>
+  Point                      point_from_event          (const Event &ev) const  { return point_from_viewport (Point (ev.x, ev.y)); }
   /* public size accessors */
   virtual Requisition        requisition          ();                              // effective size requisition
   void                       set_child_allocation (const Allocation &area); // assign parent-relative allocation

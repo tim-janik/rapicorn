@@ -319,19 +319,19 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
   WidgetImpl* grab_widget = get_grab (&unconfined);
   if (grab_widget)
     {
-      if (unconfined or grab_widget->point (Point (event.x, event.y)))
+      if (unconfined or grab_widget->point (grab_widget->point_from_event (event)))
         {
           pierced.push_back (shared_ptr_cast<WidgetImpl> (grab_widget));        // grab-widget receives all mouse events
           ContainerImpl *container = grab_widget->interface<ContainerImpl*>();
           if (container)                              /* deliver to hovered grab-widget children as well */
-            container->point_children (Point (event.x, event.y), pierced);
+            container->point_descendants (container->point_from_event (event), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all mouse events
       if (entered_)
-        point_children (Point (event.x, event.y), pierced);
+        point_descendants (point_from_event (event), pierced);
     }
   /* send leave events */
   vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
@@ -368,7 +368,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all events
-      point_children (Point (event.x, event.y), pierced);
+      point_descendants (point_from_event (event), pierced);
     }
   /* send actual event */
   bool handled = false;
@@ -1364,14 +1364,14 @@ WindowImpl::snapshot (const String &pngname)
 }
 
 bool
-WindowImpl::synthesize_enter (double xalign,
-                              double yalign)
+WindowImpl::synthesize_enter (double xalign, double yalign)
 {
   if (!has_display_window())
     return false;
   const Allocation &area = allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
+  p = point_to_viewport (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
@@ -1401,6 +1401,7 @@ WindowImpl::synthesize_click (WidgetIface &widgeti,
   const Allocation &area = widget.allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
+  p = widget.point_to_viewport (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;

@@ -331,7 +331,8 @@ TextControllerImpl::handle_event (const Event &event)
       if (tblock && bevent->button == 1)
         {
           int o = tblock->mark();
-          bool moved = tblock->mark_to_coord (bevent->x, bevent->y);
+          const Point point = point_from_event (event);
+          bool moved = tblock->mark_to_coord (point.x, point.y);
           int m = tblock->mark();
           if (o != m)
             {
