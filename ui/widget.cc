@@ -1524,27 +1524,42 @@ WidgetImpl::requisition ()
   return SizeGroup::widget_requisition (*this);
 }
 
+/// Variant of expose() that allows exposing areas outside of the current allocation().
 void
 WidgetImpl::expose_unclipped (const Region &region)
 {
-  if (!region.empty())
+  return_unless (region.empty() == false);
+  return_unless (anchored());
+  // clip expose region extents against ancestry (and translate)
+  IRect vextents = region.extents();
+  Point delta = Point (vextents.x, vextents.y);
+  WidgetImpl *last = this;
+  for (WidgetImpl *p = last->parent(); p; last = p, p = last->parent())
     {
-      // queue expose region on viewport ancestor
-      ViewportImpl *vp = parent() ? parent()->get_viewport() : get_viewport();
-      if (vp)
-        {
-          const Point delta = point_to_viewport (Point (0, 0));
-          Region viewport_region = region;
-          viewport_region.translate (delta.x, delta.y);
-          vp->expose_region (viewport_region);
-        }
+      const Allocation child_allocation = last->child_allocation();
+      // translate into parent
+      delta.x += child_allocation.x;
+      delta.y += child_allocation.y;
+      vextents.x += child_allocation.x;
+      vextents.y += child_allocation.y;
+      // clip extents to parent
+      vextents.intersect (p->allocation());
     }
+  return_unless (vextents.empty() == false);
+  // translate region into ancestor coordinates
+  ViewportImpl &viewport = *last->get_viewport(); // never NULL when anchored()
+  Region viewport_region = region;
+  viewport_region.translate (delta.x, delta.y);
+  // clip region against ancestry
+  viewport_region.intersect (Region (vextents));
+  viewport.expose_region (viewport_region);
 }
 
 /** Invalidate drawing contents of a widget
  *
- * Cause the given @a region of @a this widget to be rerendered.
- * The region is constrained to the clipped_allocation().
+ * Cause the given @a region of @a this widget to be recomposed.
+ * If the widget needs to be redrawn, use invalidate_content() instead.
+ * The expose region is constrained to the allocation().
  */
 void
 WidgetImpl::expose (const Region &region) // widget relative
