@@ -39,7 +39,6 @@ protected:
   virtual void        dispose_widget    (WidgetImpl           &widget);
   virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDir              fdir);
-  void                expose_enclosure  (); /* expose without children */
   void                stash_child       (WidgetImpl &child, bool);
   virtual void        focus_lost        ()                              { set_focus_child (NULL); }
   virtual void        set_focus_child   (WidgetImpl *widget);

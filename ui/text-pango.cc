@@ -1001,7 +1001,7 @@ protected:
     if (cursor_ != mark_)
       {
         cursor_ = mark_;
-        expose();
+        invalidate_content();
         scroll_to_cursor();
         if (selector_ >= 0)
           selection_changed();
@@ -1014,7 +1014,7 @@ protected:
     if (cursor_ >= 0)
       {
         cursor_ = -1;
-        expose();
+        invalidate_content();
         if (selector_ >= 0)
           selection_changed();
         changed ("cursor");
@@ -1026,7 +1026,7 @@ protected:
     if (selector_ != mark_)
       {
         selector_ = mark_;
-        expose();
+        invalidate_content();
         selection_changed();
         changed ("cursor");
       }
@@ -1037,7 +1037,7 @@ protected:
     if (selector_ >= 0)
       {
         selector_ = -1;
-        expose();
+        invalidate_content();
         selection_changed();
         changed ("cursor");
       }

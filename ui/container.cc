@@ -660,21 +660,6 @@ ContainerImpl::move_focus (FocusDir fdir)
   return false;
 }
 
-void
-ContainerImpl::expose_enclosure ()
-{
-  // expose without children
-  Region region (clipped_allocation());
-  for (auto childp : *this)
-    if (childp->drawable())
-      {
-        WidgetImpl &child = *childp;
-        Region cregion (child.clipped_allocation());
-        region.subtract (cregion);
-      }
-  expose (region);
-}
-
 /// Method for container implementation to switch a child on- or off-screen, e.g. in a scrolling context.
 void
 ContainerImpl::stash_child (WidgetImpl &child, bool b)
