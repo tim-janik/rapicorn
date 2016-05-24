@@ -72,7 +72,7 @@ private:
   const AncestryCache        *acache_; // cache poninter may change for const this
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
-  Allocation                  allocation_;
+  Allocation                  child_allocation_;
   PackInfo                   *pack_info_;
   cairo_surface_t            *cached_surface_;
   Requisition                 inner_size_request (); // ungrouped size requisition
@@ -304,8 +304,8 @@ public:
   /* public size accessors */
   virtual Requisition        requisition          ();                              // effective size requisition
   void                       set_child_allocation (const Allocation &area); // assign parent-relative allocation
-  const Allocation&          child_allocation     () const { return allocation_; } ///< Parent relative allocation, see also allocation().
-  Allocation                 allocation           () const { return Allocation (0, 0, allocation_.width, allocation_.height); } ///< Widget relative allocation.
+  const Allocation&          child_allocation     () const { return child_allocation_; } ///< Parent relative allocation, see also allocation().
+  Allocation                 allocation           () const { return Allocation (0, 0, child_allocation_.width, child_allocation_.height); } ///< Widget relative allocation.
   // theming & appearance
   Color                 current_color           (StyleColor color_type, const String &detail = "");
   Color                 state_color             (WidgetState state, StyleColor color_type, const String &detail = "");

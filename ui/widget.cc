@@ -1165,7 +1165,7 @@ WidgetImpl::point_from_viewport (Point viewport_point) const
   // translate ViewportImpl to parent
   const Point ppoint = parent_ ? parent_->point_from_viewport (viewport_point) : viewport_point;
   // translate parent to widget
-  return Point (ppoint.x - allocation_.x, ppoint.y - allocation_.y);
+  return Point (ppoint.x - child_allocation_.x, ppoint.y - child_allocation_.y);
 }
 
 /// Convert Point from WidgetImpl to ViewportImpl coordinates.
@@ -1173,7 +1173,7 @@ Point
 WidgetImpl::point_to_viewport (Point widget_point) const
 {
   // translate widget to parent
-  const Point ppoint (widget_point.x + allocation_.x, widget_point.y + allocation_.y);
+  const Point ppoint (widget_point.x + child_allocation_.x, widget_point.y + child_allocation_.y);
   // translate parent to ViewportImpl
   return parent_ ? parent_->point_to_viewport (ppoint) : ppoint;
 }
@@ -1601,7 +1601,7 @@ WidgetImpl::debug_name (const String &format) const
   s = string_replace (s, "%l", string_format ("%u", us.line));
   s = string_replace (s, "%n", id());
   s = string_replace (s, "%r", string_format ("%gx%g", requisition_.width, requisition_.height));
-  s = string_replace (s, "%a", allocation_.string());
+  s = string_replace (s, "%a", child_allocation_.string());
   return s;
 }
 
@@ -2023,7 +2023,7 @@ WidgetImpl::set_child_allocation (const Allocation &area)
   // determine new allocation area
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  const bool allocation_changed = allocation_ != sarea;
+  const bool allocation_changed = child_allocation_ != sarea;
   if (test_flag (INVALID_ALLOCATION) || allocation_changed)
     {
       change_flags_silently (INVALID_ALLOCATION, false);
@@ -2034,7 +2034,7 @@ WidgetImpl::set_child_allocation (const Allocation &area)
           expose_unclipped (region);                    // don't intersect with new allocation
         }
       // move and resize new allocation
-      allocation_ = sarea;
+      child_allocation_ = sarea;
       size_allocate (allocation(), allocation_changed);  // causes re-layout of immediate children
       // re-render new area
       if (allocation_changed)
@@ -2068,7 +2068,7 @@ void
 WidgetImpl::widget_compose_into (cairo_t *cr, const vector<IRect> &view_rects, int x_offset, int y_offset)
 {
   ContainerImpl *container = as_container_impl();
-  const Allocation view_area = Allocation (x_offset + allocation_.x, y_offset + allocation_.y, allocation_.width, allocation_.height);
+  const Allocation view_area = Allocation (x_offset + child_allocation_.x, y_offset + child_allocation_.y, child_allocation_.width, child_allocation_.height);
   // clipping rectangles for this and descendants
   vector<IRect> clip_rects;
   if (cached_surface_ || (container && container->has_children()))
@@ -2108,7 +2108,7 @@ WidgetImpl::compose_into (cairo_t *cr, const vector<IRect> &view_rects)
 void
 WidgetImpl::render_widget ()
 {
-  widget_render_recursive (allocation_);
+  widget_render_recursive (child_allocation_);
 }
 
 void
@@ -2203,7 +2203,7 @@ WidgetImpl::cairo_context (RenderContext &rcontext)
 bool
 WidgetImpl::drawable () const
 {
-  if (viewable() && allocation_.width > 0 && allocation_.height > 0)
+  if (viewable() && child_allocation_.width > 0 && child_allocation_.height > 0)
     return true;
   return false;
 }
