@@ -1529,7 +1529,7 @@ WidgetImpl::expose_unclipped (const Region &region)
 {
   if (!region.empty())
     {
-      // queue expose region on nextmost viewport
+      // queue expose region on viewport ancestor
       ViewportImpl *vp = parent() ? parent()->get_viewport() : get_viewport();
       if (vp)
         {
@@ -1549,12 +1549,9 @@ WidgetImpl::expose_unclipped (const Region &region)
 void
 WidgetImpl::expose (const Region &region) // widget relative
 {
-  if (drawable())
-    {
-      Region r (clipped_allocation());
-      r.intersect (region);
-      expose_unclipped (r);
-    }
+  Region r (allocation());
+  r.intersect (region);
+  expose_unclipped (r);
 }
 
 /// Signal emitted when a widget ancestry is added to or removed from a Window
@@ -1970,23 +1967,6 @@ WidgetImpl::focus_color ()
   return state_color (state(), StyleColor::FOCUS_COLOR);
 }
 
-/** Return widget allocation area accounting for clip_area().
- *
- * For any rendering or event processing purposes, clipped_allocation() should be used over allocation().
- * The unclipped size allocation is just used by @a this widget internally for layouting purposes, see also set_allocation().
- */
-Allocation
-WidgetImpl::clipped_allocation () const
-{
-  Allocation area = allocation();
-#if 0 // FIXME
-  const Allocation *clip = clip_area();
-  if (clip)
-    area.intersect (*clip);
-#endif
-  return area;
-}
-
 bool
 WidgetImpl::tune_requisition (int new_width, int new_height)
 {
@@ -2039,7 +2019,7 @@ WidgetImpl::set_child_allocation (const Allocation &area)
 {
   Allocation sarea = area;
   // capture old allocation area
-  const Allocation old_allocation = clipped_allocation();
+  const Allocation old_allocation = allocation();
   // determine new allocation area
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
@@ -2047,15 +2027,16 @@ WidgetImpl::set_child_allocation (const Allocation &area)
   if (test_flag (INVALID_ALLOCATION) || allocation_changed)
     {
       change_flags_silently (INVALID_ALLOCATION, false);
-      allocation_ = sarea;
-      size_allocate (allocation(), allocation_changed);  // causes re-layout of immediate children
       // expose old area
       if (allocation_changed)
         {
           Region region (old_allocation);
           expose_unclipped (region);                    // don't intersect with new allocation
         }
-      // expose new area
+      // move and resize new allocation
+      allocation_ = sarea;
+      size_allocate (allocation(), allocation_changed);  // causes re-layout of immediate children
+      // re-render new area
       if (allocation_changed)
         invalidate_content();
       SZDEBUG ("size allocation: 0x%016x:%s: %s => %s", size_t (this),
@@ -2223,12 +2204,7 @@ bool
 WidgetImpl::drawable () const
 {
   if (viewable() && allocation_.width > 0 && allocation_.height > 0)
-    {
-      const Allocation carea = clipped_allocation();
-      if (carea.width <= 0 || carea.height <= 0)
-        return false;
-      return true;
-    }
+    return true;
   return false;
 }
 

@@ -306,7 +306,6 @@ public:
   void                       set_child_allocation (const Allocation &area); // assign parent-relative allocation
   const Allocation&          child_allocation     () const { return allocation_; } ///< Parent relative allocation, see also allocation().
   Allocation                 allocation           () const { return Allocation (0, 0, allocation_.width, allocation_.height); } ///< Widget relative allocation.
-  Allocation                 clipped_allocation   () const;
   // theming & appearance
   Color                 current_color           (StyleColor color_type, const String &detail = "");
   Color                 state_color             (WidgetState state, StyleColor color_type, const String &detail = "");
