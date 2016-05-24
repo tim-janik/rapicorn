@@ -453,11 +453,11 @@ ContainerImpl::get_focus_child () const
 
 struct LesserWidgetByHBand {
   bool
-  operator() (WidgetImpl *const &i1,
-              WidgetImpl *const &i2) const
+  operator() (WidgetImpl *const &child1, WidgetImpl *const &child2) const
   {
-    const Allocation &a1 = i1->allocation();
-    const Allocation &a2 = i2->allocation();
+    // using child_allocation() assumes child1 and child2 have the same parent
+    const Allocation &a1 = child1->child_allocation();
+    const Allocation &a2 = child2->child_allocation();
     // sort widgets by horizontal bands first
     if (a1.y + a1.height <= a2.y)
       return true;
@@ -489,13 +489,16 @@ focus_view_area (WidgetImpl *widget)
    * movements across multiple nested scrolled areas probably become too complicated
    * to yield non-surprising results.
    */
-  Allocation farea = widget->allocation();
+  Allocation farea = widget->child_allocation();
   WidgetImpl *p = widget->parent();
   while (p)
     {
       // Intersect focusable area with parent area, or map it onto
       // one of the parent edges if they are non-intersecting.
       farea = farea.mapped_onto (p->allocation());
+      const Allocation parea = p->child_allocation();
+      farea.x += parea.x;
+      farea.y += parea.y;
       p = p->parent();
     }
   return farea;
@@ -525,11 +528,11 @@ struct LesserWidgetByDirection {
       }
   }
   bool
-  operator() (WidgetImpl *const &i1, WidgetImpl *const &i2) const
+  operator() (WidgetImpl *const &child1, WidgetImpl *const &child2) const
   {
     // calculate widget distances along dir, dist >= 0 lies ahead
-    const Allocation &a1 = focus_view_area (i1);
-    const Allocation &a2 = focus_view_area (i2);
+    const Allocation &a1 = focus_view_area (child1);
+    const Allocation &a2 = focus_view_area (child2);
     double dd1 = directional_distance (a1);
     double dd2 = directional_distance (a2);
     // sort widgets along dir
@@ -547,8 +550,8 @@ struct LesserWidgetByDirection {
       return dd1 < dd2;
     // same edge and center distance, probably because focus_view_area() collapsed
     // area coordinates, now resort to real allocation
-    dd1 = directional_distance (i1->allocation());
-    dd2 = directional_distance (i2->allocation());
+    dd1 = directional_distance (child1->rect_to_viewport (child1->allocation()));
+    dd2 = directional_distance (child2->rect_to_viewport (child2->allocation()));
     // sort widgets along dir
     if (dd1 != dd2)
       return dd1 < dd2;
