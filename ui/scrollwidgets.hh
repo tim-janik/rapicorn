@@ -32,7 +32,6 @@ protected:
   virtual void                  hierarchy_changed       (WidgetImpl *old_toplevel) override;
   virtual void                  size_allocate           (Allocation area, bool changed) override;
   virtual void                  set_focus_child         (WidgetImpl *widget) override;
-  virtual void                  scroll_to_child         (WidgetImpl &widget);
   virtual const CommandList&    list_commands           () override;
   virtual bool                  handle_event            (const Event &event);
   virtual void                  reset                   (ResetMode mode);
@@ -40,6 +39,7 @@ public:
   Aida::Signal<void ()>         sig_scrolled;
   explicit                      ScrollPortImpl          ();
   virtual                      ~ScrollPortImpl          ();
+  void                          scroll_to_descendant    (WidgetImpl &widget);
 };
 
 } // Rapicorn
