@@ -246,7 +246,7 @@ TableLayoutImpl::size_request (Requisition &requisition)
 }
 
 void
-TableLayoutImpl::size_allocate (Allocation area, bool changed)
+TableLayoutImpl::size_allocate (Allocation area)
 {
   size_allocate_init ();
   size_allocate_pass1 ();

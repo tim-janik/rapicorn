@@ -63,7 +63,7 @@ class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidge
   Requisition rec_; StringSeq seq_; IdlTestWidgetIfaceW self_;
 protected:
   virtual void                size_request  (Requisition &req) override;
-  virtual void                size_allocate (Allocation area, bool changed) override;
+  virtual void                size_allocate (Allocation area) override;
   virtual void                render        (RenderContext &rcontext) override;
 public:
   virtual bool                bool_prop     () const override;

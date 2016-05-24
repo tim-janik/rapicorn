@@ -445,7 +445,7 @@ FrameImpl::size_request (Requisition &requisition)
 }
 
 void
-FrameImpl::size_allocate (Allocation area, bool changed)
+FrameImpl::size_allocate (Allocation area)
 {
   if (has_visible_child())
     {
@@ -652,7 +652,7 @@ LayerPainterImpl::size_request (Requisition &requisition)
 }
 
 void
-LayerPainterImpl::size_allocate (Allocation area, bool changed)
+LayerPainterImpl::size_allocate (Allocation area)
 {
   for (auto childp : *this)
     {
@@ -811,7 +811,7 @@ ElementPainterImpl::size_request (Requisition &requisition)
 }
 
 void
-ElementPainterImpl::size_allocate (Allocation area, bool changed)
+ElementPainterImpl::size_allocate (Allocation area)
 {
   load_painters();
   if (size_painter_)
@@ -980,7 +980,7 @@ ShapePainterImpl::size_request (Requisition &requisition)
 }
 
 void
-ShapePainterImpl::size_allocate (Allocation area, bool changed)
+ShapePainterImpl::size_allocate (Allocation area)
 {
   const int thickness = 1; // FIXME: query viewport for thickness
   fill_area_ = area;

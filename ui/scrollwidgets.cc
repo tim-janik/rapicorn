@@ -167,7 +167,7 @@ ScrollPortImpl::do_scrolled ()
 }
 
 void
-ScrollPortImpl::size_allocate (const Allocation area, bool changed)
+ScrollPortImpl::size_allocate (const Allocation area)
 {
   return_unless (has_visible_child());
   const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;

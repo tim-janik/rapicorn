@@ -843,7 +843,7 @@ SingleContainerImpl::size_request (Requisition &requisition)
 }
 
 void
-SingleContainerImpl::size_allocate (Allocation area, bool changed)
+SingleContainerImpl::size_allocate (Allocation area)
 {
   if (has_visible_child())
     {

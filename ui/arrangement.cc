@@ -151,7 +151,7 @@ ArrangementImpl::size_request (Requisition &requisition)
 }
 
 void
-ArrangementImpl::size_allocate (Allocation area, bool changed)
+ArrangementImpl::size_allocate (Allocation area)
 {
   for (auto childp : *this)
     {

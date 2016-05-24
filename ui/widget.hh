@@ -128,7 +128,7 @@ protected:
   // resizing, requisition and allocation
   virtual void                widget_invalidate      (WidgetFlag mask); // FIXME: make private
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
-  virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
+  virtual void                size_allocate     (Allocation area) = 0; ///< Type specific size allocation implementation, see set_allocation().
   bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (int new_width, int new_height);
   /* signal methods */

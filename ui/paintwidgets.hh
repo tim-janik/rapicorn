@@ -10,7 +10,7 @@ class ArrowImpl : public virtual WidgetImpl, public virtual ArrowIface {
   Direction dir_;
 protected:
   virtual void           size_request   (Requisition &requisition) override;
-  virtual void           size_allocate  (Allocation area, bool changed) override;
+  virtual void           size_allocate  (Allocation area) override;
   virtual void           render         (RenderContext &rcontext) override;
 public:
   explicit               ArrowImpl      ();
@@ -28,7 +28,7 @@ class DotGridImpl : public virtual WidgetImpl, public virtual DotGridIface {
   virtual DrawFrame     dot_type            () const override;
 protected:
   virtual void          size_request        (Requisition &requisition) override;
-  virtual void          size_allocate       (Allocation area, bool changed) override;
+  virtual void          size_allocate       (Allocation area) override;
   virtual void          render              (RenderContext &rcontext) override;
 public:
   explicit              DotGridImpl         ();
@@ -58,7 +58,7 @@ class DrawableImpl : public virtual WidgetImpl, public virtual DrawableIface {
 protected:
   virtual void  draw_rect       (int x, int y, const Pixbuf &pixbuf);
   virtual void  size_request    (Requisition &requisition);
-  virtual void  size_allocate   (Allocation area, bool changed);
+  virtual void  size_allocate   (Allocation area);
   virtual void  render          (RenderContext &rcontext);
 public:
   explicit      DrawableImpl    ();

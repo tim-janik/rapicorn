@@ -26,7 +26,7 @@ AlignmentImpl::size_request (Requisition &requisition)
 }
 
 void
-AlignmentImpl::size_allocate (Allocation area, bool changed)
+AlignmentImpl::size_allocate (Allocation area)
 {
   if (!has_visible_child())
     return;

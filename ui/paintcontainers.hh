@@ -58,7 +58,7 @@ class FrameImpl : public virtual SingleContainerImpl, public virtual FrameIface 
 protected:
   bool              tap_tight_focus (int onoffx);
   virtual void      size_request    (Requisition &requisition) override;
-  virtual void      size_allocate   (Allocation area, bool changed) override;
+  virtual void      size_allocate   (Allocation area) override;
   virtual void      render          (RenderContext &rcontext) override;
 public: // FrameIface
   explicit          FrameImpl       ();
@@ -99,7 +99,7 @@ public:
   virtual       ~LayerPainterImpl () override;
 protected:
   virtual void   size_request            (Requisition &requisition);
-  virtual void   size_allocate           (Allocation area, bool changed);
+  virtual void   size_allocate           (Allocation area);
 };
 
 class ElementPainterImpl : public virtual SingleContainerImpl, public virtual ElementPainterIface {
@@ -116,7 +116,7 @@ protected:
   ImagePainter         filler_painter  ();
   virtual void         do_changed      (const String &name) override;
   virtual void         size_request    (Requisition &requisition) override;
-  virtual void         size_allocate   (Allocation area, bool changed) override;
+  virtual void         size_allocate   (Allocation area) override;
   virtual void         render          (RenderContext &rcontext) override;
 public:
   explicit       ElementPainterImpl   ();
@@ -150,7 +150,7 @@ class ShapePainterImpl : public virtual SingleContainerImpl, public virtual Shap
 protected:
   virtual WidgetState  render_state    () const;
   virtual void         size_request    (Requisition &requisition) override;
-  virtual void         size_allocate   (Allocation area, bool changed) override;
+  virtual void         size_allocate   (Allocation area) override;
   virtual void         render          (RenderContext &rcontext) override;
 public:
   explicit       ShapePainterImpl     ();

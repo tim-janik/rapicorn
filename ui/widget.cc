@@ -2038,11 +2038,11 @@ WidgetImpl::set_child_allocation (const Allocation &area)
       if (allocation_changed)
         {
           Region region (old_allocation);
-          expose_unclipped (region);                    // don't intersect with new allocation
+          expose_unclipped (region);            // skip intersecting with allocation
         }
       // move and resize new allocation
       child_allocation_ = sarea;
-      size_allocate (allocation(), allocation_changed);  // causes re-layout of immediate children
+      size_allocate (allocation());             // causes re-layout of immediate children
       // re-render new area
       if (allocation_changed)
         invalidate_content();

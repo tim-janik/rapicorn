@@ -181,7 +181,7 @@ SliderTroughImpl::size_request (Requisition &requisition)
 }
 
 void
-SliderTroughImpl::size_allocate (Allocation area, bool changed)
+SliderTroughImpl::size_allocate (Allocation area)
 {
   reallocate_child();
 }

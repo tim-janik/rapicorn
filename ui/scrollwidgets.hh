@@ -30,7 +30,7 @@ class ScrollPortImpl : public virtual ResizeContainerImpl, public virtual EventH
   void                          do_scrolled             ();
 protected:
   virtual void                  hierarchy_changed       (WidgetImpl *old_toplevel) override;
-  virtual void                  size_allocate           (Allocation area, bool changed) override;
+  virtual void                  size_allocate           (Allocation area) override;
   virtual void                  set_focus_child         (WidgetImpl *widget) override;
   virtual const CommandList&    list_commands           () override;
   virtual bool                  handle_event            (const Event &event);

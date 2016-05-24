@@ -14,7 +14,7 @@ class AlignmentImpl : public virtual SingleContainerImpl, public virtual Alignme
   virtual int   padding         () const;
 protected:
   virtual void  size_request    (Requisition &requisition) override;
-  virtual void  size_allocate   (Allocation area, bool changed) override;
+  virtual void  size_allocate   (Allocation area) override;
 public:
   explicit      AlignmentImpl   ();
   virtual      ~AlignmentImpl   () override;

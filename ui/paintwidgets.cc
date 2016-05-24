@@ -61,7 +61,7 @@ ArrowImpl::size_request (Requisition &requisition)
 }
 
 void
-ArrowImpl::size_allocate (Allocation area, bool changed)
+ArrowImpl::size_allocate (Allocation area)
 {
   SizePolicy spol = size_policy();
   if (spol == SizePolicy::WIDTH_FROM_HEIGHT)
@@ -245,7 +245,7 @@ DotGridImpl::size_request (Requisition &requisition)
 }
 
 void
-DotGridImpl::size_allocate (Allocation area, bool changed)
+DotGridImpl::size_allocate (Allocation area)
 {}
 
 void
@@ -313,7 +313,7 @@ DrawableImpl::size_request (Requisition &requisition)
 }
 
 void
-DrawableImpl::size_allocate (Allocation area, bool changed)
+DrawableImpl::size_allocate (Allocation area)
 {
   if (false) // clear out, can lead to flicker
     {

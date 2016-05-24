@@ -38,7 +38,7 @@ class SliderTroughImpl : public virtual SingleContainerImpl, public virtual Slid
   void                  reallocate_child        ();
 protected:
   virtual void          size_request            (Requisition &requisition) override;
-  virtual void          size_allocate           (Allocation area, bool changed) override;
+  virtual void          size_allocate           (Allocation area) override;
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   virtual bool          handle_event            (const Event &event) override;
   virtual void          reset                   (ResetMode mode = RESET_ALL) override;

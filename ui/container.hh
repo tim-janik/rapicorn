@@ -78,7 +78,7 @@ class SingleContainerImpl : public virtual ContainerImpl {
   WidgetImplP           child_widget;
 protected:
   virtual void          size_request            (Requisition &requisition);
-  virtual void          size_allocate           (Allocation area, bool changed);
+  virtual void          size_allocate           (Allocation area);
   virtual void          render                  (RenderContext &rcontext) {}
   WidgetImpl&           get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
   virtual              ~SingleContainerImpl     ();

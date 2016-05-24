@@ -488,7 +488,7 @@ WidgetListImpl::size_request (Requisition &requisition)
 }
 
 void
-WidgetListImpl::size_allocate (Allocation area, bool changed)
+WidgetListImpl::size_allocate (Allocation area)
 {
   const Allocation list_area = allocation();
   int64 list_y = list_area.y;

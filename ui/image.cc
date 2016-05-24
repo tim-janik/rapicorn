@@ -76,7 +76,7 @@ ImageImpl::size_request (Requisition &requisition)
 }
 
 void
-ImageImpl::size_allocate (Allocation area, bool changed)
+ImageImpl::size_allocate (Allocation area)
 {
   // nothing special...
 }

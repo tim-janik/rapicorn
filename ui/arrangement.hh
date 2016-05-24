@@ -26,7 +26,7 @@ public:
   virtual IRect  child_area      ();
 protected:
   virtual void   size_request            (Requisition &requisition);
-  virtual void   size_allocate           (Allocation area, bool changed);
+  virtual void   size_allocate           (Allocation area);
   Allocation     local_child_allocation  (WidgetImpl &child, int width, int height);
 };
 

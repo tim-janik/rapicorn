@@ -507,7 +507,7 @@ IdlTestWidgetImpl::size_request (Requisition &req)
 }
 
 void
-IdlTestWidgetImpl::size_allocate (Allocation area, bool changed)
+IdlTestWidgetImpl::size_allocate (Allocation area)
 {}
 
 void
