@@ -1036,15 +1036,15 @@ WindowImpl::ensure_resized()
 WidgetImpl::WidgetFlag
 WindowImpl::check_widget_requisition (WidgetImpl &widget, bool discard_tuned)
 {
-  return_unless (widget.visible(), WidgetFlag (0));
   if (discard_tuned)
     widget.invalidate_requisition();    // discard requisitions tuned to previous allocations
   ContainerImpl *container = widget.as_container_impl();
   uint64 invalidation_flags = 0;
-  if (container)
+  if (RAPICORN_LIKELY (container))
     for (auto &child : *container)
-      invalidation_flags |= check_widget_requisition (*child, discard_tuned);
-  if (widget.test_any (INVALID_REQUISITION))
+      if (RAPICORN_LIKELY (child->visible()))
+        invalidation_flags |= check_widget_requisition (*child, discard_tuned);
+  if (RAPICORN_UNLIKELY (widget.test_any (INVALID_REQUISITION)))
     widget.requisition();               // does size_request and clears INVALID_REQUISITION
   invalidation_flags |= widget.widget_flags_ & (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   return WidgetFlag (invalidation_flags);
