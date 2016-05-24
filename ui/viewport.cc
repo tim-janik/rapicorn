@@ -24,7 +24,7 @@ ViewportImpl::fetch_ancestry_cache ()
 }
 
 void
-ViewportImpl::expose_child_region (const Region &region)
+ViewportImpl::expose_region (const Region &region)
 {
   if (!region.empty())
     {

@@ -1532,7 +1532,12 @@ WidgetImpl::expose_unclipped (const Region &region)
       // queue expose region on nextmost viewport
       ViewportImpl *vp = parent() ? parent()->get_viewport() : get_viewport();
       if (vp)
-        vp->expose_child_region (region);
+        {
+          const Point delta = point_to_viewport (Point (0, 0));
+          Region viewport_region = region;
+          viewport_region.translate (delta.x, delta.y);
+          vp->expose_region (viewport_region);
+        }
     }
 }
 
