@@ -189,33 +189,35 @@ SliderTroughImpl::size_allocate (Allocation area, bool changed)
 void
 SliderTroughImpl::reallocate_child ()
 {
-  Allocation area = allocation();
   if (!has_visible_child())
     return;
   WidgetImpl &child = get_child();
-  Requisition rq = child.requisition();
-  /* expand/scale child */
+  const Requisition rq = child.requisition();
+  Allocation area = allocation();
+  // expand/scale child
   if (area.width > rq.width && !child.hspread())
     {
+      double req_width = rq.width;
       if (child.hexpand())
         {
           Adjustment *adj = adjustment();
-          double cwidth = adj ? round (adj->abs_length() * area.width) : 0;
-          rq.width = MAX (cwidth, rq.width);
+          double cwidth = adj ? iround (adj->abs_length() * area.width) : 0;
+          req_width = MAX (cwidth, req_width);
         }
-      area.x += round (nvalue() * (area.width - rq.width));
-      area.width = round (rq.width);
+      area.x += iround (nvalue() * (area.width - req_width));
+      area.width = iround (req_width);
     }
   if (area.height > rq.height && !child.vspread())
     {
+      double req_height = rq.height;
       if (child.vexpand())
         {
           Adjustment *adj = adjustment();
-          double cheight = adj ? round (adj->abs_length() * area.height) : 0;
-          rq.height = MAX (cheight, rq.height);
+          double cheight = adj ? iround (adj->abs_length() * area.height) : 0;
+          req_height = MAX (cheight, req_height);
         }
-      area.y += round (nvalue() * (area.height - rq.height));
-      area.height = round (rq.height);
+      area.y += iround (nvalue() * (area.height - req_height));
+      area.height = iround (req_height);
     }
   child.set_child_allocation (area);
 }
