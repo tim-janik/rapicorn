@@ -20,13 +20,6 @@ X11TEST_RAPIDRUN = $(X11_ENV) $(RAPIDRUN) --fatal-warnings "$$@"
 benchaida_SOURCES  = benchaida.cc
 benchaida_LDADD    = $(LDADDS)
 
-# === programs ===
-EXAMPLES        += fileview
-fileview_SOURCES = fileview.cc
-EXTRA_DIST	+= liststore.cc
-fileview_LDADD   = $(LDADDS)
-XML_FILES       += fileview.xml
-
 # === test rules ===
 
 # ui XML parsing and evaluation tests
