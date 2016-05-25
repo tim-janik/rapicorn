@@ -28,6 +28,12 @@ t600-xmlui-eval-test:
 XML_FILES += t600-xmlui-eval.xml
 check: t600-xmlui-eval-test
 
+# == t601-arrow-sizing ==
+t601-arrow-sizing-test:
+	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/t601-arrow-sizing.xml ; eval "$$TSTDIAGNOSE"
+EXTRA_DIST += t601-arrow-sizing.xml
+check: t601-arrow-sizing-test
+
 # == t700-png-image ==
 t700-png-image-test: $(srcdir)/t700-png-image.xml $(srcdir)/t700-png-image.png # $(IMGCHECK) $(X11TEST_RAPIDRUN)
 	$(Q) rm -f t700-png-image-snap.png
@@ -58,12 +64,6 @@ t702-text-ocr-test: $(srcdir)/t702-text-ocr.xml
 	$(Q) rm -f t702-text-ocr-snap.png
 XML_FILES  += t702-text-ocr.xml
 check: t702-text-ocr-test
-
-# arrowsize test
-arrowsize-test:
-	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml ; eval "$$TSTDIAGNOSE"
-EXTRA_DIST += arrowsize-test.xml
-check: arrowsize-test
 
 # factory-test
 factory-test: $(srcdir)/factory-test.ref
