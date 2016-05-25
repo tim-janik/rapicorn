@@ -39,17 +39,17 @@ alignment-png-test: $(srcdir)/alignment.xml $(srcdir)/alignment.png
 	$(Q) rm -f xtmp-alignment.png
 check: alignment-png-test
 
-# == Image test (PNG) ==
-XML_FILES  += noise16.xml
-EXTRA_DIST += noise16.png
-noise16-png-test: $(srcdir)/noise16.xml $(srcdir)/noise16.png
-	$(Q) rm -f xtmp-noise16.png
-	$(Q) test $(srcdir) = $(builddir) || cp $(srcdir)/noise16.png $(builddir)
-	$(Q) export RAPIDRUN_RES=./ ; $(X11TEST_RAPIDRUN) -x $(srcdir)/noise16.xml
-	$(Q) $(IMGCHECK) $(srcdir)/noise16.png xtmp-noise16.png ; eval "$$TSTDIAGNOSE"
-	$(Q) test $(srcdir) = $(builddir) || rm -f $(builddir)/noise16.png
-	$(Q) rm -f xtmp-noise16.png
-check: noise16-png-test
+# == t700-png-image ==
+XML_FILES  += t700-png-image.xml
+EXTRA_DIST += t700-png-image.png
+t700-png-image-test: $(srcdir)/t700-png-image.xml $(srcdir)/t700-png-image.png # $(IMGCHECK) $(X11TEST_RAPIDRUN)
+	$(Q) rm -f t700-png-image-snap.png
+	$(Q) test $(srcdir) = $(builddir) || cp $(srcdir)/t700-png-image.png $(builddir)
+	$(Q) export RAPIDRUN_RES=./ ; $(X11TEST_RAPIDRUN) -x $(srcdir)/t700-png-image.xml
+	$(Q) $(IMGCHECK) $(srcdir)/t700-png-image.png t700-png-image-snap.png ; eval "$$TSTDIAGNOSE"
+	$(Q) test $(srcdir) = $(builddir) || rm -f $(builddir)/t700-png-image.png
+	$(Q) rm -f t700-png-image-snap.png
+check: t700-png-image-test
 
 # arrowsize test
 arrowsize-test:
