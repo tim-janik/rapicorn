@@ -10,7 +10,7 @@
 
       <HBox>
 	<Frame>
-	  <RapicornTestBox snapshot_file="xtmp-alignment.png">
+	  <RapicornTestBox snapshot_file="t701-alignment-layout-snap.png">
 	    <HBox>
 
 	      <VBox width="90">

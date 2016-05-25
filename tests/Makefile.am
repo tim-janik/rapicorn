@@ -28,17 +28,6 @@ ui-xml-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/uitests.xml ; eval "$$TSTDIAGNOSE"
 check: ui-xml-test
 
-# == Alignment test ==
-# alignment.xml contains: snapshot_file="xtmp-alignment.png
-XML_FILES  += alignment.xml
-EXTRA_DIST += alignment.png
-alignment-png-test: $(srcdir)/alignment.xml $(srcdir)/alignment.png
-	$(Q) rm -f xtmp-alignment.png
-	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/alignment.xml
-	$(Q) $(IMGCHECK) $(srcdir)/alignment.png xtmp-alignment.png ; eval "$$TSTDIAGNOSE"
-	$(Q) rm -f xtmp-alignment.png
-check: alignment-png-test
-
 # == t700-png-image ==
 t700-png-image-test: $(srcdir)/t700-png-image.xml $(srcdir)/t700-png-image.png # $(IMGCHECK) $(X11TEST_RAPIDRUN)
 	$(Q) rm -f t700-png-image-snap.png
@@ -50,6 +39,16 @@ t700-png-image-test: $(srcdir)/t700-png-image.xml $(srcdir)/t700-png-image.png #
 XML_FILES  += t700-png-image.xml
 EXTRA_DIST += t700-png-image.png
 check: t700-png-image-test
+
+# == t701-alignment-layout ==
+t701-alignment-layout-test: $(srcdir)/t701-alignment-layout.xml $(srcdir)/t701-alignment-layout.png
+	$(Q) rm -f t701-alignment-layout-snap.png
+	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/t701-alignment-layout.xml
+	$(Q) $(IMGCHECK) $(srcdir)/t701-alignment-layout.png t701-alignment-layout-snap.png ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f t701-alignment-layout-snap.png
+XML_FILES  += t701-alignment-layout.xml
+EXTRA_DIST += t701-alignment-layout.png
+check: t701-alignment-layout-test
 
 # arrowsize test
 arrowsize-test:
