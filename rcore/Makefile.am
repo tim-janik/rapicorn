@@ -20,7 +20,7 @@ rapicorn_public_headers = $(strip	\
 	cpuasm.hh	cxxaux.hh	rcore.hh	visitor.hh	aidasignal.hh	\
 )
 rapicorn_cc_sources = $(sort	\
-	aida.cc		aidaprops.cc	bindable.cc	cairoutils.hh	\
+	aida.cc		aidaprops.cc	bindable.cc	\
 	resources.cc	formatter.cc	inout.cc	inifile.cc \
         platform.cc	debugtools.cc					utilities.cc  \
 					math.cc				unicode.cc   \
@@ -153,6 +153,6 @@ aidavariants.hh: $(srcdir)/aidaproto.hh $(XMANIFOLD)
 	&& echo '# 1 "aidaproto.hh"'				>>xtmp-$(@F) \
 	&& $(XMANIFOLD) $(srcdir)/aidaproto.hh 18		>>xtmp-$(@F) \
 	&& cp xtmp-$(@F) $@ && rm -f xtmp-$(@F)
-CLEANFILES += xtmp-aidavariants.hh aidavariants.hh xgen-aidas.sed
+CLEANFILES += xtmp-aidavariants.hh aidavariants.hh
 EXTRA_DIST += aidaproto.hh
 # not using "$(abs_srcdir)/aidaproto.hh" to avoid hardcoded paths in distribution tarballs
