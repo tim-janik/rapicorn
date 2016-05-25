@@ -28,7 +28,6 @@ Makefile
 /intltool-update.in
 /libtool
 /ltmain.sh
-/test-driver
 /missing
 /mkinstalldirs
 /po-helper.sh
