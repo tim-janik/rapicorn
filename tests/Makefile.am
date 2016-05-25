@@ -22,11 +22,11 @@ benchaida_LDADD    = $(LDADDS)
 
 # === test rules ===
 
-# ui XML parsing and evaluation tests
-XML_FILES += uitests.xml
-ui-xml-test:
-	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/uitests.xml ; eval "$$TSTDIAGNOSE"
-check: ui-xml-test
+# == t600-xmlui-eval ==
+t600-xmlui-eval-test:
+	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/t600-xmlui-eval.xml ; eval "$$TSTDIAGNOSE"
+XML_FILES += t600-xmlui-eval.xml
+check: t600-xmlui-eval-test
 
 # == t700-png-image ==
 t700-png-image-test: $(srcdir)/t700-png-image.xml $(srcdir)/t700-png-image.png # $(IMGCHECK) $(X11TEST_RAPIDRUN)
