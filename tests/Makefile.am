@@ -34,6 +34,14 @@ t601-arrow-sizing-test:
 EXTRA_DIST += t601-arrow-sizing.xml
 check: t601-arrow-sizing-test
 
+# == t602-factory-dump ==
+t602-factory-dump-test: $(srcdir)/t602-factory-dump.ref
+	$(Q) $(X11TEST_RAPIDRUN) -x --test-dump \
+	  --test-matched-node=".*" $(srcdir)/t602-factory-dump.xml > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/t602-factory-dump.ref'" "'$(TSTOUT)'"
+EXTRA_DIST += t602-factory-dump.xml t602-factory-dump.ref
+check: t602-factory-dump-test
+
 # == t700-png-image ==
 t700-png-image-test: $(srcdir)/t700-png-image.xml $(srcdir)/t700-png-image.png # $(IMGCHECK) $(X11TEST_RAPIDRUN)
 	$(Q) rm -f t700-png-image-snap.png
@@ -64,14 +72,6 @@ t702-text-ocr-test: $(srcdir)/t702-text-ocr.xml
 	$(Q) rm -f t702-text-ocr-snap.png
 XML_FILES  += t702-text-ocr.xml
 check: t702-text-ocr-test
-
-# factory-test
-factory-test: $(srcdir)/factory-test.ref
-	$(Q) $(X11TEST_RAPIDRUN) -x --test-dump \
-	  --test-matched-node=".*" $(srcdir)/factory-test.xml > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
-	$(Q) eval "$$TSTDIFF" "'$(srcdir)/factory-test.ref'" "'$(TSTOUT)'"
-EXTRA_DIST += factory-test.xml factory-test.ref
-check: factory-test
 
 xmllint-check:
 	$(Q) cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
