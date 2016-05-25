@@ -50,6 +50,15 @@ XML_FILES  += t701-alignment-layout.xml
 EXTRA_DIST += t701-alignment-layout.png
 check: t701-alignment-layout-test
 
+# == t702-text-ocr ==
+t702-text-ocr-test: $(srcdir)/t702-text-ocr.xml
+	$(Q) rm -f t702-text-ocr-snap.png
+	$(Q) $(X11TEST_RAPIDRUN) --snapshot=t702-text-ocr-snap.png -x $(srcdir)/t702-text-ocr.xml $(QSTDERR)
+	$(Q) eval "$$TSTOCR" t702-text-ocr-snap.png "Regu.ar.Text" \""Insensitive Text"\" \""Editab.e Text Edit.r Text"\"
+	$(Q) rm -f t702-text-ocr-snap.png
+XML_FILES  += t702-text-ocr.xml
+check: t702-text-ocr-test
+
 # arrowsize test
 arrowsize-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/arrowsize-test.xml ; eval "$$TSTDIAGNOSE"
@@ -63,15 +72,6 @@ factory-test: $(srcdir)/factory-test.ref
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/factory-test.ref'" "'$(TSTOUT)'"
 EXTRA_DIST += factory-test.xml factory-test.ref
 check: factory-test
-
-# texting test
-XML_FILES  += texting.xml
-texting-png-test: $(srcdir)/texting.xml
-	$(Q) rm -f xtmp-texting.png
-	$(Q) $(X11TEST_RAPIDRUN) --snapshot=xtmp-texting.png -x $(srcdir)/texting.xml $(QSTDERR)
-	$(Q) eval "$$TSTOCR" xtmp-texting.png "Regu.ar.Text" \""Insensitive Text"\" \""Editab.e Text Edit.r Text"\"
-	$(Q) rm -f xtmp-texting.png
-check: texting-png-test
 
 xmllint-check:
 	$(Q) cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
