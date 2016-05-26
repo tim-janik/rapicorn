@@ -71,6 +71,27 @@ t203-more-basics-svgtool.cc: t203-more-basics-resources.cc
 t203-more-basics-xmltest.cc: t201-rcore-basics-xmldata.cc
 check: t203-more-basics-test
 
+# == t204-assertions ==
+t204-assertions-test: t203-more-basics # validate failing assertions and fatal aborting
+	$(Q) rm -f $(TSTOUT)
+	$(Q) (! $(t204_assertions_env) ./t203-more-basics --test-assert		2>> $(TSTOUT)) $(QSTDERR)
+	$(Q) (! $(t204_assertions_env) ./t203-more-basics --test-unreached	2>> $(TSTOUT)) $(QSTDERR)
+	$(Q) (! $(t204_assertions_env) ./t203-more-basics --test-fatal		2>> $(TSTOUT)) $(QSTDERR)
+	$(Q) (! $(t204_assertions_env) ./t203-more-basics --test-TASSERT	2>> $(TSTOUT)) $(QSTDERR)
+	$(Q) (! $(t204_assertions_env) ./t203-more-basics --test-TCMP		2>> $(TSTOUT)) $(QSTDERR)
+	$(Q) (! $(t204_assertions_env) ./t203-more-basics --test-assertion-hook	2>> $(TSTOUT)) $(QSTDERR)
+	$(Q) grep -q 'failed.*"test-assert"'          $(TSTOUT) ; $(TSTRESULT) "check assert"
+	$(Q) grep -q 'FATAL:.*not.*reach'             $(TSTOUT) ; $(TSTRESULT) "check unreached"
+	$(Q) grep -q 'FATAL:.*fatal.*"test-fatal"'    $(TSTOUT) ; $(TSTRESULT) "check fatal error"
+	$(Q) grep -q 'assert.*fail.*".*TASSERT"'      $(TSTOUT) ; $(TSTRESULT) "check TASSERT()"
+	$(Q) grep -q 'assert.*fail.*".*TCMP"'         $(TSTOUT) ; $(TSTRESULT) "check TCMP()"
+	$(Q) grep -q 'assertion-hook.*magic=0xdecaff' $(TSTOUT) ; $(TSTRESULT) "check Test::set_assertion_hook()"
+	$(Q) grep -qi 'Aborting..'                    $(TSTOUT) ; $(TSTRESULT) "check aborting"
+	$(Q) eval "$$TSTDIAGNOSE"
+	$(Q) rm -f $(TSTOUT)
+t204_assertions_env = RAPICORN=debug:no-syslog:no-fatal-syslog
+check: t204-assertions-test
+
 # == t303-mini-server ==
 t303-mini-server-test: t303-mini-server
 	$(Q) ./t303-mini-server ; eval "$$TSTDIAGNOSE"

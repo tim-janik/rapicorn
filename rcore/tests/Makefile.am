@@ -15,20 +15,6 @@ benchrcore_SOURCES = benchrcore.cc
 benchrcore_LDADD   = $(LDADDS)
 
 # === test rules ===
-# validate failing assertions and fatal aborting
-check-assertion-handlers: testrcore2
-	$(Q) ( export RAPICORN=debug:no-syslog:no-fatal-syslog ; rm -f $(TSTOUT) ; \
-	       for arg in --test-assert --test-unreached --test-fatal --test-TASSERT --test-TCMP --test-assertion-hook ; do \
-	         ! ./testrcore2 $$arg 2>>$(TSTOUT) || exit $? ; done ) $(QSTDERR) ; $(TSTRESULT)
-	$(Q) grep -q 'failed.*"test-assert"' $(TSTOUT)		; $(TSTRESULT) "check assert"
-	$(Q) grep -q 'FATAL:.*not.*reach' $(TSTOUT)		; $(TSTRESULT) "check unreached"
-	$(Q) grep -q 'FATAL:.*fatal.*"test-fatal"' $(TSTOUT)	; $(TSTRESULT) "check fatal error"
-	$(Q) grep -q 'assert.*fail.*".*TASSERT"' $(TSTOUT)	; $(TSTRESULT) "check TASSERT()"
-	$(Q) grep -q 'assert.*fail.*".*TCMP"' $(TSTOUT)		; $(TSTRESULT) "check TCMP()"
-	$(Q) grep -q 'assertion-hook.*magic=0xdecaff' $(TSTOUT)	; $(TSTRESULT) "check Test::set_assertion_hook()"
-	$(Q) grep -qi 'Aborting..' $(TSTOUT)			; $(TSTRESULT) "check aborting"
-	$(Q) rm -f $(TSTOUT)
-check-local: check-assertion-handlers
 # check various non-fatal logging conditions
 check-logging-output: testrcore2
 	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \
