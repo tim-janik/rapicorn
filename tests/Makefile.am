@@ -40,6 +40,12 @@ t502-property-basics-test:
 EXTRA_DIST += t502-property-basics.py
 check: t502-property-basics-test
 
+# == t503-garbage-collector ==
+t503-garbage-collector-test:
+	$(Q) $(X11_TESTPYTHON) t503-garbage-collector.py ; eval "$$TSTDIAGNOSE"
+EXTRA_DIST += t503-garbage-collector.py
+check: t503-garbage-collector-test
+
 # == t600-xmlui-eval ==
 t600-xmlui-eval-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/t600-xmlui-eval.xml ; eval "$$TSTDIAGNOSE"

@@ -19,7 +19,6 @@ if not '-i' in sys.argv:
   gc_matches = re.findall (gccycle, output, re.S | re.M)
   # OK if we find the required number of GC interactions
   assert len (gc_matches) >= N_GC_CYCLES
-  print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
   sys.exit (0)
 
 import Rapicorn # Load Rapicorn language bindings for Python
