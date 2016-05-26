@@ -1,7 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include <stdio.h>
-#include "components-a1-server.hh"
-#include "components-a1-client.hh"
+#include "t303-mini-server-srvt.hh"
+#include "t303-mini-server-clnt.hh"
 
 using namespace Rapicorn;
 using namespace Rapicorn::Aida;

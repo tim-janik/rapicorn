@@ -12,10 +12,14 @@ EXAMPLES         =
 EXTRA_DIST      += $(XML_FILES)
 
 LDADDS   = $(top_builddir)/ui/librapicorn-@MAJOR@.la $(RAPICORN_DEP_LIBS)
+AIDACC_INTERN = $(top_srcdir)/aidacc/aidacc-intern
+CXXSTUB_PY    = $(top_srcdir)/aidacc/CxxStub.py
 RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/ui/tests/imgcheck
 X11TEST_RAPIDRUN = $(X11_ENV) $(RAPIDRUN) --fatal-warnings "$$@"
 X11_TESTPYTHON = $(X11_ENV) PYTHONPATH="$(abs_top_builddir)/cython/${objdir}:$$PYTHONPATH" $(PYTHON)
+LIBRAPICORN_LA = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la
+
 # Loading newly built Python modules requires accesss to libtool objdir
 objdir       = .libs
 
@@ -23,6 +27,25 @@ objdir       = .libs
 benchaida_SOURCES  = benchaida.cc
 benchaida_LDADD    = $(LDADDS)
 
+
+# == t303-mini-server ==
+t303-mini-server-test: t303-mini-server
+	$(Q) ./t303-mini-server ; eval "$$TSTDIAGNOSE"
+EXTRA_DIST += t303-mini-server.idl t303-mini-server-impl.cc
+T303_GENERATED = t303-mini-server-srvt.hh t303-mini-server-srvt.cc t303-mini-server-clnt.hh t303-mini-server-clnt.cc
+# MAKE(1) supports parallel execution of a multiple-targets-rule *only* for implicit rules
+t303-%-clnt.hh t303-%-clnt.cc t303-%-srvt.hh t303-%-srvt.cc: t303-%.idl $(CXXSTUB_PY) $(AIDACC_INTERN)
+	$(AM_V_GEN)
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G clienthh -G strip-path=$(abs_top_srcdir)/ $< -o t303-$*-clnt.hh
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G clientcc -G strip-path=$(abs_top_srcdir)/ $< -o t303-$*-clnt.cc
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G serverhh -G strip-path=$(abs_top_srcdir)/ $< -o t303-$*-srvt.hh
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G servercc -G strip-path=$(abs_top_srcdir)/ $< -o t303-$*-srvt.cc
+CLEANFILES += $(T303_GENERATED)
+t303-mini-server-main.cc: $(T303_GENERATED)
+t303_mini_server_SOURCES = t303-mini-server-main.cc
+t303_mini_server_LDADD   = $(LIBRAPICORN_LA)
+noinst_PROGRAMS         += t303-mini-server
+check: t303-mini-server-test
 
 # == t500-main-loop ==
 t500-main-loop-test:

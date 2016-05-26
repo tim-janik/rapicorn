@@ -1,8 +1,8 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include <stdio.h>
-#include "components-a1-server.hh"
-#include "components-a1-client.hh"
-#include "a1-server.cc"
+#include "t303-mini-server-srvt.hh"
+#include "t303-mini-server-clnt.hh"
+#include "t303-mini-server-impl.cc"
 
 using namespace Rapicorn;
 
@@ -202,5 +202,5 @@ main (int   argc,
   return 0;
 }
 
-#include "components-a1-client.cc"
-#include "components-a1-server.cc"
+#include "t303-mini-server-srvt.cc"
+#include "t303-mini-server-clnt.cc"
