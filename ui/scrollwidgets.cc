@@ -108,7 +108,7 @@ ScrollPortImpl::fix_adjustments ()
    * undesirably and loosing the last scroll position, we fix up the adjustments once the dust settled.
    */
   WidgetImpl &child = get_child();
-  const Allocation area = child.allocation();
+  const Allocation area = child.child_allocation();
   const double small_step = 10;
   if (hadjustment_)
     {
@@ -167,7 +167,7 @@ ScrollPortImpl::do_scrolled ()
 }
 
 void
-ScrollPortImpl::size_allocate (const Allocation area, bool changed)
+ScrollPortImpl::size_allocate (const Allocation area)
 {
   return_unless (has_visible_child());
   const int xoffset = hadjustment_ ? iround (hadjustment_->value()) : 0;
@@ -185,8 +185,7 @@ ScrollPortImpl::size_allocate (const Allocation area, bool changed)
     child_area.height = max (rq.height, area.height);
   else
     child_area.height = rq.height;
-  child_area = layout_child (child, child_area);
-  child.set_allocation (child_area);
+  layout_child_allocation (child, child_area);
   if (!fix_id_)
     {
       WindowImpl *window = get_window();
@@ -219,13 +218,13 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
         break;
       fwidget = fwidget->parent();
     }
-  // find the first focus descendant that fits the scroll area
+  // find the first focus descendant that fits the scroll port
   fwidget = rfwidget; // fallback to innermost focus widget
-  const IRect area = allocation();
+  const IRect port = allocation();
   for (WidgetImpl *widget : fwidgets)
     {
-      IRect a = widget->allocation();
-      if (a.width <= area.width && a.height <= area.height)
+      const IRect a = widget->child_allocation();
+      if (a.width <= port.width && a.height <= port.height)
         {
           fwidget = widget;
           break;
@@ -233,19 +232,19 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
     }
   if (!fwidget)
     return;
-  scroll_to_child (*fwidget);
+  scroll_to_descendant (*fwidget);
 }
 
 void
-ScrollPortImpl::scroll_to_child (WidgetImpl &widget)
+ScrollPortImpl::scroll_to_descendant (WidgetImpl &widget)
 {
   const IRect port = allocation();
   // adjust scroll area to widget's area
-  IRect inner = widget.allocation();
+  const IRect inner = rect_from_viewport (widget.rect_to_viewport (widget.allocation()));
   if (0)
     printerr ("scroll-focus: port=%s inner=%s child=%p (%s)\n",
               port.string().c_str(), inner.string().c_str(), &widget,
-              widget.allocation().string().c_str());
+              widget.child_allocation().string().c_str());
   // calc new scroll position, giving precedence to lower left
   double deltax = 0, deltay = 0;
   if (inner.upper_x() > port.upper_x() + deltax)

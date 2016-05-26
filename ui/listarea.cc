@@ -488,7 +488,7 @@ WidgetListImpl::size_request (Requisition &requisition)
 }
 
 void
-WidgetListImpl::size_allocate (Allocation area, bool changed)
+WidgetListImpl::size_allocate (Allocation area)
 {
   const Allocation list_area = allocation();
   int64 list_y = list_area.y;
@@ -504,7 +504,7 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
       carea.height = crq.height;
       list_y += carea.height;
       carea = layout_child (*child, carea); // handles spacing/alignment
-      child->set_allocation (carea);
+      child->set_child_allocation (carea);
     }
 }
 
@@ -554,7 +554,7 @@ WidgetListImpl::move_focus (FocusDir fdir)
   if (last_child && last_child->move_focus (fdir))      // refocus or row internal move_focus
     return true;
   // pick row for initial focus
-  if (!test_flag (FOCUS_CHAIN))
+  if (!test_any (FOCUS_CHAIN))
     {
       const int last_focus = focus_row();               // -1 initially
       return grab_row_focus (MAX (0, last_focus));      // list focus-in

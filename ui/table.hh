@@ -13,7 +13,7 @@ protected:
   explicit       TableLayoutImpl     ();
   virtual       ~TableLayoutImpl     ();
   virtual void   size_request        (Requisition &requisition);
-  virtual void   size_allocate       (Allocation area, bool changed);
+  virtual void   size_allocate       (Allocation area);
   virtual void   repack_child        (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew);
   void           size_request_init   ();
   void           size_request_pass1  ();

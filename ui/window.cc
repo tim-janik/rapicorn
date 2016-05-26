@@ -319,19 +319,19 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
   WidgetImpl* grab_widget = get_grab (&unconfined);
   if (grab_widget)
     {
-      if (unconfined or grab_widget->point (Point (event.x, event.y)))
+      if (unconfined or grab_widget->point (grab_widget->point_from_event (event)))
         {
           pierced.push_back (shared_ptr_cast<WidgetImpl> (grab_widget));        // grab-widget receives all mouse events
           ContainerImpl *container = grab_widget->interface<ContainerImpl*>();
           if (container)                              /* deliver to hovered grab-widget children as well */
-            container->point_children (Point (event.x, event.y), pierced);
+            container->point_descendants (container->point_from_event (event), pierced);
         }
     }
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all mouse events
       if (entered_)
-        point_children (Point (event.x, event.y), pierced);
+        point_descendants (point_from_event (event), pierced);
     }
   /* send leave events */
   vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
@@ -368,7 +368,7 @@ WindowImpl::dispatch_event_to_pierced_or_grab (const Event &event)
   else if (drawable())
     {
       pierced.push_back (shared_ptr_cast<WidgetImpl> (this)); // window receives all events
-      point_children (Point (event.x, event.y), pierced);
+      point_descendants (point_from_event (event), pierced);
     }
   /* send actual event */
   bool handled = false;
@@ -1036,15 +1036,15 @@ WindowImpl::ensure_resized()
 WidgetImpl::WidgetFlag
 WindowImpl::check_widget_requisition (WidgetImpl &widget, bool discard_tuned)
 {
-  return_unless (widget.visible(), WidgetFlag (0));
   if (discard_tuned)
     widget.invalidate_requisition();    // discard requisitions tuned to previous allocations
   ContainerImpl *container = widget.as_container_impl();
   uint64 invalidation_flags = 0;
-  if (container)
+  if (RAPICORN_LIKELY (container))
     for (auto &child : *container)
-      invalidation_flags |= check_widget_requisition (*child, discard_tuned);
-  if (widget.test_flag (INVALID_REQUISITION))
+      if (RAPICORN_LIKELY (child->visible()))
+        invalidation_flags |= check_widget_requisition (*child, discard_tuned);
+  if (RAPICORN_UNLIKELY (widget.test_any (INVALID_REQUISITION)))
     widget.requisition();               // does size_request and clears INVALID_REQUISITION
   invalidation_flags |= widget.widget_flags_ & (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   return WidgetFlag (invalidation_flags);
@@ -1061,8 +1061,8 @@ WindowImpl::check_widget_allocation (WidgetImpl &widget)
        */
       return INVALID_REQUISITION;
     }
-  if (widget.test_flag (INVALID_ALLOCATION))
-    widget.set_allocation (widget.allocation()); // clears INVALID_ALLOCATION
+  if (widget.test_any (INVALID_ALLOCATION))
+    widget.set_child_allocation (widget.child_allocation()); // clears INVALID_ALLOCATION
   uint64 invalidation_flags = 0;
   ContainerImpl *container = widget.as_container_impl();
   if (container)
@@ -1097,7 +1097,7 @@ WindowImpl::negotiate_sizes (const Allocation *new_window_area)
   // assign new size allocation if provided
   tunable_requisition_counter_ = 3;
   if (new_window_area)
-    set_allocation (*new_window_area);
+    set_child_allocation (*new_window_area);
   /* negotiate and allocate sizes, initially allow tuning and re-allocations:
    * - widgets can tune_requisition() during size_allocate() to negotiate width
    *   for height or vice versa.
@@ -1109,14 +1109,14 @@ WindowImpl::negotiate_sizes (const Allocation *new_window_area)
    */
   for (/**/; tunable_requisition_counter_; tunable_requisition_counter_--)
     {
-      if (test_flag (INVALID_ALLOCATION))
+      if (test_any (INVALID_ALLOCATION))
         {
           if (new_window_area)
-            set_allocation (allocation());
+            set_child_allocation (child_allocation());
           else
             {
               const Requisition rsize = requisition();
-              set_allocation (Allocation (0, 0, rsize.width, rsize.height));
+              set_child_allocation (Allocation (0, 0, rsize.width, rsize.height));
             }
         }
       do
@@ -1364,14 +1364,14 @@ WindowImpl::snapshot (const String &pngname)
 }
 
 bool
-WindowImpl::synthesize_enter (double xalign,
-                              double yalign)
+WindowImpl::synthesize_enter (double xalign, double yalign)
 {
   if (!has_display_window())
     return false;
   const Allocation &area = allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
+  p = point_to_viewport (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;
@@ -1401,6 +1401,7 @@ WindowImpl::synthesize_click (WidgetIface &widgeti,
   const Allocation &area = widget.allocation();
   Point p (area.x + xalign * (max (1, area.width) - 1),
            area.y + yalign * (max (1, area.height) - 1));
+  p = widget.point_to_viewport (p);
   EventContext ec;
   ec.x = p.x;
   ec.y = p.y;

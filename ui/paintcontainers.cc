@@ -75,7 +75,7 @@ void
 AmbienceImpl::insensitive_background (const String &color)
 {
   insensitive_background_ = color;
-  expose();
+  invalidate_content();
   changed ("insensitive_background");
 }
 
@@ -89,7 +89,7 @@ void
 AmbienceImpl::hover_background (const String &color)
 {
   hover_background_ = color;
-  expose();
+  invalidate_content();
   changed ("hover_background");
 }
 
@@ -103,7 +103,7 @@ void
 AmbienceImpl::active_background (const String &color)
 {
   active_background_ = color;
-  expose();
+  invalidate_content();
   changed ("active_background");
 }
 
@@ -117,7 +117,7 @@ void
 AmbienceImpl::normal_background (const String &color)
 {
   normal_background_ = color;
-  expose();
+  invalidate_content();
   changed ("normal_background");
 }
 
@@ -131,7 +131,7 @@ void
 AmbienceImpl::insensitive_lighting (Lighting sh)
 {
   insensitive_lighting_ = sh;
-  expose();
+  invalidate_content();
   changed ("insensitive_lighting");
 }
 
@@ -145,7 +145,7 @@ void
 AmbienceImpl::hover_lighting (Lighting sh)
 {
   hover_lighting_ = sh;
-  expose();
+  invalidate_content();
   changed ("hover_lighting");
 }
 
@@ -159,7 +159,7 @@ void
 AmbienceImpl::active_lighting (Lighting sh)
 {
   active_lighting_ = sh;
-  expose();
+  invalidate_content();
   changed ("active_lighting");
 }
 
@@ -173,7 +173,7 @@ void
 AmbienceImpl::normal_lighting (Lighting sh)
 {
   normal_lighting_ = sh;
-  expose();
+  invalidate_content();
   changed ("normal_lighting");
 }
 
@@ -187,7 +187,7 @@ void
 AmbienceImpl::insensitive_shade (Lighting sh)
 {
   insensitive_shade_ = sh;
-  expose();
+  invalidate_content();
   changed ("insensitive_shade");
 }
 
@@ -201,7 +201,7 @@ void
 AmbienceImpl::hover_shade (Lighting sh)
 {
   hover_shade_ = sh;
-  expose();
+  invalidate_content();
   changed ("hover_shade");
 }
 
@@ -215,7 +215,7 @@ void
 AmbienceImpl::active_shade (Lighting sh)
 {
   active_shade_ = sh;
-  expose();
+  invalidate_content();
   changed ("active_shade");
 }
 
@@ -229,7 +229,7 @@ void
 AmbienceImpl::normal_shade (Lighting sh)
 {
   normal_shade_ = sh;
-  expose();
+  invalidate_content();
   changed ("normal_shade");
 }
 
@@ -355,16 +355,6 @@ FrameImpl::is_tight_focus() const
                           (active_frame_ == DrawFrame::FOCUS || active_frame_ == DrawFrame::NONE));
 }
 
-void
-FrameImpl::do_changed (const String &name)
-{
-  SingleContainerImpl::do_changed (name);
-  if (overlap_child())
-    expose();
-  else
-    expose_enclosure();
-}
-
 DrawFrame
 FrameImpl::normal_frame () const
 {
@@ -377,7 +367,7 @@ FrameImpl::normal_frame (DrawFrame ft)
   if (normal_frame_ != ft)
     {
       normal_frame_ = ft;
-      expose_enclosure();
+      invalidate_content();
       changed ("normal_frame");
     }
 }
@@ -394,7 +384,7 @@ FrameImpl::active_frame (DrawFrame ft)
   if (active_frame_ != ft)
     {
       active_frame_ = ft;
-      expose_enclosure();
+      invalidate_content();
       changed ("active_frame");
     }
 }
@@ -455,7 +445,7 @@ FrameImpl::size_request (Requisition &requisition)
 }
 
 void
-FrameImpl::size_allocate (Allocation area, bool changed)
+FrameImpl::size_allocate (Allocation area)
 {
   if (has_visible_child())
     {
@@ -469,8 +459,7 @@ FrameImpl::size_allocate (Allocation area, bool changed)
           carea.height -= 2 * thickness;
         }
       WidgetImpl &child = get_child();
-      Allocation child_area = layout_child (child, carea);
-      child.set_allocation (child_area);
+      layout_child_allocation (child, carea);
     }
 }
 
@@ -558,19 +547,14 @@ FocusFrameImpl::focusable_container_change (ContainerImpl &focus_container)
   const bool had_focus = container_has_focus_;
   container_has_focus_ = focus_container.has_focus();
   if (had_focus != container_has_focus_)
-    {
-      if (overlap_child())
-        expose();
-      else
-        expose_enclosure();
-    }
+    invalidate_content();
 }
 
 void
 FocusFrameImpl::set_focus_child (WidgetImpl *widget)
 {
   FrameImpl::set_focus_child (widget);
-  expose_enclosure();
+  invalidate_content();
 }
 
 void
@@ -584,7 +568,7 @@ FocusFrameImpl::hierarchy_changed (WidgetImpl *old_toplevel)
   if (anchored())
     {
       ContainerImpl *container = parent();
-      while (container && !container->test_flag (NEEDS_FOCUS_INDICATOR))
+      while (container && !container->test_any (NEEDS_FOCUS_INDICATOR))
         container = container->parent();
       focus_container_ = container;
       container_has_focus_ = focus_container_ && focus_container_->has_focus();
@@ -668,15 +652,14 @@ LayerPainterImpl::size_request (Requisition &requisition)
 }
 
 void
-LayerPainterImpl::size_allocate (Allocation area, bool changed)
+LayerPainterImpl::size_allocate (Allocation area)
 {
   for (auto childp : *this)
     {
       WidgetImpl &child = *childp;
       if (!child.visible())
         continue;
-      Allocation carea = layout_child (child, area);
-      child.set_allocation (carea);
+      layout_child_allocation (child, area);
     }
 }
 
@@ -828,7 +811,7 @@ ElementPainterImpl::size_request (Requisition &requisition)
 }
 
 void
-ElementPainterImpl::size_allocate (Allocation area, bool changed)
+ElementPainterImpl::size_allocate (Allocation area)
 {
   load_painters();
   if (size_painter_)
@@ -862,8 +845,7 @@ ElementPainterImpl::size_allocate (Allocation area, bool changed)
   if (has_visible_child())
     {
       WidgetImpl &child = get_child();
-      const Allocation child_area = layout_child (child, fill_area_);
-      child.set_allocation (child_area);
+      layout_child_allocation (child, fill_area_);
     }
 }
 
@@ -906,14 +888,14 @@ FocusPainterImpl::focusable_container_change (ContainerImpl &focus_container)
   const bool had_focus = container_has_focus_;
   container_has_focus_ = focus_container.has_focus();
   if (had_focus != container_has_focus_)
-    expose();
+    invalidate_content();
 }
 
 void
 FocusPainterImpl::set_focus_child (WidgetImpl *widget)
 {
   ElementPainterImpl::set_focus_child (widget);
-  expose();
+  invalidate_content();
 }
 
 void
@@ -927,7 +909,7 @@ FocusPainterImpl::hierarchy_changed (WidgetImpl *old_toplevel)
   if (anchored())
     {
       ContainerImpl *container = parent();
-      while (container && !container->test_flag (NEEDS_FOCUS_INDICATOR))
+      while (container && !container->test_any (NEEDS_FOCUS_INDICATOR))
         container = container->parent();
       focus_container_ = container;
       container_has_focus_ = focus_container_ && focus_container_->has_focus();
@@ -998,7 +980,7 @@ ShapePainterImpl::size_request (Requisition &requisition)
 }
 
 void
-ShapePainterImpl::size_allocate (Allocation area, bool changed)
+ShapePainterImpl::size_allocate (Allocation area)
 {
   const int thickness = 1; // FIXME: query viewport for thickness
   fill_area_ = area;
@@ -1009,8 +991,7 @@ ShapePainterImpl::size_allocate (Allocation area, bool changed)
   if (has_visible_child())
     {
       WidgetImpl &child = get_child();
-      const Allocation child_area = layout_child (child, fill_area_);
-      child.set_allocation (child_area);
+      layout_child_allocation (child, fill_area_);
     }
 }
 

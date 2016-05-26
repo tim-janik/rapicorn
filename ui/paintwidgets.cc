@@ -29,7 +29,7 @@ void
 ArrowImpl::arrow_dir (Direction dir)
 {
   dir_ = dir;
-  expose();
+  invalidate_content();
   changed ("arrow_dir");
 }
 
@@ -61,7 +61,7 @@ ArrowImpl::size_request (Requisition &requisition)
 }
 
 void
-ArrowImpl::size_allocate (Allocation area, bool changed)
+ArrowImpl::size_allocate (Allocation area)
 {
   SizePolicy spol = size_policy();
   if (spol == SizePolicy::WIDTH_FROM_HEIGHT)
@@ -126,7 +126,7 @@ void
 DotGridImpl::active_dot (DrawFrame ft)
 {
   active_dot_ = ft;
-  expose();
+  invalidate_content();
   changed ("active_dot");
 }
 
@@ -140,7 +140,7 @@ void
 DotGridImpl::normal_dot (DrawFrame ft)
 {
   normal_dot_ = ft;
-  expose();
+  invalidate_content();
   changed ("normal_dot");
 }
 
@@ -154,7 +154,7 @@ void
 DotGridImpl::n_hdots (int num)
 {
   n_hdots_ = u31 (num);
-  expose();
+  invalidate_content();
   changed ("n_hdots");
 }
 
@@ -168,7 +168,7 @@ void
 DotGridImpl::n_vdots (int num)
 {
   n_vdots_ = u31 (num);
-  expose();
+  invalidate_content();
   changed ("n_vdots");
 }
 
@@ -188,7 +188,7 @@ void
 DotGridImpl::right_padding_dots (int c)
 {
   right_padding_dots_ = u31 (c);
-  expose();
+  invalidate_content();
   changed ("right_padding_dots");
 }
 
@@ -202,7 +202,7 @@ void
 DotGridImpl::top_padding_dots (int c)
 {
   top_padding_dots_ = u31 (c);
-  expose();
+  invalidate_content();
   changed ("top_padding_dots");
 }
 
@@ -216,7 +216,7 @@ void
 DotGridImpl::left_padding_dots (int c)
 {
   left_padding_dots_ = u31 (c);
-  expose();
+  invalidate_content();
   changed ("left_padding_dots");
 }
 
@@ -230,7 +230,7 @@ void
 DotGridImpl::bottom_padding_dots (int c)
 {
   bottom_padding_dots_ = u31 (c);
-  expose();
+  invalidate_content();
   changed ("bottom_padding_dots");
 }
 
@@ -245,7 +245,7 @@ DotGridImpl::size_request (Requisition &requisition)
 }
 
 void
-DotGridImpl::size_allocate (Allocation area, bool changed)
+DotGridImpl::size_allocate (Allocation area)
 {}
 
 void
@@ -313,7 +313,7 @@ DrawableImpl::size_request (Requisition &requisition)
 }
 
 void
-DrawableImpl::size_allocate (Allocation area, bool changed)
+DrawableImpl::size_allocate (Allocation area)
 {
   if (false) // clear out, can lead to flicker
     {

@@ -64,7 +64,7 @@ protected:
   bool                  button_event            (const EventButton &event, WidgetImpl *row, int index);
   virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
   virtual void          size_request            (Requisition &requisition) override;
-  virtual void          size_allocate           (Allocation area, bool changed) override;
+  virtual void          size_allocate           (Allocation area) override;
   virtual bool          handle_event            (const Event &event) override;
   virtual bool          row_event               (const Event &event, WidgetImpl *row);
   virtual void          reset                   (ResetMode mode) override;

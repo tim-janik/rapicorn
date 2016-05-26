@@ -16,7 +16,7 @@ protected:
   void                  discard_expose_region   () { expose_region_.clear(); }
   bool                  exposes_pending         () const { return !expose_region_.empty(); }
 public:
-  void                  expose_child_region     (const Region &region);
+  void                  expose_region           (const Region &region);
   explicit              ViewportImpl            ();
   virtual              ~ViewportImpl            ();
 };

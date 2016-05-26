@@ -39,13 +39,13 @@ protected:
   virtual void        dispose_widget    (WidgetImpl           &widget);
   virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDir              fdir);
-  void                expose_enclosure  (); /* expose without children */
   void                stash_child       (WidgetImpl &child, bool);
   virtual void        focus_lost        ()                              { set_focus_child (NULL); }
   virtual void        set_focus_child   (WidgetImpl *widget);
   virtual void        scroll_to_child   (WidgetImpl &widget);
   virtual void        dump_test_data    (TestStream &tstream);
   static Allocation   layout_child      (WidgetImpl &child, const Allocation &carea);
+  static void         layout_child_allocation (WidgetImpl &child, const Allocation &carea);
   static Requisition  size_request_child (WidgetImpl &child, bool *hspread = NULL, bool *vspread = NULL);
   virtual void        selectable_child_changed (WidgetChain &chain);
   void                set_child_parent (WidgetImpl &child, ContainerImpl *parent) { child.set_parent (parent); }
@@ -65,10 +65,9 @@ public:
   bool                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL, 0); return remove (*widget); }
   void                  add             (WidgetImpl                   &widget);
   void                  add             (WidgetImpl                   *widget);
-  virtual void          point_children  (Point                   p, /* widget coordinates relative */
-                                         std::vector<WidgetImplP>     &stack);
+  void                   point_descendants (Point widget_point, std::vector<WidgetImplP> &stack) const;
   virtual ContainerImpl* as_container_impl ()                           { return this; }
-  void                  debug_tree      (String indent = String());
+  void                   debug_tree        (String indent = String());
   // ContainerIface
   virtual WidgetIfaceP create_widget    (const String &widget_identifier, const StringSeq &args) override;
   virtual void         remove_widget    (WidgetIface &child) override;
@@ -79,7 +78,7 @@ class SingleContainerImpl : public virtual ContainerImpl {
   WidgetImplP           child_widget;
 protected:
   virtual void          size_request            (Requisition &requisition);
-  virtual void          size_allocate           (Allocation area, bool changed);
+  virtual void          size_allocate           (Allocation area);
   virtual void          render                  (RenderContext &rcontext) {}
   WidgetImpl&           get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
   virtual              ~SingleContainerImpl     ();

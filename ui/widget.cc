@@ -293,14 +293,6 @@ WidgetImpl::set_flag (WidgetFlag flag, bool on)
     }
 }
 
-bool
-WidgetImpl::test_flag (WidgetFlag mask) const
-{
-  assert ((mask & (mask - 1)) == 0); // single bit check
-  return test_all (mask);
-}
-
-
 StyleIfaceP
 WidgetImpl::style () const
 {
@@ -316,7 +308,7 @@ WidgetImpl::grab_default () const
 bool
 WidgetImpl::allow_focus () const
 {
-  return test_flag (ALLOW_FOCUS);
+  return test_any (ALLOW_FOCUS);
 }
 
 void
@@ -340,7 +332,7 @@ WidgetImpl::focusable () const
 bool
 WidgetImpl::has_focus () const
 {
-  if (test_flag (FOCUS_CHAIN))
+  if (test_any (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -352,7 +344,7 @@ WidgetImpl::has_focus () const
 void
 WidgetImpl::unset_focus ()
 {
-  if (test_flag (FOCUS_CHAIN))
+  if (test_any (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
       if (rwidget && rwidget->get_focus() == this)
@@ -1134,7 +1126,7 @@ static class OvrKey : public DataKey<Requisition> {
 } override_requisition;
 
 bool
-WidgetImpl::process_event (const Event &event, bool capture) // widget coordinates relative
+WidgetImpl::process_event (const Event &event, bool capture) // viewport coordinates
 {
   bool handled = false;
   EventHandler *controller = dynamic_cast<EventHandler*> (this);
@@ -1148,13 +1140,50 @@ WidgetImpl::process_event (const Event &event, bool capture) // widget coordinat
   return handled;
 }
 
+/// Check if Point @a widget_point lies within widget.
 bool
-WidgetImpl::point (Point p) /* widget coordinates relative */
+WidgetImpl::point (Point widget_point) const
 {
-  const Allocation a = clipped_allocation();
-  return (drawable() &&
-          p.x >= a.x && p.x < a.x + a.width &&
-          p.y >= a.y && p.y < a.y + a.height);
+  const Allocation a = allocation();
+  return (visible() &&
+          widget_point.x >= a.x && widget_point.x < a.x + a.width &&
+          widget_point.y >= a.y && widget_point.y < a.y + a.height);
+}
+
+/// Convert Point from ViewportImpl to WidgetImpl coordinates.
+Point
+WidgetImpl::point_from_viewport (Point viewport_point) const
+{
+  // translate ViewportImpl to parent
+  const Point ppoint = parent_ ? parent_->point_from_viewport (viewport_point) : viewport_point;
+  // translate parent to widget
+  return Point (ppoint.x - child_allocation_.x, ppoint.y - child_allocation_.y);
+}
+
+/// Convert Point from WidgetImpl to ViewportImpl coordinates.
+Point
+WidgetImpl::point_to_viewport (Point widget_point) const
+{
+  // translate widget to parent
+  const Point ppoint (widget_point.x + child_allocation_.x, widget_point.y + child_allocation_.y);
+  // translate parent to ViewportImpl
+  return parent_ ? parent_->point_to_viewport (ppoint) : ppoint;
+}
+
+/// Convert IRect from ViewportImpl to WidgetImpl coordinates.
+IRect
+WidgetImpl::rect_from_viewport (IRect viewport_rect) const
+{
+  const Point widget_point = point_from_viewport (Point (viewport_rect.x, viewport_rect.y));
+  return IRect (iround (widget_point.x), iround (widget_point.y), viewport_rect.width, viewport_rect.height);
+}
+
+/// Convert IRect from WidgetImpl to ViewportImpl coordinates.
+IRect
+WidgetImpl::rect_to_viewport (IRect widget_rect) const
+{
+  const Point viewport_point = point_to_viewport (Point (widget_rect.x, widget_rect.y));
+  return IRect (iround (viewport_point.x), iround (viewport_point.y), widget_rect.width, widget_rect.height);
 }
 
 void
@@ -1419,11 +1448,11 @@ WidgetImpl::widget_invalidate (WidgetFlag mask)
 {
   return_unless (0 == (mask & ~(INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT)));
   return_unless (mask != 0);
-  const bool had_invalid_requisition = test_flag (INVALID_REQUISITION);
+  const bool had_invalid_requisition = test_any (INVALID_REQUISITION);
   change_flags_silently (mask, true);
-  if (test_flag (INVALID_CONTENT))
+  if (test_any (INVALID_CONTENT))
     expose();
-  if (!had_invalid_requisition && test_flag (INVALID_REQUISITION))
+  if (!had_invalid_requisition && test_any (INVALID_REQUISITION))
     WidgetGroup::invalidate_widget (*this);
   WindowImpl *window = get_window();
   if (window)
@@ -1438,7 +1467,7 @@ WidgetImpl::inner_size_request()
    * requisition invalidation during the size_request phase, widget implementations
    * have to ensure we're not looping endlessly
    */
-  while (test_flag (INVALID_REQUISITION))
+  while (test_any (INVALID_REQUISITION))
     {
       change_flags_silently (INVALID_REQUISITION, false);
       Requisition inner; // 0,0
@@ -1487,32 +1516,49 @@ WidgetImpl::requisition ()
   return SizeGroup::widget_requisition (*this);
 }
 
+/// Variant of expose() that allows exposing areas outside of the current allocation().
 void
 WidgetImpl::expose_unclipped (const Region &region)
 {
-  if (!region.empty())
+  return_unless (region.empty() == false);
+  return_unless (anchored());
+  // clip expose region extents against ancestry (and translate)
+  IRect vextents = region.extents();
+  Point delta = Point (vextents.x, vextents.y);
+  WidgetImpl *last = this;
+  for (WidgetImpl *p = last->parent(); p; last = p, p = last->parent())
     {
-      // queue expose region on nextmost viewport
-      ViewportImpl *vp = parent() ? parent()->get_viewport() : get_viewport();
-      if (vp)
-        vp->expose_child_region (region);
+      const Allocation child_allocation = last->child_allocation();
+      // translate into parent
+      delta.x += child_allocation.x;
+      delta.y += child_allocation.y;
+      vextents.x += child_allocation.x;
+      vextents.y += child_allocation.y;
+      // clip extents to parent
+      vextents.intersect (p->allocation());
     }
+  return_unless (vextents.empty() == false);
+  // translate region into ancestor coordinates
+  ViewportImpl &viewport = *last->get_viewport(); // never NULL when anchored()
+  Region viewport_region = region;
+  viewport_region.translate (delta.x, delta.y);
+  // clip region against ancestry
+  viewport_region.intersect (Region (vextents));
+  viewport.expose_region (viewport_region);
 }
 
 /** Invalidate drawing contents of a widget
  *
- * Cause the given @a region of @a this widget to be rerendered.
- * The region is constrained to the clipped_allocation().
+ * Cause the given @a region of @a this widget to be recomposed.
+ * If the widget needs to be redrawn, use invalidate_content() instead.
+ * The expose region is constrained to the allocation().
  */
 void
 WidgetImpl::expose (const Region &region) // widget relative
 {
-  if (drawable())
-    {
-      Region r (clipped_allocation());
-      r.intersect (region);
-      expose_unclipped (r);
-    }
+  Region r (allocation());
+  r.intersect (region);
+  expose_unclipped (r);
 }
 
 /// Signal emitted when a widget ancestry is added to or removed from a Window
@@ -1562,7 +1608,7 @@ WidgetImpl::debug_name (const String &format) const
   s = string_replace (s, "%l", string_format ("%u", us.line));
   s = string_replace (s, "%n", id());
   s = string_replace (s, "%r", string_format ("%gx%g", requisition_.width, requisition_.height));
-  s = string_replace (s, "%a", allocation_.string());
+  s = string_replace (s, "%a", child_allocation_.string());
   return s;
 }
 
@@ -1928,23 +1974,6 @@ WidgetImpl::focus_color ()
   return state_color (state(), StyleColor::FOCUS_COLOR);
 }
 
-/** Return widget allocation area accounting for clip_area().
- *
- * For any rendering or event processing purposes, clipped_allocation() should be used over allocation().
- * The unclipped size allocation is just used by @a this widget internally for layouting purposes, see also set_allocation().
- */
-Allocation
-WidgetImpl::clipped_allocation () const
-{
-  Allocation area = allocation();
-#if 0 // FIXME
-  const Allocation *clip = clip_area();
-  if (clip)
-    area.intersect (*clip);
-#endif
-  return area;
-}
-
 bool
 WidgetImpl::tune_requisition (int new_width, int new_height)
 {
@@ -1960,7 +1989,7 @@ bool
 WidgetImpl::tune_requisition (Requisition requisition)
 {
   WidgetImpl *p = parent();
-  if (p && !test_flag (INVALID_REQUISITION))
+  if (p && !test_any (INVALID_REQUISITION))
     {
       WindowImpl *rc = get_window();
       if (rc && rc->requisitions_tunable())
@@ -1983,7 +2012,7 @@ WidgetImpl::tune_requisition (Requisition requisition)
   return false;
 }
 
-/** Set size allocation of a widget.
+/** Set parent-relative size allocation of a widget.
  *
  * Allocate the given @a area to @a this widget.
  * The size allocation is used by the widget for layouting of its contents.
@@ -1993,27 +2022,28 @@ WidgetImpl::tune_requisition (Requisition requisition)
  * This method clears the #INVALID_ALLOCATION flag and calls expose() on the widget as needed.
  */
 void
-WidgetImpl::set_allocation (const Allocation &area)
+WidgetImpl::set_child_allocation (const Allocation &area)
 {
   Allocation sarea = area;
   // capture old allocation area
-  const Allocation old_allocation = clipped_allocation();
+  const Allocation old_allocation = allocation();
   // determine new allocation area
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  const bool allocation_changed = allocation_ != sarea;
-  if (test_flag (INVALID_ALLOCATION) || allocation_changed)
+  const bool allocation_changed = child_allocation_ != sarea;
+  if (test_any (INVALID_ALLOCATION) || allocation_changed)
     {
       change_flags_silently (INVALID_ALLOCATION, false);
-      allocation_ = sarea;
-      size_allocate (allocation_, allocation_changed);  // causes re-layout of immediate children
       // expose old area
       if (allocation_changed)
         {
           Region region (old_allocation);
-          expose_unclipped (region);                    // don't intersect with new allocation
+          expose_unclipped (region);            // skip intersecting with allocation
         }
-      // expose new area
+      // move and resize new allocation
+      child_allocation_ = sarea;
+      size_allocate (allocation());             // causes re-layout of immediate children
+      // re-render new area
       if (allocation_changed)
         invalidate_content();
       SZDEBUG ("size allocation: 0x%016x:%s: %s => %s", size_t (this),
@@ -2042,51 +2072,58 @@ public:
 };
 
 void
-WidgetImpl::compose_into (cairo_t *cr, const vector<IRect> &irects)
+WidgetImpl::widget_compose_into (cairo_t *cr, const vector<IRect> &view_rects, int x_offset, int y_offset)
 {
   ContainerImpl *container = as_container_impl();
+  const Allocation view_area = Allocation (x_offset + child_allocation_.x, y_offset + child_allocation_.y, child_allocation_.width, child_allocation_.height);
   // clipping rectangles for this and descendants
-  vector<IRect> crects;
+  vector<IRect> clip_rects;
   if (cached_surface_ || (container && container->has_children()))
-    for (size_t i = 0; i < irects.size(); i++)
+    for (size_t i = 0; i < view_rects.size(); i++)
       {
-        IRect rect = irects[i];
-        rect.intersect (allocation_);
+        IRect rect = view_rects[i];
+        rect.intersect (view_area);
         if (!rect.empty())
-          crects.push_back (rect);
+          clip_rects.push_back (rect);
       }
-  if (cached_surface_ && crects.size())
+  if (cached_surface_ && clip_rects.size())
     {
       cairo_save (cr);
       // clip to rectangles
-      for (size_t i = 0; i < crects.size(); i++)
-        cairo_rectangle (cr, crects[i].x, crects[i].y, crects[i].width, crects[i].height);
+      for (size_t i = 0; i < clip_rects.size(); i++)
+        cairo_rectangle (cr, clip_rects[i].x, clip_rects[i].y, clip_rects[i].width, clip_rects[i].height);
       cairo_clip (cr);
       // compose widget surface OVER
-      cairo_set_source_surface (cr, cached_surface_, 0, 0);
+      cairo_set_source_surface (cr, cached_surface_, view_area.x, view_area.y);
       cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
       cairo_paint_with_alpha (cr, 1.0);
       // done
       cairo_restore (cr);
     }
-  if (container && crects.size())
+  if (container && clip_rects.size())
     for (auto &child : *container)
-      child->compose_into (cr, crects);
+      child->widget_compose_into (cr, clip_rects, view_area.x, view_area.y);
+}
+
+void
+WidgetImpl::compose_into (cairo_t *cr, const vector<IRect> &view_rects)
+{
+  widget_compose_into (cr, view_rects, 0, 0);
 }
 
 /// Render widget contents and contents of all viewable descendants.
 void
 WidgetImpl::render_widget ()
 {
-  widget_render_recursive (allocation_);
+  widget_render_recursive (child_allocation_);
 }
 
 void
 WidgetImpl::widget_render_recursive (const IRect &ancestry_clip)
 {
-  if (test_flag (INVALID_REQUISITION))
+  if (test_any (INVALID_REQUISITION))
     critical ("%s: rendering widget with invalid %s: %s", debug_name(), "requisition", debug_name ("%r"));
-  if (test_flag (INVALID_ALLOCATION))
+  if (test_any (INVALID_ALLOCATION))
     critical ("%s: rendering widget with invalid %s: %s", debug_name(), "allocation", debug_name ("%a"));
   // abort if we're clipped
   const IRect clip_rect = allocation().intersection (ancestry_clip);
@@ -2097,7 +2134,7 @@ WidgetImpl::widget_render_recursive (const IRect &ancestry_clip)
     for (auto &child : *container)
       child->widget_render_recursive (clip_rect);
   // render contents on demand only
-  return_unless (test_flag (INVALID_CONTENT) == true);
+  return_unless (test_any (INVALID_CONTENT) == true);
   // dispose of previous scene...
   if (cached_surface_)
     {
@@ -2173,13 +2210,8 @@ WidgetImpl::cairo_context (RenderContext &rcontext)
 bool
 WidgetImpl::drawable () const
 {
-  if (viewable() && allocation_.width > 0 && allocation_.height > 0)
-    {
-      const Allocation carea = clipped_allocation();
-      if (carea.width <= 0 || carea.height <= 0)
-        return false;
-      return true;
-    }
+  if (viewable() && child_allocation_.width > 0 && child_allocation_.height > 0)
+    return true;
   return false;
 }
 

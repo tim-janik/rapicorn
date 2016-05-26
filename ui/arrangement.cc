@@ -151,7 +151,7 @@ ArrangementImpl::size_request (Requisition &requisition)
 }
 
 void
-ArrangementImpl::size_allocate (Allocation area, bool changed)
+ArrangementImpl::size_allocate (Allocation area)
 {
   for (auto childp : *this)
     {
@@ -162,7 +162,7 @@ ArrangementImpl::size_allocate (Allocation area, bool changed)
       carea.x += area.x;
       carea.y += area.y;
       /* allocate child */
-      child.set_allocation (carea);
+      child.set_child_allocation (carea);
     }
 }
 

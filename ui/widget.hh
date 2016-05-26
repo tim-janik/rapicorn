@@ -72,7 +72,7 @@ private:
   const AncestryCache        *acache_; // cache poninter may change for const this
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
-  Allocation                  allocation_;
+  Allocation                  child_allocation_;
   PackInfo                   *pack_info_;
   cairo_surface_t            *cached_surface_;
   Requisition                 inner_size_request (); // ungrouped size requisition
@@ -89,6 +89,7 @@ private:
   virtual bool                widget_maybe_toggled   () const;
   virtual bool                widget_maybe_selected  () const;
   void                        widget_render_recursive (const IRect &ancestry_clip);
+  void                        widget_compose_into     (cairo_t *cr, const vector<IRect> &view_rects, int x_offset, int y_offset);
   void                        invalidate_all         ()              { widget_invalidate (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT); }
 protected:
   virtual void                fabricated            (); ///< Method called on all widgets after creation via Factory.
@@ -127,7 +128,7 @@ protected:
   // resizing, requisition and allocation
   virtual void                widget_invalidate      (WidgetFlag mask); // FIXME: make private
   virtual void                size_request      (Requisition &requisition) = 0; ///< Type specific size requisition implementation, see requisition().
-  virtual void                size_allocate     (Allocation area, bool changed) = 0; ///< Type specific size allocation implementation, see set_allocation().
+  virtual void                size_allocate     (Allocation area) = 0; ///< Type specific size allocation implementation, see set_allocation().
   bool                        tune_requisition  (Requisition  requisition);
   bool                        tune_requisition  (int new_width, int new_height);
   /* signal methods */
@@ -168,12 +169,11 @@ public:
   virtual WindowImpl*         as_window_impl    ()              { return NULL; }
   virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
-  bool                        test_flag         (WidgetFlag mask) const;
   bool                        test_all          (WidgetFlag mask) const { return (widget_flags_ & mask) == mask; }
   bool                        test_any          (WidgetFlag mask) const { return (widget_flags_ & mask) != 0; }
-  bool                        isconstructed     () const { return test_flag (CONSTRUCTED); } ///< Check if widget is properly constructed.
-  bool                        finalizing        () const { return test_flag (FINALIZING); }  ///< Check if the last widget reference is lost.
-  bool                        anchored          () const { return test_flag (ANCHORED); }    ///< Get widget anchored state, see #ANCHORED
+  bool                        isconstructed     () const { return test_any (CONSTRUCTED); } ///< Check if widget is properly constructed.
+  bool                        finalizing        () const { return test_any (FINALIZING); }  ///< Check if the last widget reference is lost.
+  bool                        anchored          () const { return test_any (ANCHORED); }    ///< Get widget anchored state, see #ANCHORED
   virtual bool                acceleratable     () const override;      ///< See Widget::acceleratable and WidgetState::ACCELERATABLE
   virtual void                acceleratable     (bool b) override;      ///< See Widget::acceleratable and WidgetState::ACCELERATABLE
   virtual bool                hover             () const override;
@@ -198,7 +198,7 @@ public:
   virtual void                retained          (bool b) override;
   virtual bool                stashed           () const override;
   virtual void                stashed           (bool b) override;
-  virtual bool                visible           () const override { return test_flag (VISIBLE); }     ///< Get widget visibility, see #VISIBLE
+  virtual bool                visible           () const override { return test_any (VISIBLE); }     ///< Get widget visibility, see #VISIBLE
   virtual void                visible           (bool b) override { set_flag (VISIBLE, b); }     ///< Toggle widget visibility
   virtual bool                allow_focus       () const override; ///< Indicates if widget may receive input foucs.
   virtual void                allow_focus       (bool b) override; ///< Toggle if widget may receive input focus.
@@ -209,7 +209,7 @@ public:
   bool                        pointer_sensitive () const;
   bool                        ancestry_hover    () const; ///< Check if ancestry contains hover().
   bool                        ancestry_active   () const; ///< Check if ancestry contains active().
-  bool                        has_default       () const { return test_flag (HAS_DEFAULT); }
+  bool                        has_default       () const { return test_any (HAS_DEFAULT); }
   bool                        grab_default      () const;
   bool                        focusable         () const; ///< Returns true if @a this widget participates in input focus selection.
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
@@ -292,13 +292,19 @@ protected:
   Region                     rendering_region          (RenderContext &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext &rcontext);
 public:
-  void                       compose_into              (cairo_t *cr, const vector<IRect> &irects);
-  virtual bool               point                     (Point        p);            // widget coordinates relative
+  void                       compose_into              (cairo_t *cr, const vector<IRect> &view_rects);
+  bool                       point                     (Point widget_point) const;
+  Point                      point_from_viewport       (Point viewport_point) const;
+  Point                      point_to_viewport         (Point widget_point) const;
+  IRect                      rect_from_viewport        (IRect viewport_rect) const;
+  IRect                      rect_to_viewport          (IRect widget_rect) const;
+  template<class Event>
+  Point                      point_from_event          (const Event &ev) const  { return point_from_viewport (Point (ev.x, ev.y)); }
   /* public size accessors */
-  virtual Requisition        requisition        ();                              // effective size requisition
-  void                       set_allocation     (const Allocation &area); // assign new allocation
-  const Allocation&          allocation         () const { return allocation_; } ///< Return widget layout area, see also clipped_allocation().
-  Allocation                 clipped_allocation () const;
+  virtual Requisition        requisition          ();                              // effective size requisition
+  void                       set_child_allocation (const Allocation &area); // assign parent-relative allocation
+  const Allocation&          child_allocation     () const { return child_allocation_; } ///< Parent relative allocation, see also allocation().
+  Allocation                 allocation           () const { return Allocation (0, 0, child_allocation_.width, child_allocation_.height); } ///< Widget relative allocation.
   // theming & appearance
   Color                 current_color           (StyleColor color_type, const String &detail = "");
   Color                 state_color             (WidgetState state, StyleColor color_type, const String &detail = "");

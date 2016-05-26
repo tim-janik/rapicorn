@@ -369,7 +369,7 @@ static DataKey<vector<FocusIndicator*>> focus_indicator_key;
 void
 ContainerImpl::register_focus_indicator (FocusIndicator &focus_indicator)
 {
-  assert_return (test_flag (NEEDS_FOCUS_INDICATOR));
+  assert_return (test_any (NEEDS_FOCUS_INDICATOR));
   vector<FocusIndicator*> vfi = get_data (&focus_indicator_key);
   for (auto &existing_indicator : vfi)
     assert_return (existing_indicator != &focus_indicator);
@@ -453,11 +453,11 @@ ContainerImpl::get_focus_child () const
 
 struct LesserWidgetByHBand {
   bool
-  operator() (WidgetImpl *const &i1,
-              WidgetImpl *const &i2) const
+  operator() (WidgetImpl *const &child1, WidgetImpl *const &child2) const
   {
-    const Allocation &a1 = i1->allocation();
-    const Allocation &a2 = i2->allocation();
+    // using child_allocation() assumes child1 and child2 have the same parent
+    const Allocation &a1 = child1->child_allocation();
+    const Allocation &a2 = child2->child_allocation();
     // sort widgets by horizontal bands first
     if (a1.y + a1.height <= a2.y)
       return true;
@@ -489,13 +489,16 @@ focus_view_area (WidgetImpl *widget)
    * movements across multiple nested scrolled areas probably become too complicated
    * to yield non-surprising results.
    */
-  Allocation farea = widget->allocation();
+  Allocation farea = widget->child_allocation();
   WidgetImpl *p = widget->parent();
   while (p)
     {
       // Intersect focusable area with parent area, or map it onto
       // one of the parent edges if they are non-intersecting.
       farea = farea.mapped_onto (p->allocation());
+      const Allocation parea = p->child_allocation();
+      farea.x += parea.x;
+      farea.y += parea.y;
       p = p->parent();
     }
   return farea;
@@ -525,11 +528,11 @@ struct LesserWidgetByDirection {
       }
   }
   bool
-  operator() (WidgetImpl *const &i1, WidgetImpl *const &i2) const
+  operator() (WidgetImpl *const &child1, WidgetImpl *const &child2) const
   {
     // calculate widget distances along dir, dist >= 0 lies ahead
-    const Allocation &a1 = focus_view_area (i1);
-    const Allocation &a2 = focus_view_area (i2);
+    const Allocation &a1 = focus_view_area (child1);
+    const Allocation &a2 = focus_view_area (child2);
     double dd1 = directional_distance (a1);
     double dd2 = directional_distance (a2);
     // sort widgets along dir
@@ -547,8 +550,8 @@ struct LesserWidgetByDirection {
       return dd1 < dd2;
     // same edge and center distance, probably because focus_view_area() collapsed
     // area coordinates, now resort to real allocation
-    dd1 = directional_distance (i1->allocation());
-    dd2 = directional_distance (i2->allocation());
+    dd1 = directional_distance (child1->rect_to_viewport (child1->allocation()));
+    dd2 = directional_distance (child2->rect_to_viewport (child2->allocation()));
     // sort widgets along dir
     if (dd1 != dd2)
       return dd1 < dd2;
@@ -586,7 +589,7 @@ ContainerImpl::move_focus (FocusDir fdir)
   if (!visible() || !sensitive())
     return false;
   // focus self
-  if (!has_focus() && focusable() && !test_flag (FOCUS_CHAIN))
+  if (!has_focus() && focusable() && !test_any (FOCUS_CHAIN))
     return grab_focus();
   // allow last focus descendant to handle movement
   WidgetImpl *last_child = get_data (&focus_child_key);
@@ -657,21 +660,6 @@ ContainerImpl::move_focus (FocusDir fdir)
   return false;
 }
 
-void
-ContainerImpl::expose_enclosure ()
-{
-  // expose without children
-  Region region (clipped_allocation());
-  for (auto childp : *this)
-    if (childp->drawable())
-      {
-        WidgetImpl &child = *childp;
-        Region cregion (child.clipped_allocation());
-        region.subtract (cregion);
-      }
-  expose (region);
-}
-
 /// Method for container implementation to switch a child on- or off-screen, e.g. in a scrolling context.
 void
 ContainerImpl::stash_child (WidgetImpl &child, bool b)
@@ -679,19 +667,21 @@ ContainerImpl::stash_child (WidgetImpl &child, bool b)
   child.widget_adjust_state (WidgetState::STASHED, b);
 }
 
-// window coordinates relative
+/// List all descendants in stacking order which contain Point @a widget_point.
 void
-ContainerImpl::point_children (Point p, std::vector<WidgetImplP> &stack)
+ContainerImpl::point_descendants (Point widget_point, std::vector<WidgetImplP> &stack) const
 {
   for (auto childp : *this)
     {
-      WidgetImpl &child = *childp;
+      const WidgetImpl &child = *childp;
+      const Allocation child_allocation = child.child_allocation();
+      const Point p (widget_point.x - child_allocation.x, widget_point.y - child_allocation.y);
       if (child.point (p))
         {
           stack.push_back (shared_ptr_cast<WidgetImpl> (&child));
-          ContainerImpl *cc = child.as_container_impl();
+          const ContainerImpl *cc = const_cast<WidgetImpl*> (&child)->as_container_impl();
           if (cc)
-            cc->point_children (p, stack);
+            cc->point_descendants (p, stack);
         }
     }
 }
@@ -796,6 +786,14 @@ ContainerImpl::layout_child (WidgetImpl &child, const Allocation &carea)
   return area;
 }
 
+/// Shorthand for set_child_allocation() and layout_child()
+void
+ContainerImpl::layout_child_allocation (WidgetImpl &child, const Allocation &carea)
+{
+  const Allocation child_area = layout_child (child, carea);
+  child.set_child_allocation (child_area);
+}
+
 SingleContainerImpl::SingleContainerImpl () :
   child_widget (NULL)
 {}
@@ -845,13 +843,13 @@ SingleContainerImpl::size_request (Requisition &requisition)
 }
 
 void
-SingleContainerImpl::size_allocate (Allocation area, bool changed)
+SingleContainerImpl::size_allocate (Allocation area)
 {
   if (has_visible_child())
     {
       WidgetImpl &child = get_child();
       Allocation child_area = layout_child (child, area);
-      child.set_allocation (child_area);
+      child.set_child_allocation (child_area);
     }
 }
 
