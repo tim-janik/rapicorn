@@ -697,23 +697,6 @@ ContainerImpl::point_children (Point p, std::vector<WidgetImplP> &stack)
 }
 
 void
-ContainerImpl::render_recursive (RenderContext &rcontext)
-{
-  for (auto childp : *this)
-    {
-      WidgetImpl &child = *childp;
-      if (child.drawable() && rendering_region (rcontext).contains (child.clipped_allocation()) != Region::OUTSIDE)
-        {
-          if (child.test_flag (INVALID_REQUISITION))
-            critical ("%s: rendering widget with invalid %s: %s", child.debug_name(), "requisition", child.debug_name ("%r"));
-          if (child.test_flag (INVALID_ALLOCATION))
-            critical ("%s: rendering widget with invalid %s: %s", child.debug_name(), "allocation", child.debug_name ("%a"));
-          child.render_widget (rcontext);
-        }
-    }
-}
-
-void
 ContainerImpl::debug_tree (String indent)
 {
   printerr ("%s%s(%p) (%fx%f%+f%+f)\n", indent, this->id(), this,

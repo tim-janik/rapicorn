@@ -46,6 +46,7 @@ public: /* rectangles are represented at 64bit integer precision */
   ContainedType contains          (const IRect  &rect) const;   ///< Returns if Region covers @a rect fully, partially or not at all.
   ContainedType contains          (const Region &other) const;  ///< Returns if Region covers @a other fully, partially or not at all.
   void          list_rects        (vector<DRect> &rects) const; ///< Provides a list of rectangles that define Region.
+  void          list_rects        (vector<IRect> &rects) const; ///< Provides a list of rectangles that define Region.
   uint          count_rects       () const;                     ///< Provides the number of rectangles that cover Region.
   void          add               (const DRect  &rect);         ///< Adds a rectangle to the Region.
   void          add               (const IRect  &rect);         ///< Adds a rectangle to the Region.

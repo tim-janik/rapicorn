@@ -9,8 +9,8 @@ AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
 GLIB_MKENUMS = glib-mkenums
 
 rapicorn_public_headers = $(strip	\
-	aida.hh		aidaprops.hh	\
-	bindable.hh	resources.hh	formatter.hh	inout.hh	inifile.hh \
+	aida.hh		aidaprops.hh	bindable.hh	cairoutils.hh	\
+	resources.hh	formatter.hh	inout.hh	inifile.hh \
         platform.hh	debugtools.hh					utilities.hh  \
 					math.hh				unicode.hh   \
         xmlnode.hh	markup.hh					testutils.hh \
@@ -20,8 +20,8 @@ rapicorn_public_headers = $(strip	\
 	cpuasm.hh	cxxaux.hh	rcore.hh	visitor.hh	aidasignal.hh	\
 )
 rapicorn_cc_sources = $(sort	\
-	aida.cc		aidaprops.cc	\
-	bindable.cc	resources.cc	formatter.cc	inout.cc	inifile.cc \
+	aida.cc		aidaprops.cc	bindable.cc	cairoutils.hh	\
+	resources.cc	formatter.cc	inout.cc	inifile.cc \
         platform.cc	debugtools.cc					utilities.cc  \
 					math.cc				unicode.cc   \
         xmlnode.cc	markup.cc					testutils.cc \

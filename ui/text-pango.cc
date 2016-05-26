@@ -1295,16 +1295,15 @@ protected:
       sig_selection_changed.emit();
   }
   virtual void
-  render (RenderContext &rcontext, const IRect &rect)
+  render (RenderContext &rcontext)
   {
     uint vdot_size = 0;
     IRect larea = layout_area (&vdot_size);
-    RDEBUG ("rendering label 0x%016x at %3.f%% coverage: %s", size_t (this),
-            larea.area() > 0 ? IRect (rect).intersect (larea).area() / larea.area() * 100 : 0, peek_text (NULL));
+    RDEBUG ("%s:%p: render label at %s: %s", id(), this, larea.string(), peek_text (NULL));
     if (larea.width < 1) // allowed: larea.height < 1
       return;
     /* render text */
-    cairo_t *cr = cairo_context (rcontext, rect);
+    cairo_t *cr = cairo_context (rcontext);
     default_pango_cairo_font_options (NULL, cr);
     rapicorn_pango_mutex.lock();
     if (insensitive())

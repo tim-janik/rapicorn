@@ -9,6 +9,7 @@
 #include "factory.hh"
 #include "selector.hh"
 #include "selob.hh"
+#include "rcore/cairoutils.hh"
 #include "uithread.hh"  // uithread_main_loop
 #include <algorithm>
 
@@ -52,7 +53,7 @@ WidgetIface::impl () const
 
 WidgetImpl::WidgetImpl () :
   widget_flags_ (VISIBLE), widget_state_ (uint64 (WidgetState::NORMAL)), inherited_state_ (uint64 (WidgetState::STASHED)),
-  parent_ (NULL), acache_ (NULL), factory_context_ (ctor_factory_context()), pack_info_ (NULL),
+  parent_ (NULL), acache_ (NULL), factory_context_ (ctor_factory_context()), pack_info_ (NULL), cached_surface_ (NULL),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
 
@@ -1624,8 +1625,6 @@ WidgetImpl::dump_private_data (TestStream &tstream)
 {
   tstream.dump ("requisition", string_format ("(%.17g, %.17g)", requisition().width, requisition().height));
   tstream.dump ("allocation", allocation().string());
-  const Allocation *carea = clip_area();
-  tstream.dump ("clip_area", carea ? carea->string() : "");
   tstream.dump ("factory_context", string_format ("{ id=%s, type=%s, impl=%s }",
                                                   Factory::factory_context_id (factory_context()),
                                                   Factory::factory_context_type (factory_context()),
@@ -1929,23 +1928,6 @@ WidgetImpl::focus_color ()
   return state_color (state(), StyleColor::FOCUS_COLOR);
 }
 
-/// Return clipping area for rendering and event processing if one is set.
-const Allocation*
-WidgetImpl::clip_area () const
-{
-  return test_flag (HAS_CLIP_AREA) ? &clip_area_ : NULL;
-}
-
-/// Assign clipping area for rendering and event processing.
-void
-WidgetImpl::clip_area (const Allocation *clip)
-{
-  const bool has_clip_area = clip != NULL;
-  clip_area_ = has_clip_area ? *clip : IRect();
-  if (has_clip_area != test_flag (HAS_CLIP_AREA))
-    change_flags_silently (HAS_CLIP_AREA, has_clip_area);
-}
-
 /** Return widget allocation area accounting for clip_area().
  *
  * For any rendering or event processing purposes, clipped_allocation() should be used over allocation().
@@ -1955,9 +1937,11 @@ Allocation
 WidgetImpl::clipped_allocation () const
 {
   Allocation area = allocation();
+#if 0 // FIXME
   const Allocation *clip = clip_area();
   if (clip)
     area.intersect (*clip);
+#endif
   return area;
 }
 
@@ -2004,30 +1988,24 @@ WidgetImpl::tune_requisition (Requisition requisition)
  * Allocate the given @a area to @a this widget.
  * The size allocation is used by the widget for layouting of its contents.
  * That is, its rendering contents and children of a container will be constrained to the allocation() area.
- * Normally, children are clipped to their parent's allocation, this can be overridden by
- * passing a different @a clip area which constrains the part of the allocation to be rendered
- * and is sensitive for input event processing, see clipped_allocation().
+ * Normally, children are clipped to their parent's allocation, which constrains the part of the
+ * allocation that is to be rendered and is sensitive for input event processing, see clipped_allocation().
  * This method clears the #INVALID_ALLOCATION flag and calls expose() on the widget as needed.
  */
 void
-WidgetImpl::set_allocation (const Allocation &area, const Allocation *const clip)
+WidgetImpl::set_allocation (const Allocation &area)
 {
   Allocation sarea = area;
   // capture old allocation area
   const Allocation old_allocation = clipped_allocation();
-  const IRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
   // determine new allocation area
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  IRect new_clip = clip ? *clip : sarea;
-  if (!clip && parent())
-    new_clip.intersect (parent()->clipped_allocation());
-  const bool allocation_changed = allocation_ != sarea || new_clip != old_clip;
+  const bool allocation_changed = allocation_ != sarea;
   if (test_flag (INVALID_ALLOCATION) || allocation_changed)
     {
       change_flags_silently (INVALID_ALLOCATION, false);
       allocation_ = sarea;
-      clip_area (new_clip == area ? NULL : &new_clip);  // invalidates old clip_area()
       size_allocate (allocation_, allocation_changed);  // causes re-layout of immediate children
       // expose old area
       if (allocation_changed)
@@ -2047,138 +2025,159 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *const clip
 // == rendering ==
 class WidgetImpl::RenderContext {
   friend class WidgetImpl;
-  vector<cairo_surface_t*> surfaces;
-  Region                   render_area;
-  IRect                   *hierarchical_clip;
-  vector<cairo_t*>         cairos;
+  cairo_surface_t *surface;
+  cairo_t         *cairo;
+  IRect            area;
 public:
-  explicit      RenderContext() : hierarchical_clip (NULL) {}
-  /*dtor*/     ~RenderContext();
-  const Region& region() const { return render_area; }
+  explicit      RenderContext (IRect rect) :
+    surface (NULL), cairo (NULL), area (rect)
+  {}
+  /*dtor*/     ~RenderContext()
+  {
+    if (surface)
+      cairo_surface_destroy (surface);
+    if (cairo)
+      cairo_destroy (cairo);
+  }
 };
 
 void
-WidgetImpl::render_into (cairo_t *cr, const Region &region)
+WidgetImpl::compose_into (cairo_t *cr, const vector<IRect> &irects)
 {
-  RenderContext rcontext;
-  rcontext.render_area = clipped_allocation();
-  rcontext.render_area.intersect (region);
-  if (!rcontext.render_area.empty())
+  ContainerImpl *container = as_container_impl();
+  // clipping rectangles for this and descendants
+  vector<IRect> crects;
+  if (cached_surface_ || (container && container->has_children()))
+    for (size_t i = 0; i < irects.size(); i++)
+      {
+        IRect rect = irects[i];
+        rect.intersect (allocation_);
+        if (!rect.empty())
+          crects.push_back (rect);
+      }
+  if (cached_surface_ && crects.size())
     {
-      render_widget (rcontext);
       cairo_save (cr);
-      vector<DRect> drects;
-      rcontext.render_area.list_rects (drects);
-      for (size_t i = 0; i < drects.size(); i++)
-        cairo_rectangle (cr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
+      // clip to rectangles
+      for (size_t i = 0; i < crects.size(); i++)
+        cairo_rectangle (cr, crects[i].x, crects[i].y, crects[i].width, crects[i].height);
       cairo_clip (cr);
-      for (size_t i = 0; i < rcontext.surfaces.size(); i++)
-        {
-          cairo_set_source_surface (cr, rcontext.surfaces[i], 0, 0);
-          cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-          cairo_paint_with_alpha (cr, 1.0);
-        }
+      // compose widget surface OVER
+      cairo_set_source_surface (cr, cached_surface_, 0, 0);
+      cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+      cairo_paint_with_alpha (cr, 1.0);
+      // done
       cairo_restore (cr);
     }
-  set_flag (INVALID_CONTENT, false);
+  if (container && crects.size())
+    for (auto &child : *container)
+      child->compose_into (cr, crects);
 }
 
-/// Render widget's clipped allocation area contents into the rendering context provided.
+/// Render widget contents and contents of all viewable descendants.
 void
-WidgetImpl::render_widget (RenderContext &rcontext)
+WidgetImpl::render_widget ()
 {
-  size_t n_cairos = rcontext.cairos.size();
-  IRect area = clipped_allocation();
-  IRect *saved_hierarchical_clip = rcontext.hierarchical_clip;
-  IRect newclip;
-  const IRect *clip = clip_area();
-  if (clip)
-    {
-      newclip = *clip;
-      if (saved_hierarchical_clip)
-        newclip.intersect (*saved_hierarchical_clip);
-      rcontext.hierarchical_clip = &newclip;
-    }
-  area.intersect (rendering_region (rcontext).extents());
-  render (rcontext, area);
-  render_recursive (rcontext);
-  rcontext.hierarchical_clip = saved_hierarchical_clip;
-  while (rcontext.cairos.size() > n_cairos)
-    {
-      cairo_destroy (rcontext.cairos.back());
-      rcontext.cairos.pop_back();
-    }
+  widget_render_recursive (allocation_);
 }
 
 void
-WidgetImpl::render (RenderContext &rcontext, const IRect &rect)
-{}
+WidgetImpl::widget_render_recursive (const IRect &ancestry_clip)
+{
+  if (test_flag (INVALID_REQUISITION))
+    critical ("%s: rendering widget with invalid %s: %s", debug_name(), "requisition", debug_name ("%r"));
+  if (test_flag (INVALID_ALLOCATION))
+    critical ("%s: rendering widget with invalid %s: %s", debug_name(), "allocation", debug_name ("%a"));
+  // abort if we're clipped
+  const IRect clip_rect = allocation().intersection (ancestry_clip);
+  return_unless (clip_rect.empty() == false);
+  // first render descandants recursively
+  ContainerImpl *container = as_container_impl();
+  if (container)
+    for (auto &child : *container)
+      child->widget_render_recursive (clip_rect);
+  // render contents on demand only
+  return_unless (test_flag (INVALID_CONTENT) == true);
+  // dispose of previous scene...
+  if (cached_surface_)
+    {
+      cairo_surface_t *const surface = cached_surface_;
+      assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32);
+      const uint width = cairo_image_surface_get_width (surface);
+      const uint height = cairo_image_surface_get_height (surface);
+      double xoff = 0, yoff = 0;
+      cairo_surface_get_device_offset (surface, &xoff, &yoff);
+      IRect rect = IRect (-iround (xoff), -iround (yoff), width, height);
+      expose_unclipped (rect);
+      cairo_surface_destroy (cached_surface_);
+      cached_surface_ = NULL;
+    }
+  // render contents
+  RenderContext rcontext (allocation());
+  render (rcontext);
+  assert_return (cached_surface_ == NULL);
+  cached_surface_ = rcontext.surface;
+  rcontext.surface = NULL;
+  set_flag (INVALID_CONTENT, false);
+  // ensure display of new scene...
+  if (cached_surface_)
+    {
+      cairo_surface_t *const surface = cached_surface_;
+      assert_return (cairo_image_surface_get_format (surface) == CAIRO_FORMAT_ARGB32);
+      const uint width = cairo_image_surface_get_width (surface);
+      const uint height = cairo_image_surface_get_height (surface);
+      double xoff = 0, yoff = 0;
+      cairo_surface_get_device_offset (surface, &xoff, &yoff);
+      IRect rect = IRect (-iround (xoff), -iround (yoff), width, height);
+      expose_unclipped (rect);
+    }
+  assert_return (test_any (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT) == 0);
+}
 
-void
-WidgetImpl::render_recursive (RenderContext &rcontext)
-{}
-
-const Region&
+Region
 WidgetImpl::rendering_region (RenderContext &rcontext) const
 {
-  return rcontext.render_area;
+  return Region (rcontext.area);
 }
 
 cairo_t*
-WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
+WidgetImpl::cairo_context (RenderContext &rcontext)
 {
-  IRect rect = area;
-  if (area == Allocation (-1, -1, 0, 0))
-    rect = clipped_allocation();
-  if (rcontext.hierarchical_clip)
-    rect.intersect (*rcontext.hierarchical_clip);
-  const bool empty_dummy = rect.width < 1 || rect.height < 1; // we allow cairo_contexts with 0x0 pixels
-  if (empty_dummy)
-    rect.width = rect.height = 1;
-  assert_return (rect.width > 0 && rect.height > 0, NULL);
-  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, rect.width, rect.height);
-  if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
-    critical ("%s: failed to create ARGB32 cairo surface with %dx%d pixels: %s\n", __func__, rect.width, rect.height,
-              cairo_status_to_string (cairo_surface_status (surface)));
-  cairo_surface_set_device_offset (surface, -rect.x, -rect.y);
-  cairo_t *cr = cairo_create (surface);
-  rcontext.cairos.push_back (cr);
-  if (empty_dummy)
-    cairo_surface_destroy (surface);
-  else
-    rcontext.surfaces.push_back (surface);
-  return cr;
+  if (rcontext.cairo)
+    return rcontext.cairo;
+  bool empty_dummy = false;
+  if (!rcontext.surface)
+    {
+      IRect rect = rcontext.area;
+      empty_dummy = rect.width < 1 || rect.height < 1;
+      if (empty_dummy)
+        rect.width = rect.height = 1; // simulate cairo_context with 0x0 pixels
+      rcontext.surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, rect.width, rect.height);
+      CAIRO_CHECK_STATUS (rcontext.surface);
+      cairo_surface_set_device_offset (rcontext.surface, -rect.x, -rect.y);
+    }
+  if (!rcontext.cairo)
+    {
+      rcontext.cairo = cairo_create (rcontext.surface);
+      CAIRO_CHECK_STATUS (rcontext.cairo);
+      if (empty_dummy)
+        {
+          cairo_surface_destroy (rcontext.surface);
+          rcontext.surface = NULL;
+        }
+    }
+  return rcontext.cairo;
 }
 
-WidgetImpl::RenderContext::~RenderContext()
-{
-  critical_unless (cairos.size() == 0);
-  while (!cairos.empty())
-    {
-      cairo_destroy (cairos.back());
-      cairos.pop_back();
-    }
-  while (!surfaces.empty())
-    {
-      cairo_surface_destroy (surfaces.back());
-      surfaces.pop_back();
-    }
-}
-
-/// Return wether a widget is viewable(), not #STASHED and has a non-0 clipped allocation
+/// Return wether a widget is viewable() and not #STASHED.
 bool
 WidgetImpl::drawable () const
 {
   if (viewable() && allocation_.width > 0 && allocation_.height > 0)
     {
-      const Allocation *clip = clip_area();
-      if (clip)
-        {
-          Allocation carea = allocation_;
-          carea.intersect (*clip);
-          if (carea.width <= 0 || carea.height <= 0)
-            return false;
-        }
+      const Allocation carea = clipped_allocation();
+      if (carea.width <= 0 || carea.height <= 0)
+        return false;
       return true;
     }
   return false;

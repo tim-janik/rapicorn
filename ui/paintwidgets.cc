@@ -71,13 +71,13 @@ ArrowImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-ArrowImpl::render (RenderContext &rcontext, const IRect &rect)
+ArrowImpl::render (RenderContext &rcontext)
 {
   IRect ia = allocation();
   int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
   if (width >= 2 && height >= 2)
     {
-      cairo_t *cr = cairo_context (rcontext, rect);
+      cairo_t *cr = cairo_context (rcontext);
       CPainter painter (cr);
       painter.draw_dir_arrow (x, y, width, height, foreground(), dir_);
     }
@@ -249,7 +249,7 @@ DotGridImpl::size_allocate (Allocation area, bool changed)
 {}
 
 void
-DotGridImpl::render (RenderContext &rcontext, const IRect &rect)
+DotGridImpl::render (RenderContext &rcontext)
 {
   const int ythick = 1, xthick = 1;
   int n_hdots = n_hdots_, n_vdots = n_vdots_;
@@ -282,7 +282,7 @@ DotGridImpl::render (RenderContext &rcontext, const IRect &rect)
           const int h = height - 2 * ythick;    // dot1
           n_vdots = 1 + h / (3 * ythick);
         }
-      cairo_t *cr = cairo_context (rcontext, rect);
+      cairo_t *cr = cairo_context (rcontext);
       CPainter rp (cr);
       for (int j = 0; j < n_vdots; j++)
         {
@@ -315,9 +315,12 @@ DrawableImpl::size_request (Requisition &requisition)
 void
 DrawableImpl::size_allocate (Allocation area, bool changed)
 {
-  pixbuf_ = Pixbuf();
-  x_ = 0;
-  y_ = 0;
+  if (false) // clear out, can lead to flicker
+    {
+      pixbuf_ = Pixbuf();
+      x_ = 0;
+      y_ = 0;
+    }
   sig_redraw.emit (area.x, area.y, area.width, area.height);
 }
 
@@ -341,15 +344,15 @@ DrawableImpl::draw_rect (int x, int y, const Pixbuf &pixbuf)
       x_ = 0;
       y_ = 0;
     }
-  expose();
+  invalidate_content();
 }
 
 void
-DrawableImpl::render (RenderContext &rcontext, const IRect &rect)
+DrawableImpl::render (RenderContext &rcontext)
 {
   const uint size = 10;
   const Allocation &area = allocation();
-  cairo_t *cr = cairo_context (rcontext, rect);
+  cairo_t *cr = cairo_context (rcontext);
   // checkerboard pattern
   if (true)
     {

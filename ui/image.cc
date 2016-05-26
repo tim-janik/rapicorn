@@ -82,9 +82,9 @@ ImageImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-ImageImpl::render (RenderContext &rcontext, const IRect &rect)
+ImageImpl::render (RenderContext &rcontext)
 {
-  image_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
+  image_painter_.draw_image (cairo_context (rcontext), allocation(), allocation());
 }
 
 static const WidgetFactory<ImageImpl> image_factory ("Rapicorn::Image");

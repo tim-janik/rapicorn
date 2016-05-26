@@ -25,7 +25,6 @@
   vshrink="0"
   requisition="(20, 35)"
   allocation="((0, 0), 20, 35)"
-  clip_area=""
   factory_context="{ id=main-test, type=main-test, impl=Rapicorn::Window }"
   >
     <Rapicorn::Alignment
@@ -57,7 +56,6 @@
       vshrink="0"
       requisition="(20, 35)"
       allocation="((0, 0), 20, 35)"
-      clip_area=""
       factory_context="{ id=Alignment, type=Alignment, impl=Rapicorn::Alignment }"
       >
         <Rapicorn::VBox
@@ -86,8 +84,7 @@
           hshrink="0"
           vshrink="0"
           requisition="(10, 25)"
-          allocation="((5, 5), 10, 25)"
-          clip_area=""
+          allocation="((0, 0), 10, 25)"
           factory_context="{ id=VBox, type=VBox, impl=Rapicorn::VBox }"
           >
             <Rapicorn::TestContainer
@@ -127,8 +124,7 @@
               hshrink="0"
               vshrink="0"
               requisition="(10, 10)"
-              allocation="((5, 5), 10, 10)"
-              clip_area=""
+              allocation="((0, 0), 10, 10)"
               factory_context="{ id=RapicornTestWidget, type=RapicornTestWidget, impl=Rapicorn::TestContainer }"
             >
             </Rapicorn::TestContainer>
@@ -169,8 +165,7 @@
               hshrink="0"
               vshrink="0"
               requisition="(10, 10)"
-              allocation="((5, 20), 10, 10)"
-              clip_area=""
+              allocation="((0, 0), 10, 10)"
               factory_context="{ id=RapicornTestWidget, type=RapicornTestWidget, impl=Rapicorn::TestContainer }"
             >
             </Rapicorn::TestContainer>

@@ -279,7 +279,7 @@ AmbienceImpl::render_shade (cairo_t *cairo, int x, int y, int width, int height,
 }
 
 void
-AmbienceImpl::render (RenderContext &rcontext, const IRect &rect)
+AmbienceImpl::render (RenderContext &rcontext)
 {
   IRect ia = allocation();
   const int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
@@ -295,7 +295,7 @@ AmbienceImpl::render (RenderContext &rcontext, const IRect &rect)
   else
     background_color = normal_background();
   Color background = style()->resolve_color (background_color, WidgetState::NORMAL, StyleColor::BACKGROUND);
-  cairo_t *cr = cairo_context (rcontext, rect);
+  cairo_t *cr = cairo_context (rcontext);
   CPainter painter (cr);
   if (background)
     painter.draw_filled_rect (x, y, width, height, background);
@@ -475,7 +475,7 @@ FrameImpl::size_allocate (Allocation area, bool changed)
 }
 
 void
-FrameImpl::render (RenderContext &rcontext, const IRect &rect)
+FrameImpl::render (RenderContext &rcontext)
 {
   IRect ia = allocation();
   int x = ia.x, y = ia.y, width = ia.width, height = ia.height;
@@ -530,7 +530,7 @@ FrameImpl::render (RenderContext &rcontext, const IRect &rect)
       vector<double> dashes;
       dashes.push_back (3);
       dashes.push_back (2);
-      cairo_t *cr = cairo_context (rcontext, rect);
+      cairo_t *cr = cairo_context (rcontext);
       CPainter painter (cr);
       if (outer_upper_left || inner_upper_left || inner_lower_right || outer_lower_right)
         painter.draw_shadow (x, y, width, height, outer_upper_left, inner_upper_left, inner_lower_right, outer_lower_right);
@@ -880,13 +880,13 @@ ElementPainterImpl::do_changed (const String &name)
 }
 
 void
-ElementPainterImpl::render (RenderContext &rcontext, const IRect &rect)
+ElementPainterImpl::render (RenderContext &rcontext)
 {
   load_painters();
   if (element_painter_)
-    element_painter_.draw_image (cairo_context (rcontext, rect), rect, allocation());
+    element_painter_.draw_image (cairo_context (rcontext), allocation(), allocation());
   if (filler_painter_)
-    filler_painter_.draw_image (cairo_context (rcontext, rect), rect, fill_area_);
+    filler_painter_.draw_image (cairo_context (rcontext), fill_area_, fill_area_);
 }
 
 static const WidgetFactory<ElementPainterImpl> element_painter_factory ("Rapicorn::ElementPainter");
@@ -1132,7 +1132,7 @@ draw_square (cairo_t *cr, double x, double y, double width, double height, Color
 }
 
 void
-ShapePainterImpl::render (RenderContext &rcontext, const IRect &rect)
+ShapePainterImpl::render (RenderContext &rcontext)
 {
   return_unless (fill_area_.width > 0 && fill_area_.height > 0);
   std::function<void (cairo_t*, double, double, double, double, Color, Color, bool)> draw_shape;
@@ -1152,7 +1152,7 @@ ShapePainterImpl::render (RenderContext &rcontext, const IRect &rect)
     return;
   const int thickness = 1;
   const Allocation area = allocation();
-  cairo_t *cr = cairo_context (rcontext, rect);
+  cairo_t *cr = cairo_context (rcontext);
   int r = MIN (area.width, area.height) / 2;
   int cx = area.x + area.width * 0.5 + 0.5, cy = area.y + area.height * 0.5 + 0.5;
   Color col1, col2;

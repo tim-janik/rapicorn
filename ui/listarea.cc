@@ -504,7 +504,7 @@ WidgetListImpl::size_allocate (Allocation area, bool changed)
       carea.height = crq.height;
       list_y += carea.height;
       carea = layout_child (*child, carea); // handles spacing/alignment
-      child->set_allocation (carea, &list_area);
+      child->set_allocation (carea);
     }
 }
 

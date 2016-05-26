@@ -4,9 +4,9 @@
 
 namespace Rapicorn {
 
-#define FIXED2DOUBLE    (1.0 / 256.)    // 0x.01p0
-#define DOUBLE2FIXED    (256.)          // 0x100.p0
-
+#define FRACTIONS       256
+#define FIXED2DOUBLE    (1.0 / FRACTIONS)       // 0x.01p0
+#define DOUBLE2FIXED    (double (FRACTIONS))    // 0x100.p0
 
 static inline int64
 double2fixed (double d)
@@ -28,6 +28,30 @@ rect2box (const DRect &src)
     double2fixed (src.y),
     double2fixed (src.upper_x()),
     double2fixed (src.upper_y())
+  };
+  return box;
+}
+
+static inline int64
+int2fixed (int i)
+{
+  return i * FRACTIONS;
+}
+
+static inline int
+fixed2int (int64 i)
+{
+  return i / FRACTIONS;
+}
+
+static inline RapicornRegionBox
+rect2box (const IRect &src)
+{
+  RapicornRegionBox box = {
+    int2fixed (src.x),
+    int2fixed (src.y),
+    int2fixed (src.upper_x()),
+    int2fixed (src.upper_y())
   };
   return box;
 }
@@ -175,6 +199,20 @@ Region::list_rects (std::vector<DRect> &rects) const
     rects.push_back (DRect (fixed2double (boxes[i].x1), fixed2double (boxes[i].y1),
                             fixed2double (boxes[i].x2 - boxes[i].x1),
                             fixed2double (boxes[i].y2 - boxes[i].y1)));
+}
+
+void
+Region::list_rects (std::vector<IRect> &rects) const
+{
+  rects.clear();
+  uint n = _rapicorn_region_get_rects (REGION (this), 0, NULL);
+  RapicornRegionBox boxes[n];
+  uint k = _rapicorn_region_get_rects (REGION (this), n, boxes);
+  assert (k == n);
+  for (uint i = 0; i < n; i++)
+    rects.push_back (IRect (fixed2int (boxes[i].x1), fixed2int (boxes[i].y1),
+                            fixed2int (boxes[i].x2 - boxes[i].x1),
+                            fixed2int (boxes[i].y2 - boxes[i].y1)));
 }
 
 uint

@@ -91,7 +91,7 @@ private:
                                                                  const vector<WidgetImplP>    &cminus);
   /* rendering */
   virtual void          draw_now                                ();
-  virtual void          render                                  (RenderContext &rcontext, const IRect &rect);
+  virtual void          render                                  (RenderContext &rcontext);
   /* display_window ops */
   virtual void          beep                                    ();
   virtual void          create_display_window                    ();
