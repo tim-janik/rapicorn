@@ -222,7 +222,9 @@ WindowImpl::forcefully_close_all ()
 WindowImpl::WindowImpl() :
   loop_ (uithread_main_loop()->create_slave()),
   display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
-  auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true)
+  tunable_requisition_counter_ (0),
+  auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true),
+  need_resize_ (false)
 {
   inherited_state_ = 0;
   config_.title = application_name();
@@ -286,51 +288,6 @@ WindowImpl::fetch_ancestry_cache ()
 }
 
 void
-WindowImpl::resize_window (const Allocation *new_area)
-{
-  const uint64 start = timestamp_realtime();
-  assert_return (requisitions_tunable() == false);
-  Requisition rsize;
-  DisplayWindow::State state;
-
-  // negotiate sizes (new_area==NULL) and ensures window is allocated
-  negotiate_size (new_area);
-  pending_expose_ = true;
-  if (new_area)
-    goto done;  // only called for reallocating
-  rsize = requisition();
-
-  // grow display window if needed
-  if (!display_window_)
-    goto done;
-  state = display_window_->get_state();
-  if (state.width <= 0 || state.height <= 0 ||
-      ((rsize.width > state.width || rsize.height > state.height) &&
-       (config_.request_width != rsize.width || config_.request_height != rsize.height)))
-    {
-      config_.request_width = rsize.width;
-      config_.request_height = rsize.height;
-      pending_win_size_ = true;
-      discard_expose_region(); // we request a new WIN_SIZE event in configure
-      display_window_->configure (config_, true);
-      goto done;
-    }
-  // display window size is good, allocate it
-  if (rsize.width != state.width || rsize.height != state.height)
-    {
-      Allocation area = Allocation (0, 0, state.width, state.height);
-      negotiate_size (&area);
-    }
- done:
-  const uint64 stop = timestamp_realtime();
-  DEBUG_RESIZE ("request=%s allocate=%s pws=%d expose=%s elapsed=%.3fms",
-                new_area ? "-" : string_format ("%.0fx%.0f", requisition().width, requisition().height),
-                string_format ("%.0fx%.0f", allocation().width, allocation().height),
-                pending_win_size_, peek_expose_region().extents().string(),
-                (stop - start) / 1000.0);
-}
-
-void
 WindowImpl::beep()
 {
   if (display_window_)
@@ -355,8 +312,6 @@ bool
 WindowImpl::dispatch_mouse_movement (const Event &event)
 {
   last_event_context_ = event;
-  // ensure coordinates are interpreted with correct allocations
-  ensure_resized();
   vector<WidgetImplP> pierced;
   /* figure all entered children */
   bool unconfined;
@@ -595,6 +550,7 @@ WindowImpl::dispatch_button_event (const Event &event)
   const EventButton *bevent = dynamic_cast<const EventButton*> (&event);
   if (bevent)
     {
+      ensure_resized(); // ensure coordinates are interpreted with correct allocations
       dispatch_mouse_movement (*bevent);
       if (bevent->type >= BUTTON_PRESS && bevent->type <= BUTTON_3PRESS)
         handled = dispatch_button_press (*bevent);
@@ -650,6 +606,7 @@ bool
 WindowImpl::dispatch_key_event (const Event &event)
 {
   bool handled = false;
+  ensure_resized(); // ensure coordinates are interpreted with correct allocations
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus();
   if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_event (event))
@@ -735,16 +692,16 @@ WindowImpl::dispatch_win_size_event (const Event &event)
             {
 #if 0 // excessive resizing costs
               Allocation zzz = new_area;
-              resize_window (&zzz);
+              resize_redraw (&zzz);
               for (int i = 0; i < 37; i++)
                 {
                   zzz.width += 1;
-                  resize_window (&zzz);
+                  resize_redraw (&zzz);
                   zzz.height += 1;
-                  resize_window (&zzz);
+                  resize_redraw (&zzz);
                 }
 #endif
-              resize_window (&new_area);
+              resize_redraw (&new_area);
             }
           else
             discard_expose_region(); // we'll get more WIN_SIZE events
@@ -1052,37 +1009,214 @@ WindowImpl::clear_immediate_event ()
 }
 
 void
-WindowImpl::ensure_resized()
+WindowImpl::queue_resize_redraw()
 {
-  if (test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
-    resize_window (NULL);
+  if (!need_resize_)
+    {
+      need_resize_ = true;
+      loop_->wakeup();
+    }
 }
 
 void
-WindowImpl::check_resize()
+WindowImpl::ensure_resized()
 {
-  const bool can_resize = !pending_win_size_ && display_window_;
-  if (can_resize)
-    ensure_resized();
+  if (need_resize_)
+    resize_redraw (NULL, true);
+}
+
+WidgetImpl::WidgetFlag
+WindowImpl::check_widget_requisition (WidgetImpl &widget, bool discard_tuned)
+{
+  return_unless (widget.visible(), WidgetFlag (0));
+  if (discard_tuned)
+    widget.invalidate_requisition();    // discard requisitions tuned to previous allocations
+  ContainerImpl *container = widget.as_container_impl();
+  uint64 invalidation_flags = 0;
+  if (container)
+    for (auto &child : *container)
+      invalidation_flags |= check_widget_requisition (*child, discard_tuned);
+  if (widget.test_flag (INVALID_REQUISITION))
+    widget.requisition();               // does size_request and clears INVALID_REQUISITION
+  invalidation_flags |= widget.widget_flags_ & (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  return WidgetFlag (invalidation_flags);
+}
+
+WidgetImpl::WidgetFlag
+WindowImpl::check_widget_allocation (WidgetImpl &widget)
+{
+  return_unless (widget.visible(), WidgetFlag (0));
+  if (need_resize_)
+    {
+      /* if *any* descendant needs size_request, we need to stop
+       * allocating (forcing) inadequate sizes and start over.
+       */
+      return INVALID_REQUISITION;
+    }
+  if (widget.test_flag (INVALID_ALLOCATION))
+    widget.set_allocation (widget.allocation()); // clears INVALID_ALLOCATION
+  uint64 invalidation_flags = 0;
+  ContainerImpl *container = widget.as_container_impl();
+  if (container)
+    for (auto &child : *container)
+      invalidation_flags |= check_widget_allocation (*child);
+  invalidation_flags |= widget.widget_flags_ & (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  return WidgetFlag (invalidation_flags);
+}
+
+WidgetImpl::WidgetFlag
+WindowImpl::pop_need_resize()
+{
+  if (need_resize_)
+    {
+      need_resize_ = false;
+      return INVALID_REQUISITION;
+    }
+  return WidgetFlag (0);
+}
+
+WidgetImpl::WidgetFlag
+WindowImpl::negotiate_sizes (const Allocation *new_window_area)
+{
+  const uint64 INVALID_SIZE = INVALID_REQUISITION | INVALID_ALLOCATION;
+  uint64 invalidation_flags = pop_need_resize();
+  // ensure all widgets have a valid size requisition
+  while (invalidation_flags & INVALID_REQUISITION)              // widget implementations must avoid an endless requisition loop
+    {
+      invalidation_flags = check_widget_requisition (*this, false);
+      invalidation_flags |= pop_need_resize();
+    }
+  // assign new size allocation if provided
+  tunable_requisition_counter_ = 3;
+  if (new_window_area)
+    set_allocation (*new_window_area);
+  /* negotiate and allocate sizes, initially allow tuning and re-allocations:
+   * - widgets can tune_requisition() during size_allocate() to negotiate width
+   *   for height or vice versa.
+   * - whether the tuned requisition is honored at all, depends on
+   *   tunable_requisition_counter_ which is adjusted after a few iterations
+   *   to enforce a halt of the negotiation process.
+   * - requisitions tuned to the current allocation are re-considered by the
+   *   widget's ancestors, see WidgetImpl::tune_requisition().
+   */
+  for (/**/; tunable_requisition_counter_; tunable_requisition_counter_--)
+    {
+      if (test_flag (INVALID_ALLOCATION))
+        {
+          if (new_window_area)
+            set_allocation (allocation());
+          else
+            {
+              const Requisition rsize = requisition();
+              set_allocation (Allocation (0, 0, rsize.width, rsize.height));
+            }
+        }
+      do
+        invalidation_flags = check_widget_allocation (*this);   // aborts if need_resize_!=0
+      while (INVALID_ALLOCATION == (invalidation_flags & INVALID_SIZE));
+      invalidation_flags |= pop_need_resize();
+      while (invalidation_flags & INVALID_REQUISITION)
+        invalidation_flags = check_widget_requisition (*this, false);
+      if (0 == (invalidation_flags & INVALID_ALLOCATION))
+        break;                                                  // !INVALID_REQUISITION and !INVALID_ALLOCATION
+    }
+  tunable_requisition_counter_ = 0;
+  // fixate last allocations (if still needed)
+  while (invalidation_flags & INVALID_SIZE)
+    {
+      while (invalidation_flags & INVALID_REQUISITION)
+        invalidation_flags = check_widget_requisition (*this, false);
+      while (invalidation_flags & INVALID_ALLOCATION)
+        invalidation_flags = check_widget_allocation (*this);
+      invalidation_flags |= pop_need_resize();
+    }
+  return WidgetFlag (invalidation_flags);
+}
+
+void
+WindowImpl::negotiate_initial_size()
+{
+  Allocation area;
+  // first, get a simple, untuned size requisition from all widgets
+  invalidate_size();
+  check_widget_requisition (*this, /* discard_tuned */ true);
+  // second, negotiate ideal size based on requisition
+  negotiate_sizes (NULL);
+}
+
+bool
+WindowImpl::can_resize_redraw()
+{
+  return !pending_win_size_ && display_window_ && (need_resize_ || exposes_pending());
+}
+
+void
+WindowImpl::resize_redraw (const Allocation *new_window_area, bool resize_only)
+{
+  const uint64 resize_start = timestamp_realtime();
+  if (new_window_area)
+    invalidate_allocation();                            // sets need_resize_
+  return_unless (can_resize_redraw());                  // check need_resize_
+  // if we have a new allocation, previous tunings are useless
+  const bool discard_previous_tunings = new_window_area != NULL;
+  if (discard_previous_tunings)
+    check_widget_requisition (*this, true);
+  // negotiate ideal size within allocation
+  const Allocation current_allocation = allocation();
+  const uint64 invalidation_flags = negotiate_sizes (new_window_area ? new_window_area : &current_allocation);
+  // check if we fit the display window
+  maybe_resize_window();
+  // redraw resized contents
+  const uint64 redraw_start = timestamp_realtime();
+  const String fixme_dbg = peek_expose_region().extents().string();
+  if (resize_only)
+    need_resize_ = true;                                // must redraw later
+  else if (!need_resize_ && !pending_win_size_ && (exposes_pending() || invalidation_flags & INVALID_CONTENT))
+    draw_now();
+  const uint64 stop = timestamp_realtime();
+  DEBUG_RESIZE ("request=%s allocate=%s pws=%d expose=%s resize_elapsed=%.3fms redraw_elapsed=%.3fms nresize=%d",
+                new_window_area ? "-" : string_format ("%.0fx%.0f", requisition().width, requisition().height),
+                string_format ("%.0fx%.0f", allocation().width, allocation().height),
+                pending_win_size_, fixme_dbg,
+                (redraw_start - resize_start) / 1000.0,
+                (!resize_only) * (stop - redraw_start) / 1000.0,
+                need_resize_);
+}
+
+void
+WindowImpl::maybe_resize_window()
+{
+  const Requisition rsize = requisition();
+  if (display_window_)
+    {
+      // grow display window if needed
+      const DisplayWindow::State state = display_window_->get_state();
+      if (state.width <= 0 || state.height <= 0 ||
+          ((rsize.width > state.width || rsize.height > state.height) &&
+           (config_.request_width != rsize.width || config_.request_height != rsize.height)))
+        {
+          const int oldreq_width = config_.request_width, oldreq_height = config_.request_height;
+          config_.request_width = rsize.width;
+          config_.request_height = rsize.height;
+          pending_win_size_ = true;
+          discard_expose_region(); // we request a new WIN_SIZE event in configure
+          display_window_->configure (config_, true);
+          DEBUG_RESIZE ("resize-window: %s: old=%dx%d new_config=%dx%d", id(), oldreq_width, oldreq_height, config_.request_width, config_.request_height);
+        }
+    }
 }
 
 bool
 WindowImpl::drawing_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return !pending_win_size_ && exposes_pending();
+    {
+      return can_resize_redraw();
+    }
   else if (state.phase == state.DISPATCH)
     {
       const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-      if (!pending_win_size_)
-        {
-          if (test_any (INVALID_REQUISITION | INVALID_ALLOCATION))
-            critical ("%s: invalid %s: skipping redraw...", debug_name(),
-                      test_any (INVALID_REQUISITION | INVALID_ALLOCATION) ? "REQUISITION&ALLOCATION" :
-                      test_any (INVALID_REQUISITION) ? "REQUISITION" : "ALLOCATION");
-          if (exposes_pending())
-            draw_now();
-        }
+      resize_redraw (NULL);
       return true;
     }
   return false;
@@ -1126,7 +1260,7 @@ WindowImpl::create_display_window ()
     {
       if (!display_window_)
         {
-          resize_window (NULL); // ensure initial size requisition
+          negotiate_initial_size(); // find and allocate initial size
           DisplayDriver *sdriver = DisplayDriver::retrieve_display_driver ("auto");
           if (sdriver)
             {
@@ -1139,9 +1273,9 @@ WindowImpl::create_display_window ()
               if (!id().empty())
                 setup.session_role += ":" + id();
               setup.bg_average = background();
-              const Requisition rsize = requisition();
-              config_.request_width = rsize.width;
-              config_.request_height = rsize.height;
+              const Allocation asize = allocation();
+              config_.request_width = asize.width;
+              config_.request_height = asize.height;
               if (config_.alias.empty())
                 config_.alias = program_alias();
               pending_win_size_ = true;

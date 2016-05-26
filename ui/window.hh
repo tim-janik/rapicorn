@@ -21,17 +21,26 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   vector<WidgetImplP>   last_entered_children_;
   DisplayWindow::Config config_;
   size_t                immediate_event_hash_;
+  uint                  tunable_requisition_counter_ : 8;
   uint                  auto_focus_ : 1;
   uint                  entered_ : 1;
   uint                  pending_win_size_ : 1;
   uint                  pending_expose_ : 1;
-  void                  uncross_focus           (WidgetImpl &fwidget);
+  uint                  need_resize_ : 1;
+  WidgetFlag            pop_need_resize          ();
+  WidgetFlag            negotiate_sizes          (const Allocation *new_window_area);
+  void                  resize_redraw            (const Allocation *new_window_area, bool resize_only = false);
+  bool                  can_resize_redraw        ();
+  void                  maybe_resize_window      ();
+  void                  negotiate_initial_size   ();
+  static WidgetFlag     check_widget_requisition (WidgetImpl &widget, bool discard_tuned);
+  WidgetFlag            check_widget_allocation  (WidgetImpl &widget);
+  void                  uncross_focus            (WidgetImpl &fwidget);
 protected:
   virtual void          construct               () override;
   virtual void          dispose                 () override;
   virtual const AncestryCache* fetch_ancestry_cache () override;
   void                  set_focus               (WidgetImpl *widget);
-  virtual void          check_resize            () override;
   void                  ensure_resized          ();
   virtual void          set_parent              (ContainerImpl *parent);
 public:
@@ -41,6 +50,7 @@ public:
   virtual WindowImpl*   as_window_impl          ()              { return this; }
   WidgetImpl*           get_focus               () const;
   cairo_surface_t*      create_snapshot         (const IRect  &subarea);
+  bool                  requisitions_tunable    () const        { return tunable_requisition_counter_ > 0; }
   static  void          forcefully_close_all    ();
   // properties
   virtual String        title                   () const override;
@@ -71,6 +81,7 @@ public:
                                                                  double xalign = 0.5, double yalign = 0.5) override;
   virtual bool          synthesize_delete                       () override;
   void                  draw_child                              (WidgetImpl &child);
+  void                  queue_resize_redraw                     ();
 private:
   virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();
@@ -78,13 +89,11 @@ private:
   /* misc */
   vector<WidgetImplP>   widget_difference                       (const vector<WidgetImplP>    &clist, /* preserves order of clist */
                                                                  const vector<WidgetImplP>    &cminus);
-  /* sizing */
-  void                  resize_window                           (const Allocation *new_area);
-  virtual void          beep                                    ();
   /* rendering */
   virtual void          draw_now                                ();
   virtual void          render                                  (RenderContext &rcontext, const IRect &rect);
   /* display_window ops */
+  virtual void          beep                                    ();
   virtual void          create_display_window                    ();
   virtual bool          has_display_window                       ();
   virtual void          destroy_display_window                   ();

@@ -43,13 +43,13 @@ ScrollAreaImpl::get_adjustment (AdjustmentSourceType adj_source, const String &n
 double
 ScrollAreaImpl::x_offset ()
 {
-  return round (hadjustment().value());
+  return hadjustment().value();
 }
 
 double
 ScrollAreaImpl::y_offset ()
 {
-  return round (vadjustment().value());
+  return vadjustment().value();
 }
 
 void
@@ -153,7 +153,7 @@ ScrollPortImpl::fix_adjustments ()
 void
 ScrollPortImpl::adjustment_changed()
 {
-  sig_scrolled.emit(); // FIXME: need to issue 0-distance move here
+  sig_scrolled.emit();
 }
 
 void
@@ -162,7 +162,8 @@ ScrollPortImpl::do_scrolled ()
   if (0)
     expose();
   else
-    invalidate_size();
+    invalidate_allocation();
+  // FIXME: need to issue 0-distance move here?
 }
 
 void
@@ -238,23 +239,23 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
 void
 ScrollPortImpl::scroll_to_child (WidgetImpl &widget)
 {
-  const IRect area = allocation();
+  const IRect port = allocation();
   // adjust scroll area to widget's area
-  IRect farea = widget.allocation();
+  IRect inner = widget.allocation();
   if (0)
-    printerr ("scroll-focus: area=%s farea=%s child=%p (%s)\n",
-              area.string().c_str(), farea.string().c_str(), &widget,
+    printerr ("scroll-focus: port=%s inner=%s child=%p (%s)\n",
+              port.string().c_str(), inner.string().c_str(), &widget,
               widget.allocation().string().c_str());
   // calc new scroll position, giving precedence to lower left
   double deltax = 0, deltay = 0;
-  if (farea.upper_x() > area.upper_x() + deltax)
-    deltax += farea.upper_x() - (area.upper_x() + deltax);
-  if (farea.x < area.x + deltax)
-    deltax += farea.x - (area.x + deltax);
-  if (farea.upper_y() > area.upper_y() + deltay)
-    deltay += farea.upper_y() - (area.upper_y() + deltay);
-  if (farea.y < area.y + deltay)
-    deltay += farea.y - (area.y + deltay);
+  if (inner.upper_x() > port.upper_x() + deltax)
+    deltax += inner.upper_x() - (port.upper_x() + deltax);
+  if (inner.x < port.x + deltax)
+    deltax += inner.x - (port.x + deltax);
+  if (inner.upper_y() > port.upper_y() + deltay)
+    deltay += inner.upper_y() - (port.upper_y() + deltay);
+  if (inner.y < port.y + deltay)
+    deltay += inner.y - (port.y + deltay);
   // scroll to new position
   hadjustment_->freeze();
   vadjustment_->freeze();
