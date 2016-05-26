@@ -25,7 +25,7 @@ env:
     - INTENT="distcheck" DIST="ubuntu:wily"
 matrix:
   allow_failures:
-    - env: DIST="ubuntu:xenial"
+    - env: DIST="debian:testing"
     - env: INTENT="distcheck" DIST="ubuntu:wily"
   fast_finish: true
 
