@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- button test -->
-  <Frame id="button-test" frame-type="none">
+  <Frame declare="button-test" frame-type="none">
     <VBox spacing="5">
       <Label markup-text="Test Buttons:"/>
       <Button on-click="Widget::print('click on Multiline Button')">
@@ -33,7 +33,7 @@
   </Frame>
 
   <!-- Arrangement test -->
-  <Frame id="arrangement-test" frame-type="etched-out">
+  <Frame declare="arrangement-test" frame-type="etched-out">
     <Argument name="label-variable" default="Middle Label (sinfex test)"/>
     <Arrangement>
       <Label markup-text="First?"  hanchor="1" hposition="-70" vposition="30"/>
@@ -43,7 +43,7 @@
   </Frame>
 
   <!-- Slider Test -->
-  <Frame id="slider-test" frame-type="none">
+  <Frame declare="slider-test" frame-type="none">
     <HBox spacing="5">
       <VSlider vexpand="1"/>
       <VBox hexpand="1" spacing="5">
@@ -62,7 +62,7 @@
   </Frame>
 
   <!-- test dialog -->
-  <Window id="tour-dialog" title="Rapicorn Example: tour.xml">
+  <Window declare="tour-dialog" title="Rapicorn Example: tour.xml">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="3" hexpand="1">
@@ -84,8 +84,8 @@
 	  <Alignment left-padding="5" right-padding="5" top-padding="3" bottom-padding="3" hscale="1">
 	    <HBox spacing="5" homogeneous="0" >
 	      <Button hexpand="1" on-click='Widget::print ("ok")' > <Label markup-text="Ok"/> </Button>
-	      <Button name="TDumpButton" hexpand="1" on-click="testdump" > <Label markup-text="Test Dump"/> </Button>
-	      <Button name="CloseButton" hexpand="1" on-click="Window::close()" > <Label markup-text="Close"/> </Button>
+	      <Button id="TDumpButton" hexpand="1" on-click="testdump" > <Label markup-text="Test Dump"/> </Button>
+	      <Button id="CloseButton" hexpand="1" on-click="Window::close()" > <Label markup-text="Close"/> </Button>
 	    </HBox>
 	  </Alignment>
 	</VBox>

@@ -84,7 +84,7 @@ SliderAreaImpl::hierarchy_changed (WidgetImpl *old_toplevel)
       if (!adj)
         {
           String evalue = Aida::enum_info<AdjustmentSourceType>().value_to_string (adjustment_source_);
-          throw Exception ("SliderArea failed to get Adjustment (", evalue, ") from ancestors: ", name());
+          throw Exception ("SliderArea failed to get Adjustment (", evalue, ") from ancestors: ", id());
         }
       adjustment (*adj);
     }

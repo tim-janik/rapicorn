@@ -15,7 +15,7 @@ custom_commands (WindowH &window, const String &command, const StringSeq &args)
     }
   else
     printout ("%s(): custom command: %s(%s) (Window: %s)\n", __func__,
-              command.c_str(), string_join (",", args).c_str(), window.name().c_str());
+              command, string_join (",", args), window.id());
   return true;
 }
 

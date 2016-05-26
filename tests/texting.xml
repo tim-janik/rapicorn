@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- test dialog -->
-  <Window id="main-shell" auto_focus="0">
+  <Window declare="main-shell" auto_focus="0">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <VBox sensitive="1" spacing="5" hexpand="1">
 	<Label markup-text="Regular Text" />

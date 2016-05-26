@@ -886,7 +886,7 @@ WindowImpl::add_grab (WidgetImpl &child,
                       bool      unconfined)
 {
   if (!child.has_ancestor (*this))
-    throw Exception ("child is not descendant of container \"", name(), "\": ", child.name());
+    throw Exception ("child is not descendant of container \"", id(), "\": ", child.id());
   /* for unconfined==true grabs, the mouse pointer is always considered to
    * be contained by the grab-widget, and only by the grab-widget. events are
    * delivered to the grab-widget and its children.
@@ -1144,8 +1144,8 @@ WindowImpl::create_display_window ()
                              DisplayWindow::DECORATED | DisplayWindow::MINIMIZABLE | DisplayWindow::MAXIMIZABLE;
               setup.request_flags = DisplayWindow::Flags (flags);
               setup.session_role = "RAPICORN:" + program_name();
-              if (!name().empty())
-                setup.session_role += ":" + name();
+              if (!id().empty())
+                setup.session_role += ":" + id();
               setup.bg_average = background();
               const Requisition rsize = requisition();
               config_.request_width = rsize.width;
@@ -1222,7 +1222,7 @@ WindowImpl::snapshot (const String &pngname)
   cairo_status_t wstatus = cairo_surface_write_to_png (isurface, pngname.c_str());
   cairo_surface_destroy (isurface);
   String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
-  RAPICORN_DIAG ("WindowImpl:snapshot:%s: failed to create \"%s\": %s", name().c_str(), pngname.c_str(), err.c_str());
+  RAPICORN_DIAG ("WindowImpl:snapshot:%s: failed to create \"%s\": %s", id(), pngname, err);
   return CAIRO_STATUS_SUCCESS == wstatus;
 }
 

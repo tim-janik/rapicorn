@@ -21,23 +21,23 @@ def show_and_display (win): # show and run main loop until the window is fully d
 # = SizeGroup Tests =
 # create wide and a tall buttons that are resized via size groups
 decls = """
-<Window id="SGWindow">
+<Window declare="SGWindow">
   <VBox>
     <Label markup-text="Horizontal SizeGroup:"/>
     <Frame>
       <HBox>
-        <Button name="wide1" hsize-group="HGroupedWidgets">
+        <Button id="wide1" hsize-group="HGroupedWidgets">
           <Label markup-text="Wide Button"/></Button>
-        <Button name="tall1" hsize-group="HGroupedWidgets">
+        <Button id="tall1" hsize-group="HGroupedWidgets">
           <Label markup-text="T<br/>a<br/>l<br/>l<br/> <br/>B<br/>u<br/>t<br/>t<br/>o<br/>n"/></Button>
       </HBox>
     </Frame>
     <Label markup-text="Vertical SizeGroup:"/>
     <Frame>
       <HBox>
-        <Button name="wide2" vsize-group="VGroupedWidgets">
+        <Button id="wide2" vsize-group="VGroupedWidgets">
           <Label markup-text="Wide Button"/></Button>
-        <Button name="tall2" vsize-group="VGroupedWidgets">
+        <Button id="tall2" vsize-group="VGroupedWidgets">
           <Label markup-text="T<br/>a<br/>l<br/>l<br/> <br/>B<br/>u<br/>t<br/>t<br/>o<br/>n"/></Button>
       </HBox>
     </Frame>

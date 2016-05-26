@@ -50,14 +50,14 @@ test_factory ()
   TASSERT (twidget->accu_history() == "L0L1L2Instance");
   TOK();
   // test Widget::name()
-  TASSERT (widget->name().empty() == false); // has factory default
-  String factory_default = widget->name();
-  widget->name ("FooBar_4356786453567");
-  TASSERT (widget->name() == "FooBar_4356786453567");
-  widget->name ("");
-  TASSERT (widget->name() != "FooBar_4356786453567");
-  TASSERT (widget->name().empty() == false); // back to factory default
-  TASSERT (widget->name() == factory_default);
+  TASSERT (widget->id().empty() == false); // has factory default
+  String factory_default = widget->id();
+  widget->id ("FooBar_4356786453567");
+  TASSERT (widget->id() == "FooBar_4356786453567");
+  widget->id ("");
+  TASSERT (widget->id() != "FooBar_4356786453567");
+  TASSERT (widget->id().empty() == false); // back to factory default
+  TASSERT (widget->id() == factory_default);
   TOK();
   testwin->close();
   TOK();

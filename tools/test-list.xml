@@ -3,16 +3,16 @@
 <interfaces>
 
   <!-- list construction -->
-  <Rapicorn::WidgetList id="ListArea"/>
-  <Table id="ListAreaTable" />
-  <Ambience id="ListRow" child-container="ListRowCavity" hexpand="1"
+  <Rapicorn::WidgetList declare="ListArea"/>
+  <Table declare="ListAreaTable" />
+  <Ambience declare="ListRow" child-container="ListRowCavity" hexpand="1"
 	       normal-background="background" lighting="none" shade="none">
     <Frame hexpand="1" frame-type="none" tight-focus="true">
-      <HBox name="ListRowCavity"/>
+      <HBox id="ListRowCavity"/>
     </Frame>
   </Ambience>
 
-  <Alignment id="widget-list" >
+  <Alignment declare="widget-list" >
     <Table>
       <Frame     hposition="0" vposition="2" frame-type="in" hexpand="1" vexpand="1">
 	<ListArea/>
@@ -24,7 +24,7 @@
   </Alignment>
 
   <!-- test dialog -->
-  <Window id="test-dialog" width="400" >
+  <Window declare="test-dialog" width="400" >
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox spacing="5" homogeneous="0" >

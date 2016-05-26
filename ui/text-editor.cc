@@ -557,7 +557,7 @@ TextControllerImpl::set_mode (TextMode text_mode)
     {
       /* this method maybe called from (derived) ctors, when the factory context
        * isn't yet setup. so guard text_block access by cached value to prevent
-       * get_text_block/match_interface/Widget::name/factory_context_name: fc!=NULL
+       * get_text_block/match_interface/Widget::id/factory_context_id: fc!=NULL
        * assertions.
        */
       update_text_block();

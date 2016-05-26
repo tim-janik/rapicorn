@@ -2,10 +2,10 @@
 <!-- This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0 -->
 <interfaces factory-svg="@res themes/Default.svg">
 
-  <Ambience id="OuterShell" child-container="OuterShellCavity"
+  <Ambience declare="OuterShell" child-container="OuterShellCavity"
     normal-lighting="upper-left">
     <Alignment right-padding="3" top-padding="3" left-padding="3" bottom-padding="3" hscale="0" vscale="0" >
-      <VBox name="OuterShellCavity" />
+      <VBox id="OuterShellCavity" />
     </Alignment>
   </Ambience>
 

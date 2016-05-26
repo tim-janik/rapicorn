@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- [DEF-SampleDialog] -->
-  <Window id="SampleDialog">
+  <Window declare="SampleDialog">
     <VBox spacing="5">
       <Button>
         <Label markup-text="Hello World!" />

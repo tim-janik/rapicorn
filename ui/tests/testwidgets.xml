@@ -5,7 +5,7 @@
 <interfaces>
 
   <!-- alignment test -->
-  <Window id="alignment-test">
+  <Window declare="alignment-test">
     <Alignment left-padding="31" right-padding="22" top-padding="33" bottom-padding="34">
       <RapicornTestWidget assert-left="31" assert-right="-22" assert-top="33" assert-bottom="-34"
 	width="17" height="19" assert-width="17" assert-height="19" />
@@ -13,12 +13,12 @@
   </Window>
 
   <!-- test-widget test -->
-  <Window id="test-widget-window">
+  <Window declare="test-widget-window">
     <RapicornIdlTestWidget />
   </Window>
 
   <!-- complex-window -->
-  <Window id="complex-dialog">
+  <Window declare="complex-dialog">
     <Ambience normal-lighting="upper-left">
       <Alignment padding="5">
 	<VBox spacing="3" hexpand="1">
@@ -37,7 +37,7 @@
 	      </VBox>
 	    </Frame>
 	    <ScrollArea hspread="1" vspread="1">
-	      <Label name="scroll-text">
+	      <Label id="scroll-text">
 		<Label.markup-text>
 		  <larger><larger><larger><larger>
 			  Some Large Scroll Text
@@ -47,7 +47,7 @@
 	    </ScrollArea>
 	  </VBox>
 	  <Frame>
-	    <Arrow name="special-arrow" arrow-dir="right" />
+	    <Arrow id="special-arrow" arrow-dir="right" />
 	  </Frame>
 	  <HBox spacing="5" homogeneous="0" >
 	    <Button hexpand="1" on-click='Widget::print ("ok")' > <Label markup-text="Ok"/> </Button>

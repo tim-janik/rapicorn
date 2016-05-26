@@ -402,7 +402,7 @@ test_query (int line, WidgetIfaceP iroot, const String &selector, ssize_t expect
       else
         for (size_t i = 0; i < query_all.size(); i++)
           printerr ("%s:%d:%s(expect=%d): %s: %s (%p)\n", __FILE__, line, i ? string_canonify (__func__, "", " ").c_str() : __func__,
-                    expect, string_to_cquote (selector).c_str(), query_all[i]->name().c_str(), query_all[i]);
+                    expect, string_to_cquote (selector), query_all[i]->id(), query_all[i]);
     }
 
   TASSERT_AT (line, expect == 0 || query_first != NULL);
@@ -584,7 +584,7 @@ static const char test_dialog_xml[] =
   "<?xml version='1.0' encoding='UTF-8'?>\n"
   "<interfaces>\n"
   // test-dialog
-  "<Window id='test-dialog'>\n"
+  "<Window declare='test-dialog'>\n"
   "  <Ambience normal-lighting='upper-left'>\n"
   "    <Alignment padding='5'>\n"
   "      <VBox spacing='3' hexpand='1'>\n"
@@ -593,26 +593,26 @@ static const char test_dialog_xml[] =
   "            <VBox spacing='5'>\n"
   "              <Label markup-text='Test Buttons:'/>\n"
   "              <Button on-click='Widget::print(\"click on first button\")'>\n"
-  "                <Label name='label1' markup-text='Label One'/>\n"
+  "                <Label id='label1' markup-text='Label One'/>\n"
   "              </Button>\n"
   "              <HBox hexpand='1' spacing='3'>\n"
   "                <Button on-click='Widget::print(\"Normal Button\")'>\n"
-  "                  <Label name='label123' markup-text='one-two-three' />\n"
+  "                  <Label id='label123' markup-text='one-two-three' />\n"
   "                </Button>\n"
-  "                <RapicornTestWidget name='test-widget'/>\n"
+  "                <RapicornTestWidget id='test-widget'/>\n"
   "              </HBox>\n"
   "            </VBox>\n"
   "          </Frame>\n"
   "        </VBox>\n"
   "        <Frame>\n"
-  "          <Arrow name='special-arrow' arrow-dir='right' />\n"
+  "          <Arrow id='special-arrow' arrow-dir='right' />\n"
   "        </Frame>\n"
-  "        <HBox name='testbox' >\n"
-  "          <Button name='ChildA'> <Label plain-text='Child A'/> </Button>\n"
-  "          <Label  name='ChildB'         plain-text='Child B'/>\n"
-  "          <Frame  name='ChildC'> <Label plain-text='Child C'/> </Frame>\n"
-  "          <Label  name='ChildD'         plain-text='Child D'/>\n"
-  "          <Button name='ChildE'> <Label plain-text='Child E'/> </Button>\n"
+  "        <HBox id='testbox' >\n"
+  "          <Button id='ChildA'> <Label plain-text='Child A'/> </Button>\n"
+  "          <Label  id='ChildB'         plain-text='Child B'/>\n"
+  "          <Frame  id='ChildC'> <Label plain-text='Child C'/> </Frame>\n"
+  "          <Label  id='ChildD'         plain-text='Child D'/>\n"
+  "          <Button id='ChildE'> <Label plain-text='Child E'/> </Button>\n"
   "        </HBox>\n"
   "      </VBox>\n"
   "    </Alignment>\n"

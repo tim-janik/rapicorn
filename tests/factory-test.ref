@@ -1,7 +1,7 @@
 <Rapicorn::Window
   title="Rapidrun"
   auto_focus="1"
-  name="main-test"
+  id="main-test"
   visible="1"
   sensitive="1"
   toggled="0"
@@ -20,14 +20,14 @@
   requisition="(20, 35)"
   allocation="((0, 0), 20, 35)"
   clip_area=""
-  factory_context="{ name=main-test, type=main-test, impl=Rapicorn::Window }"
+  factory_context="{ id=main-test, type=main-test, impl=Rapicorn::Window }"
   >
     <Rapicorn::Alignment
       left_padding="5"
       right_padding="5"
       bottom_padding="5"
       top_padding="5"
-      name="Alignment"
+      id="Alignment"
       visible="1"
       sensitive="1"
       toggled="0"
@@ -46,12 +46,12 @@
       requisition="(20, 35)"
       allocation="((0, 0), 20, 35)"
       clip_area=""
-      factory_context="{ name=Alignment, type=Alignment, impl=Rapicorn::Alignment }"
+      factory_context="{ id=Alignment, type=Alignment, impl=Rapicorn::Alignment }"
       >
         <Rapicorn::VBox
           homogeneous="0"
           spacing="5"
-          name="VBox"
+          id="VBox"
           visible="1"
           sensitive="1"
           toggled="0"
@@ -70,7 +70,7 @@
           requisition="(10, 25)"
           allocation="((5, 5), 10, 25)"
           clip_area=""
-          factory_context="{ name=VBox, type=VBox, impl=Rapicorn::VBox }"
+          factory_context="{ id=VBox, type=VBox, impl=Rapicorn::VBox }"
           >
             <Rapicorn::TestContainer
               value="19"
@@ -86,7 +86,7 @@
               fatal_asserts="0"
               accu=""
               accu_history=""
-              name="RapicornTestWidget"
+              id="RapicornTestWidget"
               visible="1"
               sensitive="1"
               toggled="0"
@@ -105,7 +105,7 @@
               requisition="(10, 10)"
               allocation="((5, 5), 10, 10)"
               clip_area=""
-              factory_context="{ name=RapicornTestWidget, type=RapicornTestWidget, impl=Rapicorn::TestContainer }"
+              factory_context="{ id=RapicornTestWidget, type=RapicornTestWidget, impl=Rapicorn::TestContainer }"
             >
             </Rapicorn::TestContainer>
             <Rapicorn::TestContainer
@@ -122,7 +122,7 @@
               fatal_asserts="0"
               accu=""
               accu_history=""
-              name="RapicornTestWidget"
+              id="RapicornTestWidget"
               visible="1"
               sensitive="1"
               toggled="0"
@@ -141,7 +141,7 @@
               requisition="(10, 10)"
               allocation="((5, 20), 10, 10)"
               clip_area=""
-              factory_context="{ name=RapicornTestWidget, type=RapicornTestWidget, impl=Rapicorn::TestContainer }"
+              factory_context="{ id=RapicornTestWidget, type=RapicornTestWidget, impl=Rapicorn::TestContainer }"
             >
             </Rapicorn::TestContainer>
         </Rapicorn::VBox>

@@ -3,7 +3,7 @@
 <interfaces>
 
   <!-- scroll area test -->
-  <ScrollArea id="scroll-area-test" vspread="1">
+  <ScrollArea declare="scroll-area-test" vspread="1">
     <Label>
       <Label.markup-text>HUHU
 	<br/>This is a really long text which lasts longer and longer and longer and some more, etc, etc, etc.
@@ -39,7 +39,7 @@
   </ScrollArea>
   
   <!-- Markup test -->
-  <Label id="ascii-art-label">
+  <Label declare="ascii-art-label">
     <Label.markup-text>
       <pre><tt>
 +----------------------------------------+
@@ -55,7 +55,7 @@
   </Label>
 
   <!-- Markup test -->
-  <Label id="markup-test">
+  <Label declare="markup-test">
     <Label.markup-text>
       Text styles: <b>bold</b> <u>underline</u> <i>italic</i> <s>strike</s> <br/>
       Teletype + pre: <tt><pre>** *  *   * teletype + pre *   *  * **</pre></tt> <br/>
@@ -71,7 +71,7 @@
   </Label>
 
   <!-- text editor test -->
-  <Frame id="text-editor-test" frame-type="in">
+  <Frame declare="text-editor-test" frame-type="in">
     <TextEditor>
       <TextEditor.markup-text>
 	editorg<pre>  </pre>qtext Umlauts: ÄÖÜäöüß
@@ -80,7 +80,7 @@
   </Frame>
 
   <!-- wrap text test -->
-  <Frame id="wrap-text-test">
+  <Frame declare="wrap-text-test">
     <Label
       text-mode="wrapped"
       markup-text="Wrappable test text with multiple words so words and spaces are available to allow wrapping"
@@ -89,7 +89,7 @@
   </Frame>
 
   <!-- test dialog -->
-  <Window id="main-shell" title="Rapicorn Example: texttest.xml">
+  <Window declare="main-shell" title="Rapicorn Example: texttest.xml">
     <Ambience normal-lighting="upper-left"> <!-- normal-background="beige" -->
       <Alignment right-padding="5" top-padding="5" left-padding="5" bottom-padding="5">
 	<VBox sensitive="1" spacing="5" hexpand="1">

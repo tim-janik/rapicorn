@@ -15,7 +15,7 @@ struct Evaluator {
   typedef std::map<String,String>       VariableMap;
   typedef std::list<const VariableMap*> VariableMapList;
   static String     canonify_name   (const String       &key); /* chars => [A-Za-z0-9_] */
-  static String     canonify_key    (const String       &key); /* canonify, id=>name, strip leading '_' */
+  static String     canonify_key    (const String       &key); /* canonify, declare=>name, strip leading '_' */
   static bool       split_argument  (const String       &argument,
                                      String             &key,
                                      String             &value);

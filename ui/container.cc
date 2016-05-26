@@ -101,7 +101,7 @@ ContainerImpl::widget_cross_unlink (WidgetImpl &owner, WidgetImpl &link, size_t 
           }
     }
   if (!found_one)
-    critical ("no cross link from \"%s\" to \"%s\" on \"%s\" to remove", owner.name(), link.name(), name());
+    critical ("no cross link from \"%s\" to \"%s\" on \"%s\" to remove", owner.id(), link.id(), id());
 }
 
 void
@@ -271,7 +271,7 @@ void
 ContainerImpl::child_container (ContainerImpl *child_container)
 {
   if (child_container && !child_container->has_ancestor (*this))
-    throw Exception ("child container is not descendant of container \"", name(), "\": ", child_container->name());
+    throw Exception ("child container is not descendant of container \"", id(), "\": ", child_container->id());
   set_data (&child_container_key, child_container);
 }
 
@@ -291,7 +291,7 @@ ContainerImpl::add (WidgetImpl &widget)
   critical_unless (widget.isconstructed());
   const WidgetImplP guard_widget = shared_ptr_cast<WidgetImpl> (&widget);
   if (widget.parent())
-    throw Exception ("not adding widget with parent: ", widget.name());
+    throw Exception ("not adding widget with parent: ", widget.id());
   ContainerImpl &container = child_container();
   if (this != &container)
     {
@@ -722,7 +722,7 @@ ContainerImpl::render_recursive (RenderContext &rcontext)
 void
 ContainerImpl::debug_tree (String indent)
 {
-  printerr ("%s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), this->name().c_str(), this,
+  printerr ("%s%s(%p) (%fx%f%+f%+f)\n", indent, this->id(), this,
             allocation().width, allocation().height, allocation().x, allocation().y);
   for (auto childp : *this)
     {
@@ -731,7 +731,7 @@ ContainerImpl::debug_tree (String indent)
       if (c)
         c->debug_tree (indent + "  ");
       else
-        printerr ("  %s%s(%p) (%fx%f%+f%+f)\n", indent.c_str(), child.name().c_str(), &child,
+        printerr ("  %s%s(%p) (%fx%f%+f%+f)\n", indent, child.id(), &child,
                   child.allocation().width, child.allocation().height, child.allocation().x, child.allocation().y);
     }
 }
@@ -843,8 +843,8 @@ void
 SingleContainerImpl::add_child (WidgetImpl &widget)
 {
   if (child_widget)
-    throw Exception ("invalid attempt to add child \"", widget.name(), "\" to single-child container \"", name(), "\" ",
-                     "which already has a child \"", child_widget->name(), "\"");
+    throw Exception ("invalid attempt to add child \"", widget.id(), "\" to single-child container \"", id(), "\" ",
+                     "which already has a child \"", child_widget->id(), "\"");
   child_widget = shared_ptr_cast<WidgetImpl> (&widget);
   set_child_parent (widget, this);
 }

@@ -565,14 +565,14 @@ bool
 WidgetImpl::match_interface (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const
 {
   WidgetImpl *self = const_cast<WidgetImpl*> (this);
-  if (wself && imatcher.match (self, name()))
+  if (wself && imatcher.match (self, id()))
     return true;
   if (wparent)
     {
       WidgetImpl *pwidget = parent();
       while (pwidget)
         {
-          if (imatcher.match (pwidget, pwidget->name()))
+          if (imatcher.match (pwidget, pwidget->id()))
             return true;
           pwidget = pwidget->parent();
         }
@@ -890,7 +890,7 @@ void
 WidgetImpl::set_property (const String &property_name, const String &value)
 {
   if (!__aida_setter__ (property_name, value))
-    throw Exception ("no such property: " + name() + "::" + property_name);
+    throw Exception ("no such property: " + id() + "::" + property_name);
 }
 
 bool
@@ -1367,7 +1367,7 @@ WidgetImpl::inner_size_request()
           if (ovr.height >= 0)
             inner.height = ovr.height;
           SZDEBUG ("size requesting: 0x%016x:%s: %s => %.17gx%.17g", size_t (this),
-                   Factory::factory_context_type (factory_context()).c_str(), name().c_str(),
+                   Factory::factory_context_type (factory_context()), id(),
                    inner.width, inner.height);
         }
       requisition_ = inner;
@@ -1479,7 +1479,7 @@ WidgetImpl::debug_name (const String &format) const
   s = string_replace (s, "%f", Path::basename (us.filename));
   s = string_replace (s, "%p", us.filename);
   s = string_replace (s, "%l", string_format ("%u", us.line));
-  s = string_replace (s, "%n", name());
+  s = string_replace (s, "%n", id());
   s = string_replace (s, "%r", string_format ("%gx%g", requisition_.width, requisition_.height));
   s = string_replace (s, "%a", allocation_.string());
   return s;
@@ -1546,8 +1546,8 @@ WidgetImpl::dump_private_data (TestStream &tstream)
   tstream.dump ("allocation", allocation().string());
   const Allocation *carea = clip_area();
   tstream.dump ("clip_area", carea ? carea->string() : "");
-  tstream.dump ("factory_context", string_format ("{ name=%s, type=%s, impl=%s }",
-                                                  Factory::factory_context_name (factory_context()),
+  tstream.dump ("factory_context", string_format ("{ id=%s, type=%s, impl=%s }",
+                                                  Factory::factory_context_id (factory_context()),
                                                   Factory::factory_context_type (factory_context()),
                                                   Factory::factory_context_impl_type (factory_context())));
 }
@@ -1751,26 +1751,26 @@ WidgetImpl::vsize_group (const String &group_list)
   sync_widget_groups (group_list, WIDGET_GROUP_VSIZE);
 }
 
-static DataKey<String> widget_name_key;
+static DataKey<String> widget_id_key;
 
 String
-WidgetImpl::name () const
+WidgetImpl::id () const
 {
-  String s = get_data (&widget_name_key);
+  String s = get_data (&widget_id_key);
   if (s.empty())
-    return Factory::factory_context_name (factory_context());
+    return Factory::factory_context_id (factory_context());
   else
     return s;
 }
 
 void
-WidgetImpl::name (const String &str)
+WidgetImpl::id (const String &str)
 {
   if (str.empty())
-    delete_data (&widget_name_key);
+    delete_data (&widget_id_key);
   else
-    set_data (&widget_name_key, str);
-  changed ("name");
+    set_data (&widget_id_key, str);
+  changed ("id");
 }
 
 UserSource
@@ -1946,8 +1946,8 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   if (need_expose)
     expose();
   SZDEBUG ("size allocation: 0x%016x:%s: %s => %s", size_t (this),
-           Factory::factory_context_type (factory_context()).c_str(), name().c_str(),
-           a.string().c_str());
+           Factory::factory_context_type (factory_context()), id(),
+           a.string());
 }
 
 // == rendering ==

@@ -3,12 +3,12 @@
 <interfaces>
 
   <!-- Multi-Level TestWidget creation -->
-  <RapicornTestWidget id="TestWidgetL0" accu="L0"/>
-  <TestWidgetL0 id="TestWidgetL1" accu="L1"/>
-  <TestWidgetL1 id="TestWidgetL2" accu="L2"/>
+  <RapicornTestWidget declare="TestWidgetL0" accu="L0"/>
+  <TestWidgetL0 declare="TestWidgetL1" accu="L1"/>
+  <TestWidgetL1 declare="TestWidgetL2" accu="L2"/>
 
   <!-- main window -->
-  <Window id="test-TestWidgetL2">
+  <Window declare="test-TestWidgetL2">
     <TestWidgetL2 accu="Instance"/>
   </Window>
 
