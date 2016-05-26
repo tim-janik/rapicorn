@@ -92,6 +92,20 @@ t204-assertions-test: t203-more-basics # validate failing assertions and fatal a
 t204_assertions_env = RAPICORN=debug:no-syslog:no-fatal-syslog
 check: t204-assertions-test
 
+# == t205-debug-output ==
+t205-debug-output-test: t203-more-basics # check various non-fatal logging conditions
+	$(Q) rm -f $(TSTOUT)
+	$(Q) $(t205_debug_output_env) ./t203-more-basics --test-logging 2>>$(TSTOUT)
+	$(Q) grep -q 'debugging messages'             $(TSTOUT) ; $(TSTRESULT) "check debugging"
+	$(Q) grep -q 'assertion failed: errno == 0'   $(TSTOUT) ; $(TSTRESULT) "check errno diagnostics"
+	$(Q) grep -q 'failed.*"assert-return-void"'   $(TSTOUT) ; $(TSTRESULT) "check assert_return"
+	$(Q) grep -q 'failed.*"assert-return+val"'    $(TSTOUT) ; $(TSTRESULT) "check assert_return+value"
+	$(Q) grep -q 'CRITICAL:.*"test-critical"'     $(TSTOUT) ; $(TSTRESULT) "check test critical()"
+	$(Q) eval "$$TSTDIAGNOSE"
+	$(Q) rm -f $(TSTOUT)
+t205_debug_output_env = RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all
+check: t205-debug-output-test
+
 # == t303-mini-server ==
 t303-mini-server-test: t303-mini-server
 	$(Q) ./t303-mini-server ; eval "$$TSTDIAGNOSE"

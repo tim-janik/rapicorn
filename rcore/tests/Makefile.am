@@ -15,17 +15,6 @@ benchrcore_SOURCES = benchrcore.cc
 benchrcore_LDADD   = $(LDADDS)
 
 # === test rules ===
-# check various non-fatal logging conditions
-check-logging-output: testrcore2
-	$(Q) rm -f $(TSTOUT) ; RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all \
-	     ./testrcore2 --test-logging 2>>$(TSTOUT)           ; $(TSTRESULT)
-	$(Q) grep -q 'debugging messages' $(TSTOUT)		; $(TSTRESULT) "check debugging"
-	$(Q) grep -q 'assertion failed: errno == 0' $(TSTOUT)	; $(TSTRESULT) "check errno diagnostics"
-	$(Q) grep -q 'failed.*"assert-return-void"' $(TSTOUT)	; $(TSTRESULT) "check assert_return"
-	$(Q) grep -q 'failed.*"assert-return+val"' $(TSTOUT)	; $(TSTRESULT) "check assert_return+value"
-	$(Q) grep -q 'CRITICAL:.*"test-critical"' $(TSTOUT)	; $(TSTRESULT) "check test critical()"
-	$(Q) rm -f $(TSTOUT)
-check-local: check-logging-output
 # check startup entropy
 check-startup-entropy:
 	$(Q) A=`./benchrcore --entropy` ; B=`./benchrcore --entropy`; \
