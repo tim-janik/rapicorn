@@ -9,11 +9,6 @@ AM_CXXFLAGS += $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
 noinst_PROGRAMS	 = $(TAPTESTS)
 LDADDS		 = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la $(SVG_DEPENDENCIES_LIBS)
 
-# == test programs ==
-TAPTESTS	  += benchrcore
-benchrcore_SOURCES = benchrcore.cc
-benchrcore_LDADD   = $(LDADDS)
-
 # === test rules ===
 # check startup entropy
 check-startup-entropy:

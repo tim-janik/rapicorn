@@ -218,6 +218,14 @@ t800-binding-example-test:
 EXTRA_DIST += t800-binding-example.py
 check: t800-binding-example-test
 
+# == t901-bench-rcore ==
+t901-bench-rcore-test: t901-bench-rcore
+	$(Q) $(top_srcdir)/taptool.sh --test-name t901-bench-rcore -- ./t901-bench-rcore
+t901_bench_rcore_SOURCES = t901-bench-rcore-main.cc
+t901_bench_rcore_LDADD   = $(LIBRAPICORN_LA)
+noinst_PROGRAMS         += t901-bench-rcore
+check: t901-bench-rcore-test
+
 
 xmllint-check:
 	$(Q) cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
