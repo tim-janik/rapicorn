@@ -16,7 +16,7 @@ objdir           = .libs
 EXAMPLES = example-bind.py
 
 # === tests ===
-TEST_PYPROGS = simple.py loop.py testrapicorn.py chekwidgets.py testgc.py testbind.py
+TEST_PYPROGS = simple.py testrapicorn.py chekwidgets.py testgc.py testbind.py
 
 # === python-call-info ===
 python-call-info:
