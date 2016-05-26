@@ -75,6 +75,7 @@ public:
   virtual void          close                                   () override;
   virtual void          destroy                                 () override;
   virtual bool          snapshot                                (const String &pngname) override;
+  virtual void          query_idle                              () override;
   virtual bool          synthesize_enter                        (double xalign = 0.5, double yalign = 0.5) override;
   virtual bool          synthesize_leave                        () override;
   virtual bool          synthesize_click                        (WidgetIface &widget, int button,

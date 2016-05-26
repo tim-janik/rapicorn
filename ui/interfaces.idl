@@ -361,6 +361,8 @@ interface Window : Container {
   void          close                   (); ///< Close (hide) an on screen window.
   void          destroy                 (); ///< Destroy and dispose a (possibly on screen) window.
   bool          snapshot                (String     pngname);
+  void          query_idle              (); ///< Request notificaiton when idle.
+  signal void   notify_idle             (); ///< Notificaiton signal, emitted after query_idle() once events are processed.
   signal bool   commands                (String     cmdname, StringSeq args);
   signal void   displayed               ();
   bool          synthesize_click        (Widget       widget,
