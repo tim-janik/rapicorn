@@ -109,6 +109,13 @@ t702-text-ocr-test: $(srcdir)/t702-text-ocr.xml
 XML_FILES  += t702-text-ocr.xml
 check: t702-text-ocr-test
 
+# == t800-binding-example ==
+t800-binding-example-test:
+	$(Q) $(X11_TESTPYTHON) t800-binding-example.py ; eval "$$TSTDIAGNOSE"
+EXTRA_DIST += t800-binding-example.py
+check: t800-binding-example-test
+
+
 xmllint-check:
 	$(Q) cd $(srcdir) && ! $(XMLLINT) --noout $(XML_FILES) 2>&1 | grep '.'
 check: xmllint-check

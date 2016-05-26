@@ -13,8 +13,6 @@ FPYTHON          = PYTHONPATH="$(abs_top_builddir)/cython/${objdir}:$$PYTHONPATH
 # Loading newly built Python modules requires accesss to libtool objdir
 objdir           = .libs
 
-EXAMPLES = example-bind.py
-
 # === tests ===
 TEST_PYPROGS =
 
