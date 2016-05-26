@@ -10,7 +10,7 @@ hello_window = """
   <Window declare="example-bind-py">
     <Alignment padding="15">
       <VBox spacing="30">
-        <HBox>
+        <HBox id="binding-box">
           <Label markup-text="Editable Text: "/>
           <!-- [EXAMPLE-bind-title] -->
           <TextEditor markup-text="@bind title"/>
@@ -18,7 +18,7 @@ hello_window = """
         </HBox>
         <HBox homogeneous="true" spacing="15">
           <Button on-click="show" hexpand="1">    <Label markup-text="Show Model"/> </Button>
-          <Button on-click="shuffle"> <Label markup-text="Shuffle Model"/> </Button>
+          <Button id="shuffler" on-click="shuffle"> <Label markup-text="Shuffle Model"/> </Button>
         </HBox>
       </VBox>
     </Alignment>
@@ -47,6 +47,20 @@ def window_command_handler (cmdname, args):
     om.title = v
   return True
 
-window.sig_commands += window_command_handler
+window.sig_commands.connect (window_command_handler)
 window.show()
-app.loop()
+
+import sys
+if not '-i' in sys.argv:
+  editor = window.query_selector_unique ('#binding-box .TextEditor')
+  assert editor
+  window.synthesize_enter()
+  app.process_events (window)           # allow event processing
+  initial_text = editor.markup_text
+  window.synthesize_click (window.query_selector_unique ("#shuffler"), 1)
+  app.process_events (window)           # allow event processing
+  after_click_text = editor.markup_text
+  assert initial_text != after_click_text
+  window.synthesize_delete()
+
+app.run()
