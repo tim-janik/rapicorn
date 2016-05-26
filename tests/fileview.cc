@@ -153,7 +153,13 @@ main (int   argc,
   WindowH window = app.create_window ("main-dialog");
   WidgetListH wl = WidgetListH::down_cast (window.query_selector (".WidgetList"));
   assert (wl != NULL);
-  wl.bind_model (lmh, "WidgetListRow");
+  if (1) // FIXME: wl.bind_model (lmh, "WidgetListRow");
+    {
+      for (int i = 0; i < 250; i++)
+        {
+          WidgetH w = wl.create_row (i, "list-row", Strings (string_format ("index=%d", i)));
+        }
+    }
 
   window.show();
 
