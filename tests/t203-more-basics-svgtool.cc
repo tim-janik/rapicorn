@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <algorithm>
 
-#include "../svg.hh"
+#include "rcore/svg.hh"
 
-#include "resources.cc"
+#include "t203-more-basics-resources.cc"
 
 namespace Rapicorn { namespace Cairo {
 
@@ -188,7 +188,7 @@ using namespace Rapicorn;
 static void
 test_convert_svg2png()
 {
-  const String svg_name = Path::vpath_find ("sample1.svg");
+  const String svg_name = Path::vpath_find ("t203-more-basics-sample.svg");
   Svg::FileP file = Svg::File::load (svg_name);
   if (!file)
     fatal ("Failed to load file: %s", svg_name);

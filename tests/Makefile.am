@@ -14,6 +14,7 @@ EXTRA_DIST      += $(XML_FILES)
 LDADDS   = $(top_builddir)/ui/librapicorn-@MAJOR@.la $(RAPICORN_DEP_LIBS)
 AIDACC_INTERN = $(top_srcdir)/aidacc/aidacc-intern
 CXXSTUB_PY    = $(top_srcdir)/aidacc/CxxStub.py
+RAPIDRES    = $(top_builddir)/rcore/rapidres
 RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/ui/tests/imgcheck
 X11TEST_RAPIDRUN = $(X11_ENV) $(RAPIDRUN) --fatal-warnings "$$@"
@@ -47,6 +48,28 @@ check: t201-rcore-basics-test
 t202-randomized-hashing-test: t201-rcore-basics	# test hash reseeding at program start
 	$(Q) test `./t201-rcore-basics --string-hash64 foo` != `./t201-rcore-basics --string-hash64 foo` ; $(TSTRESULT)
 check: t202-randomized-hashing-test
+
+# == t203-more-basics ==
+t203-more-basics-test: t203-more-basics
+	$(Q) $(top_srcdir)/taptool.sh --test-name t203-more-basics -- ./t203-more-basics
+t203-more-basics-resources.cc: $(RAPIDRES) $(t203_more_basics_resfiles)
+	$(AM_V_GEN)
+	$(Q) $(RAPIDRES) $(t203_more_basics_resfiles:%=$(srcdir)/%) > $@.xtmp
+	$(Q) mv $@.xtmp $@
+t203_more_basics_resfiles = t203-more-basics-sample.svg
+EXTRA_DIST += $(t203_more_basics_resfiles)
+CLEANFILES += t203-more-basics-resources.cc
+noinst_PROGRAMS           += t203-more-basics
+t203_more_basics_LDADD    = $(LIBRAPICORN_LA) $(SVG_DEPENDENCIES_LIBS)
+t203_more_basics_SOURCES  = t203-more-basics-main.cc
+t203_more_basics_SOURCES += t203-more-basics-performance.cc
+t203_more_basics_SOURCES += t203-more-basics-signal2.cc
+t203_more_basics_SOURCES += t203-more-basics-svgtool.cc
+t203_more_basics_SOURCES += t203-more-basics-threads.cc
+t203_more_basics_SOURCES += t203-more-basics-xmltest.cc
+t203-more-basics-svgtool.cc: t203-more-basics-resources.cc
+t203-more-basics-xmltest.cc: t201-rcore-basics-xmldata.cc
+check: t203-more-basics-test
 
 # == t303-mini-server ==
 t303-mini-server-test: t303-mini-server

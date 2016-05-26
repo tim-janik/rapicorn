@@ -14,27 +14,6 @@ TAPTESTS	  += benchrcore
 benchrcore_SOURCES = benchrcore.cc
 benchrcore_LDADD   = $(LDADDS)
 
-TAPTESTS          += testrcore2
-testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
-testrcore2_LDADD   = $(LDADDS) $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
-testrcore2_CXXFLAGS= $(GDKPIXBUF_CFLAGS) $(CAIRO_CFLAGS) $(AM_CXXFLAGS) # FIXME
-EXTRA_DIST        += testrcore2.outref
-
-export VPATH	# needed by test programs to find builddir relative input files
-
-# == test resources ==
-RAPIDRES    = $(abs_builddir)/../rapidres
-RES_FILES   = sample1.svg
-EXTRA_DIST += $(RES_FILES)
-resources.cc: $(RES_FILES) $(RAPIDRES) Makefile.am
-	$(AM_V_GEN)
-	$(Q) cd $(srcdir) && $(RAPIDRES) $(RES_FILES) > $(abs_builddir)/xgen-$(@F)
-	$(Q) mv xgen-$(@F) $@
-EXTRA_DIST  += resources.cc
-CLEANFILES  += resources.cc
-noinst_DATA  = resources.cc
-svgtool.cc: resources.cc
-
 # === test rules ===
 # validate failing assertions and fatal aborting
 check-assertion-handlers: testrcore2
