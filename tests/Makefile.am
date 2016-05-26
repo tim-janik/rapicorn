@@ -5,13 +5,11 @@ AM_CPPFLAGS += -I$(top_srcdir)
 DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE
 AM_CXXFLAGS += $(RAPICORN_GUI_CFLAGS)
 
-noinst_PROGRAMS  = benchaida $(EXAMPLES)
+noinst_PROGRAMS  =
 noinst_DATA      =
 XML_FILES        =
-EXAMPLES         =
 EXTRA_DIST      += $(XML_FILES)
 
-LDADDS   = $(top_builddir)/ui/librapicorn-@MAJOR@.la $(RAPICORN_DEP_LIBS)
 AIDACC_INTERN = $(top_srcdir)/aidacc/aidacc-intern
 CXXSTUB_PY    = $(top_srcdir)/aidacc/CxxStub.py
 RAPIDRES    = $(top_builddir)/rcore/rapidres
@@ -19,14 +17,9 @@ RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/ui/tests/imgcheck
 X11TEST_RAPIDRUN = $(X11_ENV) $(RAPIDRUN) --fatal-warnings "$$@"
 X11_TESTPYTHON = $(X11_ENV) PYTHONPATH="$(abs_top_builddir)/cython/${objdir}:$$PYTHONPATH" $(PYTHON)
-LIBRAPICORN_LA = $(top_builddir)/rcore/librapicorncore-@MAJOR@.la
-
+LIBRAPICORN_LA = $(top_builddir)/ui/librapicorn-@MAJOR@.la $(RAPICORN_CORE_LIBS) $(RAPICORN_DEP_LIBS)
 # Loading newly built Python modules requires accesss to libtool objdir
 objdir       = .libs
-
-# == benchaida ==
-benchaida_SOURCES  = benchaida.cc
-benchaida_LDADD    = $(LDADDS)
 
 
 # == t201-rcore-basics ==
@@ -236,6 +229,14 @@ t901_bench_rcore_SOURCES = t901-bench-rcore-main.cc
 t901_bench_rcore_LDADD   = $(LIBRAPICORN_LA)
 noinst_PROGRAMS         += t901-bench-rcore
 check: t901-bench-rcore-test
+
+# == t902-bench-aida ==
+t902-bench-aida-test: t902-bench-aida
+	$(Q) ./t902-bench-aida ; eval "$$TSTDIAGNOSE"
+t902_bench_aida_SOURCES = t902-bench-aida-main.cc
+t902_bench_aida_LDADD   = $(LIBRAPICORN_LA)
+noinst_PROGRAMS        += t902-bench-aida
+check: t902-bench-aida-test
 
 
 xmllint-check:
