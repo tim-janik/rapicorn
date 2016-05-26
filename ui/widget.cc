@@ -65,6 +65,12 @@ WidgetImpl::construct ()
 }
 
 void
+WidgetImpl::fabricated ()
+{
+  // must chain and propagate to children
+}
+
+void
 WidgetImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
 {
   f (*this);

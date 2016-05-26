@@ -135,6 +135,8 @@ public:
   virtual void     plain_text     (const String &ptext) override;
   virtual String   markup_text    () const override;
   virtual void     markup_text    (const String &markup) override;
+  virtual String   text           () const override;
+  virtual void     text           (const String &string) override;
 };
 
 class TextEditorImpl : public virtual TextControllerImpl, public virtual TextEditorIface {

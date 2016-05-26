@@ -10,6 +10,12 @@
 #define FDEBUG(...)     RAPICORN_KEY_DEBUG ("Factory", __VA_ARGS__)
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Factory-Eval", __VA_ARGS__)
 
+namespace RapicornInternal {
+struct ImplementationHelper final {
+  static inline void fabricated (WidgetImpl &widget)   { widget.fabricated(); }
+};
+} // RapicornInternal
+
 namespace Rapicorn {
 namespace Factory {
 
@@ -314,14 +320,13 @@ class Builder {
   WidgetImplP   build_scope      (const String &caller_location, const XmlNode *factory_context_node);
   WidgetImplP   build_widget     (const XmlNode *node, Evaluator &env, const XmlNode *factory_context_node, Flags bflags);
   static String canonify_dashes  (const String &key);
+  explicit           Builder             (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node);
+  static WidgetImplP build_from_factory  (const XmlNode *factory_node, const StringVector &attr_names,
+                                          const StringVector &attr_values, const XmlNode *factory_context_node);
 public:
-  explicit           Builder            (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node);
-  static WidgetImplP eval_and_build     (const String &widget_identifier,
-                                         const StringVector &call_names, const StringVector &call_values, const String &call_location);
-  static WidgetImplP build_from_factory (const XmlNode *factory_node,
-                                         const StringVector &attr_names, const StringVector &attr_values,
-                                         const XmlNode *factory_context_node);
-  static bool widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier);
+  static WidgetImplP fabricate_widget    (const String &widget_identifier,
+                                          const StringVector &call_names, const StringVector &call_values, const String &call_location);
+  static bool        widget_has_ancestor (const String &widget_identifier, const String &ancestor_identifier);
 };
 
 Builder::Builder (Builder *outer_builder, const String &widget_identifier, const XmlNode *context_node) :
@@ -358,8 +363,8 @@ is_property (const XmlNode &xnode, String *element = NULL, String *attribute = N
 }
 
 WidgetImplP
-Builder::eval_and_build (const String &widget_identifier,
-                         const StringVector &call_names, const StringVector &call_values, const String &call_location)
+Builder::fabricate_widget (const String &widget_identifier,
+                           const StringVector &call_names, const StringVector &call_values, const String &call_location)
 {
   assert_return (call_names.size() == call_values.size(), NULL);
   // initialize and check builder
@@ -385,6 +390,9 @@ Builder::eval_and_build (const String &widget_identifier,
   builder.scope_consumed_.resize (builder.scope_names_.size());
   // build widget
   WidgetImplP widget = builder.build_scope (call_location, builder.dnode_);
+  // finish fabrication
+  if (widget)
+    RapicornInternal::ImplementationHelper::fabricated (*widget);
   FDEBUG ("%s: built widget '%s': %s", node_location (builder.dnode_), widget_identifier, widget ? widget->name() : "<null>");
   return widget;
 }
@@ -749,7 +757,7 @@ create_ui_widget (const String &widget_identifier, const ArgumentList &arguments
       else
         FDEBUG ("%s: argument without value: %s", call_location, arg);
     }
-  WidgetImplP widget = Builder::eval_and_build (widget_identifier, anames, avalues, call_location);
+  WidgetImplP widget = Builder::fabricate_widget (widget_identifier, anames, avalues, call_location);
   if (!widget)
     critical ("%s: failed to create widget: %s", call_location, widget_identifier);
   return widget;

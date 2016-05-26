@@ -457,11 +457,12 @@ interface VBox : Container {
  * <br/> See also the corresponding implementation class ButtonAreaImpl.
  */
 interface ButtonArea : Container {
-  Click         click_type      = Enum (_("CLick Type"), _("Click event generation type"), "rw");
-  bool          can_toggle      = Bool (_("Can Toggle"), _("Boolean indicating whether this button may be toggled"), "rw");
-  String	on_click	= String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
-  String	on_click2	= String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
-  String	on_click3	= String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
+  Click  click_type = Enum   (_("CLick Type"), _("Click event generation type"), "rw");
+  bool   can_toggle = Bool   (_("Can Toggle"), _("Boolean indicating whether this button may be toggled"), "rw");
+  String on_click   = String (_("On CLick"), _("Action to carry out on button1 clicks."), "rw");
+  String on_click2  = String (_("On CLick"), _("Action to carry out on button2 clicks."), "rw");
+  String on_click3  = String (_("On CLick"), _("Action to carry out on button3 clicks."), "rw");
+  String label      = String (_("Label"), _("Default label to use for this button."), "w");
 };
 
 /// The ScrollArea container can display its child paritally and scroll to different parts.
@@ -566,6 +567,7 @@ interface FocusPainter : ElementPainter {
 interface Label : Container {
   String   plain_text     = String (_("Plain Text"),  _("The text to display, without markup information."), "rw");
   String   markup_text    = String (_("Markup Text"), _("The text to display, containing font and style markup."), "rw");
+  String   text           = String (_("Text"), _("This property auto-detects markup and sets plain_text or markup_text accordingly."), "w");
 };
 
 /// A widget for text display, editing, selecting and pasting.
