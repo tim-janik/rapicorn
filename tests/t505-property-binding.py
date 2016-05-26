@@ -60,4 +60,4 @@ for word in ('uiuiui22', 'HelloHello', 'x7c6g3j9', 'T', 'Te', 'Tes', 'Test'):
   assert om.somestring == word
 
 # OK if we got here
-print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
+#print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'

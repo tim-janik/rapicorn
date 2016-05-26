@@ -52,6 +52,12 @@ t504-size-groups-test:
 EXTRA_DIST += t504-size-groups.py
 check: t504-size-groups-test
 
+# == t505-property-binding ==
+t505-property-binding-test:
+	$(Q) $(X11_TESTPYTHON) t505-property-binding.py ; eval "$$TSTDIAGNOSE"
+EXTRA_DIST += t505-property-binding.py
+check: t505-property-binding-test
+
 # == t600-xmlui-eval ==
 t600-xmlui-eval-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/t600-xmlui-eval.xml ; eval "$$TSTDIAGNOSE"
