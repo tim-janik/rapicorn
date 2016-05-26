@@ -28,6 +28,21 @@ benchaida_SOURCES  = benchaida.cc
 benchaida_LDADD    = $(LDADDS)
 
 
+# == t201-rcore-basics ==
+t201-rcore-basics-test: t201-rcore-basics
+	$(Q) $(top_srcdir)/taptool.sh --test-name t201-rcore-basics -- ./t201-rcore-basics
+noinst_PROGRAMS           += t201-rcore-basics
+t201_rcore_basics_LDADD    = $(LIBRAPICORN_LA)
+t201_rcore_basics_SOURCES  = t201-rcore-basics-main.cc
+t201_rcore_basics_SOURCES += t201-rcore-basics-aidatests.cc
+t201_rcore_basics_SOURCES += t201-rcore-basics-markup.cc
+t201_rcore_basics_SOURCES += t201-rcore-basics-strings.cc
+t201_rcore_basics_SOURCES += t201-rcore-basics-timebits.cc
+t201_rcore_basics_SOURCES += t201-rcore-basics-datalist.cc
+t201_rcore_basics_SOURCES += t201-rcore-basics-loops.cc
+t201_rcore_basics_DEPENDENCIES = t201-rcore-basics-xmldata.cc
+check: t201-rcore-basics-test
+
 # == t303-mini-server ==
 t303-mini-server-test: t303-mini-server
 	$(Q) ./t303-mini-server ; eval "$$TSTDIAGNOSE"

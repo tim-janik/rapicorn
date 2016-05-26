@@ -14,11 +14,6 @@ TAPTESTS	  += benchrcore
 benchrcore_SOURCES = benchrcore.cc
 benchrcore_LDADD   = $(LDADDS)
 
-TAPTESTS          += testrcore1
-testrcore1_SOURCES = multitest.cc aidatests.cc markup.cc strings.cc timebits.cc datalist.cc loops.cc
-testrcore1_LDADD   = $(LDADDS)
-EXTRA_DIST        += data.cc testrcore1.outref
-
 TAPTESTS          += testrcore2
 testrcore2_SOURCES = messages.cc xmltest.cc threads.cc svgtool.cc signal2.cc performance.cc
 testrcore2_LDADD   = $(LDADDS) $(GDKPIXBUF_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS) $(PANGOCAIRO_LIBS) $(LIBXML_LIBS)
@@ -41,10 +36,6 @@ noinst_DATA  = resources.cc
 svgtool.cc: resources.cc
 
 # === test rules ===
-# validate hash reseeding at program start
-check-randomized-hashing:
-	$(Q) test `./testrcore1 --string-hash64 foo` != `./testrcore1 --string-hash64 foo` ; $(TSTRESULT)
-check-local: check-randomized-hashing
 # validate failing assertions and fatal aborting
 check-assertion-handlers: testrcore2
 	$(Q) ( export RAPICORN=debug:no-syslog:no-fatal-syslog ; rm -f $(TSTOUT) ; \

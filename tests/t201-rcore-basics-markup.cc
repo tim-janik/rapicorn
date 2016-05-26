@@ -2,7 +2,7 @@
 #include <rcore/testutils.hh>
 #include <string.h>
 
-#include "data.cc" // xml_data1
+#include "t201-rcore-basics-xmldata.cc" // xml_data1
 
 namespace {
 using namespace Rapicorn;

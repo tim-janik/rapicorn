@@ -3,7 +3,7 @@
 #include <ui/uithread.hh>
 #include <string.h>
 
-#include <rcore/tests/data.cc> // xml_data1
+#include "tests/t201-rcore-basics-xmldata.cc" // xml_data1
 
 namespace {
 using namespace Rapicorn;
