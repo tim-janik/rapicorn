@@ -1,7 +1,7 @@
 # Rapicorn
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS	     = . tests
+SUBDIRS	     = .
 
 AM_CPPFLAGS += -I$(top_srcdir) -I$(top_builddir) -I$(srcdir) -I.
 DEFS        += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__

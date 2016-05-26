@@ -610,7 +610,6 @@ po/Makefile.in
 data/Makefile
 rcore/Makefile
 rcore/buildconfig.h
-rcore/tests/Makefile
 res/Makefile
 aidacc/Makefile
 aidacc/tests/Makefile
