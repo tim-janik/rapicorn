@@ -9,7 +9,8 @@
 namespace Rapicorn {
 
 // == SelectableItemImpl ==
-SelectableItemImpl::SelectableItemImpl ()
+SelectableItemImpl::SelectableItemImpl () :
+  button_ (1)
 {}
 
 void
@@ -20,16 +21,26 @@ SelectableItemImpl::construct ()
   SingleContainerImpl::construct();
 }
 
-bool
-SelectableItemImpl::selected () const
+int32
+SelectableItemImpl::button () const
 {
-  return test_state (WidgetState::SELECTED);
+  return button_;
 }
 
 void
-SelectableItemImpl::selected (bool s)
+SelectableItemImpl::button (int32 b)
 {
-  adjust_state (WidgetState::SELECTED, s);
+  if (b != button_)
+    {
+      button_ = b;
+      changed ("button");
+    }
+}
+
+bool
+SelectableItemImpl::widget_maybe_selected() const
+{
+  return true;
 }
 
 bool

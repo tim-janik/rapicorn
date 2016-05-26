@@ -84,7 +84,7 @@ ScrollPortImpl::hierarchy_changed (WidgetImpl *old_toplevel)
     vadjustment_->sig_value_changed() -= conid_vadjustment_;
   vadjustment_ = NULL;
   conid_vadjustment_ = 0;
-  this->ViewportImpl::hierarchy_changed (old_toplevel);
+  ResizeContainerImpl::hierarchy_changed (old_toplevel);
   if (anchored())
     {
       find_adjustments (AdjustmentSourceType::ANCESTRY_HORIZONTAL, &hadjustment_,
@@ -198,7 +198,7 @@ ScrollPortImpl::size_allocate (const Allocation area, bool changed)
 void
 ScrollPortImpl::set_focus_child (WidgetImpl *widget)
 {
-  ViewportImpl::set_focus_child (widget);
+  ResizeContainerImpl::set_focus_child (widget);
   WidgetImpl *fchild = get_focus_child();
   if (!fchild)
     return;
@@ -291,7 +291,7 @@ ScrollPortImpl::list_commands ()
     MakeNamedCommand (ScrollPortImpl, "scroll-down",  _("Scroll downwards"),  scroll, SCROLL_DOWN),
     MakeNamedCommand (ScrollPortImpl, "scroll-right", _("Scroll rightwards"), scroll, SCROLL_RIGHT),
   };
-  static const CommandList command_list (commands, ViewportImpl::list_commands());
+  static const CommandList command_list (commands, ResizeContainerImpl::list_commands());
   return command_list;
 }
 
