@@ -54,8 +54,6 @@ window.show()
 
 # run synthesized tests
 if not max (opt in sys.argv for opt in ('-i','--interactive')):
-  testname = "  Simple-Window-Test:"
-  print testname,
   # enter window to allow input events
   b = window.synthesize_enter()
   assert b
@@ -73,7 +71,6 @@ if not max (opt in sys.argv for opt in ('-i','--interactive')):
   assert window.closed() == False
   window.synthesize_delete()
   assert window.closed() == True
-  print " " * max (0, 75 - len (testname)), "OK"
 
 # run event loop to process window events (exits when all windows are gone)
 app.run()

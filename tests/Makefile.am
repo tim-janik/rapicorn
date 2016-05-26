@@ -28,6 +28,12 @@ t500-main-loop-test:
 EXTRA_DIST += t500-main-loop.py
 check: t500-main-loop-test
 
+# == t501-simple-click ==
+t501-simple-click-test:
+	$(Q) $(X11_TESTPYTHON) t501-simple-click.py ; eval "$$TSTDIAGNOSE"
+EXTRA_DIST += t501-simple-click.py
+check: t501-simple-click-test
+
 # == t600-xmlui-eval ==
 t600-xmlui-eval-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/t600-xmlui-eval.xml ; eval "$$TSTDIAGNOSE"
