@@ -70,13 +70,13 @@ TableImpl::insert_rows (int first_row, int nrows)
 
 // == TableLayoutImpl ==
 static uint
-left_attach (const WidgetImpl::PackInfo &pi)
+left_attach (const PackInfo &pi)
 {
   return iround (MAX (0, pi.hposition));
 }
 
 static uint
-right_attach (const WidgetImpl::PackInfo &pi)
+right_attach (const PackInfo &pi)
 {
   double r = pi.hposition + pi.hspan;
   double l = left_attach (pi);
@@ -84,13 +84,13 @@ right_attach (const WidgetImpl::PackInfo &pi)
 }
 
 static uint
-bottom_attach (const WidgetImpl::PackInfo &pi)
+bottom_attach (const PackInfo &pi)
 {
   return iround (MAX (0, pi.vposition));
 }
 
 static uint
-top_attach (const WidgetImpl::PackInfo &pi)
+top_attach (const PackInfo &pi)
 {
   double t = pi.vposition + pi.vspan;
   double b = bottom_attach (pi);
@@ -296,13 +296,13 @@ TableLayoutImpl::size_request_pass1()
       /* fetch requisition from single-column children */
       if (left_attach (pi) + 1 == right_attach (pi))
         {
-          uint width = iround (crq.width + pi.left_spacing + pi.right_spacing);
+          uint width = crq.width + pi.left_spacing + pi.right_spacing;
           cols_[left_attach (pi)].requisition = MAX (cols_[left_attach (pi)].requisition, width);
         }
       /* fetch requisition from single-row children */
       if (bottom_attach (pi) + 1 == top_attach (pi))
         {
-          uint height = iround (crq.height + pi.bottom_spacing + pi.top_spacing);
+          uint height = crq.height + pi.bottom_spacing + pi.top_spacing;
           rows_[bottom_attach (pi)].requisition = MAX (rows_[bottom_attach (pi)].requisition, height);
         }
     }
@@ -341,7 +341,7 @@ TableLayoutImpl::size_request_pass3()
         {
           Requisition crq = child->requisition();
           /* Check and see if there is already enough space for the child. */
-          uint width = 0;
+          int width = 0;
           for (uint col = left_attach (pi); col < right_attach (pi); col++)
             {
               width += cols_[col].requisition;
@@ -356,7 +356,7 @@ TableLayoutImpl::size_request_pass3()
             {
               bool force_expand = false;
               uint n_expand = 0;
-              width = iround (crq.width + pi.left_spacing + pi.right_spacing - width);
+              width = crq.width + pi.left_spacing + pi.right_spacing - width;
               for (uint col = left_attach (pi); col < right_attach (pi); col++)
                 if (cols_[col].expand)
                   n_expand++;
@@ -380,7 +380,7 @@ TableLayoutImpl::size_request_pass3()
         {
           Requisition crq = child->requisition();
           /* Check and see if there is already enough space for the child. */
-          uint height = 0;
+          int height = 0;
           for (uint row = bottom_attach (pi); row < top_attach (pi); row++)
             {
               height += rows_[row].requisition;
@@ -395,7 +395,7 @@ TableLayoutImpl::size_request_pass3()
             {
               bool force_expand = false;
               uint n_expand = 0;
-              height = iround (crq.height + pi.bottom_spacing + pi.top_spacing - height);
+              height = crq.height + pi.bottom_spacing + pi.top_spacing - height;
               for (uint row = bottom_attach (pi); row < top_attach (pi); row++)
                 if (rows_[row].expand)
                   n_expand++;
@@ -555,8 +555,8 @@ TableLayoutImpl::size_allocate_pass1 ()
    *  to fill in the extra space.
    */
   Allocation area = allocation();
-  const int real_width = iround (area.width);
-  const int real_height = iround (area.height);
+  const int real_width = area.width;
+  const int real_height = area.height;
   if (homogeneous())
     {
       int nexpand, extra;
@@ -787,7 +787,7 @@ TableLayoutImpl::size_allocate_pass2 ()
         continue;
       const PackInfo &pi = child->pack_info();
       Requisition crq = child->requisition();
-      int x = ifloor (area.x);
+      int x = area.x;
       for (uint col = 0; col < left_attach (pi); col++)
         x += cols_[col].allocation + cols_[col].spacing;
       int max_width = 0;
@@ -797,7 +797,7 @@ TableLayoutImpl::size_allocate_pass2 ()
           if (col + 1 < right_attach (pi))
             max_width += cols_[col].spacing;
         }
-      int y = ifloor (area.y);
+      int y = area.y;
       for (uint row = 0; row < bottom_attach (pi); row++)
         y += rows_[row].allocation + rows_[row].spacing;
       int max_height = 0;

@@ -11,7 +11,7 @@ class TestContainerImpl : public virtual SingleContainerImpl, public virtual Tes
 protected:
   virtual Selector::
   Selob*         pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) override;
-  virtual void   render            (RenderContext &rcontext, const Rect &rect) override;
+  virtual void   render            (RenderContext &rcontext, const IRect &rect) override;
 public:
   explicit       TestContainerImpl ();
   virtual String value             () const override;
@@ -50,7 +50,7 @@ class TestBoxImpl : public virtual SingleContainerImpl, public virtual TestBoxIf
   uint   handler_id_;
   void   make_snapshot ();
 protected:
-  virtual void        render          (RenderContext &rcontext, const Rect &rect) override;
+  virtual void        render          (RenderContext &rcontext, const IRect &rect) override;
 public:
   explicit            TestBoxImpl     ();
   virtual            ~TestBoxImpl     () override;
@@ -64,7 +64,7 @@ class IdlTestWidgetImpl : public virtual WidgetImpl, public virtual IdlTestWidge
 protected:
   virtual void                size_request  (Requisition &req) override;
   virtual void                size_allocate (Allocation area, bool changed) override;
-  virtual void                render        (RenderContext &rcontext, const Rect &rect) override;
+  virtual void                render        (RenderContext &rcontext, const IRect &rect) override;
 public:
   virtual bool                bool_prop     () const override;
   virtual void                bool_prop     (bool b) override;

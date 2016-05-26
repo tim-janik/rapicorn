@@ -52,8 +52,8 @@ WidgetIface::impl () const
 
 WidgetImpl::WidgetImpl () :
   widget_flags_ (VISIBLE), widget_state_ (uint64 (WidgetState::NORMAL)), inherited_state_ (uint64 (WidgetState::STASHED)),
-  parent_ (NULL), acache_ (NULL),
-  factory_context_ (ctor_factory_context()), sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
+  parent_ (NULL), acache_ (NULL), factory_context_ (ctor_factory_context()), pack_info_ (NULL),
+  sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
 
@@ -259,8 +259,8 @@ WidgetImpl::set_flag (WidgetFlag flag, bool on)
       if (flag & repack_flag_mask)
         {
           invalidate_parent();  // ensure we request resize
-          const PackInfo &pa = pack_info();
-          repack (pa, pa);      // includes invalidate();
+          const PackInfo &pi = pack_info();
+          repack (pi, pi);      // includes invalidate();
         }
       widget_propagate_state (old_state); // mirror !VISIBLE as STASHED
     }
@@ -858,6 +858,12 @@ WidgetImpl::~WidgetImpl()
       remove_exec (timer_id);
       set_data (&visual_update_key, uint (0));
     }
+  if (pack_info_)
+    {
+      PackInfo *delme = pack_info_;
+      pack_info_ = NULL;
+      delete delme;
+    }
 }
 
 Command*
@@ -1099,42 +1105,6 @@ static class OvrKey : public DataKey<Requisition> {
     return Requisition (-1, -1);
   }
 } override_requisition;
-
-/// Get overriding widget size requisition width (-1 if unset).
-double
-WidgetImpl::width () const
-{
-  Requisition ovr = get_data (&override_requisition);
-  return ovr.width >= 0 ? ovr.width : -1;
-}
-
-/// Override widget size requisition width (use -1 to unset).
-void
-WidgetImpl::width (double w)
-{
-  Requisition ovr = get_data (&override_requisition);
-  ovr.width = w >= 0 ? w : -1;
-  set_data (&override_requisition, ovr);
-  invalidate_size();
-}
-
-/// Get overriding widget size requisition height (-1 if unset).
-double
-WidgetImpl::height () const
-{
-  Requisition ovr = get_data (&override_requisition);
-  return ovr.height >= 0 ? ovr.height : -1;
-}
-
-/// Override widget size requisition height (use -1 to unset).
-void
-WidgetImpl::height (double h)
-{
-  Requisition ovr = get_data (&override_requisition);
-  ovr.height = h >= 0 ? h : -1;
-  set_data (&override_requisition, ovr);
-  invalidate_size();
-}
 
 bool
 WidgetImpl::process_event (const Event &event, bool capture) // widget coordinates relative
@@ -1502,17 +1472,6 @@ WidgetImpl::requisition ()
   return SizeGroup::widget_requisition (*this);
 }
 
-bool
-WidgetImpl::tune_requisition (double new_width, double new_height)
-{
-  Requisition req = requisition();
-  if (new_width >= 0)
-    req.width = new_width;
-  if (new_height >= 0)
-    req.height = new_height;
-  return tune_requisition (req);
-}
-
 void
 WidgetImpl::expose_internal (const Region &region)
 {
@@ -1692,41 +1651,32 @@ WidgetImpl::find_adjustments (AdjustmentSourceType adjsrc1,
 }
 
 void
-WidgetImpl::repack (const PackInfo &orig,
-              const PackInfo &pnew)
+WidgetImpl::repack (const PackInfo &orig, const PackInfo &pnew)
 {
   if (parent())
     parent()->repack_child (*this, orig, pnew);
   invalidate();
 }
 
-WidgetImpl::PackInfo&
-WidgetImpl::pack_info (bool create)
+const PackInfo WidgetImpl::default_pack_info = {
+  0,   1,   0, 1,       // hposition, hspan, vposition, vspan
+  0.5, 1, 0.5, 1,       // halign, hscale, valign, vscale
+  0,   0,   0, 0,       // left_spacing, right_spacing, bottom_spacing, top_spacing
+  -1, -1,               // ovr_width, ovr_height
+};
+
+PackInfo&
+WidgetImpl::widget_pack_info()
 {
-  static const PackInfo pack_info_defaults = {
-    0,   1,   0, 1,     /* hposition, hspan, vposition, vspan */
-    0,   0,   0, 0,     /* left_spacing, right_spacing, bottom_spacing, top_spacing */
-    0.5, 1, 0.5, 1,     /* halign, hscale, valign, vscale */
-  };
-  static DataKey<PackInfo*> pack_info_key;
-  PackInfo *pi = get_data (&pack_info_key);
-  if (!pi)
-    {
-      if (create)
-        {
-          pi = new PackInfo (pack_info_defaults);
-          set_data (&pack_info_key, pi);
-        }
-      else /* read-only access */
-        pi = const_cast<PackInfo*> (&pack_info_defaults);
-    }
-  return *pi;
+  if (!pack_info_)
+    pack_info_ = new PackInfo (default_pack_info);
+  return *pack_info_;
 }
 
 void
 WidgetImpl::hposition (double d)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.hposition = d;
   repack (op, pa);
 }
@@ -1734,7 +1684,7 @@ WidgetImpl::hposition (double d)
 void
 WidgetImpl::hspan (double d)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.hspan = MAX (1, d);
   repack (op, pa);
 }
@@ -1742,7 +1692,7 @@ WidgetImpl::hspan (double d)
 void
 WidgetImpl::vposition (double d)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.vposition = d;
   repack (op, pa);
 }
@@ -1750,7 +1700,7 @@ WidgetImpl::vposition (double d)
 void
 WidgetImpl::vspan (double d)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.vspan = MAX (1, d);
   repack (op, pa);
 }
@@ -1758,39 +1708,57 @@ WidgetImpl::vspan (double d)
 void
 WidgetImpl::left_spacing (int s)
 {
-  PackInfo &pa = pack_info (true), op = pa;
-  pa.left_spacing = MAX (0, s);
+  PackInfo &pa = widget_pack_info(), op = pa;
+  pa.left_spacing = CLAMP (s, 0, 32767);
   repack (op, pa);
 }
 
 void
 WidgetImpl::right_spacing (int s)
 {
-  PackInfo &pa = pack_info (true), op = pa;
-  pa.right_spacing = MAX (0, s);
+  PackInfo &pa = widget_pack_info(), op = pa;
+  pa.right_spacing = CLAMP (s, 0, 32767);
   repack (op, pa);
 }
 
 void
 WidgetImpl::bottom_spacing (int s)
 {
-  PackInfo &pa = pack_info (true), op = pa;
-  pa.bottom_spacing = MAX (0, s);
+  PackInfo &pa = widget_pack_info(), op = pa;
+  pa.bottom_spacing = CLAMP (s, 0, 32767);
   repack (op, pa);
 }
 
 void
 WidgetImpl::top_spacing (int s)
 {
-  PackInfo &pa = pack_info (true), op = pa;
-  pa.top_spacing = MAX (0, s);
+  PackInfo &pa = widget_pack_info(), op = pa;
+  pa.top_spacing = CLAMP (s, 0, 32767);
+  repack (op, pa);
+}
+
+/// Override widget size requisition width (use -1 to unset).
+void
+WidgetImpl::width (int w)
+{
+  PackInfo &pa = widget_pack_info(), op = pa;
+  pa.ovr_width = w >= 0 ? MIN (w, 32767) : -1;
+  repack (op, pa);
+}
+
+/// Override widget size requisition height (use -1 to unset).
+void
+WidgetImpl::height (int h)
+{
+  PackInfo &pa = widget_pack_info(), op = pa;
+  pa.ovr_height = h >= 0 ? MIN (h, 32767) : -1;
   repack (op, pa);
 }
 
 void
 WidgetImpl::halign (double f)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.halign = CLAMP (f, 0, 1);
   repack (op, pa);
 }
@@ -1798,7 +1766,7 @@ WidgetImpl::halign (double f)
 void
 WidgetImpl::hscale (double f)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.hscale = f;
   repack (op, pa);
 }
@@ -1806,7 +1774,7 @@ WidgetImpl::hscale (double f)
 void
 WidgetImpl::valign (double f)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.valign = CLAMP (f, 0, 1);
   repack (op, pa);
 }
@@ -1814,7 +1782,7 @@ WidgetImpl::valign (double f)
 void
 WidgetImpl::vscale (double f)
 {
-  PackInfo &pa = pack_info (true), op = pa;
+  PackInfo &pa = widget_pack_info(), op = pa;
   pa.vscale = f;
   repack (op, pa);
 }
@@ -1965,7 +1933,7 @@ void
 WidgetImpl::clip_area (const Allocation *clip)
 {
   const bool has_clip_area = clip != NULL;
-  clip_area_ = has_clip_area ? *clip : Rect();
+  clip_area_ = has_clip_area ? *clip : IRect();
   if (has_clip_area != test_flag (HAS_CLIP_AREA))
     change_flags (HAS_CLIP_AREA, has_clip_area);
 }
@@ -1983,6 +1951,17 @@ WidgetImpl::clipped_allocation () const
   if (clip)
     area.intersect (*clip);
   return area;
+}
+
+bool
+WidgetImpl::tune_requisition (int new_width, int new_height)
+{
+  Requisition req = requisition();
+  if (new_width >= 0)
+    req.width = new_width;
+  if (new_height >= 0)
+    req.height = new_height;
+  return tune_requisition (req);
 }
 
 bool
@@ -2021,7 +2000,7 @@ WidgetImpl::tune_requisition (Requisition requisition)
 void
 WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
 {
-  Allocation sarea (iround (area.x), iround (area.y), iround (area.width), iround (area.height));
+  Allocation sarea = area;
   const double smax = 4503599627370496.; // 52bit precision is maximum for doubles
   sarea.x      = CLAMP (sarea.x, -smax, smax);
   sarea.y      = CLAMP (sarea.y, -smax, smax);
@@ -2029,12 +2008,12 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   sarea.height = CLAMP (sarea.height, 0, smax);
   /* remember old area */
   const Allocation old_allocation = clipped_allocation();
-  const Rect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
+  const IRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
   // always reallocate to re-layout children
   change_flags (INVALID_ALLOCATION, false); // skip notification
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
-  Rect new_clip = clip ? *clip : area;
+  IRect new_clip = clip ? *clip : area;
   if (!clip && parent())
     new_clip.intersect (parent()->clipped_allocation());
   const bool allocation_changed = allocation_ != sarea || new_clip != old_clip;
@@ -2063,7 +2042,7 @@ class WidgetImpl::RenderContext {
   friend class WidgetImpl;
   vector<cairo_surface_t*> surfaces;
   Region                   render_area;
-  Rect                    *hierarchical_clip;
+  IRect                   *hierarchical_clip;
   vector<cairo_t*>         cairos;
 public:
   explicit      RenderContext() : hierarchical_clip (NULL) {}
@@ -2081,10 +2060,10 @@ WidgetImpl::render_into (cairo_t *cr, const Region &region)
     {
       render_widget (rcontext);
       cairo_save (cr);
-      vector<Rect> rects;
-      rcontext.render_area.list_rects (rects);
-      for (size_t i = 0; i < rects.size(); i++)
-        cairo_rectangle (cr, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+      vector<DRect> drects;
+      rcontext.render_area.list_rects (drects);
+      for (size_t i = 0; i < drects.size(); i++)
+        cairo_rectangle (cr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
       cairo_clip (cr);
       for (size_t i = 0; i < rcontext.surfaces.size(); i++)
         {
@@ -2101,10 +2080,10 @@ void
 WidgetImpl::render_widget (RenderContext &rcontext)
 {
   size_t n_cairos = rcontext.cairos.size();
-  Rect area = clipped_allocation();
-  Rect *saved_hierarchical_clip = rcontext.hierarchical_clip;
-  Rect newclip;
-  const Rect *clip = clip_area();
+  IRect area = clipped_allocation();
+  IRect *saved_hierarchical_clip = rcontext.hierarchical_clip;
+  IRect newclip;
+  const IRect *clip = clip_area();
   if (clip)
     {
       newclip = *clip;
@@ -2124,7 +2103,7 @@ WidgetImpl::render_widget (RenderContext &rcontext)
 }
 
 void
-WidgetImpl::render (RenderContext &rcontext, const Rect &rect)
+WidgetImpl::render (RenderContext &rcontext, const IRect &rect)
 {}
 
 void
@@ -2140,7 +2119,7 @@ WidgetImpl::rendering_region (RenderContext &rcontext) const
 cairo_t*
 WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
 {
-  Rect rect = area;
+  IRect rect = area;
   if (area == Allocation (-1, -1, 0, 0))
     rect = clipped_allocation();
   if (rcontext.hierarchical_clip)
@@ -2149,9 +2128,9 @@ WidgetImpl::cairo_context (RenderContext &rcontext, const Allocation &area)
   if (empty_dummy)
     rect.width = rect.height = 1;
   assert_return (rect.width > 0 && rect.height > 0, NULL);
-  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, iceil (rect.width), iceil (rect.height));
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, rect.width, rect.height);
   if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
-    critical ("%s: failed to create ARGB32 cairo surface with %dx%d pixels: %s\n", __func__, iceil (rect.width), iceil (rect.height),
+    critical ("%s: failed to create ARGB32 cairo surface with %dx%d pixels: %s\n", __func__, rect.width, rect.height,
               cairo_status_to_string (cairo_surface_status (surface)));
   cairo_surface_set_device_offset (surface, -rect.x, -rect.y);
   cairo_t *cr = cairo_create (surface);

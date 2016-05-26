@@ -11,9 +11,11 @@
 namespace Rapicorn {
 
 /* --- Widget structures and forward decls --- */
-typedef Rect Allocation;
+typedef IRect Allocation;
 class SizeGroup;
 class WidgetGroup;
+typedef std::shared_ptr<WidgetGroup> WidgetGroupP;
+typedef std::vector<WidgetGroupP> WidgetGroupVector;
 class Adjustment;
 class ResizeContainerImpl;
 class WindowImpl;
@@ -43,6 +45,14 @@ class WidgetImpl;
 typedef std::shared_ptr<WidgetImpl> WidgetImplP;
 typedef std::weak_ptr<WidgetImpl>   WidgetImplW;
 
+struct PackInfo {
+  float hposition, hspan, vposition, vspan;
+  float halign, hscale, valign, vscale;
+  int32 left_spacing : 16, right_spacing : 16, bottom_spacing : 16, top_spacing : 16;
+  int32 ovr_width : 16, ovr_height : 16;
+  WidgetGroupVector widget_groups;
+};
+
 /// WidgetImpl is the base type for all UI element implementations and implements the Widget interface.
 /// More details about widgets are covered in @ref Widget.
 class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
@@ -54,6 +64,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
 public:
   struct AncestryCache;
 private:
+  static const PackInfo       default_pack_info;
   uint32                      widget_flags_; // WidgetFlag
   uint16                      widget_state_; // WidgetState
   uint16                      inherited_state_; // WidgetState
@@ -62,6 +73,7 @@ private:
   FactoryContext             &factory_context_;
   Requisition                 requisition_;
   Allocation                  allocation_, clip_area_;
+  PackInfo                   *pack_info_;
   Requisition                 inner_size_request (); // ungrouped size requisition
   void                        acache_check       () const;
   void                        widget_adjust_state       (WidgetState state, bool on);
@@ -71,6 +83,8 @@ private:
   bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
   void                        widget_propagate_state (WidgetState prev_state);
+  void                        repack                 (const PackInfo &orig, const PackInfo &pnew);
+  PackInfo&                   widget_pack_info       ();
   virtual bool                widget_maybe_toggled   () const;
   virtual bool                widget_maybe_selected  () const;
 protected:
@@ -113,8 +127,7 @@ protected:
   virtual void                invalidate_parent ();
   void                        clip_area         (const Allocation *clip);
   bool                        tune_requisition  (Requisition  requisition);
-  bool                        tune_requisition  (double       new_width,
-                                                 double       new_height);
+  bool                        tune_requisition  (int new_width, int new_height);
   /* signal methods */
   virtual void                do_invalidate     ();
   virtual void                do_changed        (const String &name) override;
@@ -221,12 +234,7 @@ public:
   virtual void                id                (const String &str); ///< Set Widget id
   FactoryContext&             factory_context   () const        { return factory_context_; }
   UserSource                  user_source       () const;
-  /* override requisition */
-  double                      width             () const;
-  void                        width             (double w);
-  double                      height            () const;
-  void                        height            (double h);
-  /* properties */
+  // properties
   Property*                   lookup_property   (const String    &property_name);
   String                      get_property      (const String    &property_name);
   void                        set_property      (const String    &property_name,
@@ -263,7 +271,7 @@ public:
   virtual void                invalidate        (WidgetFlag mask = INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
   void                        invalidate_size   ()              { invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
   void                        expose            () { expose (allocation()); } ///< Expose entire widget, see expose(const Region&)
-  void                        expose            (const Rect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
+  void                        expose            (const IRect &rect) { expose (Region (rect)); } ///< Rectangle constrained expose()
   void                        expose            (const Region &region);
   void                        queue_visual_update  ();
   void                        force_visual_update  ();
@@ -277,7 +285,7 @@ protected:
   class RenderContext;
   virtual void               render_widget             (RenderContext    &rcontext);
   virtual void               render_recursive          (RenderContext    &rcontext);
-  virtual void               render                    (RenderContext    &rcontext, const Rect &rect) = 0;
+  virtual void               render                    (RenderContext    &rcontext, const IRect &rect) = 0;
   const Region&              rendering_region          (RenderContext    &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext    &rcontext,
                                                         const Allocation &area = Allocation (-1, -1, 0, 0));
@@ -333,43 +341,39 @@ public:
                                                  AdjustmentSourceType adjsrc4 = AdjustmentSourceType::NONE,
                                                  Adjustment         **adj4 = NULL);
   // packing
-  struct PackInfo {
-    double hposition, hspan, vposition, vspan;
-    uint left_spacing, right_spacing, bottom_spacing, top_spacing;
-    double halign, hscale, valign, vscale;
-  };
-  const PackInfo&    pack_info       () const   { return const_cast<WidgetImpl*> (this)->pack_info (false); }
-  double             hposition       () const   { return pack_info ().hposition; }
-  void               hposition       (double d);
-  double             hspan           () const   { return pack_info ().hspan; }
-  void               hspan           (double d);
-  double             vposition       () const   { return pack_info ().vposition; }
-  void               vposition       (double d);
-  double             vspan           () const   { return pack_info ().vspan; }
-  void               vspan           (double d);
-  int                left_spacing    () const   { return pack_info ().left_spacing; }
-  void               left_spacing    (int s);
-  int                right_spacing   () const   { return pack_info ().right_spacing; }
-  void               right_spacing   (int s);
-  int                bottom_spacing  () const   { return pack_info ().bottom_spacing; }
-  void               bottom_spacing  (int s);
-  int                top_spacing     () const   { return pack_info ().top_spacing; }
-  void               top_spacing     (int s);
-  double             halign          () const   { return pack_info ().halign; }
-  void               halign          (double f);
-  double             hscale          () const   { return pack_info ().hscale; }
-  void               hscale          (double f);
-  double             valign          () const   { return pack_info ().valign; }
-  void               valign          (double f);
-  double             vscale          () const   { return pack_info ().vscale; }
-  void               vscale          (double f);
-  double             hanchor         () const   { return halign(); } // mirrors halign
-  void               hanchor         (double a) { halign (a); }      // mirrors halign
-  double             vanchor         () const   { return valign(); } // mirrors valign
-  void               vanchor         (double a) { valign (a); }      // mirrors valign
-private:
-  void               repack          (const PackInfo &orig, const PackInfo &pnew);
-  PackInfo&          pack_info       (bool create);
+  const PackInfo&    pack_info       () const           { return pack_info_ ? *pack_info_ : default_pack_info; }
+  virtual int        width           () const override  { return pack_info ().ovr_width; }
+  virtual void       width           (int w) override;
+  virtual int        height          () const override  { return pack_info ().ovr_height; }
+  virtual void       height          (int h) override;
+  virtual double     hposition       () const override  { return pack_info ().hposition; }
+  virtual void       hposition       (double d) override;
+  virtual double     hspan           () const override  { return pack_info ().hspan; }
+  virtual void       hspan           (double d) override;
+  virtual double     vposition       () const override  { return pack_info ().vposition; }
+  virtual void       vposition       (double d) override;
+  virtual double     vspan           () const override  { return pack_info ().vspan; }
+  virtual void       vspan           (double d) override;
+  virtual int        left_spacing    () const override  { return pack_info ().left_spacing; }
+  virtual void       left_spacing    (int s) override;
+  virtual int        right_spacing   () const override  { return pack_info ().right_spacing; }
+  virtual void       right_spacing   (int s) override;
+  virtual int        bottom_spacing  () const override  { return pack_info ().bottom_spacing; }
+  virtual void       bottom_spacing  (int s) override;
+  virtual int        top_spacing     () const override  { return pack_info ().top_spacing; }
+  virtual void       top_spacing     (int s) override;
+  virtual double     halign          () const override  { return pack_info ().halign; }
+  virtual void       halign          (double f) override;
+  virtual double     hscale          () const override  { return pack_info ().hscale; }
+  virtual void       hscale          (double f) override;
+  virtual double     valign          () const override  { return pack_info ().valign; }
+  virtual void       valign          (double f) override;
+  virtual double     vscale          () const override  { return pack_info ().vscale; }
+  virtual void       vscale          (double f) override;
+  virtual double     hanchor         () const override  { return halign(); } // mirrors halign
+  virtual void       hanchor         (double a) override { halign (a); }     // mirrors halign
+  virtual double     vanchor         () const override  { return valign(); } // mirrors valign
+  virtual void       vanchor         (double a) override { valign (a); }     // mirrors valign
 public:
   virtual bool         match_selector        (const String &selector);
   virtual WidgetIfaceP query_selector        (const String &selector);

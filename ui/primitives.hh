@@ -35,7 +35,7 @@ typedef enum {
   COMBINE_VALUE,        /* B.value = A.value */
 } CombineType;
 
-/* --- Point --- */
+// == Point ==
 class Point {
 public:
   double x, y;
@@ -125,21 +125,21 @@ round (const Point &s)
 }
 using ::round;
 
-/* --- Rect --- */
+// == DRect ==
 class IRect;
-class Rect {
+class DRect {
 public:
   double x, y;
   double width;
   double height;
-  explicit      Rect            ();
-  explicit      Rect            (Point cp0, Point cp1);
-  explicit      Rect            (Point p0, double cwidth, double cheight);
-  explicit      Rect            (double cx, double cy, double cwidth, double cheight);
-  inline        Rect            (const IRect &ir);
-  Rect&         assign          (Point p0, Point p1);
-  Rect&         assign          (Point p0, double cwidth, double cheight);
-  Rect&         assign          (double cx, double cy, double cwidth, double cheight);
+  explicit      DRect           ();
+  explicit      DRect           (Point cp0, Point cp1);
+  explicit      DRect           (Point p0, double cwidth, double cheight);
+  explicit      DRect           (double cx, double cy, double cwidth, double cheight);
+  inline        DRect           (const IRect &ir);
+  DRect&        assign          (Point p0, Point p1);
+  DRect&        assign          (Point p0, double cwidth, double cheight);
+  DRect&        assign          (double cx, double cy, double cwidth, double cheight);
   double        upper_x         () const { return x + width; }
   double        upper_y         () const { return y + height; }
   Point         upper_left      () const { return Point (x, y + height); }
@@ -166,47 +166,64 @@ public:
   Point         west            () const { return Point (x, y + height * 0.5); }
   Point         north_west      () const { return upper_left(); }
   bool          contains        (const Point &point) const      { return x <= point.x && y <= point.y && point.x < x + width && point.y < y + height; }
-  bool          operator==      (const Rect  &other) const;
-  bool          operator!=      (const Rect  &other) const      { return !operator== (other); }
-  bool          equals          (const Rect  &other, double epsilon = 0.0) const;
+  bool          operator==      (const DRect &other) const;
+  bool          operator!=      (const DRect &other) const      { return !operator== (other); }
+  bool          equals          (const DRect &other, double epsilon = 0.0) const;
   double        dist2           (const Point &p) const;
   double        dist            (const Point &p) const;
-  Rect&         rect_union      (const Rect &r);
-  Rect&         add             (const Point &p);
-  Rect&         add_border      (double b);
-  Rect&         intersect       (const Rect &r);
-  bool          intersecting    (const Rect &r) const;
-  Rect          intersection    (const Rect &r) const           { return Rect (*this).intersect (r); }
-  Rect          mapped_onto     (const Rect &bounds) const;
+  DRect&        rect_union      (const DRect &r);
+  DRect&        add             (const Point &p);
+  DRect&        add_border      (double b);
+  DRect&        intersect       (const DRect &r);
+  bool          intersecting    (const DRect &r) const;
+  DRect         intersection    (const DRect &r) const          { return DRect (*this).intersect (r); }
+  DRect         mapped_onto     (const DRect &bounds) const;
   bool          empty           () const;
   Point         anchor_point    (Anchor anchor);
-  Rect&         translate       (double deltax,
+  DRect&        translate       (double deltax,
                                  double delty);
-  Rect&         operator+       (const Point &p);
-  Rect&         operator-       (const Point &p);
+  DRect&        operator+       (const Point &p);
+  DRect&        operator-       (const Point &p);
   String        string          () const;
-  static Rect   create_anchored (Anchor anchor,
+  static DRect  create_anchored (Anchor anchor,
                                  double     width,
                                  double     height);
 };
+
+// == IRect ==
 struct IRect {
-  int64 x, y, width, height;
-  IRect (const Rect &r) :
-    x (ifloor (r.x)), y (ifloor (r.y)),
-    width (iceil (r.width)), height (iceil (r.height))
-  {}
-  IRect&
-  operator= (const Rect &r)
-  {
-    x = ifloor (r.x);
-    y = ifloor (r.y);
-    width = iceil (r.width);
-    height = iceil (r.height);
-    return *this;
-  }
+  int32 x, y, width, height;
+
+  /*ctor*/      IRect           ()                                              : x (0), y (0), width (0), height (0) {}
+  /*ctor*/      IRect           (int32 cx, int32 cy, int32 cw, int32 ch)        : x (cx), y (cy), width (cw), height (ch) {}
+  /*ctor*/      IRect           (const DRect &r)                                { operator= (r); }
+  IRect&        operator=       (const IRect &r);
+  IRect&        operator=       (const DRect &r);
+  bool          operator==      (const DRect &other) const;
+  bool          operator!=      (const DRect &other) const                      { return !operator== (other); }
+  IRect&        intersect       (const IRect &r);
+  bool          intersecting    (const IRect &r) const;
+  IRect&        assign          (int32 cx, int32 cy, int32 cwidth, int32 cheight);
+  bool          empty           () const                                        { return !width || !height; }
+  int32         upper_x         () const                                        { return x + width; }
+  int32         upper_y         () const                                        { return y + height; }
+  Point         upper_left      () const                                        { return Point (x, y + height); }
+  Point         upper_right     () const                                        { return Point (x + width, y + height); }
+  Point         lower_right     () const                                        { return Point (x + width, y); }
+  Point         lower_left      () const                                        { return Point (x, y); }
+  Point         ul              () const                                        { return upper_left(); }
+  Point         ur              () const                                        { return upper_right(); }
+  Point         lr              () const                                        { return lower_right(); }
+  Point         ll              () const                                        { return lower_left(); }
+  double        area            () const                                        { return double (width) * height; }
+  double        dist2           (const Point &p) const;
+  double        dist            (const Point &p) const;
+  IRect         mapped_onto     (const IRect &bounds) const;
+  String        string          () const;
+  IRect&        rect_union      (const IRect &r);
 };
 
-/* --- Color --- */
+// == Color ==
 class Color {
   uint32              argb_pixel;
   typedef uint32 (Color::*_unspecified_bool_type) () const; // non-numeric operator bool() result
@@ -689,12 +706,12 @@ Point::equals (const Point &p2,
 }
 
 inline
-Rect::Rect () :
+DRect::DRect () :
   x (0), y (0), width (0), height (0)
 {}
 
-inline Rect&
-Rect::assign (double cx, double cy, double cwidth, double cheight)
+inline DRect&
+DRect::assign (double cx, double cy, double cwidth, double cheight)
 {
   x = cx;
   y = cy;
@@ -704,25 +721,25 @@ Rect::assign (double cx, double cy, double cwidth, double cheight)
 }
 
 inline
-Rect::Rect (double cx, double cy, double cwidth, double cheight)
+DRect::DRect (double cx, double cy, double cwidth, double cheight)
 {
   assign (cx, cy, cwidth, cheight);
 }
 
-inline Rect&
-Rect::assign (Point p0, double cwidth, double cheight)
+inline DRect&
+DRect::assign (Point p0, double cwidth, double cheight)
 {
   return assign (p0.x, p0.y, cwidth, cheight);
 }
 
 inline
-Rect::Rect (Point p0, double cwidth, double cheight)
+DRect::DRect (Point p0, double cwidth, double cheight)
 {
   assign (p0, cwidth, cheight);
 }
 
-inline Rect&
-Rect::assign (Point p0, Point p1)
+inline DRect&
+DRect::assign (Point p0, Point p1)
 {
   Point mll (min (p0, p1));
   Point mur (max (p0, p1));
@@ -734,25 +751,24 @@ Rect::assign (Point p0, Point p1)
 }
 
 inline
-Rect::Rect (Point cp0, Point cp1)
+DRect::DRect (Point cp0, Point cp1)
 {
   assign (cp0, cp1);
 }
 
 inline
-Rect::Rect (const IRect &ir) :
+DRect::DRect (const IRect &ir) :
   x (ir.x), y (ir.y), width (ir.width), height (ir.height)
 {}
 
 inline bool
-Rect::operator== (const Rect &other) const
+DRect::operator== (const DRect &other) const
 {
   return other.x == x && other.y == y && other.width == width && other.height == height;
 }
 
 inline bool
-Rect::equals (const Rect &other,
-              double      epsilon) const
+DRect::equals (const DRect &other, double epsilon) const
 {
   if (empty() && other.empty())
     return true;
@@ -762,8 +778,8 @@ Rect::equals (const Rect &other,
           fabs (other.height - height) <= epsilon);
 }
 
-inline Rect&
-Rect::add_border (double b)
+inline DRect&
+DRect::add_border (double b)
 {
   x -= b;
   y -= b;
@@ -772,8 +788,8 @@ Rect::add_border (double b)
   return *this;
 }
 
-inline Rect&         
-Rect::add (const Point &p)
+inline DRect&
+DRect::add (const Point &p)
 {
   if (empty())
     assign (p, 0, 0);
@@ -782,8 +798,8 @@ Rect::add (const Point &p)
   return *this;
 }
 
-inline Rect&
-Rect::rect_union (const Rect &r)
+inline DRect&
+DRect::rect_union (const DRect &r)
 {
   if (r.empty())
     return *this;
@@ -795,20 +811,20 @@ Rect::rect_union (const Rect &r)
   return *this;
 }
 
-inline Rect&
-Rect::intersect (const Rect &r)
+inline DRect&
+DRect::intersect (const DRect &r)
 {
   Point pll = max (lower_left(), r.lower_left());
   Point pur = min (upper_right(), r.upper_right());
   if (pll.x <= pur.x && pll.y <= pur.y)
     assign (pll, pur);
   else
-    *this = Rect();
+    *this = DRect();
   return *this;
 }
 
 inline bool
-Rect::intersecting (const Rect &r) const
+DRect::intersecting (const DRect &r) const
 {
   return (((r.x >= x && r.x < x + width) ||
            (x >= r.x && x < r.x + r.width)) &&
@@ -817,18 +833,96 @@ Rect::intersecting (const Rect &r) const
 }
 
 inline bool
-Rect::empty () const
+DRect::empty () const
 {
   return width * height == 0;
 }
 
-inline Rect&
-Rect::translate (double deltax,
-                 double delty)
+inline DRect&
+DRect::translate (double deltax, double delty)
 {
   x += deltax;
   y += delty;
   return *this;
+}
+
+inline IRect&
+IRect::operator= (const IRect &r)
+{
+  x = r.x;
+  y = r.y;
+  width = r.width;
+  height = r.height;
+  return *this;
+}
+
+inline IRect&
+IRect::operator= (const DRect &r)
+{
+  x = ifloor (r.x);
+  y = ifloor (r.y);
+  width = iceil (r.width);
+  height = iceil (r.height);
+  return *this;
+}
+
+inline bool
+IRect::operator== (const DRect &other) const
+{
+  return other.x == x && other.y == y && other.width == width && other.height == height;
+}
+
+inline IRect&
+IRect::assign (int32 cx, int32 cy, int32 cwidth, int32 cheight)
+{
+  x = cx;
+  y = cy;
+  width = MAX (cwidth, 0);
+  height = MAX (cheight, 0);
+  return *this;
+}
+
+inline IRect&
+IRect::rect_union (const IRect &r)
+{
+  if (r.empty())
+    return *this;
+  if (empty())
+    return *this = r;
+  const int32 lx = min (x, r.x);
+  const int32 ly = min (y, r.y);
+  const int32 ux = max (x + width, r.x + r.width);
+  const int32 uy = max (y + height, r.y + r.height);
+  assign (lx, ly, ux - lx, uy - ly);
+  return *this;
+}
+
+inline IRect&
+IRect::intersect (const IRect &r)
+{
+  const int32 lx = max (x, r.x);
+  const int32 ly = max (y, r.y);
+  const int32 ux = min (x + width, r.x + r.width);
+  const int32 uy = min (y + height, r.y + r.height);
+  if (lx <= ux && ly <= uy)
+    {
+      x = lx;
+      y = ly;
+      width = ux - lx;
+      height = uy - ly;
+    }
+  else
+    *this = IRect();
+  return *this;
+}
+
+inline bool
+IRect::intersecting (const IRect &r) const
+{
+  return (((r.x >= x && r.x < x + width) ||
+           (x >= r.x && x < r.x + r.width)) &&
+          ((r.y >= y && r.y < y + height) ||
+           (y >= r.y && y < r.y + r.height)));
 }
 
 } // Rapicorn

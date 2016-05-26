@@ -10,24 +10,24 @@ using namespace Rapicorn;
 static void
 test_rect (void)
 {
-  Rect r1;
+  DRect r1;
   TASSERT (r1.empty());
   r1.assign (Point (7.1, 7.2), Point (8.4, 8.5));       // stores width=1.3, height=1.3 in double precision
   TASSERT (!r1.empty());
-  Rect r2 (7.1, 7.2, 1.3, 1.3);
-  TCMP (r2, ==, Rect (7.1, 7.2, 1.3, 1.3));
-  TASSERT (false == (r2 != Rect (7.1, 7.2, 1.3, 1.3)));
-  Rect r3 (7.1, 7.2, 1.0, 1.0);
+  DRect r2 (7.1, 7.2, 1.3, 1.3);
+  TCMP (r2, ==, DRect (7.1, 7.2, 1.3, 1.3));
+  TASSERT (false == (r2 != DRect (7.1, 7.2, 1.3, 1.3)));
+  DRect r3 (7.1, 7.2, 1.0, 1.0);
   TCMP (r3.equals (r2, 0.1), ==, false);
   TCMP (r3.equals (r2, 0.5), ==, true);
   TASSERT (r2.equals (r1, 0.00000000000001));           // using epsilon due to precision artefacts
   r3.translate (-2.5, +1.6);
-  Rect r4 (4.6, 8.8, 1.0, 1.0);
+  DRect r4 (4.6, 8.8, 1.0, 1.0);
   TASSERT (r3.equals (r4, 0.00000000000001));           // using epsilon due to precision artefacts
-  r1 = Rect (-1, -1, 0, 0);
-  r2 = Rect (-1, -1, -1, -1);                           // width and height are MAXed up to 0
-  r3 = Rect (0, 0, 0, 0);
-  r4 = Rect (1, 1, 1, 1);
+  r1 = DRect (-1, -1, 0, 0);
+  r2 = DRect (-1, -1, -1, -1);                           // width and height are MAXed up to 0
+  r3 = DRect (0, 0, 0, 0);
+  r4 = DRect (1, 1, 1, 1);
   TASSERT (r1 == r2);                                   // both empty at (-1,-1)
   TASSERT (r1 != r3);                                   // both empty, but at diferent coords
   TASSERT (r1 != r4);                                   // empty vs. non-empty
@@ -40,57 +40,57 @@ REGISTER_UITHREAD_TEST ("Region/rectangle basics", test_rect);
 static void
 test_rect_intersections (void)
 {
-  const Rect m (Point (5, 15), Point (8, 18));
-  Rect a, p, r;
+  const DRect m (Point (5, 15), Point (8, 18));
+  DRect a, p, r;
   // mapped_onto lower left
-  p = Rect (Point (1, 1), Point (2, 2));
+  p = DRect (Point (1, 1), Point (2, 2));
   TCMP (p.intersecting (m), ==, false);
-  a = p.mapped_onto (m); r = Rect (5, 15, 0, 0);
+  a = p.mapped_onto (m); r = DRect (5, 15, 0, 0);
   TCMP (a.string(), ==, r.string());
   // mapped_onto left
-  p = Rect (Point (3, 16), Point (4, 17));
+  p = DRect (Point (3, 16), Point (4, 17));
   TCMP (p.intersecting (m), ==, false);
-  a = p.mapped_onto (m); r = Rect (5, 16, 0, 1);
+  a = p.mapped_onto (m); r = DRect (5, 16, 0, 1);
   TCMP (a.string(), ==, r.string());
   // mapped_onto upper left
-  p = Rect (Point (3, 26), Point (4, 27));
+  p = DRect (Point (3, 26), Point (4, 27));
   TCMP (p.intersecting (m), ==, false);
-  a = p.mapped_onto (m); r = Rect (5, 18, 0, 0);
+  a = p.mapped_onto (m); r = DRect (5, 18, 0, 0);
   TCMP (a.string(), ==, r.string());
   // mapped_onto top
-  p = Rect (Point (6, 26), Point (7, 27));
+  p = DRect (Point (6, 26), Point (7, 27));
   TCMP (p.intersecting (m), ==, false);
-  a = p.mapped_onto (m); r = Rect (6, 18, 1, 0);
+  a = p.mapped_onto (m); r = DRect (6, 18, 1, 0);
   TCMP (a.string(), ==, r.string());
   // mapped_onto upper right
-  p = Rect (Point (25, 26), Point (28, 27));
+  p = DRect (Point (25, 26), Point (28, 27));
   TCMP (p.intersecting (m), ==, false);
-  a = p.mapped_onto (m); r = Rect (8, 18, 0, 0);
+  a = p.mapped_onto (m); r = DRect (8, 18, 0, 0);
   TCMP (a.string(), ==, r.string());
   // mapped_onto right
-  p = Rect (Point (23, 16), Point (24, 17));
+  p = DRect (Point (23, 16), Point (24, 17));
   TCMP (p.intersecting (m), ==, false);
-  a = p.mapped_onto (m); r = Rect (8, 16, 0, 1);
+  a = p.mapped_onto (m); r = DRect (8, 16, 0, 1);
   TCMP (a.string(), ==, r.string());
   // mapped_onto lower right
-  p = Rect (Point (23, 1), Point (24, 2));
+  p = DRect (Point (23, 1), Point (24, 2));
   TCMP (p.intersecting (m), ==, false);
-  a = p.mapped_onto (m); r = Rect (8, 15, 0, 0);
+  a = p.mapped_onto (m); r = DRect (8, 15, 0, 0);
   TCMP (a.string(), ==, r.string());
   // mapped_onto bottom
-  p = Rect (Point (6, 6), Point (7, 7));
+  p = DRect (Point (6, 6), Point (7, 7));
   TCMP (p.intersecting (m), ==, false);
-  a = p.mapped_onto (m); r = Rect (6, 15, 1, 0);
+  a = p.mapped_onto (m); r = DRect (6, 15, 1, 0);
   TCMP (a.string(), ==, r.string());
   // mapped_onto inner
-  p = Rect (Point (6, 16), Point (7, 17));
+  p = DRect (Point (6, 16), Point (7, 17));
   TCMP (p.intersecting (m), ==, true);
-  a = p.mapped_onto (m); r = Rect (6, 16, 1, 1);
+  a = p.mapped_onto (m); r = DRect (6, 16, 1, 1);
   TCMP (a.string(), ==, r.string());
   // mapped_onto outer
-  p = Rect (Point (0, 0), Point (100, 100));
+  p = DRect (Point (0, 0), Point (100, 100));
   TCMP (p.intersecting (m), ==, true);
-  a = p.mapped_onto (m); r = Rect (5, 15, 3, 3);
+  a = p.mapped_onto (m); r = DRect (5, 15, 3, 3);
   TCMP (a.string(), ==, r.string());
 }
 REGISTER_UITHREAD_TEST ("Region/rectangle intersection", test_rect_intersections);
@@ -103,7 +103,7 @@ test_region_basics (void)
   TASSERT (z.empty());          TASSERT (z.empty() == !z.count_rects());
   TASSERT (r.equal (r));
   TASSERT (r.equal (z));
-  r.add (Rect (Point (-1, -1), Point (1, 1)));
+  r.add (DRect (Point (-1, -1), Point (1, 1)));
   TASSERT (!r.empty());         TASSERT (r.empty() == !r.count_rects());
   TASSERT (z.empty());          TASSERT (z.empty() == !z.count_rects());
   TASSERT (!r.equal (z));
@@ -125,17 +125,17 @@ test_region_rect1 (void)
   r.clear();
   TASSERT (r.empty());          TASSERT (r.empty() == !r.count_rects());
   TCMP (r.contains (Point (0, 0)), ==, false);
-  r.add (Rect (Point (3, 3), Point (5, 5)));
+  r.add (DRect (Point (3, 3), Point (5, 5)));
   TASSERT (!r.empty());         TASSERT (r.empty() == !r.count_rects());
   TCMP (r.contains (2, 2), ==, false);
   TASSERT (r.contains (3, 3));
   TASSERT (r.contains (4, 4));
   TCMP (r.contains (5, 5), ==, false);
   TCMP (r.contains (6, 6), ==, false);
-  TCMP (r.contains (Rect (Point (3, 3), Point (5, 5))), ==, r.INSIDE);
-  TCMP (r.contains (Rect (Point (4, 4), Point (6, 6))), ==, r.PARTIAL);
-  TCMP (r.contains (Rect (Point (5, 5), Point (6, 6))), ==, r.OUTSIDE);
-  vector<Rect> rects;
+  TCMP (r.contains (DRect (Point (3, 3), Point (5, 5))), ==, r.INSIDE);
+  TCMP (r.contains (DRect (Point (4, 4), Point (6, 6))), ==, r.PARTIAL);
+  TCMP (r.contains (DRect (Point (5, 5), Point (6, 6))), ==, r.OUTSIDE);
+  vector<DRect> rects;
   r.list_rects (rects);
   TCMP (rects.size(), ==, 1);
   TCMP (rects[0].lower_left(), ==, Point (3, 3));
@@ -147,11 +147,11 @@ test_region_rect1 (void)
   TASSERT (!r.equal (z));
   z.clear();
   TASSERT (r.equal (z));
-  TCMP (r.extents(), ==, Rect (Point (0, 0), Point (0, 0)));
+  TCMP (r.extents(), ==, DRect (Point (0, 0), Point (0, 0)));
   const Region e;
   TCMP (e.contains (Point (0, 0)), ==, false);
-  TCMP (e.contains (Rect (Point (0, 0), Point (0, 0))), ==, true);
-  TCMP (e.contains (Rect (Point (0, 0), Point (1, 1))), ==, false);
+  TCMP (e.contains (DRect (Point (0, 0), Point (0, 0))), ==, true);
+  TCMP (e.contains (DRect (Point (0, 0), Point (1, 1))), ==, false);
   TCMP (e.contains (Region()), ==, true);
 }
 REGISTER_UITHREAD_TEST ("Region/region rec1t", test_region_rect1);
@@ -159,8 +159,8 @@ REGISTER_UITHREAD_TEST ("Region/region rec1t", test_region_rect1);
 static void
 test_region2 (void)
 {
-  Region a (Rect (Point (-1, -1), Point (1, 1)));
-  Region b (Rect (Point (-1, -1), Point (0, 0)));
+  Region a (DRect (Point (-1, -1), Point (1, 1)));
+  Region b (DRect (Point (-1, -1), Point (0, 0)));
   TCMP (a.equal (b), ==, false);
   TASSERT ((a != b) == true);
   TASSERT ((a == b) == false);
@@ -185,9 +185,9 @@ REGISTER_UITHREAD_TEST ("Region/region2", test_region2);
 static void
 test_region2_ops (void)
 {
-  Region a (Rect (Point (-1, -1), Point (1, 1))), sa = a;
-  Region b (Rect (Point (-1, -1), Point (0, 0))), sb = b;
-  Region c (Rect (Point (-1, -1), Point (0, 0))), sc = c;
+  Region a (DRect (Point (-1, -1), Point (1, 1))), sa = a;
+  Region b (DRect (Point (-1, -1), Point (0, 0))), sb = b;
+  Region c (DRect (Point (-1, -1), Point (0, 0))), sc = c;
   b.intersect (a);
   TCMP (b, ==, c);
   TCMP (a, !=, c);
@@ -229,7 +229,7 @@ create_rand_region (void)
   if (u >= 50 && u <= 99)
     return Region (Point (70, 123455), Point (12345, 1987)); // need equal regions with some probability
   for (int i = 0; i < u; i++)
-    r.add (Rect (Point (lrand48() * 0.005 + (((int64) lrand48()) << 16), lrand48() * 0.005 + (((int64) lrand48()) << 16)),
+    r.add (DRect (Point (lrand48() * 0.005 + (((int64) lrand48()) << 16), lrand48() * 0.005 + (((int64) lrand48()) << 16)),
                  Point (lrand48() * 0.005 + (((int64) lrand48()) << 16), lrand48() * 0.005 + (((int64) lrand48()) << 16))));
   return r;
 }
@@ -244,7 +244,7 @@ test_region_fract (void)
   r.clear();
   TASSERT (r.empty());                  TASSERT (r.empty() == !r.count_rects());
   TCMP (r.contains (Point (0, 0)), ==, false);
-  r.add (Rect (Point (0.1, 0.2), Point (3.4, 4.5)));
+  r.add (DRect (Point (0.1, 0.2), Point (3.4, 4.5)));
   TASSERT (!r.empty());                 TASSERT (r.empty() == !r.count_rects());
   TASSERT (r.contains (2, 2));
   TCMP (r.contains (0, 0), ==, false);
@@ -255,19 +255,19 @@ test_region_fract (void)
   TASSERT (r.contains (3.3, 4.4));
   TCMP (r.contains (3.3, 4.6), ==, false);
   TCMP (r.contains (6, 6), ==, false);
-  TCMP (r.contains (Rect (1, 1, 2, 2)), ==, r.INSIDE);
-  TCMP (r.contains (Rect (0, 0, 3, 3)), ==, r.PARTIAL);
-  TCMP (r.contains (Rect (3.5, 0, 70, 70)), ==, r.OUTSIDE);
+  TCMP (r.contains (DRect (1, 1, 2, 2)), ==, r.INSIDE);
+  TCMP (r.contains (DRect (0, 0, 3, 3)), ==, r.PARTIAL);
+  TCMP (r.contains (DRect (3.5, 0, 70, 70)), ==, r.OUTSIDE);
   Region r2 = r;
-  TASSERT (r2.extents().equals (Rect (0.1, 0.2, 3.3, 4.3), epsilon));
-  r2.add (Rect (0, 0, 0.1, 4.5));
-  r2.add (Rect (0, 0, 3.4, 0.2));
-  Region r3 (Rect (0, 0, 3.4, 4.5));
+  TASSERT (r2.extents().equals (DRect (0.1, 0.2, 3.3, 4.3), epsilon));
+  r2.add (DRect (0, 0, 0.1, 4.5));
+  r2.add (DRect (0, 0, 3.4, 0.2));
+  Region r3 (DRect (0, 0, 3.4, 4.5));
   TCMP (r2, ==, r3);
-  std::vector<Rect> rects;
+  std::vector<DRect> rects;
   r3.list_rects (rects);
   TCMP (rects.size(), ==, 1);
-  TASSERT (rects[0].equals (Rect (0, 0, 3.4, 4.5), epsilon));
+  TASSERT (rects[0].equals (DRect (0, 0, 3.4, 4.5), epsilon));
   if (0)
     printf ("\nREGION:\n%s\nEMPTY:\n%s\n", create_rand_region().string().c_str(), Region().string().c_str());
 }

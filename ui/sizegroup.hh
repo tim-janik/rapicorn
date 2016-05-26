@@ -32,8 +32,8 @@ public:
   static void         delete_widget     (WidgetImpl &widget);
   static void         invalidate_widget (WidgetImpl &widget);
   static void         toggled_widget    (WidgetImpl &widget);
-  static GroupVector  list_groups       (const WidgetImpl &widget);                 ///< List all groups a widget has been added to
   static WidgetGroupP create            (const String &name, WidgetGroupType type); ///< Create WidgetGroup from @a name and @a type
+  static const GroupVector& list_groups (const WidgetImpl &widget);                 ///< List all groups a widget has been added to
 };
 
 // == RadioGroup ==

@@ -81,7 +81,7 @@ class SingleContainerImpl : public virtual ContainerImpl {
 protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area, bool changed);
-  virtual void          render                  (RenderContext&, const Rect&) {}
+  virtual void          render                  (RenderContext&, const IRect&) {}
   WidgetImpl&           get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
   virtual              ~SingleContainerImpl     ();
   virtual WidgetImplP*  begin                   () const override;
@@ -127,7 +127,7 @@ class MultiContainerImpl : public virtual ContainerImpl {
   std::vector<WidgetImplP> widgets;
 protected:
   virtual              ~MultiContainerImpl      ();
-  virtual void          render                  (RenderContext&, const Rect&) override {}
+  virtual void          render                  (RenderContext&, const IRect&) override {}
   virtual void          add_child               (WidgetImpl   &widget) override;
   virtual void          remove_child            (WidgetImpl   &widget) override;
   explicit              MultiContainerImpl      ();

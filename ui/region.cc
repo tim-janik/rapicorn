@@ -21,7 +21,7 @@ fixed2double (int64 i)
 }
 
 static inline RapicornRegionBox
-rect2box (const Rect &src)
+rect2box (const DRect &src)
 {
   RapicornRegionBox box = {
     double2fixed (src.x),
@@ -56,7 +56,14 @@ Region::Region (const Region &src)
   _rapicorn_region_copy (REGION (this), REGION (&src));
 }
 
-Region::Region (const Rect &src)
+Region::Region (const DRect &src)
+{
+  _rapicorn_region_init (REGION (this), sizeof (region_));
+  RapicornRegionBox box = rect2box (src);
+  _rapicorn_region_union_rect (REGION (this), &box);
+}
+
+Region::Region (const IRect &src)
 {
   _rapicorn_region_init (REGION (this), sizeof (region_));
   RapicornRegionBox box = rect2box (src);
@@ -67,7 +74,7 @@ Region::Region (const Point          &rect_p1,
                 const Point          &rect_p2)
 {
   _rapicorn_region_init (REGION (this), sizeof (region_));
-  RapicornRegionBox box = rect2box (Rect (rect_p1, rect_p2));
+  RapicornRegionBox box = rect2box (DRect (rect_p1, rect_p2));
   _rapicorn_region_union_rect (REGION (this), &box);
 }
 
@@ -113,14 +120,14 @@ Region::swap (Region &other)
   _rapicorn_region_swap (REGION (this), REGION (&other));
 }
 
-Rect
+DRect
 Region::extents () const
 {
   RapicornRegionBox box;
   _rapicorn_region_extents (REGION (this), &box);
-  return Rect (fixed2double (box.x1), fixed2double (box.y1),
-               fixed2double (box.x2 - box.x1),
-               fixed2double (box.y2 - box.y1));
+  return DRect (fixed2double (box.x1), fixed2double (box.y1),
+                fixed2double (box.x2 - box.x1),
+                fixed2double (box.y2 - box.y1));
 }
 
 bool
@@ -131,7 +138,17 @@ Region::contains (const Point &point) const
 }
 
 Region::ContainedType
-Region::contains (const Rect &rect) const
+Region::contains (const DRect &rect) const
+{
+  RapicornRegionBox box = rect2box (rect);
+  RAPICORN_STATIC_ASSERT (OUTSIDE == (int) RAPICORN_REGION_OUTSIDE);
+  RAPICORN_STATIC_ASSERT (INSIDE  == (int) RAPICORN_REGION_INSIDE);
+  RAPICORN_STATIC_ASSERT (PARTIAL == (int) RAPICORN_REGION_PARTIAL);
+  return ContainedType (_rapicorn_region_rect_in (REGION (this), &box));
+}
+
+Region::ContainedType
+Region::contains (const IRect &rect) const
 {
   RapicornRegionBox box = rect2box (rect);
   RAPICORN_STATIC_ASSERT (OUTSIDE == (int) RAPICORN_REGION_OUTSIDE);
@@ -147,7 +164,7 @@ Region::contains (const Region &other) const
 }
 
 void
-Region::list_rects (std::vector<Rect> &rects) const
+Region::list_rects (std::vector<DRect> &rects) const
 {
   rects.clear();
   uint n = _rapicorn_region_get_rects (REGION (this), 0, NULL);
@@ -155,9 +172,9 @@ Region::list_rects (std::vector<Rect> &rects) const
   uint k = _rapicorn_region_get_rects (REGION (this), n, boxes);
   assert (k == n);
   for (uint i = 0; i < n; i++)
-    rects.push_back (Rect (fixed2double (boxes[i].x1), fixed2double (boxes[i].y1),
-                           fixed2double (boxes[i].x2 - boxes[i].x1),
-                           fixed2double (boxes[i].y2 - boxes[i].y1)));
+    rects.push_back (DRect (fixed2double (boxes[i].x1), fixed2double (boxes[i].y1),
+                            fixed2double (boxes[i].x2 - boxes[i].x1),
+                            fixed2double (boxes[i].y2 - boxes[i].y1)));
 }
 
 uint
@@ -167,7 +184,14 @@ Region::count_rects () const
 }
 
 void
-Region::add (const Rect &rect)
+Region::add (const DRect &rect)
+{
+  RapicornRegionBox box = rect2box (rect);
+  _rapicorn_region_union_rect (REGION (this), &box);
+}
+
+void
+Region::add (const IRect &rect)
 {
   RapicornRegionBox box = rect2box (rect);
   _rapicorn_region_union_rect (REGION (this), &box);
@@ -200,18 +224,18 @@ Region::exor (const Region &other)
 void
 Region::translate (double deltax, double deltay)
 {
-  std::vector<Rect> rects;
+  std::vector<DRect> rects;
   list_rects (rects);
   clear();
   for (uint i = 0; i < rects.size(); i++)
-    add (Rect (rects[i].x + deltax, rects[i].y + deltay, rects[i].width, rects[i].height));
+    add (DRect (rects[i].x + deltax, rects[i].y + deltay, rects[i].width, rects[i].height));
 }
 
 void
 Region::affine (const Affine &aff)
 {
   // FIXME: optimize for aff.is_identity()
-  std::vector<Rect> rects;
+  std::vector<DRect> rects;
   list_rects (rects);
   clear();
   for (uint i = 0; i < rects.size(); i++)
@@ -223,7 +247,7 @@ Region::affine (const Affine &aff)
       Point p2 = aff.point (rects[i].lower_left());
       Point p3 = aff.point (rects[i].upper_right());
       Point p4 = aff.point (rects[i].lower_right());
-      add (Rect (min (min (p1, p2), min (p3, p4)), max (max (p1, p2), max (p3, p4))));
+      add (DRect (min (min (p1, p2), min (p3, p4)), max (max (p1, p2), max (p3, p4))));
     }
 }
 
@@ -258,7 +282,7 @@ String
 Region::string()
 {
   String s ("{ ");
-  std::vector<Rect> rects;
+  std::vector<DRect> rects;
   list_rects (rects);
   for (uint i = 0; i < rects.size(); i++)
     {
@@ -269,7 +293,7 @@ Region::string()
   if (rects.size())
     s += "\n";
   s += "/*";
-  Rect ext = extents();
+  DRect ext = extents();
   s += ext.string();
   s += "*/ }";
   return s;
