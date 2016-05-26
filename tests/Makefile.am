@@ -43,6 +43,11 @@ t201_rcore_basics_SOURCES += t201-rcore-basics-loops.cc
 t201_rcore_basics_DEPENDENCIES = t201-rcore-basics-xmldata.cc
 check: t201-rcore-basics-test
 
+# == t202-randomized-hashing ==
+t202-randomized-hashing-test: t201-rcore-basics	# test hash reseeding at program start
+	$(Q) test `./t201-rcore-basics --string-hash64 foo` != `./t201-rcore-basics --string-hash64 foo` ; $(TSTRESULT)
+check: t202-randomized-hashing-test
+
 # == t303-mini-server ==
 t303-mini-server-test: t303-mini-server
 	$(Q) ./t303-mini-server ; eval "$$TSTDIAGNOSE"
