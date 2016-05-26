@@ -62,9 +62,9 @@ The developers can often be found chatting on IRC:
 
 	#beast IRC channel on GimpNet: irc.gimp.org
 
-The distribution tarball includes Python and C++ examples directories:
+The distribution tarball includes Python and C++ tests and examples:
 
-	examples/  pytests/
+	examples/  tests/
 
 Documentation is provided online and locally (if installed in /usr):
 

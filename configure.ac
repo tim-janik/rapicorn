@@ -619,7 +619,6 @@ ui/tests/Makefile
 cython/Makefile
 tools/Makefile
 tests/Makefile
-pytests/Makefile
 examples/Makefile
 docs/Makefile
 docs/mans/Makefile
