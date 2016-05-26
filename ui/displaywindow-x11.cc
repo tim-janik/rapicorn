@@ -1,6 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "displaywindow.hh"
 #include "uithread.hh"
+#include "rcore/cairoutils.hh"
 #include <cairo/cairo-xlib.h>
 #include <algorithm>
 #include <unistd.h>
@@ -12,27 +13,6 @@ static auto dbe_x11sync = RAPICORN_DEBUG_OPTION ("x11sync", "Synchronize X11 ope
 typedef ::Pixmap XPixmap; // avoid conflicts with Rapicorn::Pixmap
 
 #include "displaywindow-xaux.cc" // helpers, need dbe_x11sync
-
-template<class T> cairo_status_t cairo_status_from_any (T t);
-template<> cairo_status_t cairo_status_from_any (cairo_status_t c)          { return c; }
-template<> cairo_status_t cairo_status_from_any (cairo_rectangle_list_t *c) { return c ? c->status : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (cairo_font_options_t *c)   { return c ? cairo_font_options_status (c) : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (cairo_font_face_t *c)      { return c ? cairo_font_face_status (c) : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (cairo_scaled_font_t *c)    { return c ? cairo_scaled_font_status (c) : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (cairo_path_t *c)           { return c ? c->status : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (cairo_t *c)                { return c ? cairo_status (c) : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (cairo_device_t *c)         { return c ? cairo_device_status (c) : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (cairo_surface_t *c)        { return c ? cairo_surface_status (c) : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (cairo_pattern_t *c)        { return c ? cairo_pattern_status (c) : CAIRO_STATUS_NULL_POINTER; }
-template<> cairo_status_t cairo_status_from_any (const cairo_region_t *c)   { return c ? cairo_region_status (c) : CAIRO_STATUS_NULL_POINTER; }
-
-#define RAPICORN_CHECK_CAIRO_STATUS(cairox)             do {    \
-    cairo_status_t ___s = cairo_status_from_any (cairox);       \
-    if (___s != CAIRO_STATUS_SUCCESS)                           \
-      RAPICORN_CRITICAL ("cairo status (%s): %s", #cairox,      \
-                         cairo_status_to_string (___s));        \
-  } while (0)
-#define CHECK_CAIRO_STATUS(cairox)      RAPICORN_CHECK_CAIRO_STATUS (cairox)
 
 namespace Rapicorn {
 
@@ -950,7 +930,7 @@ cairo_image_surface_coverage (cairo_surface_t *surface)
 void
 DisplayWindowX11::blit (cairo_surface_t *surface, const Rapicorn::Region &region)
 {
-  CHECK_CAIRO_STATUS (surface);
+  CAIRO_CHECK_STATUS (surface);
   if (!window_)
     return;
   const IRect fullwindow = IRect (0, 0, state_.width, state_.height);
@@ -992,14 +972,14 @@ DisplayWindowX11::blit_expose_region()
       expose_region_.clear();
       return;
     }
-  CHECK_CAIRO_STATUS (expose_surface_);
+  CAIRO_CHECK_STATUS (expose_surface_);
   const unsigned long blit_serial = XNextRequest (x11context.display) - 1;
   // surface for drawing on the X11 window
   cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, window_, x11context.visual, state_.width, state_.height);
-  CHECK_CAIRO_STATUS (xsurface);
+  CAIRO_CHECK_STATUS (xsurface);
   // cairo context
   cairo_t *xcr = cairo_create (xsurface);
-  CHECK_CAIRO_STATUS (xcr);
+  CAIRO_CHECK_STATUS (xcr);
   // clip to expose_region_
   vector<DRect> drects;
   expose_region_.list_rects (drects);
@@ -1014,7 +994,7 @@ DisplayWindowX11::blit_expose_region()
   cairo_set_source_surface (xcr, expose_surface_, 0, 0);
   cairo_set_operator (xcr, CAIRO_OPERATOR_OVER);
   cairo_paint (xcr);
-  CHECK_CAIRO_STATUS (xcr);
+  CAIRO_CHECK_STATUS (xcr);
   XFlush (x11context.display);
   // debugging info
   if (rapicorn_debug_check())
@@ -1043,7 +1023,7 @@ create_checkerboard_pixmap (Display *display, Visual *visual, Drawable drawable,
   const int bw = tile_size * 2, bh = tile_size * 2;
   XPixmap xpixmap = XCreatePixmap (display, drawable, bw, bh, depth);
   cairo_surface_t *xsurface = cairo_xlib_surface_create (display, xpixmap, visual, bw, bh);
-  CHECK_CAIRO_STATUS (xsurface);
+  CAIRO_CHECK_STATUS (xsurface);
   cairo_t *cr = cairo_create (xsurface);
   cairo_set_source_color (cr, c1);
   cairo_rectangle (cr,         0,         0, tile_size, tile_size);
@@ -1125,11 +1105,11 @@ DisplayWindowX11::setup_window (const DisplayWindow::Setup &setup)
       Rapicorn::Pixmap iconpixmap ("@res Rapicorn/icons/wm-gears.png");
       wm_icon_ = XCreatePixmap (x11context.display, window_, iconpixmap.width(), iconpixmap.height(), x11context.depth);
       cairo_surface_t *xsurface = cairo_xlib_surface_create (x11context.display, wm_icon_, x11context.visual, iconpixmap.width(), iconpixmap.height());
-      CHECK_CAIRO_STATUS (xsurface);
+      CAIRO_CHECK_STATUS (xsurface);
       cairo_t *xcr = cairo_create (xsurface);
-      CHECK_CAIRO_STATUS (xcr);
+      CAIRO_CHECK_STATUS (xcr);
       cairo_surface_t *isurface = cairo_surface_from_pixmap (iconpixmap);
-      CHECK_CAIRO_STATUS (isurface);
+      CAIRO_CHECK_STATUS (isurface);
       cairo_set_source_surface (xcr, isurface, 0, 0);
       cairo_set_operator (xcr, CAIRO_OPERATOR_OVER);
       cairo_paint (xcr);
