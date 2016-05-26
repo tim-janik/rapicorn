@@ -106,6 +106,17 @@ t205-debug-output-test: t203-more-basics # check various non-fatal logging condi
 t205_debug_output_env = RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all
 check: t205-debug-output-test
 
+# == t206-naive-entropy ==
+t206-naive-entropy-test: t901-bench-rcore
+	$(Q) A=`./t901-bench-rcore --entropy` ; B=`./t901-bench-rcore --entropy`; \
+	       test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT) "naive startup entropy check"
+	$(Q) A=`./t901-bench-rcore --system-entropy` ; B=`./t901-bench-rcore --system-entropy`; \
+	       test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT) "naive system entropy check"
+	$(Q) A=`./t901-bench-rcore --runtime-entropy` ; B=`./t901-bench-rcore --runtime-entropy`; \
+	       test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT) "naive runtime entropy check"
+	$(Q) eval "$$TSTDIAGNOSE"
+check: t206-naive-entropy-test
+
 # == t303-mini-server ==
 t303-mini-server-test: t303-mini-server
 	$(Q) ./t303-mini-server ; eval "$$TSTDIAGNOSE"
