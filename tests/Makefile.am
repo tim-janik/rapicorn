@@ -16,6 +16,8 @@ RAPIDRUN = $(top_builddir)/tools/rapidrun
 IMGCHECK = $(top_builddir)/ui/tests/imgcheck
 X11TEST_RAPIDRUN = $(X11_ENV) $(RAPIDRUN) --fatal-warnings "$$@"
 X11_TESTPYTHON = $(X11_ENV) PYTHONPATH="$(abs_top_builddir)/cython/${objdir}:$$PYTHONPATH" $(PYTHON)
+# Loading newly built Python modules requires accesss to libtool objdir
+objdir       = .libs
 
 # == benchaida ==
 benchaida_SOURCES  = benchaida.cc
