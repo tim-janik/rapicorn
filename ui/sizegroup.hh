@@ -6,6 +6,7 @@
 
 namespace Rapicorn {
 
+// == WidgetGroup ==
 class WidgetGroup;
 typedef std::shared_ptr<WidgetGroup> WidgetGroupP;
 typedef std::weak_ptr  <WidgetGroup> WidgetGroupW;
@@ -18,8 +19,10 @@ protected:
   vector<WidgetImpl*> widgets_;
   explicit            WidgetGroup        (const String &name, WidgetGroupType type);
   virtual            ~WidgetGroup        ();
-  virtual void        widget_transit     (WidgetImpl &widget) {}
   virtual void        widget_invalidated (WidgetImpl &widget) {}
+  virtual void        widget_toggled     (WidgetImpl &widget) {}
+  virtual void        adding_widget      (WidgetImpl &widget) = 0;
+  virtual void        removing_widget    (WidgetImpl &widget) = 0;
 public:
   typedef vector<WidgetGroupP> GroupVector;
   String              name              () const { return name_; }                  ///< Get WidgetGroup name
@@ -28,11 +31,30 @@ public:
   void                remove_widget     (WidgetImpl &widget);                       ///< Remove a widget from group
   static void         delete_widget     (WidgetImpl &widget);
   static void         invalidate_widget (WidgetImpl &widget);
-  static GroupVector  list_groups       (WidgetImpl &widget);                       ///< List all groups a widget has been added to
+  static void         toggled_widget    (WidgetImpl &widget);
+  static GroupVector  list_groups       (const WidgetImpl &widget);                 ///< List all groups a widget has been added to
   static WidgetGroupP create            (const String &name, WidgetGroupType type); ///< Create WidgetGroup from @a name and @a type
 };
 
-/* --- SizeGroup --- */
+// == RadioGroup ==
+class RadioGroup;
+typedef std::shared_ptr<RadioGroup> RadioGroupP;
+typedef std::weak_ptr  <RadioGroup> RadioGroupW;
+
+class RadioGroup : public virtual WidgetGroup {
+  friend              class WidgetImpl;
+  friend class        FriendAllocator<RadioGroup>;
+  bool                updating_toggles_;
+  explicit            RadioGroup                (const String &name, WidgetGroupType type);
+protected:
+  virtual void        adding_widget             (WidgetImpl &widget);
+  virtual void        removing_widget           (WidgetImpl &widget);
+  virtual void        widget_toggled            (WidgetImpl &widget);
+public:
+  static bool         widget_may_toggle         (const WidgetImpl &widget);
+};
+
+// == SizeGroup ==
 class SizeGroup;
 typedef std::shared_ptr<SizeGroup> SizeGroupP;
 typedef std::weak_ptr  <SizeGroup> SizeGroupW;
@@ -47,8 +69,10 @@ class SizeGroup : public virtual WidgetGroup {
   void                invalidate_sizes          ();
   explicit            SizeGroup                 (const String &name, WidgetGroupType type);
   static Requisition  widget_requisition        (WidgetImpl &widget);   // called by WidgetImpl
+  void                widget_transit            (WidgetImpl &widget);
 protected:
-  virtual void        widget_transit            (WidgetImpl &widget);
+  virtual void        adding_widget             (WidgetImpl &widget) { widget_transit (widget); }
+  virtual void        removing_widget           (WidgetImpl &widget) { widget_transit (widget); }
   virtual void        widget_invalidated        (WidgetImpl &widget);
 public:
   virtual bool        enabled                   () const         { return enabled_; }

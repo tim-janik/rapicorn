@@ -790,8 +790,6 @@ void
 ElementPainterImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  set_flag (HSPREAD_CONTAINER, chspread);
-  set_flag (VSPREAD_CONTAINER, cvspread);
   Requisition image_size;
   Rect fill;
   if (load_painters())
@@ -812,6 +810,8 @@ ElementPainterImpl::size_request (Requisition &requisition)
       requisition.width = image_size.width;
       requisition.height = image_size.height;
     }
+  set_flag (HSPREAD_CONTAINER, chspread);
+  set_flag (VSPREAD_CONTAINER, cvspread);
 }
 
 void

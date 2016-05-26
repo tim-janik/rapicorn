@@ -10,8 +10,10 @@ WidgetGroup::create (const String &name, WidgetGroupType type)
   assert_return (name.empty() == false, NULL);
   if (type == WIDGET_GROUP_HSIZE || type == WIDGET_GROUP_VSIZE)
     return FriendAllocator<SizeGroup>::make_shared (name, type);
+  else if (type == WIDGET_GROUP_RADIO)
+    return FriendAllocator<RadioGroup>::make_shared (name, type);
   else
-    return FriendAllocator<WidgetGroup>::make_shared (name, type);
+    fatal ("invalid WidgetGroupType value: %d", type);
 }
 
 WidgetGroup::WidgetGroup (const String &name, WidgetGroupType type) :
@@ -26,7 +28,7 @@ WidgetGroup::~WidgetGroup()
 static DataKey<WidgetGroup::GroupVector> widget_group_key;
 
 vector<WidgetGroupP>
-WidgetGroup::list_groups (WidgetImpl &widget)
+WidgetGroup::list_groups (const WidgetImpl &widget)
 {
   return widget.get_data (&widget_group_key);
 }
@@ -40,13 +42,13 @@ WidgetGroup::add_widget (WidgetImpl &widget)
   GroupVector wgv = widget.get_data (&widget_group_key);
   wgv.push_back (shared_ptr_cast<WidgetGroup> (this));
   widget.set_data (&widget_group_key, wgv);
-  widget_transit (widget);
+  adding_widget (widget);
 }
 
 void
 WidgetGroup::remove_widget (WidgetImpl &widget)
 {
-  widget_transit (widget);
+  removing_widget (widget);
   // remove widget from group's list
   bool found_one = false;
   for (uint i = 0; i < widgets_.size(); i++)
@@ -95,6 +97,98 @@ WidgetGroup::invalidate_widget (WidgetImpl &widget)
   GroupVector wgl = list_groups (widget);
   for (size_t i = 0; i < wgl.size(); i++)
     wgl[i]->widget_invalidated (widget);
+}
+
+void
+WidgetGroup::toggled_widget (WidgetImpl &widget)
+{
+  // notify all groups
+  GroupVector wgl = list_groups (widget);
+  for (size_t i = 0; i < wgl.size(); i++)
+    wgl[i]->widget_toggled (widget);
+}
+
+// == RadioGroup ==
+RadioGroup::RadioGroup (const String &name, WidgetGroupType type) :
+  WidgetGroup (name, type), updating_toggles_ (false)
+{}
+
+void
+RadioGroup::adding_widget (WidgetImpl &widget)
+{
+  widget_toggled (widget);
+}
+
+void
+RadioGroup::removing_widget (WidgetImpl &widget)
+{
+  // ensure radio group has a selection after removal
+  if (widget.toggled() && widgets_.size() > 2)
+    for (size_t i = 0; i < widgets_.size(); i++)
+      if (widgets_[i] != &widget)
+        {
+          widgets_[i]->toggled (true);
+          break;
+        }
+}
+
+void
+RadioGroup::widget_toggled (WidgetImpl &widget)
+{
+  // avoid messing with our own updates
+  if (updating_toggles_)
+    return;
+  updating_toggles_ = true;
+  // widget was just toggled, enforce radio group invariant
+  if (widget.toggled())
+    {
+      // ensure no other widget in the group is toggled
+      for (size_t i = 0; i < widgets_.size(); i++)
+        if (widgets_[i] != &widget && widgets_[i]->toggled())
+          widgets_[i]->toggled (false);
+    }
+  else // widget.toggled() == false
+    {
+      // ensure *some* widget is toggled
+      bool seen_toggled = false;
+      for (size_t i = 0; i < widgets_.size(); i++)
+        if (widgets_[i]->toggled())
+          {
+            seen_toggled = true;
+            break;
+          }
+      // simply default to picking the first
+      if (!seen_toggled)
+        for (size_t i = 0; i < widgets_.size(); i++)
+          if (widgets_[i] != &widget)
+            {
+              widgets_[i]->toggled (true);
+              break;
+            }
+    }
+  updating_toggles_ = false;
+}
+
+bool
+RadioGroup::widget_may_toggle (const WidgetImpl &widget)
+{
+  if (!widget.toggled())
+    return true;
+  // check all groups
+  bool in_toggle_update = false, seen_sole_selection = false;
+  GroupVector wgl = list_groups (widget);
+  for (size_t i = 0; i < wgl.size(); i++)
+    if (wgl[i]->type() == WIDGET_GROUP_RADIO)
+      {
+        RadioGroup *rgroup = dynamic_cast<RadioGroup*> (&*wgl[i]);
+        if (rgroup->updating_toggles_)
+          in_toggle_update = true;
+        if (rgroup->widgets_.size() > 1)
+          seen_sole_selection = true;
+      }
+  if (!in_toggle_update && seen_sole_selection)
+    return false; // must not toggle off selected radio
+  return true;
 }
 
 // == SizeGroup ==

@@ -465,6 +465,12 @@ interface ButtonArea : Container {
   String label      = String (_("Label"), _("Default label to use for this button."), "w");
 };
 
+/// RadioButton widgets are used to present a set of choices with a single selection possible.
+/// See also the corresponding implementation class RadioButtonImpl.
+interface RadioButton : ButtonArea {
+  String radio_group = String (_("Radio Group"), _("Widget group used to ensure exclusive selection of a single radio button."), "rw");
+};
+
 /// The ScrollArea container can display its child paritally and scroll to different parts.
 /// See also the corresponding implementation class ScrollAreaImpl.
 interface ScrollArea : Container {

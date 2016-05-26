@@ -410,15 +410,19 @@ Builder::build_from_factory (const XmlNode *factory_node,
       factory_id = attr_values[i];
     else if (attr_names[i] == "factory_type")
       factory_type = attr_values[i];
-  // lookup widget factory
-  const ObjectTypeFactory *widget_factory = lookup_widget_factory (factory_type);
   // sanity check factory node
-  if (factory_node->name() != "Rapicorn_Factory" || !widget_factory ||
-      attr_names.size() != 2 || factory_node->list_attributes().size() != 2 ||
-      factory_id.empty() || factory_id[0] == '@' || factory_type.empty() || factory_type[0] == '@' ||
-      factory_node->children().size() != 0)
+  if (factory_node->name() != "Rapicorn_Factory" || factory_id.empty() || factory_id[0] == '@' ||
+      attr_names.size() != 2 || factory_node->list_attributes().size() != 2 || factory_node->children().size() != 0)
     {
-      critical ("%s: invalid factory type: %s", node_location (factory_node), factory_node->name());
+      critical ("%s: invalid factory node: %s", node_location (factory_node), factory_node->name());
+      return NULL;
+    }
+  // lookup widget factory
+  const ObjectTypeFactory *widget_factory = factory_type.empty() || factory_type[0] == '@' ? NULL : lookup_widget_factory (factory_type);
+  // sanity check factory type
+  if (!widget_factory)
+    {
+      critical ("%s: invalid factory type: %s", node_location (factory_node), factory_type);
       return NULL;
     }
   // build factory widget

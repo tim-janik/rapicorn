@@ -19,7 +19,7 @@ class ResizeContainerImpl;
 class WindowImpl;
 class ViewportImpl;
 namespace Selector { class Selob; }
-enum WidgetGroupType { WIDGET_GROUP_HSIZE = 1, WIDGET_GROUP_VSIZE };
+enum WidgetGroupType { WIDGET_GROUP_HSIZE = 1, WIDGET_GROUP_VSIZE, WIDGET_GROUP_RADIO };
 
 class ContainerImpl;
 typedef std::shared_ptr<ContainerImpl> ContainerImplP;
@@ -66,7 +66,6 @@ private:
   void                        acache_check       () const;
   void                        expose_internal    (const Region &region); // expose region on ancestry Viewport
   WidgetGroup*                find_widget_group  (const String &group_name, WidgetGroupType group, bool force_create = false);
-  void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
   void                        data_context_changed  ();
   bool                        match_interface       (bool wself, bool wparent, bool children, InterfaceMatcher &imatcher) const;
   bool                        process_event         (const Event &event, bool capture = false);  // widget coordinates relative
@@ -136,6 +135,7 @@ protected:
   virtual bool                custom_command    (const String &command_name, const StringSeq &command_args);
   virtual void                set_user_data     (const String &name, const Any &any);
   virtual Any                 get_user_data     (const String &name);
+  void                        sync_widget_groups (const String &group_list, WidgetGroupType group_type);
   void                        enter_widget_group (const String &group_name, WidgetGroupType group_type);
   void                        leave_widget_group (const String &group_name, WidgetGroupType group_type);
   StringVector                list_widget_groups (WidgetGroupType group_type) const;
