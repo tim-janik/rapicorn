@@ -5,9 +5,6 @@ Rapicorn test program for Python
 import Rapicorn
 import sys
 
-# issue test message
-print "  " + __file__,
-
 # Define main window Widget Tree
 my_window_xml = """
 <interfaces>
@@ -41,6 +38,3 @@ wlist.selection_mode = Rapicorn.SelectionMode.NONE      ; assert wlist.selection
 wlist.selection_mode = Rapicorn.SelectionMode.SINGLE    ; assert wlist.selection_mode == Rapicorn.SelectionMode.SINGLE
 wlist.selection_mode = Rapicorn.SelectionMode.BROWSE    ; assert wlist.selection_mode == Rapicorn.SelectionMode.BROWSE
 wlist.selection_mode = Rapicorn.SelectionMode.MULTIPLE  ; assert wlist.selection_mode == Rapicorn.SelectionMode.MULTIPLE
-
-# print positive feedback if we made it here
-print " " * max (0, 75 - len ("  " + __file__)), "OK"

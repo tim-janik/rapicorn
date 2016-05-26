@@ -34,6 +34,12 @@ t501-simple-click-test:
 EXTRA_DIST += t501-simple-click.py
 check: t501-simple-click-test
 
+# == t502-property-basics ==
+t502-property-basics-test:
+	$(Q) $(X11_TESTPYTHON) t502-property-basics.py ; eval "$$TSTDIAGNOSE"
+EXTRA_DIST += t502-property-basics.py
+check: t502-property-basics-test
+
 # == t600-xmlui-eval ==
 t600-xmlui-eval-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/t600-xmlui-eval.xml ; eval "$$TSTDIAGNOSE"
