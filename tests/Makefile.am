@@ -46,6 +46,12 @@ t503-garbage-collector-test:
 EXTRA_DIST += t503-garbage-collector.py
 check: t503-garbage-collector-test
 
+# == t504-size-groups ==
+t504-size-groups-test:
+	$(Q) $(X11_TESTPYTHON) t504-size-groups.py ; eval "$$TSTDIAGNOSE"
+EXTRA_DIST += t504-size-groups.py
+check: t504-size-groups-test
+
 # == t600-xmlui-eval ==
 t600-xmlui-eval-test:
 	$(Q) $(X11TEST_RAPIDRUN) -x $(srcdir)/t600-xmlui-eval.xml ; eval "$$TSTDIAGNOSE"
