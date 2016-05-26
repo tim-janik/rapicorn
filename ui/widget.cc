@@ -53,7 +53,6 @@ WidgetIface::impl () const
 WidgetImpl::WidgetImpl () :
   widget_flags_ (VISIBLE), widget_state_ (uint64 (WidgetState::NORMAL)), inherited_state_ (uint64 (WidgetState::STASHED)),
   parent_ (NULL), acache_ (NULL), factory_context_ (ctor_factory_context()), pack_info_ (NULL),
-  sig_invalidate (Aida::slot (*this, &WidgetImpl::do_invalidate)),
   sig_hierarchy_changed (Aida::slot (*this, &WidgetImpl::hierarchy_changed))
 {}
 
@@ -61,7 +60,7 @@ void
 WidgetImpl::construct ()
 {
   ObjectImpl::construct();
-  change_flags (CONSTRUCTED, true);
+  change_flags_silently (CONSTRUCTED, true);
 }
 
 void
@@ -139,6 +138,39 @@ WidgetImpl::pointer_sensitive () const
   return sensitive() && drawable();
 }
 
+WidgetImpl::WidgetFlag
+WidgetImpl::change_invalidation (WidgetChange type, uint64 bits)
+{
+  if (type == WidgetChange::VIEWABLE ||    // changing viewable() usually requires resizing and re-rendering
+      type == WidgetChange::CHILD_ADDED || // same for parent/child changes
+      type == WidgetChange::CHILD_REMOVED)
+    return INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT;
+  if (type == WidgetChange::STATE)
+    {
+      const WidgetState state_repaint_mask =
+        WidgetState::ACCELERATABLE | WidgetState::HOVER | WidgetState::PANEL | WidgetState::DEFAULT |
+        WidgetState::SELECTED | WidgetState::FOCUSED | WidgetState::INSENSITIVE |
+        WidgetState::ACTIVE | WidgetState::TOGGLED | WidgetState::RETAINED;
+      const WidgetState state_resize_mask =
+        WidgetState::ACCELERATABLE | WidgetState::DEFAULT | WidgetState::FOCUSED |
+        WidgetState::ACTIVE | WidgetState::TOGGLED | WidgetState::RETAINED;
+      WidgetFlag invalidation_flags = WidgetFlag (0);
+      if (bits & state_repaint_mask)
+        invalidation_flags = invalidation_flags | INVALID_CONTENT;
+      if (bits & state_resize_mask)
+        invalidation_flags = invalidation_flags | INVALID_REQUISITION;
+      return invalidation_flags;
+    }
+  if (type == WidgetChange::FLAGS)
+    {
+      const WidgetFlag flag_repaint_mask = ALLOW_FOCUS | FOCUS_CHAIN | HAS_FOCUS_INDICATOR | HAS_DEFAULT;
+      if (bits & flag_repaint_mask)
+        return INVALID_CONTENT;
+      // repacking flags are handled elsewhere
+    }
+  return WidgetFlag (0);
+}
+
 /// Unconditionally propagate widget state changes like WidgetState bits, ANCHORED, etc
 void
 WidgetImpl::widget_propagate_state (const WidgetState prev_state)
@@ -155,8 +187,12 @@ WidgetImpl::widget_propagate_state (const WidgetState prev_state)
     }
   const uint64 bits_changed = uint64 (prev_state) ^ state();
   return_unless (bits_changed != 0);
+  uint64 invalidation_flags = 0;
   if (was_viewable != viewable())
-    invalidate();       // changing viewable() forces invalidation
+    invalidation_flags = change_invalidation (WidgetChange::VIEWABLE, 0);
+  invalidation_flags |= change_invalidation (WidgetChange::STATE, bits_changed);
+  if (invalidation_flags)
+    widget_invalidate (WidgetFlag (invalidation_flags));
   if (!finalizing())
     {
       changed ("state");
@@ -200,19 +236,8 @@ WidgetImpl::widget_adjust_state (WidgetState mask, bool on)
   else
     widget_state_ &= ~uint64 (mask);
   const uint64 bits_changed = (old_state ^ state()) | (old_widget_state ^ widget_state_);
-  const uint64 avoid_repacking = 0 | WidgetState::HOVER | WidgetState::INSENSITIVE;
-  const uint64 repacking_mask = ~avoid_repacking;
   if (bits_changed)
-    {
-      expose();
-      widget_propagate_state (old_state);
-      if (bits_changed & repacking_mask)
-        {
-          const PackInfo &pa = pack_info();
-          repack (pa, pa);      // includes invalidate();
-          invalidate_parent();  // ensure we request resize
-        }
-    }
+    widget_propagate_state (old_state);
   if (parent() && (WidgetState::SELECTED & bits_changed))
     {
       WidgetChain this_chain;
@@ -226,7 +251,7 @@ WidgetImpl::widget_adjust_state (WidgetState mask, bool on)
 
 /// Apply @a mask to widget_flags_ and return if flags changed.
 bool
-WidgetImpl::change_flags (WidgetFlag mask, bool on)
+WidgetImpl::change_flags_silently (WidgetFlag mask, bool on)
 {
   const uint64 old_flags = widget_flags_;
   if (old_flags & CONSTRUCTED)
@@ -249,20 +274,21 @@ WidgetImpl::set_flag (WidgetFlag flag, bool on)
 {
   assert ((flag & (flag - 1)) == 0);            // single bit check
   const WidgetState old_state = state();        // widget_state_ | inherited_state_
-  const bool flags_changed = change_flags (flag, on);
-  const uint64 repack_flag_mask = HSHRINK | HEXPAND | HSPREAD | HSPREAD_CONTAINER |
-                                  VSHRINK | VEXPAND | VSPREAD | VSPREAD_CONTAINER |
-                                  ALLOW_FOCUS | HAS_FOCUS_INDICATOR | HAS_DEFAULT | VISIBLE;
+  const bool flags_changed = change_flags_silently (flag, on);
+  const uint64 packing_flags = HSHRINK | HEXPAND | HSPREAD | HSPREAD_CONTAINER |
+                               VSHRINK | VEXPAND | VSPREAD | VSPREAD_CONTAINER | VISIBLE;
   if (flags_changed)
     {
-      changed ("flags");
-      if (flag & repack_flag_mask)
+      const uint64 invalidation_flags = change_invalidation (WidgetChange::FLAGS, flag);
+      if (invalidation_flags)
+        widget_invalidate (WidgetFlag (invalidation_flags));
+      if (parent() && (flag & packing_flags))   // for flags affecting parent
         {
-          invalidate_parent();  // ensure we request resize
-          const PackInfo &pi = pack_info();
-          repack (pi, pi);      // includes invalidate();
+          parent()->invalidate_requisition();   // it must check requisition
+          invalidate_requisition();
         }
-      widget_propagate_state (old_state); // mirror !VISIBLE as STASHED
+      changed ("flags");
+      widget_propagate_state (old_state);       // mirrors !VISIBLE as STASHED
     }
 }
 
@@ -848,7 +874,7 @@ WidgetImpl::visual_update ()
 WidgetImpl::~WidgetImpl()
 {
   critical_unless (isconstructed());
-  change_flags (FINALIZING, true);
+  change_flags_silently (FINALIZING, true);
   WidgetGroup::delete_widget (*this);
   if (parent())
     parent()->remove (this);
@@ -1155,7 +1181,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
     {
       assert_return (pcontainer == NULL);
       WindowImpl *old_toplevel = get_window();
-      invalidate();
+      invalidate_all();
       old_parent->unparent_child (*this);
       parent_ = NULL;
       if (acache_)
@@ -1176,7 +1202,7 @@ WidgetImpl::set_parent (ContainerImpl *pcontainer)
       widget_propagate_state (old_state);
       if (parent_->anchored() && !anchored())
         sig_hierarchy_changed.emit (NULL);
-      invalidate();
+      invalidate_all();
     }
 }
 
@@ -1397,29 +1423,24 @@ WidgetImpl::invalidate_parent ()
 }
 
 void
-WidgetImpl::invalidate (WidgetFlag mask)
+WidgetImpl::widget_invalidate (WidgetFlag mask)
 {
   return_unless (0 == (mask & ~(INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT)));
   return_unless (mask != 0);
   const bool had_invalid_content = test_flag (INVALID_CONTENT);
   const bool had_invalid_allocation = test_flag (INVALID_ALLOCATION);
   const bool had_invalid_requisition = test_flag (INVALID_REQUISITION);
-  bool emit_invalidated = false;
   if (!had_invalid_content && (mask & INVALID_CONTENT))
-    {
-      expose();
-      emit_invalidated = true;
-    }
-  change_flags (mask, true);
+    expose();
+  if (!had_invalid_content && (mask & INVALID_CONTENT))
+    invalidate_parent(); // FIXME: this is only needed b/c expose() doesn't queue a redraw atm
+  change_flags_silently (mask, true);
   if ((!had_invalid_requisition && (mask & INVALID_REQUISITION)) ||
       (!had_invalid_allocation && (mask & INVALID_ALLOCATION)))
     {
       invalidate_parent(); // need new size-request from parent
       WidgetGroup::invalidate_widget (*this);
-      emit_invalidated = true;
     }
-  if (emit_invalidated && anchored())
-    sig_invalidate.emit();
 }
 
 /// Determine "internal" size requisition of a widget, including overrides, excluding groupings.
@@ -1432,7 +1453,7 @@ WidgetImpl::inner_size_request()
    */
   while (test_flag (INVALID_REQUISITION))
     {
-      change_flags (INVALID_REQUISITION, false); // skip notification
+      change_flags_silently (INVALID_REQUISITION, false);
       Requisition inner; // 0,0
       if (visible())
         {
@@ -1448,7 +1469,11 @@ WidgetImpl::inner_size_request()
                    Factory::factory_context_type (factory_context()), id(),
                    inner.width, inner.height);
         }
-      requisition_ = inner;
+      if (requisition_ != inner)
+        {
+          requisition_ = inner;
+          widget_invalidate (INVALID_ALLOCATION);
+        }
     }
   return visible() ? requisition_ : Requisition();
 }
@@ -1655,7 +1680,6 @@ WidgetImpl::repack (const PackInfo &orig, const PackInfo &pnew)
 {
   if (parent())
     parent()->repack_child (*this, orig, pnew);
-  invalidate();
 }
 
 const PackInfo WidgetImpl::default_pack_info = {
@@ -1792,10 +1816,6 @@ WidgetImpl::do_changed (const String &name)
 {
   ObjectImpl::do_changed (name);
 }
-
-void
-WidgetImpl::do_invalidate()
-{}
 
 bool
 WidgetImpl::do_event (const Event &event)
@@ -1935,7 +1955,7 @@ WidgetImpl::clip_area (const Allocation *clip)
   const bool has_clip_area = clip != NULL;
   clip_area_ = has_clip_area ? *clip : IRect();
   if (has_clip_area != test_flag (HAS_CLIP_AREA))
-    change_flags (HAS_CLIP_AREA, has_clip_area);
+    change_flags_silently (HAS_CLIP_AREA, has_clip_area);
 }
 
 /** Return widget allocation area accounting for clip_area().
@@ -2010,7 +2030,7 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   const Allocation old_allocation = clipped_allocation();
   const IRect *const old_clip_ptr = clip_area(), old_clip = old_clip_ptr ? *old_clip_ptr : old_allocation;
   // always reallocate to re-layout children
-  change_flags (INVALID_ALLOCATION, false); // skip notification
+  change_flags_silently (INVALID_ALLOCATION, false);
   if (!visible())
     sarea = Allocation (0, 0, 0, 0);
   IRect new_clip = clip ? *clip : area;
@@ -2022,7 +2042,7 @@ WidgetImpl::set_allocation (const Allocation &area, const Allocation *clip)
   size_allocate (allocation_, allocation_changed);
   Allocation a = allocation();
   const bool need_expose = allocation_changed || test_flag (INVALID_CONTENT);
-  change_flags (INVALID_CONTENT, false); // skip notification
+  change_flags_silently (INVALID_CONTENT, false);
   // expose old area
   if (need_expose)
     {

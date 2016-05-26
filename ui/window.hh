@@ -80,7 +80,6 @@ private:
                                                                  const vector<WidgetImplP>    &cminus);
   /* sizing */
   void                  resize_window                           (const Allocation *new_area);
-  virtual void          do_invalidate                           ();
   virtual void          beep                                    ();
   /* rendering */
   virtual void          draw_now                                ();

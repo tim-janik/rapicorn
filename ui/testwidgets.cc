@@ -66,9 +66,13 @@ TestContainerImpl::assert_left () const
 void
 TestContainerImpl::assert_left (double val)
 {
-  assert_left_ = val;
-  invalidate();
-  changed ("assert_left");
+  if (assert_left_ != val)
+    {
+      assert_left_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("assert_left");
+    }
 }
 
 double
@@ -80,9 +84,13 @@ TestContainerImpl::assert_right () const
 void
 TestContainerImpl::assert_right (double val)
 {
-  assert_right_ = val;
-  invalidate();
-  changed ("assert_right");
+  if (assert_right_ != val)
+    {
+      assert_right_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("assert_right");
+    }
 }
 
 double
@@ -94,9 +102,13 @@ TestContainerImpl::assert_top () const
 void
 TestContainerImpl::assert_top (double val)
 {
-  assert_top_ = val;
-  invalidate();
-  changed ("assert_top");
+  if (assert_top_ != val)
+    {
+      assert_top_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("assert_top");
+    }
 }
 
 double
@@ -108,9 +120,13 @@ TestContainerImpl::assert_bottom () const
 void
 TestContainerImpl::assert_bottom (double val)
 {
-  assert_bottom_ = val;
-  invalidate();
-  changed ("assert_bottom");
+  if (assert_bottom_ != val)
+    {
+      assert_bottom_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("assert_bottom");
+    }
 }
 
 double
@@ -122,9 +138,13 @@ TestContainerImpl::assert_width () const
 void
 TestContainerImpl::assert_width (double val)
 {
-  assert_width_ = val;
-  invalidate();
-  changed ("assert_width");
+  if (assert_width_ != val)
+    {
+      assert_width_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("assert_width");
+    }
 }
 
 double
@@ -136,9 +156,13 @@ TestContainerImpl::assert_height () const
 void
 TestContainerImpl::assert_height (double val)
 {
-  assert_height_ = val;
-  invalidate();
-  changed ("assert_height");
+  if (assert_height_ != val)
+    {
+      assert_height_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("assert_height");
+    }
 }
 
 double
@@ -150,9 +174,13 @@ TestContainerImpl::epsilon () const
 void
 TestContainerImpl::epsilon (double val)
 {
-  epsilon_ = val;
-  invalidate();
-  changed ("epsilon");
+  if (epsilon_ != val)
+    {
+      epsilon_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("epsilon");
+    }
 }
 
 bool
@@ -164,9 +192,13 @@ TestContainerImpl::paint_allocation () const
 void
 TestContainerImpl::paint_allocation (bool val)
 {
-  paint_allocation_ = val;
-  invalidate();
-  changed ("paint_allocation");
+  if (paint_allocation_ != val)
+    {
+      paint_allocation_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("paint_allocation");
+    }
 }
 
 bool
@@ -178,9 +210,13 @@ TestContainerImpl::fatal_asserts () const
 void
 TestContainerImpl::fatal_asserts (bool val)
 {
-  fatal_asserts_ = val;
-  invalidate();
-  changed ("fatal_asserts");
+  if (fatal_asserts_ != val)
+    {
+      fatal_asserts_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("fatal_asserts");
+    }
 }
 
 String
@@ -313,9 +349,13 @@ TestBoxImpl::snapshot_file () const
 void
 TestBoxImpl::snapshot_file (const String &val)
 {
-  snapshot_file_ = val;
-  invalidate();
-  changed ("snapshot_file");
+  if (snapshot_file_ != val)
+    {
+      snapshot_file_ = val;
+      invalidate_allocation();
+      invalidate_content();
+      changed ("snapshot_file");
+    }
 }
 
 void

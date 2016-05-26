@@ -331,14 +331,6 @@ WindowImpl::resize_window (const Allocation *new_area)
 }
 
 void
-WindowImpl::do_invalidate ()
-{
-  ViewportImpl::do_invalidate();
-  // we just need to make sure to be woken up, since flags are set appropriately already
-  loop_->wakeup();
-}
-
-void
 WindowImpl::beep()
 {
   if (display_window_)

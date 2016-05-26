@@ -863,7 +863,8 @@ protected:
         pango_font_description_free (fdesc);
       }
     rapicorn_pango_mutex.unlock();
-    invalidate();
+    invalidate_requisition();
+    invalidate_content();
     changed ("para_state");
   }
   virtual TextAttrState
@@ -904,7 +905,8 @@ protected:
     rapicorn_pango_mutex.unlock();
     if (err.size())
       critical ("%s", err.c_str());
-    invalidate();
+    invalidate_requisition();
+    invalidate_content();
   }
   virtual int
   mark () const /* byte_index */
@@ -1077,7 +1079,8 @@ protected:
     pango_layout_set_text (layout_, s.c_str(), -1);
     // FIXME: adjust attributes, cursor_, selector_
     rapicorn_pango_mutex.unlock();
-    invalidate();
+    invalidate_requisition();
+    invalidate_content();
     changed ("text");
     changed ("cursor");
   }
@@ -1093,7 +1096,8 @@ protected:
     pango_layout_set_text (layout_, s.c_str(), -1);
     // FIXME: adjust attributes
     rapicorn_pango_mutex.unlock();
-    invalidate();
+    invalidate_requisition();
+    invalidate_content();
     changed ("text");
     changed ("cursor");
   }

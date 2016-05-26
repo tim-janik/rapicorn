@@ -24,7 +24,7 @@ void
 ArrangementImpl::xorigin (double v)
 {
   origin_.x = v;
-  invalidate();
+  invalidate_size();
   changed ("xorigin");
 }
 
@@ -38,7 +38,7 @@ void
 ArrangementImpl::yorigin (double v)
 {
   origin_.y = v;
-  invalidate();
+  invalidate_size();
   changed ("yorigin");
 }
 
@@ -52,7 +52,7 @@ void
 ArrangementImpl::origin_hanchor (double align)
 {
   origin_hanchor_ = align;
-  invalidate();
+  invalidate_size();
   changed ("origin_hanchor");
 }
 
@@ -66,7 +66,7 @@ void
 ArrangementImpl::origin_vanchor (double align)
 {
   origin_vanchor_ = align;
-  invalidate();
+  invalidate_size();
   changed ("origin_vanchor");
 }
 

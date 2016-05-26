@@ -57,7 +57,7 @@ void
 AlignmentImpl::left_padding (int c)
 {
   left_padding_ = u16 (c);
-  invalidate();
+  invalidate_size();
   changed ("left_padding");
 }
 
@@ -71,7 +71,7 @@ void
 AlignmentImpl::right_padding (int c)
 {
   right_padding_ = u16 (c);
-  invalidate();
+  invalidate_size();
   changed ("right_padding");
 }
 
@@ -85,7 +85,7 @@ void
 AlignmentImpl::bottom_padding (int c)
 {
   bottom_padding_ = u16 (c);
-  invalidate();
+  invalidate_size();
   changed ("bottom_padding");
 }
 
@@ -99,7 +99,7 @@ void
 AlignmentImpl::top_padding (int c)
 {
   top_padding_ = u16 (c);
-  invalidate();
+  invalidate_size();
   changed ("top_padding");
 }
 
