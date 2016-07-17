@@ -45,7 +45,13 @@ td.mlabels-right		{ vertical-align: middle; }
 span.mlabel 			{ font-weight: normal; padding: 0 .2em;
 				  background-color: #7272c1; border: 1px solid #5353b4; }
 a.el				{ font-weight: normal; }
-td.memItemLeft			{ color: #808080; }
-td.memItemRight			{ color: #808080; padding-left: .8em; }
-td.memItemRight a		{ font-weight: normal; }
-td.memItemRight b		{ color: #000000; font-weight: normal; }
+td.memItemLeft, td.memTemplItemLeft		{ color: #808080; }
+td.memItemRight, td.memTemplItemRight		{ color: #808080; padding-left: .8em; }
+td.memItemRight a, td.memTemplItemRight a	{ font-weight: normal; }
+td.memItemRight b, td.memTemplItemRight b	{ color: #000000; font-weight: normal; }
+
+h2.groupheader			{ margin-bottom: 1em; }
+table.fieldtable		{ border: none; box-shadow: none; line-height: 1.5em; }
+table.fieldtable th		{ background-image: none; display: none; }
+table.fieldtable td.fieldname,
+table.fieldtable td.fielddoc	{ /*border-bottom: 1px solid #DEE4F0;*/ border: none; }
