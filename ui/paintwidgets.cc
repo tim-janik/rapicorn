@@ -2,12 +2,7 @@
 #include "paintwidgets.hh"
 #include "factory.hh"
 #include "painter.hh"
-
-#define CHECK_CAIRO_STATUS(status)      do {    \
-  cairo_status_t ___s = (status);               \
-  if (___s != CAIRO_STATUS_SUCCESS)             \
-    RAPICORN_DIAG ("%s: %s", cairo_status_to_string (___s), #status);   \
-  } while (0)
+#include "rcore/cairoutils.hh"
 
 namespace Rapicorn {
 
@@ -386,7 +381,7 @@ DrawableImpl::render (RenderContext &rcontext)
       const int rowstride = pixbuf_.width();
       cairo_surface_t *surface = cairo_image_surface_create_for_data ((uint8*) pixbuf_.pixels.data(), CAIRO_FORMAT_ARGB32,
                                                                       pixbuf_.width(), pixbuf_.height(), rowstride * 4);
-      CHECK_CAIRO_STATUS (cairo_surface_status (surface));
+      CAIRO_CHECK_STATUS (cairo_surface_status (surface));
       cairo_set_source_surface (cr, surface, x_, y_);
       cairo_paint (cr);
       cairo_surface_destroy (surface);
