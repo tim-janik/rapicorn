@@ -54,6 +54,9 @@ ABI_AGE=$(($MINOR - $ABI_MINOR))
 # - lt_age=ABI_AGE    # allow backward compatibility between ABI_VERSION .. VERSION
 # - lt_revision=MICRO # pick the latest SO revision for unchanged MAJOR.MINOR,
 #                     # see also: https://autotools.io/libtool/version.html
+# On Linux this yields:
+# library:	librapicorn-$MAJOR.so.$ABI_MINOR.$ABI_AGE.$MICRO
+# SONAME:	librapicorn-$MAJOR.so.$ABI_MINOR
 lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
