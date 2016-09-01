@@ -40,7 +40,7 @@ test "$ABI_MINOR" -le "$MINOR" || {
   AC_MSG_ERROR([ABI_VERSION must predate MINOR version: $ABI_MINOR <= $MINOR])
 }
 test "$ABI_MICRO" -eq 0 || {
-  AC_MSG_ERROR([ABI_VERSION must not indicate ABI break in MICRO releases: $ABI_MINOR.$ABI_MICRO <= $MINOR.0])
+  AC_MSG_ERROR([ABI_VERSION must not indicate ABI break in MICRO releases: $ABI_MAJOR.$ABI_MINOR.$ABI_MICRO == $ABI_MAJOR.$ABI_MINOR])
 }
 ABI_AGE=$(($MINOR - $ABI_MINOR))
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
