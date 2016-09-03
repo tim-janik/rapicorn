@@ -1352,6 +1352,19 @@ WindowImpl::destroy ()
     }
 }
 
+void
+WindowImpl::query_idle ()
+{
+  if (display_window_)
+    {
+      const WindowImplP thisp = shared_ptr_cast<WindowImpl*> (this);
+      const int PRIORITY_FLOOR = 1; // lowest possible priority, must be truely idle to execute this
+      loop_->exec_callback ([thisp] () { thisp->sig_notify_idle.emit(); }, PRIORITY_FLOOR);
+    }
+  else
+    sig_notify_idle.emit();
+}
+
 bool
 WindowImpl::snapshot (const String &pngname)
 {

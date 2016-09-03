@@ -35,7 +35,4 @@ def loop_tests():
   test_loop.run()
   assert loop_tchecks >= 10 and loop_ichecks >= 100
 
-testname = "  Loop-Test:"
-print testname,
 loop_tests()
-print " " * max (0, 75 - len (testname)), "OK"

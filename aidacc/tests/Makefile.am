@@ -90,25 +90,3 @@ check-CxxStub-client-code: $(srcdir)/testcxxclient.ref
 	$(Q) $(CXXCOMPILE) testcxxclient.cc -c ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f testcxxclient.cc testcxxclient.o
 check: check-CxxStub-server-code check-CxxStub-client-code
-
-
-# == components ==
-# test app consisting of several Aida components
-TEST_PROGS	  += components
-components_SOURCES = components.cc
-components_LDADD   = $(LDADDS)
-components_CXXFLAGS = -O0 -g # $(AM_CXXFLAGS) # compile fast
-EXTRA_DIST        += components-a1.idl a1-server.cc # components-a2.idl components-b1.idl
-COMPONENT_FILES    = components-a1-client.hh components-a1-client.cc components-a1-server.hh components-a1-server.cc
-CLEANFILES += $(COMPONENT_FILES)
-components.cc: $(COMPONENT_FILES)
-# MAKE(1) supports parallel execution of a multiple-targets-rule *only* for implicit rules
-%-client.hh %-client.cc %-server.hh %-server.cc: %.idl $(CXXSTUB_PY)
-	$(AM_V_GEN)
-	$(Q) ${AIDACC} -x CxxStub -G clienthh -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-client.hh
-	$(Q) ${AIDACC} -x CxxStub -G clientcc -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-client.cc
-	$(Q) ${AIDACC} -x CxxStub -G serverhh -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-server.hh
-	$(Q) ${AIDACC} -x CxxStub -G servercc -G strip-path=$(abs_top_srcdir)/ $< -o $(*F)-server.cc
-components-test: ./components
-	$(Q) $(<D)/$(<F) ; eval "$$TSTDIAGNOSE"
-check: components-test

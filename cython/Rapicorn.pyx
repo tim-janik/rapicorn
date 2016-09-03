@@ -32,6 +32,18 @@ def init_app (application_name = ""):
     def execute (self):
       """Execute the Application and terminatie the program with sys.exit (Application.run())."""
       sys.exit (self.run())
+    def process_events (self, window):
+      """Process all pending events on window."""
+      seen_idle = [ False ]
+      def window_notify_idle():
+        seen_idle[0] = True
+      handler_id = window.sig_notify_idle.connect (window_notify_idle)
+      window.query_idle()
+      self.main_loop().iterate_pending()                # flush currently pending handlers
+      while not seen_idle[0]:
+        self.main_loop().iterate (True)                 # block & step until signal emission
+      window.sig_notify_idle.disconnect (handler_id)
+      self.main_loop().iterate_pending()                # flush newly queued handlers
   original_Application().__aida_wrapper__ (Application) # extend Application methods
   Rapicorn__program_argv0_init (Py_GetProgramName()); # Rapicorn needs the real argv0
   cdef int   argc = 1

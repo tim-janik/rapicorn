@@ -38,7 +38,7 @@ main (int   argc,
       calls = MAX (calls, this_calls);
     }
   double err = (slowest - fastest) / slowest;
-  printout ("2way: best: %g calls/s; fastest: %.2fus; slowest: %.2fus; err: %.2f%%\n",
+  printout ("  BENCH    Aida: %g calls/s; fastest: %.2fus; slowest: %.2fus; err: %.2f%%\n",
             calls, fastest, slowest, err * 100);
   app.shutdown();
   return 0;

@@ -610,7 +610,6 @@ po/Makefile.in
 data/Makefile
 rcore/Makefile
 rcore/buildconfig.h
-rcore/tests/Makefile
 res/Makefile
 aidacc/Makefile
 aidacc/tests/Makefile
@@ -619,7 +618,6 @@ ui/tests/Makefile
 cython/Makefile
 tools/Makefile
 tests/Makefile
-pytests/Makefile
 examples/Makefile
 docs/Makefile
 docs/mans/Makefile

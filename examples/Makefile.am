@@ -38,6 +38,13 @@ tour_LDADD	 = $(LDADDS)
 XML_FILES	+= tour.xml
 EXTRA_DIST	+= testpic.jpg testpic.png testpic-IHDR.png testpic-IDAT.png testpic-DATA.png
 
+# == fileview ==
+EXAMPLES        += fileview
+fileview_SOURCES = fileview.cc
+EXTRA_DIST      += liststore.cc
+fileview_LDADD   = $(LDADDS)
+XML_FILES       += fileview.xml
+
 # tests
 tour-test: tour
 	$(Q) $(X11_ENV) ./tour --test-automation > $(TSTOUT) \

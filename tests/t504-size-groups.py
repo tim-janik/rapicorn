@@ -58,7 +58,7 @@ assert wr.width > 0 and wr.height > 0
 assert tr.width > 0 and tr.height > 0
 assert wr.height != tr.height
 assert wr.width == tr.width # size grouped
-print '  %-6s' % 'CHECK', '%-67s' % test, 'OK'
+#print '  %-6s' % 'CHECK', '%-67s' % test, 'OK'
 
 # fetch VSIZE buttons and check the sizes
 test = "Vertical SizeGroups"
@@ -70,4 +70,4 @@ assert wr.width > 0 and wr.height > 0
 assert tr.width > 0 and tr.height > 0
 assert wr.width != tr.width
 assert wr.height == tr.height # size grouped
-print '  %-6s' % 'CHECK', '%-67s' % test, 'OK'
+#print '  %-6s' % 'CHECK', '%-67s' % test, 'OK'
