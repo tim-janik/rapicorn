@@ -31,3 +31,27 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a	{ font-weight: 600; page-break-after: avoid; 
 .tabs, .tabs2, .tabs3			{ font-size: 106%; font-family: inherit; }
 .tabs2					{ font-size: 104%; }
 .tabs3					{ font-size: 102%; }
+
+/* function lists and descriptions */
+.memdoc, dl.reflist dd		{ box-shadow: none; border: none; background-image: none;
+				  border-bottom: 1px solid #bbbbbb; margin-bottom: 0.2em; }
+.memproto, dl.reflist dt	{ background-image: none; background-color: #eeeeff;
+				  border: 1px solid #aaaaff; border-radius: 0;
+				  color: #303030; }
+a				{ color: #303099; }
+.contents a:visited		{ color: #303080; }
+.memname			{ font-weight: normal; }
+td.mlabels-right		{ vertical-align: middle; }
+span.mlabel 			{ font-weight: normal; padding: 0 .2em;
+				  background-color: #7272c1; border: 1px solid #5353b4; }
+a.el				{ font-weight: normal; }
+td.memItemLeft, td.memTemplItemLeft		{ color: #808080; }
+td.memItemRight, td.memTemplItemRight		{ color: #808080; padding-left: .8em; }
+td.memItemRight a, td.memTemplItemRight a	{ font-weight: normal; }
+td.memItemRight b, td.memTemplItemRight b	{ color: #000000; font-weight: normal; }
+
+h2.groupheader			{ margin-bottom: 1em; }
+table.fieldtable		{ border: none; box-shadow: none; line-height: 1.5em; }
+table.fieldtable th		{ background-image: none; display: none; }
+table.fieldtable td.fieldname,
+table.fieldtable td.fielddoc	{ /*border-bottom: 1px solid #DEE4F0;*/ border: none; }

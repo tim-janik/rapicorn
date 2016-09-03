@@ -72,7 +72,8 @@ html-docs: doxygen-check $(top_srcdir)/ChangeLog
 	$(Q) $(MAKE) $(AM_MAKEFLAGS) --no-print-directory doxygen-html
 	$(Q) rm -f imports/tagfile-susv4.xml imports/cppreference-doxygen-web.tag.xml
 	$(QPRINT) "GEN" "CSS for Rapicorn..."
-	$(Q) sed -r 's/\bfont\b[^:;]*:[^;]*;//' -i doxygen-html/navtree.css
+	$(Q) test ! -e doxygen-html/navtree.css \
+	  || sed -r 's/\bfont\b[^:;]*:[^;]*;//' -i doxygen-html/navtree.css
 	$(Q) sed -r 's/\bfont(-size)?:[^;]*;//' -i doxygen-html/doxygen.css
 	$(QPRINT) "GEN" "HTML manual pages..."
 	$(Q) cp $(HTMLMAN_FILES) doxygen-html/
