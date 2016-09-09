@@ -7,6 +7,8 @@
 #include <zlib.h>
 #include <vector>
 #include <string>
+#include <sys/types.h>
+#include <regex.h>
 using namespace Rapicorn;
 
 /* rapidres - small C source compression utility
@@ -31,6 +33,8 @@ zintern_error (const char *format, ...)
   fprintf (stderr, "\n%s: ERROR: %s\n", main_argv0, buffer);
   _exit (1);
 }
+
+static String strip_prefix;
 
 typedef struct {
   uint pos;
@@ -89,9 +93,21 @@ gen_zfile (const String &file)
 {
   // create nice resource path
   String fname = file;
-  // strip ^[/.]
-  while (fname.size() && strchr ("/.", fname[0]))
-    fname.erase (fname.begin());
+  // strip common path prefix
+  if (!strip_prefix.empty())
+    {
+      regex_t rx;
+      if (regcomp (&rx, strip_prefix.c_str(), REG_EXTENDED | REG_NEWLINE) == 0)
+        {
+          regmatch_t pmatch[1];
+          if (regexec (&rx, fname.c_str(), ARRAY_SIZE (pmatch), pmatch, 0) == 0 &&
+              pmatch[0].rm_so == 0 && size_t (pmatch[0].rm_eo) < fname.size())
+            {
+              fname = fname.substr (pmatch[0].rm_eo);
+            }
+          regfree (&rx);
+        }
+    }
   // create C identifier
   String ident = fname;
   // substitute [/.-] with _
@@ -183,11 +199,12 @@ gen_zfile (const String &file)
 static int
 help (int exitcode)
 {
-  printf ("usage: rapidres [-h] [-v] [files...]\n");
+  printf ("usage: rapidres [-h] [-v] [-s prefix] [files...]\n");
   if (exitcode != 0)
     exit (exitcode);
   printf ("  -h, --help    Print usage information\n");
   printf ("  -v, --version Print version and file paths\n");
+  printf ("  -s PREFIX     Strip PREFIX from resource names\n");
   printf ("Generate compressed C source code for each file.\n");
   exit (0);
 }
@@ -213,6 +230,11 @@ main (int argc, char *argv[])
           printf ("information are available at http://rapicorn.org/.\n");
           exit (0);
 	}
+      else if (strcmp ("-s", argv[i]) == 0 && i + 1 < argc)
+        {
+          strip_prefix = argv[i + 1];
+          i++;
+        }
       else
 	arg_strings.push_back (argv[i]);
     }
