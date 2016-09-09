@@ -1,6 +1,5 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "text-pango.hh"
-#if     RAPICORN_WITH_PANGO
 #include <pango/pangoft2.h>
 #include <pango/pangocairo.h>
 #include "factory.hh"
@@ -1328,5 +1327,3 @@ protected:
 static const WidgetFactory<TextPangoImpl> text_pango_factory ("Rapicorn::TextPango");
 
 } // Rapicorn
-
-#endif  /* RAPICORN_WITH_PANGO */
