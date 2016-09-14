@@ -503,11 +503,13 @@ rapicorn_debug (const char *key, const char *file, const int line, const String 
   envkey_debug_message ("RAPICORN_DEBUG", key, file, line, msg, &_rapicorn_debug_check_cache);
 }
 
+#ifdef DOXYGEN
 /** Check if debugging is enabled for @a key.
  * This function checks if #$RAPICORN_DEBUG contains @a key or "all" and returns true
  * if debugging is enabled for the given key.
  */
 bool rapicorn_debug_check   (const char *key);
+#endif // DOXYGEN
 
 #ifndef DOXYGEN
 bool
