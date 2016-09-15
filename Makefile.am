@@ -5,7 +5,7 @@ include $(top_srcdir)/Makefile.decl
 topdir = $(abs_top_srcdir)
 
 # == non-migrated subdirs ==
-SUBDIRS		 = po . aidacc ui cython tools tests examples docs
+SUBDIRS		 = po . ui cython tools tests examples docs
 
 # == make setup ==
 DEFS	       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
@@ -13,6 +13,7 @@ AM_CPPFLAGS    += -I$(top_builddir) # -I$(top_srcdir)
 AM_CXXFLAGS    += $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
 lib_LTLIBRARIES	=
 bin_PROGRAMS    =
+noinst_SCRIPTS	=
 
 # == tools ==
 XMANIFOLD	= $(top_srcdir)/aidacc/xmanifold.py
@@ -29,6 +30,9 @@ buildid:
 
 # == res/ ==
 include res/Makefile.sub
+
+# == aidacc/ ==
+include aidacc/Makefile.sub
 
 # == rcore/ ==
 include rcore/Makefile.sub
