@@ -609,7 +609,6 @@ po-helper.sh
 po/Makefile.in
 rcore/buildconfig.h
 aidacc/tests/Makefile
-ui/Makefile
 ui/tests/Makefile
 cython/Makefile
 tools/Makefile

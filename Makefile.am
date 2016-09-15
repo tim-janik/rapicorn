@@ -5,7 +5,7 @@ include $(top_srcdir)/Makefile.decl
 topdir = $(abs_top_srcdir)
 
 # == non-migrated subdirs ==
-SUBDIRS		 = po . ui cython tools tests examples docs
+SUBDIRS		 = po . cython tools tests examples docs
 
 # == make setup ==
 DEFS	       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
@@ -36,3 +36,6 @@ include aidacc/Makefile.sub
 
 # == rcore/ ==
 include rcore/Makefile.sub
+
+# == ui/ ==
+include ui/Makefile.sub

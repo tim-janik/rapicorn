@@ -99,16 +99,6 @@ CLEANFILES += rcore/librapicorn-buildid.cc
 rcore_librapicorn_includedir		= $(includedir)/rapicorn-@MAJOR@/rcore
 rcore_librapicorn_include_HEADERS	= $(rcore_librapicorn_headers)
 EXTRA_DIST			       += rcore/svg.hh # private headers
-lib_LTLIBRARIES                        += ui/librapicorn-@MAJOR@.la
-ui_librapicorn_@MAJOR@_la_SOURCES       = $(rcore_librapicorn_sources)
-ui_librapicorn_@MAJOR@_la_DEPENDENCIES  = rcore/ldscript.map
-ui_librapicorn_@MAJOR@_la_LIBADD        = $(RAPICORN_CORE_LIBS) $(SVG_DEPENDENCIES_LIBS) -lm
-ui_librapicorn_@MAJOR@_la_LDFLAGS	= $(strip		\
-	$(AM_LDFLAGS) -no-undefined -Wl,--as-needed -Wl,-O1	\
-	-version-info $(LT_VERSION_INFO) 			\
-	-Wl,--version-script=$(top_srcdir)/rcore/ldscript.map	\
-) # set libtool version and export symbols for resolving
-EXTRA_DIST			       += rcore/ldscript.map
 
 # == aidavariants.hh ==
 EXTRA_DIST += rcore/aidaproto.hh
