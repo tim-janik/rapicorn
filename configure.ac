@@ -607,7 +607,6 @@ AC_CONFIG_FILES([
 Makefile
 po-helper.sh
 po/Makefile.in
-rcore/Makefile
 rcore/buildconfig.h
 aidacc/Makefile
 aidacc/tests/Makefile

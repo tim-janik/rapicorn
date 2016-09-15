@@ -1,0 +1,131 @@
+# Rapicorn			- non-recursive Makefile
+#
+
+# == rapidres ==
+RAPIDRES_INTERN			= $(top_builddir)/rcore/rapidres
+bin_PROGRAMS		       += rcore/rapidres
+rcore_rapidres_SOURCES		= rcore/rapidres.cc rcore/rapidres-buildid.cc
+rcore_rapidres_LDADD		= $(LIBZ)
+rcore/rapidres-buildid.cc: topbuildid.cc
+	$(AM_V_GEN)
+	$(Q) cp $< $@
+CLEANFILES += rcore/rapidres-buildid.cc
+rcore-rapidres-check:
+	$(Q) echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a' > xtmp-empty.dat \
+	; eval "$$TSTDIAGNOSE" "'Create rapidres sample data'"
+	$(Q) $(RAPIDRES_INTERN) xtmp-empty.dat > xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Run    rapidres'"
+	$(Q) grep -q '"xtmp-empty.dat"' xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output file name'"
+	$(Q) test `grep _ENTRY xtmp-empty.out | grep -o '[0-9]*'` -gt 16 \
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output length'"
+	$(Q) test $$[`grep _DATA xtmp-empty.out | grep -o '[0-9 +-]*'`] -lt 50 \
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output compression'"
+	$(Q) rm -f xtmp-empty.dat xtmp-empty.out
+check-local: rcore-rapidres-check
+CLEANFILES += xtmp-empty.dat xtmp-empty.out
+
+# == librapicorn-@MAJOR@.so files ==
+rcore_librapicorn_headers = $(strip	\
+	rcore/aida.hh			\
+	rcore/aidacxx.hh		\
+	rcore/aidaprops.hh		\
+	rcore/aidasignal.hh		\
+	rcore/aidavariants.hh		\
+	rcore/bindable.hh		\
+	rcore/buildconfig.h		\
+	rcore/cairoutils.hh		\
+	rcore/cpuasm.hh			\
+	rcore/cxxaux.hh			\
+	rcore/debugtools.hh		\
+	rcore/formatter.hh		\
+	rcore/inifile.hh		\
+	rcore/inout.hh			\
+	rcore/loop.hh			\
+	rcore/main.hh			\
+	rcore/markup.hh			\
+	rcore/math.hh			\
+	rcore/memory.hh			\
+	rcore/platform.hh		\
+	rcore/quicktimer.hh		\
+	rcore/randomhash.hh		\
+	rcore/rcore.hh			\
+	rcore/regex.hh			\
+	rcore/resources.hh		\
+	rcore/strings.hh		\
+	rcore/testutils.hh		\
+	rcore/thread.hh			\
+	rcore/threadlib.hh		\
+	rcore/unicode.hh		\
+	rcore/utilities.hh		\
+	rcore/visitor.hh		\
+	rcore/xmlnode.hh		\
+)
+
+rcore_librapicorn_sources = $(strip	\
+	rcore/aida.cc			\
+	rcore/aidaprops.cc		\
+	rcore/bindable.cc		\
+	rcore/debugtools.cc		\
+	rcore/formatter.cc		\
+	rcore/inifile.cc		\
+	rcore/inout.cc			\
+	rcore/librapicorn-buildid.cc	\
+	rcore/loop.cc			\
+	rcore/main.cc			\
+	rcore/markup.cc			\
+	rcore/math.cc			\
+	rcore/memory.cc			\
+	rcore/platform.cc		\
+	rcore/quicktimer.cc		\
+	rcore/randomhash.cc		\
+	rcore/regex.cc			\
+	rcore/resources.cc		\
+	rcore/strings.cc		\
+	rcore/svg.cc			\
+	rcore/testutils.cc		\
+	rcore/thread.cc			\
+	rcore/unicode.cc		\
+	rcore/utilities.cc		\
+	rcore/xmlnode.cc		\
+)
+
+rcore/librapicorn-buildid.cc: topbuildid.cc
+	$(AM_V_GEN)
+	$(Q) cp $< $@
+CLEANFILES += rcore/librapicorn-buildid.cc
+
+# == librapicorn-@MAJOR@.so ==
+rcore_librapicorn_includedir		= $(includedir)/rapicorn-@MAJOR@/rcore
+rcore_librapicorn_include_HEADERS	= $(rcore_librapicorn_headers)
+EXTRA_DIST			       += rcore/svg.hh # private headers
+lib_LTLIBRARIES                        += ui/librapicorn-@MAJOR@.la
+ui_librapicorn_@MAJOR@_la_SOURCES       = $(rcore_librapicorn_sources)
+ui_librapicorn_@MAJOR@_la_DEPENDENCIES  = rcore/ldscript.map
+ui_librapicorn_@MAJOR@_la_LIBADD        = $(RAPICORN_CORE_LIBS) $(SVG_DEPENDENCIES_LIBS) -lm
+ui_librapicorn_@MAJOR@_la_LDFLAGS	= $(strip		\
+	$(AM_LDFLAGS) -no-undefined -Wl,--as-needed -Wl,-O1	\
+	-version-info $(LT_VERSION_INFO) 			\
+	-Wl,--version-script=$(top_srcdir)/rcore/ldscript.map	\
+) # set libtool version and export symbols for resolving
+EXTRA_DIST			       += rcore/ldscript.map
+
+# == aidavariants.hh ==
+EXTRA_DIST += rcore/aidaproto.hh
+rcore/aidavariants.hh: rcore/aidaproto.hh $(XMANIFOLD)
+	$(AM_V_GEN)
+	$(Q) cd . \
+	&& echo "// $@: generated from: $<"			 >$@.tmp \
+	&& echo '# 1 "$<"'					>>$@.tmp \
+	&& $(XMANIFOLD) "$<" 18					>>$@.tmp \
+	&& mv $@.tmp $@
+CLEANFILES += rcore/aidavariants.hh
+$(rcore_librapicorn_sources): rcore/aidavariants.hh
+
+# == zres.cc ==
+rcore/zres.cc: $(top_srcdir)/res/resfiles.list $(RAPIDRES_INTERN) # res_resfiles_list contains /res/resfiles.list
+	$(AM_V_GEN)
+	$(Q) $(RAPIDRES_INTERN) $(res_resfiles_list:%=$(top_srcdir)/res/%)	>$@.tmp
+	$(Q) mv $@.tmp $@
+CLEANFILES += rcore/zres.cc
+rcore/resources.cc: rcore/zres.cc
