@@ -607,7 +607,6 @@ AC_CONFIG_FILES([
 Makefile
 po-helper.sh
 po/Makefile.in
-data/Makefile
 rcore/Makefile
 rcore/buildconfig.h
 res/Makefile
