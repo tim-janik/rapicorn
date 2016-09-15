@@ -5,4 +5,7 @@ include $(top_srcdir)/Makefile.decl
 topdir = $(abs_top_srcdir)
 
 # non-migrated subdirs
-SUBDIRS     = po . res rcore aidacc ui cython tools tests examples docs
+SUBDIRS     = po . rcore aidacc ui cython tools tests examples docs
+
+# == res/ ==
+include res/Makefile.sub

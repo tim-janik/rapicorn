@@ -1,0 +1,4 @@
+# Rapicorn                      - non-recursive Makefile
+#
+
+res_resfiles_list ::= $(shell $(top_srcdir)/misc/reslist.sh)
