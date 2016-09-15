@@ -15,6 +15,8 @@ using namespace Rapicorn;
 
 typedef std::string String;
 
+static const char *main_argv0 = "rapidres";
+
 static void zintern_error  (const char *format, ...) RAPICORN_PRINTF (1, 2);
 
 static void
@@ -26,7 +28,7 @@ zintern_error (const char *format, ...)
   vsnprintf (buffer, sizeof (buffer), format, args);
   va_end (args);
   buffer[sizeof (buffer) - 1] = 0;
-  fprintf (stderr, "\nERROR: %s\n", buffer);
+  fprintf (stderr, "\n%s: ERROR: %s\n", main_argv0, buffer);
   _exit (1);
 }
 
@@ -193,6 +195,7 @@ help (int exitcode)
 int
 main (int argc, char *argv[])
 {
+  main_argv0 = argv[0];
   std::vector<String> arg_strings;
 
   for (int i = 1; i < argc; i++)
