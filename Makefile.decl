@@ -31,7 +31,7 @@ download-recursive:
 
 # == Install Helpers ==
 # $(call SYMLINK_LATEST, GLOB, LINKNAME) - create symbolic link to latest versioned file
-SYMLINK_LATEST = ( L=`/bin/ls $(1) 2>/dev/null | sort -r | head -1` ; if test -n "$$L" ; \
+SYMLINK_LATEST = ( L=`/bin/ls -d $(1) 2>/dev/null | sort -r | head -1` ; if test -n "$$L" ; \
 		   then echo "  RELINK" $(2) && rm -f $(2) && ln -s "$$L" $(2) ; \
 		   else echo "  UNLINK" $(2) && rm -f $(2) ; fi )
 
