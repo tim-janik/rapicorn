@@ -35,14 +35,22 @@ cython/Rapicorn.cc: $(rcore_librapicorn_headers) $(ui_librapicorn_headers)
 # install Rapicorn.so symlink
 cython-Rapicorn-so-install-hook:	# runs after install-data
 	$(Q) cd $(DESTDIR)$(cython_pymodulesdir)/.. && \
-	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
-	  test -x Rapicorn.so -a -L Rapicorn.so
+	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/, Rapicorn) && \
+	  test -x Rapicorn/ -a -L Rapicorn
 install-data-hook: cython-Rapicorn-so-install-hook
 cython-Rapicorn-so-uninstall-hook:	# runs after uninstall
-	$(Q) cd $(DESTDIR)$(cython-Rapicorn-so-install-hook)/.. && \
-	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
-	  test -x Rapicorn.so -o ! -e Rapicorn.so
+	$(Q) rmdir $(DESTDIR)$(cython_pymodulesdir) 2>/dev/null ; : # maybe cleanup empty dir
+	$(Q) cd $$(readlink -m $(DESTDIR)$(cython_pymodulesdir)/..) && \
+	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/, Rapicorn) && \
+	  test -x Rapicorn/ -o ! -e Rapicorn
 uninstall-hook: cython-Rapicorn-so-uninstall-hook
+
+# == install __init__.py ==
+# Installing Rapicorn_@MAJOR@/__init__.py is required for Python to recognize
+# Rapicorn_@MAJOR@ as a package for imports. Adding __init__.py to $(srcdir)
+# trips up cython invocations, so we keep it under pkg-init/__init__.py.
+cython_pymodules_PYTHON			= cython/pkg-init/__init__.py
+# See $(cython_pymodulesdir) for the installation location
 
 # == Rapicorn.cc ==
 cython/Rapicorn.cc: cython/Rapicorn.pyx cython/Aida.pyx cython/rapicorn-core.pyx cython/rapicorn-api.pyx cython/aidapyxxcallers.hh
