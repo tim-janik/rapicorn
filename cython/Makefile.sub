@@ -1,0 +1,64 @@
+# Rapicorn			- non-recursive Makefile
+#
+
+# == install PyxxStub.py ==
+CYTHON_PYXXSTUB_PY			= cython/PyxxStub.py
+cython_pyxxstub_py_installdir		= $(aidacc_installdir)
+cython_pyxxstub_py_install_PYTHON	= $(CYTHON_PYXXSTUB_PY)
+
+# == Rapicorn.so files ==
+cython_pyx_headers = $(strip		\
+	cython/Aida.pyx			\
+	cython/aidapyxxcallers.hh	\
+	cython/aidapyxxutils.hh		\
+	cython/rapicorn-api.pyx		\
+	cython/rapicorn-core.pyx	\
+)
+cython_private_files = $(strip		\
+	cython/Rapicorn.pyx		\
+)
+EXTRA_DIST += $(cython_private_files)
+
+# == install *.pyx ==
+cython_pyx_installdir			= $(libdir)/rapicorn-@MAJOR@/pyxx
+cython_pyx_install_DATA			= $(cython_pyx_headers)
+
+# == Rapicorn.so ==
+cython_pymodulesdir			= ${pythondir}/Rapicorn_@MAJOR@
+cython_pymodules_LTLIBRARIES		= cython/Rapicorn.la
+nodist_cython_Rapicorn_la_SOURCES	= cython/Rapicorn.cc	# nodist_ forces build time generation
+cython_Rapicorn_la_CXXFLAGS		= $(AM_CXXFLAGS) $(PYTHON_CPPFLAGS) -DRAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC \
+					  -Wno-strict-aliasing -Wno-redundant-decls -Wno-unused-function
+cython_Rapicorn_la_LDFLAGS		= $(AM_LDFLAGS) -no-undefined -module -avoid-version -Wl,--as-needed -Wl,-O1 $(PYTHON_LDFLAGS)
+cython_Rapicorn_la_LIBADD		= $(top_builddir)/ui/librapicorn-@MAJOR@.la # $(PYTHON_EXTRA_LIBS)
+cython/Rapicorn.cc: $(rcore_librapicorn_headers) $(ui_librapicorn_headers)
+# install Rapicorn.so symlink
+cython-Rapicorn-so-install-hook:	# runs after install-data
+	$(Q) cd $(DESTDIR)$(cython_pymodulesdir)/.. && \
+	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
+	  test -x Rapicorn.so -a -L Rapicorn.so
+install-data-hook: cython-Rapicorn-so-install-hook
+cython-Rapicorn-so-uninstall-hook:	# runs after uninstall
+	$(Q) cd $(DESTDIR)$(cython-Rapicorn-so-install-hook)/.. && \
+	  $(call SYMLINK_LATEST, Rapicorn_[0-9][0-9]/Rapicorn.so, Rapicorn.so) && \
+	  test -x Rapicorn.so -o ! -e Rapicorn.so
+uninstall-hook: cython-Rapicorn-so-uninstall-hook
+
+# == Rapicorn.cc ==
+cython/Rapicorn.cc: cython/Rapicorn.pyx cython/Aida.pyx cython/rapicorn-core.pyx cython/rapicorn-api.pyx cython/aidapyxxcallers.hh
+	$(AM_V_GEN)
+	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. cython/Rapicorn.pyx -o $@
+CLEANFILES += cython/Rapicorn.cc
+
+# == rapicorn-api.pyx ==
+cython/rapicorn-api.pyx: ui/interfaces.idl $(AIDACC_INTERN) $(CYTHON_PYXXSTUB_PY)
+	$(AM_V_GEN)
+	$(Q) $(AIDACC_INTERN) -x $(CYTHON_PYXXSTUB_PY) $< -o $@ -G strip-path=$(abs_top_srcdir)/
+CLEANFILES += cython/rapicorn-api.pyx
+
+# == aidapyxxcallers.hh ==
+cython/aidapyxxcallers.hh: cython/aidapyxxutils.hh $(XMANIFOLD)
+	$(AM_V_GEN)
+	$(Q) $(XMANIFOLD) -S $< 18 > $@.tmp
+	$(Q) mv $@.tmp $@
+CLEANFILES += cython/aidapyxxcallers.hh
