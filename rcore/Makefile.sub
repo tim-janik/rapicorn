@@ -115,7 +115,7 @@ $(rcore_librapicorn_sources): rcore/aidavariants.hh
 # == zres.cc ==
 rcore/zres.cc: $(top_srcdir)/res/resfiles.list $(RAPIDRES_INTERN) # res_resfiles_list contains /res/resfiles.list
 	$(AM_V_GEN)
-	$(Q) $(RAPIDRES_INTERN) $(res_resfiles_list:%=$(top_srcdir)/res/%)	>$@.tmp
+	$(Q) $(RAPIDRES_INTERN) -s '.*/res/' $(res_resfiles_list:%=$(top_srcdir)/res/%)	>$@.tmp
 	$(Q) mv $@.tmp $@
 CLEANFILES += rcore/zres.cc
 rcore/resources.cc: rcore/zres.cc
