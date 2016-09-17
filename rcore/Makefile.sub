@@ -61,7 +61,6 @@ rcore_librapicorn_headers = $(strip	\
 	rcore/visitor.hh		\
 	rcore/xmlnode.hh		\
 )
-
 rcore_librapicorn_sources = $(strip	\
 	rcore/aida.cc			\
 	rcore/aidaprops.cc		\
@@ -89,7 +88,9 @@ rcore_librapicorn_sources = $(strip	\
 	rcore/utilities.cc		\
 	rcore/xmlnode.cc		\
 )
+rcore_doc_sources = $(rcore_librapicorn_headers) $(rcore_librapicorn_sources)
 
+# == librapicorn-buildid.cc ==
 rcore/librapicorn-buildid.cc: topbuildid.cc
 	$(AM_V_GEN)
 	$(Q) cp $< $@

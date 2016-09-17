@@ -107,6 +107,7 @@ ui_private_files = $(strip		\
 	ui/widget.dox			\
 )
 EXTRA_DIST += $(ui_private_files)
+ui_doc_sources = $(ui_librapicorn_headers) $(ui_librapicorn_sources) ui/widget.dox
 
 # == librapicorn-@MAJOR@.so ==
 ui_librapicorn_includedir		= $(includedir)/rapicorn-@MAJOR@/ui

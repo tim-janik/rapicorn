@@ -613,7 +613,6 @@ ui/tests/Makefile
 tools/Makefile
 tests/Makefile
 examples/Makefile
-docs/Makefile
 docs/mans/Makefile
 docs/examples/Makefile
 docs/imports/Makefile

@@ -3,9 +3,10 @@
 AUTOMAKE_OPTIONS = subdir-objects
 include $(top_srcdir)/Makefile.decl
 topdir = $(abs_top_srcdir)
+V_gen = @printf '  %-9s%s\n'
 
 # == non-migrated subdirs ==
-SUBDIRS		 = po . tools tests examples docs
+SUBDIRS		 = po . tools tests examples
 
 # == make setup ==
 DEFS	       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
@@ -42,3 +43,6 @@ include ui/Makefile.sub
 
 # == cython/ ==
 include cython/Makefile.sub
+
+# == docs/ ==
+include docs/Makefile.sub
