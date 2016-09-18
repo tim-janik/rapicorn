@@ -1,0 +1,16 @@
+# Rapicorn			- non-recursive Makefile
+#
+
+# == rapidrun ==
+bin_PROGRAMS	       += tools/rapidrun
+tools_rapidrun_SOURCES	= tools/rapidrun.cc
+tools_rapidrun_LDADD	= ui/librapicorn-@MAJOR@.la
+
+# == tools-rapidrun-check ==
+# check some options
+EXTRA_DIST += tools/minitest.xml
+tools-rapidrun-check: tools/rapidrun tools/minitest.xml
+	$(Q) tools/rapidrun --list $(srcdir)/tools/minitest.xml | grep -q "MiniButton" \
+	; eval "$$TSTDIAGNOSE" "'Check sample definition for MiniButton'"
+.PHONY: tools-rapidrun-check
+check-local: tools-rapidrun-check

@@ -6,7 +6,7 @@ topdir = $(abs_top_srcdir)
 V_gen = @printf '  %-9s%s\n'
 
 # == non-migrated subdirs ==
-SUBDIRS		 = po . tools tests examples
+SUBDIRS		 = po . tests examples
 
 # == make setup ==
 DEFS	       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__
@@ -43,6 +43,9 @@ include ui/Makefile.sub
 
 # == cython/ ==
 include cython/Makefile.sub
+
+# == tools/ ==
+include tools/Makefile.sub
 
 # == docs/ ==
 include docs/Makefile.sub
