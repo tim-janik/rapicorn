@@ -190,7 +190,7 @@ template<class... T0toN > using void_t = typename void_t__voider<T0toN...>::type
 #endif
 
 // == File Path Handling ==
-#ifdef  _WIN32
+#ifdef  _WIN32 // includes _WIN64
 #define RAPICORN_DIR_SEPARATOR		  '\\'
 #define RAPICORN_DIR_SEPARATOR_S	  "\\"
 #define RAPICORN_SEARCHPATH_SEPARATOR	  ';'
