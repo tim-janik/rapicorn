@@ -43,3 +43,24 @@ t203-more-basics-test: tests/t203-more-basics
 	$(Q) cd tests && $(abs_top_srcdir)/taptool.sh --test-name t203-more-basics -- ./t203-more-basics
 .PHONY: t203-more-basics-test
 check-local: t203-more-basics-test
+
+# == t204-assertions ==
+t204-assertions-test: tests/t203-more-basics # validate failing assertions and fatal aborting
+	$(Q) rm -f $(TSTOUT)
+	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-assertion-hook	2>$(TSTOUT)) $(QSTDERR) && \
+	     grep -q 'assertion-hook.*magic=0xdecaff'	$(TSTOUT) ; $(TSTRESULT) "check Test::set_assertion_hook()"
+	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-assert		2>$(TSTOUT)) $(QSTDERR) && \
+	     grep -q 'failed.*"test-assert"'		$(TSTOUT) ; $(TSTRESULT) "verify failing assert"
+	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-unreached		2>$(TSTOUT)) $(QSTDERR) && \
+	     grep -q 'FATAL:.*not.*reach'		$(TSTOUT) ; $(TSTRESULT) "verify failing unreached"
+	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-TASSERT		2>$(TSTOUT)) $(QSTDERR) && \
+	     grep -q 'assert.*fail.*".*TASSERT"'	$(TSTOUT) ; $(TSTRESULT) "verify failing TASSERT()"
+	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-TCMP			2>$(TSTOUT)) $(QSTDERR) && \
+	     grep -q 'assert.*fail.*".*TCMP"'		$(TSTOUT) ; $(TSTRESULT) "verify failing TCMP()"
+	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-fatal		2>$(TSTOUT)) $(QSTDERR) && \
+	     grep -q 'FATAL:.*fatal.*"test-fatal"'	$(TSTOUT) ; $(TSTRESULT) "verify fatal error"
+	$(Q) grep -qi 'Aborting..'			$(TSTOUT) ; $(TSTRESULT) "verify aborting"
+	$(Q) rm -f $(TSTOUT) && eval "$$TSTDIAGNOSE"
+tests_t204_assertions_env = RAPICORN=debug:no-syslog:no-fatal-syslog
+.PHONY: t204-assertions-test
+check-local: t204-assertions-test
