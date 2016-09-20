@@ -49,6 +49,8 @@ t204-assertions-test: tests/t203-more-basics # validate failing assertions and f
 	$(Q) rm -f $(TSTOUT)
 	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-assertion-hook	2>$(TSTOUT)) $(QSTDERR) && \
 	     grep -q 'assertion-hook.*magic=0xdecaff'	$(TSTOUT) ; $(TSTRESULT) "check Test::set_assertion_hook()"
+	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-critical		2>$(TSTOUT)) $(QSTDERR) && \
+	     grep -q 'test-critical-message'		$(TSTOUT) ; $(TSTRESULT) "verify critical message"
 	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-assert		2>$(TSTOUT)) $(QSTDERR) && \
 	     grep -q 'failed.*"test-assert"'		$(TSTOUT) ; $(TSTRESULT) "verify failing assert"
 	$(Q) (! $(tests_t204_assertions_env) tests/t203-more-basics --test-unreached		2>$(TSTOUT)) $(QSTDERR) && \

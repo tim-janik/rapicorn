@@ -34,6 +34,12 @@ static void
 test_logging (const char *logarg)
 {
   errno = EINVAL;       // used by P* checks
+  if (String ("--test-critical") == logarg)
+    {
+      rapicorn_debug_fatal_syslog_0();
+      critical ("test-critical-message");
+      exit (0); // should not be reached for tests
+    }
   if (String ("--test-assert") == logarg)
     {
       rapicorn_debug_fatal_syslog_0();
