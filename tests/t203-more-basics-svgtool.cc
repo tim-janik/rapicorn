@@ -7,8 +7,6 @@
 
 #include "rcore/svg.hh"
 
-#include "t203-more-basics-resources.cc"
-
 namespace Rapicorn { namespace Cairo {
 
 /// @TODO: unify CHECK_CAIRO_STATUS() macro implementations
