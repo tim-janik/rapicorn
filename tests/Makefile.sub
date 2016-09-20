@@ -1,0 +1,28 @@
+# Rapicorn			- non-recursive Makefile
+#
+
+# == t201-rcore-basics ==
+noinst_PROGRAMS			       += tests/t201-rcore-basics
+tests_t201_rcore_basics_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+tests_t201_rcore_basics_SOURCES		=	\
+	tests/t201-rcore-basics-main.cc		\
+	tests/t201-rcore-basics-aidatests.cc	\
+	tests/t201-rcore-basics-markup.cc	\
+	tests/t201-rcore-basics-strings.cc	\
+	tests/t201-rcore-basics-timebits.cc	\
+	tests/t201-rcore-basics-datalist.cc	\
+	tests/t201-rcore-basics-loops.cc
+tests/t201-rcore-basics-markup.cc: tests/t201-rcore-basics-xmldata.cc
+
+# == t201-rcore-basics-test ==
+t201-rcore-basics-test: tests/t201-rcore-basics
+	$(Q) cd tests && $(abs_top_srcdir)/taptool.sh --test-name t201-rcore-basics -- ./t201-rcore-basics
+.PHONY: t201-rcore-basics-test
+check-local: t201-rcore-basics-test
+
+# == t202-randomized-hashing ==
+t202-randomized-hashing-test: tests/t201-rcore-basics	# test hash reseeding at program start
+	$(Q) test `tests/t201-rcore-basics --string-hash64 foo` != `tests/t201-rcore-basics --string-hash64 foo` ; $(TSTRESULT)
+.PHONY: t202-randomized-hashing-test
+check-local: t202-randomized-hashing-test
+

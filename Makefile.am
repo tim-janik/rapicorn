@@ -6,7 +6,7 @@ topdir = $(abs_top_srcdir)
 V_gen = @printf '  %-9s%s\n'
 
 # == non-migrated subdirs ==
-SUBDIRS		 = po . tests examples
+SUBDIRS		 = po . examples
 
 # == make setup ==
 DEFS	       += @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__ -D__TOPDIR__="\"$(abs_top_srcdir)/\""
@@ -15,6 +15,7 @@ AM_CXXFLAGS    += $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
 lib_LTLIBRARIES	=
 bin_PROGRAMS    =
 noinst_SCRIPTS	=
+noinst_PROGRAMS =
 
 # == tools ==
 XMANIFOLD	= $(top_srcdir)/aidacc/xmanifold.py
@@ -49,3 +50,6 @@ include tools/Makefile.sub
 
 # == docs/ ==
 include docs/Makefile.sub
+
+# == tests/ ==
+include tests/Makefile.sub
