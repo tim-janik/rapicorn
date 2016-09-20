@@ -26,3 +26,29 @@ t202-randomized-hashing-test: tests/t201-rcore-basics	# test hash reseeding at p
 .PHONY: t202-randomized-hashing-test
 check-local: t202-randomized-hashing-test
 
+# == t203-more-basics-resources.cc ==
+tests_t203_more_basics_resfiles = tests/t203-more-basics-sample.svg
+EXTRA_DIST += $(tests_t203_more_basics_resfiles)
+tests/t203-more-basics-resources.cc: $(tests_t203_more_basics_resfiles) rcore/rapidres
+	$(AM_V_GEN)
+	$(Q) rcore/rapidres $(tests_t203_more_basics_resfiles:%=$(srcdir)/%) > $@.xtmp
+	$(Q) mv $@.xtmp $@
+CLEANFILES += tests/t203-more-basics-resources.cc
+
+# == t203-more-basics ==
+noinst_PROGRAMS				+= tests/t203-more-basics
+tests_t203_more_basics_LDADD		 = ui/librapicorn-@MAJOR@.la $(SVG_DEPENDENCIES_LIBS)
+tests_t203_more_basics_SOURCES		 = 	\
+	tests/t203-more-basics-main.cc		\
+	tests/t203-more-basics-performance.cc	\
+	tests/t203-more-basics-signal2.cc	\
+	tests/t203-more-basics-svgtool.cc	\
+	tests/t203-more-basics-threads.cc	\
+	tests/t203-more-basics-xmltest.cc
+tests/t203-more-basics-xmltest.cc: tests/t201-rcore-basics-xmldata.cc
+
+# == t203-more-basics-test ==
+t203-more-basics-test: tests/t203-more-basics
+	$(Q) cd tests && $(abs_top_srcdir)/taptool.sh --test-name t203-more-basics -- ./t203-more-basics
+.PHONY: t203-more-basics-test
+check-local: t203-more-basics-test
