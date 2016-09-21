@@ -1,26 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-# Usage: mkbuildid.sh
+# Usage: mkbuildid.sh [outfile] [depfile]
 # Update BuildID and display source file name
 
 SCRIPTNAME="$(basename "$0")" ; die() { e="$1"; shift; echo "$SCRIPTNAME: $*" >&2; exit "$e"; }
 SCRIPTDIR="$(dirname "$(readlink -f "$0")")"
 
-test "$#" -ge 1 || die 1 "Usage: mkbuildid.sh <fallbackversion> [outfile] [depfile]"
-FALLBACK_VERSION="$1"
-BUILDID_CC="$2"
-BUILDID_D="$3"
-GITINDEX="${SCRIPTDIR}/../.git/index"
+# Extract version, see: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version
+FALLBACK_VERSION="$(sed -nr "/^AC_INIT\b/{ s/^[^,]*,[^0-9]*([A-Za-z0-9.:~+-]*).*/\1/; p; }" $SCRIPTDIR/../configure.ac)"
+test -n "$FALLBACK_VERSION" || die 7 "failed to detect AC_INIT in $SCRIPTDIR/../configure.ac"
 
-if test -e "$GITINDEX" ; then			# from .git
-  BUILDID=$(
-    git describe --long --match '[0-9]*.*[0-9]' --first-parent --abbrev=14 HEAD |
-	sed 's/-\([^-]*-g\)/+r\1/'
-	 )
-else						# without .git
-  BUILDID="${FALLBACK_VERSION-0.0.0}-untracked"
-fi
+BUILDID_CC="$1"
+BUILDID_D="$2"
+GITINDEX="$SCRIPTDIR/../.git/index"
+
+gen_buildid() {
+  test -e "$GITINDEX" ||			# without .git
+      { printf %s "${FALLBACK_VERSION-0.0.0}-untracked" ; return ; }
+  COMMITID="${1-HEAD}"
+  DESC=$(git describe --match '[0-9]*.*[0-9]' --abbrev=5 $COMMITID)
+  test "$DESC" != "${DESC%%-*}" ||		# HEAD is on release tag
+      { echo "$DESC" ; return ; }
+  # HEAD has commits on top of last release tag, transform 3.2.1-7-gabc -> 3.2.2~7-gabc
+  MICRO=$(printf %s "$DESC" | sed 's/^[^-]*\b\([0-9]\+\)-.*/\1/')
+  [[ "$MICRO" =~ ^[0-9]+$ ]] || die 7 "failed to detect MICRO in $DESC"
+  MICRO=$(expr 1 + "$MICRO")
+  NEXT=$(printf %s "$DESC" | sed "s/^\([^-]*\)\b\([0-9]\+\)-/\1$MICRO~wip/")
+  printf %s "$NEXT"
+}
+
+BUILDID=$(gen_buildid HEAD)
 
 BUILDID_CODE=$(cat <<__EOF
 #include "rcore/cxxaux.hh" // const char* buildid();

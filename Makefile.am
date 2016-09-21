@@ -15,10 +15,10 @@ lib_LTLIBRARIES	=
 bin_PROGRAMS    =
 
 # == topbuildid.cc ==
-topbuildid ::= $(shell $(top_srcdir)/misc/mkbuildid.sh $(VERSION))
+topbuildid ::= $(shell $(top_srcdir)/misc/mkbuildid.sh)
 topbuildid.cc: $(top_srcdir)/misc/mkbuildid.sh
 	$(AM_V_GEN)
-	$(Q) $(top_srcdir)/misc/mkbuildid.sh $(VERSION) $@ $(DEPDIR)/topbuildid.cc.d
+	$(Q) $(top_srcdir)/misc/mkbuildid.sh $@ $(DEPDIR)/topbuildid.cc.d
 CLEANFILES += topbuildid.cc
 -include $(DEPDIR)/topbuildid.cc.d
 buildid:
