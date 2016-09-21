@@ -81,3 +81,13 @@ t205-debug-output-test: tests/t203-more-basics # check various non-fatal logging
 tests_t205_debug_output_env = RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all
 .PHONY: t205-debug-output-test
 check-local: t205-debug-output-test
+
+# == t901-bench-rcore ==
+noinst_PROGRAMS				+= tests/t901-bench-rcore
+tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
+tests_t901_bench_rcore_SOURCES		 = \
+	tests/t901-bench-rcore-main.cc
+t901-bench-rcore-test: tests/t901-bench-rcore
+	$(Q) cd tests && $(abs_top_srcdir)/taptool.sh --test-name t901-bench-rcore -- ./t901-bench-rcore
+.PHONY: t901-bench-rcore-test
+check-local: t901-bench-rcore-test
