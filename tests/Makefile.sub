@@ -94,6 +94,36 @@ t206-naive-entropy-test: tests/t901-bench-rcore
 .PHONY: t206-naive-entropy-test
 check-local: t206-naive-entropy-test
 
+# == t303-mini-server ==
+noinst_PROGRAMS				+= tests/t303-mini-server
+tests_t303_mini_server_LDADD		 = ui/librapicorn-@MAJOR@.la
+tests_t303_mini_server_CXXFLAGS		 = $(AM_CXXFLAGS) -Itests/
+tests_t303_mini_server_SOURCES		 =	\
+	tests/t303-mini-server-main.cc
+EXTRA_DIST				+=	\
+	tests/t303-mini-server.idl		\
+	tests/t303-mini-server-impl.cc
+tests_t303_generated			 =	\
+	tests/t303-mini-server-srvt.hh		\
+	tests/t303-mini-server-srvt.cc		\
+	tests/t303-mini-server-clnt.hh		\
+	tests/t303-mini-server-clnt.cc
+# MAKE(1) supports parallel execution of a multiple-targets-rule *only* for implicit rules (with '%')
+tests/t303-%-clnt.hh tests/t303-%-clnt.cc tests/t303-%-srvt.hh tests/t303-%-srvt.cc: tests/t303-%.idl $(AIDACC_CXXSTUB_PY) $(AIDACC_INTERN)
+	$(AM_V_GEN)
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G clienthh -G strip-path=$(abs_top_srcdir)/ $< -o tests/t303-$*-clnt.hh
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G clientcc -G strip-path=$(abs_top_srcdir)/ $< -o tests/t303-$*-clnt.cc
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G serverhh -G strip-path=$(abs_top_srcdir)/ $< -o tests/t303-$*-srvt.hh
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G servercc -G strip-path=$(abs_top_srcdir)/ $< -o tests/t303-$*-srvt.cc
+CLEANFILES += $(tests_t303_generated)
+tests/t303-mini-server-main.cc: $(tests_t303_generated)
+
+# == t303-mini-server-test ==
+t303-mini-server-test: tests/t303-mini-server
+	$(Q) tests/t303-mini-server ; eval "$$TSTDIAGNOSE"
+.PHONY: t303-mini-server-test
+check-local: t303-mini-server-test
+
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
 tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
