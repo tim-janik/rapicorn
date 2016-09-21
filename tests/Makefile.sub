@@ -82,6 +82,18 @@ tests_t205_debug_output_env = RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=
 .PHONY: t205-debug-output-test
 check-local: t205-debug-output-test
 
+# == t206-naive-entropy ==
+t206-naive-entropy-test: tests/t901-bench-rcore
+	$(Q) A=`tests/t901-bench-rcore --entropy` ; B=`tests/t901-bench-rcore --entropy`; \
+	       test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT) "naive startup entropy check"
+	$(Q) A=`tests/t901-bench-rcore --system-entropy` ; B=`tests/t901-bench-rcore --system-entropy`; \
+	       test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT) "naive system entropy check"
+	$(Q) A=`tests/t901-bench-rcore --runtime-entropy` ; B=`tests/t901-bench-rcore --runtime-entropy`; \
+	       test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT) "naive runtime entropy check"
+	$(Q) eval "$$TSTDIAGNOSE"
+.PHONY: t206-naive-entropy-test
+check-local: t206-naive-entropy-test
+
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
 tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
