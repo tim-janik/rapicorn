@@ -30,6 +30,9 @@ CLEANFILES += topbuildid.cc
 buildid:
 	@echo $(topbuildid)
 
+# == ./ dependencies ==
+rapicorn.hh: ui/clientapi.hh
+
 # == res/ ==
 include res/Makefile.sub
 

@@ -5,6 +5,7 @@
 bin_PROGRAMS	       += tools/rapidrun
 tools_rapidrun_SOURCES	= tools/rapidrun.cc
 tools_rapidrun_LDADD	= ui/librapicorn-@MAJOR@.la
+tools/rapidrun.cc: rapicorn.hh
 
 # == tools-rapidrun-check ==
 # check some options
