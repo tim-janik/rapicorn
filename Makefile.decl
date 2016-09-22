@@ -156,10 +156,10 @@ export TSTOCR = tstocr() { IMG="$$1"; OUT=`basename "$$1".tocr`; shift; \
   shift ; done || \
   printf '  CHECK  %-64s%s\n' "$$MAKE_TARGET_FILE: OCR tests with gocr(1)..." "SKIP" ; \
   rm -f "$$OUT" ; }; tstocr
-# $(call TSTOUT, [postfix]) - test output filename
-TSTOUT = $(strip xtst$(strip $(1))-$(@F).out)
-# $(call TSTTMP, [postfix]) - temporary test filename
-TSTTMP = $(strip xtst$(strip $(1))-$(@F).tmp)
+# $(call TSTOUT, [prefix]) - test output filename
+TSTOUT = $(strip $(@D)/xtst$(strip $(1))-$(@F).out)
+# $(call TSTTMP, [prefix]) - temporary test filename
+TSTTMP = $(strip $(@D)/xtst$(strip $(1))-$(@F).tmp)
 
 # === force-check-update ===
 force-check-update:
