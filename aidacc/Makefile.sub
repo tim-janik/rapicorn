@@ -1,11 +1,7 @@
 # Rapicorn			- non-recursive Makefile
 #
 
-AIDACC_INTERN		= $(top_builddir)/aidacc/aidacc-intern
 AIDACC			= $(top_builddir)/aidacc/aidacc
-AIDACC_CXXSTUB_PY	= aidacc/CxxStub.py
-YAPPS			= $(PYTHON) $(top_srcdir)/yapps2_deb/yapps2.py
-GPRINT			= @printf '  %-9s%s\n'
 
 # == aidacc files ==
 aidacc_imports = $(strip		\
