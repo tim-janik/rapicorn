@@ -124,6 +124,25 @@ t303-mini-server-test: tests/t303-mini-server
 .PHONY: t303-mini-server-test
 check-local: t303-mini-server-test
 
+# == check-python-tests (t5xx) ==
+EXTRA_DIST += $(make_check_pytests)
+make_check_pytests += \
+	tests/t500-main-loop.py		\
+	tests/t501-simple-click.py	\
+	tests/t502-property-basics.py	\
+	tests/t503-garbage-collector.py	\
+	tests/t504-size-groups.py	\
+	tests/t505-property-binding.py
+define make_check_pytests_TEMPLATE
+$(1)--test: $(1)
+	$$(Q) $$(XVFB_PYTHON_INTERN) $(1) ; eval "$$$$TSTDIAGNOSE" $(1)
+.PHONY: $(1)--test
+tests/check-python-tests: $(1)--test
+endef
+$(foreach PYTEST, $(make_check_pytests), $(eval $(call make_check_pytests_TEMPLATE, $(PYTEST))))
+.PHONY: tests/check-python-tests
+check-local: tests/check-python-tests
+
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
 tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
