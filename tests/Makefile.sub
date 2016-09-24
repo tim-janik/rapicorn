@@ -147,8 +147,8 @@ t601-arrow-sizing-test: tests/t601-arrow-sizing.xml
 check-local: t601-arrow-sizing-test
 
 # == t602-factory-dump ==
-EXTRA_DIST += tests/t602-factory-dump.ref
-make_check_xml_files += tests/t602-factory-dump.xml
+EXTRA_DIST		+= tests/t602-factory-dump.ref
+make_check_xml_files	+= tests/t602-factory-dump.xml
 t602-factory-dump-test: tests/t602-factory-dump.ref tests/t602-factory-dump.xml
 	$(Q) $(XVFB_RAPIDRUN) -x --test-dump \
 	  --test-matched-node=".*" $(top_srcdir)/tests/t602-factory-dump.xml > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
@@ -157,8 +157,8 @@ t602-factory-dump-test: tests/t602-factory-dump.ref tests/t602-factory-dump.xml
 check-local: t602-factory-dump-test
 
 # == t700-png-image ==
-EXTRA_DIST += tests/t700-png-image.png
-make_check_xml_files += tests/t700-png-image.xml
+EXTRA_DIST		+= tests/t700-png-image.png
+make_check_xml_files	+= tests/t700-png-image.xml
 t700-png-image-test: tests/t700-png-image.xml tests/t700-png-image.png $(IMGCHECK)
 	$(Q) rm -f tests/t700-png-image-snap.png
 	$(Q) test $(srcdir) = $(builddir) || cp $(srcdir)/tests/t700-png-image.png $(builddir)/tests
@@ -168,6 +168,17 @@ t700-png-image-test: tests/t700-png-image.xml tests/t700-png-image.png $(IMGCHEC
 	$(Q) rm -f tests/t700-png-image-snap.png
 .PHONY: t700-png-image-test
 check-local: t700-png-image-test
+
+# == t701-alignment-layout ==
+EXTRA_DIST		+= tests/t701-alignment-layout.png
+make_check_xml_files	+= tests/t701-alignment-layout.xml
+t701-alignment-layout-test: tests/t701-alignment-layout.xml tests/t701-alignment-layout.png $(IMGCHECK)
+	$(Q) rm -f tests/t701-alignment-layout-snap.png
+	$(Q) cd tests/ && $(XVFB_RAPIDRUN) -x $(topdir)/%D%/t701-alignment-layout.xml
+	$(Q) $(IMGCHECK) $(topdir)/%D%/t701-alignment-layout.png tests/t701-alignment-layout-snap.png ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f tests/t701-alignment-layout-snap.png
+.PHONY: t701-alignment-layout-test
+check-local: t701-alignment-layout-test
 
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
