@@ -143,6 +143,13 @@ $(foreach PYTEST, $(make_check_pytests), $(eval $(call make_check_pytests_TEMPLA
 .PHONY: tests/check-python-tests
 check-local: tests/check-python-tests
 
+# == t600-xmlui-eval ==
+make_check_xml_files += tests/t600-xmlui-eval.xml
+t600-xmlui-eval-test: tests/t600-xmlui-eval.xml
+	$(Q) $(XVFB_RAPIDRUN) -x $(srcdir)/tests/t600-xmlui-eval.xml ; eval "$$TSTDIAGNOSE"
+.PHONY: t600-xmlui-eval-test
+check-local: t600-xmlui-eval-test
+
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
 tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
