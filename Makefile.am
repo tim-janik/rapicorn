@@ -52,6 +52,19 @@ stamp-autocheck-xmllint: $(make_check_xml_files)
 	done
 	$(Q) touch $@
 
+# == check-python-tests ==
+check-python-tests:
+EXTRA_DIST += $(make_check_pytests)
+define make_check_pytests_TEMPLATE
+$(1)--test: $(1)
+	$$(Q) $$(XVFB_PYTHON_INTERN) $(1) ; eval "$$$$TSTDIAGNOSE" $(1)
+.PHONY: $(1)--test
+check-python-tests: $(1)--test
+endef
+$(foreach PYTEST, $(make_check_pytests), $(eval $(call make_check_pytests_TEMPLATE, $(PYTEST))))
+.PHONY: check-python-tests
+check-local: check-python-tests
+
 # == ./ dependencies ==
 rapicorn.hh: ui/clientapi.hh
 
