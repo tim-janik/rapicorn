@@ -157,6 +157,19 @@ t602-factory-dump-test: tests/t602-factory-dump.ref tests/t602-factory-dump.xml
 .PHONY: t602-factory-dump-test
 check-local: t602-factory-dump-test
 
+# == t700-png-image ==
+EXTRA_DIST += tests/t700-png-image.png
+make_check_xml_files += tests/t700-png-image.xml
+t700-png-image-test: tests/t700-png-image.xml tests/t700-png-image.png $(IMGCHECK)
+	$(Q) rm -f tests/t700-png-image-snap.png
+	$(Q) test $(srcdir) = $(builddir) || cp $(srcdir)/tests/t700-png-image.png $(builddir)/tests
+	$(Q) export RAPIDRUN_RES=$(abs_top_srcdir)/tests/ && cd tests/ && $(XVFB_RAPIDRUN) -x $(abs_top_srcdir)/tests/t700-png-image.xml
+	$(Q) test $(srcdir) = $(builddir) || rm -f $(builddir)/tests/t700-png-image.png
+	$(Q) $(IMGCHECK) $(srcdir)/tests/t700-png-image.png tests/t700-png-image-snap.png ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f tests/t700-png-image-snap.png
+.PHONY: t700-png-image-test
+check-local: t700-png-image-test
+
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
 tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
