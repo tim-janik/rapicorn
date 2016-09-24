@@ -14,9 +14,11 @@ AM_CPPFLAGS		+= -I$(top_builddir) # -I$(top_srcdir)
 AM_CXXFLAGS		+= $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
 lib_LTLIBRARIES 	 =
 bin_PROGRAMS		 =
+noinst_DATA		 =
 noinst_SCRIPTS		 =
 noinst_PROGRAMS 	 =
 make_check_pytests	 =
+make_check_xml_files	 =
 
 # == project tools and paths ==
 # objdir:		# Loading newly built Python modules requires accesss to libtool objdir
@@ -38,6 +40,16 @@ CLEANFILES += topbuildid.cc
 -include $(DEPDIR)/topbuildid.cc.d
 buildid:
 	@echo $(topbuildid)
+
+# == stamp-autocheck-xmllint ==
+EXTRA_DIST	+= $(make_check_xml_files)
+noinst_DATA	+= stamp-autocheck-xmllint
+CLEANFILES	+= stamp-autocheck-xmllint
+stamp-autocheck-xmllint: $(make_check_xml_files)
+	$(Q) for XMLFILE in $? ; do \
+	  $(XMLLINT) --noout "$$XMLFILE" ; eval "$$TSTDIAGNOSE" "$$XMLFILE" || exit $$? ; \
+	done
+	$(Q) touch $@
 
 # == ./ dependencies ==
 rapicorn.hh: ui/clientapi.hh
