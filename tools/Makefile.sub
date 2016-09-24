@@ -15,3 +15,9 @@ tools-rapidrun-check: tools/rapidrun tools/minitest.xml
 	; eval "$$TSTDIAGNOSE" "'Check sample definition for MiniButton'"
 .PHONY: tools-rapidrun-check
 check-local: tools-rapidrun-check
+
+# == imgcheck ==
+noinst_PROGRAMS		+= tools/imgcheck
+tools_imgcheck_SOURCES	 = tools/imgcheck.cc
+tools_imgcheck_LDADD	 = ui/librapicorn-@MAJOR@.la
+tools/imgcheck.cc: rapicorn.hh

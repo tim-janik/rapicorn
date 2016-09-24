@@ -31,6 +31,7 @@ WITH_PYTHONPATH 	= PYTHONPATH="$(abs_top_builddir)/cython/$(objdir):$$PYTHONPATH
 PYTHON_INTERN		= $(WITH_PYTHONPATH) $(PYTHON)
 XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH) $(X11_ENV) $(PYTHON)
 XVFB_RAPIDRUN		= $(X11_ENV) $(abs_top_builddir)/tools/rapidrun --fatal-warnings "$$@"
+IMGCHECK		= tools/imgcheck
 
 # == topbuildid.cc ==
 topbuildid ::= $(shell $(top_srcdir)/misc/mkbuildid.sh)

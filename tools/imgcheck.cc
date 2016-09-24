@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "../../configure.h"
+#include "../configure.h"
 
 #define PRGNAME "imgcheck"
 
