@@ -147,6 +147,15 @@ t601-arrow-sizing-test: tests/t601-arrow-sizing.xml
 .PHONY: t601-arrow-sizing-test
 check-local: t601-arrow-sizing-test
 
+# == t602-factory-dump ==
+EXTRA_DIST += tests/t602-factory-dump.ref
+make_check_xml_files += tests/t602-factory-dump.xml
+t602-factory-dump-test: tests/t602-factory-dump.ref tests/t602-factory-dump.xml
+	$(Q) $(XVFB_RAPIDRUN) -x --test-dump \
+	  --test-matched-node=".*" $(top_srcdir)/tests/t602-factory-dump.xml > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) eval "$$TSTDIFF" "'$(top_srcdir)/tests/t602-factory-dump.ref'" "'$(TSTOUT)'"
+.PHONY: t602-factory-dump-test
+check-local: t602-factory-dump-test
 
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
