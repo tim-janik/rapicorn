@@ -140,6 +140,14 @@ t600-xmlui-eval-test: tests/t600-xmlui-eval.xml
 .PHONY: t600-xmlui-eval-test
 check-local: t600-xmlui-eval-test
 
+# == t601-arrow-sizing ==
+make_check_xml_files += tests/t601-arrow-sizing.xml
+t601-arrow-sizing-test: tests/t601-arrow-sizing.xml
+	$(Q) $(XVFB_RAPIDRUN) -x $(srcdir)/tests/t601-arrow-sizing.xml ; eval "$$TSTDIAGNOSE"
+.PHONY: t601-arrow-sizing-test
+check-local: t601-arrow-sizing-test
+
+
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
 tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
