@@ -1,5 +1,4 @@
 # Rapicorn			- non-recursive Makefile
-#
 
 AIDACC			= $(top_builddir)/aidacc/aidacc
 

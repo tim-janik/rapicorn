@@ -1,5 +1,4 @@
 # Rapicorn			- non-recursive Makefile
-#
 
 # == install PyxxStub.py ==
 CYTHON_PYXXSTUB_PY			= cython/PyxxStub.py

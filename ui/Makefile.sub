@@ -1,5 +1,4 @@
 # Rapicorn			- non-recursive Makefile
-#
 
 # == librapicorn-@MAJOR@.so files ==
 ui_librapicorn_headers = $(strip	\

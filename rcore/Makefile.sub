@@ -1,5 +1,4 @@
 # Rapicorn			- non-recursive Makefile
-#
 
 # == rapidres ==
 RAPIDRES_INTERN			= $(top_builddir)/rcore/rapidres

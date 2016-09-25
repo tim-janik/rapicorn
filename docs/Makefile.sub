@@ -1,5 +1,4 @@
 # Rapicorn			- non-recursive Makefile
-#
 
 docs_project_link   = http://rapicorn.org
 docs_doxy_sources   = $(ui_doc_sources) $(rcore_doc_sources)

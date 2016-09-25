@@ -1,5 +1,4 @@
 # Rapicorn			- non-recursive Makefile
-#
 
 # == t201-rcore-basics ==
 noinst_PROGRAMS			       += tests/t201-rcore-basics

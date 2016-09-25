@@ -1,5 +1,4 @@
 # Rapicorn			- non-recursive Makefile
-#
 
 # == rapidrun ==
 bin_PROGRAMS	       += tools/rapidrun
