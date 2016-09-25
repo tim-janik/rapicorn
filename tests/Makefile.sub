@@ -110,10 +110,10 @@ tests_t303_generated			 =	\
 # MAKE(1) supports parallel execution of a multiple-targets-rule *only* for implicit rules (with '%')
 tests/t303-%-clnt.hh tests/t303-%-clnt.cc tests/t303-%-srvt.hh tests/t303-%-srvt.cc: tests/t303-%.idl $(AIDACC_CXXSTUB_PY) $(AIDACC_INTERN)
 	$(AM_V_GEN)
-	$(Q) $(AIDACC_INTERN) -x CxxStub -G clienthh -G strip-path=$(abs_top_srcdir)/ $< -o tests/t303-$*-clnt.hh
-	$(Q) $(AIDACC_INTERN) -x CxxStub -G clientcc -G strip-path=$(abs_top_srcdir)/ $< -o tests/t303-$*-clnt.cc
-	$(Q) $(AIDACC_INTERN) -x CxxStub -G serverhh -G strip-path=$(abs_top_srcdir)/ $< -o tests/t303-$*-srvt.hh
-	$(Q) $(AIDACC_INTERN) -x CxxStub -G servercc -G strip-path=$(abs_top_srcdir)/ $< -o tests/t303-$*-srvt.cc
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G clienthh -G strip-path=$(topdir)/ $< -o tests/t303-$*-clnt.hh
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G clientcc -G strip-path=$(topdir)/ $< -o tests/t303-$*-clnt.cc
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G serverhh -G strip-path=$(topdir)/ $< -o tests/t303-$*-srvt.hh
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G servercc -G strip-path=$(topdir)/ $< -o tests/t303-$*-srvt.cc
 CLEANFILES += $(tests_t303_generated)
 tests/t303-mini-server-main.cc: $(tests_t303_generated)
 
@@ -162,7 +162,7 @@ make_check_xml_files	+= tests/t700-png-image.xml
 t700-png-image-test: tests/t700-png-image.xml tests/t700-png-image.png $(IMGCHECK)
 	$(Q) rm -f tests/t700-png-image-snap.png
 	$(Q) test $(srcdir) = $(builddir) || cp $(srcdir)/tests/t700-png-image.png $(builddir)/tests
-	$(Q) export RAPIDRUN_RES=$(abs_top_srcdir)/tests/ && cd tests/ && $(XVFB_RAPIDRUN) -x $(abs_top_srcdir)/tests/t700-png-image.xml
+	$(Q) export RAPIDRUN_RES=$(topdir)/tests/ && cd tests/ && $(XVFB_RAPIDRUN) -x $(topdir)/tests/t700-png-image.xml
 	$(Q) test $(srcdir) = $(builddir) || rm -f $(builddir)/tests/t700-png-image.png
 	$(Q) $(IMGCHECK) $(srcdir)/tests/t700-png-image.png tests/t700-png-image-snap.png ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f tests/t700-png-image-snap.png

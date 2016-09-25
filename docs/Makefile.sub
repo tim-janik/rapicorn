@@ -48,7 +48,7 @@ docs/doxy/html: topbuildid.cc docs/doxygen.cfg docs/error.ign $(docs_doxy_auxfil
 	&& echo "OUTPUT_DIRECTORY	= output/" \
 	&& echo "GENERATE_TAGFILE	= output/html/tagfile.xml" \
 	&& echo "HTML_EXTRA_STYLESHEET	= extrastyles.css" \
-	&& echo "EXAMPLE_PATH		= $(abs_top_srcdir)/" \
+	&& echo "EXAMPLE_PATH		= $(topdir)/" \
 	&& echo "TAGFILES              += $(docs_doxy_tagsrcs)" \
 	) > docs/doxy/Doxyfile
 	$(V_gen) "DOXYGEN" $@

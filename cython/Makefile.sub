@@ -60,7 +60,7 @@ CLEANFILES += cython/Rapicorn.cc
 # == rapicorn-api.pyx ==
 cython/rapicorn-api.pyx: ui/interfaces.idl $(AIDACC_INTERN) $(CYTHON_PYXXSTUB_PY)
 	$(AM_V_GEN)
-	$(Q) $(AIDACC_INTERN) -x $(CYTHON_PYXXSTUB_PY) $< -o $@ -G strip-path=$(abs_top_srcdir)/
+	$(Q) $(AIDACC_INTERN) -x $(CYTHON_PYXXSTUB_PY) $< -o $@ -G strip-path=$(topdir)/
 CLEANFILES += cython/rapicorn-api.pyx
 
 # == aidapyxxcallers.hh ==

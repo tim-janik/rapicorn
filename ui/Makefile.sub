@@ -139,7 +139,7 @@ $(ui_librapicorn_sources): ui/serverapi.hh
 # == serverapi.cc ==
 ui/serverapi.cc: ui/interfaces.idl $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
 	$(AM_V_GEN)
-	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G servercc -G strip-path=$(abs_top_srcdir)/ \
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G servercc -G strip-path=$(topdir)/ \
 	  --inclusions '"widget.hh"' ui/interfaces.idl -o - > $@.tmp
 	$(Q) mv $@.tmp $@
 CLEANFILES += ui/serverapi.cc
@@ -157,7 +157,7 @@ $(ui_librapicorn_sources): ui/clientapi.hh
 # == clientapi.cc ==
 ui/clientapi.cc: ui/interfaces.idl $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
 	$(AM_V_GEN)
-	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G clientcc -G strip-path=$(abs_top_srcdir)/ \
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G clientcc -G strip-path=$(topdir)/ \
 	  --inclusions '"clientapi.hh"' ui/interfaces.idl -o - > $@.tmp
 	$(Q) mv $@.tmp $@
 CLEANFILES += ui/clientapi.cc
