@@ -203,3 +203,13 @@ t901-bench-rcore-test: tests/t901-bench-rcore
 	$(Q) cd tests && $(abs_top_srcdir)/taptool.sh --test-name t901-bench-rcore -- ./t901-bench-rcore
 .PHONY: t901-bench-rcore-test
 check-local: t901-bench-rcore-test
+
+# == t902-bench-aida ==
+noinst_PROGRAMS 			+= tests/t902-bench-aida
+tests_t902_bench_aida_LDADD		 = ui/librapicorn-@MAJOR@.la
+tests_t902_bench_aida_SOURCES		 = \
+	tests/t902-bench-aida-main.cc
+t902-bench-aida-test: tests/t902-bench-aida
+	$(Q) tests/t902-bench-aida ; eval "$$TSTDIAGNOSE"
+.PHONY: t902-bench-aida-test
+check-local: t902-bench-aida-test
