@@ -180,6 +180,16 @@ t701-alignment-layout-test: tests/t701-alignment-layout.xml tests/t701-alignment
 .PHONY: t701-alignment-layout-test
 check-local: t701-alignment-layout-test
 
+# == t702-text-ocr ==
+make_check_xml_files	+= tests/t702-text-ocr.xml
+t702-text-ocr-test: tests/t702-text-ocr.xml
+	$(Q) rm -f tests/t702-text-ocr-snap.png
+	$(Q) cd tests/ && $(XVFB_RAPIDRUN) --snapshot=t702-text-ocr-snap.png -x $(topdir)/%D%/t702-text-ocr.xml $(QSTDERR)
+	$(Q) eval "$$TSTOCR" tests/t702-text-ocr-snap.png "Regu.ar.Text" \""Insensitive Text"\" \""Editab.e Text Edit.r Text"\"
+	$(Q) rm -f tests/t702-text-ocr-snap.png
+.PHONY: t702-text-ocr-test
+check-local: t702-text-ocr-test
+
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
 tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
