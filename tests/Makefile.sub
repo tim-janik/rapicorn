@@ -15,7 +15,7 @@ tests/t201-rcore-basics-markup.cc: tests/t201-rcore-basics-xmldata.cc
 
 # == t201-rcore-basics-test ==
 t201-rcore-basics-test: tests/t201-rcore-basics
-	$(Q) cd tests && $(abs_top_srcdir)/taptool.sh --test-name t201-rcore-basics -- ./t201-rcore-basics
+	$(Q) cd tests && $(TAPTOOL) --test-name t201-rcore-basics -- ./t201-rcore-basics
 .PHONY: t201-rcore-basics-test
 check-local: t201-rcore-basics-test
 
@@ -39,7 +39,7 @@ tests/t203-more-basics-xmltest.cc: tests/t201-rcore-basics-xmldata.cc
 
 # == t203-more-basics-test ==
 t203-more-basics-test: tests/t203-more-basics
-	$(Q) cd tests && $(abs_top_srcdir)/taptool.sh --test-name t203-more-basics -- ./t203-more-basics
+	$(Q) cd tests && $(TAPTOOL) --test-name t203-more-basics -- ./t203-more-basics
 .PHONY: t203-more-basics-test
 check-local: t203-more-basics-test
 
@@ -200,7 +200,7 @@ tests_t901_bench_rcore_LDADD		 = ui/librapicorn-@MAJOR@.la
 tests_t901_bench_rcore_SOURCES		 = \
 	tests/t901-bench-rcore-main.cc
 t901-bench-rcore-test: tests/t901-bench-rcore
-	$(Q) cd tests && $(abs_top_srcdir)/taptool.sh --test-name t901-bench-rcore -- ./t901-bench-rcore
+	$(Q) cd tests && $(TAPTOOL) --test-name t901-bench-rcore -- ./t901-bench-rcore
 .PHONY: t901-bench-rcore-test
 check-local: t901-bench-rcore-test
 

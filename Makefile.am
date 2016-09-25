@@ -23,6 +23,7 @@ make_check_xml_files	 =
 # == project tools and paths ==
 # objdir:		# Loading newly built Python modules requires accesss to libtool objdir
 objdir			= .libs
+TAPTOOL 		= $(topdir)/taptool.sh
 XMANIFOLD		= $(topdir)/aidacc/xmanifold.py
 YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
 AIDACC_INTERN		= $(top_builddir)/aidacc/aidacc-intern
