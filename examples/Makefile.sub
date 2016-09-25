@@ -1,0 +1,47 @@
+# Rapicorn			- non-recursive Makefile
+
+
+# == hello ==
+noinst_PROGRAMS			+= examples/hello
+examples_hello_LDADD		 = ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+examples_hello_SOURCES		 = examples/hello.cc
+make_check_xml_files		+= examples/hello.xml
+
+# == scroller ==
+noinst_PROGRAMS			+= examples/scroller
+examples_scroller_LDADD		 = ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+examples_scroller_SOURCES	 = examples/scroller.cc
+make_check_xml_files		+= examples/scroller.xml
+
+# == texttest ==
+noinst_PROGRAMS			+= examples/texttest
+examples_texttest_LDADD		 = ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+examples_texttest_SOURCES	 = examples/texttest.cc
+make_check_xml_files		+= examples/texttest.xml
+
+# == graphics ==
+noinst_PROGRAMS			+= examples/graphics
+examples_graphics_LDADD		 = ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+examples_graphics_SOURCES	 = examples/graphics.cc
+make_check_xml_files		+= examples/graphics.xml
+
+# == fileview ==
+noinst_PROGRAMS			+= examples/fileview
+examples_fileview_LDADD		 = ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+examples_fileview_SOURCES	 = examples/fileview.cc
+make_check_xml_files		+= examples/fileview.xml
+EXTRA_DIST			+= examples/liststore.cc
+
+# == tour ==
+noinst_PROGRAMS			+= examples/tour
+examples_tour_LDADD		 = ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+examples_tour_SOURCES		 = examples/tour.cc
+make_check_xml_files		+= examples/tour.xml
+
+# == tour-test ==
+examples/tour-test: examples/tour
+	$(Q) $(X11_ENV) examples/tour --test-automation > $(TSTOUT) \
+	&& fgrep -q "Rapicorn Tour" $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f $(TSTOUT)
+.PHONY: examples/tour-test
+check-local: examples/tour-test

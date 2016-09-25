@@ -6,7 +6,7 @@ topdir = $(abs_top_srcdir)
 V_gen = @printf '  %-9s%s\n'
 
 # == non-migrated subdirs ==
-SUBDIRS		 = po . examples
+SUBDIRS		 = po .
 
 # == make setup ==
 DEFS			+= @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__ -D__TOPDIR__="\"$(topdir)/\""
@@ -93,3 +93,6 @@ include docs/Makefile.sub
 
 # == tests/ ==
 include tests/Makefile.sub
+
+# == examples/ ==
+include examples/Makefile.sub
