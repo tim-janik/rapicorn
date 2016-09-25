@@ -123,7 +123,7 @@ t303-mini-server-test: tests/t303-mini-server
 .PHONY: t303-mini-server-test
 check-local: t303-mini-server-test
 
-# == t5xx - make_check_pytests ==
+# == t5xx - python tests ==
 make_check_pytests += \
 	tests/t500-main-loop.py		\
 	tests/t501-simple-click.py	\
@@ -189,6 +189,10 @@ t702-text-ocr-test: tests/t702-text-ocr.xml
 	$(Q) rm -f tests/t702-text-ocr-snap.png
 .PHONY: t702-text-ocr-test
 check-local: t702-text-ocr-test
+
+# == t8xx - documentation tests ==
+make_check_pytests += \
+	tests/t800-binding-example.py
 
 # == t901-bench-rcore ==
 noinst_PROGRAMS				+= tests/t901-bench-rcore
