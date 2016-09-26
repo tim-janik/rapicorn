@@ -123,6 +123,31 @@ t303-mini-server-test: tests/t303-mini-server
 .PHONY: t303-mini-server-test
 check-local: t303-mini-server-test
 
+# == t401-servertests ==
+noinst_PROGRAMS			       += tests/t401-servertests
+tests_t401_servertests_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS) $(READLINELIBS)
+tests_t401_servertests_SOURCES		=	\
+	tests/t401/cmdtest.cc			\
+	tests/t401/labelmarkup.cc		\
+	tests/t401/primitives.cc		\
+	tests/t401/properties.cc		\
+	tests/t401/region.cc			\
+	tests/t401/server.cc			\
+	tests/t401/servertests.cc		\
+	tests/t401/sinfextest.cc		\
+	tests/t401/stores.cc			\
+	tests/t401/testselector.cc		\
+	tests/t401/testwidgets.cc		\
+	tests/t401/widgets.cc
+EXTRA_DIST				+= tests/t401/servertests.hh
+make_check_xml_files			+= tests/t401/factory.xml tests/t401/testwidgets.xml
+
+# == t401-servertests-test ==
+t401-servertests-test: tests/t401-servertests
+	$(Q) $(X11_ENV) $(TAPTOOL) --test-name t401-servertests -- tests/t401-servertests
+.PHONY: t401-servertests-test
+check-local: t401-servertests-test
+
 # == t5xx - python tests ==
 make_check_pytests += \
 	tests/t500-main-loop.py		\
