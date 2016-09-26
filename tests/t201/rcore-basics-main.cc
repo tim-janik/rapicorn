@@ -214,7 +214,7 @@ test_paths()
   TCMP (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S), ==, "dir");
   TCMP (Path::dirname ("dir" RAPICORN_DIR_SEPARATOR_S "file"), ==, "dir");
   TCMP (Path::cwd(), !=, "");
-  TCMP (Path::check (Path::join (Path::cwd(), "..", "tests"), "rd"), ==, true); // ./../tests/ should be a readable directory
+  TCMP (Path::check (Path::join (Path::cwd(), "..", Path::basename (Path::cwd())), "rd"), ==, true); // ../. should be a readable directory
   TCMP (Path::isdirname (""), ==, false);
   TCMP (Path::isdirname ("foo"), ==, false);
   TCMP (Path::isdirname ("foo/"), ==, true);
@@ -236,7 +236,7 @@ test_paths()
   if (env_home && env_logname)
     TCMP (Path::expand_tilde ("~" + String (env_logname)), ==, env_home);
   TCMP (Path::searchpath_multiply ("/:/tmp", "foo:bar"), ==, "/foo:/bar:/tmp/foo:/tmp/bar");
-  const String abs__file__ = Path::abspath (__TOPDIR__ "tests/t201-rcore-basics-main.cc");
+  const String abs__file__ = Path::abspath (__TOPDIR__ "tests/t201/rcore-basics-main.cc");
   TCMP (Path::searchpath_list ("/:" + abs__file__, "e"), ==, StringVector ({ "/", abs__file__ }));
   TCMP (Path::searchpath_contains ("/foo/:/bar", "/"), ==, false);
   TCMP (Path::searchpath_contains ("/foo/:/bar", "/foo"), ==, false); // false because "/foo" is file search
@@ -704,7 +704,7 @@ static void
 more_blob_tests ()
 {
   // load this source file and check for a random string
-  Blob fblob = Blob::load (__TOPDIR__ "tests/t201-rcore-basics-main.cc");
+  Blob fblob = Blob::load (__TOPDIR__ "tests/t201/rcore-basics-main.cc");
   assert (!!fblob);
   assert (fblob.string().find ("F2GlZ1s5FrRzsA") != String::npos);
   // create a big example file aceeding internal mmap thresholds

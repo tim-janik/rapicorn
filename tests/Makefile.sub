@@ -4,17 +4,19 @@
 noinst_PROGRAMS			       += tests/t201-rcore-basics
 tests_t201_rcore_basics_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
 tests_t201_rcore_basics_SOURCES		=	\
-	tests/t201-rcore-basics-main.cc		\
-	tests/t201-rcore-basics-aidatests.cc	\
-	tests/t201-rcore-basics-markup.cc	\
-	tests/t201-rcore-basics-strings.cc	\
-	tests/t201-rcore-basics-timebits.cc	\
-	tests/t201-rcore-basics-datalist.cc	\
-	tests/t201-rcore-basics-loops.cc
-tests/t201-rcore-basics-markup.cc: tests/t201-rcore-basics-xmldata.cc
+	tests/t201/rcore-basics-main.cc		\
+	tests/t201/rcore-basics-aidatests.cc	\
+	tests/t201/rcore-basics-markup.cc	\
+	tests/t201/rcore-basics-strings.cc	\
+	tests/t201/rcore-basics-timebits.cc	\
+	tests/t201/rcore-basics-datalist.cc	\
+	tests/t201/rcore-basics-loops.cc
+tests/t201/rcore-basics-markup.cc: tests/t201/rcore-basics-xmldata.cc
 
 # == t201-rcore-basics-test ==
-t201-rcore-basics-test: tests/t201-rcore-basics
+EXTRA_DIST				+=      \
+	tests/t201-rcore-basics.outref
+t201-rcore-basics-test: tests/t201-rcore-basics tests/t201-rcore-basics.outref
 	$(Q) cd tests && $(TAPTOOL) --test-name t201-rcore-basics -- ./t201-rcore-basics
 .PHONY: t201-rcore-basics-test
 check-local: t201-rcore-basics-test
@@ -35,7 +37,7 @@ tests_t203_more_basics_SOURCES		 = 	\
 	tests/t203-more-basics-svgtool.cc	\
 	tests/t203-more-basics-threads.cc	\
 	tests/t203-more-basics-xmltest.cc
-tests/t203-more-basics-xmltest.cc: tests/t201-rcore-basics-xmldata.cc
+tests/t203-more-basics-xmltest.cc: tests/t201/rcore-basics-xmldata.cc
 
 # == t203-more-basics-test ==
 t203-more-basics-test: tests/t203-more-basics
@@ -141,6 +143,7 @@ tests_t401_servertests_SOURCES		=	\
 	tests/t401/widgets.cc
 EXTRA_DIST				+= tests/t401/servertests.hh
 make_check_xml_files			+= tests/t401/factory.xml tests/t401/testwidgets.xml
+tests/t401/labelmarkup.cc: tests/t201/rcore-basics-xmldata.cc
 
 # == t401-servertests-test ==
 t401-servertests-test: tests/t401-servertests
