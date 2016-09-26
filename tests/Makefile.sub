@@ -164,6 +164,19 @@ t402-clienttests-test: tests/t402-clienttests
 .PHONY: t402-clienttests-test
 check-local: t402-clienttests-test
 
+# == t403-sinfex-expression-test ==
+SINFEX_SHELL				 = $(topdir)/tests/t401-servertests --shell
+EXTRA_DIST				+=	\
+	tests/t403/expressions.ref		\
+	tests/t403/expressions.txt
+t403-sinfex-expression-test: tests/t403/expressions.ref tests/t403/expressions.txt tests/t401-servertests
+	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/tests/t403/expressions.txt > $(TSTTMP)
+	$(Q) $(X11_ENV) COLUMNS=9999 $(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) eval "$$TSTDIFF" "'$(srcdir)/tests/t403/expressions.ref'" "'$(TSTOUT)'"
+	$(Q) rm -f $(TSTTMP)
+.PHONY: t403-sinfex-expression-test
+check-local: t403-sinfex-expression-test
+
 # == t5xx - python tests ==
 make_check_pytests += \
 	tests/t500-main-loop.py		\
