@@ -186,7 +186,7 @@ using namespace Rapicorn;
 static void
 test_convert_svg2png()
 {
-  const String svg_name = Path::vpath_find ("t203-more-basics-sample.svg");
+  const String svg_name = __TOPDIR__ "tests/t203/more-basics-sample.svg";
   Svg::FileP file = Svg::File::load (svg_name);
   if (!file)
     fatal ("Failed to load file: %s", svg_name);
