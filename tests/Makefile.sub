@@ -148,6 +148,22 @@ t401-servertests-test: tests/t401-servertests
 .PHONY: t401-servertests-test
 check-local: t401-servertests-test
 
+# == t402-clienttests ==
+noinst_PROGRAMS			       += tests/t402-clienttests
+tests_t402_clienttests_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+tests_t402_clienttests_SOURCES		=	\
+	tests/t402/clienttests.cc		\
+	tests/t402/pixmaps.cc
+EXTRA_DIST				+=	\
+	tests/t402/testpixs.c			\
+	tests/t402/testpixs.png
+
+# == t402-clienttests-test ==
+t402-clienttests-test: tests/t402-clienttests
+	$(Q) $(TAPTOOL) --test-name t402-clienttests -- tests/t402-clienttests
+.PHONY: t402-clienttests-test
+check-local: t402-clienttests-test
+
 # == t5xx - python tests ==
 make_check_pytests += \
 	tests/t500-main-loop.py		\

@@ -50,7 +50,7 @@ create_sample_pixmap (void)
 static void
 test_pixmap_save_load (void)
 {
-  const char *target = "pixmaps-tmp.png";
+  const char *target = __TOPDIR__ "tests/t402/pixmaps-tmp.png";
   Pixmap pixmap = create_sample_pixmap();
   assert (pixmap.get_attribute ("comment").find ("Rapicorn") < 99);
   /* test saving */
@@ -106,7 +106,7 @@ test_pixstreams (void)
   pixall.copy (spixmap4, 0, 0, -1, -1, 0, 96);
 
   /* load reference */
-  String reference = "testpixs.png";
+  String reference = __TOPDIR__ "tests/t402/testpixs.png";
   Pixmap pixref;
   if (!pixref.load_png (Path::vpath_find (reference).c_str()))
     fatal ("failed to load \"%s\": %s", reference.c_str(), string_from_errno (errno).c_str());
