@@ -168,6 +168,33 @@ t304-testpass-cxx-test: tests/t304-testpass-cxx-server tests/t304-testpass-cxx-c
 .PHONY: t304-testpass-cxx-test
 check-local: t304-testpass-cxx-test
 
+# == t305-testpass-compile-test ==
+tests/t305-testpass-compile-server: tests/t301/testpass.idl $(AIDACC_INTERN) rcore/aidavariants.hh
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G strip-path=$(topdir)/ \
+	  $(topdir)/tests/t301/include-p2.idl -o tests/t305-include-p2-server.gen.cc
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G strip-path=$(topdir)/ \
+	  $(topdir)/tests/t301/include-p1.idl -o tests/t305-include-p1-server.gen.cc
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G strip-path=$(topdir)/ \
+	  $(topdir)/tests/t301/testpass.idl -o tests/t305-testpass-server.gen.cc
+	$(Q) sed -i -e '1i#include "t305-include-p2-server.gen.cc"' \
+		    -e '1i#include "t305-include-p1-server.gen.cc"' tests/t305-testpass-server.gen.cc
+	$(Q) $(CXXCOMPILE) tests/t305-testpass-server.gen.cc -c ; eval "$$TSTDIAGNOSE"
+CLEANFILES	+= tests/t305-include-p2-server.gen.cc tests/t305-include-p1-server.gen.cc tests/t305-testpass-server.gen.cc
+tests/t305-testpass-compile-client: tests/t301/testpass.idl $(AIDACC_INTERN) rcore/aidavariants.hh
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(topdir)/ \
+	  $(topdir)/tests/t301/include-p2.idl -o tests/t305-include-p2-client.gen.cc
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(topdir)/ \
+	  $(topdir)/tests/t301/include-p1.idl -o tests/t305-include-p1-client.gen.cc
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(topdir)/ \
+	  $(topdir)/tests/t301/testpass.idl -o tests/t305-testpass-client.gen.cc
+	$(Q) sed -i -e '1i#include "t305-include-p2-client.gen.cc"' \
+		    -e '1i#include "t305-include-p1-client.gen.cc"' tests/t305-testpass-client.gen.cc
+	$(Q) $(CXXCOMPILE) tests/t305-testpass-client.gen.cc -c ; eval "$$TSTDIAGNOSE"
+CLEANFILES	+= tests/t305-include-p2-client.gen.cc tests/t305-include-p1-client.gen.cc tests/t305-testpass-client.gen.cc
+t305-testpass-compile-test: tests/t305-testpass-compile-server tests/t305-testpass-compile-client
+.PHONY: t305-testpass-compile-test
+check-local: t305-testpass-compile-test
+
 # == t401-servertests ==
 noinst_PROGRAMS			       += tests/t401-servertests
 tests_t401_servertests_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS) $(READLINELIBS)
