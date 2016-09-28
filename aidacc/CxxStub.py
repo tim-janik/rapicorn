@@ -1138,16 +1138,18 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_method_registry (self, reglines):
-    s = ''
+    s = '\n'
+    s += 'namespace { namespace AIDA_CPP_PASTE (__aida_stubs, __COUNTER__) {\n'
     if len (reglines) == 0:
       return '// Skipping empty MethodRegistry\n'
-    s += 'static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {\n'
+    s += 'static const __AIDA_Local__::MethodEntry entries[] = {\n'
     for dispatcher in reglines:
       cdigest, dispatcher_name = dispatcher
       s += '  { ' + cdigest + ', '
       s += dispatcher_name + ', },\n'
     s += '};\n'
-    s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
+    s += 'static __AIDA_Local__::MethodRegistry registry (entries);\n'
+    s += '} } // anon::__aida_stubs##__COUNTER__\n'
     return s
   def c_long_postfix (self, number):
     if number >= 9223372036854775808:
