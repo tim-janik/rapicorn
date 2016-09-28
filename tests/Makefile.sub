@@ -2,6 +2,14 @@
 
 # Test categories: 1-misc 2-rcore 3-aidacc 4-ui 5-python 6-tools 7-images 8-docs 9-benchmarks
 
+# == t101-dynamic-cast-check ==
+# deprecate dynamic casts of refernce types (broken in g++ <= 3.3.5)
+t101-dynamic-cast-check: $(HEADERS) $(SOURCES)
+	$(Q) echo "  CHECK  Rejecting dynamic_cast of reference types..." \
+	&& grep -Hn 'dynamic_cast[^<]*<[^>&]*&' $(HEADERS) $(SOURCES) \
+	| grep '.' ; exit $$[!$$?] # fail on matches
+make_check_targets += t101-dynamic-cast-check
+
 # == t201-rcore-basics ==
 noinst_PROGRAMS			       += tests/t201-rcore-basics
 tests_t201_rcore_basics_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
