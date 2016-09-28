@@ -112,105 +112,66 @@ AC_LIB_PROG_LD
 AC_LIB_PROG_LD_GNU
 AM_PROG_LIBTOOL
 AC_LIBTOOL_DLOPEN
-ACX_PROG_LD_GNU_SYMBOLIC
-MC_EVAR_ADD(AM_LDFLAGS, $SYMBOLIC_LDFLAGS)
-MC_EVAR_ADD(AM_LDFLAGS, -pthread)
-MC_EVAR_ADD(AM_LDFLAGS, -lrt)
-MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--no-undefined])
-if ${LD} --help 2>&1 | grep -q -- '-export-dynamic\b' ; then
-  MC_EVAR_ADD(AM_LDFLAGS, [-Wl,-export-dynamic])
-fi
 
-# AM_LDFLAGS, optimize linker to use faster ELF symbol hashing if we have compiler and linker support
-AC_MSG_CHECKING([whether CC, CXX and LD support gnu.hash sections])
-if ${CC}  -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
-   ${CXX} -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
-   ${LD}  --help     2>&1 | grep -q -- '--hash-style=.*\(both\|gnu\)' ; then
-  MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--hash-style=both -Wl,--as-needed -Wl,-O1])
-  AC_MSG_RESULT(yes)
+# == C++ Dialect ==
+CXX="$CXX -std=gnu++11"
+test -z "$CXXCPP" || CXXCPP="$CXXCPP -std=gnu++11"
+
+# == Compiler Setup ==
+# needs gcc >= 4.8, clang >= 3.4
+c_warnings="-Wall -Wdeprecated -Werror=format-security -Wredundant-decls -Wpointer-arith -Wmissing-declarations"
+cxx_warnings="-Wsign-promo -Woverloaded-virtual"
+c_only_flags="-Wmissing-prototypes -Wnested-externs -Wno-pointer-sign"
+gcc_c_only_flags="-fno-cond-mismatch"
+compiler_flags="-pipe"
+optimization_flags="-O3 -funroll-loops -ftree-vectorize"
+gcc_flags="-rdynamic -finline-functions -ftracer -ftree-loop-distribution"
+x86_flags="-minline-all-stringops"
+x86_flags="$x86_flags -mmmx -msse -msse2"	# Intel since 2001, AMD since 2003
+x86_flags="$x86_flags -msse3"			# Intel since 2004, AMD since 2007
+#x86_flags="$x86_flags -mssse3"			# Intel since 2006, AMD since 2011
+x86_64_flags="-mcx16"				# for CMPXCHG16B, in AMD64 since 2005
+#x86_64_flags="$x86_64_flags -msse4a"		# AMD since 2007
+#x86_64_flags="$x86_64_flags -msse4.1 -msse4.2"	# Intel since 2008, AMD since 2011
+#x86_64_flags="$x86_64_flags -mavx"		# Intel since 2011, AMD since 2011
+#x86_64_flags="$x86_64_flags -mavx2"		# Intel since 2013, AMD since 2015
+if   ${CXX} --version 2>&1 | grep -q -F 'clang' ; then
+    AM_CFLAGS="$c_warnings $c_only_flags $compiler_flags $optimization_flags"
+    AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags"
+elif ${CXX} --version 2>&1 | tr '\n' ' ' | grep -q -E '(g\++|GCC).*Free Software Foundation' ; then
+    AM_CFLAGS="$c_warnings $c_only_flags $gcc_c_only_flags $compiler_flags $optimization_flags $gcc_flags"
+    AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags $gcc_flags"
 else
-  AC_MSG_RESULT(no)
+  AC_MSG_ERROR([unknown C++ compiler])
 fi
-AC_SUBST(AM_LDFLAGS)
-
-# Pick C++ dialect, needed in CXXFLAGS for compile tests
-MC_CXX_TRY_OPTION(CXXFLAGS,  -std=gnu++11)
-
-# AM_CFLAGS & AM_CXXFLAGS
-MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++11)
-BOTHCCXXFLAGS=
+uname_m=`uname -m`
+if test "$uname_m" = x86_64 ; then	# AMD64
+    AM_CFLAGS="$AM_CFLAGS $x86_flags $x86_64_flags"
+    AM_CXXFLAGS="$AM_CXXFLAGS $x86_flags $x86_64_flags"
+elif echo "$uname_m" | grep -q '^i.*86$' ; then
+    AM_CFLAGS="$AM_CFLAGS $x86_flags"
+    AM_CXXFLAGS="$AM_CXXFLAGS $x86_flags"
+fi
 if test "x$enable_debug" = "xyes"; then
-  MC_EVAR_ADD(BOTHCCXXFLAGS,      -DG_ENABLE_DEBUG)
-  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -g3)
-  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fno-omit-frame-pointer)
-  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fverbose-asm)
-  dnl # MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Q -ftime-report -fmem-report)
+    AM_CFLAGS="$AM_CFLAGS -DG_ENABLE_DEBUG -g3 -fno-omit-frame-pointer -fverbose-asm"
+    AM_CXXFLAGS="$AM_CXXFLAGS -DG_ENABLE_DEBUG -g3 -fno-omit-frame-pointer -fverbose-asm"
 elif test "x$enable_debug" = "xno"; then
-  MC_EVAR_ADD(BOTHCCXXFLAGS, [-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS]) # -DG_DISABLE_ASSERT
-else
-  : # minimum debugging
+    AM_CFLAGS="$AM_CFLAGS -DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
+    AM_CXXFLAGS="$AM_CXXFLAGS -DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
 fi
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wall)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wdeprecated)
-MC_CC_TRY_OPTION(AM_CFLAGS,     -Wmissing-prototypes)
-MC_CC_TRY_OPTION(AM_CFLAGS,     -Wno-pointer-sign)
-MC_CC_TRY_OPTION(AM_CFLAGS,     -Wnested-externs)
-MC_CC_TRY_OPTION(AM_CFLAGS,     -fno-cond-mismatch)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wmissing-declarations)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wpointer-arith)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wredundant-decls)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Werror=format-security)
-MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Wsign-promo)
-MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Woverloaded-virtual)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -rdynamic)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -pipe)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -O2)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -ftracer)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -mcx16)
-dnl # MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Wno-invalid-offsetof)
-MC_EVAR_ADD(AM_CFLAGS,   "$BOTHCCXXFLAGS")
-MC_EVAR_ADD(AM_CXXFLAGS, "$BOTHCCXXFLAGS")
+AC_SUBST(AM_CPPFLAGS)
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CXXFLAGS)
-AC_SUBST(AM_CPPFLAGS)
 
-# == CPU Optimizations ==
-# MMX and SSE instruction sets have been introduced way more than a decade ago:
-# Intel Pentium 3: CMOV MMX SSE (1999)
-# VIA C3 Nehemiah: CMOV MMX SSE (2003)
-# Athlon Palomino: CMOV MMX SSE 3DNow (2001)
-SIMD_FLAGS=
-MC_CC_TRY_OPTION(SIMD_FLAGS, -mmmx)
-MC_CC_TRY_OPTION(SIMD_FLAGS, -msse)
-# Note, -mfpmath=sse can harm FPU-algorithm performance
-# Note, -funroll-loops can harm SSE loop performance
-#MC_CC_TRY_OPTION(SIMD_FLAGS, -funroll-loops)
-#AC_SUBST(SIMD_FLAGS)
-# Expect the target architecture to support MMX/SSE if the compiler does it.
-MC_EVAR_ADD(AM_CFLAGS,   "$SIMD_FLAGS")
-MC_EVAR_ADD(AM_CXXFLAGS, "$SIMD_FLAGS")
-# Newer vectorization instruction sets, should be optionally supported
-# SSE >= 2, AVX
-SSEAVX_FLAGS=
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse2)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse3)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mssse3)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4.1)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4.2)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4a)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mavx)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mavx2)
-AC_SUBST(SSEAVX_FLAGS)
-
-# == OPTIMIZE_FAST ==
-# Some critical code paths should be optimized to run as fast as possible
-OPTIMIZE_FAST=
-MC_CC_TRY_OPTION(OPTIMIZE_FAST, -O3)
-MC_CC_TRY_OPTION(OPTIMIZE_FAST, -ftree-vectorize)
-MC_CC_TRY_OPTION(OPTIMIZE_FAST, -finline-functions)
-MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
-AC_SUBST(OPTIMIZE_FAST)
+# == Linker flags ==
+AM_LDFLAGS="-lrt -pthread"
+ld_help_text=`${LD-ld} --help 2>&1 | tr '\n' ' '`
+check_ld_flags="-export-dynamic -O1 -Bsymbolic-functions --as-needed --no-undefined"
+for flag in $check_ld_flags ; do
+  echo " $ld_help_text" | grep -q -e "$flag" && AM_LDFLAGS="$AM_LDFLAGS -Wl,$flag"
+done
+echo " $ld_help_text" | grep -q -e "--hash-style" && AM_LDFLAGS="$AM_LDFLAGS -Wl,--hash-style=both"
+AC_SUBST(AM_LDFLAGS)
 
 # == ENABLE_DEVEL_MODE ==
 # check for development build rules, which require acess to .git/
