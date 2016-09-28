@@ -109,6 +109,19 @@ t301-testpass-idl-test: tests/t301/testpass.idl
 .PHONY: t301-testpass-idl-test
 check-local: t301-testpass-idl-test
 
+# == t302-testfail-idl-test ==
+EXTRA_DIST				+=      \
+	tests/t302/include-f1.idl		\
+	tests/t302/include-f2.idl		\
+	tests/t302/testfail.idl			\
+	tests/t302/testfail.ref
+t302-testfail-idl-test: tests/t302/testfail.idl tests/t302/testfail.ref
+	$(Q) $(AIDACC_INTERN) --aida-fail-file-test $(topdir)/tests/t302/testfail.idl > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) sed 's/\(:[0-9]\+:[0-9]\+: Trying to find one of \).*/\1.../' < $(TSTOUT) > $(TSTOUT).notokens && mv $(TSTOUT).notokens $(TSTOUT)
+	$(Q) eval "$$TSTDIFF" "'$(topdir)/tests/t302/testfail.ref'" "'$(TSTOUT)'"
+.PHONY: t302-testfail-idl-test
+check-local: t302-testfail-idl-test
+
 # == t303-mini-server ==
 noinst_PROGRAMS				+= tests/t303-mini-server
 tests_t303_mini_server_LDADD		 = ui/librapicorn-@MAJOR@.la
