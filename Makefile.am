@@ -20,6 +20,7 @@ noinst_SCRIPTS		 =
 noinst_PROGRAMS 	 =
 make_check_pytests	 =
 make_check_xml_files	 =
+make_check_targets	 =
 
 # == project tools and paths ==
 # objdir:		# Loading newly built Python modules requires accesss to libtool objdir
@@ -44,6 +45,10 @@ CLEANFILES += topbuildid.cc
 -include $(DEPDIR)/topbuildid.cc.d
 buildid:
 	@echo $(topbuildid)
+
+# == make_check_targets ==
+.PHONY: $(make_check_targets)
+check-local: $(make_check_targets)
 
 # == stamp-autocheck-xmllint ==
 EXTRA_DIST	+= $(make_check_xml_files)
