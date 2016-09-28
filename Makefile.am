@@ -71,6 +71,18 @@ check-local: check-python-tests
 # == ./ dependencies ==
 rapicorn.hh: ui/clientapi.hh
 
+# == doc/ install ==
+projectdocsdir   = $(docdir)/
+projectdocs_DATA = README NEWS COPYING.MPL
+
+# == README ==
+README: README.md
+	$(AM_V_GEN)
+	$(Q) rm -f $@		# work around read-only target
+	$(Q) $(PANDOC) -S -f markdown_github+pandoc_title_block-hard_line_breaks -t plain $< -o $@
+	$(Q) chmod a-w $@	# prevent accidental target file edits
+.SECONDARY: README.md		# pacify make(1) when shipping README without README.md
+
 # == res/ ==
 include res/Makefile.sub
 
