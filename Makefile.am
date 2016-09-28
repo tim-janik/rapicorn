@@ -14,6 +14,7 @@ AM_CPPFLAGS		+= -I$(top_builddir) # -I$(top_srcdir)
 AM_CXXFLAGS		+= $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
 lib_LTLIBRARIES 	 =
 bin_PROGRAMS		 =
+bin_SCRIPTS		 =
 noinst_DATA		 =
 noinst_SCRIPTS		 =
 noinst_PROGRAMS 	 =

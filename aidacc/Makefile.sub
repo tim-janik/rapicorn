@@ -33,21 +33,23 @@ aidacc_install_PYTHON	= $(aidacc_imports) $(aidacc_backends)
 noinst_SCRIPTS	       += $(aidacc_backends)
 
 # == aidacc executable ==
-CONFIGINT = "aidaccpydir" : "${abs_srcdir}",	"AIDA_VERSION" : "${topbuildid}",	"INTERN" : 1
-CONFIGBIN = "aidaccpydir" : "${aidaccpydir}",	"AIDA_VERSION" : "${topbuildid}"
+AIDACC_INTERN_CONFIG  = "aidaccpydir" : "${topdir}",  "AIDA_VERSION" : "${topbuildid}", "INTERN" : 1
+AIDACC_INSTALL_CONFIG = "aidaccpydir" : "${aidacc_installdir}", "AIDA_VERSION" : "${topbuildid}"
+noinst_SCRIPTS		+= $(AIDACC_INTERN)
 $(AIDACC_INTERN): aidacc/plic.py aidacc/Parser.py aidacc/TmplFiles.py
 	$(AM_V_GEN)
 	$(Q) sed < $< > $@.tmp				\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
-	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${CONFIGINT}|'
+	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${AIDACC_INTERN_CONFIG}|'
 	$(Q) chmod +x $@.tmp
 	$(Q) mv $@.tmp $@
 CLEANFILES += $(AIDACC_INTERN)
+bin_SCRIPTS		+= $(AIDACC)
 $(AIDACC): aidacc/plic.py aidacc/Parser.py aidacc/TmplFiles.py
 	$(AM_V_GEN)
 	$(Q) sed < $< > $@.tmp				\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
-	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${CONFIGBIN}|'
+	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${AIDACC_INSTALL_CONFIG}|'
 	$(Q) chmod +x $@.tmp
 	$(Q) mv $@.tmp $@
 CLEANFILES += $(AIDACC)
