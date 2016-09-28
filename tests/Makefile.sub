@@ -152,6 +152,22 @@ t303-mini-server-test: tests/t303-mini-server
 .PHONY: t303-mini-server-test
 check-local: t303-mini-server-test
 
+# == t304-testpass-cxx-test ==
+# test CxxStub Generation for Clinet & Server
+EXTRA_DIST	+= tests/t304/testcxxserver.ref
+tests/t304-testpass-cxx-server: tests/t301/testpass.idl tests/t304/testcxxserver.ref $(AIDACC_INTERN)
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G aidaids -G strip-path=$(topdir)/ \
+	  $(topdir)/tests/t301/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) eval "$$TSTDIFF" tests/t304/testcxxserver.ref
+EXTRA_DIST	+= tests/t304/testcxxclient.ref
+tests/t304-testpass-cxx-client: tests/t301/testpass.idl tests/t304/testcxxclient.ref $(AIDACC_INTERN)
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(topdir)/ \
+	  $(topdir)/tests/t301/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE"
+	$(Q) eval "$$TSTDIFF" tests/t304/testcxxclient.ref
+t304-testpass-cxx-test: tests/t304-testpass-cxx-server tests/t304-testpass-cxx-client
+.PHONY: t304-testpass-cxx-test
+check-local: t304-testpass-cxx-test
+
 # == t401-servertests ==
 noinst_PROGRAMS			       += tests/t401-servertests
 tests_t401_servertests_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS) $(READLINELIBS)
