@@ -349,6 +349,8 @@ include "include-p1.idl"; // test includes
 
 namespace RapicornAidaTest {
 
+interface UseIncludes : IncludeCheck::SomeInterface {}; // verify includes
+
 enum ClickType {
   CLICK_ON_PRESS        = 1,
   CLICK_ON_RELEASE,

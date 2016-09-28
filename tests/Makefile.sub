@@ -99,6 +99,16 @@ t206-naive-entropy-test: tests/t901-bench-rcore
 .PHONY: t206-naive-entropy-test
 check-local: t206-naive-entropy-test
 
+# == t301-testpass-idl-test ==
+EXTRA_DIST				+=      \
+	tests/t301/testpass.idl			\
+	tests/t301/include-p1.idl		\
+	tests/t301/include-p2.idl
+t301-testpass-idl-test: tests/t301/testpass.idl
+	$(Q) $(AIDACC_INTERN) --aida-debug $(topdir)/tests/t301/testpass.idl > /dev/null ; eval "$$TSTDIAGNOSE"
+.PHONY: t301-testpass-idl-test
+check-local: t301-testpass-idl-test
+
 # == t303-mini-server ==
 noinst_PROGRAMS				+= tests/t303-mini-server
 tests_t303_mini_server_LDADD		 = ui/librapicorn-@MAJOR@.la
