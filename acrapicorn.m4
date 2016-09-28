@@ -179,23 +179,14 @@ AC_DEFUN([MC_ASSERT_NONEMPTY], [
     esac
 ])
 
-dnl # MC_ASSERT_PROG(variable, program, srcpackage) - Find program
+dnl # MC_ASSERT_PROG(variable, programs)
 AC_DEFUN([MC_ASSERT_PROG], [
-    AC_PATH_PROG([$1], [$2], missing!)
-    case "_$[$1]" in
-    '_missing!')
-	AC_MSG_ERROR([failed to find $2 which is required for a functional build. $3])
-	;;
-    esac
-])
-dnl # MC_ASSERT_PROGS(variable, programs, srcpackage)
-AC_DEFUN([MC_ASSERT_PROGS], [
-    AC_PATH_PROGS([$1], [$2], missing!)
-    case "_$[$1]" in
-    '_missing!')
-	AC_MSG_ERROR([failed to find any of ($2) which is required for a functional build. $3])
-	;;
-    esac
+	   AC_PATH_PROGS([$1], [$2], :)
+	   case "_$[$1]" in
+	     '_:')
+	       AC_MSG_ERROR([failed to find program: $2])
+	       ;;
+	   esac
 ])
 
 dnl # MC_PKG_CONFIG_REQUIRE(package, version, clfgas-var, libs-var)

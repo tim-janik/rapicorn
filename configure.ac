@@ -79,10 +79,23 @@ AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=auto/yes/no build a development
 # package library defaults
 enable_static=no ; enable_shared=yes
 
-# configure requirements
-MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
+# == Utilities ==
+AC_PROG_LN_S
+AC_PROG_INSTALL
+MC_ASSERT_PROG(PKG_CONFIG, pkg-config)
+MC_ASSERT_PROG(FLEX, flex)
+MC_ASSERT_PROG(BISON, bison)
+MC_ASSERT_PROG(PANDOC, pandoc)
+MC_ASSERT_PROG(DOXYGEN, doxygen)
+MC_ASSERT_PROG(DOT, dot)
+MC_ASSERT_PROG(PYTHON2, python-2.7 python2.7 python2)
+MC_ASSERT_VERSION($PYTHON --version, 2.7)
+MC_ASSERT_PROG(CYTHON, cython)
+MC_ASSERT_VERSION($CYTHON --version, 0.20.1)
+MC_ASSERT_PROG(XMLLINT, xmllint)
+MC_ASSERT_VERSION($XMLLINT --version, 20901)
 
-# check for base package requirements early on
+# == Libraries ==
 PKG_CHECK_MODULES(SVG_DEPENDENCIES, [
 	cairo		>= 1.10.0
 	librsvg-2.0	>= 2.40.2
@@ -195,65 +208,20 @@ if test x"$enable_devel_mode" = xyes ; then
   }
   DEVELMODE="" ; NOTDEVELMODE="#"
   # devel mode build tools
-  MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
-  MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
-  MC_ASSERT_PROG(PANDOC, pandoc, [See: http://johnmacfarlane.net/pandoc/])
-  MC_ASSERT_PROG(DOXYGEN, doxygen, [See: http://www.stack.nl/~dimitri/doxygen/])
-  MC_ASSERT_PROG(DOT, dot, [See: http://www.graphviz.org/])
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"' # full debugging paths for devel-mode
 else # provide sane defaults for meaningful makefiles & errors
   DEVELMODE="#"; NOTDEVELMODE=""
-  BISON=bison; AC_SUBST(BISON)
-  FLEX=flex; AC_SUBST(FLEX)
-  PANDOC=pandoc; AC_SUBST(PANDOC)
-  DOXYGEN=doxygen; AC_SUBST(DOXYGEN)
-  DOT=dot; AC_SUBST(DOT)
   DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
 fi
 AC_SUBST(DEVELMODE)
 AC_SUBST(NOTDEVELMODE)
 AC_SUBST(DEFINE__FILE_DIR__)
 
-# C & C++ idioms
-AC_C_CONST
-AC_C_INLINE
-AC_HEADER_STDC
-
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
     [AC_COMPUTE_INT([RAPICORN_SYSVAL_$1], [$1], [$2],
 	    [AC_MSG_ERROR("failed to detect [$1]")])
     AC_SUBST([RAPICORN_SYSVAL_$1])])
-
-dnl # RAPICORN_CXX_REQUIREMENTS() - check for required minimum __GNUC__ version
-AC_DEFUN([RAPICORN_CXX_REQUIREMENTS],
-[
-    AC_MSG_CHECKING([for CXX compiler version])
-    cxx_version=`$CXX --version 2>/dev/null | head -n1`
-    AC_MSG_RESULT([$cxx_version])
-
-    # check for minimum compiler version
-    DEPVERSION_GNUC='4.7.4'
-    DEPVERSION_CLANG='3.4.2'
-    DEPVERSION_NR_GNUC=[`echo " $DEPVERSION_GNUC" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
-    DEPVERSION_NR_CLANG=[`echo " $DEPVERSION_CLANG" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
-    AC_MSG_CHECKING([for g++ >= $DEPVERSION_GNUC or clang++ >= $DEPVERSION_CLANG])
-    AC_TRY_COMPILE([
-	    #if defined __clang__
-	    #  if (__clang_major__ << 20) + (__clang_minor__ << 10) + __clang_patchlevel__ < $DEPVERSION_NR_CLANG
-	    #    error Clang version too old
-	    #  endif
-	    #elif defined __GNUC__
-	    #  if (__GNUC__ << 20) + (__GNUC_MINOR__ << 10) + __GNUC_PATCHLEVEL__ < $DEPVERSION_NR_GNUC
-	    #    error GCC version too old
-	    #  endif
-	    #endif
-    ],[], depversion_gnuc_match=ok, depversion_gnuc_match=failed)
-    AC_MSG_RESULT([$depversion_gnuc_match])
-    if test "$depversion_gnuc_match" != "ok" ; then
-	AC_MSG_ERROR([detected GNUC version too old])
-    fi
-])
 
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
@@ -500,21 +468,6 @@ AC_DEFUN([RAPICORN_PYTHON_REQUIREMENTS],
   fi
 ])
 
-dnl # RAPICORN_CYTHON_REQUIREMENTS() - rapicorn cython binding checks
-AC_DEFUN([RAPICORN_CYTHON_REQUIREMENTS],
-[
-  # cython
-  CYTHON_REQUIRED=0.20.1
-  MC_ASSERT_PROG(CYTHON, cython, [cython can be found at http://cython.org/])
-  CYTHON_VERSION=[$($CYTHON --version 2>&1 | sed 's/[^0-9]*\(.*\)$/\1/g')]
-  AS_ECHO("checking cython version... $CYTHON_VERSION")
-  MC_CHECK_VERSION([$CYTHON_VERSION], [$CYTHON_REQUIRED], [], [
-      AC_MSG_ERROR([cython version $CYTHON_REQUIRED or newer is required])
-  ])
-  AC_SUBST(CYTHON)
-  dnl # AM_CONDITIONAL([HAVE_CYTHON], [test "_$CYTHON" = "_cython"])
-])
-
 dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
 AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 [
@@ -533,35 +486,10 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
     AC_SUBST(READLINELIBS)
 ])
 
-# Aida requirements
-AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
-[
-  # Python is checked for separately
-
-  # XML linting check
-  AC_CHECK_PROGS(XMLLINT, xmllint, true)
-])
-
-# check for package requirements.
-MC_IF_VAR_EQ(GCC, yes,,
-    AC_MSG_ERROR(This package requires GNU gcc)
-)
-MC_IF_VAR_EQ(GXX, yes,,
-    AC_MSG_ERROR(This package requires GNU g++)
-)
-
-# find installation utilities
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
-
 # check requirement sets
 RAPICORN_I18N_REQUIREMENTS
-RAPICORN_CXX_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_PYTHON_REQUIREMENTS
-RAPICORN_CYTHON_REQUIREMENTS
-RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 
