@@ -1,3 +1,5 @@
+#ifndef __AIDA_CXXSTUB_SERVER_CC__
+#define __AIDA_CXXSTUB_SERVER_CC__
 
 #ifndef AIDA_CHECK
 #define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
@@ -38,3 +40,5 @@ slot (SharedPtr sp, R (*fp) (const SharedPtr&, Args...))
 }
 
 } } // Anon::__AIDA_Local__
+
+#endif // __AIDA_CXXSTUB_SERVER_CC__
