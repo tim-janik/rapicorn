@@ -1,5 +1,7 @@
 # Rapicorn			- non-recursive Makefile
 
+# Test categories: 1-misc 2-rcore 3-aidacc 4-ui 5-python 6-tools 7-images 8-docs 9-benchmarks
+
 # == t201-rcore-basics ==
 noinst_PROGRAMS			       += tests/t201-rcore-basics
 tests_t201_rcore_basics_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
