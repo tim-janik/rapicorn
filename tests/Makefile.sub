@@ -28,14 +28,12 @@ EXTRA_DIST				+=      \
 	tests/t201-rcore-basics.outref
 t201-rcore-basics-test: tests/t201-rcore-basics tests/t201-rcore-basics.outref
 	$(Q) cd tests && $(TAPTOOL) --test-name t201-rcore-basics -- ./t201-rcore-basics
-.PHONY: t201-rcore-basics-test
-check-local: t201-rcore-basics-test
+make_check_targets += t201-rcore-basics-test
 
 # == t202-randomized-hashing ==
 t202-randomized-hashing-test: tests/t201-rcore-basics	# test hash reseeding at program start
 	$(Q) test `tests/t201-rcore-basics --string-hash64 foo` != `tests/t201-rcore-basics --string-hash64 foo` ; $(TSTRESULT)
-.PHONY: t202-randomized-hashing-test
-check-local: t202-randomized-hashing-test
+make_check_targets += t202-randomized-hashing-test
 
 # == t203-more-basics ==
 noinst_PROGRAMS				+= tests/t203-more-basics
@@ -56,8 +54,7 @@ EXTRA_DIST				+=      \
 	tests/t203-more-basics.outref
 t203-more-basics-test: tests/t203-more-basics tests/t203-more-basics.outref
 	$(Q) cd tests && $(TAPTOOL) --test-name t203-more-basics -- ./t203-more-basics
-.PHONY: t203-more-basics-test
-check-local: t203-more-basics-test
+make_check_targets += t203-more-basics-test
 
 # == t204-assertions ==
 t204-assertions-test: tests/t203-more-basics # validate failing assertions and fatal aborting
@@ -79,8 +76,7 @@ t204-assertions-test: tests/t203-more-basics # validate failing assertions and f
 	$(Q) grep -qi 'Aborting..'			$(TSTOUT) ; $(TSTRESULT) "verify aborting"
 	$(Q) rm -f $(TSTOUT) && eval "$$TSTDIAGNOSE"
 tests_t204_assertions_env = RAPICORN=debug:no-syslog:no-fatal-syslog
-.PHONY: t204-assertions-test
-check-local: t204-assertions-test
+make_check_targets += t204-assertions-test
 
 # == t205-debug-output ==
 t205-debug-output-test: tests/t203-more-basics # check various non-fatal logging conditions
@@ -94,8 +90,7 @@ t205-debug-output-test: tests/t203-more-basics # check various non-fatal logging
 	$(Q) eval "$$TSTDIAGNOSE"
 	$(Q) rm -f $(TSTOUT)
 tests_t205_debug_output_env = RAPICORN=no-syslog:no-fatal-syslog RAPICORN_DEBUG=all
-.PHONY: t205-debug-output-test
-check-local: t205-debug-output-test
+make_check_targets += t205-debug-output-test
 
 # == t206-naive-entropy ==
 t206-naive-entropy-test: tests/t901-bench-rcore
@@ -106,8 +101,7 @@ t206-naive-entropy-test: tests/t901-bench-rcore
 	$(Q) A=`tests/t901-bench-rcore --runtime-entropy` ; B=`tests/t901-bench-rcore --runtime-entropy`; \
 	       test -n "$$A$$B" -a "$$A" != "$$B"; $(TSTRESULT) "naive runtime entropy check"
 	$(Q) eval "$$TSTDIAGNOSE"
-.PHONY: t206-naive-entropy-test
-check-local: t206-naive-entropy-test
+make_check_targets += t206-naive-entropy-test
 
 # == t301-testpass-idl-test ==
 EXTRA_DIST				+=      \
@@ -116,8 +110,7 @@ EXTRA_DIST				+=      \
 	tests/t301/include-p2.idl
 t301-testpass-idl-test: tests/t301/testpass.idl
 	$(Q) $(AIDACC_INTERN) --aida-debug $(topdir)/tests/t301/testpass.idl > /dev/null ; eval "$$TSTDIAGNOSE"
-.PHONY: t301-testpass-idl-test
-check-local: t301-testpass-idl-test
+make_check_targets += t301-testpass-idl-test
 
 # == t302-testfail-idl-test ==
 EXTRA_DIST				+=      \
@@ -129,8 +122,7 @@ t302-testfail-idl-test: tests/t302/testfail.idl tests/t302/testfail.ref
 	$(Q) $(AIDACC_INTERN) --aida-fail-file-test $(topdir)/tests/t302/testfail.idl > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) sed 's/\(:[0-9]\+:[0-9]\+: Trying to find one of \).*/\1.../' < $(TSTOUT) > $(TSTOUT).notokens && mv $(TSTOUT).notokens $(TSTOUT)
 	$(Q) eval "$$TSTDIFF" "'$(topdir)/tests/t302/testfail.ref'" "'$(TSTOUT)'"
-.PHONY: t302-testfail-idl-test
-check-local: t302-testfail-idl-test
+make_check_targets += t302-testfail-idl-test
 
 # == t303-mini-server ==
 noinst_PROGRAMS				+= tests/t303-mini-server
@@ -159,8 +151,7 @@ tests/t303-mini-server-main.cc: $(tests_t303_generated)
 # == t303-mini-server-test ==
 t303-mini-server-test: tests/t303-mini-server
 	$(Q) tests/t303-mini-server ; eval "$$TSTDIAGNOSE"
-.PHONY: t303-mini-server-test
-check-local: t303-mini-server-test
+make_check_targets += t303-mini-server-test
 
 # == t304-testpass-cxx-test ==
 # test CxxStub Generation for Clinet & Server
@@ -175,8 +166,7 @@ tests/t304-testpass-cxx-client: tests/t301/testpass.idl tests/t304/testcxxclient
 	  $(topdir)/tests/t301/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) eval "$$TSTDIFF" tests/t304/testcxxclient.ref
 t304-testpass-cxx-test: tests/t304-testpass-cxx-server tests/t304-testpass-cxx-client
-.PHONY: t304-testpass-cxx-test
-check-local: t304-testpass-cxx-test
+make_check_targets += t304-testpass-cxx-test
 
 # == t305-testpass-compile-test ==
 tests/t305-testpass-compile-server: tests/t301/testpass.idl $(AIDACC_INTERN) rcore/aidavariants.hh
@@ -202,8 +192,7 @@ tests/t305-testpass-compile-client: tests/t301/testpass.idl $(AIDACC_INTERN) rco
 	$(Q) $(CXXCOMPILE) tests/t305-testpass-client.gen.cc -c ; eval "$$TSTDIAGNOSE"
 CLEANFILES	+= tests/t305-include-p2-client.gen.cc tests/t305-include-p1-client.gen.cc tests/t305-testpass-client.gen.cc
 t305-testpass-compile-test: tests/t305-testpass-compile-server tests/t305-testpass-compile-client
-.PHONY: t305-testpass-compile-test
-check-local: t305-testpass-compile-test
+make_check_targets += t305-testpass-compile-test
 
 # == t401-servertests ==
 noinst_PROGRAMS			       += tests/t401-servertests
@@ -228,8 +217,7 @@ tests/t401/labelmarkup.cc: tests/t201/rcore-basics-xmldata.cc
 # == t401-servertests-test ==
 t401-servertests-test: tests/t401-servertests
 	$(Q) $(X11_ENV) $(TAPTOOL) --test-name t401-servertests -- tests/t401-servertests
-.PHONY: t401-servertests-test
-check-local: t401-servertests-test
+make_check_targets += t401-servertests-test
 
 # == t402-clienttests ==
 noinst_PROGRAMS			       += tests/t402-clienttests
@@ -244,8 +232,7 @@ EXTRA_DIST				+=	\
 # == t402-clienttests-test ==
 t402-clienttests-test: tests/t402-clienttests
 	$(Q) $(TAPTOOL) --test-name t402-clienttests -- tests/t402-clienttests
-.PHONY: t402-clienttests-test
-check-local: t402-clienttests-test
+make_check_targets += t402-clienttests-test
 
 # == t403-sinfex-expression-test ==
 SINFEX_SHELL				 = $(topdir)/tests/t401-servertests --shell
@@ -257,8 +244,7 @@ t403-sinfex-expression-test: tests/t403/expressions.ref tests/t403/expressions.t
 	$(Q) $(X11_ENV) COLUMNS=9999 $(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) eval "$$TSTDIFF" "'$(srcdir)/tests/t403/expressions.ref'" "'$(TSTOUT)'"
 	$(Q) rm -f $(TSTTMP)
-.PHONY: t403-sinfex-expression-test
-check-local: t403-sinfex-expression-test
+make_check_targets += t403-sinfex-expression-test
 
 # == t5xx - python tests ==
 make_check_pytests += \
@@ -273,15 +259,13 @@ make_check_pytests += \
 make_check_xml_files += tests/t600-xmlui-eval.xml
 t600-xmlui-eval-test: tests/t600-xmlui-eval.xml
 	$(Q) $(XVFB_RAPIDRUN) -x $(srcdir)/tests/t600-xmlui-eval.xml ; eval "$$TSTDIAGNOSE"
-.PHONY: t600-xmlui-eval-test
-check-local: t600-xmlui-eval-test
+make_check_targets += t600-xmlui-eval-test
 
 # == t601-arrow-sizing ==
 make_check_xml_files += tests/t601-arrow-sizing.xml
 t601-arrow-sizing-test: tests/t601-arrow-sizing.xml
 	$(Q) $(XVFB_RAPIDRUN) -x $(srcdir)/tests/t601-arrow-sizing.xml ; eval "$$TSTDIAGNOSE"
-.PHONY: t601-arrow-sizing-test
-check-local: t601-arrow-sizing-test
+make_check_targets += t601-arrow-sizing-test
 
 # == t602-factory-dump ==
 EXTRA_DIST		+= tests/t602-factory-dump.ref
@@ -290,8 +274,7 @@ t602-factory-dump-test: tests/t602-factory-dump.ref tests/t602-factory-dump.xml
 	$(Q) $(XVFB_RAPIDRUN) -x --test-dump \
 	  --test-matched-node=".*" $(top_srcdir)/tests/t602-factory-dump.xml > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) eval "$$TSTDIFF" "'$(top_srcdir)/tests/t602-factory-dump.ref'" "'$(TSTOUT)'"
-.PHONY: t602-factory-dump-test
-check-local: t602-factory-dump-test
+make_check_targets += t602-factory-dump-test
 
 # == t700-png-image ==
 EXTRA_DIST		+= tests/t700-png-image.png
@@ -303,8 +286,7 @@ t700-png-image-test: tests/t700-png-image.xml tests/t700-png-image.png $(IMGCHEC
 	$(Q) test $(srcdir) = $(builddir) || rm -f $(builddir)/tests/t700-png-image.png
 	$(Q) $(IMGCHECK) $(srcdir)/tests/t700-png-image.png tests/t700-png-image-snap.png ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f tests/t700-png-image-snap.png
-.PHONY: t700-png-image-test
-check-local: t700-png-image-test
+make_check_targets += t700-png-image-test
 
 # == t701-alignment-layout ==
 EXTRA_DIST		+= tests/t701-alignment-layout.png
@@ -314,8 +296,7 @@ t701-alignment-layout-test: tests/t701-alignment-layout.xml tests/t701-alignment
 	$(Q) cd tests/ && $(XVFB_RAPIDRUN) -x $(topdir)/%D%/t701-alignment-layout.xml
 	$(Q) $(IMGCHECK) $(topdir)/%D%/t701-alignment-layout.png tests/t701-alignment-layout-snap.png ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f tests/t701-alignment-layout-snap.png
-.PHONY: t701-alignment-layout-test
-check-local: t701-alignment-layout-test
+make_check_targets += t701-alignment-layout-test
 
 # == t702-text-ocr ==
 make_check_xml_files	+= tests/t702-text-ocr.xml
@@ -324,8 +305,7 @@ t702-text-ocr-test: tests/t702-text-ocr.xml
 	$(Q) cd tests/ && $(XVFB_RAPIDRUN) --snapshot=t702-text-ocr-snap.png -x $(topdir)/%D%/t702-text-ocr.xml $(QSTDERR)
 	$(Q) eval "$$TSTOCR" tests/t702-text-ocr-snap.png "Regu.ar.Text" \""Insensitive Text"\" \""Editab.e Text Edit.r Text"\"
 	$(Q) rm -f tests/t702-text-ocr-snap.png
-.PHONY: t702-text-ocr-test
-check-local: t702-text-ocr-test
+make_check_targets += t702-text-ocr-test
 
 # == t8xx - documentation tests ==
 make_check_pytests += \
@@ -338,8 +318,7 @@ tests_t901_bench_rcore_SOURCES		 = \
 	tests/t901-bench-rcore-main.cc
 t901-bench-rcore-test: tests/t901-bench-rcore
 	$(Q) cd tests && $(TAPTOOL) --test-name t901-bench-rcore -- ./t901-bench-rcore
-.PHONY: t901-bench-rcore-test
-check-local: t901-bench-rcore-test
+make_check_targets += t901-bench-rcore-test
 
 # == t902-bench-aida ==
 noinst_PROGRAMS 			+= tests/t902-bench-aida
@@ -348,5 +327,4 @@ tests_t902_bench_aida_SOURCES		 = \
 	tests/t902-bench-aida-main.cc
 t902-bench-aida-test: tests/t902-bench-aida
 	$(Q) tests/t902-bench-aida ; eval "$$TSTDIAGNOSE"
-.PHONY: t902-bench-aida-test
-check-local: t902-bench-aida-test
+make_check_targets += t902-bench-aida-test
