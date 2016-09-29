@@ -2,6 +2,8 @@
 
 # Test categories: 1-misc 2-rcore 3-aidacc 4-ui 5-python 6-tools 7-images 8-docs 9-benchmarks
 
+TESTS_PKG_CONFIG = PKG_CONFIG_PATH="$(DESTDIR)$(rapicorn_pkgconfigdir):$$PKG_CONFIG_PATH" $(PKG_CONFIG)
+
 # == t101-dynamic-cast-check ==
 # deprecate dynamic casts of refernce types (broken in g++ <= 3.3.5)
 t101-dynamic-cast-check: $(HEADERS) $(SOURCES)
@@ -9,6 +11,19 @@ t101-dynamic-cast-check: $(HEADERS) $(SOURCES)
 	&& grep -Hn 'dynamic_cast[^<]*<[^>&]*&' $(HEADERS) $(SOURCES) \
 	| grep '.' ; exit $$[!$$?] # fail on matches
 make_check_targets += t101-dynamic-cast-check
+
+# == t190-installcheck-api-test ==
+tests/t190-installcheck-api-use: tests/t190-api-use.cc
+	@echo "  BUILD   " $@
+	$(Q) $(CXX) $(CXXFLAGS) -Werror $< -c -o $(<:.cc=.o)     `$(TESTS_PKG_CONFIG) --cflags rapicorn-@MAJOR@` \
+		; eval "$$TSTDIAGNOSE" "'Compile $<'"
+	$(Q) $(CXX) $(CXXFLAGS) -Werror $(<:.cc=.o) -o $(<:.cc=) `$(TESTS_PKG_CONFIG) --libs   rapicorn-@MAJOR@` \
+		; eval "$$TSTDIAGNOSE" "'Link    $<'"
+	$(Q) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./$(<:.cc=) \
+		; eval "$$TSTDIAGNOSE" "'Execute $<'"
+	$(Q) rm -f $(<:.cc=.o) $(<:.cc=)
+.PHONY: tests/t190-installcheck-api-use
+installcheck-local: tests/t190-installcheck-api-use
 
 # == t201-rcore-basics ==
 noinst_PROGRAMS			       += tests/t201-rcore-basics
