@@ -30,9 +30,9 @@ XMANIFOLD		= $(topdir)/aidacc/xmanifold.py
 YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
 AIDACC_INTERN		= $(top_builddir)/aidacc/aidacc-intern
 AIDACC_CXXSTUB_PY	= aidacc/CxxStub.py
-WITH_PYTHONPATH 	= PYTHONPATH="$(abs_top_builddir)/cython/$(objdir):$$PYTHONPATH"
-PYTHON_INTERN		= $(WITH_PYTHONPATH) $(PYTHON)
-XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH) $(X11_ENV) $(PYTHON)
+WITH_PYTHONPATH_INTERN	= PYTHONPATH="$(abs_top_builddir)/cython/$(objdir):$$PYTHONPATH"
+PYTHON_INTERN		= $(WITH_PYTHONPATH_INTERN) $(PYTHON)
+XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH_INTERN) $(X11_ENV) $(PYTHON)
 XVFB_RAPIDRUN		= $(X11_ENV) $(abs_top_builddir)/tools/rapidrun --fatal-warnings "$$@"
 IMGCHECK		= tools/imgcheck
 

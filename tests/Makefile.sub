@@ -279,6 +279,16 @@ make_check_pytests += \
 	tests/t505-property-binding.py	\
 	tests/t506-simple-click.py
 
+# == t590-cython-installcheck-test ==
+tests/t590-cython-installcheck-test: tests/t500-cython-core.py
+	@ # Patch tests/t500-cython-core.py to use the installed versioned Rapicorn.so module
+	$(Q) sed 's/.*@LINE_REWRITTEN_FOR_INSTALLCHECK@.*/import Rapicorn_@MAJOR@ as Rapicorn/' \
+		 < $< > tests/t590-cython-installcheck.py && ! cmp -s $< tests/t590-cython-installcheck.py
+	$(Q) PYTHONPATH="$(DESTDIR)$(cython_pymodulesdir)/..:$$PYTHONPATH" $(X11_ENV) $(PYTHON) tests/t590-cython-installcheck.py
+	$(Q) rm -f tests/t590-cython-installcheck.py
+.PHONY: tests/t590-cython-installcheck-test
+installcheck-local: tests/t590-cython-installcheck-test
+
 # == t600-xmlui-eval ==
 make_check_xml_files += tests/t600-xmlui-eval.xml
 t600-xmlui-eval-test: tests/t600-xmlui-eval.xml
