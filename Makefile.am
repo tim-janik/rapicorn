@@ -36,6 +36,33 @@ XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH) $(X11_ENV) $(PYTHON)
 XVFB_RAPIDRUN		= $(X11_ENV) $(abs_top_builddir)/tools/rapidrun --fatal-warnings "$$@"
 IMGCHECK		= tools/imgcheck
 
+# == res/ ==
+include res/Makefile.sub
+
+# == aidacc/ ==
+include aidacc/Makefile.sub
+
+# == rcore/ ==
+include rcore/Makefile.sub
+
+# == ui/ ==
+include ui/Makefile.sub
+
+# == cython/ ==
+include cython/Makefile.sub
+
+# == tools/ ==
+include tools/Makefile.sub
+
+# == docs/ ==
+include docs/Makefile.sub
+
+# == tests/ ==
+include tests/Makefile.sub
+
+# == examples/ ==
+include examples/Makefile.sub
+
 # == topbuildid.cc ==
 topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh)
 topbuildid.cc: $(top_srcdir)/misc/mkbuildid.sh
@@ -112,30 +139,3 @@ README: README.md
 	$(Q) $(PANDOC) -S -f markdown_github+pandoc_title_block-hard_line_breaks -t plain $< -o $@
 	$(Q) chmod a-w $@	# prevent accidental target file edits
 .SECONDARY: README.md		# pacify make(1) when shipping README without README.md
-
-# == res/ ==
-include res/Makefile.sub
-
-# == aidacc/ ==
-include aidacc/Makefile.sub
-
-# == rcore/ ==
-include rcore/Makefile.sub
-
-# == ui/ ==
-include ui/Makefile.sub
-
-# == cython/ ==
-include cython/Makefile.sub
-
-# == tools/ ==
-include tools/Makefile.sub
-
-# == docs/ ==
-include docs/Makefile.sub
-
-# == tests/ ==
-include tests/Makefile.sub
-
-# == examples/ ==
-include examples/Makefile.sub
