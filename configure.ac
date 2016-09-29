@@ -610,7 +610,6 @@ po/Makefile.in
 rcore/buildconfig.h
 ui/tests/Makefile
 tests/Makefile
-examples/Makefile
 docs/mans/Makefile
 docs/examples/Makefile
 docs/imports/Makefile
