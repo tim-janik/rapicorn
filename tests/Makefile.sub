@@ -271,12 +271,12 @@ make_check_targets += t403-sinfex-expression-test
 
 # == t5xx - python tests ==
 make_check_pytests += \
-	tests/t500-main-loop.py		\
-	tests/t501-simple-click.py	\
+	tests/t501-main-loop.py		\
 	tests/t502-property-basics.py	\
 	tests/t503-garbage-collector.py	\
 	tests/t504-size-groups.py	\
-	tests/t505-property-binding.py
+	tests/t505-property-binding.py	\
+	tests/t506-simple-click.py
 
 # == t600-xmlui-eval ==
 make_check_xml_files += tests/t600-xmlui-eval.xml
