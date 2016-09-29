@@ -1,3 +1,5 @@
 # Rapicorn                      - non-recursive Makefile
 
-res_resfiles_list ::= $(shell $(top_srcdir)/misc/reslist.sh)
+res_resfiles_list   ::= $(shell $(top_srcdir)/misc/reslist.sh)
+
+make_check_xml_files += $(filter %.xml, $(res_resfiles_list:%=res/%))
