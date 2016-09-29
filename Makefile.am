@@ -87,6 +87,12 @@ stamp-autocheck-xmllint: $(make_check_xml_files)
 	done
 	$(Q) touch $@
 
+# == python-call-info ==
+python-call-info:
+	@echo '$(PYTHON_INTERN) -ic "import Rapicorn"'
+	@echo 'PYTHONPATH="'$$(readlink -f $(DESTDIR)$(cython_pymodulesdir)/..)':$$PYTHONPATH" $(PYTHON) -ic "import Rapicorn"'
+.PHONY: python-call-info
+
 # == check-python-tests ==
 check-python-tests:
 EXTRA_DIST += $(make_check_pytests)
