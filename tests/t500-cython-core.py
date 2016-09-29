@@ -186,6 +186,4 @@ assert Rapicorn.Label  in [w.__class__ for w in widgets]
 app.run()
 assert seen_window_display
 
-# all done
-print '  %-6s' % 'CHECK', '%-67s' % __file__, 'OK'
 # python -ic "import sys, os; sys.path.insert (0, os.path.abspath ('.libs')) ; import Rapicorn"

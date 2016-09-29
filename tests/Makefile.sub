@@ -271,6 +271,7 @@ make_check_targets += t403-sinfex-expression-test
 
 # == t5xx - python tests ==
 make_check_pytests += \
+	tests/t500-cython-core.py	\
 	tests/t501-main-loop.py		\
 	tests/t502-property-basics.py	\
 	tests/t503-garbage-collector.py	\
