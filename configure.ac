@@ -608,7 +608,6 @@ Makefile
 po-helper.sh
 po/Makefile.in
 rcore/buildconfig.h
-aidacc/tests/Makefile
 ui/tests/Makefile
 tests/Makefile
 examples/Makefile
