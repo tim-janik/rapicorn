@@ -209,6 +209,14 @@ CLEANFILES	+= tests/t305-include-p2-client.gen.cc tests/t305-include-p1-client.g
 t305-testpass-compile-test: tests/t305-testpass-compile-server tests/t305-testpass-compile-client
 make_check_targets += t305-testpass-compile-test
 
+# == t390-installcheck-aidacc ==
+tests/t390-installcheck-aidacc: tests/t301/testpass.idl
+	$(Q) cd / \
+	&& $(DESTDIR)$(bindir)/aidacc --list-formats | grep -q -i 'formats' \
+	&& $(DESTDIR)$(bindir)/aidacc $(topdir)/tests/t301/testpass.idl ; eval "$$TSTDIAGNOSE"
+.PHONY: tests/t390-installcheck-aidacc
+installcheck-local: tests/t390-installcheck-aidacc
+
 # == t401-servertests ==
 noinst_PROGRAMS			       += tests/t401-servertests
 tests_t401_servertests_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS) $(READLINELIBS)
