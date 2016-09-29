@@ -4,9 +4,9 @@ libdir=@libdir@
 datadir=@datadir@
 includedir=@includedir@/rapicorn-@MAJOR@
 
-Name: Rapicorn
-Description: Rapicorn (experimental UI toolkit)
+Name: Rapicorn-@MAJOR@
+Description: GUI toolkit for declarative UI construction and SVG-based theming
 Requires: librsvg-2.0 pangocairo pangoft2 libxml-2.0
 Version: @VERSION@
 Libs: -L${libdir} -lrapicorn-@MAJOR@ @RAPICORN_GUI_LIBS@
-Cflags: -I${includedir} @RAPICORN_GUI_CFLAGS@ -std=gnu++0x
+Cflags: -I${includedir} @RAPICORN_GUI_CFLAGS@

@@ -81,6 +81,26 @@ rapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@/
 rapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
 EXTRA_DIST		+= $(rapicorn_include_HEADERS)
 
+# == rapicorn.pc ==
+rapicorn_pkgconfigdir    = $(libdir)/pkgconfig
+rapicorn_pkgconfig_DATA  = rapicorn-@MAJOR@.pc
+EXTRA_DIST		+= rapicorn.pc.in
+rapicorn-@MAJOR@.pc: rapicorn.pc.in $(top_builddir)/config.status
+	$(AM_V_GEN)
+	$(Q) cd $(top_builddir) && $(SHELL) ./config.status --file=$@:$<
+CLEANFILES += rapicorn-@MAJOR@.pc
+# install rapicorn.pc -> rapicorn-@MAJOR@.pc symlink
+rapicorn-pc-install-hook:	# runs after install-data
+	$(Q) cd $(DESTDIR)$(rapicorn_pkgconfigdir) && \
+	  $(call SYMLINK_LATEST, rapicorn-[0-9][0-9].pc, rapicorn.pc) && \
+	  test -r rapicorn.pc -a -L rapicorn.pc
+install-data-hook: rapicorn-pc-install-hook
+rapicorn-pc-uninstall-hook:	# runs after uninstall
+	$(Q) cd $(DESTDIR)$(rapicorn_pkgconfigdir) && \
+	  $(call SYMLINK_LATEST, rapicorn-[0-9][0-9].pc, rapicorn.pc) && \
+	  test -r rapicorn.pc -o ! -e rapicorn.pc
+uninstall-hook: rapicorn-pc-uninstall-hook
+
 # == doc/ install ==
 projectdocsdir   = $(docdir)/
 projectdocs_DATA = README NEWS COPYING.MPL
