@@ -76,6 +76,11 @@ check-local: check-python-tests
 # == ./ dependencies ==
 rapicorn.hh: ui/clientapi.hh
 
+# == include/ install ==
+rapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@/
+rapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
+EXTRA_DIST		+= $(rapicorn_include_HEADERS)
+
 # == doc/ install ==
 projectdocsdir   = $(docdir)/
 projectdocs_DATA = README NEWS COPYING.MPL
