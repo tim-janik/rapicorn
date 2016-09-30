@@ -20,3 +20,8 @@ noinst_PROGRAMS		+= tools/imgcheck
 tools_imgcheck_SOURCES	 = tools/imgcheck.cc
 tools_imgcheck_LDADD	 = ui/librapicorn-@MAJOR@.la
 tools/imgcheck.cc: rapicorn.hh
+
+# == rapidrun.1 ==
+revisioned_files	+= tools/rapidrun.1.md
+man1_MANS		+= tools/rapidrun.1
+man1_HTMLS		+= tools/rapidrun.1.html

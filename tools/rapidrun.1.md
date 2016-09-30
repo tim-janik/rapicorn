@@ -1,4 +1,4 @@
-% RAPIDRUN(1) @RAPICORN_VERSION@ | Rapicorn Manual
+% RAPIDRUN(1) Rapicorn-@BUILDID@ | Rapicorn Manual
 %
 % @FILE_REVISION@
 
@@ -23,20 +23,28 @@ This tool will read the GUI description file listed on the command line, look fo
 
 **\--parse-test**
 :   Parse GuiFile.xml and exit.
+
 **-x**
 :   Enable auto-exit after first expose.
+
 **\--list**
 :   List parsed definitions.
+
 **\--fatal-warnings**
 :   Turn criticals/warnings into fatal conditions.
+
 **\--snapshot** *pngname*
 :   Dump a snapshot to *pngname*.
+
 **\--test-dump**
 :   Dump test stream after first expose.
+
 **\--test-matched-node** *PATTERN*
 :   Filter nodes in test dumps.
+
 **-h**, **\--help**
 :   Display this help and exit.
+
 **-v**, **\--version**
 :   Display version and exit.
 
