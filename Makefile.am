@@ -21,6 +21,7 @@ noinst_PROGRAMS 	 =
 make_check_pytests	 =
 make_check_xml_files	 =
 make_check_targets	 =
+revisioned_files	 = # files that need @FILE_REVISION@ substitution
 
 # == project tools and paths ==
 # objdir:		# Loading newly built Python modules requires accesss to libtool objdir
@@ -62,6 +63,24 @@ include tests/Makefile.sub
 
 # == examples/ ==
 include examples/Makefile.sub
+
+# == revisions.lst ==
+noinst_DATA += revisions.lst
+EXTRA_DIST  += revisions.lst $(revisioned_files)
+revisions.lst: @INGIT@ $(revisioned_files) Makefile
+	$(AM_V_GEN)
+	$(Q) rm -f $@.tmplst
+	$(Q) for file in $(revisioned_files) ; do \
+	  git log --format="%ai $$file" -n 99 -- $$file > $@.tmp1 && \
+	  sort -rn $@.tmp1 > $@.tmp2 && \
+	  sed -n '1{ p; q}' $@.tmp2 >> $@.tmplst || exit $$? ; \
+	done
+	$(Q) mv $@.tmplst $(topdir)/$(@F)
+	$(Q) rm -f $@.tmp1 $@.tmp2 $@.tmplst
+clean-revisions.lst: # git is required to rebuild revisions.lst, so conditionalize cleaning
+	test ! -x $(topdir)/.git/ || rm -f $(topdir)/revisions.lst
+.PHONY: clean-revisions.lst
+clean-local: clean-revisions.lst
 
 # == topbuildid.cc ==
 topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh)
