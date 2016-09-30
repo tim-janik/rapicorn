@@ -18,6 +18,7 @@ bin_SCRIPTS		 =
 noinst_DATA		 =
 noinst_SCRIPTS		 =
 noinst_PROGRAMS 	 =
+man1_HTMLS		 =
 make_check_pytests	 =
 make_check_xml_files	 =
 make_check_targets	 =
