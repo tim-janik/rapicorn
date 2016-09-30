@@ -18,6 +18,7 @@ bin_SCRIPTS		 =
 noinst_DATA		 =
 noinst_SCRIPTS		 =
 noinst_PROGRAMS 	 =
+man1_MANS		 =
 man1_HTMLS		 =
 make_check_pytests	 =
 make_check_xml_files	 =
@@ -82,6 +83,26 @@ clean-revisions.lst: # git is required to rebuild revisions.lst, so conditionali
 	test ! -x $(topdir)/.git/ || rm -f $(topdir)/revisions.lst
 .PHONY: clean-revisions.lst
 clean-local: clean-revisions.lst
+
+# == .revd.md (INTERMEDIATE) ==
+%.revd.md: %.md revisions.lst
+	$(AM_V_GEN)
+	$(Q) V=`sed -n '\| $<$$|{ s/ .*//; p; q; }' $(topdir)/revisions.lst` \
+	&& sed "s/[@]FILE_REVISION[@]/$$V/g; s/[@]BUILDID[@]/$(topbuildid)/g" < $< > $@
+
+# == man.1 (markdown) ==
+%.1: %.1.revd.md
+	$(AM_V_GEN)
+	$(Q) $(PANDOC) -s -t man $< -o $@
+
+# == man.1.html (markdown) ==
+manpage_header.html:
+	$(Q) echo $$'<a href="index.html">Return to Index</a>\n<hr>\n' > $@
+manpage_footer.html:
+	$(Q) echo $$'<hr>\n<a href="index.html">Return to Index</a>\n' > $@
+%.1.html: %.1.revd.md manpage_header.html manpage_footer.html $(topdir)/docs/manpage.css
+	$(AM_V_GEN)
+	$(Q) $(PANDOC) -s -t html -S --toc -H $(topdir)/docs/manpage.css -B manpage_header.html -A manpage_footer.html $< -o $@
 
 # == topbuildid.cc ==
 topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh)
