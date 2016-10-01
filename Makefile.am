@@ -80,7 +80,7 @@ revisions.lst: @INGIT@ $(revisioned_files) Makefile
 	$(Q) mv $@.tmplst $(topdir)/$(@F)
 	$(Q) rm -f $@.tmp1 $@.tmp2 $@.tmplst
 clean-revisions.lst: # git is required to rebuild revisions.lst, so conditionalize cleaning
-	test ! -x $(topdir)/.git/ || rm -f $(topdir)/revisions.lst
+	! git rev-parse --git-dir 2>/dev/null 1>&2 || rm -f $(topdir)/revisions.lst
 .PHONY: clean-revisions.lst
 clean-local: clean-revisions.lst
 

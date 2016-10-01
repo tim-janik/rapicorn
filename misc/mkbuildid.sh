@@ -13,10 +13,10 @@ test -n "$FALLBACK_VERSION" || die 7 "failed to detect AC_INIT in $SCRIPTDIR/../
 
 BUILDID_CC="$1"
 BUILDID_D="$2"
-GITINDEX="$SCRIPTDIR/../.git/index"
+DOTGIT=`git rev-parse --git-dir 2>/dev/null` || true
 
 gen_buildid() {
-  test -e "$GITINDEX" ||			# without .git
+  test -e "$DOTGIT" ||				# not in a git-tracked source tree
       { printf %s "${FALLBACK_VERSION-0.0.0}-untracked" ; return ; }
   COMMITID="${1-HEAD}"
   DESC=$(git describe --match '[0-9]*.*[0-9]' --abbrev=5 $COMMITID)
@@ -46,5 +46,7 @@ elif test ! -e "$BUILDID_CC" || test "$(cat "$BUILDID_CC")" != "$BUILDID_CODE" ;
   echo "$BUILDID_CODE" > "$BUILDID_CC"
 fi
 
-test -z "$BUILDID_D" -o ! -e "$GITINDEX" ||
-    echo "$BUILDID_CC: $GITINDEX"		 >"$BUILDID_D"
+test -z "$BUILDID_D" -o ! -e "$DOTGIT" || {
+  GITINDEX=`git rev-parse --show-toplevel`/`git rev-parse --git-path index`
+  echo "$BUILDID_CC: $GITINDEX"		 >"$BUILDID_D"
+}

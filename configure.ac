@@ -63,7 +63,7 @@ AC_SUBST(LT_VERSION_INFO)
 
 # Build tree checks
 AC_MSG_CHECKING([for git repository])
-test -f "${srcdir}/.git/index" && INGIT= || INGIT='#'
+DOTGIT=`git rev-parse --git-dir 2>/dev/null` && INGIT= || INGIT='#'
 AC_SUBST(INGIT)
 result=$(test -z "$INGIT" && echo yes || echo no)
 AC_MSG_RESULT($result)
@@ -215,7 +215,7 @@ AC_SUBST(OPTIMIZE_FAST)
 # == ENABLE_DEVEL_MODE ==
 # check for development build rules, which require acess to .git/
 AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
-[test x"$enable_devel_mode" = xauto -a -d "$srcdir/.git/" && enable_devel_mode=yes]
+[test x"$enable_devel_mode" = xauto -a -e "$DOTGIT" && enable_devel_mode=yes]
 test x"$enable_devel_mode" = xyes -o x"$enable_devel_mode" = x1 && enable_devel_mode=yes || enable_devel_mode=no
 AC_MSG_RESULT([$enable_devel_mode])
 edm=0; test x"$enable_devel_mode" = xyes && edm=1
