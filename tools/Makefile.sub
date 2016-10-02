@@ -1,5 +1,29 @@
 # Rapicorn			- non-recursive Makefile
 
+# == rapidres ==
+RAPIDRES_INTERN			= $(top_builddir)/tools/rapidres
+bin_PROGRAMS		       += tools/rapidres
+tools_rapidres_SOURCES		= tools/rapidres.cc tools/rapidres-buildid.cc
+tools_rapidres_LDADD		= $(LIBZ)
+tools/rapidres-buildid.cc: topbuildid.cc
+	$(AM_V_GEN)
+	$(Q) cp $< $@
+CLEANFILES += tools/rapidres-buildid.cc
+tools-rapidres-check:
+	$(Q) echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a' > tools/xtmp-empty.dat \
+	; eval "$$TSTDIAGNOSE" "'Create rapidres sample data'"
+	$(Q) $(RAPIDRES_INTERN) tools/xtmp-empty.dat > tools/xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Run    rapidres'"
+	$(Q) grep -q '"tools/xtmp-empty.dat"' tools/xtmp-empty.out \
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output file name'"
+	$(Q) test `grep _ENTRY tools/xtmp-empty.out | grep -o '[0-9]*'` -gt 16 \
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output length'"
+	$(Q) test $$[`grep _DATA tools/xtmp-empty.out | grep -o '[0-9 +-]*'`] -lt 50 \
+	; eval "$$TSTDIAGNOSE" "'Verify rapidres output compression'"
+	$(Q) rm -f tools/xtmp-empty.dat tools/xtmp-empty.out
+CLEANFILES += tools/xtmp-empty.dat tools/xtmp-empty.out
+make_check_targets += tools-rapidres-check
+
 # == rapidrun ==
 bin_PROGRAMS	       += tools/rapidrun
 tools_rapidrun_SOURCES	= tools/rapidrun.cc
