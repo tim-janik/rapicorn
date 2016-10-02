@@ -29,7 +29,7 @@ nodist_cython_Rapicorn_la_SOURCES	= cython/Rapicorn.cc	# nodist_ forces build ti
 cython_Rapicorn_la_CXXFLAGS		= $(AM_CXXFLAGS) $(PYTHON_CPPFLAGS) -DRAPICORN_AIDA_ENABLE_ENUM_ARITHMETIC \
 					  -Wno-strict-aliasing -Wno-redundant-decls -Wno-unused-function
 cython_Rapicorn_la_LDFLAGS		= $(AM_LDFLAGS) -no-undefined -module -avoid-version -Wl,--as-needed -Wl,-O1 $(PYTHON_LDFLAGS)
-cython_Rapicorn_la_LIBADD		= $(top_builddir)/ui/librapicorn-@MAJOR@.la # $(PYTHON_EXTRA_LIBS)
+cython_Rapicorn_la_LIBADD		= $(top_builddir)/ui/librapicorn-@MAJOR@.la $(PYTHON_LIBS) # $(PYTHON_EXTRA_LIBS)
 cython/Rapicorn.cc: $(rcore_librapicorn_headers) $(ui_librapicorn_headers)
 # install Rapicorn.so symlink
 cython-Rapicorn-so-install-hook:	# runs after install-data
