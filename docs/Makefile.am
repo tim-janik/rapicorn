@@ -1,7 +1,7 @@
 # Rapicorn - experimental UI toolkit
 include $(top_srcdir)/Makefile.decl
 
-SUBDIRS = mans examples imports tutorial
+SUBDIRS = examples imports tutorial
 
 QPRINT = @printf '  %-9s%s\n'
 
