@@ -1,4 +1,4 @@
-% RAPIDRES(1) @RAPICORN_VERSION@ | Rapicorn Manual
+% RAPIDRES(1) Rapicorn-@BUILDID@ | Rapicorn Manual
 %
 % @FILE_REVISION@
 

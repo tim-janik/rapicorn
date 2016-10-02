@@ -24,6 +24,11 @@ tools-rapidres-check:
 CLEANFILES += tools/xtmp-empty.dat tools/xtmp-empty.out
 make_check_targets += tools-rapidres-check
 
+# == rapidres.1 ==
+revisioned_files	+= tools/rapidres.1.md
+man1_MANS		+= tools/rapidres.1
+man1_HTMLS		+= tools/rapidres.1.html
+
 # == rapidrun ==
 bin_PROGRAMS	       += tools/rapidrun
 tools_rapidrun_SOURCES	= tools/rapidrun.cc
@@ -39,13 +44,13 @@ tools-rapidrun-check: tools/rapidrun tools/minitest.xml
 .PHONY: tools-rapidrun-check
 check-local: tools-rapidrun-check
 
+# == rapidrun.1 ==
+revisioned_files	+= tools/rapidrun.1.md
+man1_MANS		+= tools/rapidrun.1
+man1_HTMLS		+= tools/rapidrun.1.html
+
 # == imgcheck ==
 noinst_PROGRAMS		+= tools/imgcheck
 tools_imgcheck_SOURCES	 = tools/imgcheck.cc
 tools_imgcheck_LDADD	 = ui/librapicorn-@MAJOR@.la
 tools/imgcheck.cc: rapicorn.hh
-
-# == rapidrun.1 ==
-revisioned_files	+= tools/rapidrun.1.md
-man1_MANS		+= tools/rapidrun.1
-man1_HTMLS		+= tools/rapidrun.1.html
