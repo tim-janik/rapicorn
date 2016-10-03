@@ -5,7 +5,7 @@ docs_doxy_sources   = $(ui_doc_sources) $(rcore_doc_sources)
 docs_doxy_src_dirs  = ui rcore
 docs_doxy_tagsrcs   = $(strip \
 	tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/	\
-	cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/		\
+	tagfile-cppreference-14.xml=http://en.cppreference.com/w/		\
 )
 docs_doxy_tagstems  = $(filter-out =JUNK%, $(subst =, =JUNK, $(docs_doxy_tagsrcs))) # uses 'subst' for word splitting
 docs_doxygen_werror = false
@@ -26,7 +26,7 @@ docs/doxy/src: $(docs_doxy_sources) $(docs_doxygen_tagbz)
 	$(Q) find docs/doxy/src.tmp -type f -name '*[cC]' -exec sed 's/^\([^"]*\)\benum\b/\1Enum/' -i {} \;
 	@: # extract doxygen tag files
 	$(Q) for file in $(docs_doxy_tagstems) ; do \
-	  bunzip2 < docs/imports/$$file.bz2 > docs/doxy/$$file \
+	  bunzip2 < docs/$$file.bz2 > docs/doxy/$$file \
 	  || exit $? ; done
 	$(Q) mv docs/doxy/src.tmp docs/doxy/src
 
