@@ -609,7 +609,6 @@ po-helper.sh
 po/Makefile.in
 rcore/buildconfig.h
 docs/examples/Makefile
-docs/imports/Makefile
 docs/tutorial/Makefile
 ])
 
