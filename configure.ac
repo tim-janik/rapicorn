@@ -153,7 +153,7 @@ x86_64_flags="-mcx16"				# for CMPXCHG16B, in AMD64 since 2005
 if   ${CXX} --version 2>&1 | grep -q -F 'clang' ; then
     AM_CFLAGS="$c_warnings $c_only_flags $compiler_flags $optimization_flags"
     AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags"
-    MC_ASSERT_VERSION($CXX --version, 3.4.2)
+    MC_ASSERT_VERSION($CXX --version, 3.5.0)
 elif ${CXX} --version 2>&1 | tr '\n' ' ' | grep -q -E '(g\++|GCC).*Free Software Foundation' ; then
     AM_CFLAGS="$c_warnings $c_only_flags $gcc_c_only_flags $compiler_flags $optimization_flags $gcc_flags"
     AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags $gcc_flags"
