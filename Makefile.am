@@ -97,9 +97,13 @@ clean-local: clean-revisions.lst
 
 # == man.1.html (markdown) ==
 manpage_header.html:
-	$(Q) echo $$'<a href="index.html">Return to Index</a>\n<hr>\n' > $@
+	$(Q) echo $$'<a href="../index.html">Return to Index</a>\n<hr>\n' > $@
+.INTERMEDIATE: manpage_header.html
+CLEANFILES += manpage_header.html
 manpage_footer.html:
-	$(Q) echo $$'<hr>\n<a href="index.html">Return to Index</a>\n' > $@
+	$(Q) echo $$'<hr>\n<a href="../index.html">Return to Index</a>\n' > $@
+.INTERMEDIATE: manpage_footer.html
+CLEANFILES += manpage_footer.html
 %.1.html: %.1.revd.md manpage_header.html manpage_footer.html $(topdir)/docs/manpage.css
 	$(AM_V_GEN)
 	$(Q) $(PANDOC) -s -t html -S --toc -H $(topdir)/docs/manpage.css -B manpage_header.html -A manpage_footer.html $< -o $@
