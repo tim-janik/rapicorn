@@ -12,9 +12,9 @@ hello_window = """
       <VBox spacing="30">
         <HBox id="binding-box">
           <Label markup-text="Editable Text: "/>
-          <!-- [EXAMPLE-bind-title] -->
+          <!-- [bind-title-EXAMPLE] -->
           <TextEditor markup-text="@bind title"/>
-          <!-- [EXAMPLE-bind-title] -->
+          <!-- [bind-title-EXAMPLE] -->
         </HBox>
         <HBox homogeneous="true" spacing="15">
           <Button on-click="show" hexpand="1">    <Label markup-text="Show Model"/> </Button>
@@ -29,14 +29,14 @@ app.load_string (hello_window)
 
 window = app.create_window ("example-bind-py")
 
-# [EXAMPLE-Bindable-ObjectModel]
+# [Bindable-ObjectModel-EXAMPLE]
 @Rapicorn.Bindable
 class ObjectModel (object):
   def __init__ (self):
     self.title = "Hello There!"
 om = ObjectModel()
 window.data_context (om.__aida_relay__)
-# [EXAMPLE-Bindable-ObjectModel]
+# [Bindable-ObjectModel-EXAMPLE]
 
 def window_command_handler (cmdname, args):
   if cmdname == 'show':

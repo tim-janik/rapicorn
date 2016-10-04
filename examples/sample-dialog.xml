@@ -2,7 +2,7 @@
 <!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
 <interfaces>
 
-  <!-- [DEF-SampleDialog] -->
+  <!-- [SampleDialog-EXAMPLE] -->
   <Window declare="SampleDialog">
     <VBox spacing="5">
       <Button>
@@ -10,6 +10,6 @@
       </Button>
     </VBox>
   </Window>
-  <!-- [DEF-SampleDialog] -->
+  <!-- [SampleDialog-EXAMPLE] -->
 
 </interfaces>

@@ -1,31 +1,30 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 //						-*- mode:visual-line -*-
-
-/*! @page apps	Developing Applications with Rapicorn
+/// @file
+/*! @page examples	Rapicorn by Example
 @tableofcontents
 
 - @ref xmlui-syntax
 - @ref hello
-- @subpage experimental
 
 
 @section xmlui-syntax UI Definition Syntax
 
-The primary way to define user interfaces in Rapicorn is via declarative XML syntax.
+The canonical way to define user interfaces in Rapicorn is via declarative XML syntax.
 The declarations combine smaller components (buttons, images) into layout containers (VBox, Table) to form larger units.
 
 This XML creates a new definition 'SampleDialog', derived from a Window widget which contains a VBox and a Button with Label:
-  @snippet docs/examples/sample.xml DEF-SampleDialog
+  @snippet examples/sample-dialog.xml SampleDialog-EXAMPLE
 
 @subsection data-binding Data Bindings
 
 Data bindings are used in the UI XML declarations to link UI elements to properties of application model objects.
 Data bindings use the "@bind" syntax inside attribute values, example:
-  @snippet pytests/example-bind.py EXAMPLE-bind-title
+  @snippet tests/t800-binding-example.py bind-title-EXAMPLE
 
 In Python, an object can be made bindable with a decorator and used as @a data_context for a window.
 The data binding will then automatically link the attribute with "@bind title" to the @c .title field of the decorated object:
-  @snippet pytests/example-bind.py EXAMPLE-Bindable-ObjectModel
+  @snippet tests/t800-binding-example.py Bindable-ObjectModel-EXAMPLE
 
 @EXPERIMENTAL: Note that data bindings are currently being developed so features may be missing and language support may vary.
 
@@ -42,7 +41,7 @@ So in a nutshel, a Rapicorn program looks like this:
 
 So much for the theory, let's get started with the first application!
 
-@snippet docs/tutorial/tuthello.py HelloRapicorn-EXAMPLE
+@snippet examples/tutorial-hello.py HelloRapicorn-EXAMPLE
 
 @subsection hello-app-init 1. Application Startup
 
@@ -98,12 +97,11 @@ After all windows have been closed, the event loop sends out notifications that 
 the event loop from running and control is handed back to the main program.
 Most programs will simply exit at this point.
 
-*/
+*/ // @page examples
 
-/**
-  @page experimental Experimental APIs and Features
 
-  This section lists @b experimental APIs and features that are under active development. Experimental parts
-  are very likely to changes or disappear in the future and should not be depended upon.
-  However feedback regarding experimental APIs and features is highly appreciated and helps to stabelize and priorize completion.
- */
+/*! @page manpages	Command Line Tools
+
+- <a href="man1/rapidres.1.html">rapidres(1)</a>
+- <a href="man1/rapidrun.1.html">rapidrun(1)</a>
+*/ // @page manpages

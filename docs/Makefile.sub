@@ -1,7 +1,10 @@
 # Rapicorn			- non-recursive Makefile
 
 docs_project_link   = http://rapicorn.org
+docs_doxy_extra     = docs/examples.dox
 docs_doxy_sources   = $(ui_doc_sources) $(rcore_doc_sources)
+docs_doxy_headers   = $(filter     %.h %.H %.hh, $(docs_doxy_sources))
+docs_doxy_impls     = $(filter-out %.h %.H %.hh, $(docs_doxy_sources))
 docs_doxy_src_dirs  = ui rcore
 docs_doxy_tagsrcs   = $(strip \
 	tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/	\
@@ -14,14 +17,16 @@ docs_doxygen_werror = false
 DOXYGEN_GRAPHICS  ?= NO # YES
 
 # == docs/srctree ==
-docs/doxy/src: $(docs_doxy_sources) $(docs_doxygen_tagbz)
+docs/doxy/src: $(docs_doxy_sources) $(docs_doxy_extra) $(docs_doxygen_tagbz)
 	$(AM_V_GEN)
 	$(Q) rm -Rf docs/doxy/src docs/doxy/src.tmp
 	$(Q) mkdir -p $(docs_doxy_src_dirs:%=docs/doxy/src.tmp/%)
 	@: # copy source files *and* prefix each with an '@file' command
-	$(Q) for file in $(docs_doxy_sources) ; do \
+	$(Q) for file in $(docs_doxy_headers) $(docs_doxy_impls) ; do \
 	  sed "1,+0s,^,/** @file $$file */ ," $$file > docs/doxy/src.tmp/$$file \
 	  || exit $? ; done
+	@: # copy extra files verbatim
+	$(Q) cp $(docs_doxy_extra) docs/doxy/src.tmp/
 	@: # avoid docu generation from enums residing in *[cC] files
 	$(Q) find docs/doxy/src.tmp -type f -name '*[cC]' -exec sed 's/^\([^"]*\)\benum\b/\1Enum/' -i {} \;
 	@: # extract doxygen tag files
