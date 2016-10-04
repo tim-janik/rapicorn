@@ -45,3 +45,11 @@ examples/tour-test: examples/tour
 	$(Q) rm -f $(TSTOUT)
 .PHONY: examples/tour-test
 check-local: examples/tour-test
+
+# == examples-tutorial-hello-test ==
+EXTRA_DIST			+= examples/tutorial-hello.py
+examples-tutorial-hello-test: examples/tutorial-hello.py
+	$(Q) sed '/^app\.run()/s/^/# /' < $< > $(<:.py=-test.py)	# edit tutorial to enable auto-test
+	$(Q) $(XVFB_PYTHON_INTERN) $(<:.py=-test.py) --test-123 ; test $$? -eq 123 ; eval "$$TSTDIAGNOSE"
+	$(Q) rm -f $(<:.py=-test.py)					# remove edited tutorial
+make_check_targets += examples-tutorial-hello-test
