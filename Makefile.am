@@ -146,6 +146,7 @@ check-local: check-python-tests
 
 # == ./ dependencies ==
 rapicorn.hh: ui/clientapi.hh
+$(SOURCES): rapicorn.hh
 
 # == include/ install ==
 rapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@/

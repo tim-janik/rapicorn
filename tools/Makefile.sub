@@ -33,7 +33,6 @@ man1_HTMLS		+= tools/rapidres.1.html
 bin_PROGRAMS	       += tools/rapidrun
 tools_rapidrun_SOURCES	= tools/rapidrun.cc
 tools_rapidrun_LDADD	= ui/librapicorn-@MAJOR@.la
-tools/rapidrun.cc: rapicorn.hh
 
 # == tools-rapidrun-check ==
 # check some options
@@ -53,4 +52,3 @@ man1_HTMLS		+= tools/rapidrun.1.html
 noinst_PROGRAMS		+= tools/imgcheck
 tools_imgcheck_SOURCES	 = tools/imgcheck.cc
 tools_imgcheck_LDADD	 = ui/librapicorn-@MAJOR@.la
-tools/imgcheck.cc: rapicorn.hh
