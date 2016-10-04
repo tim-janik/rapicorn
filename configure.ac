@@ -608,7 +608,6 @@ Makefile
 po-helper.sh
 po/Makefile.in
 rcore/buildconfig.h
-docs/examples/Makefile
 ])
 
 AC_OUTPUT
