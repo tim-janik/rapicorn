@@ -157,7 +157,7 @@ if   ${CXX} --version 2>&1 | grep -q -F 'clang' ; then
 elif ${CXX} --version 2>&1 | tr '\n' ' ' | grep -q -E '(g\++|GCC).*Free Software Foundation' ; then
     AM_CFLAGS="$c_warnings $c_only_flags $gcc_c_only_flags $compiler_flags $optimization_flags $gcc_flags"
     AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags $gcc_flags"
-    MC_ASSERT_VERSION($CXX --version, 4.7.4)
+    MC_ASSERT_VERSION($CXX --version, 4.9.2)
 else
   AC_MSG_ERROR([unknown C++ compiler])
 fi
