@@ -52,4 +52,10 @@ examples-tutorial-hello-test: examples/tutorial-hello.py
 	$(Q) sed '/^app\.run()/s/^/# /' < $< > $(<:.py=-test.py)	# edit tutorial to enable auto-test
 	$(Q) $(XVFB_PYTHON_INTERN) $(<:.py=-test.py) --test-123 ; test $$? -eq 123 ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f $(<:.py=-test.py)					# remove edited tutorial
-make_check_targets += examples-tutorial-hello-test
+make_check_targets		+= examples-tutorial-hello-test
+
+# == examples-sample-dialog-test ==
+make_check_xml_files		+= examples/sample-dialog.xml
+examples-sample-dialog-test: examples/sample-dialog.xml
+	$(Q) $(XVFB_RAPIDRUN) -x $< ; eval "$$TSTDIAGNOSE"
+make_check_targets		+= examples-sample-dialog-test
