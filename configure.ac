@@ -134,10 +134,10 @@ test -z "$CXXCPP" || CXXCPP="$CXXCPP -std=gnu++11"
 
 # == Compiler Setup ==
 # needs gcc >= 4.8, clang >= 3.4
-c_warnings="-Wall -Wdeprecated -Werror=format-security -Wredundant-decls -Wpointer-arith -Wmissing-declarations"
-cxx_warnings="-Wsign-promo -Woverloaded-virtual"
+c_warnings="-Wall -Wdeprecated -Werror=format-security -Wredundant-decls -Wpointer-arith -Wmissing-declarations" # -Wdate-time -Wconversion -Wshadow
+cxx_warnings="-Wsign-promo -Woverloaded-virtual" # -Wnon-virtual-dtor  -Wempty-body -Wignored-qualifiers -Wunreachable-code -Wtype-limits
 c_only_flags="-Wmissing-prototypes -Wnested-externs -Wno-pointer-sign"
-gcc_c_only_flags="-fno-cond-mismatch"
+gcc_c_only_flags="-fno-cond-mismatch -fdevirtualize-speculatively"
 compiler_flags="-pipe"
 optimization_flags="-O3 -funroll-loops -ftree-vectorize"
 gcc_flags="-rdynamic -finline-functions -ftracer -ftree-loop-distribution"
