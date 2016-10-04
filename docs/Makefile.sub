@@ -32,8 +32,10 @@ docs/doxy/src: $(docs_doxy_sources) $(docs_doxygen_tagbz)
 
 # == docs/doxy/html ==
 docs_doxy_auxfiles = docs/extrastyles.css docs/doxygen_footer.html docs/references.bib
-# use order-only prerequisite on docs/doxy/src to minimize builds per buildid
-docs/doxy/html: topbuildid.cc docs/doxygen.cfg docs/error.ign $(docs_doxy_auxfiles) | docs/doxy/src
+# rebuild documentation after commits, unless NODOC is set to be non-empty
+docs/doxy/html: $(if $(NODOC), , topbuildid.cc)
+# use order-only prerequisite on docs/doxy/src to spare doxygen runs for source edits
+docs/doxy/html: docs/doxygen.cfg docs/error.ign $(docs_doxy_auxfiles) | docs/doxy/src
 	$(V_gen) "PREPARE" $@
 	$(Q) rm -Rf docs/doxy/html docs/doxy/output
 	$(Q) mkdir -p docs/doxy/output
