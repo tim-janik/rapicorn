@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Usage: mkbuildid.sh [outfile] [depfile]
+# Usage: mkbuildid.sh [-p] [outfile] [depfile]
 # Update BuildID and display source file name
 
 SCRIPTNAME="$(basename "$0")" ; die() { e="$1"; shift; echo "$SCRIPTNAME: $*" >&2; exit "$e"; }
@@ -11,6 +11,7 @@ SCRIPTDIR="$(dirname "$(readlink -f "$0")")"
 FALLBACK_VERSION="$(sed -nr "/^AC_INIT\b/{ s/^[^,]*,[^0-9]*([A-Za-z0-9.:~+-]*).*/\1/; p; }" $SCRIPTDIR/../configure.ac)"
 test -n "$FALLBACK_VERSION" || die 7 "failed to detect AC_INIT in $SCRIPTDIR/../configure.ac"
 
+test " $1" = " -p" && { PRINT=true; shift; } || PRINT=false
 BUILDID_CC="$1"
 BUILDID_D="$2"
 DOTGIT=`git rev-parse --git-dir 2>/dev/null` || true
@@ -40,11 +41,16 @@ namespace RapicornInternal {
 __EOF
 )
 
-if test -z "$BUILDID_CC" ; then
+if $PRINT ; then
   echo "$BUILDID"
-elif test ! -e "$BUILDID_CC" || test "$(cat "$BUILDID_CC")" != "$BUILDID_CODE" ; then
-  echo "$BUILDID_CODE" > "$BUILDID_CC"
 fi
+
+test -z "$BUILDID_CC" || {
+  if test ! -e "$BUILDID_CC" || test "$(cat "$BUILDID_CC")" != "$BUILDID_CODE" ; then
+    echo "  UPDATE   $BUILDID_CC" >&2
+    echo "$BUILDID_CODE" > "$BUILDID_CC"
+  fi
+}
 
 test -z "$BUILDID_D" -o ! -e "$DOTGIT" || {
   GITINDEX=`git rev-parse --show-toplevel`/`git rev-parse --git-path index`

@@ -105,12 +105,9 @@ manpage_footer.html:
 	$(Q) $(PANDOC) -s -t html -S --toc -H $(topdir)/docs/manpage.css -B manpage_header.html -A manpage_footer.html $< -o $@
 
 # == topbuildid.cc ==
-topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh)
-topbuildid.cc: $(top_srcdir)/misc/mkbuildid.sh
-	$(AM_V_GEN)
-	$(Q) $(topdir)/misc/mkbuildid.sh $@ $(DEPDIR)/topbuildid.cc.d
+topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh -p topbuildid.cc)	# "update rule" for topbuildid.cc
+topbuildid.cc: # avoid explicit deps, 'topbuildid::=' ensures updates
 CLEANFILES += topbuildid.cc
--include $(DEPDIR)/topbuildid.cc.d
 buildid:
 	@echo $(topbuildid)
 
