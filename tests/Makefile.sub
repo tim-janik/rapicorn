@@ -13,17 +13,17 @@ t101-dynamic-cast-check: $(HEADERS) $(SOURCES)
 make_check_targets += t101-dynamic-cast-check
 
 # == t190-installcheck-api-test ==
-tests/t190-installcheck-api-use: tests/t190-api-use.cc
+t190-installcheck-api-use: tests/t190-api-use.cc
 	@echo "  BUILD   " $@
-	$(Q) $(CXX) $(CXXFLAGS) -Werror $< -c -o $(<:.cc=.o)     `$(TESTS_PKG_CONFIG) --cflags rapicorn-@MAJOR@` \
+	$(Q) $(CXX) -Werror $< -c -o $(<:.cc=.o)     `$(TESTS_PKG_CONFIG) --cflags rapicorn-@MAJOR@` \
 		; eval "$$TSTDIAGNOSE" "'Compile $<'"
-	$(Q) $(CXX) $(CXXFLAGS) -Werror $(<:.cc=.o) -o $(<:.cc=) `$(TESTS_PKG_CONFIG) --libs   rapicorn-@MAJOR@` \
+	$(Q) $(CXX) -Werror $(<:.cc=.o) -o $(<:.cc=) `$(TESTS_PKG_CONFIG) --libs   rapicorn-@MAJOR@` \
 		; eval "$$TSTDIAGNOSE" "'Link    $<'"
 	$(Q) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./$(<:.cc=) \
 		; eval "$$TSTDIAGNOSE" "'Execute $<'"
 	$(Q) rm -f $(<:.cc=.o) $(<:.cc=)
-.PHONY: tests/t190-installcheck-api-use
-installcheck-local: tests/t190-installcheck-api-use
+.PHONY: t190-installcheck-api-use
+installcheck-local: t190-installcheck-api-use
 
 # == t201-rcore-basics ==
 noinst_PROGRAMS			       += tests/t201-rcore-basics
