@@ -65,24 +65,26 @@ def manifold (s, n, filename, line_offset):
 def main():
   verify_patterns (2)
   if len (sys.argv) <= 1:
-    print 'Usage: xmanifold.py [-S] <filename> [maxcount]'
+    print 'Usage: xmanifold.py [-S] <filename> [maxcount] [outfile]'
     sys.exit (1)
-  filename = None
   parse_sections = False
-  maxfold = None
-  for arg in sys.argv[1:]:
-    if   arg == '-S':
-      parse_sections = True
-    elif filename:
-      if maxfold != None:
-        raise RuntimeError ('Exactly 1 filename required')
-      maxfold = int (arg)
-    else:
-      filename = arg
-  if not filename:
-    raise RuntimeError ('Missing filename')
-  if maxfold == None:
-    maxfold = 20
+  filename = None
+  maxfold = 20
+  outfile = '/dev/stdout'
+  firstarg = 1
+  if len (sys.argv) > firstarg and sys.argv[firstarg] == '-S':
+    parse_sections = True
+    firstarg += 1
+  if len (sys.argv) > firstarg:
+    filename = sys.argv[firstarg]
+    firstarg += 1
+  else:
+    raise RuntimeError ('Missing input file')
+  if len (sys.argv) > firstarg:
+    maxfold  = int (sys.argv[firstarg])
+    firstarg += 1
+  if len (sys.argv) > firstarg:
+    outfile  = sys.argv[firstarg]
   txt = open (filename).read()
   line_offset = 1
   if parse_sections:
@@ -91,8 +93,9 @@ def main():
       raise RuntimeError ('%s: failed to identify XMANIFOLD_SECTION' % filename)
     line_offset = 1 + m.group (1).count ('\n')
     txt = m.group (2)
+  of = open (outfile, 'w')
   for i in range (0, maxfold + 1):
-    print manifold (txt, i, filename, line_offset)
+    print >>of, manifold (txt, i, filename, line_offset)
 
 if __name__ == '__main__':
   main()
