@@ -63,24 +63,31 @@ lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 
-# Build tree checks
+# == argument parsing ==
+AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
+# package library defaults
+enable_static=no ; enable_shared=yes
+
+# == Check srcdir == builddir ==
+echo "checking for srcdir==builddir... (#buildapi-variable-no-builddir)" # see https://github.com/cgwalters/build-api
+TEST_SRCDIR=`cd $srcdir ; /bin/pwd -P`
+TEST_BUILDDIR=`cd . ; /bin/pwd -P`
+test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
+  AC_MSG_ERROR([builds require builddir == srcdir (use e.g. git-worktree instead)])
+}
+DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
+AC_SUBST(DEFINE__FILE_DIR__)
+
+# == Check for git ==
 AC_MSG_CHECKING([for git repository])
 DOTGIT=`git rev-parse --git-dir 2>/dev/null` && INGIT= || INGIT='#'
 AC_SUBST(INGIT)
 result=$(test -z "$INGIT" && echo yes || echo no)
 AC_MSG_RESULT($result)
 
-# prepare automake and make
-AC_PROG_MAKE_SET        dnl # support subdirectories.
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-mk= ; AC_SUBST([mk]) # workaround for Automake abusing MAKE(1) keywords
-
-# declare --enable-* args and collect ac_help strings
-AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
-# package library defaults
-enable_static=no ; enable_shared=yes
-
-# == Utilities ==
+# == Utilities and build tools ==
+AC_PROG_MAKE_SET()
+AM_SILENT_RULES([yes])
 AC_PROG_LN_S
 AC_PROG_INSTALL
 MC_ASSERT_PROG(PKG_CONFIG, pkg-config)
@@ -197,16 +204,6 @@ if echo " $PACKAGE_VERSION" | grep -q '~wip' ; then
 fi
 AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $enable_devel_mode, [Add development aids to the build])
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = x1)
-
-# == srcdir == builddir ==
-echo "#buildapi-variable-no-builddir" >&AS_MESSAGE_LOG_FD # see https://github.com/cgwalters/build-api
-TEST_SRCDIR=`cd $srcdir ; /bin/pwd -P`
-TEST_BUILDDIR=`cd . ; /bin/pwd -P`
-test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
-  AC_MSG_ERROR([builds require builddir == srcdir (use e.g. git-worktree instead)])
-}
-DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
-AC_SUBST(DEFINE__FILE_DIR__)
 
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
 AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
