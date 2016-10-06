@@ -197,6 +197,14 @@ if echo " $PACKAGE_VERSION" | grep -q '~wip' ; then
 fi
 AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $enable_devel_mode, [Add development aids to the build])
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = x1)
+
+# == srcdir == builddir ==
+echo "#buildapi-variable-no-builddir" >&AS_MESSAGE_LOG_FD # see https://github.com/cgwalters/build-api
+TEST_SRCDIR=`cd $srcdir ; /bin/pwd -P`
+TEST_BUILDDIR=`cd . ; /bin/pwd -P`
+test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
+  AC_MSG_ERROR([builds require builddir == srcdir (use e.g. git-worktree instead)])
+}
 DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
 AC_SUBST(DEFINE__FILE_DIR__)
 
