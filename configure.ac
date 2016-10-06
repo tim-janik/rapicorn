@@ -77,7 +77,6 @@ mk= ; AC_SUBST([mk]) # workaround for Automake abusing MAKE(1) keywords
 
 # declare --enable-* args and collect ac_help strings
 AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
-AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=auto/yes/no build a development version, default=auto],,enable_devel_mode=auto)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -192,31 +191,13 @@ AC_SUBST(AM_LDFLAGS)
 
 # == ENABLE_DEVEL_MODE ==
 # check for development build rules, which require acess to .git/
-AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
-[test x"$enable_devel_mode" = xauto -a -e "$DOTGIT" && enable_devel_mode=yes]
-test x"$enable_devel_mode" = xyes -o x"$enable_devel_mode" = x1 && enable_devel_mode=yes || enable_devel_mode=no
-AC_MSG_RESULT([$enable_devel_mode])
-edm=0; test x"$enable_devel_mode" = xyes && edm=1
-AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $edm, [Build a development version])
-AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
-if test x"$enable_devel_mode" = xyes ; then
-  TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
-  TEST_BUILDDIR=$(cd . ; /bin/pwd)
-  test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
-    AC_MSG_ERROR([development build rules require srcdir == builddir])
-  }
-  git show HEAD:configure.ac 2>&1 | grep -q 'AC'_'INIT.*\brapicorn\b.*,' || {
-    AC_MSG_ERROR([development build rules require a rapicorn.git repository])
-  }
-  DEVELMODE="" ; NOTDEVELMODE="#"
-  # devel mode build tools
-  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"' # full debugging paths for devel-mode
-else # provide sane defaults for meaningful makefiles & errors
-  DEVELMODE="#"; NOTDEVELMODE=""
-  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
+enable_devel_mode=0
+if echo " $PACKAGE_VERSION" | grep -q '~wip' ; then
+    enable_devel_mode=1
 fi
-AC_SUBST(DEVELMODE)
-AC_SUBST(NOTDEVELMODE)
+AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $enable_devel_mode, [Add development aids to the build])
+AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = x1)
+DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
 AC_SUBST(DEFINE__FILE_DIR__)
 
 dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
@@ -523,7 +504,7 @@ Autoconfiguration complete.
 	Operating System:		$RAPICORN_OS
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
-	Development mode:		${NOTDEVELMODE:+enabled}${DEVELMODE:+disabled}
+	Development mode:		${ENABLE_DEVEL_MODE_FALSE:+enabled}${ENABLE_DEVEL_MODE_TRUE:+disabled}
 
 	Python extension:		enabled (mandatory)
 	Readline libs:			$READLINELIBS
