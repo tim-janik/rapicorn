@@ -1,1 +1,17 @@
 /t201-rcore-basics
+/t203-more-basics
+/t303-mini-server
+/t303-mini-server-clnt.cc
+/t303-mini-server-clnt.hh
+/t303-mini-server-srvt.cc
+/t303-mini-server-srvt.hh
+/t305-include-p1-client.gen.cc
+/t305-include-p1-server.gen.cc
+/t305-include-p2-client.gen.cc
+/t305-include-p2-server.gen.cc
+/t305-testpass-client.gen.cc
+/t305-testpass-server.gen.cc
+/t401-servertests
+/t402-clienttests
+/t901-bench-rcore
+/t902-bench-aida
