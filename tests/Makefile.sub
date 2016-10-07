@@ -210,12 +210,12 @@ t305-testpass-compile-test: tests/t305-testpass-compile-server tests/t305-testpa
 make_check_targets += t305-testpass-compile-test
 
 # == t390-installcheck-aidacc ==
-tests/t390-installcheck-aidacc: tests/t301/testpass.idl
+t390-installcheck-aidacc: tests/t301/testpass.idl
 	$(Q) cd / \
 	&& $(DESTDIR)$(bindir)/aidacc --list-formats | grep -q -i 'formats' \
 	&& $(DESTDIR)$(bindir)/aidacc $(topdir)/tests/t301/testpass.idl ; eval "$$TSTDIAGNOSE"
-.PHONY: tests/t390-installcheck-aidacc
-installcheck-local: tests/t390-installcheck-aidacc
+.PHONY: t390-installcheck-aidacc
+installcheck-local: t390-installcheck-aidacc
 
 # == t401-servertests ==
 noinst_PROGRAMS			       += tests/t401-servertests
