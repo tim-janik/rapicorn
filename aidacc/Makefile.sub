@@ -88,3 +88,6 @@ aidacc-aidacc-installcheck:
 	  grep -F -q CxxStub $(TSTOUT) && grep -F -q TypeMap $(TSTOUT) && grep -F -q ExtractDocs $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f $(TSTOUT)
 installcheck-local: aidacc-aidacc-installcheck
+
+# == aidacc cleanups ==
+CLEANFILES += aidacc/*.py[co]
