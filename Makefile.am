@@ -9,7 +9,7 @@ V_gen = @printf '  %-9s%s\n'
 SUBDIRS		 = po .
 
 # == make setup ==
-DEFS			+= @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__ -D__TOPDIR__="\"$(topdir)/\""
+DEFS			+= -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__ -D__FILE_DIR__="\"rapicorn\"" -D__TOPDIR__="\"$(topdir)/\""
 AM_CPPFLAGS		+= -I$(top_builddir) # -I$(top_srcdir)
 AM_CXXFLAGS		+= $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
 lib_LTLIBRARIES 	 =

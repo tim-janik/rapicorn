@@ -75,8 +75,6 @@ TEST_BUILDDIR=`cd . ; /bin/pwd -P`
 test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
   AC_MSG_ERROR([builds require builddir == srcdir (use e.g. git-worktree instead)])
 }
-DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
-AC_SUBST(DEFINE__FILE_DIR__)
 
 # == Check for git ==
 AC_MSG_CHECKING([for git repository])
