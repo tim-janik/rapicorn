@@ -28,6 +28,7 @@ make_check_targets += tools-rapidres-check
 revisioned_files	+= tools/rapidres.1.md
 man1_MANS		+= tools/rapidres.1
 man1_HTMLS		+= tools/rapidres.1.html
+CLEANFILES		+= tools/rapidres.1 tools/rapidres.1.html
 
 # == rapidrun ==
 bin_PROGRAMS	       += tools/rapidrun
@@ -47,6 +48,7 @@ check-local: tools-rapidrun-check
 revisioned_files	+= tools/rapidrun.1.md
 man1_MANS		+= tools/rapidrun.1
 man1_HTMLS		+= tools/rapidrun.1.html
+CLEANFILES		+= tools/rapidrun.1 tools/rapidrun.1.html
 
 # == imgcheck ==
 noinst_PROGRAMS		+= tools/imgcheck
