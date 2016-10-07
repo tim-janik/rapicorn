@@ -1,6 +1,6 @@
 # Rapicorn			- non-recursive Makefile
 
-AIDACC			= $(top_builddir)/aidacc/aidacc
+AIDACC_INSTALLABLE	= $(top_builddir)/aidacc/aidacc
 
 # == aidacc files ==
 aidacc_imports = $(strip		\
@@ -33,8 +33,8 @@ aidacc_install_PYTHON	= $(aidacc_imports) $(aidacc_backends)
 noinst_SCRIPTS	       += $(aidacc_backends)
 
 # == aidacc executable ==
-AIDACC_INTERN_CONFIG  = "aidaccpydir" : "${topdir}",  "AIDA_VERSION" : "${topbuildid}", "INTERN" : 1
-AIDACC_INSTALL_CONFIG = "aidaccpydir" : "${aidacc_installdir}", "AIDA_VERSION" : "${topbuildid}"
+AIDACC_INTERN_CONFIG	 = "aidaccpydir" : "${topdir}",  "AIDA_VERSION" : "${topbuildid}", "INTERN" : 1
+AIDACC_INSTALL_CONFIG	 = "aidaccpydir" : "${aidacc_installdir}", "AIDA_VERSION" : "${topbuildid}"
 noinst_SCRIPTS		+= $(AIDACC_INTERN)
 $(AIDACC_INTERN): aidacc/plic.py $(aidacc_imports) $(aidacc_backends) aidacc/TmplFiles.py
 	$(AM_V_GEN)
@@ -43,16 +43,16 @@ $(AIDACC_INTERN): aidacc/plic.py $(aidacc_imports) $(aidacc_backends) aidacc/Tmp
 	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${AIDACC_INTERN_CONFIG}|'
 	$(Q) chmod +x $@.tmp
 	$(Q) mv $@.tmp $@
-CLEANFILES += $(AIDACC_INTERN)
-bin_SCRIPTS		+= $(AIDACC)
-$(AIDACC): aidacc/plic.py $(aidacc_imports) $(aidacc_backends) aidacc/TmplFiles.py
+CLEANFILES		+= $(AIDACC_INTERN)
+bin_SCRIPTS		+= $(AIDACC_INSTALLABLE)
+$(AIDACC_INSTALLABLE): aidacc/plic.py $(aidacc_imports) $(aidacc_backends) aidacc/TmplFiles.py
 	$(AM_V_GEN)
 	$(Q) sed < $< > $@.tmp				\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
 	  -e '1,24s|^ *#@PKGINSTALL_CONFIGVARS_IN24LINES@|  ${AIDACC_INSTALL_CONFIG}|'
 	$(Q) chmod +x $@.tmp
 	$(Q) mv $@.tmp $@
-CLEANFILES += $(AIDACC)
+CLEANFILES += $(AIDACC_INSTALLABLE)
 
 # == TmplFiles.py ==
 EXTRA_DIST += $(aidacc_templ_files)
@@ -84,7 +84,7 @@ check-local: aidacc-aidacc-intern-check
 
 # == Post-Installation Test ==
 aidacc-aidacc-installcheck:
-	$(Q) PATH="$(bindir):$$PATH" $(AIDACC) -x CxxStub -x ExtractDocs -x TypeMap --list-formats > $(TSTOUT) && \
+	$(Q) PATH="$(bindir):$$PATH" $(AIDACC_INSTALLABLE) -x CxxStub -x ExtractDocs -x TypeMap --list-formats > $(TSTOUT) && \
 	  grep -F -q CxxStub $(TSTOUT) && grep -F -q TypeMap $(TSTOUT) && grep -F -q ExtractDocs $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) rm -f $(TSTOUT)
 installcheck-local: aidacc-aidacc-installcheck
