@@ -188,3 +188,29 @@ README: README.md
 	$(Q) $(PANDOC) -S -f markdown_github+pandoc_title_block-hard_line_breaks -t plain $< -o $@
 	$(Q) chmod a-w $@	# prevent accidental target file edits
 .SECONDARY: README.md		# pacify make(1) when shipping README without README.md
+MAINTAINERCLEANFILES += README
+
+# == cleanups ==
+CLEANFILES +=			\
+	yapps2_deb/yapps/*.pyc
+MAINTAINERCLEANFILES += 	\
+	Makefile\.in		\
+	config/compile		\
+	aclocal\.m4		\
+	autogen\.log		\
+	configure		\
+	configure\.h\.in	\
+	configure\.h\.in~	\
+	config/config\.guess	\
+	config/config\.sub	\
+	config/depcomp		\
+	config/install-sh	\
+	config/intltool\.m4	\
+	config/libtool\.m4	\
+	config/ltmain\.sh	\
+	config/ltoptions\.m4	\
+	config/ltsugar\.m4	\
+	config/ltversion\.m4	\
+	config/lt~obsolete\.m4	\
+	config/missing		\
+	config/py-compile
