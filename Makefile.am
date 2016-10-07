@@ -28,7 +28,7 @@ revisioned_files	 = # files that need @FILE_REVISION@ substitution
 # == project tools and paths ==
 # objdir:		# Loading newly built Python modules requires accesss to libtool objdir
 objdir			= .libs
-TAPTOOL 		= $(topdir)/taptool.sh
+TAPTOOL 		= $(topdir)/misc/taptool.sh
 XMANIFOLD		= $(topdir)/misc/xmanifold.py
 YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
 AIDACC_INTERN		= $(top_builddir)/aidacc/aidacc-intern
