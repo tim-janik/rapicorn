@@ -118,7 +118,7 @@ PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
 	pangocairo	>= 1.30.0
 ])
 
-# compiler, linker & libtool
+# == detect compiler, linker & libtool ==
 saved_CFLAGS="$CFLAGS"
 AC_PROG_CC
 CFLAGS="$saved_CFLAGS" 		# AC_PROG_CC_G called internally consistently breaks $CFLAGS
@@ -138,7 +138,7 @@ AC_LIBTOOL_DLOPEN
 CXX="$CXX -std=gnu++11"
 test -z "$CXXCPP" || CXXCPP="$CXXCPP -std=gnu++11"
 
-# == Compiler Setup ==
+# == Compiler flags ==
 # needs gcc >= 4.8, clang >= 3.4
 c_warnings="-Wall -Wdeprecated -Werror=format-security -Wredundant-decls -Wpointer-arith -Wmissing-declarations" # -Wdate-time -Wconversion -Wshadow
 cxx_warnings="-Wsign-promo -Woverloaded-virtual" # -Wnon-virtual-dtor  -Wempty-body -Wignored-qualifiers -Wunreachable-code -Wtype-limits
@@ -205,11 +205,34 @@ fi
 AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $enable_devel_mode, [Add development aids to the build])
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = x1)
 
-dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
-AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
-    [AC_COMPUTE_INT([RAPICORN_SYSVAL_$1], [$1], [$2],
-	    [AC_MSG_ERROR("failed to detect [$1]")])
-    AC_SUBST([RAPICORN_SYSVAL_$1])])
+# == RAPICORN_SYSVAL_POLLINIT ==
+AC_MSG_CHECKING([for POLL constants])
+rm -f conftest.val
+rapicorn_pollvalue_code='
+  #define _GNU_SOURCE
+  #include <sys/types.h>
+  #include <sys/poll.h>
+  #include <stdio.h>
+int main() {
+  FILE *f = fopen ("conftest.val", "w");
+  if (!f)
+    return 1;
+  fprintf (f, "0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x",
+           POLLIN, POLLPRI, POLLOUT, POLLRDNORM, POLLRDBAND, POLLWRNORM, POLLWRBAND, POLLERR, POLLHUP, POLLNVAL);
+  return ferror (f) || fclose (f) != 0;
+}'
+AC_TRY_RUN([$rapicorn_pollvalue_code], rapicorn_pollvalue_result=`cat conftest.val`, unset rapicorn_pollvalue_result)
+rm -f conftest.val
+if test -z "$rapicorn_pollvalue_result" ; then
+  AC_MSG_RESULT([failed])
+  AC_MSG_ERROR([failed to detect poll values])
+else
+  AC_MSG_RESULT([done])
+fi
+RAPICORN_SYSVAL_POLLINIT="[((const unsigned int[]) { $rapicorn_pollvalue_result })]"
+AC_SUBST(RAPICORN_SYSVAL_POLLINIT) # macro needed for a public header file
+dnl # AC_DEFINE_UNQUOTED(RAPICORN_SYSVAL_POLLINIT, [((const unsigned int[[]]) { $rapicorn_pollvalue_result })], [Values for POLLIN..POLLNVAL])
+
 
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
@@ -230,25 +253,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     GLIB_SIZEOF([], long, rapicorn_long)
     RAPICORN_SIZEOF_LONG="$glib_cv_sizeof_rapicorn_long"
     AC_SUBST(RAPICORN_SIZEOF_LONG)
-
-    # --- POLL* ---
-    poll_headers=["
-      #define _GNU_SOURCE
-      #include <sys/types.h>
-      #include <sys/poll.h>
-    "]
-    AC_MSG_CHECKING([for POLL constants])
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLIN],     $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLPRI],    $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLOUT],    $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLRDNORM], $poll_headers) # needs _GNU_SOURCE on linux
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLRDBAND], $poll_headers) # needs _GNU_SOURCE on linux
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLWRNORM], $poll_headers) # needs _GNU_SOURCE on linux
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLWRBAND], $poll_headers) # needs _GNU_SOURCE on linux
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLERR],    $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLHUP],    $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLNVAL],   $poll_headers)
-    AC_MSG_RESULT([done])
 
     AC_CHECK_HEADERS( [sys/eventfd.h] )
 
