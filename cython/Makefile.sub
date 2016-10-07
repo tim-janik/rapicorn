@@ -69,3 +69,6 @@ cython/aidapyxxcallers.hh: cython/aidapyxxutils.hh $(XMANIFOLD)
 	$(Q) $(XMANIFOLD) -S $< 18 > $@.tmp
 	$(Q) mv $@.tmp $@
 CLEANFILES += cython/aidapyxxcallers.hh
+
+# == cython cleanups ==
+CLEANFILES += cython/*.py[co]
