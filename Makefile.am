@@ -11,7 +11,7 @@ SUBDIRS		 = po .
 # == make setup ==
 DEFS			+= -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__ -D__FILE_DIR__="\"rapicorn\"" -D__TOPDIR__="\"$(topdir)/\""
 AM_CPPFLAGS		+= -I$(top_builddir) # -I$(top_srcdir)
-AM_CXXFLAGS		+= $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
+AM_CXXFLAGS		+=
 lib_LTLIBRARIES 	 =
 bin_PROGRAMS		 =
 bin_SCRIPTS		 =

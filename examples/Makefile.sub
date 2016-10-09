@@ -21,7 +21,8 @@ make_check_xml_files		+= examples/texttest.xml
 
 # == graphics ==
 noinst_PROGRAMS			+= examples/graphics
-examples_graphics_LDADD		 = ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+examples_graphics_CXXFLAGS	 = $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
+examples_graphics_LDADD		 = ui/librapicorn-@MAJOR@.la $(LIBRAPICORN_LIBS)
 examples_graphics_SOURCES	 = examples/graphics.cc
 make_check_xml_files		+= examples/graphics.xml
 

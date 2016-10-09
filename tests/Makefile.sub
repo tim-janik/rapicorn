@@ -27,7 +27,8 @@ installcheck-local: t190-installcheck-api-use
 
 # == t201-rcore-basics ==
 noinst_PROGRAMS			       += tests/t201-rcore-basics
-tests_t201_rcore_basics_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
+tests_t201_rcore_basics_CXXFLAGS	= $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
+tests_t201_rcore_basics_LDADD		= ui/librapicorn-@MAJOR@.la $(LIBRAPICORN_LIBS)
 tests_t201_rcore_basics_SOURCES		=	\
 	tests/t201/rcore-basics-main.cc		\
 	tests/t201/rcore-basics-aidatests.cc	\
@@ -52,7 +53,8 @@ make_check_targets += t202-randomized-hashing-test
 
 # == t203-more-basics ==
 noinst_PROGRAMS				+= tests/t203-more-basics
-tests_t203_more_basics_LDADD		 = ui/librapicorn-@MAJOR@.la $(SVG_DEPENDENCIES_LIBS)
+tests_t203_more_basics_CXXFLAGS		 = $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
+tests_t203_more_basics_LDADD		 = ui/librapicorn-@MAJOR@.la $(LIBRAPICORN_LIBS)
 tests_t203_more_basics_SOURCES		 = 	\
 	tests/t203/more-basics-main.cc		\
 	tests/t203/more-basics-performance.cc	\
@@ -219,7 +221,8 @@ installcheck-local: t390-installcheck-aidacc
 
 # == t401-servertests ==
 noinst_PROGRAMS			       += tests/t401-servertests
-tests_t401_servertests_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS) $(READLINELIBS)
+tests_t401_servertests_CXXFLAGS		= $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
+tests_t401_servertests_LDADD		= ui/librapicorn-@MAJOR@.la $(LIBRAPICORN_LIBS) $(READLINELIBS)
 tests_t401_servertests_SOURCES		=	\
 	tests/t401/cmdtest.cc			\
 	tests/t401/labelmarkup.cc		\

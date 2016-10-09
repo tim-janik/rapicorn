@@ -4,7 +4,7 @@
 RAPIDRES_INTERN			= $(top_builddir)/tools/rapidres
 bin_PROGRAMS		       += tools/rapidres
 tools_rapidres_SOURCES		= tools/rapidres.cc tools/rapidres-buildid.cc
-tools_rapidres_LDADD		= $(LIBZ)
+tools_rapidres_LDADD		= $(LIBZ_LIBS)
 tools/rapidres-buildid.cc: topbuildid.cc
 	$(AM_V_GEN)
 	$(Q) cp $< $@

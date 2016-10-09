@@ -113,8 +113,8 @@ ui_librapicorn_includedir		= $(includedir)/rapicorn-@MAJOR@/ui
 ui_librapicorn_include_HEADERS		= $(ui_librapicorn_headers)
 lib_LTLIBRARIES                        += ui/librapicorn-@MAJOR@.la
 ui_librapicorn_@MAJOR@_la_SOURCES       = $(rcore_librapicorn_sources) $(ui_librapicorn_sources)
-ui_librapicorn_@MAJOR@_la_CXXFLAGS      = $(AM_CXXFLAGS) $(RAPICORN_GUI_CFLAGS)
-ui_librapicorn_@MAJOR@_la_LIBADD        = $(RAPICORN_GUI_LIBS) $(RAPICORN_CORE_LIBS) $(SVG_DEPENDENCIES_LIBS) -lm # -lfreetype -lfontconfig
+ui_librapicorn_@MAJOR@_la_CXXFLAGS      = $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
+ui_librapicorn_@MAJOR@_la_LIBADD        = $(LIBRAPICORN_LIBS)
 EXTRA_ui_librapicorn_@MAJOR@_la_DEPENDENCIES = rcore/ldscript.map
 ui_librapicorn_@MAJOR@_la_LDFLAGS	= $(strip		\
 	$(AM_LDFLAGS) -no-undefined -Wl,--as-needed -Wl,-O1	\

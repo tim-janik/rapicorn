@@ -102,19 +102,32 @@ MC_ASSERT_PROG(XMLLINT, xmllint)
 MC_ASSERT_VERSION($XMLLINT --version, 20901)
 
 # == Libraries ==
-PKG_CHECK_MODULES(SVG_DEPENDENCIES, [
+# libz
+AC_CHECK_LIB(z, gzsetparams, [AC_CHECK_HEADER(zlib.h, LIBZ_LIBS='-lz', LIBZ='')], LIBZ='')
+if test -z "$LIBZ_LIBS"; then
+    AC_MSG_ERROR([Compression library libz is missing, but required])
+fi
+AC_SUBST(LIBZ_LIBS)
+# librapicorn dependencies
+LIBRAPICORN_REQUIRES="
+	libpng12	>= 1.2.50
 	cairo		>= 1.10.0
 	librsvg-2.0	>= 2.40.2
-])
-PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
-	cairo		>= 1.10.0
-	glib-2.0	>= 2.32.0
-	gio-2.0		>= 2.30.0
-	gthread-2.0	>= 2.30.0
 	pango		>= 1.30.0
 	pangoft2	>= 1.30.0
 	pangocairo	>= 1.30.0
-])
+	x11		>= 1.6.2
+	xext		>= 1.3.3
+	glib-2.0	>= 2.32.0
+	gio-2.0		>= 2.30.0
+	gthread-2.0	>= 2.30.0
+"
+LIBRAPICORN_REQUIRES=`echo $LIBRAPICORN_REQUIRES` # strip whitespaces
+# define LIBRAPICORN_CFLAGS and LIBRAPICORN_LIBS
+PKG_CHECK_MODULES(LIBRAPICORN, [ $LIBRAPICORN_REQUIRES ])
+LIBRAPICORN_LIBS="$LIBRAPICORN_LIBS $LIBZ_LIBS"
+# for C++ library linking, '-lpthread' is needed in addition to '-pthread'
+LIBRAPICORN_LIBS=`printf %s "$LIBRAPICORN_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
 
 # == detect compiler, linker & libtool ==
 saved_CFLAGS="$CFLAGS"
@@ -345,41 +358,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 	AC_MSG_RESULT(no)
       fi
     fi
-
-    dnl # --- require libz ---
-    if test -z "$LIBZ"; then
-        AC_CHECK_LIB(z, gzsetparams,
-            [AC_CHECK_HEADER(zlib.h, LIBZ='-lz', LIBZ='')],
-            LIBZ='')
-    fi
-    if test -z "$LIBZ"; then
-        AC_MSG_ERROR([Compression library libz is missing, but required])
-    fi
-    AC_SUBST(LIBZ)
-
-    dnl --- require libpng ---
-    if test -z "$LIBPNG"; then
-	dnl # png_set_add_alpha() exists only since libpng v1.2
-	AC_MSG_CHECKING(for libpng12)
-	if $PKG_CONFIG --exists libpng12 ; then
-	    AC_MSG_RESULT(yes)
-	    LIBPNG=`$PKG_CONFIG --libs libpng12`
-	elif $PKG_CONFIG --exists libpng13 ; then
-	    AC_MSG_RESULT(yes)
-	    LIBPNG=`$PKG_CONFIG --libs libpng13`
-	else
-	    AC_MSG_RESULT(no)
-	    AC_MSG_ERROR([PNG image library libpng (>= 1.2) is missing, but required])
-	fi
-    fi
-
-    dnl # --- check for GLib (version checked above) ---
-    PKG_CHECK_MODULES(RAPICORN_CORE, glib-2.0 gio-2.0 gthread-2.0)
-    # libtool doesn't automatically figure that -pthread implies -lpthread
-    RAPICORN_CORE_LIBS=`echo " $RAPICORN_CORE_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
-    RAPICORN_CORE_LIBS="$RAPICORN_CORE_LIBS $LIBPNG $LIBZ"
-    AC_SUBST(RAPICORN_CORE_CFLAGS)
-    AC_SUBST(RAPICORN_CORE_LIBS)
 ])
 
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
@@ -414,28 +392,6 @@ AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
     dnl # do gettext checks, provide INTLLIBS and CATOBJEXT
     AM_GLIB_GNU_GETTEXT
     AC_PROG_INTLTOOL
-])
-
-dnl # RAPICORN_REQUIREMENTS() - checks everything needed by ui/
-AC_DEFUN([RAPICORN_REQUIREMENTS],
-[
-    dnl # --- check for Rapicorn GUI dependencies ---
-    PKG_CHECK_MODULES(RAPICORN_GUI, cairo pangoft2 pangocairo)
-    dnl # == X11 System ==
-    AC_CHECK_LIB(X11, XOpenDisplay,
-      [ RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS -lX11" ],
-      [ AC_MSG_ERROR([missing X11 library]) ])
-    dnl # == X11 Extensions ==
-    AC_CHECK_LIB(Xext, XShmAttach,
-      [ RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS -lXext" ],
-      [ AC_MSG_ERROR([missing X11 shared memory extension]) ])
-    RAPICORN_GUI_CFLAGS="$RAPICORN_GUI_CFLAGS $RAPICORN_CORE_CFLAGS"
-    # libtool doesn't automatically figure that -pthread implies -lpthread
-    RAPICORN_GUI_LIBS=`echo " $RAPICORN_GUI_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
-    RAPICORN_GUI_LIBS="$RAPICORN_GUI_LIBS $RAPICORN_CORE_LIBS $LIBZ"
-    AC_SUBST(RAPICORN_GUI_CFLAGS)
-    AC_SUBST(RAPICORN_GUI_LIBS)
-    AM_CONDITIONAL(WITH_PANGO, true)
 ])
 
 dnl # RAPICORN_PYTHON_REQUIREMENTS() - rapicorn python checks
@@ -480,7 +436,6 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 RAPICORN_I18N_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_PYTHON_REQUIREMENTS
-RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 
 # create output files
