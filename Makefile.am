@@ -135,6 +135,12 @@ python-call-info:
 	@echo 'PYTHONPATH="'$$(readlink -f $(DESTDIR)$(cython_pymodulesdir)/..)':$$PYTHONPATH" $(PYTHON) -ic "import Rapicorn"'
 .PHONY: python-call-info
 
+# == pkg-config-call-info ==
+rapicorn_pkgconfigdir    = $(libdir)/pkgconfig
+pkg-config-call-info:
+	@echo 'PKG_CONFIG_PATH="'$(DESTDIR)$(rapicorn_pkgconfigdir):$$PKG_CONFIG_PATH'" $(PKG_CONFIG)'
+.PHONY: pkg-config-call-info
+
 # == check-python-tests ==
 check-python-tests:
 EXTRA_DIST += $(make_check_pytests)
@@ -158,7 +164,6 @@ rapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
 EXTRA_DIST		+= $(rapicorn_include_HEADERS)
 
 # == rapicorn.pc ==
-rapicorn_pkgconfigdir    = $(libdir)/pkgconfig
 rapicorn_pkgconfig_DATA  = rapicorn-@MAJOR@.pc
 EXTRA_DIST		+= rapicorn.pc.in
 rapicorn-@MAJOR@.pc: rapicorn.pc.in $(top_builddir)/config.status
