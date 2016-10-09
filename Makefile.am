@@ -195,6 +195,32 @@ README: README.md
 .SECONDARY: README.md		# pacify make(1) when shipping README without README.md
 MAINTAINERCLEANFILES += README
 
+# == distcheck ==
+# distcheck_uniqdir - directory for build tests, outside of srcdir, unique per user and checkout
+# distcheck_uniqdir = $(shell printf distcheck-%d-%04x\\n $$UID 0x`X=$$(pwd) && echo -n "$$X" | md5sum | sed 's/^\(....\).*/\1/'`)
+distcheck_uniqdir = $(shell python -c "import os, md5; print ('distcheck-%u-%s' % (os.getuid(), md5.new (os.getcwd()).hexdigest()[:4]))")
+distcheck: dist
+	$(Q) TMPDIR="$${TMPDIR-$${TEMP-$${TMP-/tmp}}}" \
+	&& DDIR="$$TMPDIR/$(distcheck_uniqdir)" \
+	&& TARBALL=`readlink -f $(firstword $(DIST_ARCHIVES))` \
+	&& test -n "$$TMPDIR" -a -n "$(distcheck_uniqdir)" -a -n "$$DDIR" -a -n "$(distdir)" -a -n "$$TARBALL" \
+	&& mkdir -p "$$DDIR" \
+	&& set -x \
+	&& rm -rf "$$DDIR/$(distdir)/" \
+	&& cd "$$DDIR" \
+	&& tar xf "$$TARBALL" \
+	&& cd "$(distdir)" \
+	&& ./configure --prefix="`pwd`/_inst" $(AM_DISTCHECK_CONFIGURE_FLAGS) $(DISTCHECK_CONFIGURE_FLAGS) \
+	&& $(MAKE) $(AM_MAKEFLAGS) \
+	&& $(MAKE) $(AM_MAKEFLAGS) check \
+	&& $(MAKE) $(AM_MAKEFLAGS) install \
+	&& $(MAKE) $(AM_MAKEFLAGS) installcheck \
+	&& $(MAKE) $(AM_MAKEFLAGS) uninstall \
+	&& rm -rf "$$DDIR/$(distdir)/" \
+	&& { rmdir -p "$$DDIR" 2>/dev/null || true ; } \
+	&& echo "Archive OK: $$TARBALL"
+.PHONY: distcheck
+
 # == cleanups ==
 CLEANFILES +=			\
 	yapps2_deb/yapps/*.pyc
