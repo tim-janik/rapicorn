@@ -8,19 +8,21 @@ cython_pyxxstub_py_install_PYTHON	= $(CYTHON_PYXXSTUB_PY)
 # == Rapicorn.so files ==
 cython_pyx_headers = $(strip		\
 	cython/Aida.pyx			\
-	cython/aidapyxxcallers.hh	\
 	cython/aidapyxxutils.hh		\
-	cython/rapicorn-api.pyx		\
 	cython/rapicorn-core.pyx	\
+)
+cython_generated_headers = $(strip	\
+	cython/aidapyxxcallers.hh	\
+	cython/rapicorn-api.pyx		\
 )
 cython_private_files = $(strip		\
 	cython/Rapicorn.pyx		\
 )
-EXTRA_DIST += $(cython_private_files)
+EXTRA_DIST += $(cython_private_files) $(cython_pyx_headers)
 
 # == install *.pyx ==
 cython_pyx_installdir			= $(libdir)/rapicorn-@MAJOR@/pyxx
-cython_pyx_install_DATA			= $(cython_pyx_headers)
+cython_pyx_install_DATA			= $(cython_pyx_headers) $(cython_generated_headers)
 
 # == Rapicorn.so ==
 cython_pymodulesdir			= ${pythondir}/Rapicorn_@MAJOR@
