@@ -11,13 +11,16 @@ docs_doxy_tagsrcs   = $(strip \
 	tagfile-cppreference-15.xml=http://en.cppreference.com/w/		\
 )
 docs_doxy_tagstems  = $(filter-out =JUNK%, $(subst =, =JUNK, $(docs_doxy_tagsrcs))) # uses 'subst' for word splitting
+docs_doxygen_tagbzs = $(docs_doxy_tagstems:%=docs/%.bz2)
+EXTRA_DIST         += $(docs_doxygen_tagbzs)
 docs_doxygen_werror = false
+EXTRA_DIST	   += $(docs_doxy_extra)
 
 # Build with dot files by default
 DOXYGEN_GRAPHICS  ?= NO # YES
 
 # == docs/srctree ==
-docs/doxy/src: $(docs_doxy_sources) $(docs_doxy_extra) $(docs_doxygen_tagbz)
+docs/doxy/src: $(docs_doxy_sources) $(docs_doxy_extra) $(docs_doxygen_tagbzs)
 	$(AM_V_GEN)
 	$(Q) rm -Rf docs/doxy/src docs/doxy/src.tmp
 	$(Q) mkdir -p $(docs_doxy_src_dirs:%=docs/doxy/src.tmp/%)
@@ -37,6 +40,7 @@ docs/doxy/src: $(docs_doxy_sources) $(docs_doxy_extra) $(docs_doxygen_tagbz)
 
 # == docs/doxy/html ==
 docs_doxy_auxfiles = docs/extrastyles.css docs/doxygen_footer.html docs/references.bib
+EXTRA_DIST	  += docs/doxygen.cfg docs/error.ign $(docs_doxy_auxfiles)
 # rebuild documentation after commits, unless NODOC is set to be non-empty
 docs/doxy/html: $(if $(NODOC), , topbuildid.cc)
 # use order-only prerequisite on docs/doxy/src to spare doxygen runs for source edits
