@@ -4,17 +4,17 @@ AIDACC_INSTALLABLE	= $(top_builddir)/aidacc/aidacc
 
 # == aidacc files ==
 aidacc_imports = $(strip		\
-	aidacc/Decls.py			\
-	aidacc/GenUtils.py		\
-	aidacc/Parser.py		\
 	aidacc/AuxData.py		\
-	aidacc/yapps2runtime.py		\
-)
-aidacc_backends = $(strip		\
+	aidacc/CxxStub.py		\
+	aidacc/Decls.py			\
+	aidacc/ExtractDocs.py		\
+	aidacc/GenUtils.py		\
 	aidacc/PrettyDump.py		\
 	aidacc/TypeMap.py		\
-	aidacc/CxxStub.py		\
-	aidacc/ExtractDocs.py		\
+	aidacc/yapps2runtime.py		\
+)
+aidacc_generated = $(strip		\
+	aidacc/Parser.py		\
 	aidacc/TmplFiles.py		\
 )
 aidacc_templ_files = $(strip		\
@@ -28,15 +28,15 @@ aidacc_private_files = $(strip		\
 EXTRA_DIST += $(aidacc_private_files)
 
 # == aidacc imports ==
-aidacc_installdir	= $(libdir)/rapicorn-@MAJOR@/aidacc
-aidacc_install_PYTHON	= $(aidacc_imports) $(aidacc_backends)
-noinst_SCRIPTS	       += $(aidacc_backends)
+aidacc_installdir		= $(libdir)/rapicorn-@MAJOR@/aidacc
+aidacc_install_PYTHON		= $(aidacc_imports)
+nodist_aidacc_install_PYTHON	= $(aidacc_generated)
 
 # == aidacc executable ==
 AIDACC_INTERN_CONFIG	 = "aidaccpydir" : "${topdir}",  "AIDA_VERSION" : "${topbuildid}", "INTERN" : 1
 AIDACC_INSTALL_CONFIG	 = "aidaccpydir" : "${aidacc_installdir}", "AIDA_VERSION" : "${topbuildid}"
 noinst_SCRIPTS		+= $(AIDACC_INTERN)
-$(AIDACC_INTERN): aidacc/plic.py $(aidacc_imports) $(aidacc_backends) aidacc/TmplFiles.py
+$(AIDACC_INTERN): aidacc/plic.py $(aidacc_imports) $(aidacc_generated) aidacc/TmplFiles.py
 	$(AM_V_GEN)
 	$(Q) sed < $< > $@.tmp				\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
@@ -45,7 +45,7 @@ $(AIDACC_INTERN): aidacc/plic.py $(aidacc_imports) $(aidacc_backends) aidacc/Tmp
 	$(Q) mv $@.tmp $@
 CLEANFILES		+= $(AIDACC_INTERN)
 bin_SCRIPTS		+= $(AIDACC_INSTALLABLE)
-$(AIDACC_INSTALLABLE): aidacc/plic.py $(aidacc_imports) $(aidacc_backends) aidacc/TmplFiles.py
+$(AIDACC_INSTALLABLE): aidacc/plic.py $(aidacc_imports) $(aidacc_generated) aidacc/TmplFiles.py
 	$(AM_V_GEN)
 	$(Q) sed < $< > $@.tmp				\
 	  -e '1,1s|#!/usr/bin/env python\([0-9]\+\(\.[0-9]\+\)\?\)\?|#!${PYTHON}|' \
@@ -67,7 +67,6 @@ aidacc/TmplFiles.py: $(aidacc_templ_files)
 CLEANFILES += aidacc/TmplFiles.py
 
 # == Parser.py ==
-EXTRA_DIST += aidacc/Parser.g
 aidacc/Parser.py: aidacc/Parser.g
 	$(AM_V_GEN)
 	$(Q) $(YAPPS) aidacc/Parser.g $@.tmp 2>&1 | tee $@.errors	# yapps exit code is bogus
