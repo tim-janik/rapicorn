@@ -212,6 +212,9 @@ distcheck: dist
 	&& tar xf "$$TARBALL" \
 	&& cd "$(distdir)" \
 	&& ./configure --prefix="`pwd`/_inst" $(AM_DISTCHECK_CONFIGURE_FLAGS) $(DISTCHECK_CONFIGURE_FLAGS) \
+	&& touch dc-dist-cleanfiles dc-after-clean && find . -print >dc-dist-cleanfiles && make clean \
+	&& find . -print >dc-after-clean && cmp dc-dist-cleanfiles dc-after-clean \
+	|| { diff -u dc-dist-cleanfiles dc-after-clean ; exit 1 ; } && rm -f dc-dist-cleanfiles dc-after-clean \
 	&& $(MAKE) $(AM_MAKEFLAGS) \
 	&& $(MAKE) $(AM_MAKEFLAGS) check \
 	&& $(MAKE) $(AM_MAKEFLAGS) install \
