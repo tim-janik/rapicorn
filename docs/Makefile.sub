@@ -79,6 +79,7 @@ docs_html_installbase	 = $(docdir)
 noinst_DATA		+= docs/doxy/html/doc-version	# AM target to trigger docs/doxy/html builds
 docs-html-install: $(docs_html_install_DATA)
 	rm -Rf "$(DESTDIR)$(docs_html_installbase)"/html/
+	umask 022 && $(MKDIR_P) "$(DESTDIR)$(docs_html_installbase)"
 	umask 022 && cp -RP docs/doxy/html/ "$(DESTDIR)$(docs_html_installbase)"
 .PHONY: docs-html-install
 install-data-local: docs-html-install
