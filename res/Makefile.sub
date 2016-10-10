@@ -1,9 +1,10 @@
 # Rapicorn                      - non-recursive Makefile
 
-EXTRA_DIST	     +=		\
-	misc/reslist.sh		\
-	res/resfiles.list
-
 res_resfiles_list   ::= $(shell $(topdir)/misc/reslist.sh)
 
 make_check_xml_files += $(filter %.xml, $(res_resfiles_list:%=res/%))
+
+EXTRA_DIST	     +=			\
+	misc/reslist.sh			\
+	res/resfiles.list		\
+	$(res_resfiles_list:%=res/%)
