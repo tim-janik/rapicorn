@@ -30,7 +30,6 @@ revisioned_files	 = # files that need @FILE_REVISION@ substitution
 objdir			= .libs
 TAPTOOL 		= $(topdir)/misc/taptool.sh
 XMANIFOLD		= $(topdir)/misc/xmanifold.py
-YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
 AIDACC_INTERN		= $(top_builddir)/aidacc/aidacc-intern
 AIDACC_CXXSTUB_PY	= aidacc/CxxStub.py
 WITH_PYTHONPATH_INTERN	= PYTHONPATH="$(abs_top_builddir)/cython/$(objdir):$$PYTHONPATH"
@@ -38,6 +37,18 @@ PYTHON_INTERN		= $(WITH_PYTHONPATH_INTERN) $(PYTHON)
 XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH_INTERN) $(X11_ENV) $(PYTHON)
 XVFB_RAPIDRUN		= $(X11_ENV) $(abs_top_builddir)/tools/rapidrun --fatal-warnings "$$@"
 IMGCHECK		= tools/imgcheck
+EXTRA_DIST	       +=	\
+	misc/xmanifold.py	\
+	misc/taptool.sh
+
+# == yapps ==
+YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
+EXTRA_DIST	       += 		\
+	yapps2_deb/yapps/__init__.py	\
+	yapps2_deb/yapps/grammar.py	\
+	yapps2_deb/yapps/parsetree.py	\
+	yapps2_deb/yapps/runtime.py	\
+	yapps2_deb/yapps2.py
 
 # == res/ ==
 include res/Makefile.sub
@@ -104,7 +115,8 @@ manpage_footer.html:
 	$(Q) echo $$'<hr>\n<a href="../index.html">Return to Index</a>\n' > $@
 .INTERMEDIATE: manpage_footer.html
 CLEANFILES += manpage_footer.html
-%.1.html: %.1.revd.md manpage_header.html manpage_footer.html $(topdir)/docs/manpage.css
+EXTRA_DIST += docs/manpage.css
+%.1.html: %.1.revd.md manpage_header.html manpage_footer.html docs/manpage.css
 	$(AM_V_GEN)
 	$(Q) $(PANDOC) -s -t html -S --toc -H $(topdir)/docs/manpage.css -B manpage_header.html -A manpage_footer.html $< -o $@
 
@@ -186,6 +198,7 @@ uninstall-hook: rapicorn-pc-uninstall-hook
 # == doc/ install ==
 projectdocsdir   = $(docdir)/
 projectdocs_DATA = README NEWS COPYING.MPL
+EXTRA_DIST	+= $(projectdocs_DATA)
 
 # == README ==
 README: README.md
