@@ -119,12 +119,15 @@ nodist_ui_librapicorn_@MAJOR@_la_SOURCES	= $(rcore_generated_sources)
 ui_librapicorn_@MAJOR@_la_CXXFLAGS		= $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
 ui_librapicorn_@MAJOR@_la_LIBADD		= $(LIBRAPICORN_LIBS)
 EXTRA_ui_librapicorn_@MAJOR@_la_DEPENDENCIES	= rcore/ldscript.map
+EXTRA_DIST				       += rcore/ldscript.map
 ui_librapicorn_@MAJOR@_la_LDFLAGS		= $(strip	\
 	$(AM_LDFLAGS) -no-undefined -Wl,--as-needed -Wl,-O1	\
 	-version-info $(LT_VERSION_INFO) 			\
 	-Wl,--version-script=$(top_srcdir)/rcore/ldscript.map	\
-) # set libtool version and export symbols for resolving
-EXTRA_DIST			       += rcore/ldscript.map
+) # set library version and restrict exported symbols
+# headers for internal build dependencies
+librapicorn_all_headers				 = $(ui_librapicorn_include_HEADERS) $(nodist_ui_librapicorn_include_HEADERS) \
+						   $(rcore_librapicorn_include_HEADERS) $(nodist_rcore_librapicorn_include_HEADERS)
 # ldconfig
 install-exec-ldconfig: # libtool >= 1.5.2 doesn't always set rpath, requiring ldconfig
 	test ! -x /sbin/ldconfig -o ! -w /etc/ld.so.cache || /sbin/ldconfig $(DESTDIR)$(libdir)
