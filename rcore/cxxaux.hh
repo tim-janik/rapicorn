@@ -2,7 +2,7 @@
 #ifndef __RAPICORN_CXXAUX_HH__
 #define __RAPICORN_CXXAUX_HH__
 
-#include <rcore/buildconfig.h>
+#include <rcore/sys-config.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stddef.h>			// NULL

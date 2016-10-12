@@ -6,7 +6,7 @@
 #include <rcore/aidacxx.hh>
 #include <rcore/aidaprops.hh>
 #include <rcore/bindable.hh>
-#include <rcore/buildconfig.h>
+#include <rcore/sys-config.h>
 #include <rcore/resources.hh>
 #include <rcore/cpuasm.hh>
 #include <rcore/cxxaux.hh>

@@ -415,7 +415,7 @@ AC_CONFIG_FILES([
 Makefile
 po-helper.sh
 po/Makefile.in
-rcore/buildconfig.h
+rcore/sys-config.h
 ])
 
 AC_OUTPUT
