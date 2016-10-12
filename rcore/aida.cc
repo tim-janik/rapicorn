@@ -2309,8 +2309,12 @@ ImplicitBaseP
 ServerConnectionImpl::pop_interface (ProtoReader &fr)
 {
   const uint64 orbid = fr.pop_orbid();
-  OrbObjectP orbop = object_map_.orbo_from_orbid (orbid);
-  return object_map_.instance_from_orbo (orbop);
+  if (orbid)
+    {
+      OrbObjectP orbop = object_map_.orbo_from_orbid (orbid);
+      return object_map_.instance_from_orbo (orbop);
+    }
+  return NULL;
 }
 
 void
