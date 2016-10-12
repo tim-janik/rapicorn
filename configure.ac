@@ -330,35 +330,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
       AC_MSG_RESULT(no)
     ])
     AC_SUBST(RAPICORN_HAVE_MUTEXATTR_SETTYPE)
-
-    dnl # == g++<=4.7 missing --enable-libstdcxx-time ==
-    AC_CHECK_FUNCS([nanosleep sched_yield])
-    if test "x$ac_cv_func_nanosleep$ac_cv_func_sched_yield" = xyesyes; then
-      AC_MSG_CHECKING([whether g++ <= 4.7 sleep_for/yield workaround is needed])
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
-	      	#if __GNUC__ == 4 && __GNUC_MINOR__ <= 7 && !defined (_GLIBCXX_USE_SCHED_YIELD) && !defined (_GLIBCXX_USE_NANOSLEEP)
-	        #  define _GLIBCXX_USE_SCHED_YIELD 1
-	        #  define _GLIBCXX_USE_NANOSLEEP 1
-	        #  define FAKE_USE_NANOSLEEP__FAKE_USE_SCHED_YIELD 1
-		#  include <chrono>
-		#  include <thread>
-	        #endif
-		],[
-	      	#if __GNUC__ == 4 && __GNUC_MINOR__ <= 7 && FAKE_USE_NANOSLEEP__FAKE_USE_SCHED_YIELD == 1
-		  std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		  std::this_thread::yield();
-		#else
-		  SKIP - TEST; not a buggy gcc version detected;
-		#endif
-		])], [glibcxx_needs_nanosleep=yes], [glibcxx_needs_nanosleep=no])
-      if test "x$glibcxx_needs_nanosleep" = xyes ; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE([_GLIBCXX_USE_SCHED_YIELD], [1], [Define if g++<=4.7 fails to detect sched_yield.])
-	AC_DEFINE([_GLIBCXX_USE_NANOSLEEP],   [1], [Define if g++<=4.7 fails to detect nanosleep.])
-      else
-	AC_MSG_RESULT(no)
-      fi
-    fi
 ])
 
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
