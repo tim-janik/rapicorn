@@ -100,6 +100,7 @@ ui_private_files = $(strip		\
 	ui/blitfuncs.hh			\
 	ui/clientapi.cc			\
 	ui/displaywindow-xaux.cc	\
+	ui/interfaces.idl		\
 	ui/key2ucs4.cc			\
 	ui/regionimpl.h			\
 	ui/serverapi.cc			\
