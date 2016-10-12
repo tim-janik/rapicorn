@@ -1138,16 +1138,18 @@ class Generator:
     s += '}\n'
     return s
   def generate_server_method_registry (self, reglines):
-    s = ''
+    s = '\n'
+    s += 'namespace { namespace AIDA_CPP_PASTE (__aida_stubs, __COUNTER__) {\n'
     if len (reglines) == 0:
       return '// Skipping empty MethodRegistry\n'
-    s += 'static const __AIDA_Local__::MethodEntry _aida_stub_entries[] = {\n'
+    s += 'static const __AIDA_Local__::MethodEntry entries[] = {\n'
     for dispatcher in reglines:
       cdigest, dispatcher_name = dispatcher
       s += '  { ' + cdigest + ', '
       s += dispatcher_name + ', },\n'
     s += '};\n'
-    s += 'static __AIDA_Local__::MethodRegistry _aida_stub_registry (_aida_stub_entries);\n'
+    s += 'static __AIDA_Local__::MethodRegistry registry (entries);\n'
+    s += '} } // anon::__aida_stubs##__COUNTER__\n'
     return s
   def c_long_postfix (self, number):
     if number >= 9223372036854775808:
@@ -1435,14 +1437,16 @@ def generate (namespace_list, **args):
   idlfiles = config['files']
   if len (idlfiles) != 1:
     raise RuntimeError ("CxxStub: exactly one IDL input file is required")
+  outname = config.get ('output', '-')
   gg = Generator (idlfiles[0])
-  all = config['backend-options'] == []
-  gg.gen_aidaids  = all or 'aidaids' in config['backend-options']
-  gg.gen_serverhh = all or 'serverhh' in config['backend-options']
-  gg.gen_servercc = all or 'servercc' in config['backend-options']
-  gg.gen_clienthh = all or 'clienthh' in config['backend-options']
-  gg.gen_clientcc = all or 'clientcc' in config['backend-options']
+  gg.gen_aidaids  = 'aidaids' in config['backend-options'] or re.search (r'aidaids.?hh', outname)
+  gg.gen_serverhh = 'serverhh' in config['backend-options'] or re.search (r'server.?hh', outname)
+  gg.gen_servercc = 'servercc' in config['backend-options'] or re.search (r'server.?cc', outname)
+  gg.gen_clienthh = 'clienthh' in config['backend-options'] or re.search (r'client.?hh', outname)
+  gg.gen_clientcc = 'clientcc' in config['backend-options'] or re.search (r'client.?cc', outname)
   gg.gen_inclusions = config['inclusions']
+  if not any ([gg.gen_aidaids, gg.gen_serverhh, gg.gen_servercc, gg.gen_clienthh, gg.gen_clientcc]):
+    raise RuntimeError ("CxxStub: failed to identify output file type")
   for opt in config['backend-options']:
     if opt.startswith ('macro='):
       gg.cppmacro = opt[6:]
@@ -1459,7 +1463,6 @@ def generate (namespace_list, **args):
   ns_rapicorn = Decls.Namespace ('Rapicorn', None, [])
   gg.ns_aida = ( ns_rapicorn, Decls.Namespace ('Aida', ns_rapicorn, []) ) # Rapicorn::Aida namespace tuple for open_namespace()
   textstring = gg.generate_impl_types (config['implementation_types']) # namespace_list
-  outname = config.get ('output', '-')
   if outname != '-':
     fout = open (outname, 'w')
     fout.write (textstring)

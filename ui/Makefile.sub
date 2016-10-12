@@ -1,0 +1,180 @@
+# Rapicorn			- non-recursive Makefile
+
+# == librapicorn-@MAJOR@.so files ==
+ui_librapicorn_headers = $(strip	\
+	ui/adjustment.hh		\
+	ui/application.hh		\
+	ui/arrangement.hh		\
+	ui/binding.hh			\
+	ui/buttons.hh			\
+	ui/clientapi.hh			\
+	ui/cmdlib.hh			\
+	ui/commands.hh			\
+	ui/container.hh			\
+	ui/displaywindow.hh		\
+	ui/evaluator.hh			\
+	ui/events.hh			\
+	ui/factory.hh			\
+	ui/image.hh			\
+	ui/internal.hh			\
+	ui/keysymbols.hh		\
+	ui/layoutcontainers.hh		\
+	ui/listarea.hh			\
+	ui/models.hh			\
+	ui/object.hh			\
+	ui/paintcontainers.hh		\
+	ui/painter.hh			\
+	ui/paintwidgets.hh		\
+	ui/pixmap.hh			\
+	ui/primitives.hh		\
+	ui/region.hh			\
+	ui/scrollwidgets.hh		\
+	ui/selector.hh			\
+	ui/selob.hh			\
+	ui/serverapi.hh			\
+	ui/sinfex.hh			\
+	ui/sinfeximpl.hh		\
+	ui/sizegroup.hh			\
+	ui/slider.hh			\
+	ui/stock.hh			\
+	ui/style.hh			\
+	ui/table.hh			\
+	ui/testwidgets.hh		\
+	ui/text-editor.hh		\
+	ui/text-pango.hh		\
+	ui/uithread.hh			\
+	ui/utilities.hh			\
+	ui/viewport.hh			\
+	ui/widget.hh			\
+	ui/window.hh			\
+)
+ui_librapicorn_sources = $(strip	\
+	ui/adjustment.cc		\
+	ui/application.cc		\
+	ui/arrangement.cc		\
+	ui/binding.cc			\
+	ui/blit-mmx.cc			\
+	ui/blitfuncs.cc			\
+	ui/buttons.cc			\
+	ui/clientglue.cc		\
+	ui/cmdlib.cc			\
+	ui/commands.cc			\
+	ui/container.cc			\
+	ui/displaywindow-x11.cc		\
+	ui/displaywindow.cc		\
+	ui/evaluator.cc			\
+	ui/events.cc			\
+	ui/factory.cc			\
+	ui/image.cc			\
+	ui/layoutcontainers.cc		\
+	ui/listarea.cc			\
+	ui/models.cc			\
+	ui/object.cc			\
+	ui/paintcontainers.cc		\
+	ui/painter.cc			\
+	ui/paintwidgets.cc		\
+	ui/pixmap.cc			\
+	ui/primitives.cc		\
+	ui/region.cc			\
+	ui/regionimpl.c			\
+	ui/scrollwidgets.cc		\
+	ui/selector.cc			\
+	ui/selob.cc			\
+	ui/serverglue.cc		\
+	ui/sinfex.cc			\
+	ui/sizegroup.cc			\
+	ui/slider.cc			\
+	ui/stock.cc			\
+	ui/style.cc			\
+	ui/table.cc			\
+	ui/testwidgets.cc		\
+	ui/text-editor.cc		\
+	ui/text-pango.cc		\
+	ui/uithread.cc			\
+	ui/utilities.cc			\
+	ui/viewport.cc			\
+	ui/widget.cc			\
+	ui/window.cc			\
+)
+ui_private_files = $(strip		\
+	ui/blitfuncs.hh			\
+	ui/clientapi.cc			\
+	ui/displaywindow-xaux.cc	\
+	ui/key2ucs4.cc			\
+	ui/regionimpl.h			\
+	ui/serverapi.cc			\
+	ui/widget.dox			\
+)
+EXTRA_DIST += $(ui_private_files)
+ui_doc_sources = $(ui_librapicorn_headers) $(ui_librapicorn_sources) ui/widget.dox
+
+# == librapicorn-@MAJOR@.so ==
+ui_librapicorn_includedir		= $(includedir)/rapicorn-@MAJOR@/ui
+ui_librapicorn_include_HEADERS		= $(ui_librapicorn_headers)
+lib_LTLIBRARIES                        += ui/librapicorn-@MAJOR@.la
+ui_librapicorn_@MAJOR@_la_SOURCES       = $(rcore_librapicorn_sources) $(ui_librapicorn_sources)
+ui_librapicorn_@MAJOR@_la_CXXFLAGS      = $(AM_CXXFLAGS) $(RAPICORN_GUI_CFLAGS)
+ui_librapicorn_@MAJOR@_la_LIBADD        = $(RAPICORN_GUI_LIBS) $(RAPICORN_CORE_LIBS) $(SVG_DEPENDENCIES_LIBS) -lm # -lfreetype -lfontconfig
+EXTRA_ui_librapicorn_@MAJOR@_la_DEPENDENCIES = rcore/ldscript.map
+ui_librapicorn_@MAJOR@_la_LDFLAGS	= $(strip		\
+	$(AM_LDFLAGS) -no-undefined -Wl,--as-needed -Wl,-O1	\
+	-version-info $(LT_VERSION_INFO) 			\
+	-Wl,--version-script=$(top_srcdir)/rcore/ldscript.map	\
+) # set libtool version and export symbols for resolving
+EXTRA_DIST			       += rcore/ldscript.map
+# ldconfig
+install-exec-ldconfig: # libtool >= 1.5.2 doesn't always set rpath, requiring ldconfig
+	test ! -x /sbin/ldconfig -o ! -w /etc/ld.so.cache || /sbin/ldconfig $(DESTDIR)$(libdir)
+install-exec-hook: install-exec-ldconfig
+
+# == serverapi.hh ==
+ui/serverapi.hh: ui/interfaces.idl ui/serverinsert.hh $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
+	$(AM_V_GEN)
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G serverhh \
+	  --insertions ui/serverinsert.hh ui/interfaces.idl -o $@.tmp
+	$(Q) mv $@.tmp $@
+CLEANFILES += ui/serverapi.hh
+$(ui_librapicorn_sources): ui/serverapi.hh
+
+# == serverapi.cc ==
+ui/serverapi.cc: ui/interfaces.idl $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
+	$(AM_V_GEN)
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G servercc -G strip-path=$(topdir)/ \
+	  --inclusions '"widget.hh"' ui/interfaces.idl -o - > $@.tmp
+	$(Q) mv $@.tmp $@
+CLEANFILES += ui/serverapi.cc
+ui/serverglue.cc: ui/serverapi.cc
+
+# == clientapi.hh ==
+ui/clientapi.hh: ui/interfaces.idl ui/clientinsert.hh $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
+	$(AM_V_GEN)
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G clienthh \
+	  --insertions ui/clientinsert.hh ui/interfaces.idl -o $@.tmp
+	$(Q) mv $@.tmp $@
+CLEANFILES += ui/clientapi.hh
+$(ui_librapicorn_sources): ui/clientapi.hh
+
+# == clientapi.cc ==
+ui/clientapi.cc: ui/interfaces.idl $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
+	$(AM_V_GEN)
+	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G clientcc -G strip-path=$(topdir)/ \
+	  --inclusions '"clientapi.hh"' ui/interfaces.idl -o - > $@.tmp
+	$(Q) mv $@.tmp $@
+CLEANFILES += ui/clientapi.cc
+ui/clientglue.cc: ui/clientapi.cc
+
+# == sinfex.lgen ==
+EXTRA_DIST += ui/sinfex.l
+ui/sinfex.lgen: ui/sinfex.l
+	$(AM_V_GEN)
+	$(Q) $(FLEX) -CFe -o$@ $<
+CLEANFILES += ui/sinfex.lgen
+ui/sinfex.cc: ui/sinfex.lgen
+
+# == sinfex.ygen ==
+EXTRA_DIST += ui/sinfex.y
+ui/sinfex.ygen: ui/sinfex.y
+	$(AM_V_GEN)
+	$(Q) $(BISON) -o$@ $<
+CLEANFILES += ui/sinfex.ygen
+ui/sinfex.cc: ui/sinfex.ygen

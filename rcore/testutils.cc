@@ -22,7 +22,7 @@ namespace Rapicorn {
 namespace Test {
 
 Timer::Timer (double deadline_in_secs) :
-  deadline_ (deadline_in_secs), test_duration_ (0), n_runs_ (0)
+  deadline_ (deadline_in_secs), test_duration_ (0), n_reps_ (0)
 {}
 
 Timer::~Timer ()
@@ -37,37 +37,33 @@ Timer::bench_time ()
   return timestamp_benchmark() / 1000000000.0;
 }
 
+#define DEBUG_LOOPS_NEEDED(...) while (0) printerr (__VA_ARGS__)
+
 int64
 Timer::loops_needed ()
 {
-  if (samples_.size() < 7)
+  if (samples_.size() < 3)
     {
-      n_runs_ += 1;
-      return n_runs_;           // force significant number of test runs
+      n_reps_ = MAX (1, n_reps_);
+      DEBUG_LOOPS_NEEDED ("loops_needed: %d\n", n_reps_);
+      return n_reps_;           // force significant number of test runs
     }
   double resolution = timestamp_resolution() / 1000000000.0;
   const double deadline = MAX (deadline_ == 0.0 ? 0.005 : deadline_, resolution * 10000.0);
-  if (test_duration_ < deadline * 0.1)
+  if (test_duration_ < deadline * 0.2)
     {
-      // we double the number of tests per run to gain more accuracy
-      n_runs_ += n_runs_;
-      return n_runs_;
+      // increase the number of tests per run to gain more accuracy
+      n_reps_ = MAX (n_reps_ + 1, int64 (n_reps_ * 1.5)) | 1;
+      DEBUG_LOOPS_NEEDED ("loops_needed: %d\n", n_reps_);
+      return n_reps_;
     }
   if (test_duration_ < deadline)
     {
-      // we increase the number of tests per run to gain more accuracy
-      n_runs_ += 1;
-      return n_runs_;
+      DEBUG_LOOPS_NEEDED ("loops_needed: %d\n", n_reps_);
+      return n_reps_;
     }
-  return 0; // time for testing exceeded
-}
-
-void
-Timer::reset()
-{
-  samples_.resize (0);
-  test_duration_ = 0;
-  n_runs_ = 0;
+  DEBUG_LOOPS_NEEDED ("loops_needed: %d\n", 0);
+  return 0;
 }
 
 void
@@ -75,10 +71,18 @@ Timer::submit (double elapsed, int64 repetitions)
 {
   test_duration_ += elapsed;
   double resolution = timestamp_resolution() / 1000000000.0;
-  if (elapsed >= resolution * 100.0) // force error below 1%
+  if (elapsed >= resolution * 500.0) // force error below 5%
     samples_.push_back (elapsed / repetitions);
   else
-    n_runs_ += repetitions; // double n_runs_ to yield significant times
+    n_reps_ = (n_reps_ + n_reps_) | 1; // double n_reps_ to yield significant times
+}
+
+void
+Timer::reset()
+{
+  samples_.resize (0);
+  test_duration_ = 0;
+  n_reps_ = 0;
 }
 
 double

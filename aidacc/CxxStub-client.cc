@@ -1,3 +1,5 @@
+#ifndef __AIDA_CXXSTUB_CLIENT_CC__
+#define __AIDA_CXXSTUB_CLIENT_CC__
 
 #ifndef AIDA_CHECK
 #define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
@@ -17,3 +19,5 @@ new_emit_result (const ProtoMsg *fb, uint64 h, uint64 l, uint32 n)
 }
 
 } } // Anon::__AIDA_Local__
+
+#endif // __AIDA_CXXSTUB_CLIENT_CC__

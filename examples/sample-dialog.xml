@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>	<!--*-mode: xml;-*-->
+<!-- Licensed CC0 Public Domain: http://creativecommons.org/publicdomain/zero/1.0 -->
+<interfaces>
+
+  <!-- [SampleDialog-EXAMPLE] -->
+  <Window declare="SampleDialog">
+    <VBox spacing="5">
+      <Button>
+        <Label markup-text="Hello World!" />
+      </Button>
+    </VBox>
+  </Window>
+  <!-- [SampleDialog-EXAMPLE] -->
+
+</interfaces>

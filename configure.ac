@@ -10,8 +10,8 @@ AC_PREREQ(2.57)
 # * MICRO:           Increment with every release, increments must *not* break ABI
 # * ABI_VERSION:     Record the latest version since ABI compatibility has been kept
 # * ABI changes:     Increment MAJOR or MINOR and reset ABI_VERSION to the current VERSION
-# * -RC:             Release candidate, may contain -rc[0-9]+ or nothing
-AC_INIT([rapicorn], [16.0.1])
+# * ~RC:             Release candidate, may contain [~-]\w+[0-9]+ or nothing
+AC_INIT([rapicorn], [16.0.1~wip])
 :;      ABI_VERSION=[16.0.0]
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AM_CONFIG_HEADER(configure.h)
@@ -63,7 +63,7 @@ AC_SUBST(LT_VERSION_INFO)
 
 # Build tree checks
 AC_MSG_CHECKING([for git repository])
-test -f "${srcdir}/.git/index" && INGIT= || INGIT='#'
+DOTGIT=`git rev-parse --git-dir 2>/dev/null` && INGIT= || INGIT='#'
 AC_SUBST(INGIT)
 result=$(test -z "$INGIT" && echo yes || echo no)
 AC_MSG_RESULT($result)
@@ -215,7 +215,7 @@ AC_SUBST(OPTIMIZE_FAST)
 # == ENABLE_DEVEL_MODE ==
 # check for development build rules, which require acess to .git/
 AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
-[test x"$enable_devel_mode" = xauto -a -d "$srcdir/.git/" && enable_devel_mode=yes]
+[test x"$enable_devel_mode" = xauto -a -e "$DOTGIT" && enable_devel_mode=yes]
 test x"$enable_devel_mode" = xyes -o x"$enable_devel_mode" = x1 && enable_devel_mode=yes || enable_devel_mode=no
 AC_MSG_RESULT([$enable_devel_mode])
 edm=0; test x"$enable_devel_mode" = xyes && edm=1
@@ -607,23 +607,7 @@ AC_CONFIG_FILES([
 Makefile
 po-helper.sh
 po/Makefile.in
-data/Makefile
-rcore/Makefile
 rcore/buildconfig.h
-res/Makefile
-aidacc/Makefile
-aidacc/tests/Makefile
-ui/Makefile
-ui/tests/Makefile
-cython/Makefile
-tools/Makefile
-tests/Makefile
-examples/Makefile
-docs/Makefile
-docs/mans/Makefile
-docs/examples/Makefile
-docs/imports/Makefile
-docs/tutorial/Makefile
 ])
 
 AC_OUTPUT

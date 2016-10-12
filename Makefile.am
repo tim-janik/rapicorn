@@ -1,104 +1,216 @@
-# Rapicorn
+# Rapicorn                      - non-recursive Makefile
+
+AUTOMAKE_OPTIONS = subdir-objects
 include $(top_srcdir)/Makefile.decl
+topdir = $(abs_top_srcdir)
+V_gen = @printf '  %-9s%s\n'
 
-SUBDIRS     = . po data res rcore aidacc ui cython tools tests examples docs
+# == non-migrated subdirs ==
+SUBDIRS		 = po .
 
-noinst_DATA =
+# == make setup ==
+DEFS			+= @DEFINE__FILE_DIR__@ -DRAPICORN_CONVENIENCE -D__RAPICORN_BUILD__ -D__TOPDIR__="\"$(topdir)/\""
+AM_CPPFLAGS		+= -I$(top_builddir) # -I$(top_srcdir)
+AM_CXXFLAGS		+= $(RAPICORN_CORE_CFLAGS) $(SVG_DEPENDENCIES_CFLAGS)
+lib_LTLIBRARIES 	 =
+bin_PROGRAMS		 =
+bin_SCRIPTS		 =
+noinst_DATA		 =
+noinst_SCRIPTS		 =
+noinst_PROGRAMS 	 =
+man1_MANS		 =
+man1_HTMLS		 =
+make_check_pytests	 =
+make_check_xml_files	 =
+make_check_targets	 =
+revisioned_files	 = # files that need @FILE_REVISION@ substitution
 
-# === web site ===
-site site-preview site-update:
-	@$(MAKE) -C web/ $(AM_MAKEFLAGS) $@
-.PHONY: site site-update
+# == project tools and paths ==
+# objdir:		# Loading newly built Python modules requires accesss to libtool objdir
+objdir			= .libs
+TAPTOOL 		= $(topdir)/misc/taptool.sh
+XMANIFOLD		= $(topdir)/misc/xmanifold.py
+YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
+AIDACC_INTERN		= $(top_builddir)/aidacc/aidacc-intern
+AIDACC_CXXSTUB_PY	= aidacc/CxxStub.py
+WITH_PYTHONPATH_INTERN	= PYTHONPATH="$(abs_top_builddir)/cython/$(objdir):$$PYTHONPATH"
+PYTHON_INTERN		= $(WITH_PYTHONPATH_INTERN) $(PYTHON)
+XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH_INTERN) $(X11_ENV) $(PYTHON)
+XVFB_RAPIDRUN		= $(X11_ENV) $(abs_top_builddir)/tools/rapidrun --fatal-warnings "$$@"
+IMGCHECK		= tools/imgcheck
 
-test:
-	$(MAKE) -C tests/ $(AM_MAKEFLAGS) $@
-.PHONY: test
+# == res/ ==
+include res/Makefile.sub
 
-# === doc/ files ===
-maindocsdir   = $(docdir)/
-maindocs_DATA = README NEWS COPYING.MPL
+# == aidacc/ ==
+include aidacc/Makefile.sub
+
+# == rcore/ ==
+include rcore/Makefile.sub
+
+# == ui/ ==
+include ui/Makefile.sub
+
+# == cython/ ==
+include cython/Makefile.sub
+
+# == tools/ ==
+include tools/Makefile.sub
+
+# == docs/ ==
+include docs/Makefile.sub
+
+# == tests/ ==
+include tests/Makefile.sub
+
+# == examples/ ==
+include examples/Makefile.sub
+
+# == revisions.lst ==
+noinst_DATA += revisions.lst
+EXTRA_DIST  += revisions.lst $(revisioned_files)
+revisions.lst: @INGIT@ $(revisioned_files) Makefile
+	$(AM_V_GEN)
+	$(Q) rm -f $@.tmplst
+	$(Q) for file in $(revisioned_files) ; do \
+	  git log --format="%ai $$file" -n 99 -- $$file > $@.tmp1 && \
+	  sort -rn $@.tmp1 > $@.tmp2 && \
+	  sed -n '1{ p; q}' $@.tmp2 >> $@.tmplst || exit $$? ; \
+	done
+	$(Q) mv $@.tmplst $(topdir)/$(@F)
+	$(Q) rm -f $@.tmp1 $@.tmp2 $@.tmplst
+clean-revisions.lst: # git is required to rebuild revisions.lst, so conditionalize cleaning
+	! git rev-parse --git-dir 2>/dev/null 1>&2 || rm -f $(topdir)/revisions.lst
+.PHONY: clean-revisions.lst
+clean-local: clean-revisions.lst
+
+# == .revd.md (INTERMEDIATE) ==
+%.revd.md: %.md revisions.lst
+	$(AM_V_GEN)
+	$(Q) V=`sed -n '\| $<$$|{ s/ .*//; p; q; }' $(topdir)/revisions.lst` \
+	&& sed "s/[@]FILE_REVISION[@]/$$V/g; s/[@]BUILDID[@]/$(topbuildid)/g" < $< > $@
+
+# == man.1 (markdown) ==
+%.1: %.1.revd.md
+	$(AM_V_GEN)
+	$(Q) $(PANDOC) -s -t man $< -o $@
+
+# == man.1.html (markdown) ==
+manpage_header.html:
+	$(Q) echo $$'<a href="../index.html">Return to Index</a>\n<hr>\n' > $@
+.INTERMEDIATE: manpage_header.html
+CLEANFILES += manpage_header.html
+manpage_footer.html:
+	$(Q) echo $$'<hr>\n<a href="../index.html">Return to Index</a>\n' > $@
+.INTERMEDIATE: manpage_footer.html
+CLEANFILES += manpage_footer.html
+%.1.html: %.1.revd.md manpage_header.html manpage_footer.html $(topdir)/docs/manpage.css
+	$(AM_V_GEN)
+	$(Q) $(PANDOC) -s -t html -S --toc -H $(topdir)/docs/manpage.css -B manpage_header.html -A manpage_footer.html $< -o $@
+
+# == topbuildid.cc ==
+topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh -p topbuildid.cc)	# "update rule" for topbuildid.cc
+topbuildid.cc: # avoid explicit deps, 'topbuildid::=' ensures updates
+CLEANFILES += topbuildid.cc
+buildid:
+	@echo $(topbuildid)
+
+# == make_check_targets ==
+.PHONY: $(make_check_targets)
+check-local: $(make_check_targets)
+
+# == stamp-autocheck-xmllint ==
+EXTRA_DIST	+= $(make_check_xml_files)
+noinst_DATA	+= stamp-autocheck-xmllint
+CLEANFILES	+= stamp-autocheck-xmllint
+stamp-autocheck-xmllint: $(make_check_xml_files)
+	$(Q) for XMLFILE in $? ; do \
+	  $(XMLLINT) --noout "$$XMLFILE" ; eval "$$TSTDIAGNOSE" "$$XMLFILE" || exit $$? ; \
+	done
+	$(Q) touch $@
+
+# == python-call-info ==
+python-call-info:
+	@echo '$(PYTHON_INTERN) -ic "import Rapicorn"'
+	@echo 'PYTHONPATH="'$$(readlink -f $(DESTDIR)$(cython_pymodulesdir)/..)':$$PYTHONPATH" $(PYTHON) -ic "import Rapicorn"'
+.PHONY: python-call-info
+
+# == check-python-tests ==
+check-python-tests:
+EXTRA_DIST += $(make_check_pytests)
+define make_check_pytests_TEMPLATE
+$(1)--test: $(1)
+	$$(Q) $$(XVFB_PYTHON_INTERN) $(1) ; eval "$$$$TSTDIAGNOSE" $(1)
+.PHONY: $(1)--test
+check-python-tests: $(1)--test
+endef
+$(foreach PYTEST, $(make_check_pytests), $(eval $(call make_check_pytests_TEMPLATE, $(PYTEST))))
+.PHONY: check-python-tests
+check-local: check-python-tests
+
+# == ./ dependencies ==
+rapicorn.hh: ui/clientapi.hh
+$(SOURCES): rapicorn.hh
+
+# == include/ install ==
+rapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@/
+rapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
+EXTRA_DIST		+= $(rapicorn_include_HEADERS)
+
+# == rapicorn.pc ==
+rapicorn_pkgconfigdir    = $(libdir)/pkgconfig
+rapicorn_pkgconfig_DATA  = rapicorn-@MAJOR@.pc
+EXTRA_DIST		+= rapicorn.pc.in
+rapicorn-@MAJOR@.pc: rapicorn.pc.in $(top_builddir)/config.status
+	$(AM_V_GEN)
+	$(Q) cd $(top_builddir) && $(SHELL) ./config.status --file=$@:$<
+CLEANFILES += rapicorn-@MAJOR@.pc
+# install rapicorn.pc -> rapicorn-@MAJOR@.pc symlink
+rapicorn-pc-install-hook:	# runs after install-data
+	$(Q) cd $(DESTDIR)$(rapicorn_pkgconfigdir) && \
+	  $(call SYMLINK_LATEST, rapicorn-[0-9][0-9].pc, rapicorn.pc) && \
+	  test -r rapicorn.pc -a -L rapicorn.pc
+install-data-hook: rapicorn-pc-install-hook
+rapicorn-pc-uninstall-hook:	# runs after uninstall
+	$(Q) cd $(DESTDIR)$(rapicorn_pkgconfigdir) && \
+	  $(call SYMLINK_LATEST, rapicorn-[0-9][0-9].pc, rapicorn.pc) && \
+	  test -r rapicorn.pc -o ! -e rapicorn.pc
+uninstall-hook: rapicorn-pc-uninstall-hook
+
+# == doc/ install ==
+projectdocsdir   = $(docdir)/
+projectdocs_DATA = README NEWS COPYING.MPL
+
+# == README ==
 README: README.md
 	$(AM_V_GEN)
-	$(Q) rm -f $@      # work around read-only target files
+	$(Q) rm -f $@		# work around read-only target
 	$(Q) $(PANDOC) -S -f markdown_github+pandoc_title_block-hard_line_breaks -t plain $< -o $@
-	$(Q) chmod a-w $@  # prevent accidental target file edits
-.SECONDARY: README.md # pacify make(1) when shipping README without README.md
-README.html: README.md
-	$(AM_V_GEN)
-	$(Q) rm -f $@      # work around read-only target files
-	$(Q) $(PANDOC) -s -S -f markdown_github+pandoc_title_block-hard_line_breaks -t html5 $< -o $@
-	$(Q) chmod a-w $@  # prevent accidental target file edits
-EXTRA_DIST   += $(maindocs_DATA)
+	$(Q) chmod a-w $@	# prevent accidental target file edits
+.SECONDARY: README.md		# pacify make(1) when shipping README without README.md
+MAINTAINERCLEANFILES += README
 
-# === i18n tool files ===
-CLEANFILES += intltool-extract intltool-merge intltool-update
-EXTRA_DIST += intltool-extract.in intltool-merge.in intltool-update.in
-
-# === rapicorn toplevel include file ===
-toprapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@/
-toprapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
-EXTRA_DIST += $(toprapicorn_include_HEADERS)
-
-# === rapicorn*.pc ===
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = rapicorn.pc # rapicorn-@MAJOR@.pc
-rapicorn.pc: $(top_builddir)/config.status rapicorn.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status --file=$@:rapicorn.pc.in
-EXTRA_DIST += rapicorn.pc.in
-CLEANFILES += rapicorn.pc
-
-# == ETAGS ==
-ETAGS:
-	rm -f ETAGS
-	$(MAKE) local-ETAGS -C rcore/
-	$(MAKE) local-ETAGS -C ui/
-.PHONY: ETAGS
-
-# === Simple API build test ===
-installcheck-local:
-	$(Q) cd . \
-	&& echo '#include <rapicorn-core.hh>'				 > tmpx.cc \
-	&& echo '#include <rapicorn-test.hh>'				>> tmpx.cc \
-	&& echo '#include <rapicorn.hh>'				>> tmpx.cc \
-	&& echo 'using namespace Rapicorn;'				>> tmpx.cc \
-	&& echo 'extern "C" int main (int argc, char *argv[]) {'	>> tmpx.cc \
-	&& echo 'ApplicationH app = init_app (".AMtest", &argc, argv);'	>> tmpx.cc \
-	&& echo 'Blob blob = Blob::load (".");'				>> tmpx.cc \
-	&& echo 'return app.run_and_exit(); }'				>> tmpx.cc \
-		; eval "$$TSTDIAGNOSE" "'Create  rapicorn sample program'"
-	$(Q) $(CXX) -Werror tmpx.cc -c `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --cflags rapicorn` \
-		; eval "$$TSTDIAGNOSE" "'Compile rapicorn sample program'"
-	$(Q) $(CXX) -Werror tmpx.o -o tmpx `PKG_CONFIG_PATH="$(pkgconfigdir):$$PKG_CONFIG_PATH" pkg-config --libs rapicorn` \
-		; eval "$$TSTDIAGNOSE" "'Link    rapicorn sample program'"
-	$(Q) LD_LIBRARY_PATH="$(libdir):$$LD_LIBRARY_PATH" ./tmpx \
-		; eval "$$TSTDIAGNOSE" "'Execute rapicorn sample program'"
-	$(Q) rm -f tmpx.o tmpx.cc tmpx
-
-# === source code check ===
-check-dynamic_cast:	# check for dynamic_cast of reference types which is broken in gcc <= 3.3.5
-	$(Q) echo "  CHECK  Repel dynamic_cast of reference types..." \
-	&& find $(srcdir)	-type f \( -iname '*.[hc][hc]' -o -iname '*.[hc]' \)	\
-			-exec grep -Hn 'dynamic_cast[^<]*<[^>&]*&' {} \;	\
-	| grep '.' ; exit $$[!$$?] # fail on matches
-check-local: check-dynamic_cast # run source code checks before all others
-
-# === automake fixes ===
-# disable bogus cleanup checks
-distcleancheck_listfiles = true # find . -type f -print
-# distuninstallcheck_listfiles = true # find . -type f -print
-MAINTAINERCLEANFILES += intltool-extract.in  intltool-merge.in  intltool-update.in
-
-# == ChangeLog & Release Rules ==
-CHANGELOG_RANGE = $(shell git cat-file -e bb02c8c92f88a091ca8ca2002a5800c2102e5e1d && \
-                    echo bb02c8c92f88a091ca8ca2002a5800c2102e5e1d..HEAD || echo HEAD)
-ChangeLog: $(GITSTAMPS)
-	$(AM_V_GEN)
-	$(Q) git log --pretty='%ad  %an 	# %h%n%n%B%n' --abbrev=11 \
-		--date=short --first-parent $(CHANGELOG_RANGE)	 > xgen-$(@F) # Generate ChangeLog with -prefixed records
-	$(Q) sed 's/^/	/; s/^	// ; s/[[:space:]]\+$$// '	-i xgen-$(@F) # Tab-indent commit bodies, kill trailing whitespaces
-	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'		-i xgen-$(@F) # Compress multiple newlines
-	$(Q) mv xgen-$(@F) $@
-	$(Q) test -s $@ || { mv $@ $@.empty ; ls -al --full-time $@.empty ; exit 1 ; }
-noinst_DATA += ChangeLog
-MAINTAINERCLEANFILES += ChangeLog
-EXTRA_DIST  += ChangeLog taptool.sh
+# == cleanups ==
+CLEANFILES +=			\
+	yapps2_deb/yapps/*.pyc
+MAINTAINERCLEANFILES += 	\
+	Makefile\.in		\
+	config/compile		\
+	aclocal\.m4		\
+	autogen\.log		\
+	configure		\
+	configure\.h\.in	\
+	configure\.h\.in~	\
+	config/config\.guess	\
+	config/config\.sub	\
+	config/depcomp		\
+	config/install-sh	\
+	config/intltool\.m4	\
+	config/libtool\.m4	\
+	config/ltmain\.sh	\
+	config/ltoptions\.m4	\
+	config/ltsugar\.m4	\
+	config/ltversion\.m4	\
+	config/lt~obsolete\.m4	\
+	config/missing		\
+	config/py-compile

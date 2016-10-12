@@ -1,0 +1,97 @@
+# Rapicorn			- non-recursive Makefile
+
+docs_project_link   = http://rapicorn.org
+docs_doxy_extra     = docs/examples.dox
+docs_doxy_sources   = $(ui_doc_sources) $(rcore_doc_sources)
+docs_doxy_headers   = $(filter     %.h %.H %.hh, $(docs_doxy_sources))
+docs_doxy_impls     = $(filter-out %.h %.H %.hh, $(docs_doxy_sources))
+docs_doxy_src_dirs  = ui rcore
+docs_doxy_tagsrcs   = $(strip \
+	tagfile-susv4.xml=http://pubs.opengroup.org/onlinepubs/9699919799/	\
+	tagfile-cppreference-15.xml=http://en.cppreference.com/w/		\
+)
+docs_doxy_tagstems  = $(filter-out =JUNK%, $(subst =, =JUNK, $(docs_doxy_tagsrcs))) # uses 'subst' for word splitting
+docs_doxygen_werror = false
+
+# Build with dot files by default
+DOXYGEN_GRAPHICS  ?= NO # YES
+
+# == docs/srctree ==
+docs/doxy/src: $(docs_doxy_sources) $(docs_doxy_extra) $(docs_doxygen_tagbz)
+	$(AM_V_GEN)
+	$(Q) rm -Rf docs/doxy/src docs/doxy/src.tmp
+	$(Q) mkdir -p $(docs_doxy_src_dirs:%=docs/doxy/src.tmp/%)
+	@: # copy source files *and* prefix each with an '@file' command
+	$(Q) for file in $(docs_doxy_headers) $(docs_doxy_impls) ; do \
+	  sed "1,+0s,^,/** @file $$file */ ," $$file > docs/doxy/src.tmp/$$file \
+	  || exit $? ; done
+	@: # copy extra files verbatim
+	$(Q) cp $(docs_doxy_extra) docs/doxy/src.tmp/
+	@: # avoid docu generation from enums residing in *[cC] files
+	$(Q) find docs/doxy/src.tmp -type f -name '*[cC]' -exec sed 's/^\([^"]*\)\benum\b/\1Enum/' -i {} \;
+	@: # extract doxygen tag files
+	$(Q) for file in $(docs_doxy_tagstems) ; do \
+	  bunzip2 < docs/$$file.bz2 > docs/doxy/$$file \
+	  || exit $? ; done
+	$(Q) mv docs/doxy/src.tmp docs/doxy/src
+
+# == docs/doxy/html ==
+docs_doxy_auxfiles = docs/extrastyles.css docs/doxygen_footer.html docs/references.bib
+# rebuild documentation after commits, unless NODOC is set to be non-empty
+docs/doxy/html: $(if $(NODOC), , topbuildid.cc)
+# use order-only prerequisite on docs/doxy/src to spare doxygen runs for source edits
+docs/doxy/html: docs/doxygen.cfg docs/error.ign $(docs_doxy_auxfiles) | docs/doxy/src
+	$(V_gen) "PREPARE" $@
+	$(Q) rm -Rf docs/doxy/html docs/doxy/output
+	$(Q) mkdir -p docs/doxy/output
+	$(Q) cp $(docs_doxy_auxfiles) docs/doxy/
+	$(Q) (cat docs/doxygen.cfg \
+	&& echo "PROJECT_NUMBER		= $(topbuildid)" \
+	&& echo "HAVE_DOT		= $(DOXYGEN_GRAPHICS)" \
+	&& echo "CLASS_DIAGRAMS		= $(DOXYGEN_GRAPHICS)" \
+	&& echo "DOT_MULTI_TARGETS	= YES" \
+	&& echo "INPUT			= src/" \
+	&& echo "STRIP_FROM_PATH	= $$(pwd)/docs/doxy/src" \
+	&& echo "OUTPUT_DIRECTORY	= output/" \
+	&& echo "GENERATE_TAGFILE	= output/html/tagfile.xml" \
+	&& echo "HTML_EXTRA_STYLESHEET	= extrastyles.css" \
+	&& echo "EXAMPLE_PATH		= $(topdir)/" \
+	&& echo "TAGFILES              += $(docs_doxy_tagsrcs)" \
+	) > docs/doxy/Doxyfile
+	$(V_gen) "DOXYGEN" $@
+	$(Q) cd docs/doxy && $(DOXYGEN) Doxyfile > error.log 2>&1
+	$(Q) test ! -s docs/doxy/error.log && rm -f docs/doxy/error.log \
+	|| { echo "WARNING: doxygen issues encountered ($$(wc -l <docs/doxy/error.log)): $$(pwd)/docs/doxy/error.log" ; \
+	     ! grep -E -v -f $(srcdir)/docs/error.ign docs/doxy/error.log || ! $(docs_doxygen_werror) ; }
+	$(V_gen) "POLISH" $@
+	$(Q) sed -r $(docs_sed_accesskey_f) $(docs_sed_project_link) -i docs/doxy/output/html/*.html
+	$(Q) mv docs/doxy/output/html docs/doxy/html
+docs_sed_accesskey_f  = -e 's;(<input [^>]*id="MSearchField"[^>]*accesskey=")S";\1F";'
+docs_sed_project_link = -e 's;<div id="projectname">((\w|[+_/~*%^-])+);<div id="projectname"><a href="$(docs_project_link)">\1</a>;'
+CLEANFILES           += docs/error.log
+docs/doxy/html/doc-version: docs/doxy/html $(man1_HTMLS)
+	$(AM_V_GEN)
+	$(Q) test -z "$(man1_HTMLS)" || { $(MKDIR_P) docs/doxy/html/man1/ && cp $(man1_HTMLS) docs/doxy/html/man1/ ; }
+	$(Q) echo "$(PACKAGE)-$(topbuildid)" > $@
+
+# == install docs/doxy/html ==
+docs_html_installbase  = $(docdir)
+docs_html_installdir   = $(docs_html_installbase)/html/
+docs_html_install_DATA = docs/doxy/html/doc-version 			# AM target to trigger docs/doxy/html builds
+docs-html-install: $(docs_html_install_DATA)
+	rm -Rf "$(DESTDIR)$(docs_html_installbase)"/html/
+	umask 022 && cp -RP docs/doxy/html/ "$(DESTDIR)$(docs_html_installbase)"
+.PHONY: docs-html-install
+install-data-local: docs-html-install
+
+# == uninstall docs/doxy/html ==
+docs-html-uninstall:
+	rm -Rf "$(DESTDIR)$(docs_html_installbase)"/html/
+.PHONY: docs-html-uninstall
+uninstall-local: docs-html-uninstall
+
+# == clean docs/doxy/ ==
+docs-doxy-clean:
+	rm -Rf docs/doxy/
+.PHONY: docs-doxy-clean
+clean-local: docs-doxy-clean

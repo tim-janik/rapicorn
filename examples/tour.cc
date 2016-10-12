@@ -19,7 +19,7 @@ custom_commands (WindowH &window, const String &command, const StringSeq &args)
   return true;
 }
 
-#include "../ui/tests/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
+#include "../tests/t402/testpixs.c" // alpha_rle alpha_raw rgb_rle rgb_raw
 
 extern "C" int
 main (int   argc,

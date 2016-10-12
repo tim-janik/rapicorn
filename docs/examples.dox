@@ -1,0 +1,107 @@
+// This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
+//						-*- mode:visual-line -*-
+/// @file
+/*! @page examples	Rapicorn by Example
+@tableofcontents
+
+- @ref xmlui-syntax
+- @ref hello
+
+
+@section xmlui-syntax UI Definition Syntax
+
+The canonical way to define user interfaces in Rapicorn is via declarative XML syntax.
+The declarations combine smaller components (buttons, images) into layout containers (VBox, Table) to form larger units.
+
+This XML creates a new definition 'SampleDialog', derived from a Window widget which contains a VBox and a Button with Label:
+  @snippet examples/sample-dialog.xml SampleDialog-EXAMPLE
+
+@subsection data-binding Data Bindings
+
+Data bindings are used in the UI XML declarations to link UI elements to properties of application model objects.
+Data bindings use the "@bind" syntax inside attribute values, example:
+  @snippet tests/t800-binding-example.py bind-title-EXAMPLE
+
+In Python, an object can be made bindable with a decorator and used as @a data_context for a window.
+The data binding will then automatically link the attribute with "@bind title" to the @c .title field of the decorated object:
+  @snippet tests/t800-binding-example.py Bindable-ObjectModel-EXAMPLE
+
+@EXPERIMENTAL: Note that data bindings are currently being developed so features may be missing and language support may vary.
+
+
+@section hello Hello Rapicorn
+
+Like many others, Rapicorn is an event driven user interface (UI) toolkit, which determines its programming model.
+That is, Rapicorn is used to define and present UI elements (widgets) to the user and then waits and reacts to input events provided by the user.
+So in a nutshel, a Rapicorn program looks like this:
+-# Application Startup.
+-# Dialog creation and display.
+-# Events & Signals: handle user events with code in callback functions.
+-# Event Loop & Exit: Wait for events, loop and eventually exit the application.
+
+So much for the theory, let's get started with the first application!
+
+@snippet examples/tutorial-hello.py HelloRapicorn-EXAMPLE
+
+@subsection hello-app-init 1. Application Startup
+
+Rapicorn is provided as a versioned Python module that's intended to be imported into the "Rapicorn" namespace.
+This way, Python scripts can be deliberately updated to new Rapicorn versions by changing just the import lines.
+
+The app_init() function takes a string with a unique application name to identify its windows in desktop sessions
+and to associate saved configuration data.
+This function creates the Application object, initializes the library, loads configuration, data and graphics files.
+
+@subsection hello-create-dialog 2. Dialog Creation
+
+The hello_window variable contains an XML syntax declaration which defines the way in which various widgets
+are combined to form a window which contains spacings, some text and a clickable button.
+All widgets and the properties (attributes) supported by each are described in the reference documentation, e.g.
+Rapicorn::Window, Rapicorn::Label and Rapicorn::Button.
+Note the Button's @a on-click attribute, the string assigned to it represents a "command" that is passed on to
+the Window::commands signal.
+
+The hello_window definition first needs to be registered with the Application.
+We then create a window widget from this definition.
+
+
+@subsection hello-event-signal 3. Events and Signals
+
+As soon as Window widgets are shown on the screen, users can interact with them in various ways, e.g. through key presses,
+mouse movements, button presses, finger gestures, touches or swipes.
+
+When a button is clicked, it responds with @a on-click notifications, which means a notification with a custom command is
+sent out for this window.
+The actual notification is carried out by the Window::commands signal.
+Signals are a means to connect custom callback functions to notifications, so by connecting our callback function to the
+Window::commands signal, our code can handle certain commands.
+
+In order to react to users interacting with this window, we need to define a handler function 'command_handler'
+to be called on such occastions.
+For the purpose of this program, we simply request the Application object to close all currently opened windows,
+which eventually results in exiting the application.
+
+To summarize for our example, the event loop, button and window will cause the Window::commands signal to be emitted
+when the button is clicked.
+This in turn causes the command_handler() to be called, which simply closes all open windows, so the application can stop.
+
+
+@subsection hello-loop-exit Event Loop and Exit
+
+After showing Window widgets on the screen, all applications need to enter the main event loop.
+The event loop simply waits for user input events on all windows currently open (plus related events like network IO, etc)
+and takes care of letting each widget process the events it needs, e.g. mouse clicks on a Button widget.
+By default, the loop keeps running and processes events as long as any Window is still open.
+
+After all windows have been closed, the event loop sends out notifications that cause the Application object to stop
+the event loop from running and control is handed back to the main program.
+Most programs will simply exit at this point.
+
+*/ // @page examples
+
+
+/*! @page manpages	Command Line Tools
+
+- <a href="man1/rapidres.1.html">rapidres(1)</a>
+- <a href="man1/rapidrun.1.html">rapidrun(1)</a>
+*/ // @page manpages

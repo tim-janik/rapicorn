@@ -1,12 +1,6 @@
-/librapicorncore-[0-9][0-9].la
+/rapidres
+/rapidres-buildid.cc
+/librapicorn-buildid.cc
 /aidavariants.hh
 /buildconfig.h
-/buildid.git
-/buildid.h
-/rapicornsignalvariants.hh
-/types-ptpp.cc
-/types-zgen.c
-/gen-enums.cc
-/stamp-autochecks
-/rapidres-[0-9][0-9]
 /zres.cc

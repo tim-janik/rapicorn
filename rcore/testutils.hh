@@ -38,7 +38,7 @@ class Timer {
   const double   deadline_;
   vector<double> samples_;
   double         test_duration_;
-  int64          n_runs_;
+  int64          n_reps_;
   int64          loops_needed ();
   void           reset        ();
   void           submit       (double elapsed, int64 repetitions);
@@ -47,7 +47,7 @@ public:
   /// Create a Timer() instance, specifying an optional upper bound for test durations.
   explicit       Timer        (double deadline_in_secs = 0);
   virtual       ~Timer        ();
-  int64          n_runs       () const { return n_runs_; }             ///< Number of benchmark runs executed
+  int64          n_reps       () const { return n_reps_; }             ///< Number of benchmark repetitions to execute
   double         test_elapsed () const { return test_duration_; }      ///< Seconds spent in benchmark()
   double         min_elapsed  () const;         ///< Minimum time benchmarked for a @a callee() call.
   double         max_elapsed  () const;         ///< Maximum time benchmarked for a @a callee() call.
