@@ -1,6 +1,6 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "rcore/cxxaux.hh"
-#include "../configure.h"
+#include "config/config.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>

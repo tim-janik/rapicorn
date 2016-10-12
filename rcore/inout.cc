@@ -4,7 +4,7 @@
 #include "strings.hh"
 #include "thread.hh"
 #include "main.hh"
-#include "../configure.h"
+#include "config/config.h"
 #include <unistd.h>
 #include <syslog.h>
 #include <sys/types.h>

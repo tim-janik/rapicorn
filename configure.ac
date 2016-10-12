@@ -16,7 +16,7 @@ AC_INIT([rapicorn], [16.0.1~wip])
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
-AM_CONFIG_HEADER(configure.h)
+AM_CONFIG_HEADER(config/config.h)
 AC_CANONICAL_TARGET                                     # architecture information
 AM_INIT_AUTOMAKE(1.9 dist-xz tar-pax no-dist-gzip no-define foreign)
 # version handling
