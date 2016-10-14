@@ -84,7 +84,8 @@ private:
 
 struct Initializer {
   int *argcp; char **argv; const StringVector *args;
-  Mutex mutex; Cond cond; bool done;
+  Mutex mutex; Cond cond;
+  std::atomic<bool> done;
 };
 
 static ThreadInfo *volatile uithread_threadinfo = NULL;
