@@ -250,9 +250,55 @@ if test -z "$rapicorn_pollvalue_result" ; then
 else
   AC_MSG_RESULT([done])
 fi
-RAPICORN_SYSVAL_POLLINIT="[((const unsigned int[]) { $rapicorn_pollvalue_result })]"
+RAPICORN_SYSVAL_POLLINIT="[ $rapicorn_pollvalue_result ]"
 AC_SUBST(RAPICORN_SYSVAL_POLLINIT) # macro needed for a public header file
 dnl # AC_DEFINE_UNQUOTED(RAPICORN_SYSVAL_POLLINIT, [((const unsigned int[[]]) { $rapicorn_pollvalue_result })], [Values for POLLIN..POLLNVAL])
+
+# == Headers ==
+AC_CHECK_HEADERS( [sys/eventfd.h] )
+
+# == sizeof ==
+AC_CHECK_SIZEOF(uint, 0, [#include <sys/types.h>])
+RAPICORN_SIZEOF_SYS_TYPESH_UINT="$ac_cv_sizeof_uint"
+AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT) # needed by sys-config.h.in
+
+# == pthread_spinlock_t initializer ==
+AC_LANG_PUSH([C])
+saveed_LDFLAGS="$LDFLAGS" ; LDFLAGS="-pthread $LDFLAGS"
+AC_TRY_RUN(
+  [
+    #include <stdio.h>
+    #include <string.h>
+    #include <assert.h>
+    #include <pthread.h>
+    struct Spin { pthread_spinlock_t dummy1, s1, dummy2, s2, dummy3; };
+    int
+    main (int argc, char *argv[])
+    {
+      struct Spin spin;
+      memset (&spin, 0xffffffff, sizeof (spin));
+      if (pthread_spin_init (&spin.s1, 0) == 0 &&
+          pthread_spin_init (&spin.s2, 0) == 0 &&
+          sizeof (pthread_spinlock_t) == 4 && // current implementation assumption
+          spin.s1 == spin.s2) // check for location-independent initialization
+        {
+          FILE *f = fopen ("conftest_spinlock_initializer", "w");
+          assert (f);
+          fprintf (f, "{ ");
+          fprintf (f, "0x%04x,", *(int*) &spin.s1);
+          fprintf (f, " }\n");
+          fclose (f);
+        }
+      return 0;
+    } ],
+  RAPICORN_SPINLOCK_INITIALIZER=`cat conftest_spinlock_initializer` && rm -f conftest_spinlock_initializer ,
+  RAPICORN_SPINLOCK_INITIALIZER='' )
+LDFLAGS="$saveed_LDFLAGS"
+AC_LANG_POP([C])
+test -z "$RAPICORN_SPINLOCK_INITIALIZER" && {
+  AC_MSG_FAILURE([spinlock initializer check failed to execute])
+}
+AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
 
 
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
@@ -264,18 +310,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
   docdir="${datarootdir}/doc/rapicorn" # "rapicorn-$MAJOR"
   AC_SUBST(docdir)
 
-    # --- sizeof and presence of uint ---
-    GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
-    RAPICORN_SIZEOF_SYS_TYPESH_UINT="$glib_cv_sizeof_rapicorn_sys_typesh_uint"
-    AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT)
-    GLIB_SIZEOF([], void**, rapicorn_pointer)
-    RAPICORN_SIZEOF_POINTER="$glib_cv_sizeof_rapicorn_pointer"
-    AC_SUBST(RAPICORN_SIZEOF_POINTER)
-    GLIB_SIZEOF([], long, rapicorn_long)
-    RAPICORN_SIZEOF_LONG="$glib_cv_sizeof_rapicorn_long"
-    AC_SUBST(RAPICORN_SIZEOF_LONG)
-
-    AC_CHECK_HEADERS( [sys/eventfd.h] )
 
     # --- OS/Win32 detection ---
     dnl # needs AC_CANONICAL_HOST
@@ -284,7 +318,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 	AC_MSG_ERROR([configure failed to execute $missing_macro])
     }
     AC_MSG_CHECKING([for Win32])
-    RAPICORN_OS_CHOICES="WIN32 UNIX" # OS types we will check for
     case "$host" in
 	*-*-mingw*)
 	    RAPICORN_OS=WIN32
@@ -296,49 +329,7 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
 	    ;;
     esac
     AC_SUBST(RAPICORN_OS)
-    AC_SUBST(RAPICORN_OS_CHOICES)
     AC_DEFINE_UNQUOTED(RAPICORN_OS_$RAPICORN_OS, "1", [Win32 detection])
-
-    dnl # == sizeof threading structs ==
-    GLIB_SIZEOF([#include <pthread.h>], pthread_mutex_t, pth_mutex_t)
-    RAPICORN_SIZEOF_PTH_MUTEX_T="$glib_cv_sizeof_pth_mutex_t"
-    AC_SUBST(RAPICORN_SIZEOF_PTH_MUTEX_T)
-    GLIB_SIZEOF([#include <pthread.h>], pthread_cond_t, pth_cond_t)
-    RAPICORN_SIZEOF_PTH_COND_T="$glib_cv_sizeof_pth_cond_t"
-    AC_SUBST(RAPICORN_SIZEOF_PTH_COND_T)
-
-    # == sizeof pthread_rwlock_t ==
-    GLIB_SIZEOF([#include <pthread.h>], pthread_rwlock_t, rapicorn_pthreadh_rwlock)
-    RAPICORN_SIZEOF_PTHREADH_RWLOCK="$glib_cv_sizeof_rapicorn_pthreadh_rwlock"
-    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_RWLOCK)
-
-    # == sizeof pthread_spinlock_t ==
-    GLIB_SIZEOF([#include <pthread.h>], pthread_spinlock_t, rapicorn_pthreadh_spinlock)
-    RAPICORN_SIZEOF_PTHREADH_SPINLOCK="$glib_cv_sizeof_rapicorn_pthreadh_spinlock"
-    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK)
-
-    # == pthread_spinlock_t initializer ==
-    MC_DEFINE_SPINLOCK_INITIALIZER()
-    RAPICORN_SPINLOCK_INITIALIZER="$mc_cv_spinlock_initializer"
-    AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
-
-    dnl # --- pthread_mutexattr_settype ---
-    AC_MSG_CHECKING([for pthread_mutexattr_settype()])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-      #define _XOPEN_SOURCE   600
-      #include <pthread.h>
-    ]], [[
-      int (*attr_settype) (pthread_mutexattr_t *__attr, int __kind) = pthread_mutexattr_settype;
-      int val = PTHREAD_MUTEX_RECURSIVE;
-      attr_settype = 0; val = 0;
-    ]])],[
-      RAPICORN_HAVE_MUTEXATTR_SETTYPE=1
-      AC_MSG_RESULT(yes)
-    ],[
-      RAPICORN_HAVE_MUTEXATTR_SETTYPE=0
-      AC_MSG_RESULT(no)
-    ])
-    AC_SUBST(RAPICORN_HAVE_MUTEXATTR_SETTYPE)
 ])
 
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
