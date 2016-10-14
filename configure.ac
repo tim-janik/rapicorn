@@ -2,8 +2,9 @@ dnl # Rapicorn                                       -*- Mode: shell-script; -*-
 dnl
 builtin(include, acrapicorn.m4)dnl # include special macros
 builtin(include, ld-symbolic.m4)dnl # include special macros
-
 AC_PREREQ(2.57)
+
+# == Package & Version ==
 # VERSION: MAJOR.MINOR.MICRO-RC:
 # * MAJOR:           Increment on major API breaks, *forces* ABI break, resets MINOR, MICRO and ABI_VERSION
 # * MINOR:           Increment for significant changes or ABI breaks, resets MICRO
@@ -63,8 +64,8 @@ lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 
-# == argument parsing ==
-AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
+# == Argument parsing ==
+AC_ARG_ENABLE(debug, [  --enable-debug=[no/min/yes/addr/threads] turn on debugging, default=minimum],,enable_debug=min)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -187,19 +188,29 @@ elif echo "$uname_m" | grep -q '^i.*86$' ; then
     AM_CFLAGS="$AM_CFLAGS $x86_flags"
     AM_CXXFLAGS="$AM_CXXFLAGS $x86_flags"
 fi
-if test "x$enable_debug" = "xyes"; then
-    AM_CFLAGS="$AM_CFLAGS -DG_ENABLE_DEBUG -g3 -fno-omit-frame-pointer -fverbose-asm"
-    AM_CXXFLAGS="$AM_CXXFLAGS -DG_ENABLE_DEBUG -g3 -fno-omit-frame-pointer -fverbose-asm"
-elif test "x$enable_debug" = "xno"; then
-    AM_CFLAGS="$AM_CFLAGS -DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
-    AM_CXXFLAGS="$AM_CXXFLAGS -DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
-fi
-AC_SUBST(AM_CPPFLAGS)
+# debug flags
+case "_$enable_debug" in
+  _addr*)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=undefined -fsanitize=address"
+    AM_LDFLAGS="$AM_LDFLAGS -lubsan -lasan" ;;
+  _thread*)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=undefined -fsanitize=thread"
+    AM_LDFLAGS="$AM_LDFLAGS -lubsan -ltsan" ;;
+  _yes)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer" ;;
+  _min*)
+    debug_flags="-DG_ENABLE_DEBUG -g1" ;;
+  _*)
+    debug_flags="-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" ;; # -DG_DISABLE_ASSERT
+esac
+AM_CFLAGS="$AM_CFLAGS $debug_flags"
+AM_CXXFLAGS="$AM_CXXFLAGS $debug_flags"
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CXXFLAGS)
+AC_SUBST(AM_CPPFLAGS)
 
 # == Linker flags ==
-AM_LDFLAGS="-lrt -pthread"
+AM_LDFLAGS="$AM_LDFLAGS -lrt -pthread"
 ld_help_text=`${LD-ld} --help 2>&1 | tr '\n' ' '`
 check_ld_flags="-export-dynamic -O1 -Bsymbolic-functions --as-needed --no-undefined"
 for flag in $check_ld_flags ; do
