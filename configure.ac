@@ -84,66 +84,17 @@ AC_SUBST(INGIT)
 result=$(test -z "$INGIT" && echo yes || echo no)
 AC_MSG_RESULT($result)
 
-# == Utilities and build tools ==
-AC_PROG_MAKE_SET()
-AM_SILENT_RULES([yes])
-AC_PROG_LN_S
-AC_PROG_INSTALL
-MC_ASSERT_PROG(PKG_CONFIG, pkg-config)
-MC_ASSERT_PROG(FLEX, flex)
-MC_ASSERT_PROG(BISON, bison)
-MC_ASSERT_PROG(PANDOC, pandoc)
-MC_ASSERT_PROG(DOXYGEN, doxygen)
-MC_ASSERT_PROG(DOT, dot)
-MC_ASSERT_PROG(PYTHON2, python-2.7 python2.7 python2)
-MC_ASSERT_VERSION($PYTHON --version, 2.7)
-MC_ASSERT_PROG(CYTHON, cython)
-MC_ASSERT_VERSION($CYTHON --version, 0.20.1)
-MC_ASSERT_PROG(XMLLINT, xmllint)
-MC_ASSERT_VERSION($XMLLINT --version, 20901)
-
-# == Libraries ==
-# libz
-AC_CHECK_LIB(z, gzsetparams, [AC_CHECK_HEADER(zlib.h, LIBZ_LIBS='-lz', LIBZ='')], LIBZ='')
-if test -z "$LIBZ_LIBS"; then
-    AC_MSG_ERROR([Compression library libz is missing, but required])
-fi
-AC_SUBST(LIBZ_LIBS)
-# librapicorn dependencies
-LIBRAPICORN_REQUIRES="
-	libpng		>= 1.2.50
-	cairo		>= 1.10.0
-	librsvg-2.0	>= 2.40.2
-	pango		>= 1.30.0
-	pangoft2	>= 1.30.0
-	pangocairo	>= 1.30.0
-	x11		>= 1.6.2
-	xext		>= 1.3.3
-	glib-2.0	>= 2.32.0
-	gio-2.0		>= 2.30.0
-	gthread-2.0	>= 2.30.0
-"
-LIBRAPICORN_REQUIRES=`echo $LIBRAPICORN_REQUIRES` # strip whitespaces
-AC_SUBST(LIBRAPICORN_REQUIRES)
-# define LIBRAPICORN_CFLAGS and LIBRAPICORN_LIBS
-PKG_CHECK_MODULES(LIBRAPICORN, [ $LIBRAPICORN_REQUIRES ])
-LIBRAPICORN_LIBS="$LIBRAPICORN_LIBS $LIBZ_LIBS"
-# for C++ library linking, '-lpthread' is needed in addition to '-pthread'
-LIBRAPICORN_LIBS=`printf %s "$LIBRAPICORN_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
-
-# == detect compiler, linker & libtool ==
-saved_CFLAGS="$CFLAGS"
-AC_PROG_CC
-CFLAGS="$saved_CFLAGS" 		# AC_PROG_CC_G called internally consistently breaks $CFLAGS
-saved_CXXFLAGS="$CFLAGS"
+# == Compiler, linker, libtool ==
+saved_CFLAGS="$CFLAGS" ; saved_CXXFLAGS="$CFLAGS" # the AC_PROG_C* macros mess up CFLAGS and CXXFLAGS
+AC_PROG_CC		# note, this must preceede AC_CHECK_LIB, AC_TRY_RUN, etc to preserve CFLAGS etc
 AC_PROG_CPP
-CXXFLAGS="$saved_CXXFLAGS"	# AC_PROG_CXX_G called internally consistently breaks $CXXFLAGS
 AC_PROG_CXX
 AC_PROG_CXXCPP
-AC_PROG_LD
 AC_LANG_CPLUSPLUS	# use CXX for compilation tests
+AC_PROG_LD
 AC_LIB_PROG_LD
 AC_LIB_PROG_LD_GNU
+CFLAGS="$saved_CFLAGS" ; CXXFLAGS="$saved_CXXFLAGS"
 AM_PROG_LIBTOOL
 AC_LIBTOOL_DLOPEN
 
@@ -227,6 +178,53 @@ if echo " $PACKAGE_VERSION" | grep -q '~wip' ; then
 fi
 AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $enable_devel_mode, [Add development aids to the build])
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = x1)
+
+# == Utilities and build tools ==
+AC_PROG_MAKE_SET()
+AM_SILENT_RULES([yes])
+AC_PROG_LN_S
+AC_PROG_INSTALL
+MC_ASSERT_PROG(PKG_CONFIG, pkg-config)
+MC_ASSERT_PROG(FLEX, flex)
+MC_ASSERT_PROG(BISON, bison)
+MC_ASSERT_PROG(PANDOC, pandoc)
+MC_ASSERT_PROG(DOXYGEN, doxygen)
+MC_ASSERT_PROG(DOT, dot)
+MC_ASSERT_PROG(PYTHON2, python-2.7 python2.7 python2)
+MC_ASSERT_VERSION($PYTHON --version, 2.7)
+MC_ASSERT_PROG(CYTHON, cython)
+MC_ASSERT_VERSION($CYTHON --version, 0.20.1)
+MC_ASSERT_PROG(XMLLINT, xmllint)
+MC_ASSERT_VERSION($XMLLINT --version, 20901)
+
+# == Libraries ==
+# libz
+AC_CHECK_LIB(z, gzsetparams, [AC_CHECK_HEADER(zlib.h, LIBZ_LIBS='-lz', LIBZ='')], LIBZ='')
+if test -z "$LIBZ_LIBS"; then
+    AC_MSG_ERROR([Compression library libz is missing, but required])
+fi
+AC_SUBST(LIBZ_LIBS)
+# librapicorn dependencies
+LIBRAPICORN_REQUIRES="
+	libpng		>= 1.2.50
+	cairo		>= 1.10.0
+	librsvg-2.0	>= 2.40.2
+	pango		>= 1.30.0
+	pangoft2	>= 1.30.0
+	pangocairo	>= 1.30.0
+	x11		>= 1.6.2
+	xext		>= 1.3.3
+	glib-2.0	>= 2.32.0
+	gio-2.0		>= 2.30.0
+	gthread-2.0	>= 2.30.0
+"
+LIBRAPICORN_REQUIRES=`echo $LIBRAPICORN_REQUIRES` # strip whitespaces
+AC_SUBST(LIBRAPICORN_REQUIRES)
+# define LIBRAPICORN_CFLAGS and LIBRAPICORN_LIBS
+PKG_CHECK_MODULES(LIBRAPICORN, [ $LIBRAPICORN_REQUIRES ])
+LIBRAPICORN_LIBS="$LIBRAPICORN_LIBS $LIBZ_LIBS"
+# for C++ library linking, '-lpthread' is needed in addition to '-pthread'
+LIBRAPICORN_LIBS=`printf %s "$LIBRAPICORN_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
 
 # == RAPICORN_SYSVAL_POLLINIT ==
 AC_MSG_CHECKING([for POLL constants])
