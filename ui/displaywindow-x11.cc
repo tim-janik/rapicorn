@@ -1123,8 +1123,8 @@ DisplayWindowX11::setup_window (const DisplayWindow::Setup &setup)
     wmhints.flags |= XUrgencyHint;
   if (f & (HIDDEN | ICONIFY))
     wmhints.initial_state = IconicState;
-  const char *cmdv[2] = { program_argv0().c_str(), NULL };
-  const String resname = program_alias(), resclass = program_name(); // keep strings alive until after Xutf8SetWMProperties
+  const String argv0 = program_argv0(), resname = program_alias(), resclass = program_name(); // keep strings alive until after Xutf8SetWMProperties
+  const char *cmdv[2] = { argv0.c_str(), NULL };
   XClassHint class_hint = { const_cast<char*> (resname.c_str()), const_cast<char*> (resclass.c_str()) };
   Xutf8SetWMProperties (x11context.display, window_, NULL, NULL, const_cast<char**> (cmdv), ARRAY_SIZE (cmdv) - 1,
                         NULL, &wmhints, &class_hint);

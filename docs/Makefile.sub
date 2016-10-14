@@ -75,9 +75,8 @@ docs/doxy/html/doc-version: docs/doxy/html $(man1_HTMLS)
 	$(Q) echo "$(PACKAGE)-$(topbuildid)" > $@
 
 # == install docs/doxy/html ==
-docs_html_installbase  = $(docdir)
-docs_html_installdir   = $(docs_html_installbase)/html/
-docs_html_install_DATA = docs/doxy/html/doc-version 			# AM target to trigger docs/doxy/html builds
+docs_html_installbase	 = $(docdir)
+noinst_DATA		+= docs/doxy/html/doc-version	# AM target to trigger docs/doxy/html builds
 docs-html-install: $(docs_html_install_DATA)
 	rm -Rf "$(DESTDIR)$(docs_html_installbase)"/html/
 	umask 022 && cp -RP docs/doxy/html/ "$(DESTDIR)$(docs_html_installbase)"
