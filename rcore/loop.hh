@@ -17,17 +17,17 @@ struct PollFD   /// Mirrors struct pollfd for poll(3posix)
   uint16        revents;
   /// Event types that can be polled for, set in .events, updated in .revents
   enum {
-    IN          = RAPICORN_SYSVAL_POLLIN,       ///< RDNORM || RDBAND
-    PRI         = RAPICORN_SYSVAL_POLLPRI,      ///< urgent data available
-    OUT         = RAPICORN_SYSVAL_POLLOUT,      ///< writing data will not block
-    RDNORM      = RAPICORN_SYSVAL_POLLRDNORM,   ///< reading data will not block
-    RDBAND      = RAPICORN_SYSVAL_POLLRDBAND,   ///< reading priority data will not block
-    WRNORM      = RAPICORN_SYSVAL_POLLWRNORM,   ///< writing data will not block
-    WRBAND      = RAPICORN_SYSVAL_POLLWRBAND,   ///< writing priority data will not block
-    /* Event types updated in .revents regardlessly */
-    ERR         = RAPICORN_SYSVAL_POLLERR,      ///< error condition
-    HUP         = RAPICORN_SYSVAL_POLLHUP,      ///< file descriptor closed
-    NVAL        = RAPICORN_SYSVAL_POLLNVAL,     ///< invalid PollFD
+    IN          = RAPICORN_SYSVAL_POLLINIT[0],  ///< RDNORM || RDBAND
+    PRI         = RAPICORN_SYSVAL_POLLINIT[1],  ///< urgent data available
+    OUT         = RAPICORN_SYSVAL_POLLINIT[2],  ///< writing data will not block
+    RDNORM      = RAPICORN_SYSVAL_POLLINIT[3],  ///< reading data will not block
+    RDBAND      = RAPICORN_SYSVAL_POLLINIT[4],  ///< reading priority data will not block
+    WRNORM      = RAPICORN_SYSVAL_POLLINIT[5],  ///< writing data will not block
+    WRBAND      = RAPICORN_SYSVAL_POLLINIT[6],  ///< writing priority data will not block
+    // Event types unconditionally updated in .revents
+    ERR         = RAPICORN_SYSVAL_POLLINIT[7],  ///< error condition
+    HUP         = RAPICORN_SYSVAL_POLLINIT[8],  ///< file descriptor closed
+    NVAL        = RAPICORN_SYSVAL_POLLINIT[9],  ///< invalid PollFD
   };
 };
 

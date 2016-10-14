@@ -14,6 +14,8 @@ AC_PREREQ(2.57)
 AC_INIT([rapicorn], [16.0.1~wip])
 :;      ABI_VERSION=[16.0.0]
 AC_CONFIG_SRCDIR([ui/widget.hh])
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_MACRO_DIR([config])
 AM_CONFIG_HEADER(configure.h)
 AC_CANONICAL_TARGET                                     # architecture information
 AM_INIT_AUTOMAKE(1.9 dist-xz tar-pax no-dist-gzip no-define foreign)
@@ -61,28 +63,45 @@ lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 
-# Build tree checks
+# == argument parsing ==
+AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
+# package library defaults
+enable_static=no ; enable_shared=yes
+
+# == Check srcdir == builddir ==
+echo "checking for srcdir==builddir... (#buildapi-variable-no-builddir)" # see https://github.com/cgwalters/build-api
+TEST_SRCDIR=`cd $srcdir ; /bin/pwd -P`
+TEST_BUILDDIR=`cd . ; /bin/pwd -P`
+test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
+  AC_MSG_ERROR([builds require builddir == srcdir (use e.g. git-worktree instead)])
+}
+
+# == Check for git ==
 AC_MSG_CHECKING([for git repository])
 DOTGIT=`git rev-parse --git-dir 2>/dev/null` && INGIT= || INGIT='#'
 AC_SUBST(INGIT)
 result=$(test -z "$INGIT" && echo yes || echo no)
 AC_MSG_RESULT($result)
 
-# prepare automake and make
-AC_PROG_MAKE_SET        dnl # support subdirectories.
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-mk= ; AC_SUBST([mk]) # workaround for Automake abusing MAKE(1) keywords
+# == Utilities and build tools ==
+AC_PROG_MAKE_SET()
+AM_SILENT_RULES([yes])
+AC_PROG_LN_S
+AC_PROG_INSTALL
+MC_ASSERT_PROG(PKG_CONFIG, pkg-config)
+MC_ASSERT_PROG(FLEX, flex)
+MC_ASSERT_PROG(BISON, bison)
+MC_ASSERT_PROG(PANDOC, pandoc)
+MC_ASSERT_PROG(DOXYGEN, doxygen)
+MC_ASSERT_PROG(DOT, dot)
+MC_ASSERT_PROG(PYTHON2, python-2.7 python2.7 python2)
+MC_ASSERT_VERSION($PYTHON --version, 2.7)
+MC_ASSERT_PROG(CYTHON, cython)
+MC_ASSERT_VERSION($CYTHON --version, 0.20.1)
+MC_ASSERT_PROG(XMLLINT, xmllint)
+MC_ASSERT_VERSION($XMLLINT --version, 20901)
 
-# declare --enable-* args and collect ac_help strings
-AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
-AC_ARG_ENABLE(devel-mode, [  --enable-devel-mode=auto/yes/no build a development version, default=auto],,enable_devel_mode=auto)
-# package library defaults
-enable_static=no ; enable_shared=yes
-
-# configure requirements
-MC_ASSERT_PROG(PKG_CONFIG, pkg-config, [pkg-config can be found at http://pkgconfig.freedesktop.org/])
-
-# check for base package requirements early on
+# == Libraries ==
 PKG_CHECK_MODULES(SVG_DEPENDENCIES, [
 	cairo		>= 1.10.0
 	librsvg-2.0	>= 2.40.2
@@ -97,7 +116,7 @@ PKG_CHECK_MODULES(BASE_DEPENDENCIES, [
 	pangocairo	>= 1.30.0
 ])
 
-# compiler, linker & libtool
+# == detect compiler, linker & libtool ==
 saved_CFLAGS="$CFLAGS"
 AC_PROG_CC
 CFLAGS="$saved_CFLAGS" 		# AC_PROG_CC_G called internally consistently breaks $CFLAGS
@@ -112,185 +131,106 @@ AC_LIB_PROG_LD
 AC_LIB_PROG_LD_GNU
 AM_PROG_LIBTOOL
 AC_LIBTOOL_DLOPEN
-ACX_PROG_LD_GNU_SYMBOLIC
-MC_EVAR_ADD(AM_LDFLAGS, $SYMBOLIC_LDFLAGS)
-MC_EVAR_ADD(AM_LDFLAGS, -pthread)
-MC_EVAR_ADD(AM_LDFLAGS, -lrt)
-MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--no-undefined])
-if ${LD} --help 2>&1 | grep -q -- '-export-dynamic\b' ; then
-  MC_EVAR_ADD(AM_LDFLAGS, [-Wl,-export-dynamic])
-fi
 
-# AM_LDFLAGS, optimize linker to use faster ELF symbol hashing if we have compiler and linker support
-AC_MSG_CHECKING([whether CC, CXX and LD support gnu.hash sections])
-if ${CC}  -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
-   ${CXX} -dumpspecs 2>&1 | grep -q -- '--hash-style=\(both\|gnu\).*--as-needed' && \
-   ${LD}  --help     2>&1 | grep -q -- '--hash-style=.*\(both\|gnu\)' ; then
-  MC_EVAR_ADD(AM_LDFLAGS, [-Wl,--hash-style=both -Wl,--as-needed -Wl,-O1])
-  AC_MSG_RESULT(yes)
+# == C++ Dialect ==
+CXX="$CXX -std=gnu++11"
+test -z "$CXXCPP" || CXXCPP="$CXXCPP -std=gnu++11"
+
+# == Compiler flags ==
+# needs gcc >= 4.8, clang >= 3.4
+c_warnings="-Wall -Wdeprecated -Werror=format-security -Wredundant-decls -Wpointer-arith -Wmissing-declarations" # -Wdate-time -Wconversion -Wshadow
+cxx_warnings="-Wsign-promo -Woverloaded-virtual" # -Wnon-virtual-dtor  -Wempty-body -Wignored-qualifiers -Wunreachable-code -Wtype-limits
+c_only_flags="-Wmissing-prototypes -Wnested-externs -Wno-pointer-sign"
+gcc_c_only_flags="-fno-cond-mismatch -fdevirtualize-speculatively"
+compiler_flags="-pipe"
+optimization_flags="-O3 -funroll-loops -ftree-vectorize"
+gcc_flags="-rdynamic -finline-functions -ftracer -ftree-loop-distribution"
+x86_flags="-minline-all-stringops"
+x86_flags="$x86_flags -mmmx -msse -msse2"	# Intel since 2001, AMD since 2003
+x86_flags="$x86_flags -msse3"			# Intel since 2004, AMD since 2007
+#x86_flags="$x86_flags -mssse3"			# Intel since 2006, AMD since 2011
+x86_64_flags="-mcx16"				# for CMPXCHG16B, in AMD64 since 2005
+#x86_64_flags="$x86_64_flags -msse4a"		# AMD since 2007
+#x86_64_flags="$x86_64_flags -msse4.1 -msse4.2"	# Intel since 2008, AMD since 2011
+#x86_64_flags="$x86_64_flags -mavx"		# Intel since 2011, AMD since 2011
+#x86_64_flags="$x86_64_flags -mavx2"		# Intel since 2013, AMD since 2015
+if   ${CXX} --version 2>&1 | grep -q -F 'clang' ; then
+    AM_CFLAGS="$c_warnings $c_only_flags $compiler_flags $optimization_flags"
+    AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags"
+    MC_ASSERT_VERSION($CXX --version, 3.5.0)
+elif ${CXX} --version 2>&1 | tr '\n' ' ' | grep -q -E '(g\++|GCC).*Free Software Foundation' ; then
+    AM_CFLAGS="$c_warnings $c_only_flags $gcc_c_only_flags $compiler_flags $optimization_flags $gcc_flags"
+    AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags $gcc_flags"
+    MC_ASSERT_VERSION($CXX --version, 4.9.2)
 else
-  AC_MSG_RESULT(no)
+  AC_MSG_ERROR([unknown C++ compiler])
 fi
-AC_SUBST(AM_LDFLAGS)
-
-# Pick C++ dialect, needed in CXXFLAGS for compile tests
-MC_CXX_TRY_OPTION(CXXFLAGS,  -std=gnu++11)
-
-# AM_CFLAGS & AM_CXXFLAGS
-MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -std=gnu++11)
-BOTHCCXXFLAGS=
+uname_m=`uname -m`
+if test "$uname_m" = x86_64 ; then	# AMD64
+    AM_CFLAGS="$AM_CFLAGS $x86_flags $x86_64_flags"
+    AM_CXXFLAGS="$AM_CXXFLAGS $x86_flags $x86_64_flags"
+elif echo "$uname_m" | grep -q '^i.*86$' ; then
+    AM_CFLAGS="$AM_CFLAGS $x86_flags"
+    AM_CXXFLAGS="$AM_CXXFLAGS $x86_flags"
+fi
 if test "x$enable_debug" = "xyes"; then
-  MC_EVAR_ADD(BOTHCCXXFLAGS,      -DG_ENABLE_DEBUG)
-  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -g3)
-  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fno-omit-frame-pointer)
-  MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -fverbose-asm)
-  dnl # MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Q -ftime-report -fmem-report)
+    AM_CFLAGS="$AM_CFLAGS -DG_ENABLE_DEBUG -g3 -fno-omit-frame-pointer -fverbose-asm"
+    AM_CXXFLAGS="$AM_CXXFLAGS -DG_ENABLE_DEBUG -g3 -fno-omit-frame-pointer -fverbose-asm"
 elif test "x$enable_debug" = "xno"; then
-  MC_EVAR_ADD(BOTHCCXXFLAGS, [-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS]) # -DG_DISABLE_ASSERT
-else
-  : # minimum debugging
+    AM_CFLAGS="$AM_CFLAGS -DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
+    AM_CXXFLAGS="$AM_CXXFLAGS -DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
 fi
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wall)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wdeprecated)
-MC_CC_TRY_OPTION(AM_CFLAGS,     -Wmissing-prototypes)
-MC_CC_TRY_OPTION(AM_CFLAGS,     -Wno-pointer-sign)
-MC_CC_TRY_OPTION(AM_CFLAGS,     -Wnested-externs)
-MC_CC_TRY_OPTION(AM_CFLAGS,     -fno-cond-mismatch)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wmissing-declarations)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wpointer-arith)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Wredundant-decls)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -Werror=format-security)
-MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Wsign-promo)
-MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Woverloaded-virtual)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -rdynamic)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -pipe)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -O2)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -ftracer)
-MC_CC_TRY_OPTION(BOTHCCXXFLAGS, -mcx16)
-dnl # MC_CXX_TRY_OPTION(AM_CXXFLAGS,  -Wno-invalid-offsetof)
-MC_EVAR_ADD(AM_CFLAGS,   "$BOTHCCXXFLAGS")
-MC_EVAR_ADD(AM_CXXFLAGS, "$BOTHCCXXFLAGS")
+AC_SUBST(AM_CPPFLAGS)
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CXXFLAGS)
-AC_SUBST(AM_CPPFLAGS)
 
-# == CPU Optimizations ==
-# MMX and SSE instruction sets have been introduced way more than a decade ago:
-# Intel Pentium 3: CMOV MMX SSE (1999)
-# VIA C3 Nehemiah: CMOV MMX SSE (2003)
-# Athlon Palomino: CMOV MMX SSE 3DNow (2001)
-SIMD_FLAGS=
-MC_CC_TRY_OPTION(SIMD_FLAGS, -mmmx)
-MC_CC_TRY_OPTION(SIMD_FLAGS, -msse)
-# Note, -mfpmath=sse can harm FPU-algorithm performance
-# Note, -funroll-loops can harm SSE loop performance
-#MC_CC_TRY_OPTION(SIMD_FLAGS, -funroll-loops)
-#AC_SUBST(SIMD_FLAGS)
-# Expect the target architecture to support MMX/SSE if the compiler does it.
-MC_EVAR_ADD(AM_CFLAGS,   "$SIMD_FLAGS")
-MC_EVAR_ADD(AM_CXXFLAGS, "$SIMD_FLAGS")
-# Newer vectorization instruction sets, should be optionally supported
-# SSE >= 2, AVX
-SSEAVX_FLAGS=
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse2)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse3)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mssse3)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4.1)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4.2)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -msse4a)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mavx)
-MC_CC_TRY_OPTION(SSEAVX_FLAGS, -mavx2)
-AC_SUBST(SSEAVX_FLAGS)
-
-# == OPTIMIZE_FAST ==
-# Some critical code paths should be optimized to run as fast as possible
-OPTIMIZE_FAST=
-MC_CC_TRY_OPTION(OPTIMIZE_FAST, -O3)
-MC_CC_TRY_OPTION(OPTIMIZE_FAST, -ftree-vectorize)
-MC_CC_TRY_OPTION(OPTIMIZE_FAST, -finline-functions)
-MC_CC_TRY_OPTION(OPTIMIZE_FAST, -minline-all-stringops)
-AC_SUBST(OPTIMIZE_FAST)
+# == Linker flags ==
+AM_LDFLAGS="-lrt -pthread"
+ld_help_text=`${LD-ld} --help 2>&1 | tr '\n' ' '`
+check_ld_flags="-export-dynamic -O1 -Bsymbolic-functions --as-needed --no-undefined"
+for flag in $check_ld_flags ; do
+  echo " $ld_help_text" | grep -q -e "$flag" && AM_LDFLAGS="$AM_LDFLAGS -Wl,$flag"
+done
+echo " $ld_help_text" | grep -q -e "--hash-style" && AM_LDFLAGS="$AM_LDFLAGS -Wl,--hash-style=both"
+AC_SUBST(AM_LDFLAGS)
 
 # == ENABLE_DEVEL_MODE ==
 # check for development build rules, which require acess to .git/
-AC_MSG_CHECKING(for ENABLE_DEVEL_MODE)
-[test x"$enable_devel_mode" = xauto -a -e "$DOTGIT" && enable_devel_mode=yes]
-test x"$enable_devel_mode" = xyes -o x"$enable_devel_mode" = x1 && enable_devel_mode=yes || enable_devel_mode=no
-AC_MSG_RESULT([$enable_devel_mode])
-edm=0; test x"$enable_devel_mode" = xyes && edm=1
-AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $edm, [Build a development version])
-AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = xyes)
-if test x"$enable_devel_mode" = xyes ; then
-  TEST_SRCDIR=$(cd $srcdir ; /bin/pwd)
-  TEST_BUILDDIR=$(cd . ; /bin/pwd)
-  test "$TEST_SRCDIR" == "$TEST_BUILDDIR" || {
-    AC_MSG_ERROR([development build rules require srcdir == builddir])
-  }
-  git show HEAD:configure.ac 2>&1 | grep -q 'AC'_'INIT.*\brapicorn\b.*,' || {
-    AC_MSG_ERROR([development build rules require a rapicorn.git repository])
-  }
-  DEVELMODE="" ; NOTDEVELMODE="#"
-  # devel mode build tools
-  MC_ASSERT_PROG(BISON, bison, [See: http://ftp.gnu.org/gnu/bison/])
-  MC_ASSERT_PROG(FLEX, flex, [See: http://flex.sourceforge.net/])
-  MC_ASSERT_PROG(PANDOC, pandoc, [See: http://johnmacfarlane.net/pandoc/])
-  MC_ASSERT_PROG(DOXYGEN, doxygen, [See: http://www.stack.nl/~dimitri/doxygen/])
-  MC_ASSERT_PROG(DOT, dot, [See: http://www.graphviz.org/])
-  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"${abs_srcdir}\"' # full debugging paths for devel-mode
-else # provide sane defaults for meaningful makefiles & errors
-  DEVELMODE="#"; NOTDEVELMODE=""
-  BISON=bison; AC_SUBST(BISON)
-  FLEX=flex; AC_SUBST(FLEX)
-  PANDOC=pandoc; AC_SUBST(PANDOC)
-  DOXYGEN=doxygen; AC_SUBST(DOXYGEN)
-  DOT=dot; AC_SUBST(DOT)
-  DEFINE__FILE_DIR__='-D__FILE_DIR__=\"rapicorn/${subdir}\"'
+enable_devel_mode=0
+if echo " $PACKAGE_VERSION" | grep -q '~wip' ; then
+    enable_devel_mode=1
 fi
-AC_SUBST(DEVELMODE)
-AC_SUBST(NOTDEVELMODE)
-AC_SUBST(DEFINE__FILE_DIR__)
+AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $enable_devel_mode, [Add development aids to the build])
+AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = x1)
 
-# C & C++ idioms
-AC_C_CONST
-AC_C_INLINE
-AC_HEADER_STDC
+# == RAPICORN_SYSVAL_POLLINIT ==
+AC_MSG_CHECKING([for POLL constants])
+rm -f conftest.val
+rapicorn_pollvalue_code='
+  #define _GNU_SOURCE
+  #include <sys/types.h>
+  #include <sys/poll.h>
+  #include <stdio.h>
+int main() {
+  FILE *f = fopen ("conftest.val", "w");
+  if (!f)
+    return 1;
+  fprintf (f, "0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x",
+           POLLIN, POLLPRI, POLLOUT, POLLRDNORM, POLLRDBAND, POLLWRNORM, POLLWRBAND, POLLERR, POLLHUP, POLLNVAL);
+  return ferror (f) || fclose (f) != 0;
+}'
+AC_TRY_RUN([$rapicorn_pollvalue_code], rapicorn_pollvalue_result=`cat conftest.val`, unset rapicorn_pollvalue_result)
+rm -f conftest.val
+if test -z "$rapicorn_pollvalue_result" ; then
+  AC_MSG_RESULT([failed])
+  AC_MSG_ERROR([failed to detect poll values])
+else
+  AC_MSG_RESULT([done])
+fi
+RAPICORN_SYSVAL_POLLINIT="[((const unsigned int[]) { $rapicorn_pollvalue_result })]"
+AC_SUBST(RAPICORN_SYSVAL_POLLINIT) # macro needed for a public header file
+dnl # AC_DEFINE_UNQUOTED(RAPICORN_SYSVAL_POLLINIT, [((const unsigned int[[]]) { $rapicorn_pollvalue_result })], [Values for POLLIN..POLLNVAL])
 
-dnl # RAPICORN_SUBST_COMPUTED_SYSVAL(IDENTIFIER, INCLUDES) - defines & AC_SUBST()s RAPICORN_SYSVAL_$1
-AC_DEFUN([RAPICORN_SUBST_COMPUTED_SYSVAL], 
-    [AC_COMPUTE_INT([RAPICORN_SYSVAL_$1], [$1], [$2],
-	    [AC_MSG_ERROR("failed to detect [$1]")])
-    AC_SUBST([RAPICORN_SYSVAL_$1])])
-
-dnl # RAPICORN_CXX_REQUIREMENTS() - check for required minimum __GNUC__ version
-AC_DEFUN([RAPICORN_CXX_REQUIREMENTS],
-[
-    AC_MSG_CHECKING([for CXX compiler version])
-    cxx_version=`$CXX --version 2>/dev/null | head -n1`
-    AC_MSG_RESULT([$cxx_version])
-
-    # check for minimum compiler version
-    DEPVERSION_GNUC='4.7.4'
-    DEPVERSION_CLANG='3.4.2'
-    DEPVERSION_NR_GNUC=[`echo " $DEPVERSION_GNUC" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
-    DEPVERSION_NR_CLANG=[`echo " $DEPVERSION_CLANG" | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)/(\1<<20)+(\2<<10)+\3/'`]
-    AC_MSG_CHECKING([for g++ >= $DEPVERSION_GNUC or clang++ >= $DEPVERSION_CLANG])
-    AC_TRY_COMPILE([
-	    #if defined __clang__
-	    #  if (__clang_major__ << 20) + (__clang_minor__ << 10) + __clang_patchlevel__ < $DEPVERSION_NR_CLANG
-	    #    error Clang version too old
-	    #  endif
-	    #elif defined __GNUC__
-	    #  if (__GNUC__ << 20) + (__GNUC_MINOR__ << 10) + __GNUC_PATCHLEVEL__ < $DEPVERSION_NR_GNUC
-	    #    error GCC version too old
-	    #  endif
-	    #endif
-    ],[], depversion_gnuc_match=ok, depversion_gnuc_match=failed)
-    AC_MSG_RESULT([$depversion_gnuc_match])
-    if test "$depversion_gnuc_match" != "ok" ; then
-	AC_MSG_ERROR([detected GNUC version too old])
-    fi
-])
 
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
 AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
@@ -311,25 +251,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
     GLIB_SIZEOF([], long, rapicorn_long)
     RAPICORN_SIZEOF_LONG="$glib_cv_sizeof_rapicorn_long"
     AC_SUBST(RAPICORN_SIZEOF_LONG)
-
-    # --- POLL* ---
-    poll_headers=["
-      #define _GNU_SOURCE
-      #include <sys/types.h>
-      #include <sys/poll.h>
-    "]
-    AC_MSG_CHECKING([for POLL constants])
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLIN],     $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLPRI],    $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLOUT],    $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLRDNORM], $poll_headers) # needs _GNU_SOURCE on linux
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLRDBAND], $poll_headers) # needs _GNU_SOURCE on linux
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLWRNORM], $poll_headers) # needs _GNU_SOURCE on linux
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLWRBAND], $poll_headers) # needs _GNU_SOURCE on linux
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLERR],    $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLHUP],    $poll_headers)
-    RAPICORN_SUBST_COMPUTED_SYSVAL([POLLNVAL],   $poll_headers)
-    AC_MSG_RESULT([done])
 
     AC_CHECK_HEADERS( [sys/eventfd.h] )
 
@@ -537,21 +458,6 @@ AC_DEFUN([RAPICORN_PYTHON_REQUIREMENTS],
   fi
 ])
 
-dnl # RAPICORN_CYTHON_REQUIREMENTS() - rapicorn cython binding checks
-AC_DEFUN([RAPICORN_CYTHON_REQUIREMENTS],
-[
-  # cython
-  CYTHON_REQUIRED=0.20.1
-  MC_ASSERT_PROG(CYTHON, cython, [cython can be found at http://cython.org/])
-  CYTHON_VERSION=[$($CYTHON --version 2>&1 | sed 's/[^0-9]*\(.*\)$/\1/g')]
-  AS_ECHO("checking cython version... $CYTHON_VERSION")
-  MC_CHECK_VERSION([$CYTHON_VERSION], [$CYTHON_REQUIRED], [], [
-      AC_MSG_ERROR([cython version $CYTHON_REQUIRED or newer is required])
-  ])
-  AC_SUBST(CYTHON)
-  dnl # AM_CONDITIONAL([HAVE_CYTHON], [test "_$CYTHON" = "_cython"])
-])
-
 dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
 AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
 [
@@ -570,35 +476,10 @@ AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
     AC_SUBST(READLINELIBS)
 ])
 
-# Aida requirements
-AC_DEFUN([RAPICORN_AIDA_REQUIREMENTS],
-[
-  # Python is checked for separately
-
-  # XML linting check
-  AC_CHECK_PROGS(XMLLINT, xmllint, true)
-])
-
-# check for package requirements.
-MC_IF_VAR_EQ(GCC, yes,,
-    AC_MSG_ERROR(This package requires GNU gcc)
-)
-MC_IF_VAR_EQ(GXX, yes,,
-    AC_MSG_ERROR(This package requires GNU g++)
-)
-
-# find installation utilities
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PATH_PROG(UPDATE_MIME_DATABASE, update-mime-database)
-
 # check requirement sets
 RAPICORN_I18N_REQUIREMENTS
-RAPICORN_CXX_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_PYTHON_REQUIREMENTS
-RAPICORN_CYTHON_REQUIREMENTS
-RAPICORN_AIDA_REQUIREMENTS
 RAPICORN_REQUIREMENTS
 RAPICORN_TEST_REQUIREMENTS
 
@@ -630,7 +511,7 @@ Autoconfiguration complete.
 	Operating System:		$RAPICORN_OS
 
 	CPU optimizations:		${FPU_FLAGS:+fpu}${MMX_FLAGS:+ mmx}${AMD3DNOW_FLAGS:+ 3dnow}${SSE_FLAGS:+ sse}${SSE2_FLAGS:+ sse2}${SSE3_FLAGS:+ sse3}
-	Development mode:		${NOTDEVELMODE:+enabled}${DEVELMODE:+disabled}
+	Development mode:		${ENABLE_DEVEL_MODE_FALSE:+enabled}${ENABLE_DEVEL_MODE_TRUE:+disabled}
 
 	Python extension:		enabled (mandatory)
 	Readline libs:			$READLINELIBS
