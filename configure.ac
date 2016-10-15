@@ -138,7 +138,8 @@ elif echo "$uname_m" | grep -q '^i.*86$' ; then
     AM_CFLAGS="$AM_CFLAGS $x86_flags"
     AM_CXXFLAGS="$AM_CXXFLAGS $x86_flags"
 fi
-# debug flags
+
+# == Debug flags ==
 case "_$enable_debug" in
   _addr*)
     debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=undefined -fsanitize=address"
@@ -196,9 +197,12 @@ MC_ASSERT_VERSION($CYTHON --version, 0.20.1)
 MC_ASSERT_PROG(XMLLINT, xmllint)
 MC_ASSERT_VERSION($XMLLINT --version, 20901)
 
+# == Headers ==
+AC_CHECK_HEADERS_ONCE( zlib.h sys/eventfd.h readline/readline.h readline/history.h )
+
 # == Libraries ==
 # libz
-AC_CHECK_LIB(z, gzsetparams, [AC_CHECK_HEADER(zlib.h, LIBZ_LIBS='-lz', LIBZ='')], LIBZ='')
+AC_CHECK_LIB(z, gzsetparams, [ LIBZ='' ; test "$ac_cv_header_zlib_h" = yes && LIBZ_LIBS='-lz' ])
 if test -z "$LIBZ_LIBS"; then
     AC_MSG_ERROR([Compression library libz is missing, but required])
 fi
@@ -253,9 +257,6 @@ RAPICORN_SYSVAL_POLLINIT="[ $rapicorn_pollvalue_result ]"
 AC_SUBST(RAPICORN_SYSVAL_POLLINIT) # macro needed for a public header file
 dnl # AC_DEFINE_UNQUOTED(RAPICORN_SYSVAL_POLLINIT, [((const unsigned int[[]]) { $rapicorn_pollvalue_result })], [Values for POLLIN..POLLNVAL])
 
-# == Headers ==
-AC_CHECK_HEADERS( [sys/eventfd.h] )
-
 # == sizeof ==
 AC_CHECK_SIZEOF(uint, 0, [#include <sys/types.h>])
 RAPICORN_SIZEOF_SYS_TYPESH_UINT="$ac_cv_sizeof_uint"
@@ -298,6 +299,23 @@ test -z "$RAPICORN_SPINLOCK_INITIALIZER" && {
   AC_MSG_FAILURE([spinlock initializer check failed to execute])
 }
 AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
+
+# == libreadline & libhistory ==
+READLINELIBS=""
+AC_CHECK_LIB(readline, readline,
+	     [
+	       AC_CHECK_LIB(history, using_history,
+			    [
+			      test "$ac_cv_header_readline_readline_h$ac_cv_header_readline_history_h" = yesyes && {
+				AC_DEFINE_UNQUOTED(HAVE_READLINE_AND_HISTORY, 1, [Whether -lreadline -lhistory works])
+				READLINELIBS="-lreadline -lhistory"
+			      }
+			    ])
+	     ])
+AC_SUBST(READLINELIBS)
+test -z "$READLINELIBS" && {
+  AC_MSG_ERROR(Missing readline library development files)
+}
 
 
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
@@ -364,29 +382,10 @@ AC_DEFUN([RAPICORN_PYTHON_REQUIREMENTS],
   fi
 ])
 
-dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
-AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
-[
-    READLINELIBS=""
-    AC_CHECK_HEADERS(readline/readline.h, [
-        AC_CHECK_HEADERS(readline/history.h, [
-	    AC_CHECK_LIB(readline, readline, [
-		AC_CHECK_LIB(history, using_history, [
-		    AC_DEFINE_UNQUOTED(HAVE_READLINE_AND_HISTORY, 1,
-			[Whether -lreadline -lhistory works])
-		    READLINELIBS="-lreadline -lhistory"
-		    ]) ]) ]) ])
-    test -z "$READLINELIBS" && {
-      AC_MSG_ERROR(Missing readline library development files)
-    }
-    AC_SUBST(READLINELIBS)
-])
-
 # check requirement sets
 RAPICORN_I18N_REQUIREMENTS
 RAPICORN_CORE_REQUIREMENTS
 RAPICORN_PYTHON_REQUIREMENTS
-RAPICORN_TEST_REQUIREMENTS
 
 # create output files
 AC_CONFIG_FILES([
