@@ -11,11 +11,12 @@ cd "$SCRIPTDIR/../res/"
 
 RESFILES_LIST="$(cat resfiles.list)"
 FILE_LIST="$(find -type f |
-	     grep -Ev '/Makefile[^/]*$|/meson.build|/resfiles.list$' |
+	     grep -Ev '/Makefile[^/]*$|/GNUmakefile|/meson.build|/resfiles.list$' |
              sed 's,^[.]/,,' |
              sort)"
 
 if [ "$FILE_LIST" != "$RESFILES_LIST" ] ; then
+    echo "  UPDATE   res/resfiles.list" >&2
     echo "$FILE_LIST" >resfiles.list
 fi
 
