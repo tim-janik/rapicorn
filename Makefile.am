@@ -110,11 +110,11 @@ clean-local: clean-revisions.lst
 manpage_header.html:
 	$(Q) echo $$'<a href="../index.html">Return to Index</a>\n<hr>\n' > $@
 .INTERMEDIATE: manpage_header.html
-CLEANFILES += manpage_header.html
+MOSTLYCLEANFILES += manpage_header.html
 manpage_footer.html:
 	$(Q) echo $$'<hr>\n<a href="../index.html">Return to Index</a>\n' > $@
 .INTERMEDIATE: manpage_footer.html
-CLEANFILES += manpage_footer.html
+MOSTLYCLEANFILES += manpage_footer.html
 EXTRA_DIST += docs/manpage.css
 %.1.html: %.1.revd.md manpage_header.html manpage_footer.html docs/manpage.css
 	$(AM_V_GEN)
@@ -124,7 +124,7 @@ EXTRA_DIST += docs/manpage.css
 EXTRA_DIST  += misc/mkbuildid.sh
 topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh -p topbuildid.cc)	# "update rule" for topbuildid.cc
 topbuildid.cc: # avoid explicit deps, 'topbuildid::=' ensures updates
-CLEANFILES += topbuildid.cc
+CLEANFILES += topbuildid.cc	# preserve across 'mostlyclean' if unchanged to avoid expensive rebuilds
 buildid:
 	@echo $(topbuildid)
 
@@ -133,9 +133,9 @@ buildid:
 check-local: $(make_check_targets)
 
 # == stamp-autocheck-xmllint ==
-EXTRA_DIST	+= $(make_check_xml_files)
-noinst_DATA	+= stamp-autocheck-xmllint
-CLEANFILES	+= stamp-autocheck-xmllint
+EXTRA_DIST	 += $(make_check_xml_files)
+noinst_DATA	 += stamp-autocheck-xmllint
+MOSTLYCLEANFILES += stamp-autocheck-xmllint
 stamp-autocheck-xmllint: $(make_check_xml_files)
 	$(Q) for XMLFILE in $? ; do \
 	  $(XMLLINT) --noout "$$XMLFILE" ; eval "$$TSTDIAGNOSE" "$$XMLFILE" || exit $$? ; \
@@ -182,7 +182,7 @@ EXTRA_DIST		+= rapicorn.pc.in
 rapicorn-@MAJOR@.pc: rapicorn.pc.in $(top_builddir)/config.status
 	$(AM_V_GEN)
 	$(Q) cd $(top_builddir) && $(SHELL) ./config.status --file=$@:$<
-CLEANFILES += rapicorn-@MAJOR@.pc
+MOSTLYCLEANFILES += rapicorn-@MAJOR@.pc
 # install rapicorn.pc -> rapicorn-@MAJOR@.pc symlink
 rapicorn-pc-install-hook:	# runs after install-data
 	$(Q) cd $(DESTDIR)$(rapicorn_pkgconfigdir) && \
@@ -256,7 +256,7 @@ distcheck: dist
 .PHONY: distcheck distuninstallcheck-hook
 
 # == cleanups ==
-CLEANFILES +=			\
+MOSTLYCLEANFILES +=		\
 	yapps2_deb/yapps/*.pyc
 MAINTAINERCLEANFILES += 	\
 	Makefile\.in		\

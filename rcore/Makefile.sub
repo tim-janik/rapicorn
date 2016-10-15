@@ -77,7 +77,7 @@ rcore_doc_sources = $(rcore_librapicorn_headers) $(rcore_librapicorn_sources) # 
 rcore/librapicorn-buildid.cc: topbuildid.cc
 	$(AM_V_GEN)
 	$(Q) cp $< $@
-CLEANFILES += rcore/librapicorn-buildid.cc
+MOSTLYCLEANFILES += rcore/librapicorn-buildid.cc
 
 # == librapicorn-@MAJOR@.so ==
 rcore_librapicorn_includedir		 = $(includedir)/rapicorn-@MAJOR@/rcore
@@ -93,7 +93,7 @@ rcore/aidavariants.hh: rcore/aidaproto.hh $(XMANIFOLD)
 	&& echo '# 1 "$<"'					>>$@.tmp \
 	&& $(XMANIFOLD) "$<" 18					>>$@.tmp \
 	&& mv $@.tmp $@
-CLEANFILES += rcore/aidavariants.hh
+MOSTLYCLEANFILES += rcore/aidavariants.hh
 $(rcore_librapicorn_sources): rcore/aidavariants.hh
 
 # == zres.cc ==
@@ -101,5 +101,5 @@ rcore/zres.cc: $(top_srcdir)/res/resfiles.list $(RAPIDRES_INTERN) # res_resfiles
 	$(AM_V_GEN)
 	$(Q) $(RAPIDRES_INTERN) -s '.*/res/' $(res_resfiles_list:%=$(top_srcdir)/res/%)	>$@.tmp
 	$(Q) mv $@.tmp $@
-CLEANFILES += rcore/zres.cc
+MOSTLYCLEANFILES += rcore/zres.cc
 rcore/resources.cc: rcore/zres.cc

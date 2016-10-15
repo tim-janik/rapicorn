@@ -57,20 +57,20 @@ cython_pymodules_PYTHON			= cython/pkg-init/__init__.py
 cython/Rapicorn.cc: cython/Rapicorn.pyx cython/Aida.pyx cython/rapicorn-core.pyx cython/rapicorn-api.pyx cython/aidapyxxcallers.hh
 	$(AM_V_GEN)
 	$(Q) $(CYTHON) --cplus -Wextra -Werror --fast-fail -I. cython/Rapicorn.pyx -o $@
-CLEANFILES += cython/Rapicorn.cc
+MOSTLYCLEANFILES += cython/Rapicorn.cc
 
 # == rapicorn-api.pyx ==
 cython/rapicorn-api.pyx: ui/interfaces.idl $(AIDACC_INTERN) $(CYTHON_PYXXSTUB_PY)
 	$(AM_V_GEN)
 	$(Q) $(AIDACC_INTERN) -x $(CYTHON_PYXXSTUB_PY) $< -o $@ -G strip-path=$(topdir)/
-CLEANFILES += cython/rapicorn-api.pyx
+MOSTLYCLEANFILES += cython/rapicorn-api.pyx
 
 # == aidapyxxcallers.hh ==
 cython/aidapyxxcallers.hh: cython/aidapyxxutils.hh $(XMANIFOLD)
 	$(AM_V_GEN)
 	$(Q) $(XMANIFOLD) -S $< 18 > $@.tmp
 	$(Q) mv $@.tmp $@
-CLEANFILES += cython/aidapyxxcallers.hh
+MOSTLYCLEANFILES += cython/aidapyxxcallers.hh
 
 # == cython cleanups ==
-CLEANFILES += cython/*.py[co]
+MOSTLYCLEANFILES += cython/*.py[co]

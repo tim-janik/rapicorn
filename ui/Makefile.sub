@@ -140,7 +140,7 @@ ui/serverapi.hh: ui/interfaces.idl ui/serverinsert.hh $(AIDACC_INTERN) $(AIDACC_
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G serverhh \
 	  --insertions ui/serverinsert.hh ui/interfaces.idl -o $@.tmp
 	$(Q) mv $@.tmp $@
-CLEANFILES += ui/serverapi.hh
+MOSTLYCLEANFILES += ui/serverapi.hh
 $(ui_librapicorn_sources): ui/serverapi.hh
 
 # == serverapi.cc ==
@@ -149,7 +149,7 @@ ui/serverapi.cc: ui/interfaces.idl $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G servercc -G strip-path=$(topdir)/ \
 	  --inclusions '"widget.hh"' ui/interfaces.idl -o - > $@.tmp
 	$(Q) mv $@.tmp $@
-CLEANFILES += ui/serverapi.cc
+MOSTLYCLEANFILES += ui/serverapi.cc
 ui/serverglue.cc: ui/serverapi.cc
 
 # == clientapi.hh ==
@@ -159,7 +159,7 @@ ui/clientapi.hh: ui/interfaces.idl ui/clientinsert.hh $(AIDACC_INTERN) $(AIDACC_
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G clienthh \
 	  --insertions ui/clientinsert.hh ui/interfaces.idl -o $@.tmp
 	$(Q) mv $@.tmp $@
-CLEANFILES += ui/clientapi.hh
+MOSTLYCLEANFILES += ui/clientapi.hh
 $(ui_librapicorn_sources): ui/clientapi.hh
 
 # == clientapi.cc ==
@@ -168,7 +168,7 @@ ui/clientapi.cc: ui/interfaces.idl $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G clientcc -G strip-path=$(topdir)/ \
 	  --inclusions '"clientapi.hh"' ui/interfaces.idl -o - > $@.tmp
 	$(Q) mv $@.tmp $@
-CLEANFILES += ui/clientapi.cc
+MOSTLYCLEANFILES += ui/clientapi.cc
 ui/clientglue.cc: ui/clientapi.cc
 
 # == sinfex.lgen ==
@@ -176,7 +176,7 @@ EXTRA_DIST += ui/sinfex.l
 ui/sinfex.lgen: ui/sinfex.l
 	$(AM_V_GEN)
 	$(Q) $(FLEX) -CFe -o$@ $<
-CLEANFILES += ui/sinfex.lgen
+MOSTLYCLEANFILES += ui/sinfex.lgen
 ui/sinfex.cc: ui/sinfex.lgen
 
 # == sinfex.ygen ==
@@ -184,5 +184,5 @@ EXTRA_DIST += ui/sinfex.y
 ui/sinfex.ygen: ui/sinfex.y
 	$(AM_V_GEN)
 	$(Q) $(BISON) -o$@ $<
-CLEANFILES += ui/sinfex.ygen
+MOSTLYCLEANFILES += ui/sinfex.ygen
 ui/sinfex.cc: ui/sinfex.ygen
