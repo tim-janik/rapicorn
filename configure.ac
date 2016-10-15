@@ -309,27 +309,6 @@ AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
   # We need a properly versioned path: ${prefix}/share/doc/rapicorn-MAJOR
   docdir="${datarootdir}/doc/rapicorn" # "rapicorn-$MAJOR"
   AC_SUBST(docdir)
-
-
-    # --- OS/Win32 detection ---
-    dnl # needs AC_CANONICAL_HOST
-    test -z "$host" && {
-	missing_macro="AC""_CANONICAL_HOST"
-	AC_MSG_ERROR([configure failed to execute $missing_macro])
-    }
-    AC_MSG_CHECKING([for Win32])
-    case "$host" in
-	*-*-mingw*)
-	    RAPICORN_OS=WIN32
-	    AC_MSG_RESULT([yes])
-	    ;;
-	*)
-	    RAPICORN_OS=UNIX
-	    AC_MSG_RESULT([no])
-	    ;;
-    esac
-    AC_SUBST(RAPICORN_OS)
-    AC_DEFINE_UNQUOTED(RAPICORN_OS_$RAPICORN_OS, "1", [Win32 detection])
 ])
 
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements

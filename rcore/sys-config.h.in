@@ -16,7 +16,6 @@
 
 
 // system specifics
-#define RAPICORN_OS_@RAPICORN_OS@               (1) // one of: WIN32 UNIX
 #define RAPICORN_SIZEOF_SYS_TYPESH_UINT         @RAPICORN_SIZEOF_SYS_TYPESH_UINT@
 #define RAPICORN_SYSVAL_POLLINIT                ((const unsigned int[]) { @RAPICORN_SYSVAL_POLLINIT@ })
 #define RAPICORN_SPINLOCK_INITIALIZER           @RAPICORN_SPINLOCK_INITIALIZER@

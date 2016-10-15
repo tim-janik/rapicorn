@@ -331,7 +331,7 @@ split_string_tests (void)
   TCMP (string_join ("+", string_split (" a  b \n c \t\n\r\f\v d")), ==, "a+b+c+d");
   TCMP (string_join ("^", Path::searchpath_split ("one;two;three;;")), ==, "one^two^three");
   TCMP (string_join ("^", Path::searchpath_split (";one;two;three")), ==, "one^two^three");
-#ifdef RAPICORN_OS_UNIX
+#ifdef RAPICORN_UNIX_PATHS
   TCMP (string_join ("^", Path::searchpath_split (":one:two:three:")), ==, "one^two^three");
 #endif
   TCMP (string_join ("", string_split ("all  white\tspaces\nwill\vbe\fstripped")), ==, "allwhitespaceswillbestripped");
