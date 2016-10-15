@@ -6,6 +6,10 @@
 
 namespace Rapicorn {
 
+/// Get a string describing the machine architecture, e.g. "AMD64".
+String  cpu_arch ();
+
+/// Retrieve string identifying the runtime CPU type.
 String  cpu_info ();
 
 /// Acquire information about a task (process or thread) at runtime.

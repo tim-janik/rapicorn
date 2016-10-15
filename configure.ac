@@ -27,7 +27,6 @@ RAPICORN_VERSION="$PACKAGE_VERSION"
 [MICRO=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
 AC_SUBST(RAPICORN_VERSION)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
-AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 # For automake, we need to easily provide MAJOR.MINOR.MICRO and MAJOR_MINOR_MICRO:
 AC_SUBST(MAJOR)
 AC_SUBST(MINOR)
