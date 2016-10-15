@@ -319,6 +319,22 @@ test -z "$RAPICORN_SPINLOCK_INITIALIZER" && {
 }
 AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
 
+# == bin/python & libpython.so & Python.h ==
+PYTHON_REQUIRED=2.7
+AM_PATH_PYTHON($PYTHON_REQUIRED)
+dnl # AC_PYTHON_DEVEL is provided by autoconf-archive
+AC_PYTHON_DEVEL([>= $PYTHON_REQUIRED])
+AC_MSG_CHECKING([for working Python extension compilation])
+PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
+saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_CPPFLAGS"     # verify sane Python module builds
+AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=true, py_build=false)
+CPPFLAGS="$saved_CPPFLAGS"
+AC_MSG_RESULT($py_build)
+if test "$py_build" != "true" ; then
+    AC_MSG_ERROR([failed to build extension against Python (>=$PYTHON_REQUIRED) headers])
+fi
+
 
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
 AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
@@ -354,29 +370,9 @@ AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
     AC_PROG_INTLTOOL
 ])
 
-dnl # RAPICORN_PYTHON_REQUIREMENTS() - rapicorn python checks
-AC_DEFUN([RAPICORN_PYTHON_REQUIREMENTS],
-[
-  # python
-  PYTHON_REQUIRED=2.7
-  AM_PATH_PYTHON($PYTHON_REQUIRED)
-  dnl # AC_REQUIRE([AC_PYTHON_DEVEL]) # AC_PYTHON_DEVEL is usually provided by autoconf-archive
-  AC_PYTHON_DEVEL([>= $PYTHON_REQUIRED])
-  AC_MSG_CHECKING([for working Python extension compilation])
-  saved_CPPFLAGS="$CPPFLAGS"
-  PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
-  CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_CPPFLAGS"     # verify sane Python module builds
-  AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
-  CPPFLAGS="$saved_CPPFLAGS"
-  AC_MSG_RESULT($py_build)
-  if test "$py_build" != "ok" ; then
-    AC_MSG_ERROR([failed to build extension against Python (>=$PYTHON_REQUIRED) headers])
-  fi
-])
 
 # check requirement sets
 RAPICORN_I18N_REQUIREMENTS
-RAPICORN_PYTHON_REQUIREMENTS
 
 # create output files
 AC_CONFIG_FILES([
