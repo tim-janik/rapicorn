@@ -200,13 +200,7 @@ MC_ASSERT_VERSION($XMLLINT --version, 20901)
 # == Headers ==
 AC_CHECK_HEADERS_ONCE( zlib.h sys/eventfd.h readline/readline.h readline/history.h )
 
-# == Libraries ==
-# libz
-AC_CHECK_LIB(z, gzsetparams, [ LIBZ='' ; test "$ac_cv_header_zlib_h" = yes && LIBZ_LIBS='-lz' ])
-if test -z "$LIBZ_LIBS"; then
-    AC_MSG_ERROR([Compression library libz is missing, but required])
-fi
-AC_SUBST(LIBZ_LIBS)
+# == pkg-config Libraries ==
 # librapicorn dependencies
 LIBRAPICORN_REQUIRES="
 	libpng		>= 1.2.50
@@ -225,9 +219,39 @@ LIBRAPICORN_REQUIRES=`echo $LIBRAPICORN_REQUIRES` # strip whitespaces
 AC_SUBST(LIBRAPICORN_REQUIRES)
 # define LIBRAPICORN_CFLAGS and LIBRAPICORN_LIBS
 PKG_CHECK_MODULES(LIBRAPICORN, [ $LIBRAPICORN_REQUIRES ])
-LIBRAPICORN_LIBS="$LIBRAPICORN_LIBS $LIBZ_LIBS"
 # for C++ library linking, '-lpthread' is needed in addition to '-pthread'
 LIBRAPICORN_LIBS=`printf %s "$LIBRAPICORN_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
+
+# == libz ==
+AC_CHECK_LIB(z, gzsetparams, [ LIBZ_LIBS='' ; test "$ac_cv_header_zlib_h" = yes && LIBZ_LIBS='-lz' ])
+if test -z "$LIBZ_LIBS"; then
+    AC_MSG_ERROR([Compression library libz is missing, but required])
+else
+  LIBRAPICORN_LIBS="$LIBRAPICORN_LIBS $LIBZ_LIBS"
+fi
+AC_SUBST(LIBZ_LIBS)
+
+# == libreadline & libhistory ==
+READLINELIBS=""
+AC_CHECK_LIB(readline, readline,
+	     [
+	       AC_CHECK_LIB(history, using_history,
+			    [
+			      test "$ac_cv_header_readline_readline_h$ac_cv_header_readline_history_h" = yesyes && {
+				AC_DEFINE_UNQUOTED(HAVE_READLINE_AND_HISTORY, 1, [Whether -lreadline -lhistory works])
+				READLINELIBS="-lreadline -lhistory"
+			      }
+			    ])
+	     ])
+AC_SUBST(READLINELIBS)
+test -z "$READLINELIBS" && {
+  AC_MSG_ERROR(Missing readline library development files)
+}
+
+# == sizeof ==
+AC_CHECK_SIZEOF(uint, 0, [#include <sys/types.h>])
+RAPICORN_SIZEOF_SYS_TYPESH_UINT="$ac_cv_sizeof_uint"
+AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT) # needed by sys-config.h.in
 
 # == RAPICORN_SYSVAL_POLLINIT ==
 AC_MSG_CHECKING([for POLL constants])
@@ -256,11 +280,6 @@ fi
 RAPICORN_SYSVAL_POLLINIT="[ $rapicorn_pollvalue_result ]"
 AC_SUBST(RAPICORN_SYSVAL_POLLINIT) # macro needed for a public header file
 dnl # AC_DEFINE_UNQUOTED(RAPICORN_SYSVAL_POLLINIT, [((const unsigned int[[]]) { $rapicorn_pollvalue_result })], [Values for POLLIN..POLLNVAL])
-
-# == sizeof ==
-AC_CHECK_SIZEOF(uint, 0, [#include <sys/types.h>])
-RAPICORN_SIZEOF_SYS_TYPESH_UINT="$ac_cv_sizeof_uint"
-AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT) # needed by sys-config.h.in
 
 # == pthread_spinlock_t initializer ==
 AC_LANG_PUSH([C])
@@ -299,23 +318,6 @@ test -z "$RAPICORN_SPINLOCK_INITIALIZER" && {
   AC_MSG_FAILURE([spinlock initializer check failed to execute])
 }
 AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
-
-# == libreadline & libhistory ==
-READLINELIBS=""
-AC_CHECK_LIB(readline, readline,
-	     [
-	       AC_CHECK_LIB(history, using_history,
-			    [
-			      test "$ac_cv_header_readline_readline_h$ac_cv_header_readline_history_h" = yesyes && {
-				AC_DEFINE_UNQUOTED(HAVE_READLINE_AND_HISTORY, 1, [Whether -lreadline -lhistory works])
-				READLINELIBS="-lreadline -lhistory"
-			      }
-			    ])
-	     ])
-AC_SUBST(READLINELIBS)
-test -z "$READLINELIBS" && {
-  AC_MSG_ERROR(Missing readline library development files)
-}
 
 
 dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
