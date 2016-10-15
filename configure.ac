@@ -335,55 +335,44 @@ if test "$py_build" != "true" ; then
     AC_MSG_ERROR([failed to build extension against Python (>=$PYTHON_REQUIRED) headers])
 fi
 
-
-dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
-AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
-[
-    dnl # TRANSLATORS: enter your language here
-    ALL_LINGUAS="de"
-    dnl # TRANSLATORS: enter your language here
-    AC_SUBST(ALL_LINGUAS)
-
-    dnl # versioned Rapicorn gettext domain (po/)
-    RAPICORN_GETTEXT_DOMAIN="librapicorn-$MAJOR.$MINOR.$MICRO"
-    AC_SUBST(RAPICORN_GETTEXT_DOMAIN)
-    AC_DEFINE_UNQUOTED(RAPICORN_GETTEXT_DOMAIN, "$RAPICORN_GETTEXT_DOMAIN", [Versioned Rapicorn gettext domain])
-    GETTEXT_PACKAGE=$RAPICORN_GETTEXT_DOMAIN
-    AC_SUBST(GETTEXT_PACKAGE)
-
-    dnl # locale directory for all domains
-    dnl # (AM_GLIB_DEFINE_LOCALEDIR() could do this if it would do AC_SUBST())
-    saved_prefix="$prefix" ; saved_exec_prefix="$exec_prefix"
-    test "x$prefix" = xNONE && prefix="$ac_default_prefix"
-    if test "x$CATOBJEXT" = "x.mo" ; then
-      test "x$exec_prefix" = xNONE && exec_prefix="$prefix" # needs $prefix
-      pkglocaledir=`eval echo "${libdir}/locale"` # needs $exec_prefix
-    else
-      datarootdir=`eval echo "${datarootdir}"`		# needs $prefix
-      pkglocaledir=`eval echo "${datadir}/locale"`	# needs ${datarootdir}
-    fi
-    exec_prefix="$saved_exec_prefix" ; prefix="$saved_prefix"
-    AC_SUBST(pkglocaledir)
-
-    dnl # do gettext checks, provide INTLLIBS and CATOBJEXT
-    AM_GLIB_GNU_GETTEXT
-    AC_PROG_INTLTOOL
-])
+# == I18n ==
+### TRANSLATORS: enter your language here
+ALL_LINGUAS="de"
+### TRANSLATORS: enter your language here
+AC_SUBST(ALL_LINGUAS)
+# versioned Rapicorn gettext domain (po/)
+RAPICORN_GETTEXT_DOMAIN="librapicorn-$MAJOR.$MINOR.$MICRO"
+AC_SUBST(RAPICORN_GETTEXT_DOMAIN)
+AC_DEFINE_UNQUOTED(RAPICORN_GETTEXT_DOMAIN, "$RAPICORN_GETTEXT_DOMAIN", [Versioned Rapicorn gettext domain])
+GETTEXT_PACKAGE=$RAPICORN_GETTEXT_DOMAIN
+AC_SUBST(GETTEXT_PACKAGE)
+# determine pkglocaledir
+saved_prefix="$prefix" ; saved_exec_prefix="$exec_prefix"
+test "x$prefix" = xNONE && prefix="$ac_default_prefix"
+if test "x$CATOBJEXT" = "x.mo" ; then
+    test "x$exec_prefix" = xNONE && exec_prefix="$prefix" # needs $prefix
+    pkglocaledir=`eval echo "${libdir}/locale"`           # needs $exec_prefix
+else
+  datarootdir=`eval echo "${datarootdir}"`		  # needs $prefix
+  pkglocaledir=`eval echo "${datadir}/locale"`	          # needs ${datarootdir}
+fi
+exec_prefix="$saved_exec_prefix" ; prefix="$saved_prefix"
+AC_SUBST(pkglocaledir)
+# check for gettext, provide INTLLIBS and CATOBJEXT
+AM_GLIB_GNU_GETTEXT
+AC_PROG_INTLTOOL
 
 
-# check requirement sets
-RAPICORN_I18N_REQUIREMENTS
-
-# create output files
+# == Output files ==
 AC_CONFIG_FILES([
 Makefile
 po-helper.sh
 po/Makefile.in
 rcore/sys-config.h
 ])
-
 AC_OUTPUT
 
+# == Configuration summary ==
 printexpandvar()
 {
 	_x="$1";
@@ -392,8 +381,6 @@ printexpandvar()
 	done
 	echo -n "$_x"
 }
-
-dnl # Show configuration summary
 cat <<EOF
 Autoconfiguration complete.
 
