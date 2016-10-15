@@ -320,16 +320,6 @@ test -z "$RAPICORN_SPINLOCK_INITIALIZER" && {
 AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
 
 
-dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
-AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
-[
-  # === docdir ===
-  # AM default: docdir = ${datarootdir}/doc/${PACKAGE_TARNAME} # == ${prefix}/share/doc/rapicorn
-  # We need a properly versioned path: ${prefix}/share/doc/rapicorn-MAJOR
-  docdir="${datarootdir}/doc/rapicorn" # "rapicorn-$MAJOR"
-  AC_SUBST(docdir)
-])
-
 dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
 AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
 [
@@ -386,7 +376,6 @@ AC_DEFUN([RAPICORN_PYTHON_REQUIREMENTS],
 
 # check requirement sets
 RAPICORN_I18N_REQUIREMENTS
-RAPICORN_CORE_REQUIREMENTS
 RAPICORN_PYTHON_REQUIREMENTS
 
 # create output files
