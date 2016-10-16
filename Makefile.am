@@ -30,7 +30,6 @@ revisioned_files	 = # files that need @FILE_REVISION@ substitution
 objdir			= .libs
 TAPTOOL 		= $(topdir)/misc/taptool.sh
 XMANIFOLD		= $(topdir)/misc/xmanifold.py
-YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
 AIDACC_INTERN		= $(top_builddir)/aidacc/aidacc-intern
 AIDACC_CXXSTUB_PY	= aidacc/CxxStub.py
 WITH_PYTHONPATH_INTERN	= PYTHONPATH="$(abs_top_builddir)/cython/$(objdir):$$PYTHONPATH"
@@ -38,6 +37,18 @@ PYTHON_INTERN		= $(WITH_PYTHONPATH_INTERN) $(PYTHON)
 XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH_INTERN) $(X11_ENV) $(PYTHON)
 XVFB_RAPIDRUN		= $(X11_ENV) $(abs_top_builddir)/tools/rapidrun --fatal-warnings "$$@"
 IMGCHECK		= tools/imgcheck
+EXTRA_DIST	       +=	\
+	misc/xmanifold.py	\
+	misc/taptool.sh
+
+# == yapps ==
+YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
+EXTRA_DIST	       += 		\
+	yapps2_deb/yapps/__init__.py	\
+	yapps2_deb/yapps/grammar.py	\
+	yapps2_deb/yapps/parsetree.py	\
+	yapps2_deb/yapps/runtime.py	\
+	yapps2_deb/yapps2.py
 
 # == res/ ==
 include res/Makefile.sub
@@ -104,11 +115,13 @@ manpage_footer.html:
 	$(Q) echo $$'<hr>\n<a href="../index.html">Return to Index</a>\n' > $@
 .INTERMEDIATE: manpage_footer.html
 CLEANFILES += manpage_footer.html
-%.1.html: %.1.revd.md manpage_header.html manpage_footer.html $(topdir)/docs/manpage.css
+EXTRA_DIST += docs/manpage.css
+%.1.html: %.1.revd.md manpage_header.html manpage_footer.html docs/manpage.css
 	$(AM_V_GEN)
 	$(Q) $(PANDOC) -s -t html -S --toc -H $(topdir)/docs/manpage.css -B manpage_header.html -A manpage_footer.html $< -o $@
 
 # == topbuildid.cc ==
+EXTRA_DIST  += misc/mkbuildid.sh
 topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh -p topbuildid.cc)	# "update rule" for topbuildid.cc
 topbuildid.cc: # avoid explicit deps, 'topbuildid::=' ensures updates
 CLEANFILES += topbuildid.cc
@@ -185,6 +198,7 @@ uninstall-hook: rapicorn-pc-uninstall-hook
 # == doc/ install ==
 projectdocsdir   = $(docdir)/
 projectdocs_DATA = README NEWS COPYING.MPL
+EXTRA_DIST	+= $(projectdocs_DATA)
 
 # == README ==
 README: README.md
@@ -194,6 +208,52 @@ README: README.md
 	$(Q) chmod a-w $@	# prevent accidental target file edits
 .SECONDARY: README.md		# pacify make(1) when shipping README without README.md
 MAINTAINERCLEANFILES += README
+
+# == distcheck ==
+# Distcheck aims:
+# - use srcdir==builddir;
+# - build *outside* the original source tree to catch missing files or dirs, and without picking up parent directory contents;
+# - support parallel builds;
+# - verify that no CLEANFILES are shipped in dist tarball;
+# - check that $(DESTDIR) is properly honored in installation rules.
+# distcheck_uniqdir - directory for build tests, outside of srcdir, unique per user and checkout
+# distcheck_uniqdir = distcheck-$(shell printf %d-%04x\\n $$UID 0x`X=$$(pwd) && echo -n "$$X" | md5sum | sed 's/^\(....\).*/\1/'`)
+distcheck_uniqdir = distcheck-$(shell python -c "import os, md5; print ('%u-%s' % (os.getuid(), md5.new (os.getcwd()).hexdigest()[:4]))")
+distcheck: dist
+	$(Q) TMPDIR="$${TMPDIR-$${TEMP-$${TMP-/tmp}}}" \
+	&& DCDIR="$$TMPDIR/$(distcheck_uniqdir)" \
+	&& TARBALL=`readlink -f $(firstword $(DIST_ARCHIVES))` \
+	&& test -n "$$TMPDIR" -a -n "$(distcheck_uniqdir)" -a -n "$$DCDIR" -a -n "$(distdir)" -a -n "$$TARBALL" \
+	&& { test ! -e "$$DCDIR/" || { chmod u+w -R "$$DCDIR/" && rm -r "$$DCDIR/" ; } ; } \
+	&& mkdir -p "$$DCDIR" \
+	&& set -x \
+	&& cd "$$DCDIR" \
+	&& tar xf "$$TARBALL" \
+	&& cd "$(distdir)" \
+	&& ./configure --prefix="$$DCDIR/inst" $(AM_DISTCHECK_CONFIGURE_FLAGS) $(DISTCHECK_CONFIGURE_FLAGS) \
+	&& touch dc-buildtree-cleaned \
+	&& find . -print >dc-buildtree-files \
+	&& $(MAKE) $(AM_MAKEFLAGS) clean \
+	&& find . -print >dc-buildtree-cleaned \
+	&& diff -u dc-buildtree-files dc-buildtree-cleaned \
+	&& $(MAKE) $(AM_MAKEFLAGS) -j`nproc` \
+	&& $(MAKE) $(AM_MAKEFLAGS) check \
+	&& $(MAKE) $(AM_MAKEFLAGS) install \
+	&& $(MAKE) $(AM_MAKEFLAGS) installcheck \
+	&& $(MAKE) $(AM_MAKEFLAGS) uninstall \
+	&& $(MAKE) $(AM_MAKEFLAGS) distuninstallcheck-hook \
+	&& $(MAKE) $(AM_MAKEFLAGS) distuninstallcheck distuninstallcheck_dir="$$DCDIR/inst" \
+	&& chmod a-w -R "$$DCDIR/inst" \
+	&& mkdir -m 0700 "$$DCDIR/destdir" \
+	&& $(MAKE) $(AM_MAKEFLAGS) DESTDIR="$$DCDIR/destdir" install \
+	&& $(MAKE) $(AM_MAKEFLAGS) DESTDIR="$$DCDIR/destdir" uninstall \
+	&& $(MAKE) $(AM_MAKEFLAGS) DESTDIR="$$DCDIR/destdir" distuninstallcheck-hook \
+	&& $(MAKE) $(AM_MAKEFLAGS) DESTDIR="$$DCDIR/destdir" distuninstallcheck distuninstallcheck_dir="$$DCDIR/destdir" \
+	&& set +x \
+	&& cd "$(abs_top_builddir)" \
+	&& { chmod u+w -R "$$DCDIR/" && rm -r "$$DCDIR/" ; } \
+	&& echo "OK: archive ready for distribution: $$TARBALL" | sed '1h; 1s/./=/g; 1p; 1x; $$p; $$x'
+.PHONY: distcheck distuninstallcheck-hook
 
 # == cleanups ==
 CLEANFILES +=			\

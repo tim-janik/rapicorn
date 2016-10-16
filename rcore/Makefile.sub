@@ -6,7 +6,6 @@ rcore_librapicorn_headers = $(strip	\
 	rcore/aidacxx.hh		\
 	rcore/aidaprops.hh		\
 	rcore/aidasignal.hh		\
-	rcore/aidavariants.hh		\
 	rcore/bindable.hh		\
 	rcore/buildconfig.h		\
 	rcore/cairoutils.hh		\
@@ -36,6 +35,9 @@ rcore_librapicorn_headers = $(strip	\
 	rcore/visitor.hh		\
 	rcore/xmlnode.hh		\
 )
+rcore_generated_headers = $(strip	\
+	rcore/aidavariants.hh		\
+)
 rcore_librapicorn_sources = $(strip	\
 	rcore/aida.cc			\
 	rcore/aidaprops.cc		\
@@ -44,7 +46,6 @@ rcore_librapicorn_sources = $(strip	\
 	rcore/formatter.cc		\
 	rcore/inifile.cc		\
 	rcore/inout.cc			\
-	rcore/librapicorn-buildid.cc	\
 	rcore/loop.cc			\
 	rcore/main.cc			\
 	rcore/markup.cc			\
@@ -63,7 +64,14 @@ rcore_librapicorn_sources = $(strip	\
 	rcore/utilities.cc		\
 	rcore/xmlnode.cc		\
 )
-rcore_doc_sources = $(rcore_librapicorn_headers) $(rcore_librapicorn_sources)
+rcore_generated_sources = $(strip	\
+	rcore/librapicorn-buildid.cc	\
+)
+rcore_private_files = $(strip		\
+	rcore/svg.hh			\
+)
+EXTRA_DIST += $(rcore_private_files)
+rcore_doc_sources = $(rcore_librapicorn_headers) $(rcore_librapicorn_sources) # $(rcore_generated_sources)
 
 # == librapicorn-buildid.cc ==
 rcore/librapicorn-buildid.cc: topbuildid.cc
@@ -72,9 +80,9 @@ rcore/librapicorn-buildid.cc: topbuildid.cc
 CLEANFILES += rcore/librapicorn-buildid.cc
 
 # == librapicorn-@MAJOR@.so ==
-rcore_librapicorn_includedir		= $(includedir)/rapicorn-@MAJOR@/rcore
-rcore_librapicorn_include_HEADERS	= $(rcore_librapicorn_headers)
-EXTRA_DIST			       += rcore/svg.hh # private headers
+rcore_librapicorn_includedir		 = $(includedir)/rapicorn-@MAJOR@/rcore
+rcore_librapicorn_include_HEADERS	 = $(rcore_librapicorn_headers)
+nodist_rcore_librapicorn_include_HEADERS = $(rcore_generated_headers)
 
 # == aidavariants.hh ==
 EXTRA_DIST += rcore/aidaproto.hh

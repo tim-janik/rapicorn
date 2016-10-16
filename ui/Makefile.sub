@@ -7,7 +7,6 @@ ui_librapicorn_headers = $(strip	\
 	ui/arrangement.hh		\
 	ui/binding.hh			\
 	ui/buttons.hh			\
-	ui/clientapi.hh			\
 	ui/cmdlib.hh			\
 	ui/commands.hh			\
 	ui/container.hh			\
@@ -31,7 +30,6 @@ ui_librapicorn_headers = $(strip	\
 	ui/scrollwidgets.hh		\
 	ui/selector.hh			\
 	ui/selob.hh			\
-	ui/serverapi.hh			\
 	ui/sinfex.hh			\
 	ui/sinfeximpl.hh		\
 	ui/sizegroup.hh			\
@@ -47,6 +45,10 @@ ui_librapicorn_headers = $(strip	\
 	ui/viewport.hh			\
 	ui/widget.hh			\
 	ui/window.hh			\
+)
+ui_generated_headers   = $(strip	\
+	ui/clientapi.hh			\
+	ui/serverapi.hh			\
 )
 ui_librapicorn_sources = $(strip	\
 	ui/adjustment.cc		\
@@ -98,36 +100,41 @@ ui_librapicorn_sources = $(strip	\
 )
 ui_private_files = $(strip		\
 	ui/blitfuncs.hh			\
-	ui/clientapi.cc			\
 	ui/displaywindow-xaux.cc	\
+	ui/interfaces.idl		\
 	ui/key2ucs4.cc			\
 	ui/regionimpl.h			\
-	ui/serverapi.cc			\
 	ui/widget.dox			\
 )
 EXTRA_DIST += $(ui_private_files)
-ui_doc_sources = $(ui_librapicorn_headers) $(ui_librapicorn_sources) ui/widget.dox
+ui_doc_sources = $(ui_librapicorn_headers) $(ui_librapicorn_sources) ui/widget.dox $(ui_generated_headers)
 
 # == librapicorn-@MAJOR@.so ==
-ui_librapicorn_includedir		= $(includedir)/rapicorn-@MAJOR@/ui
-ui_librapicorn_include_HEADERS		= $(ui_librapicorn_headers)
-lib_LTLIBRARIES                        += ui/librapicorn-@MAJOR@.la
-ui_librapicorn_@MAJOR@_la_SOURCES       = $(rcore_librapicorn_sources) $(ui_librapicorn_sources)
-ui_librapicorn_@MAJOR@_la_CXXFLAGS      = $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
-ui_librapicorn_@MAJOR@_la_LIBADD        = $(LIBRAPICORN_LIBS)
-EXTRA_ui_librapicorn_@MAJOR@_la_DEPENDENCIES = rcore/ldscript.map
-ui_librapicorn_@MAJOR@_la_LDFLAGS	= $(strip		\
+ui_librapicorn_includedir			= $(includedir)/rapicorn-@MAJOR@/ui
+ui_librapicorn_include_HEADERS			= $(ui_librapicorn_headers)
+nodist_ui_librapicorn_include_HEADERS		= $(ui_generated_headers)
+lib_LTLIBRARIES				       += ui/librapicorn-@MAJOR@.la
+ui_librapicorn_@MAJOR@_la_SOURCES		= $(rcore_librapicorn_sources) $(ui_librapicorn_sources)
+nodist_ui_librapicorn_@MAJOR@_la_SOURCES	= $(rcore_generated_sources)
+ui_librapicorn_@MAJOR@_la_CXXFLAGS		= $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
+ui_librapicorn_@MAJOR@_la_LIBADD		= $(LIBRAPICORN_LIBS)
+EXTRA_ui_librapicorn_@MAJOR@_la_DEPENDENCIES	= ui/ldscript.map
+EXTRA_DIST				       += ui/ldscript.map
+ui_librapicorn_@MAJOR@_la_LDFLAGS		= $(strip	\
 	$(AM_LDFLAGS) -no-undefined -Wl,--as-needed -Wl,-O1	\
 	-version-info $(LT_VERSION_INFO) 			\
-	-Wl,--version-script=$(top_srcdir)/rcore/ldscript.map	\
-) # set libtool version and export symbols for resolving
-EXTRA_DIST			       += rcore/ldscript.map
+	-Wl,--version-script=$(top_srcdir)/ui/ldscript.map	\
+) # set library version and restrict exported symbols
+# headers for internal build dependencies
+librapicorn_all_headers				 = $(ui_librapicorn_include_HEADERS) $(nodist_ui_librapicorn_include_HEADERS) \
+						   $(rcore_librapicorn_include_HEADERS) $(nodist_rcore_librapicorn_include_HEADERS)
 # ldconfig
 install-exec-ldconfig: # libtool >= 1.5.2 doesn't always set rpath, requiring ldconfig
 	test ! -x /sbin/ldconfig -o ! -w /etc/ld.so.cache || /sbin/ldconfig $(DESTDIR)$(libdir)
 install-exec-hook: install-exec-ldconfig
 
 # == serverapi.hh ==
+EXTRA_DIST += ui/serverinsert.hh
 ui/serverapi.hh: ui/interfaces.idl ui/serverinsert.hh $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
 	$(AM_V_GEN)
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G serverhh \
@@ -146,6 +153,7 @@ CLEANFILES += ui/serverapi.cc
 ui/serverglue.cc: ui/serverapi.cc
 
 # == clientapi.hh ==
+EXTRA_DIST += ui/clientinsert.hh
 ui/clientapi.hh: ui/interfaces.idl ui/clientinsert.hh $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
 	$(AM_V_GEN)
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G clienthh \

@@ -10,9 +10,10 @@ t101-dynamic-cast-check: $(HEADERS) $(SOURCES)
 	$(Q) echo "  CHECK  Rejecting dynamic_cast of reference types..." \
 	&& grep -Hn 'dynamic_cast[^<]*<[^>&]*&' $(HEADERS) $(SOURCES) \
 	| grep '.' ; exit $$[!$$?] # fail on matches
-make_check_targets += t101-dynamic-cast-check
+make_check_targets	+= t101-dynamic-cast-check
 
 # == t190-installcheck-api-test ==
+EXTRA_DIST		+= tests/t190-api-use.cc
 t190-installcheck-api-use: tests/t190-api-use.cc
 	@echo "  BUILD   " $@
 	$(Q) $(CXX) -Werror $< -c -o $(<:.cc=.o)     `$(TESTS_PKG_CONFIG) --cflags rapicorn-@MAJOR@` \
@@ -27,6 +28,7 @@ installcheck-local: t190-installcheck-api-use
 
 # == t201-rcore-basics ==
 noinst_PROGRAMS			       += tests/t201-rcore-basics
+EXTRA_DIST			       += tests/t201/rcore-basics-xmldata.cc
 tests_t201_rcore_basics_CXXFLAGS	= $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
 tests_t201_rcore_basics_LDADD		= ui/librapicorn-@MAJOR@.la $(LIBRAPICORN_LIBS)
 tests_t201_rcore_basics_SOURCES		=	\
