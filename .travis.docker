@@ -26,7 +26,7 @@ RUN retry apt-get update && retry apt-get -y install apt-utils && retry apt-get 
 # Provide build essentials and dependencies
 RUN retry apt-get install -y \
     build-essential devscripts lintian automake autoconf autoconf-archive libtool intltool git xvfb \
-    bison flex cython doxygen graphviz texlive-binaries pandoc \
+    bison flex cython doxygen graphviz texlive-binaries pandoc libxml2-utils \
     librsvg2-dev libpango1.0-dev python2.7-dev libxml2-dev libreadline6-dev \
     libreadline-dev python-all-dev python-enum34
 
