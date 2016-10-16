@@ -4,9 +4,6 @@
 FROM @DIST@
 MAINTAINER Tim Janik <timj@gnu.org>
 
-# Carry over enviroment variables
-ENV EMAIL rapicorn@googlegroups.com
-
 # Automation tools and convenience commands
 ENV DEBIAN_FRONTEND noninteractive
 RUN echo '#!/bin/bash\n"$@" || { sleep 10 ; "$@" ; } || { sleep 90 ; "$@" ; }' > /bin/retry && chmod +x /bin/retry && \
@@ -30,17 +27,19 @@ RUN retry apt-get install -y \
     librsvg2-dev libpango1.0-dev python2.7-dev libxml2-dev libreadline6-dev \
     libreadline-dev python-all-dev python-enum34
 
-# Setup build environment by copying the git history
-COPY .git /tmp/rapicorn.git
-RUN cd /usr/src/ && git clone /tmp/rapicorn.git
-
-# Build sources in /usr/src/$PROJECT/
-WORKDIR /usr/src/rapicorn
-
 # Provide clang++ if needed
 ENV INTENT "@INTENT@"
 RUN [ $INTENT = clangbuild ] || exit 0 && \
     retry apt-get install -y clang
+
+# Setup build environment and provide the git repository
+ENV PROJECT	rapicorn
+ENV EMAIL	rapicorn@googlegroups.com
+COPY tmp-mirror.git /tmp/$PROJECT.git
+RUN cd /usr/src/ && git clone /tmp/$PROJECT.git
+
+# Build sources in project directory
+WORKDIR /usr/src/$PROJECT
 
 # Build sources, run tests and create distribution tarball
 # Carry out distcheck test if desired
