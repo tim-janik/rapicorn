@@ -44,9 +44,9 @@ WORKDIR /usr/src/$PROJECT
 # Build sources, run tests and create distribution tarball
 # Carry out distcheck test if desired
 RUN [ $INTENT != clangbuild ] || exit 0 && \
-    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no
+    nice ./autogen.sh --prefix=/usr
 RUN [ $INTENT = clangbuild ] || exit 0 && \
-    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no CC=clang CXX=clang++
+    nice ./autogen.sh --prefix=/usr CC=clang CXX=clang++
 RUN nice make -j`nproc`
 RUN nice make check
 RUN nice make install
