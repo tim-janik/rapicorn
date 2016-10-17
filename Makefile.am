@@ -279,3 +279,24 @@ MAINTAINERCLEANFILES += 	\
 	config/lt~obsolete\.m4	\
 	config/missing		\
 	config/py-compile
+
+# == ChangeLog ==
+# Since we switched in 2007 from keeping a ChangeLog file to using the git log exclusively, we need to generate it in 2 parts.
+oldchangelog_sedcmd = 's/^[ 	]*(\w\w\w \w\w\w  *[0-9]+ [0-9][0-9]:[0-9][0-9]:[0-9][0-9] 200[0-9] [ a-zA-Z]*) <\w+@[a-z.]+>$$/	\1/'
+ChangeLog: $(GITSTAMPS_FIXME)
+	$(AM_V_GEN)
+	$(Q) git log --topo-order --full-history --date=short \
+		--abbrev=11 --until=2007-05-17 \
+		--pretty='%ad  %an 	# %h%n%n%B%n'	     > $@.tmpo	# Generate *old* ChangeLog with -prefixed records
+	$(Q) sed -r $(oldchangelog_sedcmd)		    -i $@.tmpo	# Tab-indent old ChangeLog author lines
+	$(Q) git log --topo-order --full-history --date=short \
+		--abbrev=11 --since=2007-05-17 \
+		--pretty='%ad  %an 	# %h%n%n%B%n'	     > $@.tmpn	# Generate new git log with -prefixed records
+	$(Q) cat $@.tmpn $@.tmpo > $@.tmp && rm -f $@.tmpn $@.tmpo
+	$(Q) sed -r -e 's/^(	|        )?/	/' \
+		    -e 's/^	// ; s/[[:space:]]+$$// ' -i $@.tmp	# Tab-indent commit bodies, kill trailing whitespaces
+	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'	    -i $@.tmp	# Compress multiple newlines
+	$(Q) mv $@.tmp $@
+noinst_DATA	     += ChangeLog
+EXTRA_DIST	     += ChangeLog
+MAINTAINERCLEANFILES += ChangeLog

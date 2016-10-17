@@ -4,9 +4,6 @@
 FROM @DIST@
 MAINTAINER Tim Janik <timj@gnu.org>
 
-# Carry over enviroment variables
-ENV EMAIL rapicorn@googlegroups.com
-
 # Automation tools and convenience commands
 ENV DEBIAN_FRONTEND noninteractive
 RUN echo '#!/bin/bash\n"$@" || { sleep 10 ; "$@" ; } || { sleep 90 ; "$@" ; }' > /bin/retry && chmod +x /bin/retry && \
@@ -30,24 +27,26 @@ RUN retry apt-get install -y \
     librsvg2-dev libpango1.0-dev python2.7-dev libxml2-dev libreadline6-dev \
     libreadline-dev python-all-dev python-enum34
 
-# Setup build environment by copying the git history
-COPY .git /tmp/rapicorn.git
-RUN cd /usr/src/ && git clone /tmp/rapicorn.git
-
-# Build sources in /usr/src/$PROJECT/
-WORKDIR /usr/src/rapicorn
-
 # Provide clang++ if needed
 ENV INTENT "@INTENT@"
 RUN [ $INTENT = clangbuild ] || exit 0 && \
     retry apt-get install -y clang
 
+# Setup build environment and provide the git repository
+ENV PROJECT	rapicorn
+ENV EMAIL	rapicorn@googlegroups.com
+COPY tmp-mirror.git /tmp/$PROJECT.git
+RUN cd /usr/src/ && git clone /tmp/$PROJECT.git
+
+# Build sources in project directory
+WORKDIR /usr/src/$PROJECT
+
 # Build sources, run tests and create distribution tarball
 # Carry out distcheck test if desired
 RUN [ $INTENT != clangbuild ] || exit 0 && \
-    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no
+    nice ./autogen.sh --prefix=/usr
 RUN [ $INTENT = clangbuild ] || exit 0 && \
-    nice ./autogen.sh --prefix=/usr --enable-devel-mode=no CC=clang CXX=clang++
+    nice ./autogen.sh --prefix=/usr CC=clang CXX=clang++
 RUN nice make -j`nproc`
 RUN nice make check
 RUN nice make install
@@ -63,27 +62,34 @@ RUN [ $INTENT = distcheck ] || exit 0 && \
 RUN nice make clean
 RUN ls -l *.tar.xz
 
-# Build packages in /usr/src/
-WORKDIR /usr/src/
-
 # Create deb packages as follows:
-# Eval configuration, prepare debian source tarball, prepare debian/ directory,
-# update 'changelog', install dependencies, build debian packages.
+# Figure Debian version, this must have a distribution specific suffix for bintray uploads.
+# Extract distribution from tarball, prepare debian source tarball, add debian/ directory,
+# update Debian's 'changelog', install build tools, build Debian packages in /usr/src/.
 ENV DISTRELEASE "@DISTRELEASE@"
 ENV TRAVIS_JOB_NUMBER "@TRAVIS_JOB_NUMBER@"
 RUN [ $INTENT = package ] || exit 0 && \
-    eval `rapicorn/buildtool.sh config` && \
-    DIST_TARBALL="$PACKAGE/$PACKAGE-$UPSVERSION.tar.xz" && \
-    DEB_TARBALL="$PACKAGE"_"${DEBVERSION%-*}.orig.tar.xz" && \
-    cp $DIST_TARBALL $DEB_TARBALL && tar xf $DEB_TARBALL && \
-    cd $PACKAGE-$UPSVERSION/ && cp -r ../$PACKAGE/debian/ . && \
-    dch -v "$DEBVERSION" "$CHANGELOGMSG" && dch -r "" && cat debian/changelog && \
-    retry apt-get -y install $(dpkg-checkbuilddeps 2>&1 | sed 's/.*: //') && \
-    nice debuild -j`nproc` -rfakeroot -us -uc && \
-    cd .. && ls -al
+	TARBALL=`echo *.tar.xz` && \
+	TARDIR=${TARBALL%.tar*} && \
+	TARPACKAGE=${TARDIR%-*} && \
+	TARVERSION=${TARDIR#*-} && \
+	BUILDID=`misc/mkbuildid.sh -p` && \
+	DEBVERSION=$BUILDID-0${DISTRELEASE:-local}${TRAVIS_JOB_NUMBER:+~travis${TRAVIS_JOB_NUMBER/*./}} && \
+	DEB_TARBALL="$TARPACKAGE"_"${DEBVERSION%-*}.orig.tar.xz" && \
+	COMMITID=`git rev-parse HEAD` && \
+	CHANGELOGMSG="Development snapshot, git commit $COMMITID" && \
+	cp $TARBALL ../$DEB_TARBALL && \
+	cd ../ && \
+	tar xf $DEB_TARBALL && \
+	cd $TARDIR/ && cp -r ../$TARPACKAGE/debian/ . && \
+	dch -v "$DEBVERSION" "$CHANGELOGMSG" && dch -r "" && cat debian/changelog && \
+	retry apt-get -y install $(dpkg-checkbuilddeps 2>&1 | sed 's/.*: //') && \
+	nice debuild -j`nproc` -rfakeroot -us -uc && \
+	cd .. && ls -al
 
-# Test package installation and removal locally
+# Test package installation from /usr/src/ and removal locally
 RUN [ $INTENT = package ] || exit 0 && \
+    cd .. && \
     dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz && \
     echo 'deb [trusted=yes] file:///usr/src ./' > /etc/apt/sources.list.d/usrsrc.list && \
     retry apt-get update && apt-get install -y rapicorn && \
