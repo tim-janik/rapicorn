@@ -19,10 +19,10 @@ env:
     - DIST="debian:jessie"
     - DIST="debian:testing"
     - DIST="ubuntu:xenial"
-    #- DIST="ubuntu:trusty" # not needed by Beast
-    - INTENT="clangbuild" DIST="ubuntu:wily"
     # distcheck: succeed in 'make distcheck'
     - INTENT="distcheck" DIST="ubuntu:wily"
+    # clangbuild: succeed in using clang++ for builds
+    - INTENT="clangbuild" DIST="ubuntu:wily"
 matrix:
   allow_failures:
     - env: DIST="debian:testing"
@@ -30,14 +30,14 @@ matrix:
   fast_finish: true
 
 before_install:
-  # buildtool.sh requires complete history for monotonic revisioning
-  - travis_retry git fetch --unshallow
-  # Build variable setup; example: DIST=debian:jessie DISTNAME=debian DISTRELEASE=jessie BTREPO=devel
-  # Uses `buildtool.sh` to determine the version dependent bintray repository name
+  - travis_retry git fetch --unshallow # git describe requires complete history
+  # Build variable setup; example: DIST=debian:jessie DISTRELEASE=jessie RC={deb|devel}
   - true &&
-    export DISTNAME="${DIST%:*}" DISTRELEASE="${DIST#*:}" BTREPO="`./buildtool.sh ifdevel devel deb`" &&
-    export BEASTAPTSOURCE="deb [trusted=yes] https://dl.bintray.com/beast-team/$BTREPO $DISTRELEASE main" &&
-    echo "INTENT=$INTENT DIST=$DIST DISTNAME=$DISTNAME DISTRELEASE=$DISTRELEASE BEASTAPTSOURCE='$BEASTAPTSOURCE'"
+    DISTRELEASE="${DIST#*:}" &&
+    BUILDID=`misc/mkbuildid.sh -p` && { test "$BUILDID" = "${BUILDID%-*}" && RC=deb || RC=devel ; } &&
+    BEASTAPTSOURCE="deb [trusted=yes] https://dl.bintray.com/beast-team/$RC $DISTRELEASE main" &&
+    export DISTRELEASE BEASTAPTSOURCE BUILDID RC &&
+    echo "INTENT=$INTENT DIST=$DIST DISTRELEASE=$DISTRELEASE BUILDID=$BUILDID RC=$RC BEASTAPTSOURCE='$BEASTAPTSOURCE'"
   # Sample environment
   - uname -a
   - cat /etc/os-release
@@ -48,15 +48,13 @@ before_install:
   - $CC --version
 
 install:
-  # Configure Dockerfile by substituting @VAR@ with $VAR
-  - ./buildtool.sh applyenv .travis.docker > Dockerfile
-  # Build and run tests, create packages
-  - docker build -t rapicorn .
+  # Build inside docker container
+  - misc/dockerbuild.sh $DIST $INTENT
 
 script:
   # Upload packages
   - ([ $INTENT = package ] || exit 0 && docker run -ti --rm rapicorn /bin/bash -c \
-        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al && rapicorn/buildtool.sh bintrayup beast-team $BTREPO/rapicorn $DISTRELEASE *.deb")
+        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al .. && misc/bintrayup.sh $DIST beast-team@$RC/rapicorn ../*.deb")
   # Test package installation from remote location
   - ([ $INTENT = package ] || exit 0 && sleep 60 && travis_retry docker run -ti --rm rapicorn /bin/bash -c \
         "set -x && retry apt-get -y install apt-transport-https ca-certificates &&
