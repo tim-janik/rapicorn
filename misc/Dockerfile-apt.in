@@ -87,8 +87,9 @@ RUN [ $INTENT = package ] || exit 0 && \
 	nice debuild -j`nproc` -rfakeroot -us -uc && \
 	cd .. && ls -al
 
-# Test package installation and removal locally
+# Test package installation from /usr/src/ and removal locally
 RUN [ $INTENT = package ] || exit 0 && \
+    cd .. && \
     dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz && \
     echo 'deb [trusted=yes] file:///usr/src ./' > /etc/apt/sources.list.d/usrsrc.list && \
     retry apt-get update && apt-get install -y rapicorn && \
