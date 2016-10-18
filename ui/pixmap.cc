@@ -465,7 +465,7 @@ pngcontext_configure_4argb (png_structp  png_ptr,
   if (color_type == PNG_COLOR_TYPE_PALETTE)
     png_set_palette_to_rgb (png_ptr);                           // request RGB format
   if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-    png_set_gray_1_2_4_to_8 (png_ptr);                          // request 8bit per sample
+    png_set_expand_gray_1_2_4_to_8 (png_ptr);                   // request 8bit per sample
   if (png_get_valid (png_ptr, info_ptr, PNG_INFO_tRNS))
     png_set_tRNS_to_alpha (png_ptr);                            // request transparency as alpha channel
   if (bit_depth == 16)
@@ -573,7 +573,7 @@ pngcontext_error (png_structp png_ptr, png_const_charp error_msg)
   PngContext<Pixbuf> *pcontext = (PngContext<Pixbuf>*) png_get_error_ptr (png_ptr);
   if (!pcontext->error)
     pcontext->error = EIO;
-  longjmp (png_ptr->jmpbuf, 1);
+  longjmp (png_jmpbuf (png_ptr), 1);
 }
 
 static void
@@ -618,7 +618,7 @@ anon_load_png (PixmapT<Pixbuf> pixmap, size_t nbytes, const char *bytes)
       return NULL;
     }
   /* save stack for longjmp() in png_loader_error() */
-  if (setjmp (png_ptr->jmpbuf) == 0)
+  if (setjmp (png_jmpbuf (png_ptr)) == 0)
     {
       /* read pixel image */
       pcontext.error = EINVAL;
@@ -678,7 +678,7 @@ PixmapT<Pixbuf>::save_png (const String &filename) /* assigns errno */
   pcontext.error = EIO;
   png_textp text_ptr = NULL;
   pcontext.fp = fopen (filename.c_str(), "wb");
-  if (pcontext.fp && setjmp (png_ptr->jmpbuf) == 0)
+  if (pcontext.fp && setjmp (png_jmpbuf (png_ptr)) == 0)
     {
       /* write pixel image */
       pcontext.error = EIO;
