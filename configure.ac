@@ -110,7 +110,7 @@ fi
 AC_SUBST(LIBZ_LIBS)
 # librapicorn dependencies
 LIBRAPICORN_REQUIRES="
-	libpng12	>= 1.2.50
+	libpng		>= 1.2.50
 	cairo		>= 1.10.0
 	librsvg-2.0	>= 2.40.2
 	pango		>= 1.30.0

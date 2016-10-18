@@ -93,7 +93,7 @@ static ThreadInfo *volatile uithread_threadinfo = NULL;
 class UIThread {
   std::thread             thread_;
   pthread_mutex_t         thread_mutex_;
-  volatile bool           running_;
+  volatile int            running_;
   Initializer            *idata_;
   const MainLoopP         main_loop_;
 public:
@@ -101,14 +101,14 @@ public:
     thread_mutex_ (PTHREAD_MUTEX_INITIALIZER), running_ (0), idata_ (idata),
     main_loop_ (MainLoop::create())
   {}
-  bool  running() const { return running_; }
+  bool  running() const { return running_ != 0; }
   void
   start()
   {
     pthread_mutex_lock (&thread_mutex_);
     if (thread_.get_id() == std::thread::id())
       {
-        assert (running_ == false);
+        assert (running() == false);
         thread_ = std::thread (std::ref (*this));
       }
     pthread_mutex_unlock (&thread_mutex_);
@@ -128,7 +128,7 @@ public:
     if (thread_.joinable())
       thread_.join();
     pthread_mutex_unlock (&thread_mutex_);
-    assert (running_ == false);
+    assert (running() == false);
   }
   void
   queue_stop()
@@ -173,8 +173,8 @@ public:
     assert (atomic_load (&uithread_threadinfo) == NULL);
     atomic_store (&uithread_threadinfo, &ThreadInfo::self());
     ThreadInfo::self().name ("RapicornUIThread");
-    const bool running_twice = __sync_fetch_and_add (&running_, +1);
-    assert (running_twice == false);
+    const int running_twice = __sync_fetch_and_add (&running_, +1);
+    assert (running_twice == 0);
 
     initialize();
     assert_return (idata_ == NULL);
@@ -186,11 +186,11 @@ public:
         break;  // handle pending idle handlers like exec_*()
     main_loop_->destroy_loop();
 
-    assert (running_ == true);
-    const bool stopped_twice = !__sync_fetch_and_sub (&running_, +1);
+    assert (running() == true);
+    const bool stopped_twice = 0 == __sync_fetch_and_sub (&running_, +1);
     assert (stopped_twice == false);
 
-    assert (running_ == false);
+    assert (running() == false);
     ThreadInfo *last_threadinfo = atomic_swap (&uithread_threadinfo, (ThreadInfo*) NULL);
     assert (last_threadinfo == &ThreadInfo::self());
   }
