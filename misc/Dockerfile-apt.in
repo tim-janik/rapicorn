@@ -13,10 +13,10 @@ RUN echo '#!/bin/bash\n"$@" || { sleep 10 ; "$@" ; } || { sleep 90 ; "$@" ; }' >
     '\nfunction regrep { (shopt -s globstar extglob; IFS=; set - ; /usr/bin/nice /bin/egrep --color=auto -d skip "") }' \
     | tee -a /etc/bash.bashrc >> /root/.bashrc
 
-# Ensure uptodate distribution and access to the bintray.com repositories
+# Ensure uptodate distribution, add bintray.com repo key for which dirmngr is needed
 ENV http_proxy "@http_proxy@"
-RUN retry apt-get update && retry apt-get -y install apt-utils && retry apt-get -y upgrade && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
+RUN retry apt-get update && retry apt-get -y install apt-utils dirmngr && retry apt-get -y upgrade && \
+    retry apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
 
 # ENV BEASTAPTSOURCE "@BEASTAPTSOURCE@"
 
