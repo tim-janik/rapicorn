@@ -4,12 +4,8 @@
 RAPIDRES_INTERN			= $(top_builddir)/tools/rapidres
 bin_PROGRAMS		       += tools/rapidres
 tools_rapidres_SOURCES		= tools/rapidres.cc
-nodist_tools_rapidres_SOURCES	= tools/rapidres-buildid.cc
+nodist_tools_rapidres_SOURCES	= topbuildid.cc
 tools_rapidres_LDADD		= $(LIBZ_LIBS)
-tools/rapidres-buildid.cc: topbuildid.cc
-	$(AM_V_GEN)
-	$(Q) cp $< $@
-MOSTLYCLEANFILES += tools/rapidres-buildid.cc
 tools-rapidres-check:
 	$(Q) echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a' > tools/xtmp-empty.dat \
 	; eval "$$TSTDIAGNOSE" "'Create rapidres sample data'"
