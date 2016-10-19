@@ -11,8 +11,7 @@ language: c
 
 env:
   global:
-    #- http_proxy="http://example.com"
-    - INTENT="package" # default intent
+    - INTENT="package,bintrayup" # default
   matrix:
     # package: build packages for distribution $DIST
     - DIST="ubuntu:wily"
@@ -33,40 +32,28 @@ matrix:
   fast_finish: true
 
 before_install:
-  - travis_retry git fetch --unshallow # git describe requires complete history
-  # Build variable setup; example: DIST=debian:jessie DISTRELEASE=jessie RC={deb|devel}
-  - true &&
-    DISTRELEASE="${DIST#*:}" &&
-    BUILDID=`misc/mkbuildid.sh -p` && { test "$BUILDID" = "${BUILDID%-*}" && RC=deb || RC=devel ; } &&
-    BEASTAPTSOURCE="deb [trusted=yes] https://dl.bintray.com/beast-team/$RC $DISTRELEASE main" &&
-    export DISTRELEASE BEASTAPTSOURCE BUILDID RC &&
-    echo "INTENT=$INTENT DIST=$DIST DISTRELEASE=$DISTRELEASE BUILDID=$BUILDID RC=$RC BEASTAPTSOURCE='$BEASTAPTSOURCE'"
-  # Sample environment
+  # Show build setup
+  - echo "INTENT=$INTENT DIST=$DIST"
   - uname -a
   - cat /etc/os-release
   - pwd
   - free -tm
+  - $CC --version
+  - $CXX --version
   - make --version
   - python --version
-  - $CC --version
 
 install:
-  # Build inside docker container
-  - misc/dockerbuild.sh $DIST $INTENT
+  # git describe requires complete history
+  - travis_retry git fetch --unshallow
 
 script:
-  # Upload packages
-  - ([ $INTENT = package ] || exit 0 && docker run -ti --rm rapicorn /bin/bash -c \
-        "export BINTRAY_APITOKEN=$BINTRAY_APITOKEN && ls -al .. && misc/bintrayup.sh $DIST beast-team@$RC/rapicorn ../*.deb")
-  # Test package installation from remote location
-  - ([ $INTENT = package ] || exit 0 && sleep 60 && travis_retry docker run -ti --rm rapicorn /bin/bash -c \
-        "set -x && retry apt-get -y install apt-transport-https ca-certificates &&
-        echo '$BEASTAPTSOURCE' | tee /etc/apt/sources.list.d/beast-team.list &&
-        retry apt-get update && retry apt-get -y install rapicorn")
+  # Build inside docker container
+  - misc/dockerbuild.sh "$DIST" "$INTENT"
   - docker ps -a
 
 after_success:
-  - echo "Done, all OK!"
+  - echo "OK, all done."
 
 notifications:
   irc:
