@@ -5,16 +5,17 @@ set -e
 SCRIPTNAME="$(basename "$0")" ; die() { e="$1"; shift; echo "$SCRIPTNAME: $*" >&2; exit "$e"; }
 SCRIPTDIR="$(dirname "$(readlink -f "$0")")"
 
-# Usage: bintrayup <DIST> <ACCOUNTPATH> [packages...]
-DIST="$1"		# e.g. debian:jessie
-ACCOUNTPATH="$2"	# e.g. beast-team@stable/beast
-shift 2 || :
+# Usage: bintrayup <TOKENFILE> <DIST> <ACCOUNTPATH> [packages...]
+TOKENFILE="$1"		# e.g. ~/.bintray-apitoken
+DIST="$2"		# e.g. debian:jessie
+ACCOUNTPATH="$3"	# e.g. beast-team/stable/beast
+shift 3 || :
 DISTRELEASE="${DIST#*:}"
-ACCNAME="${ACCOUNTPATH%@*}"
-PKGPATH="${ACCOUNTPATH#*@}"
+ACCNAME="${ACCOUNTPATH%%/*}"
+PKGPATH="${ACCOUNTPATH#*/}"
 test -n "$DISTRELEASE" || die 1 "missing distribution"
 test -n "$ACCNAME" -o -n "$PKGPATH" || die 1 "invalid bintray account path"
-test -n "$BINTRAY_APITOKEN" || die 1 "missing BINTRAY_APITOKEN"
+test -r "$TOKENFILE" || die 1 "inaccesible token file: $TOKENFILE"
 test -n "$1" || die 1 "missing deb files"
 
 # extract metainfo
@@ -26,7 +27,7 @@ test -n "$DEBVERSION" || die 2 "failed to identify Debian version from package: 
 REPOVERSION="$DEBVERSION"
 echo "  REMOTE  " "creating new version: $REPOVERSION"
 curl -d "{ \"name\": \"$REPOVERSION\", \"released\": \"`date -I`\", \"desc\": \"Automatic CI Build\" }" \
-  -u"$ACCNAME:$BINTRAY_APITOKEN" "https://api.bintray.com/packages/$ACCNAME/$PKGPATH/versions" \
+  -u"$ACCNAME:`cat "$TOKENFILE"`" "https://api.bintray.com/packages/$ACCNAME/$PKGPATH/versions" \
   -H"Content-Type: application/json" -f && EX=$? || EX=$?
 test $EX = 0 -o $EX = 22 # 22 indicates HTTP responses >= 400, the version likely already exists
 # upload individual files
@@ -39,7 +40,7 @@ for F in "$@" ; do
   S="${F%.deb}"; A="${S##*_}"
   test ! -z "$A" || continue
   echo "  REMOTE  " "uploading: $F ($A)"
-  curl -T "$F" -u"$ACCNAME:$BINTRAY_APITOKEN" "$URL/`basename $F`;$OPTS;deb_architecture=$A" -f && EX=$? || EX=$?
+  curl -T "$F" -u"$ACCNAME:`cat "$TOKENFILE"`" "$URL/`basename $F`;$OPTS;deb_architecture=$A" -f && EX=$? || EX=$?
   ALLOK=$(($ALLOK + $EX))
 done
 test $ALLOK = 0 || die 2 "Some files failed to upload"
