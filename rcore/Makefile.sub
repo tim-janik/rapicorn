@@ -39,6 +39,7 @@ rcore_generated_headers = $(strip	\
 	rcore/sys-config.h		\
 )
 rcore_librapicorn_sources = $(strip	\
+	topbuildid.cc			\
 	rcore/aida.cc			\
 	rcore/aidaprops.cc		\
 	rcore/bindable.cc		\
@@ -64,20 +65,11 @@ rcore_librapicorn_sources = $(strip	\
 	rcore/utilities.cc		\
 	rcore/xmlnode.cc		\
 )
-rcore_generated_sources = $(strip	\
-	rcore/librapicorn-buildid.cc	\
-)
 rcore_private_files = $(strip		\
 	rcore/svg.hh			\
 )
 EXTRA_DIST += $(rcore_private_files)
-rcore_doc_sources = $(rcore_librapicorn_headers) $(rcore_librapicorn_sources) # $(rcore_generated_sources)
-
-# == librapicorn-buildid.cc ==
-rcore/librapicorn-buildid.cc: topbuildid.cc
-	$(AM_V_GEN)
-	$(Q) cp $< $@
-MOSTLYCLEANFILES += rcore/librapicorn-buildid.cc
+rcore_doc_sources = $(rcore_librapicorn_headers) $(rcore_librapicorn_sources)
 
 # == librapicorn-@MAJOR@.so ==
 rcore_librapicorn_includedir		 = $(includedir)/rapicorn-@MAJOR@/rcore
