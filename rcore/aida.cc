@@ -3,7 +3,7 @@
 #include "aidaprops.hh"
 #include "thread.hh"
 #include "regex.hh"
-#include "../configure.h"       // HAVE_SYS_EVENTFD_H
+#include "config/config.h"      // HAVE_SYS_EVENTFD_H
 #include "randomhash.hh"        // random_nonce
 
 #include <string.h>

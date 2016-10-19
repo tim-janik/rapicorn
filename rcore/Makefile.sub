@@ -7,7 +7,6 @@ rcore_librapicorn_headers = $(strip	\
 	rcore/aidaprops.hh		\
 	rcore/aidasignal.hh		\
 	rcore/bindable.hh		\
-	rcore/buildconfig.h		\
 	rcore/cairoutils.hh		\
 	rcore/cpuasm.hh			\
 	rcore/cxxaux.hh			\
@@ -37,6 +36,7 @@ rcore_librapicorn_headers = $(strip	\
 )
 rcore_generated_headers = $(strip	\
 	rcore/aidavariants.hh		\
+	rcore/sys-config.h		\
 )
 rcore_librapicorn_sources = $(strip	\
 	rcore/aida.cc			\

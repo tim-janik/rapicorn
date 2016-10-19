@@ -2,5 +2,5 @@
 /rapidres-buildid.cc
 /librapicorn-buildid.cc
 /aidavariants.hh
-/buildconfig.h
+/sys-config.h
 /zres.cc

@@ -1,7 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "clientapi.hh"
 #include "internal.hh"
-#include "../configure.h" // RAPICORN_GETTEXT_DOMAIN
+#include "config/config.h" // RAPICORN_GETTEXT_DOMAIN
 #include <stdlib.h>
 
 #define SDEBUG(...)     RAPICORN_KEY_DEBUG ("StartUp", __VA_ARGS__)

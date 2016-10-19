@@ -6,7 +6,7 @@
 #include <unistd.h>
 using namespace Rapicorn;
 
-#include "../../configure.h"    // for HAVE_READLINE_AND_HISTORY
+#include "config/config.h"      // for HAVE_READLINE_AND_HISTORY
 #ifdef HAVE_READLINE_AND_HISTORY
 #include <readline/readline.h>  // for --shell
 #include <readline/history.h>   // for --shell

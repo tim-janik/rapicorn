@@ -1,5 +1,8 @@
 /compile
 /config.guess
+/config.h
+/config.h.in
+/config.h.in~
 /config.sub
 /depcomp
 /install-sh
@@ -12,3 +15,4 @@
 /lt~obsolete.m4
 /missing
 /py-compile
+/stamp-h1
