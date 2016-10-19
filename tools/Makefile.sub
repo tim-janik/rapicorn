@@ -9,7 +9,7 @@ tools_rapidres_LDADD		= $(LIBZ_LIBS)
 tools/rapidres-buildid.cc: topbuildid.cc
 	$(AM_V_GEN)
 	$(Q) cp $< $@
-CLEANFILES += tools/rapidres-buildid.cc
+MOSTLYCLEANFILES += tools/rapidres-buildid.cc
 tools-rapidres-check:
 	$(Q) echo '0123456789abcdef 0123456789abcdef c61fd6dd8e5a 0123456789abcdef c61fd6dd8e5a' > tools/xtmp-empty.dat \
 	; eval "$$TSTDIAGNOSE" "'Create rapidres sample data'"
@@ -22,14 +22,14 @@ tools-rapidres-check:
 	$(Q) test $$[`grep _DATA tools/xtmp-empty.out | grep -o '[0-9 +-]*'`] -lt 50 \
 	; eval "$$TSTDIAGNOSE" "'Verify rapidres output compression'"
 	$(Q) rm -f tools/xtmp-empty.dat tools/xtmp-empty.out
-CLEANFILES += tools/xtmp-empty.dat tools/xtmp-empty.out
+MOSTLYCLEANFILES += tools/xtmp-empty.dat tools/xtmp-empty.out
 make_check_targets += tools-rapidres-check
 
 # == rapidres.1 ==
 revisioned_files	+= tools/rapidres.1.md
 man1_MANS		+= tools/rapidres.1
 man1_HTMLS		+= tools/rapidres.1.html
-CLEANFILES		+= tools/rapidres.1 tools/rapidres.1.html
+MOSTLYCLEANFILES	+= tools/rapidres.1 tools/rapidres.1.html
 
 # == rapidrun ==
 bin_PROGRAMS	       += tools/rapidrun
@@ -49,7 +49,7 @@ check-local: tools-rapidrun-check
 revisioned_files	+= tools/rapidrun.1.md
 man1_MANS		+= tools/rapidrun.1
 man1_HTMLS		+= tools/rapidrun.1.html
-CLEANFILES		+= tools/rapidrun.1 tools/rapidrun.1.html
+MOSTLYCLEANFILES	+= tools/rapidrun.1 tools/rapidrun.1.html
 
 # == imgcheck ==
 noinst_PROGRAMS		+= tools/imgcheck

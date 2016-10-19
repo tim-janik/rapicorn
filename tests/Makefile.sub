@@ -164,7 +164,7 @@ tests/t303-%-clnt.hh tests/t303-%-clnt.cc tests/t303-%-srvt.hh tests/t303-%-srvt
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G clientcc -G strip-path=$(topdir)/ $< -o tests/t303-$*-clnt.cc
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G serverhh -G strip-path=$(topdir)/ $< -o tests/t303-$*-srvt.hh
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G servercc -G strip-path=$(topdir)/ $< -o tests/t303-$*-srvt.cc
-CLEANFILES += $(tests_t303_generated)
+MOSTLYCLEANFILES += $(tests_t303_generated)
 tests/t303-mini-server-main.cc: $(tests_t303_generated)
 
 # == t303-mini-server-test ==
@@ -198,7 +198,7 @@ tests/t305-testpass-compile-server: tests/t301/testpass.idl $(AIDACC_INTERN) rco
 	$(Q) sed -i -e '1i#include "t305-include-p2-server.gen.cc"' \
 		    -e '1i#include "t305-include-p1-server.gen.cc"' tests/t305-testpass-server.gen.cc
 	$(Q) $(CXXCOMPILE) tests/t305-testpass-server.gen.cc -c ; eval "$$TSTDIAGNOSE"
-CLEANFILES	+= tests/t305-include-p2-server.gen.cc tests/t305-include-p1-server.gen.cc tests/t305-testpass-server.gen.cc
+MOSTLYCLEANFILES += tests/t305-include-p2-server.gen.cc tests/t305-include-p1-server.gen.cc tests/t305-testpass-server.gen.cc
 tests/t305-testpass-compile-client: tests/t301/testpass.idl $(AIDACC_INTERN) rcore/aidavariants.hh
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(topdir)/ \
 	  $(topdir)/tests/t301/include-p2.idl -o tests/t305-include-p2-client.gen.cc
@@ -209,7 +209,7 @@ tests/t305-testpass-compile-client: tests/t301/testpass.idl $(AIDACC_INTERN) rco
 	$(Q) sed -i -e '1i#include "t305-include-p2-client.gen.cc"' \
 		    -e '1i#include "t305-include-p1-client.gen.cc"' tests/t305-testpass-client.gen.cc
 	$(Q) $(CXXCOMPILE) tests/t305-testpass-client.gen.cc -c ; eval "$$TSTDIAGNOSE"
-CLEANFILES	+= tests/t305-include-p2-client.gen.cc tests/t305-include-p1-client.gen.cc tests/t305-testpass-client.gen.cc
+MOSTLYCLEANFILES += tests/t305-include-p2-client.gen.cc tests/t305-include-p1-client.gen.cc tests/t305-testpass-client.gen.cc
 t305-testpass-compile-test: tests/t305-testpass-compile-server tests/t305-testpass-compile-client
 make_check_targets += t305-testpass-compile-test
 
