@@ -36,15 +36,11 @@ ImplicitBase::__aida_lookup__ (const String &property_name)
 {
   // provide PropertyMaps globally
   typedef std::unordered_map<String, Property*> PropertyMap;
-  static std::map<const PropertyList*,PropertyMap*> *plist_map = NULL;
-  do_once {
-    static uint64 space[sizeof (*plist_map) / sizeof (uint64)];
-    plist_map = new (space) std::map<const PropertyList*,PropertyMap*>();
-  }
+  static std::map<const PropertyList*,PropertyMap*> plist_map;
   // find or construct property map
   const PropertyList &plist = __aida_properties__();
   ScopedLock<Mutex> plist_map_locker (plist_map_mutex);
-  PropertyMap *pmap = (*plist_map)[&plist];
+  PropertyMap *pmap = plist_map[&plist];
   if (!pmap)
     {
       pmap = new PropertyMap;
@@ -56,7 +52,7 @@ ImplicitBase::__aida_lookup__ (const String &property_name)
           if (prop)
             (*pmap)[prop->ident] = prop;
         }
-      (*plist_map)[&plist] = pmap;
+      plist_map[&plist] = pmap;
     }
   plist_map_locker.unlock();
   PropertyMap::iterator it = pmap->find (property_name);
