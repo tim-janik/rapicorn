@@ -1380,12 +1380,8 @@ public:
 Selob*
 Selob::true_match ()
 {
-  static SelobTrue *singleton = NULL;
-  do_once {
-    static int64 mem[(sizeof (SelobTrue) + 7) / 8];
-    singleton = new (mem) SelobTrue;
-  }
-  return singleton;
+  static SelobTrue selob_true; // singleton
+  return &selob_true;
 }
 
 } // Selector
