@@ -64,7 +64,7 @@ LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 
 # == Argument parsing ==
-AC_ARG_ENABLE(debug, [  --enable-debug=[no/min/yes/addr/threads] turn on debugging, default=minimum],,enable_debug=min)
+AC_ARG_ENABLE(debug, [  --enable-debug=[no/min/yes/asan/tsan/lsan/ubsan] turn on debugging, default=minimum],,enable_debug=min)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -141,12 +141,18 @@ fi
 
 # == Debug flags ==
 case "_$enable_debug" in
-  _addr*)
-    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=undefined -fsanitize=address"
-    AM_LDFLAGS="$AM_LDFLAGS -lubsan -lasan" ;;
-  _thread*)
-    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=undefined -fsanitize=thread"
-    AM_LDFLAGS="$AM_LDFLAGS -lubsan -ltsan" ;;
+  _ubsan)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=undefined"
+    AM_LDFLAGS="$AM_LDFLAGS -lubsan" ;;
+  _asan)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=address"
+    AM_LDFLAGS="$AM_LDFLAGS -lasan" ;;
+  _tsan)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=thread"
+    AM_LDFLAGS="$AM_LDFLAGS -ltsan" ;;
+  _lsan)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=leak"
+    AM_LDFLAGS="$AM_LDFLAGS -llsan" ;;
   _yes)
     debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer" ;;
   _min*)
