@@ -32,7 +32,6 @@
 #endif
 #define AIDA_CPP_PASTE2i(a,b)                   a ## b // indirection required to expand __LINE__ etc
 #define AIDA_CPP_PASTE2(a,b)                    AIDA_CPP_PASTE2i (a,b)
-#define ALIGN4(sz,unit)                         (sizeof (unit) * ((sz + sizeof (unit) - 1) / sizeof (unit)))
 #define GCLOG(...)                              RAPICORN_KEY_DEBUG ("GCStats", __VA_ARGS__)
 #define AIDA_MESSAGES_ENABLED()                 rapicorn_debug_check ("AidaMsg")
 #define AIDA_MESSAGE(...)                       RAPICORN_KEY_DEBUG ("AidaMsg", __VA_ARGS__)
@@ -1246,7 +1245,7 @@ public:
   {
     const uint32 _offs = 1 + (_ntypes + 7) / 8;
     const size_t bmemlen = sizeof (ProtoUnion[_offs + _ntypes]);
-    const size_t objlen = ALIGN4 (sizeof (ContiguousProtoMsg), int64);
+    const size_t objlen = 8 * ((sizeof (ContiguousProtoMsg) + 7) / 8);
     uint8_t *omem = (uint8_t*) operator new (objlen + bmemlen);
     ProtoUnion *bmem = (ProtoUnion*) (omem + objlen);
     return new (omem) ContiguousProtoMsg (_ntypes, bmem, bmemlen);
@@ -1555,10 +1554,9 @@ protected:
       return NULL;
   }
 private:
-  Node  *head_ __attribute__ ((aligned (64)));
-  // we pad/align with CPU_CACHE_LINE_SIZE to avoid false sharing between pushing and popping threads
-  Node  *local_ __attribute__ ((aligned (64)));
-} __attribute__ ((aligned (64)));
+  Node  *head_;
+  Node  *local_; // ideally use a different cache line to avoid false sharing between pushing and popping threads
+};
 
 
 // == TransportChannel ==
