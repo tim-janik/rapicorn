@@ -7,7 +7,7 @@ os: linux
 dist: trusty
 sudo: required
 services: docker
-language: c
+language: generic
 
 env:
   global:
@@ -38,9 +38,6 @@ before_install:
   - cat /etc/os-release
   - pwd
   - free -tm
-  - $CC --version
-  - $CXX --version
-  - make --version
   - python --version
 
 install:
