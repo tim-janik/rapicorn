@@ -386,28 +386,26 @@ public:
   virtual WidgetSeq    query_selector_all    (const String &selector);
   virtual WidgetIfaceP query_selector_unique (const String &selector);
   template<class C> typename
-  InterfaceMatch<C>::Result interface        (const String &ident = String(),
-                                              const std::nothrow_t &nt = dothrow) const;
+  InterfaceMatch<C>::Result interface        (const String &ident = String()) const;
   template<class C> typename
-  InterfaceMatch<C>::Result parent_interface (const String &ident = String(),
-                                              const std::nothrow_t &nt = dothrow) const;
+  InterfaceMatch<C>::Result parent_interface (const String &ident = String()) const;
 };
 
 // == Implementations ==
 template<class C> typename WidgetImpl::InterfaceMatch<C>::Result
-WidgetImpl::interface (const String &ident, const std::nothrow_t &nt) const
+WidgetImpl::interface (const String &ident) const
 {
   InterfaceMatch<C> interface_match (ident);
   match_interface (1, 0, 1, interface_match);
-  return interface_match.result (&nt == &dothrow);
+  return interface_match.result();
 }
 
 template<class C> typename WidgetImpl::InterfaceMatch<C>::Result
-WidgetImpl::parent_interface (const String &ident, const std::nothrow_t &nt) const
+WidgetImpl::parent_interface (const String &ident) const
 {
   InterfaceMatch<C> interface_match (ident);
   match_interface (0, 1, 0, interface_match);
-  return interface_match.result (&nt == &dothrow);
+  return interface_match.result();
 }
 
 } // Rapicorn
