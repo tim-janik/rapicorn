@@ -13,13 +13,13 @@ operator new (std::size_t size) throw (std::bad_alloc)
   return p;
 }
 void*
-operator new (std::size_t size, const std::nothrow_t& /*nothrow_constant*/) throw()
+operator new (std::size_t size, const std::nothrow_t& /*nothrow_constant*/) noexcept
 {
   void *p = malloc (size);
   printf ("SignalBench: new(%zd)\n", size);
   return p;
 }
-/* void* operator new (std::size_t size, void* ptr) throw(); */
+/* void* operator new (std::size_t size, void* ptr) noexcept; */
 static int szinfo (const char *msg) { printf ("SignalBench: szinfo: %s\n", msg); return 0; }
 #else
 static int szinfo (const char *msg) { return 0; }
