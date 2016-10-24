@@ -17,8 +17,8 @@ test_window()
   TOK();
   WidgetImpl &widget = window.impl();
   TOK();
-  WindowImpl &wimpl = widget.interface<WindowImpl&>();
-  TASSERT (&wimpl != NULL);
+  WindowImpl *wimpl = widget.interface<WindowImpl*>();
+  TASSERT (wimpl != NULL);
   TOK();
 }
 REGISTER_UITHREAD_TEST ("Widgets/Test Window creation", test_window);
