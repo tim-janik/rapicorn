@@ -17,8 +17,14 @@ BUILDID_D="$2"
 DOTGIT=`git rev-parse --git-dir 2>/dev/null` || true
 
 gen_buildid() {
-  test -e "$DOTGIT" ||				# not in a git-tracked source tree
-      { printf %s "${FALLBACK_VERSION-0.0.0}-untracked" ; return ; }
+  test -e "$DOTGIT" || {						# no .git, probably tarball
+    if echo " $FALLBACK_VERSION" | grep -q '^ [0-9.]\+$' ; then
+      printf %s "$FALLBACK_VERSION"					# plain version, no -rc suffix
+    else
+      printf %s "${FALLBACK_VERSION-0.0.0}-tarball"			# wip/rc but without commit id
+    fi
+    return
+  }
   COMMITID="${1-HEAD}"
   DESC=$(git describe --match '[0-9]*.*[0-9]' --abbrev=5 $COMMITID)
   test "$DESC" != "${DESC%%-*}" ||		# HEAD is on release tag
