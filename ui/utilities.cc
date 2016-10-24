@@ -41,7 +41,7 @@ Exception::set (const String &s)
   reason = strdup (s.c_str());
 }
 
-Exception::~Exception() throw()
+Exception::~Exception() noexcept
 {
   if (reason)
     free (reason);
