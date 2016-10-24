@@ -2,8 +2,9 @@ dnl # Rapicorn                                       -*- Mode: shell-script; -*-
 dnl
 builtin(include, acrapicorn.m4)dnl # include special macros
 builtin(include, ld-symbolic.m4)dnl # include special macros
-
 AC_PREREQ(2.57)
+
+# == Package & Version ==
 # VERSION: MAJOR.MINOR.MICRO-RC:
 # * MAJOR:           Increment on major API breaks, *forces* ABI break, resets MINOR, MICRO and ABI_VERSION
 # * MINOR:           Increment for significant changes or ABI breaks, resets MICRO
@@ -26,7 +27,6 @@ RAPICORN_VERSION="$PACKAGE_VERSION"
 [MICRO=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\3/'`]
 AC_SUBST(RAPICORN_VERSION)
 AC_DEFINE_UNQUOTED(RAPICORN_VERSION, "$RAPICORN_VERSION", [Rapicorn Version])
-AC_DEFINE_UNQUOTED(RAPICORN_ARCH_NAME, "$target", [Architecture Description])
 # For automake, we need to easily provide MAJOR.MINOR.MICRO and MAJOR_MINOR_MICRO:
 AC_SUBST(MAJOR)
 AC_SUBST(MINOR)
@@ -63,8 +63,8 @@ lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
 
-# == argument parsing ==
-AC_ARG_ENABLE(debug,      [  --enable-debug=[no/minimum/yes]   turn on debugging, default=yes],,enable_debug=yes)
+# == Argument parsing ==
+AC_ARG_ENABLE(debug, [  --enable-debug=[no/min/yes/asan/tsan/lsan/ubsan] turn on debugging, default=minimum],,enable_debug=min)
 # package library defaults
 enable_static=no ; enable_shared=yes
 
@@ -83,66 +83,17 @@ AC_SUBST(INGIT)
 result=$(test -z "$INGIT" && echo yes || echo no)
 AC_MSG_RESULT($result)
 
-# == Utilities and build tools ==
-AC_PROG_MAKE_SET()
-AM_SILENT_RULES([yes])
-AC_PROG_LN_S
-AC_PROG_INSTALL
-MC_ASSERT_PROG(PKG_CONFIG, pkg-config)
-MC_ASSERT_PROG(FLEX, flex)
-MC_ASSERT_PROG(BISON, bison)
-MC_ASSERT_PROG(PANDOC, pandoc)
-MC_ASSERT_PROG(DOXYGEN, doxygen)
-MC_ASSERT_PROG(DOT, dot)
-MC_ASSERT_PROG(PYTHON2, python-2.7 python2.7 python2)
-MC_ASSERT_VERSION($PYTHON --version, 2.7)
-MC_ASSERT_PROG(CYTHON, cython)
-MC_ASSERT_VERSION($CYTHON --version, 0.20.1)
-MC_ASSERT_PROG(XMLLINT, xmllint)
-MC_ASSERT_VERSION($XMLLINT --version, 20901)
-
-# == Libraries ==
-# libz
-AC_CHECK_LIB(z, gzsetparams, [AC_CHECK_HEADER(zlib.h, LIBZ_LIBS='-lz', LIBZ='')], LIBZ='')
-if test -z "$LIBZ_LIBS"; then
-    AC_MSG_ERROR([Compression library libz is missing, but required])
-fi
-AC_SUBST(LIBZ_LIBS)
-# librapicorn dependencies
-LIBRAPICORN_REQUIRES="
-	libpng		>= 1.2.50
-	cairo		>= 1.10.0
-	librsvg-2.0	>= 2.40.2
-	pango		>= 1.30.0
-	pangoft2	>= 1.30.0
-	pangocairo	>= 1.30.0
-	x11		>= 1.6.2
-	xext		>= 1.3.3
-	glib-2.0	>= 2.32.0
-	gio-2.0		>= 2.30.0
-	gthread-2.0	>= 2.30.0
-"
-LIBRAPICORN_REQUIRES=`echo $LIBRAPICORN_REQUIRES` # strip whitespaces
-AC_SUBST(LIBRAPICORN_REQUIRES)
-# define LIBRAPICORN_CFLAGS and LIBRAPICORN_LIBS
-PKG_CHECK_MODULES(LIBRAPICORN, [ $LIBRAPICORN_REQUIRES ])
-LIBRAPICORN_LIBS="$LIBRAPICORN_LIBS $LIBZ_LIBS"
-# for C++ library linking, '-lpthread' is needed in addition to '-pthread'
-LIBRAPICORN_LIBS=`printf %s "$LIBRAPICORN_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
-
-# == detect compiler, linker & libtool ==
-saved_CFLAGS="$CFLAGS"
-AC_PROG_CC
-CFLAGS="$saved_CFLAGS" 		# AC_PROG_CC_G called internally consistently breaks $CFLAGS
-saved_CXXFLAGS="$CFLAGS"
+# == Compiler, linker, libtool ==
+saved_CFLAGS="$CFLAGS" ; saved_CXXFLAGS="$CFLAGS" # the AC_PROG_C* macros mess up CFLAGS and CXXFLAGS
+AC_PROG_CC		# note, this must preceede AC_CHECK_LIB, AC_TRY_RUN, etc to preserve CFLAGS etc
 AC_PROG_CPP
-CXXFLAGS="$saved_CXXFLAGS"	# AC_PROG_CXX_G called internally consistently breaks $CXXFLAGS
 AC_PROG_CXX
 AC_PROG_CXXCPP
-AC_PROG_LD
 AC_LANG_CPLUSPLUS	# use CXX for compilation tests
+AC_PROG_LD
 AC_LIB_PROG_LD
 AC_LIB_PROG_LD_GNU
+CFLAGS="$saved_CFLAGS" ; CXXFLAGS="$saved_CXXFLAGS"
 AM_PROG_LIBTOOL
 AC_LIBTOOL_DLOPEN
 
@@ -187,19 +138,36 @@ elif echo "$uname_m" | grep -q '^i.*86$' ; then
     AM_CFLAGS="$AM_CFLAGS $x86_flags"
     AM_CXXFLAGS="$AM_CXXFLAGS $x86_flags"
 fi
-if test "x$enable_debug" = "xyes"; then
-    AM_CFLAGS="$AM_CFLAGS -DG_ENABLE_DEBUG -g3 -fno-omit-frame-pointer -fverbose-asm"
-    AM_CXXFLAGS="$AM_CXXFLAGS -DG_ENABLE_DEBUG -g3 -fno-omit-frame-pointer -fverbose-asm"
-elif test "x$enable_debug" = "xno"; then
-    AM_CFLAGS="$AM_CFLAGS -DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
-    AM_CXXFLAGS="$AM_CXXFLAGS -DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" # -DG_DISABLE_ASSERT
-fi
-AC_SUBST(AM_CPPFLAGS)
+
+# == Debug flags ==
+case "_$enable_debug" in
+  _ubsan)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=undefined"
+    AM_LDFLAGS="$AM_LDFLAGS -lubsan" ;;
+  _asan)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=address"
+    AM_LDFLAGS="$AM_LDFLAGS -lasan" ;;
+  _tsan)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=thread"
+    AM_LDFLAGS="$AM_LDFLAGS -ltsan" ;;
+  _lsan)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer -fno-inline -fsanitize=leak"
+    AM_LDFLAGS="$AM_LDFLAGS -llsan" ;;
+  _yes)
+    debug_flags="-DG_ENABLE_DEBUG -ggdb3 -fverbose-asm -fno-omit-frame-pointer" ;;
+  _min*)
+    debug_flags="-DG_ENABLE_DEBUG -g1" ;;
+  _*)
+    debug_flags="-DG_DISABLE_CHECKS -DG_DISABLE_CAST_CHECKS" ;; # -DG_DISABLE_ASSERT
+esac
+AM_CFLAGS="$AM_CFLAGS $debug_flags"
+AM_CXXFLAGS="$AM_CXXFLAGS $debug_flags"
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CXXFLAGS)
+AC_SUBST(AM_CPPFLAGS)
 
 # == Linker flags ==
-AM_LDFLAGS="-lrt -pthread"
+AM_LDFLAGS="$AM_LDFLAGS -lrt -pthread"
 ld_help_text=`${LD-ld} --help 2>&1 | tr '\n' ' '`
 check_ld_flags="-export-dynamic -O1 -Bsymbolic-functions --as-needed --no-undefined"
 for flag in $check_ld_flags ; do
@@ -216,6 +184,80 @@ if echo " $PACKAGE_VERSION" | grep -q '~wip' ; then
 fi
 AC_DEFINE_UNQUOTED(ENABLE_DEVEL_MODE, $enable_devel_mode, [Add development aids to the build])
 AM_CONDITIONAL(ENABLE_DEVEL_MODE, test x"$enable_devel_mode" = x1)
+
+# == Utilities and build tools ==
+AC_PROG_MAKE_SET()
+AM_SILENT_RULES([yes])
+AC_PROG_LN_S
+AC_PROG_INSTALL
+MC_ASSERT_PROG(PKG_CONFIG, pkg-config)
+MC_ASSERT_PROG(FLEX, flex)
+MC_ASSERT_PROG(BISON, bison)
+MC_ASSERT_PROG(PANDOC, pandoc)
+MC_ASSERT_PROG(DOXYGEN, doxygen)
+MC_ASSERT_PROG(DOT, dot)
+MC_ASSERT_PROG(PYTHON2, python-2.7 python2.7 python2)
+MC_ASSERT_VERSION($PYTHON --version, 2.7)
+MC_ASSERT_PROG(CYTHON, cython)
+MC_ASSERT_VERSION($CYTHON --version, 0.20.1)
+MC_ASSERT_PROG(XMLLINT, xmllint)
+MC_ASSERT_VERSION($XMLLINT --version, 20901)
+
+# == Headers ==
+AC_CHECK_HEADERS_ONCE( zlib.h sys/eventfd.h readline/readline.h readline/history.h )
+
+# == pkg-config Libraries ==
+# librapicorn dependencies
+LIBRAPICORN_REQUIRES="
+	libpng		>= 1.2.50
+	cairo		>= 1.10.0
+	librsvg-2.0	>= 2.40.2
+	pango		>= 1.30.0
+	pangoft2	>= 1.30.0
+	pangocairo	>= 1.30.0
+	x11		>= 1.6.2
+	xext		>= 1.3.3
+	glib-2.0	>= 2.32.0
+	gio-2.0		>= 2.30.0
+	gthread-2.0	>= 2.30.0
+"
+LIBRAPICORN_REQUIRES=`echo $LIBRAPICORN_REQUIRES` # strip whitespaces
+AC_SUBST(LIBRAPICORN_REQUIRES)
+# define LIBRAPICORN_CFLAGS and LIBRAPICORN_LIBS
+PKG_CHECK_MODULES(LIBRAPICORN, [ $LIBRAPICORN_REQUIRES ])
+# for C++ library linking, '-lpthread' is needed in addition to '-pthread'
+LIBRAPICORN_LIBS=`printf %s "$LIBRAPICORN_LIBS" | sed 's/\(-pthread\b\)/\1 -lpthread/' `
+
+# == libz ==
+AC_CHECK_LIB(z, gzsetparams, [ LIBZ_LIBS='' ; test "$ac_cv_header_zlib_h" = yes && LIBZ_LIBS='-lz' ])
+if test -z "$LIBZ_LIBS"; then
+    AC_MSG_ERROR([Compression library libz is missing, but required])
+else
+  LIBRAPICORN_LIBS="$LIBRAPICORN_LIBS $LIBZ_LIBS"
+fi
+AC_SUBST(LIBZ_LIBS)
+
+# == libreadline & libhistory ==
+READLINELIBS=""
+AC_CHECK_LIB(readline, readline,
+	     [
+	       AC_CHECK_LIB(history, using_history,
+			    [
+			      test "$ac_cv_header_readline_readline_h$ac_cv_header_readline_history_h" = yesyes && {
+				AC_DEFINE_UNQUOTED(HAVE_READLINE_AND_HISTORY, 1, [Whether -lreadline -lhistory works])
+				READLINELIBS="-lreadline -lhistory"
+			      }
+			    ])
+	     ])
+AC_SUBST(READLINELIBS)
+test -z "$READLINELIBS" && {
+  AC_MSG_ERROR(Missing readline library development files)
+}
+
+# == sizeof ==
+AC_CHECK_SIZEOF(uint, 0, [#include <sys/types.h>])
+RAPICORN_SIZEOF_SYS_TYPESH_UINT="$ac_cv_sizeof_uint"
+AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT) # needed by sys-config.h.in
 
 # == RAPICORN_SYSVAL_POLLINIT ==
 AC_MSG_CHECKING([for POLL constants])
@@ -241,185 +283,102 @@ if test -z "$rapicorn_pollvalue_result" ; then
 else
   AC_MSG_RESULT([done])
 fi
-RAPICORN_SYSVAL_POLLINIT="[((const unsigned int[]) { $rapicorn_pollvalue_result })]"
+RAPICORN_SYSVAL_POLLINIT="[ $rapicorn_pollvalue_result ]"
 AC_SUBST(RAPICORN_SYSVAL_POLLINIT) # macro needed for a public header file
 dnl # AC_DEFINE_UNQUOTED(RAPICORN_SYSVAL_POLLINIT, [((const unsigned int[[]]) { $rapicorn_pollvalue_result })], [Values for POLLIN..POLLNVAL])
 
+# == pthread_spinlock_t initializer ==
+AC_LANG_PUSH([C])
+saveed_LDFLAGS="$LDFLAGS" ; LDFLAGS="-pthread $LDFLAGS"
+AC_TRY_RUN(
+  [
+    #include <stdio.h>
+    #include <string.h>
+    #include <assert.h>
+    #include <pthread.h>
+    struct Spin { pthread_spinlock_t dummy1, s1, dummy2, s2, dummy3; };
+    int
+    main (int argc, char *argv[])
+    {
+      struct Spin spin;
+      memset (&spin, 0xffffffff, sizeof (spin));
+      if (pthread_spin_init (&spin.s1, 0) == 0 &&
+          pthread_spin_init (&spin.s2, 0) == 0 &&
+          sizeof (pthread_spinlock_t) == 4 && // current implementation assumption
+          spin.s1 == spin.s2) // check for location-independent initialization
+        {
+          FILE *f = fopen ("conftest_spinlock_initializer", "w");
+          assert (f);
+          fprintf (f, "{ ");
+          fprintf (f, "0x%04x,", *(int*) &spin.s1);
+          fprintf (f, " }\n");
+          fclose (f);
+        }
+      return 0;
+    } ],
+  RAPICORN_SPINLOCK_INITIALIZER=`cat conftest_spinlock_initializer` && rm -f conftest_spinlock_initializer ,
+  RAPICORN_SPINLOCK_INITIALIZER='' )
+LDFLAGS="$saveed_LDFLAGS"
+AC_LANG_POP([C])
+test -z "$RAPICORN_SPINLOCK_INITIALIZER" && {
+  AC_MSG_FAILURE([spinlock initializer check failed to execute])
+}
+AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
 
-dnl # RAPICORN_CORE_REQUIREMENTS() - checks everything needed for rcore
-AC_DEFUN([RAPICORN_CORE_REQUIREMENTS],
-[
-  # === docdir ===
-  # AM default: docdir = ${datarootdir}/doc/${PACKAGE_TARNAME} # == ${prefix}/share/doc/rapicorn
-  # We need a properly versioned path: ${prefix}/share/doc/rapicorn-MAJOR
-  docdir="${datarootdir}/doc/rapicorn" # "rapicorn-$MAJOR"
-  AC_SUBST(docdir)
-
-    # --- sizeof and presence of uint ---
-    GLIB_SIZEOF([#include <sys/types.h>], uint, rapicorn_sys_typesh_uint)
-    RAPICORN_SIZEOF_SYS_TYPESH_UINT="$glib_cv_sizeof_rapicorn_sys_typesh_uint"
-    AC_SUBST(RAPICORN_SIZEOF_SYS_TYPESH_UINT)
-    GLIB_SIZEOF([], void**, rapicorn_pointer)
-    RAPICORN_SIZEOF_POINTER="$glib_cv_sizeof_rapicorn_pointer"
-    AC_SUBST(RAPICORN_SIZEOF_POINTER)
-    GLIB_SIZEOF([], long, rapicorn_long)
-    RAPICORN_SIZEOF_LONG="$glib_cv_sizeof_rapicorn_long"
-    AC_SUBST(RAPICORN_SIZEOF_LONG)
-
-    AC_CHECK_HEADERS( [sys/eventfd.h] )
-
-    # --- OS/Win32 detection ---
-    dnl # needs AC_CANONICAL_HOST
-    test -z "$host" && {
-	missing_macro="AC""_CANONICAL_HOST"
-	AC_MSG_ERROR([configure failed to execute $missing_macro])
-    }
-    AC_MSG_CHECKING([for Win32])
-    RAPICORN_OS_CHOICES="WIN32 UNIX" # OS types we will check for
-    case "$host" in
-	*-*-mingw*)
-	    RAPICORN_OS=WIN32
-	    AC_MSG_RESULT([yes])
-	    ;;
-	*)
-	    RAPICORN_OS=UNIX
-	    AC_MSG_RESULT([no])
-	    ;;
-    esac
-    AC_SUBST(RAPICORN_OS)
-    AC_SUBST(RAPICORN_OS_CHOICES)
-    AC_DEFINE_UNQUOTED(RAPICORN_OS_$RAPICORN_OS, "1", [Win32 detection])
-
-    dnl # == sizeof threading structs ==
-    GLIB_SIZEOF([#include <pthread.h>], pthread_mutex_t, pth_mutex_t)
-    RAPICORN_SIZEOF_PTH_MUTEX_T="$glib_cv_sizeof_pth_mutex_t"
-    AC_SUBST(RAPICORN_SIZEOF_PTH_MUTEX_T)
-    GLIB_SIZEOF([#include <pthread.h>], pthread_cond_t, pth_cond_t)
-    RAPICORN_SIZEOF_PTH_COND_T="$glib_cv_sizeof_pth_cond_t"
-    AC_SUBST(RAPICORN_SIZEOF_PTH_COND_T)
-
-    # == sizeof pthread_rwlock_t ==
-    GLIB_SIZEOF([#include <pthread.h>], pthread_rwlock_t, rapicorn_pthreadh_rwlock)
-    RAPICORN_SIZEOF_PTHREADH_RWLOCK="$glib_cv_sizeof_rapicorn_pthreadh_rwlock"
-    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_RWLOCK)
-
-    # == sizeof pthread_spinlock_t ==
-    GLIB_SIZEOF([#include <pthread.h>], pthread_spinlock_t, rapicorn_pthreadh_spinlock)
-    RAPICORN_SIZEOF_PTHREADH_SPINLOCK="$glib_cv_sizeof_rapicorn_pthreadh_spinlock"
-    AC_SUBST(RAPICORN_SIZEOF_PTHREADH_SPINLOCK)
-
-    # == pthread_spinlock_t initializer ==
-    MC_DEFINE_SPINLOCK_INITIALIZER()
-    RAPICORN_SPINLOCK_INITIALIZER="$mc_cv_spinlock_initializer"
-    AC_SUBST(RAPICORN_SPINLOCK_INITIALIZER)
-
-    dnl # --- pthread_mutexattr_settype ---
-    AC_MSG_CHECKING([for pthread_mutexattr_settype()])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-      #define _XOPEN_SOURCE   600
-      #include <pthread.h>
-    ]], [[
-      int (*attr_settype) (pthread_mutexattr_t *__attr, int __kind) = pthread_mutexattr_settype;
-      int val = PTHREAD_MUTEX_RECURSIVE;
-      attr_settype = 0; val = 0;
-    ]])],[
-      RAPICORN_HAVE_MUTEXATTR_SETTYPE=1
-      AC_MSG_RESULT(yes)
-    ],[
-      RAPICORN_HAVE_MUTEXATTR_SETTYPE=0
-      AC_MSG_RESULT(no)
-    ])
-    AC_SUBST(RAPICORN_HAVE_MUTEXATTR_SETTYPE)
-])
-
-dnl # RAPICORN_I18N_REQUIREMENTS() - check for all i18n requirements
-AC_DEFUN([RAPICORN_I18N_REQUIREMENTS],
-[
-    dnl # TRANSLATORS: enter your language here
-    ALL_LINGUAS="de"
-    dnl # TRANSLATORS: enter your language here
-    AC_SUBST(ALL_LINGUAS)
-
-    dnl # versioned Rapicorn gettext domain (po/)
-    RAPICORN_GETTEXT_DOMAIN="librapicorn-$MAJOR.$MINOR.$MICRO"
-    AC_SUBST(RAPICORN_GETTEXT_DOMAIN)
-    AC_DEFINE_UNQUOTED(RAPICORN_GETTEXT_DOMAIN, "$RAPICORN_GETTEXT_DOMAIN", [Versioned Rapicorn gettext domain])
-    GETTEXT_PACKAGE=$RAPICORN_GETTEXT_DOMAIN
-    AC_SUBST(GETTEXT_PACKAGE)
-
-    dnl # locale directory for all domains
-    dnl # (AM_GLIB_DEFINE_LOCALEDIR() could do this if it would do AC_SUBST())
-    saved_prefix="$prefix" ; saved_exec_prefix="$exec_prefix"
-    test "x$prefix" = xNONE && prefix="$ac_default_prefix"
-    if test "x$CATOBJEXT" = "x.mo" ; then
-      test "x$exec_prefix" = xNONE && exec_prefix="$prefix" # needs $prefix
-      pkglocaledir=`eval echo "${libdir}/locale"` # needs $exec_prefix
-    else
-      datarootdir=`eval echo "${datarootdir}"`		# needs $prefix
-      pkglocaledir=`eval echo "${datadir}/locale"`	# needs ${datarootdir}
-    fi
-    exec_prefix="$saved_exec_prefix" ; prefix="$saved_prefix"
-    AC_SUBST(pkglocaledir)
-
-    dnl # do gettext checks, provide INTLLIBS and CATOBJEXT
-    AM_GLIB_GNU_GETTEXT
-    AC_PROG_INTLTOOL
-])
-
-dnl # RAPICORN_PYTHON_REQUIREMENTS() - rapicorn python checks
-AC_DEFUN([RAPICORN_PYTHON_REQUIREMENTS],
-[
-  # python
-  PYTHON_REQUIRED=2.7
-  AM_PATH_PYTHON($PYTHON_REQUIRED)
-  dnl # AC_REQUIRE([AC_PYTHON_DEVEL]) # AC_PYTHON_DEVEL is usually provided by autoconf-archive
-  AC_PYTHON_DEVEL([>= $PYTHON_REQUIRED])
-  AC_MSG_CHECKING([for working Python extension compilation])
-  saved_CPPFLAGS="$CPPFLAGS"
-  PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
-  CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_CPPFLAGS"     # verify sane Python module builds
-  AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=ok, py_build=failed)
-  CPPFLAGS="$saved_CPPFLAGS"
-  AC_MSG_RESULT($py_build)
-  if test "$py_build" != "ok" ; then
+# == bin/python & libpython.so & Python.h ==
+PYTHON_REQUIRED=2.7
+AM_PATH_PYTHON($PYTHON_REQUIRED)
+dnl # AC_PYTHON_DEVEL is provided by autoconf-archive
+AC_PYTHON_DEVEL([>= $PYTHON_REQUIRED])
+AC_MSG_CHECKING([for working Python extension compilation])
+PYTHON_CPPFLAGS="$PYTHON_CPPFLAGS -fno-strict-aliasing" # needed by Python headers
+saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-Wall -Werror $CPPFLAGS $PYTHON_CPPFLAGS"     # verify sane Python module builds
+AC_TRY_COMPILE([#include <Python.h>], [Py_InitModule(0,0);], py_build=true, py_build=false)
+CPPFLAGS="$saved_CPPFLAGS"
+AC_MSG_RESULT($py_build)
+if test "$py_build" != "true" ; then
     AC_MSG_ERROR([failed to build extension against Python (>=$PYTHON_REQUIRED) headers])
-  fi
-])
+fi
 
-dnl # RAPICORN_TEST_REQUIREMENTS() - checks for test programs
-AC_DEFUN([RAPICORN_TEST_REQUIREMENTS],
-[
-    READLINELIBS=""
-    AC_CHECK_HEADERS(readline/readline.h, [
-        AC_CHECK_HEADERS(readline/history.h, [
-	    AC_CHECK_LIB(readline, readline, [
-		AC_CHECK_LIB(history, using_history, [
-		    AC_DEFINE_UNQUOTED(HAVE_READLINE_AND_HISTORY, 1,
-			[Whether -lreadline -lhistory works])
-		    READLINELIBS="-lreadline -lhistory"
-		    ]) ]) ]) ])
-    test -z "$READLINELIBS" && {
-      AC_MSG_ERROR(Missing readline library development files)
-    }
-    AC_SUBST(READLINELIBS)
-])
+# == I18n ==
+### TRANSLATORS: enter your language here
+ALL_LINGUAS="de"
+### TRANSLATORS: enter your language here
+AC_SUBST(ALL_LINGUAS)
+# versioned Rapicorn gettext domain (po/)
+RAPICORN_GETTEXT_DOMAIN="librapicorn-$MAJOR.$MINOR.$MICRO"
+AC_SUBST(RAPICORN_GETTEXT_DOMAIN)
+AC_DEFINE_UNQUOTED(RAPICORN_GETTEXT_DOMAIN, "$RAPICORN_GETTEXT_DOMAIN", [Versioned Rapicorn gettext domain])
+GETTEXT_PACKAGE=$RAPICORN_GETTEXT_DOMAIN
+AC_SUBST(GETTEXT_PACKAGE)
+# determine pkglocaledir
+saved_prefix="$prefix" ; saved_exec_prefix="$exec_prefix"
+test "x$prefix" = xNONE && prefix="$ac_default_prefix"
+if test "x$CATOBJEXT" = "x.mo" ; then
+    test "x$exec_prefix" = xNONE && exec_prefix="$prefix" # needs $prefix
+    pkglocaledir=`eval echo "${libdir}/locale"`           # needs $exec_prefix
+else
+  datarootdir=`eval echo "${datarootdir}"`		  # needs $prefix
+  pkglocaledir=`eval echo "${datadir}/locale"`	          # needs ${datarootdir}
+fi
+exec_prefix="$saved_exec_prefix" ; prefix="$saved_prefix"
+AC_SUBST(pkglocaledir)
+# check for gettext, provide INTLLIBS and CATOBJEXT
+AM_GLIB_GNU_GETTEXT
+AC_PROG_INTLTOOL
 
-# check requirement sets
-RAPICORN_I18N_REQUIREMENTS
-RAPICORN_CORE_REQUIREMENTS
-RAPICORN_PYTHON_REQUIREMENTS
-RAPICORN_TEST_REQUIREMENTS
 
-# create output files
+# == Output files ==
 AC_CONFIG_FILES([
 Makefile
 po-helper.sh
 po/Makefile.in
 rcore/sys-config.h
 ])
-
 AC_OUTPUT
 
+# == Configuration summary ==
 printexpandvar()
 {
 	_x="$1";
@@ -428,8 +387,6 @@ printexpandvar()
 	done
 	echo -n "$_x"
 }
-
-dnl # Show configuration summary
 cat <<EOF
 Autoconfiguration complete.
 

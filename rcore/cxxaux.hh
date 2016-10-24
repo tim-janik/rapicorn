@@ -191,12 +191,16 @@ template<class... T0toN > using void_t = typename void_t__voider<T0toN...>::type
 
 // == File Path Handling ==
 #ifdef  _WIN32 // includes _WIN64
+#undef  RAPICORN_UNIX_PATHS
+#define RAPICORN_DOS_PATHS                1
 #define RAPICORN_DIR_SEPARATOR		  '\\'
 #define RAPICORN_DIR_SEPARATOR_S	  "\\"
 #define RAPICORN_SEARCHPATH_SEPARATOR	  ';'
 #define RAPICORN_SEARCHPATH_SEPARATOR_S	  ";"
 #define RAPICORN_IS_ABSPATH(p)          (((p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z')) && p[1] == ':' && p[2] == '\\')
 #else   // !_WIN32
+#define RAPICORN_UNIX_PATHS               1
+#undef  RAPICORN_DOS_PATHS
 #define RAPICORN_DIR_SEPARATOR		  '/'
 #define RAPICORN_DIR_SEPARATOR_S	  "/"
 #define RAPICORN_SEARCHPATH_SEPARATOR	  ':'

@@ -24,7 +24,7 @@ variable_map_list_lookup (const VariableMapList &env_maps,
   if (key == "RAPICORN_VERSION")
     return Sinfex::Value (RAPICORN_VERSION);
   else if (key == "RAPICORN_ARCHITECTURE")
-    return Sinfex::Value (RAPICORN_ARCH_NAME);
+    return Sinfex::Value (cpu_arch());
   else if (key == "RANDOM")
     return Sinfex::Value (lrand48());
   else
