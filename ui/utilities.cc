@@ -7,8 +7,6 @@
 namespace Rapicorn {
 
 /* --- exceptions --- */
-const std::nothrow_t dothrow = {};
-
 Exception::Exception (const String &s1, const String &s2, const String &s3, const String &s4,
                       const String &s5, const String &s6, const String &s7, const String &s8) :
   reason (NULL)
