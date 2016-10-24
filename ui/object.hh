@@ -52,48 +52,31 @@ protected:
   bool          match_found_;
 };
 
-template<class C>
-struct ObjectImpl::InterfaceMatch : ObjectImpl::InterfaceMatcher {
-  typedef C&    Result;
-  explicit      InterfaceMatch  (const String &ident) : InterfaceMatcher (ident), instance_ (NULL) {}
-  C&            result          (bool may_throw) const;
-  virtual bool  match           (ObjectImpl *obj, const String &ident);
-protected:
-  C            *instance_;
-};
-template<class C>
-struct ObjectImpl::InterfaceMatch<C&> : InterfaceMatch<C> {
-  explicit      InterfaceMatch  (const String &ident) : InterfaceMatch<C> (ident) {}
-};
-template<class C>
-struct ObjectImpl::InterfaceMatch<C*> : InterfaceMatch<C> {
-  typedef C*    Result;
-  explicit      InterfaceMatch  (const String &ident) : InterfaceMatch<C> (ident) {}
-  C*            result          (bool may_throw) const { return InterfaceMatch<C>::instance_; }
+template<class ClassPtr> struct ObjectImpl::InterfaceMatch : ObjectImpl::InterfaceMatcher {
+  static_assert (std::is_pointer<ClassPtr>::value, "invalid InterfaceMatch<> cast to non-pointer type");
 };
 
-template<class C> bool
-ObjectImpl::InterfaceMatch<C>::match (ObjectImpl *obj, const String &ident)
-{
-  if (!instance_)
-    {
-      const String &id = ident_;
-      if (id.empty() || id == ident)
-        {
-          instance_ = dynamic_cast<C*> (obj);
-          match_found_ = instance_ != NULL;
-        }
-    }
-  return match_found_;
-}
-
-template<class C> C&
-ObjectImpl::InterfaceMatch<C>::result (bool may_throw) const
-{
-  if (!this->instance_ && may_throw)
-    throw std::bad_cast();
-  return *this->instance_;
-}
+template<class Class>
+struct ObjectImpl::InterfaceMatch<Class*> : ObjectImpl::InterfaceMatcher {
+  typedef Class* Result;
+  explicit       InterfaceMatch  (const String &ident) : InterfaceMatcher (ident), instance_ (NULL) {}
+  Class*         result          () const { return instance_; }
+  virtual bool   match           (ObjectImpl *object, const String &ident = String()) final
+  {
+    if (!instance_)
+      {
+        const String &id = ident_;
+        if (id.empty() || id == ident)
+          {
+            instance_ = dynamic_cast<Class*> (object);
+            match_found_ = instance_ != NULL;
+          }
+      }
+    return match_found_;
+  }
+private:
+  Class         *instance_;
+};
 
 } // Rapicorn
 
