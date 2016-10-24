@@ -41,10 +41,6 @@ private:
   char *reason;
 };
 struct NullPointer : std::exception {};
-/* allow 'dothrow' as function argument analogous to 'nothrow' */
-extern const std::nothrow_t dothrow; /* indicate "with exception" semantics */
-using std::nothrow_t;
-using std::nothrow;
 
 /* --- derivation assertions --- */
 template<class Derived, class Base>

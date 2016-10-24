@@ -150,7 +150,8 @@ SliderTroughImpl::hierarchy_changed (WidgetImpl *old_toplevel)
   if (anchored())
     {
       slider_area_ = parent_interface<SliderAreaImpl*>();
-      conid_slider_changed_ = slider_area_->sig_slider_changed() += Aida::slot (*this, &SliderTroughImpl::reallocate_child);
+      if (slider_area_)
+        conid_slider_changed_ = slider_area_->sig_slider_changed() += Aida::slot (*this, &SliderTroughImpl::reallocate_child);
     }
 }
 
@@ -275,8 +276,8 @@ SliderSkidImpl::~SliderSkidImpl()
 bool
 SliderSkidImpl::flipped() const
 {
-  SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
-  return trough.flipped();
+  SliderTroughImpl *trough = parent_interface<SliderTroughImpl*>();
+  return trough ? trough->flipped() : false;
 }
 
 bool
@@ -335,9 +336,12 @@ SliderSkidImpl::handle_event (const Event &event)
 {
   const Allocation slider_allocation = rect_to_viewport (allocation());
   bool handled = false, proper_release = false;
-  SliderTroughImpl &trough = parent_interface<SliderTroughImpl>();
-  const Allocation trough_allocation = trough.rect_to_viewport (trough.allocation());
-  Adjustment &adj = *trough.adjustment();
+  SliderTroughImpl *trough = parent_interface<SliderTroughImpl*>();
+  Adjustment *adj_p = trough ? trough->adjustment() : NULL;
+  if (!adj_p)
+    return false;
+  Adjustment &adj = *adj_p;
+  const Allocation trough_allocation = trough->rect_to_viewport (trough->allocation());
   switch (event.type)
     {
       const EventButton *bevent;
