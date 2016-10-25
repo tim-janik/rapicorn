@@ -39,7 +39,7 @@ Mutex::debug_locked()
            memcmp (&mutex_, &unlocked_mutex2, sizeof (mutex_)) == 0);
 }
 
-static ThreadInfo *volatile     list_head = NULL;
+static std::atomic<ThreadInfo*> list_head;
 static size_t volatile          thread_counter = 0;
 ThreadInfo __thread*            ThreadInfo::self_cached = NULL;
 static Mutex                    thread_info_mutex;
@@ -103,8 +103,11 @@ ThreadInfo::create ()
     }
   // reuse existing ThreadInfo
   for (tdata = list_head; tdata; tdata = tdata->next)
-    if (!tdata->pth_thread_id && __sync_bool_compare_and_swap (&tdata->pth_thread_id, 0, pttid))
-      break;
+    {
+      pthread_t unset = 0;
+      if (tdata->pth_thread_id.compare_exchange_strong (unset, pttid))
+        break;
+    }
   // allocate new ThreadInfo
   if (!tdata)
     {
@@ -121,9 +124,13 @@ ThreadInfo::create ()
   if (needs_listing)
     {
       assert (tdata->next == NULL);
+      ThreadInfo *next;
       do
-        tdata->next = list_head;
-      while (!__sync_bool_compare_and_swap (&list_head, tdata->next, tdata));
+        {
+          next = list_head;
+          tdata->next = next;
+        }
+      while (!list_head.compare_exchange_weak (next, tdata));
     }
   return tdata;
 }
@@ -135,10 +142,9 @@ ThreadInfo::reset_specific ()
   for (size_t i = 0; i < ARRAY_SIZE (hp); i++)
     hp[i] = NULL;
   self_cached = NULL;
-  const pthread_t pttid = pthread_self();
-  do
-    assert (pttid == pth_thread_id);
-  while (!__sync_bool_compare_and_swap (&pth_thread_id, pttid, 0));
+  pthread_t pttid = pthread_self();
+  while (!pth_thread_id.compare_exchange_strong (pttid, 0))
+    assert (pttid == pthread_self());
   data_list_.clear_like_destructor(); // should be empty
   // TESTED: printout ("resetted: %x (%p)\n", pttid, this);
 }

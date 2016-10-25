@@ -94,8 +94,8 @@ struct ThreadInfo {
   template<typename T> inline T    swap_data   (DataKey<T> *key)         { tdl(); T d = data_list_.swap (key); tdu(); return d; }
   template<typename T> inline T    swap_data   (DataKey<T> *key, T data) { tdl(); T d = data_list_.swap (key, data); tdu(); return d; }
 private:
-  ThreadInfo        *volatile next;
-  pthread_t                   pth_thread_id;
+  std::atomic<ThreadInfo*>    next;
+  std::atomic<pthread_t>      pth_thread_id;
   char                        pad[RAPICORN_CACHE_LINE_ALIGNMENT - sizeof hp - sizeof next - sizeof pth_thread_id];
   String                      name_;
   Mutex                       data_mutex_;
