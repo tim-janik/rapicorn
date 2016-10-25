@@ -26,7 +26,7 @@ variable_map_list_lookup (const VariableMapList &env_maps,
   else if (key == "RAPICORN_ARCHITECTURE")
     return Sinfex::Value (cpu_arch());
   else if (key == "RANDOM")
-    return Sinfex::Value (lrand48());
+    return Sinfex::Value (random_int64());
   else
     {
       unknown = true;

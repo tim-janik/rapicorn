@@ -228,6 +228,23 @@ struct Init {
   explicit Init (void (*f) ()) { f(); }
 };
 
+/** Helper to provide memory for placement new
+ * AlignedPOD<SIZE> is aligned like max_align_t or like malloc()-ed memory and
+ * provides SIZE bytes. Idiomatic use is:
+ * \code{.cc}
+ *   static AlignedPOD<sizeof (std::string)> pod_mem;
+ *   std::string *str = new (&pod_mem) std::string();
+ * \endcode
+ */
+template<size_t SIZE>
+struct alignas (16) AlignedPOD {
+  typename std::aligned_storage<SIZE, 16>::type mem;
+  /* malloc() aligns to 2 * sizeof (size_t), i.e. 16 on 64bit, max_align_t is
+   * usually aligned to long double, i.e. 16, and most SIMD code also needs at
+   * least 16 byte alignment.
+   */
+};
+
 /// Create an instance of @a Class on demand that is constructed and never destructed.
 /// DurableInstance<Class*> provides the memory for a @a Class instance and calls it's
 /// constructor on demand, but it's destructor is never called (so the memory allocated

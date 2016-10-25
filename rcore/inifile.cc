@@ -355,12 +355,8 @@ IniFile::section (const String &name) const
   SectionMap::const_iterator cit = sections_.find (name);
   if (cit != sections_.end())
     return cit->second;
-  static const StringVector *dummy = NULL;
-  do_once {
-    static uint64 space[(sizeof (StringVector) + 7) / 8];
-    dummy = new (space) StringVector();
-  }
-  return *dummy;
+  static const StringVector empty_dummy;
+  return empty_dummy;
 }
 
 bool

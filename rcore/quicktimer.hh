@@ -53,7 +53,7 @@ QuickTimer::expired()
   if (RAPICORN_LIKELY (timer_type == QuickTimer::TIMEOFDAY))
     {
       const uint64 tnow = timestamp_realtime();
-      if (RAPICORN_UNLIKELY (ABS (tnow - mark_) >= granularity))
+      if (RAPICORN_UNLIKELY (tnow - mark_ >= granularity))
         {
           mark_ = tnow;
           return RAPICORN_UNLIKELY (time_elapsed());

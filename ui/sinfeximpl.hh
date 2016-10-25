@@ -58,7 +58,7 @@ class SinfexExpressionStack {
       }
   }
   uint index      () const   { return mark.up - start; }
-  void put_double (double d) { grow (sizeof (d)); *mark.dp++ = d; }
+  void put_double (double d) { if (ptrdiff_t (mark.up) & 0x7) grow (4), *mark.up++ = 0; grow (sizeof (d)); *mark.dp++ = d; }
   void put_uint   (uint   u) { grow (sizeof (u)); *mark.up++ = u; }
   void
   put_string (String s)

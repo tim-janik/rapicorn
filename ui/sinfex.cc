@@ -210,7 +210,10 @@ SinfexExpression::eval_op (Scope &scope,
     {
       uint ui;
     case SINFEX_0:      return Value (0);
-    case SINFEX_REAL:   return Value (*mark.dp);
+    case SINFEX_REAL:
+      if (ptrdiff_t (mark.up) & 0x7)
+        mark.up++;
+      return Value (*mark.dp);
     case SINFEX_STRING:
       ui = *mark.up++;
       return Value (String (mark.cp, ui));

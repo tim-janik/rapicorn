@@ -308,13 +308,15 @@ struct SHA3_224::State : SHAKE_Base<224, 0x06> {
 };
 
 SHA3_224::SHA3_224 () :
-  state_ (new (mem_) State())
+  state_ (new (&mem_) State())
 {
   static_assert (sizeof (mem_) >= sizeof (*state_), "");
 }
 
 SHA3_224::~SHA3_224 ()
-{}
+{
+  state_->~State();
+}
 
 void
 SHA3_224::update (const uint8_t *data, size_t length)
@@ -348,13 +350,15 @@ struct SHA3_256::State : SHAKE_Base<256, 0x06> {
 };
 
 SHA3_256::SHA3_256 () :
-  state_ (new (mem_) State())
+  state_ (new (&mem_) State())
 {
   static_assert (sizeof (mem_) >= sizeof (*state_), "");
 }
 
 SHA3_256::~SHA3_256 ()
-{}
+{
+  state_->~State();
+}
 
 void
 SHA3_256::update (const uint8_t *data, size_t length)
@@ -388,13 +392,15 @@ struct SHA3_384::State : SHAKE_Base<384, 0x06> {
 };
 
 SHA3_384::SHA3_384 () :
-  state_ (new (mem_) State())
+  state_ (new (&mem_) State())
 {
   static_assert (sizeof (mem_) >= sizeof (*state_), "");
 }
 
 SHA3_384::~SHA3_384 ()
-{}
+{
+  state_->~State();
+}
 
 void
 SHA3_384::update (const uint8_t *data, size_t length)
@@ -428,13 +434,15 @@ struct SHA3_512::State : SHAKE_Base<512, 0x06> {
 };
 
 SHA3_512::SHA3_512 () :
-  state_ (new (mem_) State())
+  state_ (new (&mem_) State())
 {
   static_assert (sizeof (mem_) >= sizeof (*state_), "");
 }
 
 SHA3_512::~SHA3_512 ()
-{}
+{
+  state_->~State();
+}
 
 void
 SHA3_512::update (const uint8_t *data, size_t length)
@@ -468,13 +476,15 @@ struct SHAKE128::State : SHAKE_Base<0, 0x1f> {
 };
 
 SHAKE128::SHAKE128 () :
-  state_ (new (mem_) State())
+  state_ (new (&mem_) State())
 {
   static_assert (sizeof (mem_) >= sizeof (*state_), "");
 }
 
 SHAKE128::~SHAKE128 ()
-{}
+{
+  state_->~State();
+}
 
 void
 SHAKE128::update (const uint8_t *data, size_t length)
@@ -508,13 +518,15 @@ struct SHAKE256::State : SHAKE_Base<0, 0x1f> {
 };
 
 SHAKE256::SHAKE256 () :
-  state_ (new (mem_) State())
+  state_ (new (&mem_) State())
 {
   static_assert (sizeof (mem_) >= sizeof (*state_), "");
 }
 
 SHAKE256::~SHAKE256 ()
-{}
+{
+  state_->~State();
+}
 
 void
 SHAKE256::update (const uint8_t *data, size_t length)
@@ -582,10 +594,10 @@ global_random64()
     {
       uint64 entropy[32];
       collect_runtime_entropy (entropy, ARRAY_SIZE (entropy));
-      static uint64 mem[(sizeof (KeccakRng) + 7) / 8];
+      static std::aligned_storage<sizeof (KeccakRng), alignof (KeccakRng)>::type mem;
       // 8 rounds provide good statistical shuffling, and
       // 256 hidden bits make the generator state unguessable
-      global_rng = new (mem) KeccakRng (256, 8);
+      global_rng = new (&mem) KeccakRng (256, 8);
       global_rng->seed (entropy, ARRAY_SIZE (entropy));
     }
   return global_rng->random();
