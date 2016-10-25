@@ -558,8 +558,12 @@ test_thread_atomic_cxx (void)
 }
 REGISTER_TEST ("Threads/C++AtomicThreading", test_thread_atomic_cxx);
 
+#if 0   // disable AsyncRingBuffer
+/* AsyncRingBuffer isn't needed atm and -fsanitize=thread reports lots of races about it.
+ * The code segfaults if compiled with g++ 6.2.0-5ubuntu12, so it's disabled for now until
+ * the code either gets more work or is removed entirely.
+ */
 // == Atomic Ring Buffer
-
 static inline void
 handle_contention ()
 {
@@ -727,5 +731,6 @@ test_ring_buffer ()
   TASSERT (rbr.total != 0 && rbr.total == rbw.total);
 }
 REGISTER_TEST ("Threads/AsyncRingBuffer", test_ring_buffer);
+#endif  // disable AsyncRingBuffer
 
 } // Anon
