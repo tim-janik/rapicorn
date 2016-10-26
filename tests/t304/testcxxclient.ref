@@ -340,8 +340,9 @@ public:
 };
 typedef FirstInterfaceHandle FirstInterfaceH; ///< Convenience alias for the IDL type FirstInterface.
 
-struct ClnT_XFooRecord
+class ClnT_XFooRecord
 {
+public:
   /// @cond GeneratedFields
   bool                          single_bool;
   int                           single_num;
@@ -394,8 +395,9 @@ struct ClnT_XFooRecord
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_XFooRecord&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_XFooRecord&);
 
-struct ClnT_XFooSequence : public std::vector<bool>
+class ClnT_XFooSequence : public std::vector<bool>
 {
+public:
   typedef std::vector<bool> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -407,8 +409,9 @@ struct ClnT_XFooSequence : public std::vector<bool>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_XFooSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_XFooSequence&);
 
-struct ClnT_IntSequence : public std::vector<int>
+class ClnT_IntSequence : public std::vector<int>
 {
+public:
   typedef std::vector<int> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -420,8 +423,9 @@ struct ClnT_IntSequence : public std::vector<int>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_IntSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_IntSequence&);
 
-struct ClnT_FloatSequence : public std::vector<double>
+class ClnT_FloatSequence : public std::vector<double>
 {
+public:
   typedef std::vector<double> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -433,8 +437,9 @@ struct ClnT_FloatSequence : public std::vector<double>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_FloatSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_FloatSequence&);
 
-struct ClnT_StringSequence : public std::vector<std::string>
+class ClnT_StringSequence : public std::vector<std::string>
 {
+public:
   typedef std::vector<std::string> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -446,8 +451,9 @@ struct ClnT_StringSequence : public std::vector<std::string>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_StringSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_StringSequence&);
 
-struct ClnT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
+class ClnT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
+public:
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -459,8 +465,9 @@ struct ClnT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_ExtensiveEnumSequence&);
 
-struct ClnT_RecordSequence : public std::vector<ClnT_XFooRecord>
+class ClnT_RecordSequence : public std::vector<ClnT_XFooRecord>
 {
+public:
   typedef std::vector<ClnT_XFooRecord> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -472,8 +479,9 @@ struct ClnT_RecordSequence : public std::vector<ClnT_XFooRecord>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_RecordSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_RecordSequence&);
 
-struct ClnT_SequenceSequence : public std::vector<ClnT_IntSequence>
+class ClnT_SequenceSequence : public std::vector<ClnT_IntSequence>
 {
+public:
   typedef std::vector<ClnT_IntSequence> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -485,8 +493,9 @@ struct ClnT_SequenceSequence : public std::vector<ClnT_IntSequence>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_SequenceSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_SequenceSequence&);
 
-struct ClnT_InterfaceSequence : public std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>>
+class ClnT_InterfaceSequence : public std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>>
 {
+public:
   typedef std::vector<Rapicorn::Aida::RemoteMember<FirstInterfaceHandle>> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -498,8 +507,9 @@ struct ClnT_InterfaceSequence : public std::vector<Rapicorn::Aida::RemoteMember<
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_InterfaceSequence&);
 
-struct ClnT_AnySequence : public std::vector<Rapicorn::Aida::Any>
+class ClnT_AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
+public:
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -515,8 +525,9 @@ class ClnT_NestedTypesRec;
 
 class ClnT_NestedTypesSeq;
 
-struct ClnT_NestedTypesRec
+class ClnT_NestedTypesRec
 {
+public:
   /// @cond GeneratedFields
   ClnT_XFooRecord               rec;
   ClnT_XFooSequence             seq;
@@ -537,8 +548,9 @@ struct ClnT_NestedTypesRec
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_NestedTypesRec&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_NestedTypesRec&);
 
-struct ClnT_NestedTypesSeq : public std::vector<ClnT_NestedTypesRec>
+class ClnT_NestedTypesSeq : public std::vector<ClnT_NestedTypesRec>
 {
+public:
   typedef std::vector<ClnT_NestedTypesRec> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -550,8 +562,9 @@ struct ClnT_NestedTypesSeq : public std::vector<ClnT_NestedTypesRec>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_NestedTypesSeq&);
 
-struct ClnT_NewRecord
+class ClnT_NewRecord
 {
+public:
   /// @cond GeneratedFields
   int                           i;
   Enum1                         enum1;
@@ -578,8 +591,9 @@ void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_NewRecord&);
 
 namespace Inner {
 
-struct ClnT_InnerRecord
+class ClnT_InnerRecord
 {
+public:
   /// @cond GeneratedFields
   int                           x;
   int                           y;
@@ -603,8 +617,9 @@ void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_InnerRecord&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_InnerRecord&);
 } // Inner
 
-struct ClnT_Refer2Inner
+class ClnT_Refer2Inner
 {
+public:
   /// @cond GeneratedFields
   Inner::ClnT_InnerRecord       r;
   /// @endcond
@@ -626,8 +641,9 @@ void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_Refer2Inner&);
 
 namespace OtherNamespace {
 
-struct ClnT_SomeRecord
+class ClnT_SomeRecord
 {
+public:
   /// @cond GeneratedFields
   MandatoryNamespace::ClnT_NewRecord r1;
   MandatoryNamespace::ClnT_NewRecord r2;
@@ -655,8 +671,9 @@ void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_SomeRecord&);
 
 namespace Auxdata {
 
-struct ClnT_RecordWithAuxdata
+class ClnT_RecordWithAuxdata
 {
+public:
   /// @cond GeneratedFields
   bool                          aux_bool;
   int                           aux32;
@@ -813,8 +830,9 @@ public:
 };
 typedef GrandChildHandle GrandChildH; ///< Convenience alias for the IDL type GrandChild.
 
-struct ClnT_QuickRecord
+class ClnT_QuickRecord
 {
+public:
   /// @cond GeneratedFields
   int                           int1;
   int                           int2;
@@ -835,8 +853,9 @@ struct ClnT_QuickRecord
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const ClnT_QuickRecord&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, ClnT_QuickRecord&);
 
-struct ClnT_QuickSequence : public std::vector<double>
+class ClnT_QuickSequence : public std::vector<double>
 {
+public:
   typedef std::vector<double> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -1226,8 +1245,9 @@ public:
 };
 typedef CompressorHandle CompressorH; ///< Convenience alias for the IDL type Compressor.
 
-struct ClnT_RecordForGroups
+class ClnT_RecordForGroups
 {
+public:
   /// @cond GeneratedFields
   int                           i;
   double                        ratio;

@@ -317,12 +317,13 @@ class Generator:
     if type_info.storage == Decls.SEQUENCE:
       fl = type_info.elements
       #s += '/// @cond GeneratedRecords\n'
-      s += 'struct ' + self.C (type_info) + ' : public std::vector<' + self.M (fl[1]) + '>\n'
+      s += 'class ' + self.C (type_info) + ' : public std::vector<' + self.M (fl[1]) + '>\n'
       s += '{\n'
     else:
       #s += '/// @cond GeneratedSequences\n'
-      s += 'struct %s\n' % self.C (type_info)
+      s += 'class %s\n' % self.C (type_info)
       s += '{\n'
+    s += 'public:\n'
     if type_info.storage == Decls.RECORD:
       s += '  /// @cond GeneratedFields\n'
       fieldlist = type_info.fields

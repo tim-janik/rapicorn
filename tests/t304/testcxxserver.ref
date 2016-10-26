@@ -376,8 +376,9 @@ void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_FirstInterfaceIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_FirstInterfaceIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_FirstInterfaceIfaceP&);
 
-struct SrvT_XFooRecord
+class SrvT_XFooRecord
 {
+public:
   /// @cond GeneratedFields
   bool                          single_bool;
   int                           single_num;
@@ -430,8 +431,9 @@ struct SrvT_XFooRecord
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_XFooRecord&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_XFooRecord&);
 
-struct SrvT_XFooSequence : public std::vector<bool>
+class SrvT_XFooSequence : public std::vector<bool>
 {
+public:
   typedef std::vector<bool> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -443,8 +445,9 @@ struct SrvT_XFooSequence : public std::vector<bool>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_XFooSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_XFooSequence&);
 
-struct SrvT_IntSequence : public std::vector<int>
+class SrvT_IntSequence : public std::vector<int>
 {
+public:
   typedef std::vector<int> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -456,8 +459,9 @@ struct SrvT_IntSequence : public std::vector<int>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_IntSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_IntSequence&);
 
-struct SrvT_FloatSequence : public std::vector<double>
+class SrvT_FloatSequence : public std::vector<double>
 {
+public:
   typedef std::vector<double> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -469,8 +473,9 @@ struct SrvT_FloatSequence : public std::vector<double>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_FloatSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_FloatSequence&);
 
-struct SrvT_StringSequence : public std::vector<std::string>
+class SrvT_StringSequence : public std::vector<std::string>
 {
+public:
   typedef std::vector<std::string> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -482,8 +487,9 @@ struct SrvT_StringSequence : public std::vector<std::string>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_StringSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_StringSequence&);
 
-struct SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
+class SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 {
+public:
   typedef std::vector<ExtensiveEnum> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -495,8 +501,9 @@ struct SrvT_ExtensiveEnumSequence : public std::vector<ExtensiveEnum>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_ExtensiveEnumSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_ExtensiveEnumSequence&);
 
-struct SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
+class SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
 {
+public:
   typedef std::vector<SrvT_XFooRecord> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -508,8 +515,9 @@ struct SrvT_RecordSequence : public std::vector<SrvT_XFooRecord>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_RecordSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_RecordSequence&);
 
-struct SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
+class SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
 {
+public:
   typedef std::vector<SrvT_IntSequence> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -521,8 +529,9 @@ struct SrvT_SequenceSequence : public std::vector<SrvT_IntSequence>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_SequenceSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_SequenceSequence&);
 
-struct SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
+class SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
 {
+public:
   typedef std::vector<I_FirstInterfaceIfaceP> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -534,8 +543,9 @@ struct SrvT_InterfaceSequence : public std::vector<I_FirstInterfaceIfaceP>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_InterfaceSequence&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_InterfaceSequence&);
 
-struct SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
+class SrvT_AnySequence : public std::vector<Rapicorn::Aida::Any>
 {
+public:
   typedef std::vector<Rapicorn::Aida::Any> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -551,8 +561,9 @@ class SrvT_NestedTypesRec;
 
 class SrvT_NestedTypesSeq;
 
-struct SrvT_NestedTypesRec
+class SrvT_NestedTypesRec
 {
+public:
   /// @cond GeneratedFields
   SrvT_XFooRecord               rec;
   SrvT_XFooSequence             seq;
@@ -573,8 +584,9 @@ struct SrvT_NestedTypesRec
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_NestedTypesRec&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_NestedTypesRec&);
 
-struct SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
+class SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
 {
+public:
   typedef std::vector<SrvT_NestedTypesRec> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -586,8 +598,9 @@ struct SrvT_NestedTypesSeq : public std::vector<SrvT_NestedTypesRec>
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_NestedTypesSeq&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_NestedTypesSeq&);
 
-struct SrvT_NewRecord
+class SrvT_NewRecord
 {
+public:
   /// @cond GeneratedFields
   int                           i;
   Enum1                         enum1;
@@ -614,8 +627,9 @@ void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_NewRecord&);
 
 namespace Inner {
 
-struct SrvT_InnerRecord
+class SrvT_InnerRecord
 {
+public:
   /// @cond GeneratedFields
   int                           x;
   int                           y;
@@ -639,8 +653,9 @@ void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_InnerRecord&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_InnerRecord&);
 } // Inner
 
-struct SrvT_Refer2Inner
+class SrvT_Refer2Inner
 {
+public:
   /// @cond GeneratedFields
   Inner::SrvT_InnerRecord       r;
   /// @endcond
@@ -662,8 +677,9 @@ void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_Refer2Inner&);
 
 namespace OtherNamespace {
 
-struct SrvT_SomeRecord
+class SrvT_SomeRecord
 {
+public:
   /// @cond GeneratedFields
   MandatoryNamespace::SrvT_NewRecord r1;
   MandatoryNamespace::SrvT_NewRecord r2;
@@ -691,8 +707,9 @@ void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_SomeRecord&);
 
 namespace Auxdata {
 
-struct SrvT_RecordWithAuxdata
+class SrvT_RecordWithAuxdata
 {
+public:
   /// @cond GeneratedFields
   bool                          aux_bool;
   int                           aux32;
@@ -892,8 +909,9 @@ void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_GrandChildIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_GrandChildIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_GrandChildIfaceP&);
 
-struct SrvT_QuickRecord
+class SrvT_QuickRecord
 {
+public:
   /// @cond GeneratedFields
   int                           int1;
   int                           int2;
@@ -914,8 +932,9 @@ struct SrvT_QuickRecord
 void operator<<= (Rapicorn::Aida::ProtoMsg&, const SrvT_QuickRecord&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, SrvT_QuickRecord&);
 
-struct SrvT_QuickSequence : public std::vector<double>
+class SrvT_QuickSequence : public std::vector<double>
 {
+public:
   typedef std::vector<double> Sequence;
   reference append_back() ///< Append data at the end, returns write reference to data.
   { resize (size() + 1); return back(); }
@@ -1376,8 +1395,9 @@ void operator<<= (Rapicorn::Aida::ProtoMsg&, const I_CompressorIfaceP&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_CompressorIface*&);
 void operator>>= (Rapicorn::Aida::ProtoReader&, I_CompressorIfaceP&);
 
-struct SrvT_RecordForGroups
+class SrvT_RecordForGroups
 {
+public:
   /// @cond GeneratedFields
   int                           i;
   double                        ratio;
