@@ -61,7 +61,7 @@ init_app (const String &application_name, int *argcp, char **argv, const StringV
   // full locale initialization is needed by X11, etc
   if (!setlocale (LC_ALL,""))
     {
-      auto sgetenv = [] (const char *var)  {
+      const auto sgetenv = [] (const char *var)  {
         const char *str = getenv (var);
         return str ? str : "";
       };
@@ -175,16 +175,15 @@ namespace Rapicorn {
 MainLoopP
 ApplicationH::main_loop()
 {
-  ApplicationH the_app = the();
-  assert_return (the_app != NULL, NULL);
-  static MainLoopP app_loop = NULL;
-  do_once
-    {
-      app_loop = MainLoop::create();
-      AppSourceP source = AppSource::create (*the_app.__aida_connection__());
-      app_loop->add (source);
-      source->queue_check_primaries();
-    }
+  static const MainLoopP app_loop = [] () {
+    ApplicationH the_app = the();
+    assert (the_app != NULL);
+    MainLoopP main_loop = MainLoop::create();
+    AppSourceP source = AppSource::create (*the_app.__aida_connection__());
+    main_loop->add (source);
+    source->queue_check_primaries();
+    return main_loop;
+  } ();
   return app_loop;
 }
 
