@@ -1245,8 +1245,8 @@ DisplayWindowX11::handle_content_request (const size_t nth, ContentOffer *const 
         ecstyle = XCompoundTextStyle;
       else if (xev.target == x11context.atom ("STRING"))
         ecstyle = XStringStyle;
-      Atom ptype;
-      int pformat;
+      Atom ptype = 0;
+      int pformat = 0;
       vector<uint8> chars;
       bool transferred = x11_convert_string_for_text_property (x11context.display, ecstyle, cr.data, &chars, &ptype, &pformat);
       transferred = transferred && pformat == 8 &&
@@ -1426,11 +1426,12 @@ X11Context::X11Context (DisplayDriver &driver, AsyncNotifyingQueue<DisplayComman
   root_window (0), input_method (NULL)
 {
   XDEBUG ("%s: X11Context started", __func__);
-  do_once {
+  static const bool __used initialize = [] () {
     const bool x11_initialized_for_threads = XInitThreads ();
     assert (x11_initialized_for_threads == true);
     xlib_error_handler = XSetErrorHandler (x11_error);
-  }
+    return true;
+  } ();
 }
 
 X11Context::~X11Context ()
