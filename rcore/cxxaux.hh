@@ -61,6 +61,8 @@
 #define	UNLIKELY		RAPICORN_UNLIKELY       ///< Compiler hint that @a expression is unlikely to be true.
 #define	LIKELY			RAPICORN_LIKELY         ///< Compiler hint that @a expression is likely to be true.
 #define	STRINGIFY               RAPICORN_CPP_STRINGIFY  ///< Produces a const char C string from the macro @a argument.
+#define __unused                RAPICORN_UNUSED
+#define __used                  RAPICORN_USED
 #endif
 /**
  * @def RAPICORN_CONVENIENCE
@@ -91,6 +93,7 @@
 #define RAPICORN_NORETURN                       __attribute__ ((__noreturn__))
 #define RAPICORN_CONST                          __attribute__ ((__const__))
 #define RAPICORN_UNUSED                         __attribute__ ((__unused__))
+#define RAPICORN_USED                           __attribute__ ((__used__))
 #define RAPICORN_NO_INSTRUMENT                  __attribute__ ((__no_instrument_function__))
 #define RAPICORN_DEPRECATED                     __attribute__ ((__deprecated__))
 #define RAPICORN_ALWAYS_INLINE			__attribute__ ((always_inline))
@@ -108,6 +111,7 @@
 #define RAPICORN_NORETURN
 #define RAPICORN_CONST
 #define RAPICORN_UNUSED
+#define RAPICORN_USED
 #define RAPICORN_NO_INSTRUMENT
 #define RAPICORN_DEPRECATED
 #define RAPICORN_ALWAYS_INLINE
