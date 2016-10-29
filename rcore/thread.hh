@@ -188,15 +188,6 @@ using namespace std::this_thread;
 
 } // ThisThread
 
-#ifdef RAPICORN_CONVENIENCE
-
-/** The @e do_once statement preceeds code blocks to ensure that a critical section is executed atomically and at most once.
- *  Example: @snippet tests/t203/more-basics-threads.cc do_once-EXAMPLE
- */
-#define do_once                         RAPICORN_DO_ONCE
-
-#endif  // RAPICORN_CONVENIENCE
-
 /// Exclusive<> is a type wrapper that provides non-racy atomic access to a copyable @a Type.
 template<class Type>
 class Exclusive {
