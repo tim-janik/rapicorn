@@ -131,13 +131,13 @@ REGISTER_UITHREAD_TEST ("TestWidget/Test GUI assertions (alignment-test)", test_
 static void
 ensure_ui_file()
 {
-  do_once
-    {
-      // first, load required ui files
-      ApplicationImpl &app = ApplicationImpl::the();
-      String testwidgets_xml = __TOPDIR__ "tests/t401/testwidgets.xml";
-      app.auto_load (testwidgets_xml, program_argv0());
-    }
+  static const bool __used load_once = [] () {
+    // first, load required ui files
+    ApplicationImpl &app = ApplicationImpl::the();
+    String testwidgets_xml = __TOPDIR__ "tests/t401/testwidgets.xml";
+    app.auto_load (testwidgets_xml, program_argv0());
+    return true;
+  } ();
 }
 
 static void
