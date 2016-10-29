@@ -45,7 +45,7 @@ test "$ABI_MICRO" -eq 0 || {
 }
 ABI_AGE=$(($MINOR - $ABI_MINOR))
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-# Note, rapicorn provides backwards binary compatibility only within
+# Note, this package provides backwards binary compatibility only within
 # MINOR.MICRO increments, and only since ABI_VERSION.
 # Interface additions occour with pretty much every release.
 # For libtool this means:
@@ -56,8 +56,8 @@ ABI_AGE=$(($MINOR - $ABI_MINOR))
 # - lt_revision=MICRO # pick the latest SO revision for unchanged MAJOR.MINOR,
 #                     # see also: https://autotools.io/libtool/version.html
 # On Linux this yields:
-# library:	librapicorn-$MAJOR.so.$ABI_MINOR.$ABI_AGE.$MICRO
-# SONAME:	librapicorn-$MAJOR.so.$ABI_MINOR
+# library:      libfoo-$MAJOR.so.$ABI_MINOR.$ABI_AGE.$MICRO
+# SONAME:       libfoo-$MAJOR.so.$ABI_MINOR
 lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
