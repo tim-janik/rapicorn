@@ -134,11 +134,14 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     msg = "condition failed: " + msg;
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
   if (f & DO_STAMP)
-    do_once {
-      printerr ("[%s] %s[%u]: program started at: %.6f\n",
-                timestamp_format (delta).c_str(),
-                program_alias().c_str(), ThisThread::thread_pid(),
-                start / 1000000.0);
+    {
+      static const bool __used print_once = [&] () {
+        printerr ("[%s] %s[%u]: program started at: %.6f\n",
+                  timestamp_format (delta).c_str(),
+                  program_alias().c_str(), ThisThread::thread_pid(),
+                  start / 1000000.0);
+        return true;
+      } ();
     }
   if (f & DO_DEBUG)
     {
@@ -180,7 +183,10 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     }
   if (f & DO_SYSLOG)
     {
-      do_once { openlog (NULL, LOG_PID, LOG_USER); } // force pid logging
+      static const bool __used open_once = [] () {
+        openlog (NULL, LOG_PID, LOG_USER); // force pid logging
+        return true;
+      } ();
       String end = emsg;
       if (!end.empty() && end[end.size()-1] == '\n')
         end.resize (end.size()-1);
@@ -201,22 +207,22 @@ debug_handler (const char dkind, const String &file_line, const String &message,
   if (f & DO_LOGFILE)
     {
       String out;
-      do_once
-        {
-          int fd;
-          do
-            fd = open (Path::abspath (conftest_logfile).c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOCTTY, 0666);
-          while (conftest_logfd < 0 && errno == EINTR);
-          if (fd == 0) // invalid initialization value
-            {
-              fd = dup (fd);
-              close (0);
-            }
-          out = string_format ("[%s] %s[%u]: program started at: %s\n",
-                               timestamp_format (delta).c_str(), program_alias().c_str(), ThisThread::thread_pid(),
-                               timestamp_format (start).c_str());
-          conftest_logfd = fd;
-        }
+      static const bool __used print_once = [&] () {
+        int fd;
+        do
+          fd = open (Path::abspath (conftest_logfile).c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOCTTY, 0666);
+        while (conftest_logfd < 0 && errno == EINTR);
+        if (fd == 0) // invalid initialization value
+          {
+            fd = dup (fd);
+            close (0);
+          }
+        out = string_format ("[%s] %s[%u]: program started at: %s\n",
+                             timestamp_format (delta).c_str(), program_alias().c_str(), ThisThread::thread_pid(),
+                             timestamp_format (start).c_str());
+        conftest_logfd = fd;
+        return true;
+      } ();
       out += string_format ("[%s] %s[%u]:%s%s%s",
                             timestamp_format (delta).c_str(), program_alias().c_str(), ThisThread::thread_pid(),
                             wherewhat.c_str(), msg.c_str(), emsg.c_str());
