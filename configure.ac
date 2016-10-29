@@ -1,7 +1,6 @@
-dnl # Rapicorn                                       -*- Mode: shell-script; -*-
-dnl
+# Rapicorn                                       -*- Mode: shell-script; -*-
+
 builtin(include, acrapicorn.m4)dnl # include special macros
-builtin(include, ld-symbolic.m4)dnl # include special macros
 AC_PREREQ(2.57)
 
 # == Package & Version ==
