@@ -3,7 +3,7 @@
 #define __RAPICORN_THREAD_HH__
 
 #include <rcore/utilities.hh>
-#include <rcore/threadlib.hh>
+#include <rcore/cpuasm.hh>
 #include <thread>
 #include <list>
 
