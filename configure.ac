@@ -108,7 +108,9 @@ c_only_flags="-Wmissing-prototypes -Wnested-externs -Wno-pointer-sign"
 gcc_c_only_flags="-fno-cond-mismatch -fdevirtualize-speculatively"
 compiler_flags="-pipe"
 optimization_flags="-O3 -funroll-loops -ftree-vectorize"
-gcc_flags="-rdynamic -finline-functions -ftracer -ftree-loop-distribution"
+FAST_MATH_FLAGS="-ffast-math"
+gcc_flags="-rdynamic -finline-functions -ftracer -ftree-loop-distribution -ftree-loop-ivcanon -ftree-loop-im"
+gcc_fast_math="-fivopts"
 x86_flags="-minline-all-stringops"
 x86_flags="$x86_flags -mmmx -msse -msse2"	# Intel since 2001, AMD since 2003
 x86_flags="$x86_flags -msse3"			# Intel since 2004, AMD since 2007
@@ -125,10 +127,12 @@ if   ${CXX} --version 2>&1 | grep -q -F 'clang' ; then
 elif ${CXX} --version 2>&1 | tr '\n' ' ' | grep -q -E '(g\++|GCC).*Free Software Foundation' ; then
     AM_CFLAGS="$c_warnings $c_only_flags $gcc_c_only_flags $compiler_flags $optimization_flags $gcc_flags"
     AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags $gcc_flags"
+    FAST_MATH_FLAGS="$FAST_MATH_FLAGS $gcc_fast_math"
     MC_ASSERT_VERSION($CXX --version, 4.9.2)
 else
   AC_MSG_ERROR([unknown C++ compiler])
 fi
+AC_SUBST(FAST_MATH_FLAGS)
 uname_m=`uname -m`
 if test "$uname_m" = x86_64 ; then	# AMD64
     AM_CFLAGS="$AM_CFLAGS $x86_flags $x86_64_flags"
