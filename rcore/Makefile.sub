@@ -28,7 +28,6 @@ rcore_librapicorn_headers = $(strip	\
 	rcore/strings.hh		\
 	rcore/testutils.hh		\
 	rcore/thread.hh			\
-	rcore/threadlib.hh		\
 	rcore/unicode.hh		\
 	rcore/utilities.hh		\
 	rcore/visitor.hh		\

@@ -625,10 +625,10 @@ static const char test_dialog_xml[] =
 static void
 load_ui_defs()
 {
-  do_once
-    {
-      String errs = Factory::parse_ui_data (RAPICORN_STRLOC(), sizeof (test_dialog_xml)-1, test_dialog_xml, "", NULL, NULL);
-      if (!errs.empty())
-        fatal ("%s:%d: failed to parse internal XML string: %s", __FILE__, __LINE__, errs.c_str());
-    }
+  static const bool __used load_once = [] () {
+    String errs = Factory::parse_ui_data (RAPICORN_STRLOC(), sizeof (test_dialog_xml)-1, test_dialog_xml, "", NULL, NULL);
+    if (!errs.empty())
+      fatal ("%s:%d: failed to parse internal XML string: %s", __FILE__, __LINE__, errs.c_str());
+    return true;
+  } ();
 }

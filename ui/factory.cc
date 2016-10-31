@@ -123,12 +123,8 @@ namespace Factory {
 static std::list<const ObjectTypeFactory*>&
 widget_type_list()
 {
-  static std::list<const ObjectTypeFactory*> *widget_type_factories_p = NULL;
-  do_once
-    {
-      widget_type_factories_p = new std::list<const ObjectTypeFactory*>();
-    }
-  return *widget_type_factories_p;
+  static std::list<const ObjectTypeFactory*> widget_type_factories;
+  return widget_type_factories;
 }
 
 static const ObjectTypeFactory*
@@ -771,8 +767,8 @@ WidgetImplP
 create_ui_child (ContainerImpl &container, const String &widget_identifier, const ArgumentList &arguments, bool autoadd)
 {
   // figure XML context
-  FactoryContext &fc = container.factory_context();
-  assert (NULL != &fc);
+  FactoryContext *fc = &container.factory_context();
+  assert (NULL != fc);
   // create child within parent namespace
   //local_namespace_list.push_back (namespace_domain);
   WidgetImplP widget = create_ui_widget (widget_identifier, arguments);
@@ -817,25 +813,23 @@ parse_ui_data (const String &data_name, size_t data_length, const char *data, co
 static void
 initialize_factory_lazily (void)
 {
-  static bool initialized = false;
-  if (!initialized)
-    {
-      initialized++;
-      Blob blob;
-      String err;
-      blob = Res ("@res Rapicorn/foundation.xml");
-      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
-      if (!err.empty())
-        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
-      blob = Res ("@res Rapicorn/standard.xml");
-      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
-      if (!err.empty())
-        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
-      blob = Res ("@res themes/Default.xml");
-      err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
-      if (!err.empty())
-        user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
-    }
+  static const bool __used initialize = [] () {
+    Blob blob;
+    String err;
+    blob = Res ("@res Rapicorn/foundation.xml");
+    err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+    if (!err.empty())
+      user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
+    blob = Res ("@res Rapicorn/standard.xml");
+    err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+    if (!err.empty())
+      user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
+    blob = Res ("@res themes/Default.xml");
+    err = Factory::parse_ui_data_internal (blob.name(), blob.size(), blob.data(), "", NULL, NULL);
+    if (!err.empty())
+      user_warning (UserSource ("Factory"), "failed to load '%s': %s", blob.name(), err);
+    return true;
+  } ();
 }
 
 } // Rapicorn

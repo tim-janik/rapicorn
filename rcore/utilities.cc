@@ -75,25 +75,25 @@ static uint64    realtime_start = 0;
 static void
 timestamp_init_ ()
 {
-  do_once
-    {
-      realtime_start = timestamp_realtime();
-      struct timespec tp = { 0, 0 };
-      if (clock_getres (CLOCK_REALTIME, &tp) >= 0)
-        monotonic_resolution = tp.tv_sec * 1000000000ULL + tp.tv_nsec;
-      uint64 mstart = realtime_start;
+  static const bool __used initialize = [] () {
+    realtime_start = timestamp_realtime();
+    struct timespec tp = { 0, 0 };
+    if (clock_getres (CLOCK_REALTIME, &tp) >= 0)
+      monotonic_resolution = tp.tv_sec * 1000000000ULL + tp.tv_nsec;
+    uint64 mstart = realtime_start;
 #ifdef CLOCK_MONOTONIC
-      // CLOCK_MONOTONIC_RAW cannot slew, but doesn't measure SI seconds accurately
-      // CLOCK_MONOTONIC may slew, but attempts to accurately measure SI seconds
-      if (monotonic_clockid == CLOCK_REALTIME && clock_getres (CLOCK_MONOTONIC, &tp) >= 0)
-        {
-          monotonic_clockid = CLOCK_MONOTONIC;
-          monotonic_resolution = tp.tv_sec * 1000000000ULL + tp.tv_nsec;
-          mstart = timestamp_benchmark(); // here, monotonic_start=0 still
-        }
+    // CLOCK_MONOTONIC_RAW cannot slew, but doesn't measure SI seconds accurately
+    // CLOCK_MONOTONIC may slew, but attempts to accurately measure SI seconds
+    if (monotonic_clockid == CLOCK_REALTIME && clock_getres (CLOCK_MONOTONIC, &tp) >= 0)
+      {
+        monotonic_clockid = CLOCK_MONOTONIC;
+        monotonic_resolution = tp.tv_sec * 1000000000ULL + tp.tv_nsec;
+        mstart = timestamp_benchmark(); // here, monotonic_start=0 still
+      }
 #endif
-      monotonic_start = mstart;
-    }
+    monotonic_start = mstart;
+    return true;
+  } ();
 }
 namespace { static struct Timestamper { Timestamper() { timestamp_init_(); } } realtime_startup; } // Anon
 
