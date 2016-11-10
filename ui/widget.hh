@@ -90,7 +90,6 @@ private:
   virtual bool                widget_maybe_selected  () const;
   void                        widget_render_recursive (const IRect &ancestry_clip);
   void                        widget_compose_into     (cairo_t *cr, const vector<IRect> &view_rects, int x_offset, int y_offset);
-  void                        invalidate_all         ()              { widget_invalidate (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT); }
 protected:
   virtual void                fabricated            (); ///< Method called on all widgets after creation via Factory.
   virtual bool                do_event              (const Event &event);
@@ -278,6 +277,7 @@ public:
   void                  invalidate_requisition  ()              { widget_invalidate (INVALID_REQUISITION); }
   void                  invalidate_allocation   ()              { widget_invalidate (INVALID_ALLOCATION); }
   void                  invalidate_size         ()              { widget_invalidate (INVALID_REQUISITION | INVALID_ALLOCATION); }
+  void                  invalidate_all          ()              { widget_invalidate (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT); }
   void                  queue_visual_update     ();
   void                  force_visual_update     ();
   /* public signals */
