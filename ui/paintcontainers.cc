@@ -667,7 +667,8 @@ static const WidgetFactory<LayerPainterImpl> layer_painter_factory ("Rapicorn::L
 
 // == ElementPainter ==
 ElementPainterImpl::ElementPainterImpl() :
-  svg_source_ ("auto"), match_states_ ("all")
+  child_area_ { 0, 0, -1, -1 },
+  svg_source_ ("auto")
 {}
 
 ElementPainterImpl::~ElementPainterImpl()
@@ -679,46 +680,67 @@ ElementPainterImpl::svg_source (const String &resource)
   String val = string_strip (resource);
   return_unless (val != svg_source_);
   svg_source_ = val;
-  reset_cache();
-  invalidate_size();
-  invalidate_content();
+  cached_svg_.reset();
+  invalidate_all();
   changed ("svg_source");
 }
 
-void
-ElementPainterImpl::element (const String &fragment)
+Svg::FileP
+ElementPainterImpl::svg_file() const
 {
-  String val = string_strip (fragment);
-  return_unless (val != element_);
-  element_ = val;
-  reset_cache();
-  invalidate_size();
-  invalidate_content();
-  changed ("element");
+  if (!cached_svg_)
+    {
+      if (svg_source_ != "auto")
+        {
+          cached_svg_ = style()->load_svg (svg_source_);
+          if (!cached_svg_)
+            user_warning (user_source(), "failed to lookup SVG: %s", svg_source_);
+        }
+      if (!cached_svg_)
+        cached_svg_ = style()->svg_file();
+    }
+  return cached_svg_;
+}
+
+const ElementPainterImpl::PaintEntry&
+ElementPainterImpl::peek_entry (uint64 state_bit) const
+{
+  for (const auto &p : paint_elements_)
+    if (p.state_bit == state_bit)
+      return p;
+  static const PaintEntry dummy { "", 0 };
+  return dummy;
+}
+
+ElementPainterImpl::PaintEntry&
+ElementPainterImpl::fetch_entry (uint64 state_bit)
+{
+  for (auto &p : paint_elements_)
+    if (p.state_bit == state_bit)
+      return p;
+  const PaintEntry new_entry { "", state_bit };
+  paint_elements_.push_back (new_entry);
+  return paint_elements_.back();
 }
 
 void
-ElementPainterImpl::filler (const String &fragment)
+ElementPainterImpl::assign_entry (uint64 state_bit, const String &element, const String &property)
 {
-  String val = string_strip (fragment);
-  return_unless (val != filler_);
-  filler_ = val;
-  reset_cache();
-  invalidate_size();
-  invalidate_content();
-  changed ("filler");
-}
-
-void
-ElementPainterImpl::match_states (const String &kind)
-{
-  String val = string_strip (kind) == "none" ? "none" : "all";
-  return_unless (val != match_states_);
-  match_states_ = val;
-  reset_cache();
-  invalidate_size();
-  invalidate_content();
-  changed ("match");
+  assert_return ((state_bit & (state_bit - 1)) == 0); // have at most one bit set
+  assert_return (property.empty() == false);
+  PaintEntry &pe = fetch_entry (state_bit);
+  const String stripped_element = string_strip (element);
+  if (pe.element != stripped_element)
+    {
+      pe.element = stripped_element;
+      if (state_bit == FILLING_PAINTER)
+        invalidate_content();
+      else if (state_bit == SIZING_PAINTER)
+        invalidate_size();
+      else // WidgetState changes
+        invalidate_all();
+      changed (property);
+    }
 }
 
 WidgetState
@@ -727,72 +749,101 @@ ElementPainterImpl::render_state () const
   return state();
 }
 
-void
-ElementPainterImpl::reset_cache ()
+String
+ElementPainterImpl::size_fragment () const
 {
-  cached_file_.reset();
-  size_painter_.reset();
-  element_painter_.reset();
-  filler_painter_.reset();
+  const PaintEntry *pe = NULL;
+  for (auto &e : paint_elements_)
+    if (e.element.empty())
+      continue;
+    else if (e.state_bit == SIZING_PAINTER)             // give SIZING precedence
+      return StyleIface::pick_fragment (e.element, WidgetState::NORMAL, svg_file()->list());
+    else if (!pe ||                                     // first, match any
+             (e.state_bit != FILLING_PAINTER &&
+              e.state_bit < pe->state_bit))             // minimize match requirements
+      pe = &e;
+  String fragment;
+  if (pe)
+    {
+      fragment = StyleIface::pick_fragment (pe->element, WidgetState::NORMAL, svg_file()->list());
+      if (fragment.empty() && pe->state_bit)    // if needed, allow state fragment with duplicate "+state" flag
+        fragment = StyleIface::pick_fragment (pe->element, WidgetState (pe->state_bit), svg_file()->list());
+    }
+  return fragment;
 }
 
-bool
-ElementPainterImpl::load_painters()
+String
+ElementPainterImpl::filling_fragment (WidgetState widget_state) const
 {
-  if (!cached_file_)
+  for (auto &e : paint_elements_)
+    if (e.element.empty())
+      continue;
+    else if (e.state_bit == FILLING_PAINTER)
+      return StyleIface::pick_fragment (e.element, widget_state, svg_file()->list());
+  return "";
+}
+
+String
+ElementPainterImpl::state_fragment (WidgetState widget_state) const
+{
+  const uint64 state = (uint64) widget_state;
+  const PaintEntry *pe = NULL;
+  for (auto &e : paint_elements_)
+    if (e.element.empty())
+      continue;
+    else if ((!pe && e.state_bit == 0) ||               // fallback to NORMAL if present
+             (!pe && (e.state_bit & state)) ||          // find first state match
+             (pe &&
+              (e.state_bit & state) > pe->state_bit))   // improve match
+      pe = &e;
+  String fragment;
+  if (pe)
     {
-      if (svg_source_ == "auto")
-        cached_file_ = style()->svg_file();
-      else
-        cached_file_ = style()->load_svg (svg_source_);
-      if (!cached_file_)
-        user_warning (user_source(), "failed to lookup SVG: %s", svg_source_);
-      return_unless (cached_file_ != NULL, false);
+      fragment = StyleIface::pick_fragment (pe->element, WidgetState (state & ~pe->state_bit), svg_file()->list());
+      if (fragment.empty() && (state & pe->state_bit))  // if needed, allow state fragment with duplicate "+state" flag
+        fragment = StyleIface::pick_fragment (pe->element, widget_state, svg_file()->list());
     }
-  if (!size_painter_)
+  return fragment;
+}
+
+ImagePainter
+ElementPainterImpl::load_painter (const String &fragment) const
+{
+  ImagePainter image_painter;
+  if (!fragment.empty())
     {
-      String fragment;
-      if (!element_.empty())
-        fragment = StyleIface::pick_fragment (element_, WidgetState::NORMAL, cached_file_->list());
-      if (fragment.empty() && !filler_.empty())
-        fragment = StyleIface::pick_fragment (filler_, WidgetState::NORMAL, cached_file_->list());
-      if (!fragment.empty())
-        size_painter_ = ImagePainter (cached_file_, fragment);
-      if (!size_painter_)
+      image_painter = ImagePainter (svg_file(), fragment);
+      if (!image_painter)
         user_warning (user_source(), "failed to lookup SVG element: %s %s", svg_source_, fragment);
-      return_unless (size_painter_, false);
     }
-  const WidgetState fragment_state = match_states_ == "all" ? render_state() : WidgetState::NORMAL;
-  if (!element_painter_)
-    {
-      String fragment;
-      if (!element_.empty())
-        fragment = StyleIface::pick_fragment (element_, fragment_state, cached_file_->list());
-      if (!fragment.empty())
-        element_painter_ = ImagePainter (cached_file_, fragment);
-    }
-  if (!filler_painter_)
-    {
-      String fragment;
-      if (!filler_.empty())
-        fragment = StyleIface::pick_fragment (filler_, fragment_state, cached_file_->list());
-      if (!fragment.empty())
-        filler_painter_ = ImagePainter (cached_file_, fragment);
-    }
-  return true;
+  return image_painter;
+}
+
+ImagePainter
+ElementPainterImpl::size_painter () const
+{
+  return load_painter (size_fragment());
+}
+
+ImagePainter
+ElementPainterImpl::state_painter () const
+{
+  return load_painter (state_fragment (render_state()));
+}
+
+ImagePainter
+ElementPainterImpl::filling_painter () const
+{
+  return load_painter (filling_fragment (render_state()));
 }
 
 void
 ElementPainterImpl::size_request (Requisition &requisition)
 {
   bool chspread = false, cvspread = false;
-  Requisition image_size;
-  IRect fill;
-  if (load_painters())
-    {
-      image_size = size_painter_.image_size ();
-      fill = size_painter_.fill_area();
-    }
+  ImagePainter painter = size_painter();
+  const Requisition image_size = painter.image_size ();
+  const IRect fill = painter.fill_area();
   assert_return (fill.x + fill.width <= image_size.width);
   assert_return (fill.y + fill.height <= image_size.height);
   if (has_visible_child())
@@ -813,13 +864,13 @@ ElementPainterImpl::size_request (Requisition &requisition)
 void
 ElementPainterImpl::size_allocate (Allocation area)
 {
-  load_painters();
-  if (size_painter_)
+  ImagePainter painter = size_painter();
+  const Requisition image_size = painter.image_size ();
+  const IRect fill = painter.fill_area();
+  assert_return (fill.x + fill.width <= image_size.width);
+  assert_return (fill.y + fill.height <= image_size.height);
+  if (fill.width > 0 && fill.height > 0)
     {
-      const Requisition image_size = size_painter_.image_size ();
-      IRect fill = size_painter_.fill_area();
-      assert_return (fill.x + fill.width <= image_size.width);
-      assert_return (fill.y + fill.height <= image_size.height);
       Svg::Span spans[3] = { { 0, 0 }, { 0, 1 }, { 0, 0 } };
       // horizontal distribution & allocation
       spans[0].length = fill.x;
@@ -828,8 +879,8 @@ ElementPainterImpl::size_allocate (Allocation area)
       ssize_t dremain = Svg::Span::distribute (ARRAY_SIZE (spans), spans, area.width - image_size.width, 1);
       if (dremain < 0)
         Svg::Span::distribute (ARRAY_SIZE (spans), spans, dremain, 0); // shrink *all* segments
-      fill_area_.x = area.x + spans[0].length;
-      fill_area_.width = spans[1].length;
+      child_area_.x = area.x + spans[0].length;
+      child_area_.width = spans[1].length;
       // vertical distribution & allocation
       spans[0].length = fill.y;
       spans[1].length = fill.height;
@@ -837,15 +888,15 @@ ElementPainterImpl::size_allocate (Allocation area)
       dremain = Svg::Span::distribute (ARRAY_SIZE (spans), spans, area.height - image_size.height, 1);
       if (dremain < 0)
         Svg::Span::distribute (ARRAY_SIZE (spans), spans, dremain, 0); // shrink *all* segments
-      fill_area_.y = area.y + spans[0].length;
-      fill_area_.height = spans[1].length;
+      child_area_.y = area.y + spans[0].length;
+      child_area_.height = spans[1].length;
     }
   else
-    fill_area_ = area;
+    child_area_ = area;
   if (has_visible_child())
     {
       WidgetImpl &child = get_child();
-      layout_child_allocation (child, fill_area_);
+      layout_child_allocation (child, child_area_);
     }
 }
 
@@ -855,8 +906,8 @@ ElementPainterImpl::do_changed (const String &name)
   SingleContainerImpl::do_changed (name);
   if (name == "state")
     {
-      element_painter_.reset();
-      filler_painter_.reset();
+      // reset state_painter()
+      // reset filling_painter()
       invalidate_content();
     }
 }
@@ -864,11 +915,8 @@ ElementPainterImpl::do_changed (const String &name)
 void
 ElementPainterImpl::render (RenderContext &rcontext)
 {
-  load_painters();
-  if (element_painter_)
-    element_painter_.draw_image (cairo_context (rcontext), allocation(), allocation());
-  if (filler_painter_)
-    filler_painter_.draw_image (cairo_context (rcontext), fill_area_, fill_area_);
+  state_painter().draw_image (cairo_context (rcontext), allocation(), allocation());
+  filling_painter().draw_image (cairo_context (rcontext), child_area_, child_area_);
 }
 
 static const WidgetFactory<ElementPainterImpl> element_painter_factory ("Rapicorn::ElementPainter");
