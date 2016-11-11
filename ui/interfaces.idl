@@ -586,7 +586,6 @@ interface ElementPainter : Container {
 /// It also provide the HAS_FOCUS_INDICATOR flag for its nextmost NEEDS_FOCUS_INDICATOR ancestor.
 /// See also the corresponding implementation class FocusPainterImpl.
 interface FocusPainter : ElementPainter {
-  /* bool   tight_focus = Bool (_("Tight Focus"), _("Overlay child with focus frame"), "rw"); */
 };
 
 /// A widget for text display.

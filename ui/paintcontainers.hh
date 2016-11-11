@@ -171,13 +171,13 @@ class FocusPainterImpl : public virtual ElementPainterImpl, public virtual Focus
   ContainerImpl *focus_container_;
   bool           container_has_focus_, tight_;
 protected:
-  virtual WidgetState render_state             () const override;
-  virtual void      set_focus_child            (WidgetImpl *widget) override;
-  virtual void      hierarchy_changed          (WidgetImpl *old_toplevel) override;
-  virtual void      focusable_container_change (ContainerImpl &focus_container) override;
+  virtual WidgetState render_state               () const override;
+  virtual void        set_focus_child            (WidgetImpl *widget) override;
+  virtual void        hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void        focusable_container_change (ContainerImpl &focus_container) override;
 public:
-  explicit       FocusPainterImpl ();
-  virtual       ~FocusPainterImpl () override;
+  explicit            FocusPainterImpl           ();
+  virtual            ~FocusPainterImpl           () override;
 };
 
 class ShapePainterImpl : public virtual SingleContainerImpl, public virtual ShapePainterIface {
