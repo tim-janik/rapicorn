@@ -362,7 +362,10 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
       handled = (*it)->process_event (*move_event);
   delete move_event;
   /* update entered children */
-  last_entered_children_ = pierced;
+  last_entered_children_.swap (pierced);
+  if (last_entered_children_.size() != pierced.size() ||
+      (last_entered_children_.size() > 0 && last_entered_children_.back() != pierced.back()))
+    changed ("get_entered");
   return handled;
 }
 
