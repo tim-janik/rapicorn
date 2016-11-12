@@ -341,17 +341,6 @@ WidgetImpl::has_focus () const
   return false;
 }
 
-void
-WidgetImpl::unset_focus ()
-{
-  if (test_any (FOCUS_CHAIN))
-    {
-      WindowImpl *rwidget = get_window();
-      if (rwidget && rwidget->get_focus_widget() == this)
-        WindowImpl::WidgetImplFriend::set_focus (*rwidget, NULL);
-    }
-}
-
 bool
 WidgetImpl::grab_focus ()
 {

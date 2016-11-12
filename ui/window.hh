@@ -48,6 +48,7 @@ public:
   explicit              WindowImpl              ();
   virtual              ~WindowImpl              () override;
   virtual WindowImpl*   as_window_impl          ()              { return this; }
+  virtual void          unset_focus             () override     { set_focus (NULL); }
   WidgetIfaceP          get_focus               () override;
   WidgetImpl*           get_focus_widget        ()              { return shared_ptr_cast<WidgetImpl> (get_focus()).get(); }
   WidgetIfaceP          get_entered             () override;

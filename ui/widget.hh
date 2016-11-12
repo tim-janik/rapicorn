@@ -213,7 +213,6 @@ public:
   bool                        focusable         () const; ///< Returns true if @a this widget participates in input focus selection.
   bool                        has_focus         () const; ///< Returns true if @a this widget has focus to receive keyboard events.
   bool                        grab_focus        ();
-  void                        unset_focus       ();
   virtual bool                move_focus        (FocusDir fdir);
   virtual bool                activate          ();
   virtual bool                hexpand           () const { return test_any (HEXPAND | HSPREAD | HSPREAD_CONTAINER); } ///< Get horizontal expansion
