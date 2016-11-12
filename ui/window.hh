@@ -48,7 +48,10 @@ public:
   explicit              WindowImpl              ();
   virtual              ~WindowImpl              () override;
   virtual WindowImpl*   as_window_impl          ()              { return this; }
-  WidgetImpl*           get_focus               () const;
+  WidgetIfaceP          get_focus               () override;
+  WidgetImpl*           get_focus_widget        ()              { return shared_ptr_cast<WidgetImpl> (get_focus()).get(); }
+  WidgetIfaceP          get_entered             () override;
+  WidgetImpl*           get_entered_widget      ()              { return shared_ptr_cast<WidgetImpl> (get_entered()).get(); }
   cairo_surface_t*      create_snapshot         (const IRect  &subarea);
   bool                  requisitions_tunable    () const        { return tunable_requisition_counter_ > 0; }
   static  void          forcefully_close_all    ();

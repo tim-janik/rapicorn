@@ -335,7 +335,7 @@ WidgetImpl::has_focus () const
   if (test_any (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
-      if (rwidget && rwidget->get_focus() == this)
+      if (rwidget && rwidget->get_focus_widget() == this)
         return true;
     }
   return false;
@@ -347,7 +347,7 @@ WidgetImpl::unset_focus ()
   if (test_any (FOCUS_CHAIN))
     {
       WindowImpl *rwidget = get_window();
-      if (rwidget && rwidget->get_focus() == this)
+      if (rwidget && rwidget->get_focus_widget() == this)
         WindowImpl::WidgetImplFriend::set_focus (*rwidget, NULL);
     }
 }
@@ -367,7 +367,7 @@ WidgetImpl::grab_focus ()
   rwidget = get_window();
   if (rwidget && rwidget->get_focus() == NULL)
     WindowImpl::WidgetImplFriend::set_focus (*rwidget, this);
-  return rwidget && rwidget->get_focus() == this;
+  return rwidget && rwidget->get_focus_widget() == this;
 }
 
 bool

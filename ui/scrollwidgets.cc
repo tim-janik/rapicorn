@@ -205,7 +205,7 @@ ScrollPortImpl::set_focus_child (WidgetImpl *widget)
   WindowImpl *rt = get_window();
   if (!rt)
     return;
-  WidgetImpl *const rfwidget = rt->get_focus();
+  WidgetImpl *const rfwidget = rt->get_focus_widget();
   WidgetImpl *fwidget = rfwidget;
   if (!fwidget)
     return;

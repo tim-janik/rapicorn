@@ -118,6 +118,15 @@ WindowImpl::command_dispatcher (const LoopState &state)
   return false;
 }
 
+WidgetIfaceP
+WindowImpl::get_entered ()
+{
+  WidgetImplP widget = last_entered_children_.empty() ? NULL : last_entered_children_.back();
+  if (widget && widget->anchored())
+    return widget;
+  return NULL;
+}
+
 struct CurrentFocus {
   WidgetImpl *focus_widget;
   size_t      uncross_id;
@@ -125,10 +134,10 @@ struct CurrentFocus {
 };
 static DataKey<CurrentFocus> focus_widget_key;
 
-WidgetImpl*
-WindowImpl::get_focus () const
+WidgetIfaceP
+WindowImpl::get_focus ()
 {
-  return get_data (&focus_widget_key).focus_widget;
+  return shared_ptr_cast<WidgetIface> (get_data (&focus_widget_key).focus_widget);
 }
 
 void
@@ -609,7 +618,7 @@ WindowImpl::dispatch_key_event (const Event &event)
   bool handled = false;
   ensure_resized(); // ensure coordinates are interpreted with correct allocations
   dispatch_mouse_movement (event);
-  WidgetImpl *focus_widget = get_focus();
+  WidgetImpl *focus_widget = get_focus_widget();
   if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_event (event))
     return true;
   const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
@@ -625,7 +634,7 @@ WindowImpl::dispatch_key_event (const Event &event)
         }
       if (!handled && (activate == ACTIVATE_FOCUS || activate == ACTIVATE_DEFAULT))
         {
-          focus_widget = get_focus();
+          focus_widget = get_focus_widget();
           if (focus_widget && focus_widget->key_sensitive())
             {
               if (!focus_widget->activate())
@@ -647,7 +656,7 @@ bool
 WindowImpl::dispatch_data_event (const Event &event)
 {
   dispatch_mouse_movement (event);
-  WidgetImpl *focus_widget = get_focus();
+  WidgetImpl *focus_widget = get_focus_widget();
   if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_event (event))
     return true;
   else if (event.type == CONTENT_REQUEST)
