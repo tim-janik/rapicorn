@@ -49,6 +49,6 @@ Keyboard shortcuts like Tab, Shift-Tab, Up, Down, Left, Right (sometimes in comb
 -# Rapicorn.Container generally keep track of the last child that had focus (the focus_child) or was part of the focus chain (an ancestor of the widget having focus).
 -# Onece focus moves on, the Container.focus_child is adjusted or unset. Some containers need to memorize the last focus child, the Container.focus_lost() method can be overridden for this purpose.
 -# The Window.auto_focus property controls whether a window contains an initially focused widget when it is shown.
--# The FocusDir::CHAIN flag is used to keep track of the current focus widget and its ancestry.
+-# The FOCUS_CHAIN flag is used to keep track of the current focus widget and its ancestry.
 
 */

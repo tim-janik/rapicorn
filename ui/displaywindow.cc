@@ -228,7 +228,7 @@ flag_name (uint64 flag)
     case DisplayWindow::ABOVE_ALL:	return "ABOVE_ALL";
     case DisplayWindow::BELOW_ALL:	return "BELOW_ALL";
     case DisplayWindow::ATTENTION:	return "ATTENTION";
-    case DisplayWindow::FOCUS_DECO:	return "FocusDir::DECO";
+    case DisplayWindow::FOCUS_DECO:	return "FOCUS_DECO";
     case DisplayWindow::DECORATED:	return "DECORATED";
     case DisplayWindow::MINIMIZABLE:	return "MINIMIZABLE";
     case DisplayWindow::MAXIMIZABLE:	return "MAXIMIZABLE";
