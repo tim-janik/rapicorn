@@ -487,7 +487,7 @@ WindowImpl::dispatch_button_release (const EventButton &bevent)
 void
 WindowImpl::cancel_widget_events (WidgetImpl *widget)
 {
-  /* cancel enter events */
+  // cancel enter events
   for (int i = last_entered_children_.size(); i > 0;)
     {
       WidgetImplP current = last_entered_children_[--i]; /* walk backwards */
@@ -499,7 +499,7 @@ WindowImpl::cancel_widget_events (WidgetImpl *widget)
           delete mevent;
         }
     }
-  /* cancel button press events */
+  // cancel button press events
   while (button_state_map_.begin() != button_state_map_.end())
     {
       ButtonStateMap::iterator it = button_state_map_.begin();
@@ -508,7 +508,7 @@ WindowImpl::cancel_widget_events (WidgetImpl *widget)
       if (&bs.widget == widget || !widget)
         {
           EventButton *bevent = create_event_button (BUTTON_CANCELED, last_event_context_, bs.button);
-          bs.widget.process_event (*bevent); // modifies button_state_map_ + this
+          bs.widget.process_event (*bevent, bs.captured); // modifies button_state_map_ + this
           delete bevent;
         }
     }
