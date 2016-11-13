@@ -62,11 +62,10 @@ public:
   virtual bool          auto_focus              () const override;
   virtual void          auto_focus              (bool afocus) override;
   // grab handling
-  virtual void          add_grab                                (WidgetImpl &child, bool unconfined = false);
-  void                  add_grab                                (WidgetImpl *child, bool unconfined = false);
+  virtual void          add_grab                                (WidgetImpl &child, bool constrained = true);
   virtual bool          remove_grab                             (WidgetImpl &child);
   bool                  remove_grab                             (WidgetImpl *child);
-  virtual WidgetImpl*   get_grab                                (bool                   *unconfined = NULL);
+  virtual WidgetImpl*   get_grab                                (bool *constrained = NULL);
   bool                  is_grabbing                             (WidgetImpl &descendant);
   // main loop
   virtual EventLoop*    get_loop                                ();
@@ -92,8 +91,7 @@ private:
   void                  grab_stack_changed                      ();
   virtual void          dispose_widget                          (WidgetImpl               &widget);
   /* misc */
-  vector<WidgetImplP>   widget_difference                       (const vector<WidgetImplP>    &clist, /* preserves order of clist */
-                                                                 const vector<WidgetImplP>    &cminus);
+  vector<WidgetImplP>   widget_difference                       (const vector<WidgetImplP> &widgets, const vector<WidgetImplP> &removes);
   /* rendering */
   virtual void          draw_now                                ();
   virtual void          render                                  (RenderContext &rcontext);
@@ -116,7 +114,7 @@ private:
   virtual void          cancel_widget_events                      (WidgetImpl               *widget);
   void                  cancel_widget_events                      (WidgetImpl &widget) { cancel_widget_events (&widget); }
   bool                  dispatch_mouse_movement                 (const Event            &event);
-  bool                  dispatch_event_to_pierced_or_grab       (const Event            &event);
+  bool                  dispatch_event_to_entered               (const Event            &event);
   bool                  dispatch_button_press                   (const EventButton      &bevent);
   bool                  dispatch_button_release                 (const EventButton      &bevent);
   bool                  dispatch_cancel_event                   (const Event            &event);
@@ -125,7 +123,7 @@ private:
   bool                  dispatch_leave_event                    (const EventMouse       &mevent);
   bool                  dispatch_button_event                   (const Event            &event);
   bool                  dispatch_focus_event                    (const EventFocus       &fevent);
-  bool                  move_focus_dir                          (FocusDir                focus_dir);
+  bool                  move_container_focus                    (ContainerImpl &container, FocusDir focus_dir);
   bool                  dispatch_key_event                      (const Event            &event);
   bool                  dispatch_data_event                     (const Event            &event);
   bool                  dispatch_scroll_event                   (const EventScroll      &sevent);
@@ -137,8 +135,8 @@ private:
   /* --- GrabEntry --- */
   struct GrabEntry {
     WidgetImpl *widget;
-    bool  unconfined;
-    explicit            GrabEntry (WidgetImpl *i, bool uc) : widget (i), unconfined (uc) {}
+    bool        constrained;
+    explicit    GrabEntry (WidgetImpl *i, bool con) : widget (i), constrained (con) {}
   };
   vector<GrabEntry>     grab_stack_;
   /* --- ButtonState --- */
