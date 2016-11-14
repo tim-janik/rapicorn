@@ -60,7 +60,6 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   friend                      class SizeGroup;
   friend                      class ContainerImpl;
   friend                      class WindowImpl;
-  friend                      class RapicornInternal::ImplementationHelper;
 public:
   struct AncestryCache;
 private:
@@ -165,6 +164,7 @@ protected:
   /// @}
 public:
   explicit                    WidgetImpl        ();
+  void                        fabricated        (Internal); // for factory use only
   virtual WindowImpl*         as_window_impl    ()              { return NULL; }
   virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }

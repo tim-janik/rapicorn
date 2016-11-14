@@ -366,4 +366,10 @@ inject_init_args (const char *const internal_args)
   internal_init_args_ = internal_args;
 }
 
+#ifdef __RAPICORN_BUILD__
+template<> void
+InternalUse<rapicorn_build()>::internal_linkage()
+{}
+#endif // __RAPICORN_BUILD__
+
 } // RapicornInternal

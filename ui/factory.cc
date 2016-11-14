@@ -10,12 +10,6 @@
 #define FDEBUG(...)     RAPICORN_KEY_DEBUG ("Factory", __VA_ARGS__)
 #define EDEBUG(...)     RAPICORN_KEY_DEBUG ("Factory-Eval", __VA_ARGS__)
 
-namespace RapicornInternal {
-struct ImplementationHelper final {
-  static inline void fabricated (WidgetImpl &widget)   { widget.fabricated(); }
-};
-} // RapicornInternal
-
 namespace Rapicorn {
 namespace Factory {
 
@@ -388,7 +382,7 @@ Builder::fabricate_widget (const String &widget_identifier,
   WidgetImplP widget = builder.build_scope (call_location, builder.dnode_);
   // finish fabrication
   if (widget)
-    RapicornInternal::ImplementationHelper::fabricated (*widget);
+    widget->fabricated (Internal());
   FDEBUG ("%s: built widget '%s': %s", node_location (builder.dnode_), widget_identifier, widget ? widget->id() : "<null>");
   return widget;
 }

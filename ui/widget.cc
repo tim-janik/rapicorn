@@ -65,9 +65,15 @@ WidgetImpl::construct ()
 }
 
 void
-WidgetImpl::fabricated ()
+WidgetImpl::fabricated()
 {
   // must chain and propagate to children
+}
+
+void
+WidgetImpl::fabricated (Internal)
+{
+  fabricated();
 }
 
 void

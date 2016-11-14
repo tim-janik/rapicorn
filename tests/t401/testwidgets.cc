@@ -39,6 +39,10 @@ test_factory ()
   WindowImpl *window = &testwin->impl();
   widget = window->interface<WidgetImpl*> ("TestWidgetL2");
   TASSERT (widget != NULL);
+#if 0
+  // must result in compiler/linker error due to internal usage
+  widget->fabricated (Internal()); // not our business to call!
+#endif
   TestContainerImpl *twidget = dynamic_cast<TestContainerImpl*> (widget);
   TASSERT (twidget != NULL);
   if (0)
