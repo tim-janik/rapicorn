@@ -1539,7 +1539,7 @@ WidgetImpl::expose_unclipped (const Region &region)
   viewport_region.translate (delta.x, delta.y);
   // clip region against ancestry
   viewport_region.intersect (Region (vextents));
-  viewport.expose_region (viewport_region);
+  viewport.get_window()->expose_region (viewport_region); // FIXME: use viewport
 }
 
 /** Invalidate drawing contents of a widget

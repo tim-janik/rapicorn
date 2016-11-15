@@ -304,6 +304,38 @@ WindowImpl::beep()
     display_window_->beep();
 }
 
+void
+WindowImpl::expose_region (const Region &region)
+{
+  if (!region.empty())
+    {
+      expose_region_.add (region);
+      collapse_expose_region();
+    }
+}
+
+void
+WindowImpl::collapse_expose_region ()
+{
+  // check for excess expose fragment scenarios
+  uint n_erects = expose_region_.count_rects();
+  /* considering O(n^2) collision computation complexity, but also focus frame
+   * exposures which easily consist of 4+ fragments, a hundred rectangles turn
+   * out to be an emperically suitable threshold.
+   */
+  if (n_erects > 99)
+    {
+      /* aparently the expose fragments we're combining are too small,
+       * so we can end up with spending too much time on expose rectangle
+       * compression (more time than needed for actual rendering).
+       * as a workaround, we simply force everything into a single expose
+       * rectangle which is good enough to avoid worst case explosion.
+       */
+      expose_region_.add (expose_region_.extents());
+      DEBUG_RENDER ("collapsing expose rectangles due to overflow: %u -> %u", n_erects, expose_region_.count_rects());
+    }
+}
+
 // Return @a widgets without any of @a removes, preserving the original order.
 vector<WidgetImplP>
 WindowImpl::widget_difference (const vector<WidgetImplP> &widgets, const vector<WidgetImplP> &removes)

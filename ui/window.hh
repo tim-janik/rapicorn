@@ -20,6 +20,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   String                     last_command_;
   vector<WidgetImplP>   last_entered_children_;
   DisplayWindow::Config config_;
+  Region                expose_region_;
   size_t                immediate_event_hash_;
   uint                  tunable_requisition_counter_ : 8;
   uint                  auto_focus_ : 1;
@@ -33,6 +34,10 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   bool                  can_resize_redraw        ();
   void                  maybe_resize_window      ();
   void                  negotiate_initial_size   ();
+  void                  collapse_expose_region   ();
+  const Region&         peek_expose_region       () const       { return expose_region_; }
+  void                  discard_expose_region    ()             { expose_region_.clear(); }
+  bool                  exposes_pending          () const       { return !expose_region_.empty(); }
   static WidgetFlag     check_widget_requisition (WidgetImpl &widget, bool discard_tuned);
   WidgetFlag            check_widget_allocation  (WidgetImpl &widget);
   void                  uncross_focus            (WidgetImpl &fwidget);
@@ -53,6 +58,7 @@ public:
   WidgetImpl*           get_focus_widget        ()              { return shared_ptr_cast<WidgetImpl> (get_focus()).get(); }
   WidgetIfaceP          get_entered             () override;
   WidgetImpl*           get_entered_widget      ()              { return shared_ptr_cast<WidgetImpl> (get_entered()).get(); }
+  void                  expose_region           (const Region &region);
   cairo_surface_t*      create_snapshot         (const IRect  &subarea);
   bool                  requisitions_tunable    () const        { return tunable_requisition_counter_ > 0; }
   static  void          forcefully_close_all    ();
