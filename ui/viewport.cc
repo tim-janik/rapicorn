@@ -11,7 +11,7 @@
 namespace Rapicorn {
 
 ViewportImpl::ViewportImpl() :
-  display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
+  display_window_ (NULL), immediate_event_hash_ (0),
   tunable_requisition_counter_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true),
   need_resize_ (false)
@@ -42,10 +42,23 @@ ViewportImpl::fetch_ancestry_cache ()
 }
 
 void
-ViewportImpl::beep()
+ViewportImpl::hierarchy_changed (WidgetImpl *old_toplevel)
 {
-  if (has_display_window())
-    display_window_->beep();
+  if (old_toplevel)
+    {
+      EventLoop *loop = old_toplevel->get_loop();
+      loop->remove (event_dispatcher_id_);
+      event_dispatcher_id_ = 0;
+      loop->remove (drawing_dispatcher_id_);
+      drawing_dispatcher_id_ = 0;
+    }
+  ResizeContainerImpl::hierarchy_changed (old_toplevel);
+  if (anchored())
+    {
+      EventLoop *loop = get_loop();
+      event_dispatcher_id_ = loop->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+      drawing_dispatcher_id_ = loop->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+    }
 }
 
 String
@@ -80,51 +93,6 @@ ViewportImpl::auto_focus (bool afocus)
       auto_focus_ = afocus;
       changed ("auto_focus");
     }
-}
-
-bool
-ViewportImpl::custom_command (const String &command_name, const StringSeq &command_args)
-{
-  assert_return (commands_emission_ == NULL, false);
-  last_command_ = command_name;
-  commands_emission_ = sig_commands.emission (command_name, command_args);
-  return true;
-}
-
-bool
-ViewportImpl::command_dispatcher (const LoopState &state)
-{
-  if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return commands_emission_ && commands_emission_->pending();
-  else if (state.phase == state.DISPATCH)
-    {
-      ViewportImplP guard_this = shared_ptr_cast<ViewportImpl> (this);
-      commands_emission_->dispatch();                   // invoke signal handlers
-      bool handled = false;
-      if (commands_emission_->has_value())
-        handled = commands_emission_->get_value();      // value returned from signal handler
-      if (handled || commands_emission_->done())
-        {
-          if (!handled)                                 // all handlers returned false
-            critical ("Command unhandled: %s", last_command_.c_str());
-          Signal_commands::Emission *emi = commands_emission_;
-          commands_emission_ = NULL;
-          delete emi;
-          last_command_ = "";
-        }
-      return true;
-    }
-  else if (state.phase == state.DESTROY)
-    {
-      if (commands_emission_)
-        {
-          Signal_commands::Emission *emi = commands_emission_;
-          commands_emission_ = NULL;
-          delete emi;
-          last_command_ = "";
-        }
-    }
-  return false;
 }
 
 WidgetIfaceP
@@ -1179,7 +1147,7 @@ ViewportImpl::screen_viewable ()
 static bool startup_viewport = true;
 
 void
-ViewportImpl::async_show()
+ViewportImpl::show_display_window()
 {
   if (has_display_window())
     {
@@ -1235,8 +1203,7 @@ ViewportImpl::create_display_window ()
             fatal ("failed to find and open any display driver");
         }
       RAPICORN_ASSERT (has_display_window() == true);
-      loop->flag_primary (true); // FIXME: depends on WM-managable
-      EventLoop::VoidSlot sl = Aida::slot (*this, &ViewportImpl::async_show);
+      EventLoop::VoidSlot sl = Aida::slot (*this, &ViewportImpl::show_display_window);
       loop->exec_callback (sl);
     }
 }
@@ -1250,9 +1217,6 @@ ViewportImpl::destroy_display_window ()
   clear_immediate_event();
   display_window_->destroy();
   display_window_ = NULL;
-  EventLoop *loop = get_loop();
-  if (loop)
-    loop->flag_primary (false);
   // reset widget state where needed
   cancel_widget_events (NULL);
 }
@@ -1309,60 +1273,6 @@ ViewportImpl::snapshot (const String &pngname)
   String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
   RAPICORN_DIAG ("ViewportImpl:snapshot:%s: failed to create \"%s\": %s", id(), pngname, err);
   return CAIRO_STATUS_SUCCESS == wstatus;
-}
-
-bool
-ViewportImpl::synthesize_enter (double xalign, double yalign)
-{
-  if (!has_display_window())
-    return false;
-  const Allocation &area = allocation();
-  Point p (area.x + xalign * (max (1, area.width) - 1),
-           area.y + yalign * (max (1, area.height) - 1));
-  p = point_to_viewport (p);
-  EventContext ec;
-  ec.x = p.x;
-  ec.y = p.y;
-  push_immediate_event (create_event_mouse (MOUSE_ENTER, ec));
-  return true;
-}
-
-bool
-ViewportImpl::synthesize_leave ()
-{
-  if (!has_display_window())
-    return false;
-  EventContext ec;
-  push_immediate_event (create_event_mouse (MOUSE_LEAVE, ec));
-  return true;
-}
-
-bool
-ViewportImpl::synthesize_click (WidgetIface &widgeti, int button, double xalign, double yalign)
-{
-  WidgetImpl &widget = *dynamic_cast<WidgetImpl*> (&widgeti);
-  if (!has_display_window() || !&widget)
-    return false;
-  const Allocation &area = widget.allocation();
-  Point p (area.x + xalign * (max (1, area.width) - 1),
-           area.y + yalign * (max (1, area.height) - 1));
-  p = widget.point_to_viewport (p);
-  EventContext ec;
-  ec.x = p.x;
-  ec.y = p.y;
-  push_immediate_event (create_event_button (BUTTON_RELEASE, ec, button));
-  push_immediate_event (create_event_button (BUTTON_PRESS, ec, button));
-  return true;
-}
-
-bool
-ViewportImpl::synthesize_delete ()
-{
-  if (!has_display_window())
-    return false;
-  EventContext ec;
-  push_immediate_event (create_event_win_delete (ec));
-  return true;
 }
 
 static const WidgetFactory<ViewportImpl> viewport_factory ("Rapicorn::Viewport");

@@ -32,12 +32,11 @@ static void wleave (WindowImpl *wi)
 
 
 WindowImpl::WindowImpl () :
-  loop_ (uithread_main_loop()->create_slave())
+  loop_ (uithread_main_loop()->create_slave()),
+  commands_emission_ (NULL)
 {
   // create event loop (auto-starts)
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
+  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
   loop_->flag_primary (false);
 }
 
@@ -96,6 +95,21 @@ WindowImpl::set_parent (ContainerImpl *parent)
 }
 
 void
+WindowImpl::create_display_window ()
+{
+  ViewportImpl::create_display_window();
+  if (has_display_window())
+    loop_->flag_primary (true);
+}
+
+void
+WindowImpl::destroy_display_window ()
+{
+  ViewportImpl::destroy_display_window();
+  loop_->flag_primary (false);
+}
+
+void
 WindowImpl::forcefully_close_all()
 {
   vector<WindowImpl*> wl = WindowTrail::wlist();
@@ -112,6 +126,105 @@ WindowImpl::widget_is_anchored (WidgetImpl &widget, Internal)
   if (window && ApplicationImpl::WindowImplFriend::has_window (*window))
     return true;
   return false;
+}
+
+bool
+WindowImpl::custom_command (const String &command_name, const StringSeq &command_args)
+{
+  assert_return (commands_emission_ == NULL, false);
+  last_command_ = command_name;
+  commands_emission_ = sig_commands.emission (command_name, command_args);
+  return true;
+}
+
+bool
+WindowImpl::command_dispatcher (const LoopState &state)
+{
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    return commands_emission_ && commands_emission_->pending();
+  else if (state.phase == state.DISPATCH)
+    {
+      WindowImplP guard_this = shared_ptr_cast<WindowImpl> (this);
+      commands_emission_->dispatch();                   // invoke signal handlers
+      bool handled = false;
+      if (commands_emission_->has_value())
+        handled = commands_emission_->get_value();      // value returned from signal handler
+      if (handled || commands_emission_->done())
+        {
+          if (!handled)                                 // all handlers returned false
+            critical ("Command unhandled: %s", last_command_.c_str());
+          Signal_commands::Emission *emi = commands_emission_;
+          commands_emission_ = NULL;
+          delete emi;
+          last_command_ = "";
+        }
+      return true;
+    }
+  else if (state.phase == state.DESTROY)
+    {
+      if (commands_emission_)
+        {
+          Signal_commands::Emission *emi = commands_emission_;
+          commands_emission_ = NULL;
+          delete emi;
+          last_command_ = "";
+        }
+    }
+  return false;
+}
+
+bool
+WindowImpl::synthesize_enter (double xalign, double yalign)
+{
+  if (!has_display_window())
+    return false;
+  const Allocation &area = allocation();
+  Point p (area.x + xalign * (max (1, area.width) - 1),
+           area.y + yalign * (max (1, area.height) - 1));
+  p = point_to_viewport (p);
+  EventContext ec;
+  ec.x = p.x;
+  ec.y = p.y;
+  push_immediate_event (create_event_mouse (MOUSE_ENTER, ec));
+  return true;
+}
+
+bool
+WindowImpl::synthesize_leave ()
+{
+  if (!has_display_window())
+    return false;
+  EventContext ec;
+  push_immediate_event (create_event_mouse (MOUSE_LEAVE, ec));
+  return true;
+}
+
+bool
+WindowImpl::synthesize_click (WidgetIface &widgeti, int button, double xalign, double yalign)
+{
+  WidgetImpl &widget = *dynamic_cast<WidgetImpl*> (&widgeti);
+  if (!has_display_window() || !&widget)
+    return false;
+  const Allocation &area = widget.allocation();
+  Point p (area.x + xalign * (max (1, area.width) - 1),
+           area.y + yalign * (max (1, area.height) - 1));
+  p = widget.point_to_viewport (p);
+  EventContext ec;
+  ec.x = p.x;
+  ec.y = p.y;
+  push_immediate_event (create_event_button (BUTTON_RELEASE, ec, button));
+  push_immediate_event (create_event_button (BUTTON_PRESS, ec, button));
+  return true;
+}
+
+bool
+WindowImpl::synthesize_delete ()
+{
+  if (!has_display_window())
+    return false;
+  EventContext ec;
+  push_immediate_event (create_event_win_delete (ec));
+  return true;
 }
 
 static const WidgetFactory<WindowImpl> window_factory ("Rapicorn::Window");
