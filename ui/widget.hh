@@ -294,6 +294,7 @@ protected:
   Region                     rendering_region          (RenderContext &rcontext) const;
   virtual cairo_t*           cairo_context             (RenderContext &rcontext);
 public:
+  static vector<WidgetImplP> widget_difference         (const vector<WidgetImplP> &widgets, const vector<WidgetImplP> &removes);
   void                       compose_into              (cairo_t *cr, const vector<IRect> &view_rects);
   bool                       point                     (Point widget_point) const;
   Point                      point_from_viewport       (Point viewport_point) const;

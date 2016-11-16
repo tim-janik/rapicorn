@@ -94,7 +94,7 @@ private:
   void                  grab_stack_changed                      ();
   virtual void          dispose_widget                          (WidgetImpl               &widget);
   /* misc */
-  vector<WidgetImplP>   widget_difference                       (const vector<WidgetImplP> &widgets, const vector<WidgetImplP> &removes);
+  virtual bool          custom_command                          (const String &command_name, const StringSeq &command_args);
   /* rendering */
   virtual void          draw_now                                ();
   virtual void          render                                  (RenderContext &rcontext);
@@ -110,8 +110,6 @@ private:
   virtual bool          event_dispatcher                        (const LoopState &state);
   virtual bool          drawing_dispatcher                      (const LoopState &state);
   virtual bool          command_dispatcher                      (const LoopState &state);
-  virtual bool          custom_command                          (const String    &command_name,
-                                                                 const StringSeq &command_args);
   /* event handling */
   virtual void          cancel_widget_events                      (WidgetImpl               *widget);
   void                  cancel_widget_events                      (WidgetImpl &widget) { cancel_widget_events (&widget); }

@@ -2183,4 +2183,20 @@ WidgetImpl::drawable () const
   return false;
 }
 
+// Return @a widgets without any of @a removes, preserving the original order.
+vector<WidgetImplP>
+WidgetImpl::widget_difference (const vector<WidgetImplP> &widgets, const vector<WidgetImplP> &removes)
+{
+  std::set<WidgetImpl*> mminus;
+  for (auto &delme : removes)
+    mminus.insert (&*delme);
+  vector<WidgetImplP> remainings;
+  if (widgets.size() > removes.size())
+    remainings.reserve (widgets.size() - removes.size());
+  for (auto &candidate : widgets)
+    if (mminus.find (&*candidate) == mminus.end())
+      remainings.push_back (candidate);
+  return remainings;
+}
+
 } // Rapicorn
