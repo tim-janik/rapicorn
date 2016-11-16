@@ -863,60 +863,10 @@ ViewportImpl::dispatch_button_release (const EventButton &bevent)
 }
 
 bool
-ViewportImpl::dispatch_cancel_event (const Event &event)
-{
-  cancel_widget_events (NULL);
-  return false;
-}
-
-bool
-ViewportImpl::dispatch_enter_event (const EventMouse &mevent)
-{
-  entered_ = true;
-  dispatch_mouse_movement (mevent);
-  return false;
-}
-
-bool
 ViewportImpl::dispatch_move_event (const EventMouse &mevent)
 {
   dispatch_mouse_movement (mevent);
   return false;
-}
-
-bool
-ViewportImpl::dispatch_leave_event (const EventMouse &mevent)
-{
-  dispatch_mouse_movement (mevent);
-  entered_ = false;
-  return false;
-}
-
-bool
-ViewportImpl::dispatch_button_event (const Event &event)
-{
-  bool handled = false;
-  const EventButton *bevent = dynamic_cast<const EventButton*> (&event);
-  if (bevent)
-    {
-      ensure_resized(); // ensure coordinates are interpreted with correct allocations
-      dispatch_mouse_movement (*bevent);
-      if (bevent->type >= BUTTON_PRESS && bevent->type <= BUTTON_3PRESS)
-        handled = dispatch_button_press (*bevent);
-      else
-        handled = dispatch_button_release (*bevent);
-      dispatch_mouse_movement (*bevent);
-    }
-  return handled;
-}
-
-bool
-ViewportImpl::dispatch_focus_event (const EventFocus &fevent)
-{
-  bool handled = false;
-  // dispatch_event_to_entered (*fevent);
-  dispatch_mouse_movement (fevent);
-  return handled;
 }
 
 bool
@@ -1003,36 +953,6 @@ ViewportImpl::dispatch_key_event (const Event &event)
 }
 
 bool
-ViewportImpl::dispatch_data_event (const Event &event)
-{
-  dispatch_mouse_movement (event);
-  WidgetImpl *focus_widget = get_focus_widget();
-  if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_event (event))
-    return true;
-  else if (event.type == CONTENT_REQUEST)
-    {
-      // CONTENT_REQUEST events must be answered
-      const EventData *devent = dynamic_cast<const EventData*> (&event);
-      provide_content ("", "", devent->request_id); // no-type, i.e. reject request
-      return true;
-    }
-  else
-    return false;
-}
-
-bool
-ViewportImpl::dispatch_scroll_event (const EventScroll &sevent)
-{
-  bool handled = false;
-  if (sevent.type == SCROLL_UP || sevent.type == SCROLL_RIGHT ||
-      sevent.type == SCROLL_DOWN || sevent.type == SCROLL_LEFT)
-    {
-      dispatch_mouse_movement (sevent);
-      handled = dispatch_event_to_entered (sevent);
-    }
-  return handled;
-}
-bool
 ViewportImpl::dispatch_win_size_event (const Event &event)
 {
   bool handled = false;
@@ -1077,23 +997,6 @@ ViewportImpl::dispatch_win_size_event (const Event &event)
 }
 
 bool
-ViewportImpl::dispatch_win_delete_event (const Event &event)
-{
-  bool handled = false;
-  const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
-  if (devent)
-    handled = dispatch_win_destroy();
-  return handled;
-}
-
-bool
-ViewportImpl::dispatch_win_destroy ()
-{
-  destroy();
-  return true;
-}
-
-bool
 ViewportImpl::dispatch_event (const Event &event)
 {
   if (!has_display_window())
@@ -1101,39 +1004,80 @@ ViewportImpl::dispatch_event (const Event &event)
   EDEBUG ("%s: w=%p", string_from_event_type (event.type), this);
   switch (event.type)
     {
+      bool handled;
+      const EventButton *bevent;
+      WidgetImpl *focus_widget;
     case EVENT_LAST:
-    case EVENT_NONE:          return false;
-    case MOUSE_ENTER:         return dispatch_enter_event (event);
+    case EVENT_NONE:
+      return false;
+    case MOUSE_ENTER:
+      entered_ = true;
+      dispatch_mouse_movement (event);
+      return false;
     case MOUSE_MOVE:
       if (display_window_->peek_events ([] (Event *e) { return e->type == MOUSE_MOVE; }))
         return true; // coalesce multiple motion events
       else
         return dispatch_move_event (event);
-    case MOUSE_LEAVE:         return dispatch_leave_event (event);
+    case MOUSE_LEAVE:
+      dispatch_mouse_movement (event);
+      entered_ = false;
+      return false;
     case BUTTON_PRESS:
     case BUTTON_2PRESS:
     case BUTTON_3PRESS:
     case BUTTON_CANCELED:
     case BUTTON_RELEASE:
     case BUTTON_2RELEASE:
-    case BUTTON_3RELEASE:     return dispatch_button_event (event);
+    case BUTTON_3RELEASE:
+      ensure_resized(); // ensure coordinates are interpreted with correct allocations
+      bevent = dynamic_cast<const EventButton*> (&event);
+      dispatch_mouse_movement (*bevent);
+      if (bevent->type >= BUTTON_PRESS && bevent->type <= BUTTON_3PRESS)
+        handled = dispatch_button_press (*bevent);
+      else
+        handled = dispatch_button_release (*bevent);
+      dispatch_mouse_movement (*bevent);
+      return handled;
     case FOCUS_IN:
-    case FOCUS_OUT:           return dispatch_focus_event (event);
+    case FOCUS_OUT:
+      dispatch_mouse_movement (event);  // dispatch_event_to_entered (event);
+      return false;
     case KEY_PRESS:
     case KEY_CANCELED:
-    case KEY_RELEASE:         return dispatch_key_event (event);
+    case KEY_RELEASE:
+      return dispatch_key_event (event);
     case CONTENT_DATA:
     case CONTENT_CLEAR:
-    case CONTENT_REQUEST:     return dispatch_data_event (event);
+    case CONTENT_REQUEST:
+      dispatch_mouse_movement (event);
+      focus_widget = get_focus_widget();
+      if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_event (event))
+        return true;
+      else if (event.type == CONTENT_REQUEST)
+        { // CONTENT_REQUEST events must be answered
+          const EventData *devent = dynamic_cast<const EventData*> (&event);
+          provide_content ("", "", devent->request_id); // no-type, i.e. reject request
+          return true;
+        }
+      return false;
     case SCROLL_UP:          // button4
     case SCROLL_DOWN:        // button5
     case SCROLL_LEFT:        // button6
     case SCROLL_RIGHT:       // button7
-      ;                       return dispatch_scroll_event (event);
-    case CANCEL_EVENTS:       return dispatch_cancel_event (event);
-    case WIN_SIZE:            return dispatch_win_size_event (event);
-    case WIN_DELETE:          return dispatch_win_delete_event (event);
-    case WIN_DESTROY:         return dispatch_win_destroy();
+      dispatch_mouse_movement (event);
+      return dispatch_event_to_entered (event);
+    case CANCEL_EVENTS:
+      cancel_widget_events (NULL);
+      return false;
+    case WIN_SIZE:
+      return dispatch_win_size_event (event);
+    case WIN_DELETE:
+      destroy();
+      return true;
+    case WIN_DESTROY:
+      destroy();
+      return true;
     }
   return false;
 }
