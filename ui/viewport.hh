@@ -7,20 +7,12 @@
 
 namespace Rapicorn {
 
-class ViewportImpl : public virtual ResizeContainerImpl {
-protected:
-  virtual const AncestryCache* fetch_ancestry_cache () override;
-public:
-  explicit              ViewportImpl            ();
-  virtual              ~ViewportImpl            ();
-};
+class ViewportImpl;
+typedef std::shared_ptr<ViewportImpl> ViewportImplP;
+typedef std::weak_ptr<ViewportImpl>   ViewportImplW;
 
-class WindowImpl;
-typedef std::shared_ptr<WindowImpl> WindowImplP;
-typedef std::weak_ptr<WindowImpl>   WindowImplW;
-
-/* --- Window --- */
-class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
+// == ViewportImpl ==
+class ViewportImpl : public virtual ResizeContainerImpl, public virtual ViewportIface {
   const EventLoopP      loop_;
   DisplayWindow        *display_window_;
   EventContext          last_event_context_;
@@ -40,7 +32,7 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   WidgetFlag            negotiate_sizes          (const Allocation *new_window_area);
   void                  resize_redraw            (const Allocation *new_window_area, bool resize_only = false);
   bool                  can_resize_redraw        ();
-  void                  maybe_resize_window      ();
+  void                  maybe_resize_viewport      ();
   void                  negotiate_initial_size   ();
   void                  collapse_expose_region   ();
   const Region&         peek_expose_region       () const       { return expose_region_; }
@@ -50,17 +42,14 @@ class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
   WidgetFlag            check_widget_allocation  (WidgetImpl &widget);
   void                  uncross_focus            (WidgetImpl &fwidget);
 protected:
-  virtual void          construct               () override;
-  virtual void          dispose                 () override;
   virtual const AncestryCache* fetch_ancestry_cache () override;
   void                  set_focus               (WidgetImpl *widget);
   void                  ensure_resized          ();
-  virtual void          set_parent              (ContainerImpl *parent);
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE + 1; ///< Execute resizes right before GUI updates.
-  explicit              WindowImpl              ();
-  virtual              ~WindowImpl              () override;
-  virtual WindowImpl*   as_window_impl          ()              { return this; }
+  explicit              ViewportImpl            ();
+  virtual              ~ViewportImpl            () override;
+  virtual ViewportImpl* as_viewport_impl        () override     { return this; }
   virtual void          unset_focus             () override     { set_focus (NULL); }
   WidgetIfaceP          get_focus               () override;
   WidgetImpl*           get_focus_widget        ()              { return shared_ptr_cast<WidgetImpl> (get_focus()).get(); }
@@ -69,10 +58,11 @@ public:
   void                  expose_region           (const Region &region);
   cairo_surface_t*      create_snapshot         (const IRect  &subarea);
   bool                  requisitions_tunable    () const        { return tunable_requisition_counter_ > 0; }
-  static  void          forcefully_close_all    ();
+  void                  draw_child              (WidgetImpl &child);
+  void                  queue_resize_redraw     ();
   // properties
   virtual String        title                   () const override;
-  virtual void          title                   (const String &window_title) override;
+  virtual void          title                   (const String &viewport_title) override;
   virtual bool          auto_focus              () const override;
   virtual void          auto_focus              (bool afocus) override;
   // grab handling
@@ -85,7 +75,7 @@ public:
   virtual EventLoop*    get_loop                                ();
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
-  /* WindowIface */
+  /* ViewportIface */
   virtual bool          screen_viewable                         () override;
   virtual void          show                                    () override;
   virtual bool          closed                                  () override;
@@ -95,11 +85,10 @@ public:
   virtual void          query_idle                              () override;
   virtual bool          synthesize_enter                        (double xalign = 0.5, double yalign = 0.5) override;
   virtual bool          synthesize_leave                        () override;
-  virtual bool          synthesize_click                        (WidgetIface &widget, int button,
-                                                                 double xalign = 0.5, double yalign = 0.5) override;
+  virtual bool          synthesize_click                        (WidgetIface &widget, int button, double xalign = 0.5, double yalign = 0.5) override;
   virtual bool          synthesize_delete                       () override;
-  void                  draw_child                              (WidgetImpl &child);
-  void                  queue_resize_redraw                     ();
+  // internal API
+  DisplayWindow*        display_window                          (Internal = Internal()) const;
 private:
   virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();
@@ -175,15 +164,6 @@ private:
   typedef std::map<ButtonState,uint> ButtonStateMap;
   ButtonStateMap button_state_map_;
   ButtonStateMap::iterator button_state_map_find_earliest (const uint button, const bool captured);
-public: // tailored member access for WidgetImpl
-  /// @cond INTERNAL
-  class WidgetImplFriend {
-    friend                class WidgetImpl; // only friends can access private class members
-    static DisplayWindow* display_window     (WindowImpl &window)                     { return window.display_window_; }
-    static void           set_focus          (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
-    static bool           widget_is_anchored (WidgetImpl &widget);
-  };
-  /// @endcond
 };
 
 } // Rapicorn

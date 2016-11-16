@@ -59,6 +59,7 @@ class WidgetImpl : public virtual WidgetIface, public virtual ObjectImpl {
   friend                      class WidgetGroup;
   friend                      class SizeGroup;
   friend                      class ContainerImpl;
+  friend                      class ViewportImpl;
   friend                      class WindowImpl;
 public:
   struct AncestryCache;
@@ -113,8 +114,8 @@ protected:
     VSHRINK                   = 1 << 14, ///< Flag set on widgets that handle vertical shrinking well, see vshrink()
     HEXPAND                   = 1 << 15, ///< Flag set on widgets that are useful to expand horizontally, see hexpand()
     VEXPAND                   = 1 << 16, ///< Flag set on widgets that are useful to expand vertically, see vexpand()
-    HSPREAD                   = 1 << 17, ///< Flag set on widgets that should expand/shrink horizontally with window growth, see hspread()
-    VSPREAD                   = 1 << 18, ///< Flag set on widgets that should expand/shrink vertically with window growth, see vspread()
+    HSPREAD                   = 1 << 17, ///< Flag set on widgets that should expand/shrink horizontally with viewport growth, see hspread()
+    VSPREAD                   = 1 << 18, ///< Flag set on widgets that should expand/shrink vertically with viewport growth, see vspread()
     HSPREAD_CONTAINER         = 1 << 19, ///< Flag set on containers that contain hspread() widgets
     VSPREAD_CONTAINER         = 1 << 20, ///< Flag set on containers that contain vspread() widgets
   };
@@ -166,6 +167,7 @@ public:
   explicit                    WidgetImpl        ();
   void                        fabricated        (Internal); // for factory use only
   virtual WindowImpl*         as_window_impl    ()              { return NULL; }
+  virtual ViewportImpl*       as_viewport_impl  ()              { return NULL; }
   virtual ContainerImpl*      as_container_impl ()              { return NULL; }
   virtual Selector::Selob*    pseudo_selector   (Selector::Selob &selob, const String &ident, const String &arg, String &error) { return NULL; }
   bool                        test_all          (WidgetFlag mask) const { return (widget_flags_ & mask) == mask; }

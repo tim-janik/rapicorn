@@ -3,7 +3,6 @@
 #include "factory.hh"
 #include "uithread.hh"
 #include "rcore/cairoutils.hh"
-#include <algorithm>
 
 #define EDEBUG(...)           RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
 #define DEBUG_RESIZE(...)     RAPICORN_KEY_DEBUG ("Resize", __VA_ARGS__)
@@ -11,53 +10,18 @@
 
 namespace Rapicorn {
 
-ViewportImpl::ViewportImpl ()
-{}
-
-ViewportImpl::~ViewportImpl ()
-{
-  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
-  ancestry_cache->viewport = NULL;
-}
-
-const WidgetImpl::AncestryCache*
-ViewportImpl::fetch_ancestry_cache ()
-{
-  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
-  ancestry_cache->viewport = this;
-  return ancestry_cache;
-}
-
-WindowImpl&
-WindowIface::impl ()
-{
-  WindowImpl *wimpl = dynamic_cast<WindowImpl*> (this);
-  if (!wimpl)
-    throw std::bad_cast();
-  return *wimpl;
-}
-
-const WindowImpl&
-WindowIface::impl () const
-{
-  const WindowImpl *wimpl = dynamic_cast<const WindowImpl*> (this);
-  if (!wimpl)
-    throw std::bad_cast();
-  return *wimpl;
-}
-
 String
-WindowImpl::title () const
+ViewportImpl::title () const
 {
   return config_.title;
 }
 
 void
-WindowImpl::title (const String &window_title)
+ViewportImpl::title (const String &viewport_title)
 {
-  if (config_.title != window_title)
+  if (config_.title != viewport_title)
     {
-      config_.title = window_title;
+      config_.title = viewport_title;
       if (display_window_)
         display_window_->configure (config_, false);
       changed ("title");
@@ -65,13 +29,13 @@ WindowImpl::title (const String &window_title)
 }
 
 bool
-WindowImpl::auto_focus () const
+ViewportImpl::auto_focus () const
 {
   return auto_focus_;
 }
 
 void
-WindowImpl::auto_focus (bool afocus)
+ViewportImpl::auto_focus (bool afocus)
 {
   if (afocus != auto_focus_)
     {
@@ -80,16 +44,8 @@ WindowImpl::auto_focus (bool afocus)
     }
 }
 
-void
-WindowImpl::set_parent (ContainerImpl *parent)
-{
-  if (parent)
-    critical ("setting parent on toplevel Window widget to: %p (%s)", parent, parent->typeid_name().c_str());
-  return ContainerImpl::set_parent (parent);
-}
-
 bool
-WindowImpl::custom_command (const String &command_name, const StringSeq &command_args)
+ViewportImpl::custom_command (const String &command_name, const StringSeq &command_args)
 {
   assert_return (commands_emission_ == NULL, false);
   last_command_ = command_name;
@@ -98,13 +54,13 @@ WindowImpl::custom_command (const String &command_name, const StringSeq &command
 }
 
 bool
-WindowImpl::command_dispatcher (const LoopState &state)
+ViewportImpl::command_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return commands_emission_ && commands_emission_->pending();
   else if (state.phase == state.DISPATCH)
     {
-      WindowImplP guard_this = shared_ptr_cast<WindowImpl> (this);
+      ViewportImplP guard_this = shared_ptr_cast<ViewportImpl> (this);
       commands_emission_->dispatch();                   // invoke signal handlers
       bool handled = false;
       if (commands_emission_->has_value())
@@ -134,7 +90,7 @@ WindowImpl::command_dispatcher (const LoopState &state)
 }
 
 WidgetIfaceP
-WindowImpl::get_entered ()
+ViewportImpl::get_entered ()
 {
   WidgetImplP widget = last_entered_children_.empty() ? NULL : last_entered_children_.back();
   if (widget && widget->anchored())
@@ -150,13 +106,13 @@ struct CurrentFocus {
 static DataKey<CurrentFocus> focus_widget_key;
 
 WidgetIfaceP
-WindowImpl::get_focus ()
+ViewportImpl::get_focus ()
 {
   return shared_ptr_cast<WidgetIface> (get_data (&focus_widget_key).focus_widget);
 }
 
 void
-WindowImpl::uncross_focus (WidgetImpl &fwidget)
+ViewportImpl::uncross_focus (WidgetImpl &fwidget)
 {
   CurrentFocus cfocus = get_data (&focus_widget_key);
   assert_return (&fwidget == cfocus.focus_widget);
@@ -181,7 +137,7 @@ WindowImpl::uncross_focus (WidgetImpl &fwidget)
 }
 
 void
-WindowImpl::set_focus (WidgetImpl *widget)
+ViewportImpl::set_focus (WidgetImpl *widget)
 {
   CurrentFocus cfocus = get_data (&focus_widget_key);
   if (widget == cfocus.focus_widget)
@@ -193,7 +149,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
   // set new focus
   assert_return (widget->has_ancestor (*this));
   cfocus.focus_widget = widget;
-  cfocus.uncross_id = cross_link (*cfocus.focus_widget, Aida::slot (*this, &WindowImpl::uncross_focus));
+  cfocus.uncross_id = cross_link (*cfocus.focus_widget, Aida::slot (*this, &ViewportImpl::uncross_focus));
   set_data (&focus_widget_key, cfocus);
   while (widget)
     {
@@ -207,7 +163,7 @@ WindowImpl::set_focus (WidgetImpl *widget)
 }
 
 cairo_surface_t*
-WindowImpl::create_snapshot (const IRect &subarea)
+ViewportImpl::create_snapshot (const IRect &subarea)
 {
   const IRect rect = subarea.intersection (allocation());
   cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
@@ -222,29 +178,7 @@ WindowImpl::create_snapshot (const IRect &subarea)
   return surface;
 }
 
-namespace WindowTrail {
-static Mutex               wmutex;
-static vector<WindowImpl*> windows;
-static vector<WindowImpl*> wlist  ()               { ScopedLock<Mutex> slock (wmutex); return windows; }
-static void wenter (WindowImpl *wi) { ScopedLock<Mutex> slock (wmutex); windows.push_back (wi); }
-static void wleave (WindowImpl *wi)
-{
-  ScopedLock<Mutex> slock (wmutex);
-  auto it = find (windows.begin(), windows.end(), wi);
-  assert_return (it != windows.end());
-  windows.erase (it);
-};
-} // WindowTrail
-
-void
-WindowImpl::forcefully_close_all ()
-{
-  vector<WindowImpl*> wl = WindowTrail::wlist();
-  for (auto it : wl)
-    it->close();
-}
-
-WindowImpl::WindowImpl() :
+ViewportImpl::ViewportImpl() :
   loop_ (uithread_main_loop()->create_slave()),
   display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
   tunable_requisition_counter_ (0),
@@ -254,38 +188,14 @@ WindowImpl::WindowImpl() :
   inherited_state_ = 0;
   config_.title = application_name();
   // create event loop (auto-starts)
-  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-  loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
   loop_->flag_primary (false);
 }
 
-void
-WindowImpl::construct ()
+ViewportImpl::~ViewportImpl()
 {
-  ViewportImpl::construct();
-  assert_return (has_children() == false);      // must be anchored before becoming parent
-  assert_return (get_window() && get_viewport());
-  WindowTrail::wenter (this);
-  ApplicationImpl::WindowImplFriend::add_window (*this);
-  assert_return (anchored() == false);
-  sig_hierarchy_changed.emit (NULL);
-  assert_return (anchored() == true);
-}
-
-void
-WindowImpl::dispose ()
-{
-  assert_return (anchored() == true);
-  const bool was_listed = ApplicationImpl::WindowImplFriend::remove_window (*this);
-  assert_return (was_listed);
-  sig_hierarchy_changed.emit (this);
-  assert_return (anchored() == false);
-}
-
-WindowImpl::~WindowImpl()
-{
-  WindowTrail::wleave (this);
   assert_return (anchored() == false);
   if (display_window_)
     {
@@ -293,34 +203,29 @@ WindowImpl::~WindowImpl()
       display_window_->destroy();
       display_window_ = NULL;
     }
-  /* make sure all children are removed while this is still of type WindowImpl.
-   * necessary because C++ alters the object type during constructors and destructors
-   */
-  if (has_children())
-    remove (get_child());
   // shutdown event loop
   loop_->destroy_loop();
-  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ViewportImpl::fetch_ancestry_cache());
-  ancestry_cache->window = NULL;
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
+  ancestry_cache->viewport = NULL;
 }
 
 const WidgetImpl::AncestryCache*
-WindowImpl::fetch_ancestry_cache ()
+ViewportImpl::fetch_ancestry_cache ()
 {
-  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ViewportImpl::fetch_ancestry_cache());
-  ancestry_cache->window = this;
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
+  ancestry_cache->viewport = this;
   return ancestry_cache;
 }
 
 void
-WindowImpl::beep()
+ViewportImpl::beep()
 {
   if (display_window_)
     display_window_->beep();
 }
 
 void
-WindowImpl::expose_region (const Region &region)
+ViewportImpl::expose_region (const Region &region)
 {
   if (!region.empty())
     {
@@ -330,7 +235,7 @@ WindowImpl::expose_region (const Region &region)
 }
 
 void
-WindowImpl::collapse_expose_region ()
+ViewportImpl::collapse_expose_region ()
 {
   // check for excess expose fragment scenarios
   uint n_erects = expose_region_.count_rects();
@@ -353,7 +258,7 @@ WindowImpl::collapse_expose_region ()
 
 // Return @a widgets without any of @a removes, preserving the original order.
 vector<WidgetImplP>
-WindowImpl::widget_difference (const vector<WidgetImplP> &widgets, const vector<WidgetImplP> &removes)
+ViewportImpl::widget_difference (const vector<WidgetImplP> &widgets, const vector<WidgetImplP> &removes)
 {
   std::set<WidgetImpl*> mminus;
   for (auto &delme : removes)
@@ -368,7 +273,7 @@ WindowImpl::widget_difference (const vector<WidgetImplP> &widgets, const vector<
 }
 
 bool
-WindowImpl::dispatch_mouse_movement (const Event &event)
+ViewportImpl::dispatch_mouse_movement (const Event &event)
 {
   last_event_context_ = event;
   vector<WidgetImplP> pierced; // list of entered widgets
@@ -387,7 +292,7 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
     }
   else if (!grab_widget && drawable() && entered_)
     {
-      pierced.push_back (shared_ptr_cast<WidgetImpl> (this));           // deliver to entered window
+      pierced.push_back (shared_ptr_cast<WidgetImpl> (this));           // deliver to entered viewport
       point_descendants (point_from_event (event), pierced);
     }
   // send leave events - not "stolen" by grab_widget, so other widgets are notified about the grab through leave-event
@@ -429,7 +334,7 @@ WindowImpl::dispatch_mouse_movement (const Event &event)
 
 /// Dispatch event to previously entered widgets.
 bool
-WindowImpl::dispatch_event_to_entered (const Event &event)
+ViewportImpl::dispatch_event_to_entered (const Event &event)
 {
   const vector<WidgetImplP> &pierced = last_entered_children_;
   // send actual event
@@ -441,7 +346,7 @@ WindowImpl::dispatch_event_to_entered (const Event &event)
 }
 
 bool
-WindowImpl::dispatch_button_press (const EventButton &bevent)
+ViewportImpl::dispatch_button_press (const EventButton &bevent)
 {
   uint press_count = bevent.type - BUTTON_PRESS + 1;
   assert (press_count >= 1 && press_count <= 3);
@@ -479,8 +384,8 @@ WindowImpl::dispatch_button_press (const EventButton &bevent)
   return handled;
 }
 
-WindowImpl::ButtonStateMap::iterator
-WindowImpl::button_state_map_find_earliest (const uint button, const bool captured)
+ViewportImpl::ButtonStateMap::iterator
+ViewportImpl::button_state_map_find_earliest (const uint button, const bool captured)
 {
   ButtonStateMap::iterator earliest_it = button_state_map_.end();
   uint64 earliest_serializer = ~uint64 (0);
@@ -498,7 +403,7 @@ WindowImpl::button_state_map_find_earliest (const uint button, const bool captur
 }
 
 bool
-WindowImpl::dispatch_button_release (const EventButton &bevent)
+ViewportImpl::dispatch_button_release (const EventButton &bevent)
 {
   bool handled = false;
   // event propagation, bubble phase - handle_event(release/CANCELED) for previous handle_event(press_event)
@@ -535,7 +440,7 @@ WindowImpl::dispatch_button_release (const EventButton &bevent)
 }
 
 void
-WindowImpl::cancel_widget_events (WidgetImpl *widget)
+ViewportImpl::cancel_widget_events (WidgetImpl *widget)
 {
   // cancel enter events
   for (int i = last_entered_children_.size(); i > 0;)
@@ -565,14 +470,14 @@ WindowImpl::cancel_widget_events (WidgetImpl *widget)
 }
 
 bool
-WindowImpl::dispatch_cancel_event (const Event &event)
+ViewportImpl::dispatch_cancel_event (const Event &event)
 {
   cancel_widget_events (NULL);
   return false;
 }
 
 bool
-WindowImpl::dispatch_enter_event (const EventMouse &mevent)
+ViewportImpl::dispatch_enter_event (const EventMouse &mevent)
 {
   entered_ = true;
   dispatch_mouse_movement (mevent);
@@ -580,14 +485,14 @@ WindowImpl::dispatch_enter_event (const EventMouse &mevent)
 }
 
 bool
-WindowImpl::dispatch_move_event (const EventMouse &mevent)
+ViewportImpl::dispatch_move_event (const EventMouse &mevent)
 {
   dispatch_mouse_movement (mevent);
   return false;
 }
 
 bool
-WindowImpl::dispatch_leave_event (const EventMouse &mevent)
+ViewportImpl::dispatch_leave_event (const EventMouse &mevent)
 {
   dispatch_mouse_movement (mevent);
   entered_ = false;
@@ -595,7 +500,7 @@ WindowImpl::dispatch_leave_event (const EventMouse &mevent)
 }
 
 bool
-WindowImpl::dispatch_button_event (const Event &event)
+ViewportImpl::dispatch_button_event (const Event &event)
 {
   bool handled = false;
   const EventButton *bevent = dynamic_cast<const EventButton*> (&event);
@@ -613,7 +518,7 @@ WindowImpl::dispatch_button_event (const Event &event)
 }
 
 bool
-WindowImpl::dispatch_focus_event (const EventFocus &fevent)
+ViewportImpl::dispatch_focus_event (const EventFocus &fevent)
 {
   bool handled = false;
   // dispatch_event_to_entered (*fevent);
@@ -622,7 +527,7 @@ WindowImpl::dispatch_focus_event (const EventFocus &fevent)
 }
 
 bool
-WindowImpl::move_container_focus (ContainerImpl &container, FocusDir focus_dir)
+ViewportImpl::move_container_focus (ContainerImpl &container, FocusDir focus_dir)
 {
   assert_return (container.has_ancestor (*this), false);
   WidgetImplP keep_focus = NULL, old_focus = shared_ptr_cast<WidgetImpl> (get_focus());
@@ -636,7 +541,7 @@ WindowImpl::move_container_focus (ContainerImpl &container, FocusDir focus_dir)
     }
   if (focus_dir != FocusDir::NONE && !container.move_focus (focus_dir))
     {
-      if (keep_focus && keep_focus->get_window() != this)
+      if (keep_focus && keep_focus->get_viewport() != this)
         keep_focus = NULL;
       if (keep_focus)
         keep_focus->grab_focus();        // ensure to keep directional focus widget (usually arrows)
@@ -654,7 +559,7 @@ WindowImpl::move_container_focus (ContainerImpl &container, FocusDir focus_dir)
 }
 
 bool
-WindowImpl::dispatch_key_event (const Event &event)
+ViewportImpl::dispatch_key_event (const Event &event)
 {
   ensure_resized(); // ensure coordinates are interpreted with correct allocations
   dispatch_mouse_movement (event);
@@ -705,7 +610,7 @@ WindowImpl::dispatch_key_event (const Event &event)
 }
 
 bool
-WindowImpl::dispatch_data_event (const Event &event)
+ViewportImpl::dispatch_data_event (const Event &event)
 {
   dispatch_mouse_movement (event);
   WidgetImpl *focus_widget = get_focus_widget();
@@ -723,7 +628,7 @@ WindowImpl::dispatch_data_event (const Event &event)
 }
 
 bool
-WindowImpl::dispatch_scroll_event (const EventScroll &sevent)
+ViewportImpl::dispatch_scroll_event (const EventScroll &sevent)
 {
   bool handled = false;
   if (sevent.type == SCROLL_UP || sevent.type == SCROLL_RIGHT ||
@@ -735,7 +640,7 @@ WindowImpl::dispatch_scroll_event (const EventScroll &sevent)
   return handled;
 }
 bool
-WindowImpl::dispatch_win_size_event (const Event &event)
+ViewportImpl::dispatch_win_size_event (const Event &event)
 {
   bool handled = false;
   const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
@@ -779,7 +684,7 @@ WindowImpl::dispatch_win_size_event (const Event &event)
 }
 
 bool
-WindowImpl::dispatch_win_delete_event (const Event &event)
+ViewportImpl::dispatch_win_delete_event (const Event &event)
 {
   bool handled = false;
   const EventWinDelete *devent = dynamic_cast<const EventWinDelete*> (&event);
@@ -789,23 +694,23 @@ WindowImpl::dispatch_win_delete_event (const Event &event)
 }
 
 bool
-WindowImpl::dispatch_win_destroy ()
+ViewportImpl::dispatch_win_destroy ()
 {
   destroy();
   return true;
 }
 
 void
-WindowImpl::draw_child (WidgetImpl &child)
+ViewportImpl::draw_child (WidgetImpl &child)
 {
   // FIXME: this should be optimized to just redraw the child in question
-  WindowImpl *child_window = child.get_window();
-  assert_return (child_window == this);
+  ViewportImpl *child_viewport = child.get_viewport();
+  assert_return (child_viewport == this);
   draw_now();
 }
 
 void
-WindowImpl::draw_now ()
+ViewportImpl::draw_now ()
 {
   if (display_window_)
     {
@@ -851,7 +756,7 @@ WindowImpl::draw_now ()
 }
 
 void
-WindowImpl::render (RenderContext &rcontext)
+ViewportImpl::render (RenderContext &rcontext)
 {
   // paint background
   Color col = background();
@@ -866,7 +771,7 @@ WindowImpl::render (RenderContext &rcontext)
 }
 
 void
-WindowImpl::remove_grab_widget (WidgetImpl &child)
+ViewportImpl::remove_grab_widget (WidgetImpl &child)
 {
   bool stack_changed = false;
   for (int i = grab_stack_.size() - 1; i >= 0; i--)
@@ -880,7 +785,7 @@ WindowImpl::remove_grab_widget (WidgetImpl &child)
 }
 
 void
-WindowImpl::grab_stack_changed()
+ViewportImpl::grab_stack_changed()
 {
   // FIXME: use idle handler for event synthesis
   EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context_);
@@ -892,7 +797,7 @@ WindowImpl::grab_stack_changed()
 }
 
 void
-WindowImpl::add_grab (WidgetImpl &child, bool constrained)
+ViewportImpl::add_grab (WidgetImpl &child, bool constrained)
 {
   if (!child.has_ancestor (*this))
     throw Exception ("child is not descendant of container \"", id(), "\": ", child.id());
@@ -905,14 +810,14 @@ WindowImpl::add_grab (WidgetImpl &child, bool constrained)
 }
 
 bool
-WindowImpl::remove_grab (WidgetImpl *child)
+ViewportImpl::remove_grab (WidgetImpl *child)
 {
   assert_return (child != NULL, false);
   return remove_grab (*child);
 }
 
 bool
-WindowImpl::remove_grab (WidgetImpl &child)
+ViewportImpl::remove_grab (WidgetImpl &child)
 {
   for (int i = grab_stack_.size() - 1; i >= 0; i--)
     if (grab_stack_[i].widget == &child)
@@ -925,7 +830,7 @@ WindowImpl::remove_grab (WidgetImpl &child)
 }
 
 WidgetImpl*
-WindowImpl::get_grab (bool *constrained)
+ViewportImpl::get_grab (bool *constrained)
 {
   for (int i = grab_stack_.size() - 1; i >= 0; i--)
     if (grab_stack_[i].widget->visible())
@@ -938,7 +843,7 @@ WindowImpl::get_grab (bool *constrained)
 }
 
 bool
-WindowImpl::is_grabbing (WidgetImpl &descendant)
+ViewportImpl::is_grabbing (WidgetImpl &descendant)
 {
   for (size_t i = 0; i < grab_stack_.size(); i++)
     if (grab_stack_[i].widget == &descendant)
@@ -947,21 +852,21 @@ WindowImpl::is_grabbing (WidgetImpl &descendant)
 }
 
 void
-WindowImpl::dispose_widget (WidgetImpl &widget)
+ViewportImpl::dispose_widget (WidgetImpl &widget)
 {
   remove_grab_widget (widget);
   cancel_widget_events (widget);
-  ViewportImpl::dispose_widget (widget);
+  ResizeContainerImpl::dispose_widget (widget);
 }
 
 bool
-WindowImpl::has_queued_win_size ()
+ViewportImpl::has_queued_win_size ()
 {
   return display_window_ && display_window_->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
 }
 
 bool
-WindowImpl::dispatch_event (const Event &event)
+ViewportImpl::dispatch_event (const Event &event)
 {
   if (!display_window_)
     return false;       // we can only handle events on a display_window
@@ -1006,7 +911,7 @@ WindowImpl::dispatch_event (const Event &event)
 }
 
 bool
-WindowImpl::event_dispatcher (const LoopState &state)
+ViewportImpl::event_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     return display_window_ && display_window_->has_event();
@@ -1029,7 +934,7 @@ WindowImpl::event_dispatcher (const LoopState &state)
 }
 
 bool
-WindowImpl::immediate_event_dispatcher (const LoopState &state)
+ViewportImpl::immediate_event_dispatcher (const LoopState &state)
 {
   switch (state.phase)
     {
@@ -1048,7 +953,7 @@ WindowImpl::immediate_event_dispatcher (const LoopState &state)
 }
 
 void
-WindowImpl::push_immediate_event (Event *event)
+ViewportImpl::push_immediate_event (Event *event)
 {
   assert_return (display_window_ != NULL);
   assert_return (event != NULL);
@@ -1056,20 +961,20 @@ WindowImpl::push_immediate_event (Event *event)
   if (immediate_event_hash_ == 0)
     {
       // force immediate (synthesized) event processing before further uithread main loop RPC handling
-      loop_->exec_dispatcher (Aida::slot (*this, &WindowImpl::immediate_event_dispatcher), EventLoop::PRIORITY_NOW);
+      loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::immediate_event_dispatcher), EventLoop::PRIORITY_NOW);
       immediate_event_hash_ = size_t (event);
     }
 }
 
 void
-WindowImpl::clear_immediate_event ()
+ViewportImpl::clear_immediate_event ()
 {
   return_unless (immediate_event_hash_ != 0);
   immediate_event_hash_ = 0;
 }
 
 void
-WindowImpl::queue_resize_redraw()
+ViewportImpl::queue_resize_redraw()
 {
   if (!need_resize_)
     {
@@ -1079,14 +984,14 @@ WindowImpl::queue_resize_redraw()
 }
 
 void
-WindowImpl::ensure_resized()
+ViewportImpl::ensure_resized()
 {
   if (need_resize_)
     resize_redraw (NULL, true);
 }
 
 WidgetImpl::WidgetFlag
-WindowImpl::check_widget_requisition (WidgetImpl &widget, bool discard_tuned)
+ViewportImpl::check_widget_requisition (WidgetImpl &widget, bool discard_tuned)
 {
   if (discard_tuned)
     widget.invalidate_requisition();    // discard requisitions tuned to previous allocations
@@ -1103,7 +1008,7 @@ WindowImpl::check_widget_requisition (WidgetImpl &widget, bool discard_tuned)
 }
 
 WidgetImpl::WidgetFlag
-WindowImpl::check_widget_allocation (WidgetImpl &widget)
+ViewportImpl::check_widget_allocation (WidgetImpl &widget)
 {
   return_unless (widget.visible(), WidgetFlag (0));
   if (need_resize_)
@@ -1125,7 +1030,7 @@ WindowImpl::check_widget_allocation (WidgetImpl &widget)
 }
 
 WidgetImpl::WidgetFlag
-WindowImpl::pop_need_resize()
+ViewportImpl::pop_need_resize()
 {
   if (need_resize_)
     {
@@ -1136,7 +1041,7 @@ WindowImpl::pop_need_resize()
 }
 
 WidgetImpl::WidgetFlag
-WindowImpl::negotiate_sizes (const Allocation *new_window_area)
+ViewportImpl::negotiate_sizes (const Allocation *new_viewport_area)
 {
   const uint64 INVALID_SIZE = INVALID_REQUISITION | INVALID_ALLOCATION;
   uint64 invalidation_flags = pop_need_resize();
@@ -1148,8 +1053,8 @@ WindowImpl::negotiate_sizes (const Allocation *new_window_area)
     }
   // assign new size allocation if provided
   tunable_requisition_counter_ = 3;
-  if (new_window_area)
-    set_child_allocation (*new_window_area);
+  if (new_viewport_area)
+    set_child_allocation (*new_viewport_area);
   /* negotiate and allocate sizes, initially allow tuning and re-allocations:
    * - widgets can tune_requisition() during size_allocate() to negotiate width
    *   for height or vice versa.
@@ -1163,7 +1068,7 @@ WindowImpl::negotiate_sizes (const Allocation *new_window_area)
     {
       if (test_any (INVALID_ALLOCATION))
         {
-          if (new_window_area)
+          if (new_viewport_area)
             set_child_allocation (child_allocation());
           else
             {
@@ -1194,7 +1099,7 @@ WindowImpl::negotiate_sizes (const Allocation *new_window_area)
 }
 
 void
-WindowImpl::negotiate_initial_size()
+ViewportImpl::negotiate_initial_size()
 {
   Allocation area;
   // first, get a simple, untuned size requisition from all widgets
@@ -1205,27 +1110,27 @@ WindowImpl::negotiate_initial_size()
 }
 
 bool
-WindowImpl::can_resize_redraw()
+ViewportImpl::can_resize_redraw()
 {
   return !pending_win_size_ && display_window_ && (need_resize_ || exposes_pending());
 }
 
 void
-WindowImpl::resize_redraw (const Allocation *new_window_area, bool resize_only)
+ViewportImpl::resize_redraw (const Allocation *new_viewport_area, bool resize_only)
 {
   const uint64 resize_start = timestamp_realtime();
-  if (new_window_area)
+  if (new_viewport_area)
     invalidate_allocation();                            // sets need_resize_
   return_unless (can_resize_redraw());                  // check need_resize_
   // if we have a new allocation, previous tunings are useless
-  const bool discard_previous_tunings = new_window_area != NULL;
+  const bool discard_previous_tunings = new_viewport_area != NULL;
   if (discard_previous_tunings)
     check_widget_requisition (*this, true);
   // negotiate ideal size within allocation
   const Allocation current_allocation = allocation();
-  const uint64 invalidation_flags = negotiate_sizes (new_window_area ? new_window_area : &current_allocation);
+  const uint64 invalidation_flags = negotiate_sizes (new_viewport_area ? new_viewport_area : &current_allocation);
   // check if we fit the display window
-  maybe_resize_window();
+  maybe_resize_viewport();
   // redraw resized contents
   const uint64 redraw_start = timestamp_realtime();
   const String fixme_dbg = peek_expose_region().extents().string();
@@ -1238,7 +1143,7 @@ WindowImpl::resize_redraw (const Allocation *new_window_area, bool resize_only)
     }
   const uint64 stop = timestamp_realtime();
   DEBUG_RESIZE ("request=%s allocate=%s pws=%d expose=%s resize_elapsed=%.3fms redraw_elapsed=%.3fms nresize=%d",
-                new_window_area ? "-" : string_format ("%.0fx%.0f", requisition().width, requisition().height),
+                new_viewport_area ? "-" : string_format ("%.0fx%.0f", requisition().width, requisition().height),
                 string_format ("%.0fx%.0f", allocation().width, allocation().height),
                 pending_win_size_, fixme_dbg,
                 (redraw_start - resize_start) / 1000.0,
@@ -1247,7 +1152,7 @@ WindowImpl::resize_redraw (const Allocation *new_window_area, bool resize_only)
 }
 
 void
-WindowImpl::maybe_resize_window()
+ViewportImpl::maybe_resize_viewport()
 {
   const Requisition rsize = requisition();
   if (display_window_)
@@ -1264,13 +1169,13 @@ WindowImpl::maybe_resize_window()
           pending_win_size_ = true;
           discard_expose_region(); // we request a new WIN_SIZE event in configure
           display_window_->configure (config_, true);
-          DEBUG_RESIZE ("resize-window: %s: old=%dx%d new_config=%dx%d", id(), oldreq_width, oldreq_height, config_.request_width, config_.request_height);
+          DEBUG_RESIZE ("resize-viewport: %s: old=%dx%d new_config=%dx%d", id(), oldreq_width, oldreq_height, config_.request_width, config_.request_height);
         }
     }
 }
 
 bool
-WindowImpl::drawing_dispatcher (const LoopState &state)
+ViewportImpl::drawing_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
     {
@@ -1286,21 +1191,21 @@ WindowImpl::drawing_dispatcher (const LoopState &state)
 }
 
 EventLoop*
-WindowImpl::get_loop ()
+ViewportImpl::get_loop ()
 {
   return &*loop_;
 }
 
 bool
-WindowImpl::screen_viewable ()
+ViewportImpl::screen_viewable ()
 {
   return visible() && display_window_ && display_window_->viewable();
 }
 
-static bool startup_window = true;
+static bool startup_viewport = true;
 
 void
-WindowImpl::async_show()
+ViewportImpl::async_show()
 {
   if (display_window_)
     {
@@ -1310,14 +1215,20 @@ WindowImpl::async_show()
       // size request & show up
       display_window_->show();
       // figure if this is the first window triggered by the user startig an app
-      const bool user_action = startup_window;
-      startup_window = false;
+      const bool user_action = startup_viewport;
+      startup_viewport = false;
       display_window_->present (user_action);
     }
 }
 
+DisplayWindow*
+ViewportImpl::display_window (Internal) const
+{
+  return display_window_;
+}
+
 void
-WindowImpl::create_display_window ()
+ViewportImpl::create_display_window ()
 {
   if (anchored())
     {
@@ -1350,19 +1261,19 @@ WindowImpl::create_display_window ()
         }
       RAPICORN_ASSERT (display_window_ != NULL);
       loop_->flag_primary (true); // FIXME: depends on WM-managable
-      EventLoop::VoidSlot sl = Aida::slot (*this, &WindowImpl::async_show);
+      EventLoop::VoidSlot sl = Aida::slot (*this, &ViewportImpl::async_show);
       loop_->exec_callback (sl);
     }
 }
 
 bool
-WindowImpl::has_display_window ()
+ViewportImpl::has_display_window ()
 {
   return !!display_window_;
 }
 
 void
-WindowImpl::destroy_display_window ()
+ViewportImpl::destroy_display_window ()
 {
   const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
   if (!display_window_)
@@ -1376,25 +1287,25 @@ WindowImpl::destroy_display_window ()
 }
 
 void
-WindowImpl::show ()
+ViewportImpl::show ()
 {
   create_display_window();
 }
 
 bool
-WindowImpl::closed ()
+ViewportImpl::closed ()
 {
   return !has_display_window();
 }
 
 void
-WindowImpl::close ()
+ViewportImpl::close ()
 {
   destroy_display_window();
 }
 
 void
-WindowImpl::destroy ()
+ViewportImpl::destroy ()
 {
   const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
   if (anchored())
@@ -1405,11 +1316,11 @@ WindowImpl::destroy ()
 }
 
 void
-WindowImpl::query_idle ()
+ViewportImpl::query_idle ()
 {
   if (display_window_)
     {
-      const WindowImplP thisp = shared_ptr_cast<WindowImpl*> (this);
+      const ViewportImplP thisp = shared_ptr_cast<ViewportImpl*> (this);
       const int PRIORITY_FLOOR = 1; // lowest possible priority, must be truely idle to execute this
       loop_->exec_callback ([thisp] () { thisp->sig_notify_idle.emit(); }, PRIORITY_FLOOR);
     }
@@ -1418,18 +1329,18 @@ WindowImpl::query_idle ()
 }
 
 bool
-WindowImpl::snapshot (const String &pngname)
+ViewportImpl::snapshot (const String &pngname)
 {
   cairo_surface_t *isurface = this->create_snapshot (allocation());
   cairo_status_t wstatus = cairo_surface_write_to_png (isurface, pngname.c_str());
   cairo_surface_destroy (isurface);
   String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
-  RAPICORN_DIAG ("WindowImpl:snapshot:%s: failed to create \"%s\": %s", id(), pngname, err);
+  RAPICORN_DIAG ("ViewportImpl:snapshot:%s: failed to create \"%s\": %s", id(), pngname, err);
   return CAIRO_STATUS_SUCCESS == wstatus;
 }
 
 bool
-WindowImpl::synthesize_enter (double xalign, double yalign)
+ViewportImpl::synthesize_enter (double xalign, double yalign)
 {
   if (!has_display_window())
     return false;
@@ -1445,7 +1356,7 @@ WindowImpl::synthesize_enter (double xalign, double yalign)
 }
 
 bool
-WindowImpl::synthesize_leave ()
+ViewportImpl::synthesize_leave ()
 {
   if (!has_display_window())
     return false;
@@ -1455,7 +1366,7 @@ WindowImpl::synthesize_leave ()
 }
 
 bool
-WindowImpl::synthesize_click (WidgetIface &widgeti,
+ViewportImpl::synthesize_click (WidgetIface &widgeti,
                               int        button,
                               double     xalign,
                               double     yalign)
@@ -1476,7 +1387,7 @@ WindowImpl::synthesize_click (WidgetIface &widgeti,
 }
 
 bool
-WindowImpl::synthesize_delete ()
+ViewportImpl::synthesize_delete ()
 {
   if (!has_display_window())
     return false;
@@ -1485,18 +1396,6 @@ WindowImpl::synthesize_delete ()
   return true;
 }
 
-static const WidgetFactory<WindowImpl> window_factory ("Rapicorn::Window");
-
-// == WidgetImplFriend ==
-bool
-WindowImpl::WidgetImplFriend::widget_is_anchored (WidgetImpl &widget)
-{
-  if (widget.parent() && widget.parent()->anchored())
-    return true;
-  WindowImpl *window = widget.as_window_impl(); // fast cast
-  if (window && ApplicationImpl::WindowImplFriend::has_window (*window))
-    return true;
-  return false;
-}
+static const WidgetFactory<ViewportImpl> viewport_factory ("Rapicorn::Viewport");
 
 } // Rapicorn

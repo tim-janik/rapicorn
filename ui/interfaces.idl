@@ -344,36 +344,38 @@ interface Container : Widget {
   void   remove_widget (Widget child);
 };
 
+/** Viewport contains a display window implementation to show its contents on screen.
+ */
+interface Viewport : Container {
+  String        title      = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
+  bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
+  signal void displayed         (); ///< Notify about (re-)rendering the viewport on screen.
+  signal bool commands          (String     cmdname, StringSeq args);
+  bool        screen_viewable   (); ///< Check whether the display window is currently viewable on screen.
+  Widget      get_entered       (); ///< Retrieve the Viewport's descendant Widget that was last entered if any.
+  void        unset_focus       (); ///< Reset the Viewport's focus widget.
+  Widget      get_focus         (); ///< Retrieve the Viewport's current focus widget.
+  bool        closed            (); ///< Check wether the viewport has been shown or is closed.
+  void        close             (); ///< Close (hide) an on screen viewport.
+  void        show              (); ///< Show (display) a viewport so it appears on screen.
+  void        destroy           (); ///< Destroy and dispose a (possibly on screen) viewport.
+  bool        snapshot          (String     pngname);
+  bool        synthesize_delete ();
+  bool        synthesize_leave  ();
+  bool        synthesize_enter  (float64 xalign = 0.5, float64 yalign = 0.5);
+  bool        synthesize_click  (Widget widget, int32 button, float64 xalign = 0.5, float64 yalign = 0.5);
+  // deprecated
+  signal void notify_idle       (); ///< Notificaiton signal, emitted after query_idle() once events are processed.
+  void        query_idle        (); ///< Request notificaiton when idle.
+};
+
 /** Window represents the toplevel onscreen widget.
  * A Window interface is the main user visible handle for screen objects in Rapicorn.
  * Windows can be obtained from the Application singleton. They contain UI elements
  * like buttons and text fields, and the neccessary logic for UI event processing.
  * <br/> See also the corresponding implementation class WindowImpl.
  */
-interface Window : Container {
-  String        title = String (_("Window Title"), _("User visible title to be displayed in the window title bar"), "rw");
-  bool          auto_focus = Bool (_("Auto Focus"), _("Automatically set focus widget when the window is shown initially"), "rw");
-  bool          screen_viewable         (); ///< Check whether the window is currently viewable on screen.
-  void          show                    (); ///< Show (display) a window so it appears on screen.
-  bool          closed                  (); ///< Check wether the window has been shown or is closed.
-  void          close                   (); ///< Close (hide) an on screen window.
-  void          destroy                 (); ///< Destroy and dispose a (possibly on screen) window.
-  bool          snapshot                (String     pngname);
-  void          query_idle              (); ///< Request notificaiton when idle.
-  Widget        get_focus               (); ///< Retrieve the Window's current focus widget.
-  void          unset_focus             (); ///< Reset the Window's focus widget.
-  Widget        get_entered             (); ///< Retrieve the Window's descendant Widget that was last entered if any.
-  signal void   notify_idle             (); ///< Notificaiton signal, emitted after query_idle() once events are processed.
-  signal bool   commands                (String     cmdname, StringSeq args);
-  signal void   displayed               ();
-  bool          synthesize_click        (Widget       widget,
-                                         int32        button,
-                                         float64      xalign = 0.5,
-                                         float64      yalign = 0.5);
-  bool          synthesize_enter        (float64      xalign = 0.5,
-                                         float64      yalign = 0.5);
-  bool          synthesize_leave        ();
-  bool          synthesize_delete       ();
+interface Window : Viewport {
 };
 
 /// A sequence of Window objects.

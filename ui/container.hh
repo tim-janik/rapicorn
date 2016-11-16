@@ -17,6 +17,7 @@ public:
 // == Container ==
 struct ContainerImpl : public virtual WidgetImpl, public virtual ContainerIface {
   friend              class WidgetImpl;
+  friend              class ViewportImpl;
   friend              class WindowImpl;
   void                uncross_descendant    (WidgetImpl          &descendant);
   size_t              widget_cross_link     (WidgetImpl           &owner,

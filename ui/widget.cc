@@ -1302,7 +1302,7 @@ WidgetImpl::get_viewport () const
     return acache->viewport;
   ViewportImpl *viewport = NULL;
   for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !viewport; widget = widget->parent())
-    viewport = dynamic_cast<ViewportImpl*> (widget);
+    viewport = widget->as_viewport_impl();
   return viewport;
 }
 
