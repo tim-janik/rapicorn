@@ -87,6 +87,7 @@ public:
   virtual bool          synthesize_leave                        () override;
   virtual bool          synthesize_click                        (WidgetIface &widget, int button, double xalign = 0.5, double yalign = 0.5) override;
   virtual bool          synthesize_delete                       () override;
+  bool                  has_display_window                      () const        { return display_window_ != NULL; }
   // internal API
   DisplayWindow*        display_window                          (Internal = Internal()) const;
 private:
@@ -101,7 +102,6 @@ private:
   /* display_window ops */
   virtual void          beep                                    ();
   virtual void          create_display_window                    ();
-  virtual bool          has_display_window                       ();
   virtual void          destroy_display_window                   ();
   void                  async_show                               ();
   /* main loop */

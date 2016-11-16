@@ -29,7 +29,7 @@ ViewportImpl::ViewportImpl() :
 ViewportImpl::~ViewportImpl()
 {
   assert_return (anchored() == false);
-  if (display_window_)
+  if (has_display_window())
     {
       clear_immediate_event();
       display_window_->destroy();
@@ -52,7 +52,7 @@ ViewportImpl::fetch_ancestry_cache ()
 void
 ViewportImpl::beep()
 {
-  if (display_window_)
+  if (has_display_window())
     display_window_->beep();
 }
 
@@ -68,7 +68,7 @@ ViewportImpl::title (const String &viewport_title)
   if (config_.title != viewport_title)
     {
       config_.title = viewport_title;
-      if (display_window_)
+      if (has_display_window())
         display_window_->configure (config_, false);
       changed ("title");
     }
@@ -712,7 +712,7 @@ ViewportImpl::draw_child (WidgetImpl &child)
 void
 ViewportImpl::draw_now ()
 {
-  if (display_window_)
+  if (has_display_window())
     {
       const uint64 start = timestamp_realtime();
       IRect area = allocation();
@@ -743,7 +743,7 @@ ViewportImpl::draw_now ()
       cairo_surface_destroy (surface);
       // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
       loop_->exec_callback ([this] () {
-          if (display_window_)
+          if (has_display_window())
             sig_displayed.emit();
         }, EventLoop::PRIORITY_UPDATE);
       const uint64 stop = timestamp_realtime();
@@ -862,13 +862,13 @@ ViewportImpl::dispose_widget (WidgetImpl &widget)
 bool
 ViewportImpl::has_queued_win_size ()
 {
-  return display_window_ && display_window_->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
+  return has_display_window() && display_window_->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
 }
 
 bool
 ViewportImpl::dispatch_event (const Event &event)
 {
-  if (!display_window_)
+  if (!has_display_window())
     return false;       // we can only handle events on a display_window
   EDEBUG ("%s: w=%p", string_from_event_type (event.type), this);
   switch (event.type)
@@ -914,11 +914,11 @@ bool
 ViewportImpl::event_dispatcher (const LoopState &state)
 {
   if (state.phase == state.PREPARE || state.phase == state.CHECK)
-    return display_window_ && display_window_->has_event();
+    return has_display_window() && display_window_->has_event();
   else if (state.phase == state.DISPATCH)
     {
       const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
-      Event *event = display_window_ ? display_window_->pop_event() : NULL;
+      Event *event = has_display_window() ? display_window_->pop_event() : NULL;
       if (event)
         {
           if (immediate_event_hash_ == size_t (event))
@@ -955,7 +955,7 @@ ViewportImpl::immediate_event_dispatcher (const LoopState &state)
 void
 ViewportImpl::push_immediate_event (Event *event)
 {
-  assert_return (display_window_ != NULL);
+  assert_return (has_display_window() == true);
   assert_return (event != NULL);
   display_window_->push_event (event);
   if (immediate_event_hash_ == 0)
@@ -1112,7 +1112,7 @@ ViewportImpl::negotiate_initial_size()
 bool
 ViewportImpl::can_resize_redraw()
 {
-  return !pending_win_size_ && display_window_ && (need_resize_ || exposes_pending());
+  return !pending_win_size_ && has_display_window() && (need_resize_ || exposes_pending());
 }
 
 void
@@ -1155,7 +1155,7 @@ void
 ViewportImpl::maybe_resize_viewport()
 {
   const Requisition rsize = requisition();
-  if (display_window_)
+  if (has_display_window())
     {
       // grow display window if needed
       const DisplayWindow::State state = display_window_->get_state();
@@ -1199,7 +1199,7 @@ ViewportImpl::get_loop ()
 bool
 ViewportImpl::screen_viewable ()
 {
-  return visible() && display_window_ && display_window_->viewable();
+  return visible() && has_display_window() && display_window_->viewable();
 }
 
 static bool startup_viewport = true;
@@ -1207,7 +1207,7 @@ static bool startup_viewport = true;
 void
 ViewportImpl::async_show()
 {
-  if (display_window_)
+  if (has_display_window())
     {
       // try to ensure initial focus
       if (auto_focus_ && !get_focus())
@@ -1232,7 +1232,7 @@ ViewportImpl::create_display_window ()
 {
   if (anchored())
     {
-      if (!display_window_)
+      if (!has_display_window())
         {
           negotiate_initial_size(); // find and allocate initial size
           DisplayDriver *sdriver = DisplayDriver::retrieve_display_driver ("auto");
@@ -1259,24 +1259,18 @@ ViewportImpl::create_display_window ()
           else
             fatal ("failed to find and open any display driver");
         }
-      RAPICORN_ASSERT (display_window_ != NULL);
+      RAPICORN_ASSERT (has_display_window() == true);
       loop_->flag_primary (true); // FIXME: depends on WM-managable
       EventLoop::VoidSlot sl = Aida::slot (*this, &ViewportImpl::async_show);
       loop_->exec_callback (sl);
     }
 }
 
-bool
-ViewportImpl::has_display_window ()
-{
-  return !!display_window_;
-}
-
 void
 ViewportImpl::destroy_display_window ()
 {
   const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
-  if (!display_window_)
+  if (!has_display_window())
     return; // during destruction, ref_count == 0
   clear_immediate_event();
   display_window_->destroy();
@@ -1318,7 +1312,7 @@ ViewportImpl::destroy ()
 void
 ViewportImpl::query_idle ()
 {
-  if (display_window_)
+  if (has_display_window())
     {
       const ViewportImplP thisp = shared_ptr_cast<ViewportImpl*> (this);
       const int PRIORITY_FLOOR = 1; // lowest possible priority, must be truely idle to execute this
