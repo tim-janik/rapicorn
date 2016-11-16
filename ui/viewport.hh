@@ -13,7 +13,6 @@ typedef std::weak_ptr<ViewportImpl>   ViewportImplW;
 
 // == ViewportImpl ==
 class ViewportImpl : public virtual ResizeContainerImpl, public virtual ViewportIface {
-  const EventLoopP      loop_;
   DisplayWindow        *display_window_;
   EventContext          last_event_context_;
   Signal_commands::Emission *commands_emission_;
@@ -45,7 +44,6 @@ protected:
   virtual const AncestryCache* fetch_ancestry_cache () override;
   void                  ensure_resized          ();
 public:
-  static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE + 1; ///< Execute resizes right before GUI updates.
   explicit              ViewportImpl            ();
   virtual              ~ViewportImpl            () override;
   virtual ViewportImpl* as_viewport_impl        () override     { return this; }
@@ -88,7 +86,14 @@ public:
   // internal API
   DisplayWindow*        display_window                          (Internal = Internal()) const;
   void                  set_focus                               (WidgetImpl *widget, Internal = Internal());
-  EventLoop*            get_event_loop                          (Internal = Internal()) const  { return loop_.get(); }
+public: // FIXME
+  /* event loop */
+  void                  push_immediate_event                    (Event *event);
+  void                  clear_immediate_event                   ();
+  bool                  immediate_event_dispatcher              (const LoopState &state);
+  virtual bool          event_dispatcher                        (const LoopState &state);
+  virtual bool          drawing_dispatcher                      (const LoopState &state);
+  virtual bool          command_dispatcher                      (const LoopState &state);
 private:
   virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();
@@ -103,13 +108,6 @@ private:
   virtual void          create_display_window                    ();
   virtual void          destroy_display_window                   ();
   void                  async_show                               ();
-  /* main loop */
-  void                  push_immediate_event                    (Event *event);
-  void                  clear_immediate_event                   ();
-  bool                  immediate_event_dispatcher              (const LoopState &state);
-  virtual bool          event_dispatcher                        (const LoopState &state);
-  virtual bool          drawing_dispatcher                      (const LoopState &state);
-  virtual bool          command_dispatcher                      (const LoopState &state);
   /* event handling */
   virtual void          cancel_widget_events                      (WidgetImpl               *widget);
   void                  cancel_widget_events                      (WidgetImpl &widget) { cancel_widget_events (&widget); }

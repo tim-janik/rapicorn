@@ -1264,7 +1264,7 @@ EventLoop*
 WidgetImpl::get_loop () const
 {
   WindowImpl *window = get_window();
-  return window ? window->get_event_loop() : NULL;
+  return window ? window->get_event_loop().get() : NULL;
 }
 
 WindowImpl*

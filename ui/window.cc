@@ -2,6 +2,7 @@
 #include "window.hh"
 #include "factory.hh"
 #include "application.hh"
+#include "uithread.hh"
 #include <algorithm>
 
 namespace Rapicorn {
@@ -30,8 +31,15 @@ static void wleave (WindowImpl *wi)
 } // WindowTrail
 
 
-WindowImpl::WindowImpl ()
-{}
+WindowImpl::WindowImpl () :
+  loop_ (uithread_main_loop()->create_slave())
+{
+  // create event loop (auto-starts)
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
+  loop_->flag_primary (false);
+}
 
 void
 WindowImpl::construct()
@@ -60,6 +68,8 @@ WindowImpl::~WindowImpl ()
 {
   WindowTrail::wleave (this);
   assert_return (anchored() == false);
+  // shutdown event loop
+  loop_->destroy_loop();
   /* make sure all children are removed while this is still of type ViewportImpl.
    * necessary because C++ alters the object type during constructors and destructors
    */

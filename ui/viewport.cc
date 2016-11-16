@@ -1,7 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "viewport.hh"
 #include "factory.hh"
-#include "uithread.hh"
+#include "window.hh"
 #include "rcore/cairoutils.hh"
 
 #define EDEBUG(...)           RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
@@ -11,7 +11,6 @@
 namespace Rapicorn {
 
 ViewportImpl::ViewportImpl() :
-  loop_ (uithread_main_loop()->create_slave()),
   display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
   tunable_requisition_counter_ (0),
   auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true),
@@ -19,11 +18,6 @@ ViewportImpl::ViewportImpl() :
 {
   inherited_state_ = 0;
   config_.title = application_name();
-  // create event loop (auto-starts)
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
-  loop_->flag_primary (false);
 }
 
 ViewportImpl::~ViewportImpl()
@@ -35,8 +29,6 @@ ViewportImpl::~ViewportImpl()
       display_window_->destroy();
       display_window_ = NULL;
     }
-  // shutdown event loop
-  loop_->destroy_loop();
   AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
   ancestry_cache->viewport = NULL;
 }
@@ -696,7 +688,8 @@ ViewportImpl::draw_child (WidgetImpl &child)
 void
 ViewportImpl::draw_now ()
 {
-  if (has_display_window())
+  EventLoop *loop = get_loop();
+  if (loop && has_display_window())
     {
       const uint64 start = timestamp_realtime();
       IRect area = allocation();
@@ -726,7 +719,7 @@ ViewportImpl::draw_now ()
       cairo_destroy (cr);
       cairo_surface_destroy (surface);
       // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
-      loop_->exec_callback ([this] () {
+      loop->exec_callback ([this] () {
           if (has_display_window())
             sig_displayed.emit();
         }, EventLoop::PRIORITY_UPDATE);
@@ -942,10 +935,11 @@ ViewportImpl::push_immediate_event (Event *event)
   assert_return (has_display_window() == true);
   assert_return (event != NULL);
   display_window_->push_event (event);
-  if (immediate_event_hash_ == 0)
+  EventLoop *loop = get_loop();
+  if (immediate_event_hash_ == 0 && loop)
     {
       // force immediate (synthesized) event processing before further uithread main loop RPC handling
-      loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::immediate_event_dispatcher), EventLoop::PRIORITY_NOW);
+      loop->exec_dispatcher (Aida::slot (*this, &ViewportImpl::immediate_event_dispatcher), EventLoop::PRIORITY_NOW);
       immediate_event_hash_ = size_t (event);
     }
 }
@@ -963,7 +957,9 @@ ViewportImpl::queue_resize_redraw()
   if (!need_resize_)
     {
       need_resize_ = true;
-      loop_->wakeup();
+      EventLoop *loop = get_loop();
+      if (loop)
+        loop->wakeup();
     }
 }
 
@@ -1208,7 +1204,8 @@ ViewportImpl::display_window (Internal) const
 void
 ViewportImpl::create_display_window ()
 {
-  if (anchored())
+  EventLoopP loop = anchored() ? get_window()->get_event_loop() : NULL;
+  if (loop)
     {
       if (!has_display_window())
         {
@@ -1232,15 +1229,15 @@ ViewportImpl::create_display_window ()
                 config_.alias = program_alias();
               pending_win_size_ = true;
               display_window_ = sdriver->create_display_window (setup, config_);
-              display_window_->set_event_wakeup ([this] () { loop_->wakeup(); /* thread safe */ });
+              display_window_->set_event_wakeup ([loop] () { loop->wakeup(); /* thread safe */ });
             }
           else
             fatal ("failed to find and open any display driver");
         }
       RAPICORN_ASSERT (has_display_window() == true);
-      loop_->flag_primary (true); // FIXME: depends on WM-managable
+      loop->flag_primary (true); // FIXME: depends on WM-managable
       EventLoop::VoidSlot sl = Aida::slot (*this, &ViewportImpl::async_show);
-      loop_->exec_callback (sl);
+      loop->exec_callback (sl);
     }
 }
 
@@ -1253,7 +1250,9 @@ ViewportImpl::destroy_display_window ()
   clear_immediate_event();
   display_window_->destroy();
   display_window_ = NULL;
-  loop_->flag_primary (false);
+  EventLoop *loop = get_loop();
+  if (loop)
+    loop->flag_primary (false);
   // reset widget state where needed
   cancel_widget_events (NULL);
 }
@@ -1290,11 +1289,12 @@ ViewportImpl::destroy ()
 void
 ViewportImpl::query_idle ()
 {
-  if (has_display_window())
+  EventLoop *loop = get_loop();
+  if (loop && has_display_window())
     {
       const ViewportImplP thisp = shared_ptr_cast<ViewportImpl*> (this);
       const int PRIORITY_FLOOR = 1; // lowest possible priority, must be truely idle to execute this
-      loop_->exec_callback ([thisp] () { thisp->sig_notify_idle.emit(); }, PRIORITY_FLOOR);
+      loop->exec_callback ([thisp] () { thisp->sig_notify_idle.emit(); }, PRIORITY_FLOOR);
     }
   else
     sig_notify_idle.emit();

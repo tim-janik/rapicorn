@@ -12,6 +12,7 @@ typedef std::shared_ptr<WindowImpl> WindowImplP;
 typedef std::weak_ptr<WindowImpl>   WindowImplW;
 
 class WindowImpl : public virtual ViewportImpl, public virtual WindowIface {
+  const EventLoopP      loop_;
 protected:
   virtual void                 construct            () override;
   virtual void                 dispose              () override;
@@ -21,9 +22,10 @@ public:
   explicit              WindowImpl            ();
   virtual              ~WindowImpl            ();
   virtual WindowImpl*   as_window_impl        () override       { return this; }
+  EventLoopP            get_event_loop        () const          { return loop_; } ///< See get_loop().
   static  void          forcefully_close_all  ();
   // internal API
-  static bool           widget_is_anchored    (WidgetImpl &widget, Internal = Internal());
+  static bool           widget_is_anchored    (WidgetImpl &widget, Internal = Internal()); ///< See anchored().
 };
 
 } // Rapicorn
