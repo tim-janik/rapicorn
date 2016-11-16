@@ -146,7 +146,7 @@ protected:
   virtual                    ~WidgetImpl        ();
   virtual void                construct         () override;
   virtual void                set_parent        (ContainerImpl *parent);
-  virtual void                hierarchy_changed (WidgetImpl *old_toplevel);
+  virtual void                hierarchy_changed (WindowImpl *old_toplevel);
   virtual bool                can_focus         () const; ///< Widget specific sentinel on wether it can currently receive input focus.
   virtual bool                activate_widget   ();
   virtual bool                custom_command    (const String &command_name, const StringSeq &command_args);
@@ -283,7 +283,7 @@ public:
   void                  queue_visual_update     ();
   void                  force_visual_update     ();
   /* public signals */
-  Signal<void (WidgetImpl *old)>    sig_hierarchy_changed;
+  Signal<void (WindowImpl*)> sig_hierarchy_changed;
   /* coordinate handling */
 protected:
   struct WidgetChain { WidgetImpl *widget; WidgetChain *next; WidgetChain() : widget (NULL), next (NULL) {} };

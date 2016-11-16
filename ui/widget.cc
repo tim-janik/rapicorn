@@ -1543,7 +1543,7 @@ WidgetImpl::expose (const Region &region) // widget relative
 
 /// Signal emitted when a widget ancestry is added to or removed from a Window
 void
-WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+WidgetImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   if (anchored())
     {

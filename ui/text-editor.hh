@@ -104,7 +104,7 @@ class TextControllerImpl : public virtual SingleContainerImpl, public virtual Ev
 protected:
   explicit              TextControllerImpl      ();
   virtual              ~TextControllerImpl      () override;
-  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
+  virtual void          hierarchy_changed       (WindowImpl *old_toplevel) override;
   virtual void          construct               () override;
   virtual bool          can_focus               () const override;
   virtual void          reset                   (ResetMode mode = RESET_ALL) override;

@@ -43,7 +43,7 @@ ViewportImpl::fetch_ancestry_cache ()
 }
 
 void
-ViewportImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+ViewportImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   if (old_toplevel)
     {

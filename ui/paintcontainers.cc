@@ -558,7 +558,7 @@ FocusFrameImpl::set_focus_child (WidgetImpl *widget)
 }
 
 void
-FocusFrameImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+FocusFrameImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   if (focus_container_)
     focus_container_->unregister_focus_indicator (*this);
@@ -947,7 +947,7 @@ FocusPainterImpl::set_focus_child (WidgetImpl *widget)
 }
 
 void
-FocusPainterImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+FocusPainterImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   if (focus_container_)
     focus_container_->unregister_focus_indicator (*this);

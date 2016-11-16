@@ -38,7 +38,7 @@ protected:
   virtual void        remove_child      (WidgetImpl           &widget) = 0;
   virtual void        unparent_child    (WidgetImpl           &widget);
   virtual void        dispose_widget    (WidgetImpl           &widget);
-  virtual void        hierarchy_changed (WidgetImpl           *old_toplevel);
+  virtual void        hierarchy_changed (WindowImpl           *old_toplevel);
   virtual bool        move_focus        (FocusDir              fdir);
   void                stash_child       (WidgetImpl &child, bool);
   virtual void        focus_lost        ()                              { set_focus_child (NULL); }
@@ -108,7 +108,7 @@ class ResizeContainerImpl : public virtual SingleContainerImpl {
   virtual void          widget_invalidate       (WidgetFlag mask) override;
 protected:
   virtual const AncestryCache* fetch_ancestry_cache () override;
-  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
+  virtual void          hierarchy_changed       (WindowImpl *old_toplevel) override;
   explicit              ResizeContainerImpl     ();
   virtual              ~ResizeContainerImpl     ();
 };

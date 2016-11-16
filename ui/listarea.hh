@@ -62,7 +62,7 @@ protected:
   void                  change_selection        (int current, int previous, bool toggle, bool range, bool preserve);
   bool                  key_press_event         (const EventKey &event);
   bool                  button_event            (const EventButton &event, WidgetImpl *row, int index);
-  virtual void          hierarchy_changed       (WidgetImpl *old_toplevel) override;
+  virtual void          hierarchy_changed       (WindowImpl *old_toplevel) override;
   virtual void          size_request            (Requisition &requisition) override;
   virtual void          size_allocate           (Allocation area) override;
   virtual bool          handle_event            (const Event &event) override;

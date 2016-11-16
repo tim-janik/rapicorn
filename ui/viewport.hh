@@ -49,7 +49,7 @@ class ViewportImpl : public virtual ResizeContainerImpl, public virtual Viewport
   bool                         drawing_dispatcher         (const LoopState &state);
 protected:
   virtual const AncestryCache* fetch_ancestry_cache       () override;
-  virtual void                 hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void                 hierarchy_changed          (WindowImpl *old_toplevel) override;
   virtual void                 render                     (RenderContext &rcontext);
   virtual void                 dispose_widget             (WidgetImpl &widget);
   void                         push_immediate_event       (Event *event);

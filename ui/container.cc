@@ -343,7 +343,7 @@ ContainerImpl::foreach_recursive (const std::function<void (WidgetImpl&)> &f)
 }
 
 void
-ContainerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+ContainerImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   WidgetImpl::hierarchy_changed (old_toplevel);
   for (auto child : *this)
@@ -886,7 +886,7 @@ ResizeContainerImpl::fetch_ancestry_cache ()
 }
 
 void
-ResizeContainerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+ResizeContainerImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   SingleContainerImpl::hierarchy_changed (old_toplevel);
 }
