@@ -10,6 +10,52 @@
 
 namespace Rapicorn {
 
+ViewportImpl::ViewportImpl() :
+  loop_ (uithread_main_loop()->create_slave()),
+  display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
+  tunable_requisition_counter_ (0),
+  auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true),
+  need_resize_ (false)
+{
+  inherited_state_ = 0;
+  config_.title = application_name();
+  // create event loop (auto-starts)
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
+  loop_->flag_primary (false);
+}
+
+ViewportImpl::~ViewportImpl()
+{
+  assert_return (anchored() == false);
+  if (display_window_)
+    {
+      clear_immediate_event();
+      display_window_->destroy();
+      display_window_ = NULL;
+    }
+  // shutdown event loop
+  loop_->destroy_loop();
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
+  ancestry_cache->viewport = NULL;
+}
+
+const WidgetImpl::AncestryCache*
+ViewportImpl::fetch_ancestry_cache ()
+{
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
+  ancestry_cache->viewport = this;
+  return ancestry_cache;
+}
+
+void
+ViewportImpl::beep()
+{
+  if (display_window_)
+    display_window_->beep();
+}
+
 String
 ViewportImpl::title () const
 {
@@ -176,52 +222,6 @@ ViewportImpl::create_snapshot (const IRect &subarea)
   compose_into (cr, irects);
   cairo_destroy (cr);
   return surface;
-}
-
-ViewportImpl::ViewportImpl() :
-  loop_ (uithread_main_loop()->create_slave()),
-  display_window_ (NULL), commands_emission_ (NULL), immediate_event_hash_ (0),
-  tunable_requisition_counter_ (0),
-  auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true),
-  need_resize_ (false)
-{
-  inherited_state_ = 0;
-  config_.title = application_name();
-  // create event loop (auto-starts)
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
-  loop_->exec_dispatcher (Aida::slot (*this, &ViewportImpl::command_dispatcher), EventLoop::PRIORITY_NOW);
-  loop_->flag_primary (false);
-}
-
-ViewportImpl::~ViewportImpl()
-{
-  assert_return (anchored() == false);
-  if (display_window_)
-    {
-      clear_immediate_event();
-      display_window_->destroy();
-      display_window_ = NULL;
-    }
-  // shutdown event loop
-  loop_->destroy_loop();
-  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
-  ancestry_cache->viewport = NULL;
-}
-
-const WidgetImpl::AncestryCache*
-ViewportImpl::fetch_ancestry_cache ()
-{
-  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
-  ancestry_cache->viewport = this;
-  return ancestry_cache;
-}
-
-void
-ViewportImpl::beep()
-{
-  if (display_window_)
-    display_window_->beep();
 }
 
 void
@@ -1366,10 +1366,7 @@ ViewportImpl::synthesize_leave ()
 }
 
 bool
-ViewportImpl::synthesize_click (WidgetIface &widgeti,
-                              int        button,
-                              double     xalign,
-                              double     yalign)
+ViewportImpl::synthesize_click (WidgetIface &widgeti, int button, double xalign, double yalign)
 {
   WidgetImpl &widget = *dynamic_cast<WidgetImpl*> (&widgeti);
   if (!has_display_window() || !&widget)
