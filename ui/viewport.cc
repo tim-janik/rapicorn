@@ -1,10 +1,8 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
-#include "window.hh"
-#include "application.hh"
+#include "viewport.hh"
 #include "factory.hh"
 #include "uithread.hh"
 #include "rcore/cairoutils.hh"
-#include <string.h> // memcpy
 #include <algorithm>
 
 #define EDEBUG(...)           RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
@@ -12,6 +10,23 @@
 #define DEBUG_RENDER(...)     RAPICORN_KEY_DEBUG ("Render", __VA_ARGS__)
 
 namespace Rapicorn {
+
+ViewportImpl::ViewportImpl ()
+{}
+
+ViewportImpl::~ViewportImpl ()
+{
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
+  ancestry_cache->viewport = NULL;
+}
+
+const WidgetImpl::AncestryCache*
+ViewportImpl::fetch_ancestry_cache ()
+{
+  AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
+  ancestry_cache->viewport = this;
+  return ancestry_cache;
+}
 
 WindowImpl&
 WindowIface::impl ()

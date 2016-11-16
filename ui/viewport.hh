@@ -1,11 +1,19 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
-#ifndef __RAPICORN_WINDOW_HH__
-#define __RAPICORN_WINDOW_HH__
+#ifndef __RAPICORN_VIEWPORT_HH__
+#define __RAPICORN_VIEWPORT_HH__
 
-#include <ui/viewport.hh>
+#include <ui/container.hh>
 #include <ui/displaywindow.hh>
 
 namespace Rapicorn {
+
+class ViewportImpl : public virtual ResizeContainerImpl {
+protected:
+  virtual const AncestryCache* fetch_ancestry_cache () override;
+public:
+  explicit              ViewportImpl            ();
+  virtual              ~ViewportImpl            ();
+};
 
 class WindowImpl;
 typedef std::shared_ptr<WindowImpl> WindowImplP;
@@ -180,4 +188,4 @@ public: // tailored member access for WidgetImpl
 
 } // Rapicorn
 
-#endif  /* __RAPICORN_WINDOW_HH__ */
+#endif  /* __RAPICORN_VIEWPORT_HH__ */
