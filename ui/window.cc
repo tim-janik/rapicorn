@@ -61,6 +61,7 @@ WindowImpl::dispose()
   assert_return (was_listed);
   sig_hierarchy_changed.emit (this);
   assert_return (anchored() == false);
+  ViewportImpl::dispose();
 }
 
 WindowImpl::~WindowImpl ()
