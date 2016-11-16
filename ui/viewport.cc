@@ -1190,12 +1190,6 @@ ViewportImpl::drawing_dispatcher (const LoopState &state)
   return false;
 }
 
-EventLoop*
-ViewportImpl::get_loop ()
-{
-  return &*loop_;
-}
-
 bool
 ViewportImpl::screen_viewable ()
 {

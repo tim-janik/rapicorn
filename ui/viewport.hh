@@ -70,8 +70,6 @@ public:
   bool                  remove_grab                             (WidgetImpl *child);
   virtual WidgetImpl*   get_grab                                (bool *constrained = NULL);
   bool                  is_grabbing                             (WidgetImpl &descendant);
-  // main loop
-  virtual EventLoop*    get_loop                                ();
   // signals
   typedef Aida::Signal<void ()> NotifySignal;
   /* ViewportIface */
@@ -90,6 +88,7 @@ public:
   // internal API
   DisplayWindow*        display_window                          (Internal = Internal()) const;
   void                  set_focus                               (WidgetImpl *widget, Internal = Internal());
+  EventLoop*            get_event_loop                          (Internal = Internal()) const  { return loop_.get(); }
 private:
   virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();

@@ -261,6 +261,7 @@ public:
   WidgetImpl*                 common_ancestor   (const WidgetImpl &other) const;
   WidgetImpl*                 common_ancestor   (const WidgetImpl *other) const { return common_ancestor (*other); }
   const AncestryCache*        ancestry_cache       () const { if (RAPICORN_UNLIKELY (!acache_)) acache_check(); return acache_; }
+  EventLoop*                  get_loop             () const;
   WindowImpl*                 get_window           () const;
   ViewportImpl*               get_viewport         () const;
   ResizeContainerImpl*        get_resize_container () const;

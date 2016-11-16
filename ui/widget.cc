@@ -751,39 +751,27 @@ WidgetImpl::query_selector_unique (const String &selector)
 uint
 WidgetImpl::exec_slow_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->exec_timer (sl, 250, 50, EventLoop::PRIORITY_NORMAL);
-    }
+  EventLoop *loop = get_loop();
+  if (loop)
+    return loop->exec_timer (sl, 250, 50, EventLoop::PRIORITY_NORMAL);
   return 0;
 }
 
 uint
 WidgetImpl::exec_fast_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->exec_timer (sl, 200, 20, EventLoop::PRIORITY_NORMAL);
-    }
+  EventLoop *loop = get_loop();
+  if (loop)
+    return loop->exec_timer (sl, 200, 20, EventLoop::PRIORITY_NORMAL);
   return 0;
 }
 
 uint
 WidgetImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->exec_timer (sl, 250, 33, EventLoop::PRIORITY_NORMAL);
-    }
+  EventLoop *loop = get_loop();
+  if (loop)
+    return loop->exec_timer (sl, 250, 33, EventLoop::PRIORITY_NORMAL);
   return 0;
 }
 
@@ -793,22 +781,16 @@ WidgetImpl::exec_now (const EventLoop::VoidSlot &sl)
   /* queue arbitrary code for asynchornous execution, i.e. this function pretty much guarantees
    * slot execution if there's *any* main loop running, so fallback to the UIThread main loop if needed.
    */
-  WindowImpl *rwidget = get_window();
-  EventLoop *loop = rwidget ? rwidget->get_loop() : &*uithread_main_loop();
-  return loop ? loop->exec_now (sl) : 0;
+  EventLoop *loop = get_loop();
+  loop = loop ? loop : uithread_main_loop().get();
+  return loop->exec_now (sl);
 }
 
 bool
 WidgetImpl::remove_exec (uint exec_id)
 {
-  WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->try_remove (exec_id);
-    }
-  return false;
+  EventLoop *loop = get_loop();
+  return loop ? loop->try_remove (exec_id) : false;
 }
 
 bool
@@ -830,15 +812,11 @@ WidgetImpl::queue_visual_update ()
   uint timer_id = get_data (&visual_update_key);
   if (!timer_id)
     {
-      WindowImpl *rwidget = get_window();
-      if (rwidget)
+      EventLoop *loop = get_loop();
+      if (loop)
         {
-          EventLoop *loop = rwidget->get_loop();
-          if (loop)
-            {
-              timer_id = loop->exec_timer (Aida::slot (*this, &WidgetImpl::force_visual_update), 20);
-              set_data (&visual_update_key, timer_id);
-            }
+          timer_id = loop->exec_timer (Aida::slot (*this, &WidgetImpl::force_visual_update), 20);
+          set_data (&visual_update_key, timer_id);
         }
     }
 }
@@ -1280,6 +1258,13 @@ WidgetImpl::root () const
     while (root->parent_)
       root = root->parent_;
   return root;
+}
+
+EventLoop*
+WidgetImpl::get_loop () const
+{
+  WindowImpl *window = get_window();
+  return window ? window->get_event_loop() : NULL;
 }
 
 WindowImpl*
