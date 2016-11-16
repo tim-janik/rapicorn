@@ -22,15 +22,8 @@ public:
   virtual              ~WindowImpl            ();
   virtual WindowImpl*   as_window_impl        () override       { return this; }
   static  void          forcefully_close_all  ();
-public: // tailored member access for WidgetImpl
-  /// @cond INTERNAL
-  class WidgetImplFriend {
-    friend                class WidgetImpl; // only friends can access private class members
-    static DisplayWindow* display_window     (WindowImpl &window)                     { return window.display_window(); }
-    static void           set_focus          (WindowImpl &window, WidgetImpl *widget) { window.set_focus (widget); }
-    static bool           widget_is_anchored (WidgetImpl &widget);
-  };
-  /// @endcond
+  // internal API
+  static bool           widget_is_anchored    (WidgetImpl &widget, Internal = Internal());
 };
 
 } // Rapicorn

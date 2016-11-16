@@ -93,11 +93,8 @@ WindowImpl::forcefully_close_all()
     it->close();
 }
 
-static const WidgetFactory<WindowImpl> window_factory ("Rapicorn::Window");
-
-// == WidgetImplFriend ==
 bool
-WindowImpl::WidgetImplFriend::widget_is_anchored (WidgetImpl &widget)
+WindowImpl::widget_is_anchored (WidgetImpl &widget, Internal)
 {
   if (widget.parent() && widget.parent()->anchored())
     return true;
@@ -106,5 +103,7 @@ WindowImpl::WidgetImplFriend::widget_is_anchored (WidgetImpl &widget)
     return true;
   return false;
 }
+
+static const WidgetFactory<WindowImpl> window_factory ("Rapicorn::Window");
 
 } // Rapicorn

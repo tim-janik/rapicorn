@@ -183,7 +183,7 @@ ViewportImpl::uncross_focus (WidgetImpl &fwidget)
 }
 
 void
-ViewportImpl::set_focus (WidgetImpl *widget)
+ViewportImpl::set_focus (WidgetImpl *widget, Internal)
 {
   CurrentFocus cfocus = get_data (&focus_widget_key);
   if (widget == cfocus.focus_widget)

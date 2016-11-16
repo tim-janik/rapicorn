@@ -357,11 +357,11 @@ WidgetImpl::grab_focus ()
   // unset old focus
   WindowImpl *rwidget = get_window();
   if (rwidget)
-    WindowImpl::WidgetImplFriend::set_focus (*rwidget, NULL);
+    rwidget->set_focus (NULL);
   // set new focus
   rwidget = get_window();
-  if (rwidget && rwidget->get_focus() == NULL)
-    WindowImpl::WidgetImplFriend::set_focus (*rwidget, this);
+  if (rwidget && rwidget->get_focus_widget() == NULL)
+    rwidget->set_focus (this);
   return rwidget && rwidget->get_focus_widget() == this;
 }
 
@@ -559,7 +559,7 @@ WidgetImpl::notify_key_error ()
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         display_window->beep();
     }
@@ -578,7 +578,7 @@ WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const Stri
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         {
           display_window->request_content (csource, nonce, data_type);
@@ -600,7 +600,7 @@ WidgetImpl::own_content (ContentSourceType content_source, uint64 nonce, const S
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         {
           display_window->set_content_owner (content_source, nonce, data_types);
@@ -619,7 +619,7 @@ WidgetImpl::disown_content (ContentSourceType content_source, uint64 nonce)
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         {
           display_window->set_content_owner (content_source, nonce, StringVector());
@@ -640,7 +640,7 @@ WidgetImpl::provide_content (const String &data_type, const String &data, uint64
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         {
           display_window->provide_content (data_type, data, request_id);
@@ -1571,7 +1571,7 @@ WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
     }
   // assign anchored
   const bool was_anchored = anchored();
-  set_flag (ANCHORED, WindowImpl::WidgetImplFriend::widget_is_anchored (*this)); // anchored = true/false
+  set_flag (ANCHORED, WindowImpl::widget_is_anchored (*this)); // anchored = true/false
   const bool hierarchy_anchor_changed = was_anchored != anchored();
   assert_return (hierarchy_anchor_changed == true);
   if (anchored())

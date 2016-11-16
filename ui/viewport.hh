@@ -43,7 +43,6 @@ class ViewportImpl : public virtual ResizeContainerImpl, public virtual Viewport
   void                  uncross_focus            (WidgetImpl &fwidget);
 protected:
   virtual const AncestryCache* fetch_ancestry_cache () override;
-  void                  set_focus               (WidgetImpl *widget);
   void                  ensure_resized          ();
 public:
   static const int      PRIORITY_RESIZE         = EventLoop::PRIORITY_UPDATE + 1; ///< Execute resizes right before GUI updates.
@@ -90,6 +89,7 @@ public:
   bool                  has_display_window                      () const        { return display_window_ != NULL; }
   // internal API
   DisplayWindow*        display_window                          (Internal = Internal()) const;
+  void                  set_focus                               (WidgetImpl *widget, Internal = Internal());
 private:
   virtual void          remove_grab_widget                      (WidgetImpl               &child);
   void                  grab_stack_changed                      ();
