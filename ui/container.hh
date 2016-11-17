@@ -33,7 +33,7 @@ protected:
   virtual            ~ContainerImpl     ();
   virtual void        fabricated        () override;
   virtual void        do_changed        (const String &name) override;
-  virtual void        add_child         (WidgetImpl           &widget) = 0;
+  virtual String      add_child         (WidgetImplP widget) = 0;
   virtual void        repack_child      (WidgetImpl &widget, const PackInfo &orig, const PackInfo &pnew);
   virtual void        remove_child      (WidgetImpl           &widget) = 0;
   virtual void        unparent_child    (WidgetImpl           &widget);
@@ -65,7 +65,7 @@ public:
   bool                  remove          (WidgetImpl           &widget);
   bool                  remove          (WidgetImpl           *widget)  { assert_return (widget != NULL, 0); return remove (*widget); }
   void                  add             (WidgetImpl                   &widget);
-  void                  add             (WidgetImpl                   *widget);
+  String                try_add         (WidgetImplP widget);
   void                   point_descendants (Point widget_point, std::vector<WidgetImplP> &stack) const;
   virtual ContainerImpl* as_container_impl ()                           { return this; }
   void                   debug_tree        (String indent = String());
@@ -76,21 +76,21 @@ public:
 
 // == Single Child Container ==
 class SingleContainerImpl : public virtual ContainerImpl {
-  WidgetImplP           child_widget;
+  WidgetImplP           child_widget_;
 protected:
   virtual void          size_request            (Requisition &requisition);
   virtual void          size_allocate           (Allocation area);
   virtual void          render                  (RenderContext &rcontext) {}
-  WidgetImpl&           get_child               () { critical_unless (child_widget != NULL); return *child_widget; }
+  WidgetImpl&           get_child               () { critical_unless (child_widget_ != NULL); return *child_widget_; }
   virtual              ~SingleContainerImpl     ();
   virtual WidgetImplP*  begin                   () const override;
   virtual WidgetImplP*  end                     () const override;
-  virtual size_t        n_children              () { return child_widget ? 1 : 0; }
-  virtual WidgetImpl*   nth_child               (size_t nth) { return nth == 0 ? child_widget.get() : NULL; }
-  bool                  has_visible_child       () { return child_widget && child_widget->visible(); }
-  bool                  has_drawable_child      () { return child_widget && child_widget->drawable(); }
-  virtual void          add_child               (WidgetImpl   &widget);
-  virtual void          remove_child            (WidgetImpl   &widget);
+  virtual size_t        n_children              () { return child_widget_ ? 1 : 0; }
+  virtual WidgetImpl*   nth_child               (size_t nth) { return nth == 0 ? child_widget_.get() : NULL; }
+  bool                  has_visible_child       () { return child_widget_ && child_widget_->visible(); }
+  bool                  has_drawable_child      () { return child_widget_ && child_widget_->drawable(); }
+  virtual String        add_child               (WidgetImplP widget) override;
+  virtual void          remove_child            (WidgetImpl &widget);
   explicit              SingleContainerImpl     ();
 };
 
@@ -119,8 +119,8 @@ class MultiContainerImpl : public virtual ContainerImpl {
 protected:
   virtual              ~MultiContainerImpl      ();
   virtual void          render                  (RenderContext &rcontext) override {}
-  virtual void          add_child               (WidgetImpl   &widget) override;
-  virtual void          remove_child            (WidgetImpl   &widget) override;
+  virtual String        add_child               (WidgetImplP widget) override;
+  virtual void          remove_child            (WidgetImpl &widget) override;
   explicit              MultiContainerImpl      ();
 public:
   virtual WidgetImplP*  begin                   () const override;

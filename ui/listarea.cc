@@ -193,23 +193,23 @@ WidgetListImpl::child_index (WidgetImpl &widget) const
   return -1;
 }
 
-void
-WidgetListImpl::add_child (WidgetImpl &widget)
+String
+WidgetListImpl::add_child (WidgetImplP widget)
 {
-  critical_unless (widget.parent() == NULL); // unparented
-  MultiContainerImpl::add_child (widget);
-  if (widget.parent() == this) // parented to self
-    {
-      EventHandler *ehandler = dynamic_cast<EventHandler*> (&widget);
-      if (ehandler)
-        ehandler->sig_event() += [this, &widget] (const Event &event) -> bool { return this->row_event (event, &widget); };
-      insertion_cursor_ = std::max (0U, insertion_cursor_);
-      insertion_cursor_ = std::min (size_t (insertion_cursor_), widget_rows_.size()); // e.g. MAXINT appends
-      if (insertion_cursor_ >= widget_rows_.size())
-        widget_rows_.resize (widget_rows_.size() + 1);
-      widget_rows_[insertion_cursor_] = shared_ptr_cast<WidgetImpl> (&widget);
-      insertion_cursor_ += 1;
-    }
+  String error = MultiContainerImpl::add_child (widget);
+  if (!error.empty())
+    return error;
+  assert_return (widget->parent() == this, __HERE__);
+  EventHandler *ehandler = dynamic_cast<EventHandler*> (&*widget);
+  if (ehandler)
+    ehandler->sig_event() += [this, widget] (const Event &event) -> bool { return this->row_event (event, &*widget); };
+  insertion_cursor_ = std::max (0U, insertion_cursor_);
+  insertion_cursor_ = std::min (size_t (insertion_cursor_), widget_rows_.size()); // e.g. MAXINT appends
+  if (insertion_cursor_ >= widget_rows_.size())
+    widget_rows_.resize (widget_rows_.size() + 1);
+  widget_rows_[insertion_cursor_] = widget;
+  insertion_cursor_ += 1;
+  return "";
 }
 
 void

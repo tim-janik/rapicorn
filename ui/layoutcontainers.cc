@@ -130,17 +130,17 @@ HBoxImpl::HBoxImpl()
 HBoxImpl::~HBoxImpl()
 {}
 
-void
-HBoxImpl::add_child (WidgetImpl &widget)
+String
+HBoxImpl::add_child (WidgetImplP widget)
 {
   uint col = n_cols();
   while (col > 0 && !is_col_used (col - 1))
     col--;
   if (is_col_used (col))
     expand_table (col, 1, UINT_MAX, 0); // grow for appending
-  widget.hposition (col);
-  widget.hspan (1);
-  TableLayoutImpl::add_child (widget); // ref, sink, set_parent, insert
+  widget->hposition (col);
+  widget->hspan (1);
+  return TableLayoutImpl::add_child (widget); // ref, sink, set_parent, insert
 }
 
 bool
@@ -180,17 +180,17 @@ VBoxImpl::VBoxImpl()
 VBoxImpl::~VBoxImpl()
 {}
 
-void
-VBoxImpl::add_child (WidgetImpl &widget)
+String
+VBoxImpl::add_child (WidgetImplP widget)
 {
   uint row = n_rows();
   while (row > 0 && !is_row_used (row - 1))
     row--;
   if (is_row_used (row))
     expand_table (UINT_MAX, 0, row, 1); // grow for appending
-  widget.vposition (row);
-  widget.vspan (1);
-  TableLayoutImpl::add_child (widget); // ref, sink, set_parent, insert
+  widget->vposition (row);
+  widget->vspan (1);
+  return TableLayoutImpl::add_child (widget); // ref, sink, set_parent, insert
 }
 
 bool

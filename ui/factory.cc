@@ -17,13 +17,25 @@ namespace Factory {
 static String
 node_location (const XmlNode *xnode)
 {
-  return string_format ("%s:%d", xnode->parsed_file().c_str(), xnode->parsed_line());
+  return string_format ("%s:%d", xnode->parsed_file(), xnode->parsed_line());
 }
 
 static String
 node_location (const XmlNodeP xnode)
 {
   return node_location (xnode.get());
+}
+
+static UserSource
+user_source (const XmlNode *xnode)
+{
+  return UserSource ("Factory", xnode->parsed_file(), xnode->parsed_line());
+}
+
+static UserSource
+user_source (const XmlNodeP xnode)
+{
+  return user_source (xnode.get());
 }
 
 // == InterfaceFile ==
@@ -682,12 +694,12 @@ Builder::build_widget (const XmlNode *const wnode, Evaluator &env, const XmlNode
           }
         WidgetImplP child = build_widget (&*cnode, env, &*cnode, SCOPE_CHILD);
         if (child)
-          try {
+          {
             // be verbose...
             FDEBUG ("%s: built child '%s': %s", node_location (cnode), cnode->name(), child ? child->id() : "<null>");
-            container->add (*child);
-          } catch (std::exception &exc) {
-            critical ("%s: adding %s to parent failed: %s", node_location (cnode), cnode->name(), exc.what());
+            String error = container->try_add (child);
+            if (!error.empty())
+              user_warning (user_source (cnode), "failed to add '%s' to '%s': %s", cnode->name(), container->debug_name(), error);
           }
       }
   return widget;

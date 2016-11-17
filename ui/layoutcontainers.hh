@@ -31,26 +31,26 @@ public:
 
 class HBoxImpl : public virtual TableLayoutImpl, public virtual HBoxIface {
 protected:
-  virtual void  add_child       (WidgetImpl &widget) override;
+  virtual String add_child   (WidgetImplP widget) override;
 public:
-  explicit      HBoxImpl        ();
-  virtual      ~HBoxImpl        () override;
-  virtual bool  homogeneous     () const override;
-  virtual void  homogeneous     (bool homogeneous_widgets) override;
-  virtual int   spacing         () const override;
-  virtual void  spacing         (int cspacing) override;
+  explicit       HBoxImpl    ();
+  virtual        ~HBoxImpl   () override;
+  virtual bool   homogeneous () const override;
+  virtual void   homogeneous (bool homogeneous_widgets) override;
+  virtual int    spacing     () const override;
+  virtual void   spacing     (int cspacing) override;
 };
 
 class VBoxImpl : public virtual TableLayoutImpl, public virtual VBoxIface {
 protected:
-  virtual void  add_child       (WidgetImpl &widget) override;
+  virtual String add_child   (WidgetImplP widget) override;
 public:
-  explicit      VBoxImpl        ();
-  virtual      ~VBoxImpl        () override;
-  virtual bool  homogeneous     () const override;
-  virtual void  homogeneous     (bool homogeneous_widgets) override;
-  virtual int   spacing         () const override;
-  virtual void  spacing         (int vspacing) override;
+  explicit       VBoxImpl    ();
+  virtual        ~VBoxImpl   () override;
+  virtual bool   homogeneous () const override;
+  virtual void   homogeneous (bool homogeneous_widgets) override;
+  virtual int    spacing     () const override;
+  virtual void   spacing     (int vspacing) override;
 };
 
 } // Rapicorn

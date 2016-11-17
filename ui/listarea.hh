@@ -70,7 +70,7 @@ protected:
   virtual void          reset                   (ResetMode mode) override;
   virtual bool          move_focus              (FocusDir fdir) override;
   virtual void          focus_lost              () override;
-  virtual void          add_child               (WidgetImpl &widget) override;
+  virtual String        add_child               (WidgetImplP widget) override;
   virtual void          remove_child            (WidgetImpl &widget) override;
   virtual void          selectable_child_changed (WidgetChain &chain) override;
   ssize_t               child_index             (WidgetImpl &widget) const;

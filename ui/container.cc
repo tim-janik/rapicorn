@@ -11,7 +11,7 @@
 
 namespace Rapicorn {
 
-/* --- CrossLinks --- */
+// == CrossLinks ==
 struct CrossLink {
   WidgetImpl           *owner, *link;
   WidgetImpl::WidgetSlot  uncross;
@@ -50,6 +50,7 @@ struct UncrossNode {
 static UncrossNode *uncross_callback_stack = NULL;
 static Mutex        uncross_callback_stack_mutex;
 
+// == ContainerImpl ==
 size_t
 ContainerImpl::widget_cross_link (WidgetImpl &owner, WidgetImpl &link, const WidgetSlot &uncross)
 {
@@ -284,37 +285,34 @@ ContainerImpl::child_container ()
   return *container;
 }
 
-void
-ContainerImpl::add (WidgetImpl &widget)
+String
+ContainerImpl::try_add (WidgetImplP widget)
 {
-  critical_unless (this->isconstructed());
-  critical_unless (widget.isconstructed());
-  const WidgetImplP guard_widget = shared_ptr_cast<WidgetImpl> (&widget);
-  if (widget.parent())
-    throw Exception ("not adding widget with parent: ", widget.id());
   ContainerImpl &container = child_container();
   if (this != &container)
+    return container.try_add (widget);
+  assert_return (widget != NULL, "widget != NULL");
+  assert_return (this->isconstructed(), "!isconstructed");
+  assert_return (widget->isconstructed(), "!isconstructed");
+  if (widget->parent())
+    return "child already has a parent";
+  const String error = container.add_child (widget);
+  if (widget->parent())
     {
-      container.add (widget);
-      return;
+      const PackInfo &pa = widget->pack_info();
+      PackInfo po = pa;
+      po.hspan = po.vspan = 0; // indicate initial repack_child()
+      widget->parent()->repack_child (*widget, po, pa);
     }
-  try {
-    container.add_child (widget);
-    const PackInfo &pa = widget.pack_info();
-    PackInfo po = pa;
-    po.hspan = po.vspan = 0; // indicate initial repack_child()
-    container.repack_child (widget, po, pa);
-  } catch (...) {
-    throw;
-  }
+  return error;
 }
 
 void
-ContainerImpl::add (WidgetImpl *widget)
+ContainerImpl::add (WidgetImpl &widget)
 {
-  if (!widget)
-    throw NullPointer();
-  add (*widget);
+  String error = try_add (shared_ptr_cast<WidgetImpl> (&widget));
+  if (!error.empty())
+    critical ("failed to add container child: %s", __func__, error);
 }
 
 bool
@@ -795,40 +793,41 @@ ContainerImpl::layout_child_allocation (WidgetImpl &child, const Allocation &car
 }
 
 SingleContainerImpl::SingleContainerImpl () :
-  child_widget (NULL)
+  child_widget_ (NULL)
 {}
 
 WidgetImplP*
 SingleContainerImpl::begin () const
 {
-  WidgetImplP *iter = const_cast<WidgetImplP*> (&child_widget);
+  WidgetImplP *iter = const_cast<WidgetImplP*> (&child_widget_);
   return iter;
 }
 
 WidgetImplP*
 SingleContainerImpl::end () const
 {
-  WidgetImplP *iter = const_cast<WidgetImplP*> (&child_widget);
-  if (child_widget)
+  WidgetImplP *iter = const_cast<WidgetImplP*> (&child_widget_);
+  if (child_widget_)
     iter++;
   return iter;
 }
 
-void
-SingleContainerImpl::add_child (WidgetImpl &widget)
+String
+SingleContainerImpl::add_child (WidgetImplP widget)
 {
-  if (child_widget)
-    throw Exception ("invalid attempt to add child \"", widget.id(), "\" to single-child container \"", id(), "\" ",
-                     "which already has a child \"", child_widget->id(), "\"");
-  child_widget = shared_ptr_cast<WidgetImpl> (&widget);
-  set_child_parent (widget, this);
+  if (child_widget_)
+    return "invalid attempt to add multiple children to SingleContainerImpl";
+  child_widget_ = widget;
+  set_child_parent (*widget, this);
+  return "";
 }
 
 void
 SingleContainerImpl::remove_child (WidgetImpl &widget)
 {
-  const WidgetImplP guard_widget = child_widget;
-  child_widget.reset();
+  assert_return (&widget == child_widget_.get());
+  const WidgetImplP guard_widget = child_widget_;
+  child_widget_.reset();
   set_child_parent (widget, NULL);
 }
 
@@ -855,8 +854,8 @@ SingleContainerImpl::size_allocate (Allocation area)
 
 SingleContainerImpl::~SingleContainerImpl()
 {
-  while (child_widget)
-    remove (*child_widget.get());
+  while (child_widget_)
+    remove (*child_widget_);
 }
 
 // == ResizeContainerImpl ==
@@ -919,11 +918,12 @@ MultiContainerImpl::end () const
   return const_cast<WidgetImplP*> (iter);
 }
 
-void
-MultiContainerImpl::add_child (WidgetImpl &widget)
+String
+MultiContainerImpl::add_child (WidgetImplP widget)
 {
-  widgets.push_back (shared_ptr_cast<WidgetImpl> (&widget));
-  set_child_parent (widget, this);
+  widgets.push_back (widget);
+  set_child_parent (*widget, this);
+  return "";
 }
 
 void
