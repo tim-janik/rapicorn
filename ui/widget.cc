@@ -1260,6 +1260,15 @@ WidgetImpl::root () const
   return root;
 }
 
+WidgetImpl*
+WidgetImpl::toplevel()
+{
+  WidgetImpl *top = this;
+  while (top->parent())
+    top = top->parent();
+  return top;
+}
+
 EventLoop*
 WidgetImpl::get_loop () const
 {

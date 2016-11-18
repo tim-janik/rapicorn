@@ -257,6 +257,7 @@ public:
   ContainerImpl*              parent            () const { return parent_; }
   ContainerImplP              parentp           () const;
   ContainerImpl*              root              () const;
+  WidgetImpl*                 toplevel          ();
   bool                        has_ancestor      (const WidgetImpl &ancestor) const;
   WidgetImpl*                 common_ancestor   (const WidgetImpl &other) const;
   WidgetImpl*                 common_ancestor   (const WidgetImpl *other) const { return common_ancestor (*other); }
