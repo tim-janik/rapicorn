@@ -107,7 +107,7 @@ ui_private_files = $(strip		\
 	ui/widget.dox			\
 )
 EXTRA_DIST += $(ui_private_files)
-ui_doc_sources = $(ui_librapicorn_headers) $(ui_librapicorn_sources) ui/widget.dox $(ui_generated_headers)
+ui_doc_sources = $(ui_librapicorn_headers) $(ui_librapicorn_sources) ui/widget.dox ui/interfaces.idl ui/interfaces.dox $(ui_generated_headers)
 
 # == librapicorn-@MAJOR@.so ==
 ui_librapicorn_includedir			= $(includedir)/rapicorn-@MAJOR@/ui
@@ -132,6 +132,15 @@ librapicorn_all_headers				 = $(ui_librapicorn_include_HEADERS) $(nodist_ui_libr
 install-exec-ldconfig: # libtool >= 1.5.2 doesn't always set rpath, requiring ldconfig
 	test ! -x /sbin/ldconfig -o ! -w /etc/ld.so.cache || /sbin/ldconfig $(DESTDIR)$(libdir)
 install-exec-hook: install-exec-ldconfig
+
+# == interfaces.dox ==
+ui/interfaces.dox: ui/interfaces.idl $(AIDACC_INTERN) $(AIDACC_EXTRACTDOCS_PY)
+ui/interfaces.dox: ui/interfaces.idl $(AIDACC_INTERN) $(AIDACC_EXTRACTDOCS_PY)
+	$(AM_V_GEN)
+	$(Q) $(AIDACC_INTERN) -x ExtractDocs ui/interfaces.idl -o $@.tmp
+	$(Q) mv $@.tmp $@
+MOSTLYCLEANFILES += ui/interfaces.dox
+$(ui_librapicorn_sources): ui/interfaces.dox
 
 # == serverapi.hh ==
 EXTRA_DIST += ui/serverinsert.hh

@@ -32,6 +32,7 @@ TAPTOOL 		= $(topdir)/misc/taptool.sh
 XMANIFOLD		= $(topdir)/misc/xmanifold.py
 AIDACC_INTERN		= $(top_builddir)/aidacc/aidacc-intern
 AIDACC_CXXSTUB_PY	= aidacc/CxxStub.py
+AIDACC_EXTRACTDOCS_PY 	= aidacc/ExtractDocs.py
 WITH_PYTHONPATH_INTERN	= PYTHONPATH="$(abs_top_builddir)/cython/$(objdir):$$PYTHONPATH"
 PYTHON_INTERN		= $(WITH_PYTHONPATH_INTERN) $(PYTHON)
 XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH_INTERN) $(X11_ENV) $(PYTHON)
