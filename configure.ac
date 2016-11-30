@@ -1,7 +1,6 @@
-dnl # Rapicorn                                       -*- Mode: shell-script; -*-
-dnl
+# Rapicorn                                       -*- Mode: shell-script; -*-
+
 builtin(include, acrapicorn.m4)dnl # include special macros
-builtin(include, ld-symbolic.m4)dnl # include special macros
 AC_PREREQ(2.57)
 
 # == Package & Version ==
@@ -46,7 +45,7 @@ test "$ABI_MICRO" -eq 0 || {
 }
 ABI_AGE=$(($MINOR - $ABI_MINOR))
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-# Note, rapicorn provides backwards binary compatibility only within
+# Note, this package provides backwards binary compatibility only within
 # MINOR.MICRO increments, and only since ABI_VERSION.
 # Interface additions occour with pretty much every release.
 # For libtool this means:
@@ -57,8 +56,8 @@ ABI_AGE=$(($MINOR - $ABI_MINOR))
 # - lt_revision=MICRO # pick the latest SO revision for unchanged MAJOR.MINOR,
 #                     # see also: https://autotools.io/libtool/version.html
 # On Linux this yields:
-# library:	librapicorn-$MAJOR.so.$ABI_MINOR.$ABI_AGE.$MICRO
-# SONAME:	librapicorn-$MAJOR.so.$ABI_MINOR
+# library:      libfoo-$MAJOR.so.$ABI_MINOR.$ABI_AGE.$MICRO
+# SONAME:       libfoo-$MAJOR.so.$ABI_MINOR
 lt_current=$MINOR ; lt_age=$ABI_AGE ; lt_revision=$MICRO
 LT_VERSION_INFO="$lt_current:$lt_revision:$lt_age"
 AC_SUBST(LT_VERSION_INFO)
@@ -109,7 +108,10 @@ c_only_flags="-Wmissing-prototypes -Wnested-externs -Wno-pointer-sign"
 gcc_c_only_flags="-fno-cond-mismatch -fdevirtualize-speculatively"
 compiler_flags="-pipe"
 optimization_flags="-O3 -funroll-loops -ftree-vectorize"
-gcc_flags="-rdynamic -finline-functions -ftracer -ftree-loop-distribution"
+FAST_MATH_FLAGS="-ffast-math"
+gcc_flags="-rdynamic -finline-functions -ftracer -ftree-loop-distribution -ftree-loop-ivcanon -ftree-loop-im"
+gcc_fast_math="-fivopts"
+clang_fix_flags="-Qunused-arguments"		# avoid bogus -pthread warning (llvm#7798)
 x86_flags="-minline-all-stringops"
 x86_flags="$x86_flags -mmmx -msse -msse2"	# Intel since 2001, AMD since 2003
 x86_flags="$x86_flags -msse3"			# Intel since 2004, AMD since 2007
@@ -120,16 +122,18 @@ x86_64_flags="-mcx16"				# for CMPXCHG16B, in AMD64 since 2005
 #x86_64_flags="$x86_64_flags -mavx"		# Intel since 2011, AMD since 2011
 #x86_64_flags="$x86_64_flags -mavx2"		# Intel since 2013, AMD since 2015
 if   ${CXX} --version 2>&1 | grep -q -F 'clang' ; then
-    AM_CFLAGS="$c_warnings $c_only_flags $compiler_flags $optimization_flags"
-    AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags"
+    AM_CFLAGS="$c_warnings $c_only_flags $compiler_flags $optimization_flags $clang_fix_flags"
+    AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags $clang_fix_flags"
     MC_ASSERT_VERSION($CXX --version, 3.5.0)
 elif ${CXX} --version 2>&1 | tr '\n' ' ' | grep -q -E '(g\++|GCC).*Free Software Foundation' ; then
     AM_CFLAGS="$c_warnings $c_only_flags $gcc_c_only_flags $compiler_flags $optimization_flags $gcc_flags"
     AM_CXXFLAGS="$c_warnings $cxx_warnings $compiler_flags $optimization_flags $gcc_flags"
+    FAST_MATH_FLAGS="$FAST_MATH_FLAGS $gcc_fast_math"
     MC_ASSERT_VERSION($CXX --version, 4.9.2)
 else
   AC_MSG_ERROR([unknown C++ compiler])
 fi
+AC_SUBST(FAST_MATH_FLAGS)
 uname_m=`uname -m`
 if test "$uname_m" = x86_64 ; then	# AMD64
     AM_CFLAGS="$AM_CFLAGS $x86_flags $x86_64_flags"

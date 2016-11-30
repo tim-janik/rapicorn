@@ -19,7 +19,7 @@ env:
     - DIST="debian:testing"
     - DIST="ubuntu:xenial"
     - DIST="ubuntu:yakkety"
-    - DIST="ubuntu:wily" INTENT="clangbuild,distcheck"
+    - DIST="ubuntu:yakkety" INTENT="clangbuild,distcheck"
 matrix:
   allow_failures:
     - env: DIST="debian:testing"
