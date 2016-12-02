@@ -1939,15 +1939,9 @@ WidgetImpl::dark_color ()
 }
 
 Color
-WidgetImpl::dark_shadow ()
+WidgetImpl::dark_clinch ()
 {
-  return state_color (state(), StyleColor::DARK_SHADOW);
-}
-
-Color
-WidgetImpl::dark_glint ()
-{
-  return state_color (state(), StyleColor::DARK_GLINT);
+  return state_color (state(), StyleColor::DARK_CLINCH);
 }
 
 Color
@@ -1957,15 +1951,9 @@ WidgetImpl::light_color ()
 }
 
 Color
-WidgetImpl::light_shadow ()
+WidgetImpl::light_clinch ()
 {
-  return state_color (state(), StyleColor::LIGHT_SHADOW);
-}
-
-Color
-WidgetImpl::light_glint ()
-{
-  return state_color (state(), StyleColor::LIGHT_GLINT);
+  return state_color (state(), StyleColor::LIGHT_CLINCH);
 }
 
 Color

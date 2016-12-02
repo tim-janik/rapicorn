@@ -322,11 +322,9 @@ public:
   Color                 foreground              ();
   Color                 background              ();
   Color                 dark_color              ();
-  Color                 dark_shadow             ();
-  Color                 dark_glint              ();
+  Color                 dark_clinch             ();
   Color                 light_color             ();
-  Color                 light_shadow            ();
-  Color                 light_glint             ();
+  Color                 light_clinch            ();
   Color                 focus_color             ();
   /* debugging/testing */
   virtual String        test_dump               ();

@@ -284,8 +284,8 @@ DotGridImpl::render (RenderContext &rcontext)
           int xtmp = 0;
           for (int i = 0; i < n_hdots; i++)
             {
-              rp.draw_shaded_rect (x + xtmp, y + 2 * ythick - 1, dark_shadow(),
-                                   x + xtmp + 2 * xthick - 1, y, light_glint());
+              rp.draw_shaded_rect (x + xtmp, y + 2 * ythick - 1, dark_color(),
+                                   x + xtmp + 2 * xthick - 1, y, light_color());
               xtmp += 3 * xthick;
             }
           y += 3 * ythick;

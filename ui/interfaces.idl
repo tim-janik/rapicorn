@@ -59,14 +59,12 @@ enum StyleColor {
   BACKGROUND,
   BACKGROUND_EVEN,
   BACKGROUND_ODD,
-  DARK,
-  DARK_SHADOW,
-  DARK_GLINT,
-  LIGHT,
-  LIGHT_SHADOW,
-  LIGHT_GLINT,
   FOCUS_COLOR,
-  MARK
+  LIGHT,
+  DARK,
+  LIGHT_CLINCH,
+  DARK_CLINCH,
+  MARK,
 };
 
 /// Enum type for directional elements like arrows.

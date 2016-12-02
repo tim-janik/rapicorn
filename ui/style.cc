@@ -118,11 +118,9 @@ StyleImpl::state_color (WidgetState state, StyleColor color_type, const String &
     case StyleColor::BACKGROUND_EVEN: return fragment_color ("bg", state);
     case StyleColor::BACKGROUND_ODD:  return adjust_color (fragment_color ("bg", state), 1.0, 0.98);
     case StyleColor::DARK:          return fragment_color ("dark", state);
-    case StyleColor::DARK_SHADOW:   return adjust_color (state_color (state, StyleColor::DARK, detail), 1, 0.9); // 0xff8f8c88
-    case StyleColor::DARK_GLINT:    return adjust_color (state_color (state, StyleColor::DARK, detail), 1, 1.1); // 0xffafaca8
+    case StyleColor::DARK_CLINCH:   return fragment_color ("dark-clinch", state);
     case StyleColor::LIGHT:         return fragment_color ("light", state);
-    case StyleColor::LIGHT_SHADOW:  return adjust_color (state_color (state, StyleColor::LIGHT, detail), 1, 0.93); // 0xffcfccc8
-    case StyleColor::LIGHT_GLINT:   return adjust_color (state_color (state, StyleColor::LIGHT, detail), 1, 1.07); // 0xffefece8
+    case StyleColor::LIGHT_CLINCH:  return fragment_color ("light-clinch", state);
     case StyleColor::FOCUS_COLOR:   return fragment_color ("fc", state);
     case StyleColor::MARK:          return fragment_color ("mark", state);
     default:                        return 0x00000000; // silence warnings
@@ -267,13 +265,13 @@ StyleIface::resolve_color (const String &color_name, WidgetState state, StyleCol
 }
 
 Color
-StyleIface::insensitive_ink (WidgetState state, Color *glintp)
+StyleIface::insensitive_ink (WidgetState state, Color *clinchp)
 {
   // construct insensitive ink by mixing foreground and dark_color
   Color fgink = state_color (state | WidgetState::INSENSITIVE, StyleColor::FOREGROUND);
-  Color glint = state_color (state | WidgetState::INSENSITIVE, StyleColor::LIGHT);
-  if (glintp)
-    *glintp = glint;
+  Color clinch = state_color (state | WidgetState::INSENSITIVE, StyleColor::LIGHT);
+  if (clinchp)
+    *clinchp = clinch;
   return fgink;
 }
 

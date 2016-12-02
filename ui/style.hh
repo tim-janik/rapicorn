@@ -23,7 +23,7 @@ public:
   virtual Color      theme_color        (double hue360, double saturation100, double brightness100, const String &detail = "") = 0;
   virtual Color      state_color        (WidgetState state, StyleColor color_type, const String &detail = "") = 0;
   Color              resolve_color      (const String &color_name, WidgetState state = WidgetState::NORMAL, StyleColor style_color = StyleColor::NONE);
-  Color              insensitive_ink    (WidgetState state, Color *glintp = NULL);
+  Color              insensitive_ink    (WidgetState state, Color *clinchp = NULL);
   virtual Svg::FileP svg_file           () = 0;
   static Svg::FileP  load_svg           (const String &svg_resource);
   static Blob        load_res           (const String &resource);

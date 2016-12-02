@@ -243,7 +243,7 @@ void
 AmbienceImpl::render_shade (cairo_t *cairo, int x, int y, int width, int height, Lighting st)
 {
   int shade_alpha = 0x3b;
-  Color light = light_glint().shade (shade_alpha), dark = dark_glint().shade (shade_alpha);
+  Color light = light_clinch().shade (shade_alpha), dark = dark_clinch().shade (shade_alpha);
   uint64 dark_flag = uint64 (st) & Lighting::DARK_FLAG;
   CPainter painter (cairo);
   if (dark_flag != Lighting::NONE)
@@ -479,28 +479,28 @@ FrameImpl::render (RenderContext &rcontext)
       switch (current_frame())
         {
         case DrawFrame::IN:
-          outer_upper_left = dark_glint();
-          inner_upper_left = dark_shadow();
-          inner_lower_right = light_shadow();
-          outer_lower_right = light_glint();
+          outer_upper_left = dark_clinch();
+          inner_upper_left = dark_color();
+          inner_lower_right = light_color();
+          outer_lower_right = light_clinch();
           break;
         case DrawFrame::OUT:
-          outer_upper_left = light_shadow();
-          inner_upper_left = light_glint();
-          inner_lower_right = dark_glint();
-          outer_lower_right = dark_shadow();
+          outer_upper_left = light_color();
+          inner_upper_left = light_clinch();
+          inner_lower_right = dark_clinch();
+          outer_lower_right = dark_color();
           break;
         case DrawFrame::ETCHED_IN:
-          outer_upper_left = dark_shadow();
-          inner_upper_left = light_glint();
-          inner_lower_right = dark_shadow();
-          outer_lower_right = light_glint();
+          outer_upper_left = dark_color();
+          inner_upper_left = light_clinch();
+          inner_lower_right = dark_color();
+          outer_lower_right = light_clinch();
           break;
         case DrawFrame::ETCHED_OUT:
-          outer_upper_left = light_glint();
-          inner_upper_left = dark_shadow();
-          inner_lower_right = light_glint();
-          outer_lower_right = dark_shadow();
+          outer_upper_left = light_clinch();
+          inner_upper_left = dark_color();
+          inner_lower_right = light_clinch();
+          outer_lower_right = dark_color();
           break;
         case DrawFrame::FOCUS:
           if (is_tight_focus())
@@ -1138,8 +1138,8 @@ ShapePainterImpl::render (RenderContext &rcontext)
   int cx = area.x + area.width * 0.5 + 0.5, cy = area.y + area.height * 0.5 + 0.5;
   Color col1, col2;
   // outer shape
-  col1 = style()->state_color (rstate, StyleColor::DARK_GLINT);
-  col2 = style()->state_color (rstate, StyleColor::LIGHT_GLINT);
+  col1 = style()->state_color (rstate, StyleColor::DARK_CLINCH);
+  col2 = style()->state_color (rstate, StyleColor::LIGHT_CLINCH);
   draw_shape (cr, cx - r, cy - r, 2 * r, 2 * r, col1, col2, false);
   // inner shape
   r -= thickness;
