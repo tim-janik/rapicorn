@@ -385,10 +385,23 @@ void
 debug_assert (const char *file, const int line, const char *message)
 {
   String btmsg;
-  if (dbe_backtrace_warnings)
+  if (dbe_backtrace_warnings)           // indicates string_to_bool ("backtrace-warnings") == true
     {
+      int64 btdepth = string_to_int (debug_config_get ("backtrace-warnings", "true"));
+      if (btdepth < 1)                  // string_to_int can yield 0 if the value is "true" instead of a number
+        btdepth = 7;                    // default to limited assertion backtraces
+      btdepth += 1;                     // add 1 since we're skipping the first frame
+      if (btdepth > RAPICORN_BACKTRACE_MAXDEPTH)
+        btdepth = RAPICORN_BACKTRACE_MAXDEPTH;
       void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
-      btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), file, line, NULL);
+      ssize_t nptrs = backtrace_pointers (__p_, btdepth);
+      if (nptrs > 1)
+        {
+          nptrs -= 1;
+          void **ptrs = &__p_[1];       // skip the first frame, i.e. __func__
+          const StringVector symbols = pretty_backtrace_symbols (ptrs, nptrs);
+          btmsg = "  " + string_join ("\n  ", symbols) + "\n";
+        }
     }
   debug_handler ('C', file, line, String ("assertion failed: ") + (message ? message : "?"), NULL, btmsg);
 }
