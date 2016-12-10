@@ -126,12 +126,6 @@ debug_handler (const char dkind, const String &file_line, const String &message,
   const String where = file_line + (file_line.empty() ? "" : ": ");
   const String wherewhat = where + what + ": ";
   String emsg = "\n"; // (f & DO_ERRNO ? ": " + string_from_errno (saved_errno) : "")
-  if (kind == 'A')
-    msg = "assertion failed: " + msg;
-  else if (kind == 'U')
-    msg = "assertion must not be reached" + String (msg.empty() ? "" : ": ") + msg;
-  else if (kind == 'I')
-    msg = "condition failed: " + msg;
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
   if (f & DO_STAMP)
     {
