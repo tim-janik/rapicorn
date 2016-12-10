@@ -261,7 +261,7 @@ cstring_option_sense (const char *option_string, const char *option, char *value
             }
           else if (p[l] == 0 || p[l] == ':' || p[l] == ';')
             {                           // option present
-              strcpy (value, "1");
+              strcpy (value, "true");
             }
           else
             match = false;              // no match
@@ -428,7 +428,7 @@ debug_config_add (const String &option)
   else
     {
       key = option;
-      value = "1";
+      value = "true";
     }
   if (!key.empty())
     dbg->map[key] = value;
