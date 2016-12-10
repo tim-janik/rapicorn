@@ -489,7 +489,7 @@ read_maps ()
   return mv;
 }
 
-static StringVector
+StringVector
 pretty_backtrace_symbols (void **pointers, const int nptrs)
 {
   // fetch process maps to correlate pointers
