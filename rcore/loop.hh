@@ -124,7 +124,7 @@ class MainLoop : public EventLoop
 {
   friend                class FriendAllocator<MainLoop>;
   friend                class EventLoop;
-  friend                class SlaveLoop;
+  friend                class SubLoop;
   Mutex                 mutex_;
   uint                  rr_index_;
   vector<EventLoopP>    loops_;
@@ -135,9 +135,9 @@ class MainLoop : public EventLoop
   GlibGMainContext     *gcontext_;
   bool                  finishable_L        ();
   void                  wakeup_poll         ();                 ///< Wakeup main loop from polling.
-  void                  add_loop_L          (EventLoop &loop);  ///< Adds a slave loop to this main loop.
-  void                  kill_loop_Lm        (EventLoop &loop);  ///< Destroy a slave loop and all its sources.
-  void                  kill_loops_Lm       ();                 ///< Destroy this loop and all slave loops.
+  void                  add_loop_L          (EventLoop &loop);  ///< Adds a sub loop to this main loop.
+  void                  kill_loop_Lm        (EventLoop &loop);  ///< Destroy a sub loop and all its sources.
+  void                  kill_loops_Lm       ();                 ///< Destroy this loop and all sub loops.
   bool                  iterate_loops_Lm    (LoopState&, bool b, bool d);
   explicit              MainLoop            ();
 public:
@@ -149,7 +149,7 @@ public:
   bool       pending         ();                     ///< Check if iterate() needs to be called for dispatching.
   bool       iterate         (bool block);           ///< Perform one loop iteration and return whether more iterations are needed.
   void       iterate_pending (); ///< Call iterate() until no immediate dispatching is needed.
-  EventLoopP create_slave    (); ///< Creates a new slave loop that is run as part of this main loop.
+  EventLoopP create_sub_loop (); ///< Creates a new event loop that is run as part of this main loop.
   static MainLoopP  create   ();
   inline Mutex&     mutex    () { return mutex_; } ///< Provide access to the mutex associated with this main loop.
   bool    set_g_main_context (GlibGMainContext *glib_main_context); ///< Set context to integrate with a GLib @a GMainContext loop.

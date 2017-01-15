@@ -65,7 +65,7 @@ cdef extern from "rapicorn-core.hh"   namespace "Rapicorn":
     bool                                pending         () except *
     bool                                iterate         (bool blocking) except *
     void                                iterate_pending () except *
-    shared_ptr[Rapicorn__EventLoop]     create_slave ()
+    shared_ptr[Rapicorn__EventLoop]     create_sub_loop ()
   shared_ptr[Rapicorn__MainLoop] MainLoop__create "Rapicorn::MainLoop::create" ()
 
 # == Rapicorn Python Core ==
@@ -191,9 +191,9 @@ cdef class MainLoop (EventLoop):
   def pending (self):                   return self.mainp.pending()
   def iterate (self, blocking):         return self.mainp.iterate (blocking)
   def iterate_pending (self):           self.mainp.iterate_pending()
-  def create_slave (self):
+  def create_sub_loop (self):
     global EventLoop__internal_ctarg
-    EventLoop__internal_ctarg = new shared_ptr[Rapicorn__EventLoop] (self.mainp.create_slave())
+    EventLoop__internal_ctarg = new shared_ptr[Rapicorn__EventLoop] (self.mainp.create_sub_loop())
     return EventLoop()
 cdef shared_ptr[Rapicorn__MainLoop] Rapicorn__MainLoop__unwrap (object pyo1) except *:
   cdef MainLoop mself = <MainLoop?> pyo1
