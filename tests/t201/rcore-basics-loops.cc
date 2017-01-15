@@ -255,7 +255,7 @@ test_loop_round_robin (void)
    * we guess that any count in significant excess of n_handlers * rungroup
    * should suffice.
    */
-  const uint rungroup_for_all = 3 * rungroup + 3;
+  const uint rungroup_for_all = 3 * (rungroup + 1);
   for (uint i = 0; i < rungroup_for_all; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 >= rungroup);
@@ -281,17 +281,17 @@ test_loop_round_robin (void)
   id2 = loop->exec_callback (increment_round_robin_2, EventLoop::PRIORITY_NEXT);
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  const uint rungroup_for_two = 2 * rungroup + 2;
+  const uint rungroup_for_two = 2 * (rungroup + 1);
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
   TASSERT (round_robin_1 < rungroup && round_robin_2 >= rungroup);
   loop->remove (id1);
   loop->remove (id2);
-  // check round-robin for loops
+  // check round-robin behavior between loops
   EventLoopP slave = loop->create_slave();
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
-  id1 = loop->exec_callback (increment_round_robin_1);
+  id1 = loop->exec_idle (increment_round_robin_1);
   id2 = slave->exec_idle (increment_round_robin_2);
   for (uint i = 0; i < rungroup_for_two; i++)
     loop->iterate (false);
@@ -300,7 +300,21 @@ test_loop_round_robin (void)
   loop->remove (id1);
   slave->remove (id2);
   slave->destroy_loop();
+  // check starvation behavior between loops
+  slave = loop->create_slave();
+  round_robin_1 = round_robin_2 = 0;
+  TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
+  id1 = loop->exec_idle (increment_round_robin_1);
+  id2 = slave->exec_callback (increment_round_robin_2);
+  for (uint i = 0; i < rungroup_for_two; i++)
+    loop->iterate (false);
+  TASSERT (round_robin_1 < rungroup && round_robin_2 >= rungroup);
+  // cleanup
+  loop->remove (id1);
+  slave->remove (id2);
+  slave->destroy_loop();
   // check round-robin starvation between loops due to PRIORITY_ASCENT and higher
+#if 0 // disabled, PRIORITY_ASCENT now *only* affects loops interacting with a GMainContext
   slave = loop->create_slave();
   round_robin_1 = round_robin_2 = 0;
   TASSERT (round_robin_1 == 0 && round_robin_2 == 0);
@@ -313,6 +327,7 @@ test_loop_round_robin (void)
   loop->remove (id1);
   slave->remove (id2);
   slave->destroy_loop();
+#endif
   // MainLoop::destroy_loop also cleans up all slaves and their sources
   loop->destroy_loop();
 }
