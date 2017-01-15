@@ -718,7 +718,6 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
     loops[i]->collect_sources_Lm (state);
   // prepare
   bool any_dispatchable = false;
-  bool priority_ascension = false;      // flag for priority elevation between loops
   state.phase = state.PREPARE;
   state.current_time_usecs = timestamp_realtime();
   bool dispatchable[nrloops + 1];        // +1 for gcontext_
@@ -726,8 +725,6 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
     {
       dispatchable[i] = loops[i]->prepare_sources_Lm (state, &timeout_usecs, pfda);
       any_dispatchable |= dispatchable[i];
-      if (UNLIKELY (loops[i]->dispatch_priority_ >= PRIORITY_ASCENT) && dispatchable[i])
-        priority_ascension = true;
     }
   // prepare GLib
   const int gfirstfd = pfda.size();
@@ -769,13 +766,18 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
   // check
   state.phase = state.CHECK;
   state.current_time_usecs = timestamp_realtime();
+  int16 max_dispatch_priority = -32768;
   for (size_t i = 0; i < nrloops; i++)
     {
       dispatchable[i] |= loops[i]->check_sources_Lm (state, pfda);
-      any_dispatchable |= dispatchable[i];
-      if (UNLIKELY (loops[i]->dispatch_priority_ >= PRIORITY_ASCENT) && dispatchable[i])
-        priority_ascension = true;
+      if (!dispatchable[i])
+        continue;
+      any_dispatchable = true;
+      max_dispatch_priority = MAX (max_dispatch_priority, loops[i]->dispatch_priority_);
     }
+  bool priority_ascension = false;      // flag for priority elevation between loops
+  if (UNLIKELY (max_dispatch_priority >= PRIORITY_ASCENT) && any_dispatchable)
+    priority_ascension = true;
   // check GLib
   if (RAPICORN_UNLIKELY (gcontext_))
     {
@@ -787,13 +789,18 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
     {
       const size_t gloop = RAPICORN_UNLIKELY (gcontext_) && dispatchable[nrloops] ? 1 : 0;
       const size_t maxloops = nrloops + gloop; // +1 for gcontext_
-      size_t index, i = maxloops;
-      do        // find next dispatchable loop in round-robin fashion
-        index = rr_index_++ % maxloops;
-      while ((!dispatchable[index] ||
-              (priority_ascension && (index >= nrloops || // no priority_ascension support for gcontext_
-                                      loops[index]->dispatch_priority_ < PRIORITY_ASCENT))) &&
-             i--);
+      size_t index;
+      while (true)    // pick loops in round-robin fashion
+        {
+          index = rr_index_++ % maxloops; // round-robin step
+          if (!dispatchable[index])
+            continue; // need to find next dispatchable
+          if (index < nrloops && loops[index]->dispatch_priority_ < max_dispatch_priority)
+            continue; // ignore loops without max-priority source, except for gcontext_ which can still benefit from round-robin
+          if (priority_ascension && index >= nrloops)
+            continue; // but there's no priority_ascension support for gcontext_
+          break;      // DONE: index points to a dispatchable loop which meets priority requirements
+        }
       state.phase = state.DISPATCH;
       if (index >= nrloops)
         g_main_context_dispatch (gcontext_);
