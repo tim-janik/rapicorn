@@ -103,17 +103,31 @@ protected:
 };
 
 class ElementPainterImpl : public virtual SingleContainerImpl, public virtual ElementPainterIface {
-  String        svg_source_, element_, filler_, match_states_;
-  Svg::FileP    cached_file_;
-  ImagePainter  size_painter_, element_painter_, filler_painter_;
-  Allocation    fill_area_;
-  void          reset_cache            ();
-  bool          load_painters          ();
+  Allocation                    child_area_;
+  String                        svg_source_;
+  mutable Svg::FileP            cached_svg_;
+  struct PaintEntry {
+    String                      element;
+    uint64                      state_bit;
+  };
+  std::vector<PaintEntry>       paint_elements_;
+  static constexpr uint64       FILLING_PAINTER = 1ull << 61;
+  static constexpr uint64       SIZING_PAINTER  = 1ull << 62;
+  Svg::FileP           svg_file        () const;
+  PaintEntry&          fetch_entry     (uint64 state_bit);
+  const PaintEntry&    peek_entry      (uint64 state_bit) const;
+  const PaintEntry&    peek_entry      (WidgetState state_bit) const                            { return peek_entry (uint64 (state_bit)); }
+  void                 assign_entry    (uint64 state_bit, const String &element, const String &property);
+  void                 assign_entry    (WidgetState sbit, const String &e, const String &p)     { assign_entry (uint64 (sbit), e, p); }
+  ImagePainter         load_painter    (const String &fragment) const;
 protected:
+  String               size_fragment   () const;
+  String               state_fragment  (WidgetState widget_state) const;
+  String               filling_fragment(WidgetState widget_state) const;
+  ImagePainter         size_painter    () const;
+  ImagePainter         state_painter   () const;
+  ImagePainter         filling_painter () const;
   virtual WidgetState  render_state    () const;
-  ImagePainter         size_painter    ();
-  ImagePainter         element_painter ();
-  ImagePainter         filler_painter  ();
   virtual void         do_changed      (const String &name) override;
   virtual void         size_request    (Requisition &requisition) override;
   virtual void         size_allocate   (Allocation area) override;
@@ -121,27 +135,49 @@ protected:
 public:
   explicit       ElementPainterImpl   ();
   virtual       ~ElementPainterImpl   () override;
-  virtual String svg_source           () const override                 { return svg_source_; }
-  virtual void   svg_source           (const String &svgfile) override;
-  virtual String element              () const override                 { return element_; }
-  virtual void   element              (const String &fragment) override;
-  virtual String filler               () const override                 { return filler_; }
-  virtual void   filler               (const String &fragment) override;
-  virtual String match_states         () const override                 { return match_states_; }
-  virtual void   match_states         (const String &kind) override;
+  virtual String svg_source            () const override                { return svg_source_; }
+  virtual void   svg_source            (const String &source) override;
+  virtual String sizing_element        () const override                { return peek_entry (SIZING_PAINTER).element; }
+  virtual void   sizing_element        (const String &element) override { assign_entry (SIZING_PAINTER, element, "sizing_element"); }
+  virtual String normal_element        () const override                { return peek_entry (WidgetState::NORMAL).element; }
+  virtual void   normal_element        (const String &element) override { assign_entry (WidgetState::NORMAL, element, "normal_element"); }
+  virtual String acceleratable_element () const override                { return peek_entry (WidgetState::ACCELERATABLE).element; }
+  virtual void   acceleratable_element (const String &element) override { assign_entry (WidgetState::ACCELERATABLE, element, "acceleratable_element"); }
+  virtual String hover_element         () const override                { return peek_entry (WidgetState::HOVER).element; }
+  virtual void   hover_element         (const String &element) override { assign_entry (WidgetState::HOVER, element, "hover_element"); }
+  virtual String panel_element         () const override                { return peek_entry (WidgetState::PANEL).element; }
+  virtual void   panel_element         (const String &element) override { assign_entry (WidgetState::PANEL, element, "panel_element"); }
+  virtual String default_element       () const override                { return peek_entry (WidgetState::DEFAULT).element; }
+  virtual void   default_element       (const String &element) override { assign_entry (WidgetState::DEFAULT, element, "default_element"); }
+  virtual String selected_element      () const override                { return peek_entry (WidgetState::SELECTED).element; }
+  virtual void   selected_element      (const String &element) override { assign_entry (WidgetState::SELECTED, element, "selected_element"); }
+  virtual String focused_element       () const override                { return peek_entry (WidgetState::FOCUSED).element; }
+  virtual void   focused_element       (const String &element) override { assign_entry (WidgetState::FOCUSED, element, "focused_element"); }
+  virtual String insensitive_element   () const override                { return peek_entry (WidgetState::INSENSITIVE).element; }
+  virtual void   insensitive_element   (const String &element) override { assign_entry (WidgetState::INSENSITIVE, element, "insensitive_element"); }
+  virtual String active_element        () const override                { return peek_entry (WidgetState::ACTIVE).element; }
+  virtual void   active_element        (const String &element) override { assign_entry (WidgetState::ACTIVE, element, "active_element"); }
+  virtual String toggled_element       () const override                { return peek_entry (WidgetState::TOGGLED).element; }
+  virtual void   toggled_element       (const String &element) override { assign_entry (WidgetState::TOGGLED, element, "toggled_element"); }
+  virtual String retained_element      () const override                { return peek_entry (WidgetState::RETAINED).element; }
+  virtual void   retained_element      (const String &element) override { assign_entry (WidgetState::RETAINED, element, "retained_element"); }
+  virtual String stashed_element       () const override                { return peek_entry (WidgetState::STASHED).element; }
+  virtual void   stashed_element       (const String &element) override { assign_entry (WidgetState::STASHED, element, "stashed_element"); }
+  virtual String filling_element       () const override                { return peek_entry (FILLING_PAINTER).element; }
+  virtual void   filling_element       (const String &element) override { assign_entry (FILLING_PAINTER, element, "filling_element"); }
 };
 
 class FocusPainterImpl : public virtual ElementPainterImpl, public virtual FocusPainterIface, public virtual FocusIndicator {
   ContainerImpl *focus_container_;
   bool           container_has_focus_, tight_;
 protected:
-  virtual WidgetState render_state             () const override;
-  virtual void      set_focus_child            (WidgetImpl *widget) override;
-  virtual void      hierarchy_changed          (WidgetImpl *old_toplevel) override;
-  virtual void      focusable_container_change (ContainerImpl &focus_container) override;
+  virtual WidgetState render_state               () const override;
+  virtual void        set_focus_child            (WidgetImpl *widget) override;
+  virtual void        hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void        focusable_container_change (ContainerImpl &focus_container) override;
 public:
-  explicit       FocusPainterImpl ();
-  virtual       ~FocusPainterImpl () override;
+  explicit            FocusPainterImpl           ();
+  virtual            ~FocusPainterImpl           () override;
 };
 
 class ShapePainterImpl : public virtual SingleContainerImpl, public virtual ShapePainterIface {

@@ -563,10 +563,21 @@ interface ShapePainter : Container {
 /// widget states appended (e.g. "ID:active") and match the WidgetState of @a this are preferred.
 /// See also the corresponding implementation class ElementPainterImpl.
 interface ElementPainter : Container {
-  String svg_source   = String (_("SVG Source"), _("SVG image file providing elements to be painted."), "rw");
-  String element      = String (_("SVG Element"), _("ID of a state-dependent SVG element to paint and define the child fill area."), "rw");
-  String filler       = String (_("SVG Filler"), _("ID of a state-dependent SVG element used to to paint the fill area."), "rw");
-  String match_states = String (_("Match States"), _("Use 'none' to avoid state dependent element variants, defaults to 'all'."), "rw");
+  String svg_source            = String (_("SVG Source"), _("SVG image file providing elements to be painted."), "rw");
+  String sizing_element        = String (_("Sizing Element"), _("ID of an SVG element used to define the size of the child fill area."), "rw");
+  String normal_element        = String (_("Normal Element"), _("ID of a state-modifiable SVG element to paint and define the size of the child fill area."), "rw");
+  String acceleratable_element = String (_("Acceleratable Element"), _("Like normal_element for WidgetState::ACCELERATABLE."), "rw");
+  String hover_element         = String (_("Hover Element"), _("Like normal_element for WidgetState::HOVER."), "rw");
+  String panel_element         = String (_("Panel Element"), _("Like normal_element for WidgetState::PANEL."), "rw");
+  String default_element       = String (_("Default Element"), _("Like normal_element for WidgetState::DEFAULT."), "rw");
+  String selected_element      = String (_("Selected Element"), _("Like normal_element for WidgetState::SELECTED."), "rw");
+  String focused_element       = String (_("Focused Element"), _("Like normal_element for WidgetState::FOCUSED."), "rw");
+  String insensitive_element   = String (_("Insensitive Element"), _("Like normal_element for WidgetState::INSENSITIVE."), "rw");
+  String active_element        = String (_("Active Element"), _("Like normal_element for WidgetState::ACTIVE."), "rw");
+  String toggled_element       = String (_("Toggled Element"), _("Like normal_element for WidgetState::TOGGLED."), "rw");
+  String retained_element      = String (_("Retained Element"), _("Like normal_element for WidgetState::RETAINED."), "rw");
+  String stashed_element       = String (_("Stashed Element"), _("Like normal_element for WidgetState::STASHED."), "rw");
+  String filling_element       = String (_("Filling Element"), _("ID of a state-modifiable SVG element used to to paint the child fill area."), "rw");
 };
 
 /// The FocusPainter container decorates its single child according to focus changes.
@@ -575,7 +586,6 @@ interface ElementPainter : Container {
 /// It also provide the HAS_FOCUS_INDICATOR flag for its nextmost NEEDS_FOCUS_INDICATOR ancestor.
 /// See also the corresponding implementation class FocusPainterImpl.
 interface FocusPainter : ElementPainter {
-  /* bool   tight_focus = Bool (_("Tight Focus"), _("Overlay child with focus frame"), "rw"); */
 };
 
 /// A widget for text display.
