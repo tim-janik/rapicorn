@@ -525,8 +525,8 @@ WidgetListImpl::grab_row_focus (int next_focus, int old_focus)
   else
     {
       row = get_row_widget (old_focus);
-      if (row)
-        row->unset_focus();                     // or no row gets focus
+      if (row && row->test_any (FOCUS_CHAIN))
+        get_window()->unset_focus();            // or no row gets focus
       success = false;
     }
   const int current_focus = success ? focus_row () : -1;

@@ -358,7 +358,7 @@ SliderSkidImpl::handle_event (const Event &event)
       if (!button_ and (bevent->button == 1 or bevent->button == 2))
         {
           button_ = bevent->button;
-          get_window()->add_grab (this, true);
+          get_window()->add_grab (*this);
           handled = true;
           coffset_ = 0;
           const Point viewport_point = Point (event.x, event.y);

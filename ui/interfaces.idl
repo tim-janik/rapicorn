@@ -360,6 +360,9 @@ interface Window : Container {
   void          destroy                 (); ///< Destroy and dispose a (possibly on screen) window.
   bool          snapshot                (String     pngname);
   void          query_idle              (); ///< Request notificaiton when idle.
+  Widget        get_focus               (); ///< Retrieve the Window's current focus widget.
+  void          unset_focus             (); ///< Reset the Window's focus widget.
+  Widget        get_entered             (); ///< Retrieve the Window's descendant Widget that was last entered if any.
   signal void   notify_idle             (); ///< Notificaiton signal, emitted after query_idle() once events are processed.
   signal bool   commands                (String     cmdname, StringSeq args);
   signal void   displayed               ();

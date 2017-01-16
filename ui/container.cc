@@ -617,7 +617,7 @@ ContainerImpl::move_focus (FocusDir fdir)
       break;
     case FocusDir::UP:    case FocusDir::LEFT:
     case FocusDir::RIGHT: case FocusDir::DOWN:
-      current = get_window()->get_focus();
+      current = get_window()->get_focus_widget();
       if (current)
         refpoint = rect_center (focus_view_area (current));
       else // use an entering corner as reference point
