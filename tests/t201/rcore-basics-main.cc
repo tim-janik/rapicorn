@@ -763,6 +763,13 @@ test_stamps()
 }
 REGISTER_TEST ("utilities/Stamps", test_stamps);
 
+static int
+my_compare_func (const void*, const void*)
+{
+  RAPICORN_BACKTRACE();
+  exit (0);
+}
+
 static void // Test Mutextes before GLib's thread initialization
 test_before_thread_init()
 {
@@ -824,6 +831,11 @@ main (int argc, char *argv[])
         result = "no stats";
       printout ("TaskStatus: %s\n", result);
       return 0;
+    }
+  if (argc >= 2 && String ("--backtrace") == argv[1])
+    {
+      char dummy_array[3] = { 1, 2, 3 };
+      qsort (dummy_array, 3, 1, my_compare_func);
     }
 
   return Test::run();

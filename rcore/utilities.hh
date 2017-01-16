@@ -19,6 +19,7 @@
 #define STRLOC()         RAPICORN_STRLOC()          ///< Shorthand for RAPICORN_STRLOC() if RAPICORN_CONVENIENCE is defined.
 #define return_if        RAPICORN_RETURN_IF         ///< Shorthand for RAPICORN_RETURN_IF() if RAPICORN_CONVENIENCE is defined.
 #define return_unless    RAPICORN_RETURN_UNLESS     ///< Shorthand for RAPICORN_RETURN_UNLESS() if RAPICORN_CONVENIENCE is defined.
+#define BACKTRACE        RAPICORN_BACKTRACE
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
@@ -84,10 +85,16 @@ String  pretty_file                             (const char *file_dir, const cha
 #define RAPICORN_RETURN_UNLESS(cond, ...)       do { if (RAPICORN_LIKELY (cond)) break; return __VA_ARGS__; } while (0)
 
 // === Debugging Functions (internal) ===
-vector<String> pretty_backtrace (uint level = 0, size_t *parent_addr = NULL) __attribute__ ((noinline));
-void        debug_backtrace_snapshot (size_t key);
-String      debug_backtrace_showshot (size_t key);
-inline void breakpoint ();
+#define RAPICORN_BACKTRACE_MAXDEPTH   1024
+#define RAPICORN_BACKTRACE_STRING()   ({ void *__p_[RAPICORN_BACKTRACE_MAXDEPTH]; const String __s_ = ::Rapicorn::pretty_backtrace (__p_, ::Rapicorn::backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), __FILE__, __LINE__, __func__); __s_; })
+#define RAPICORN_BACKTRACE()          ({ ::Rapicorn::printerr ("%s", RAPICORN_BACKTRACE_STRING()); })
+extern int (*backtrace_pointers)      (void **buffer, int size);
+String       pretty_backtrace         (void **ptrs, ssize_t nptrs, const char *file, int line, const char *func);
+StringVector pretty_backtrace_symbols (void **pointers, const int nptrs);
+void         debug_backtrace_snapshot (size_t key);
+String       debug_backtrace_showshot (size_t key);
+String       process_handle           ();
+inline void  breakpoint ();
 
 // === Macro Implementations ===
 #define RAPICORN_BREAKPOINT()           Rapicorn::breakpoint()  ///< Cause a debugging breakpoint, for development only.

@@ -94,13 +94,16 @@ static void docextract_definition = RAPICORN_DEBUG_OPTION ("all", "Enable all av
 static DebugOption dbe_syslog = RAPICORN_DEBUG_OPTION ("syslog", "Enable logging of general purpose messages through syslog(3).");
 static DebugOption dbe_fatal_syslog = RAPICORN_DEBUG_OPTION ("fatal-syslog", "Enable logging of fatal conditions through syslog(3).");
 static DebugOption dbe_fatal_warnings = RAPICORN_DEBUG_OPTION ("fatal-warnings", "Cast all warning messages into fatal errors.");
+static DebugOption dbe_backtrace_warnings = RAPICORN_DEBUG_OPTION ("backtrace-warnings", "Generate a backtrace for all warning messages.");
 
-static __attribute__ ((noinline)) void // internal function, this + caller are skipped in backtraces
-debug_handler (const char dkind, const String &file_line, const String &message, const char *key = NULL)
+static void
+debug_handler (const char dkind, const char *const file, const int line, const String &message,
+               const char *key = NULL, const String &backtrace_string = "")
 {
   /* The logging system must work before Rapicorn is initialized, and possibly even during
    * global_ctor phase. So any initialization needed here needs to be handled on demand.
    */
+  const String file_line = !file ? "" : String (file) + (line < 1 ? "" : ":" + string_from_int (line));
   String msg = message;
   const char kind = toupper (dkind);
   enum { DO_STDERR = 1, DO_SYSLOG = 2, DO_ABORT = 4, DO_DEBUG = 8, DO_ERRNO = 16,
@@ -122,16 +125,10 @@ debug_handler (const char dkind, const String &file_line, const String &message,
     case 'D': what = "DEBUG";    f |= DO_DEBUG  | DO_STAMP;                 break;      // debug
     }
   f |= conftest_logfd > 0 || !conftest_logfile.empty() ? DO_LOGFILE : 0;
-  f |= (f & DO_ABORT) ? DO_BACKTRACE : 0;
+  f |= !backtrace_string.empty() ? DO_BACKTRACE : 0;
   const String where = file_line + (file_line.empty() ? "" : ": ");
   const String wherewhat = where + what + ": ";
   String emsg = "\n"; // (f & DO_ERRNO ? ": " + string_from_errno (saved_errno) : "")
-  if (kind == 'A')
-    msg = "assertion failed: " + msg;
-  else if (kind == 'U')
-    msg = "assertion must not be reached" + String (msg.empty() ? "" : ": ") + msg;
-  else if (kind == 'I')
-    msg = "condition failed: " + msg;
   const uint64 start = timestamp_startup(), delta = max (timestamp_realtime(), start) - start;
   if (f & DO_STAMP)
     {
@@ -194,16 +191,6 @@ debug_handler (const char dkind, const String &file_line, const String &message,
       const String severity = (f & DO_ABORT) ? "ABORTING: " : "";
       syslog (level, "%s%s%s", severity.c_str(), msg.c_str(), end.c_str());
     }
-  String btmsg;
-  if (f & DO_BACKTRACE)
-    {
-      size_t addr;
-      const vector<String> syms = pretty_backtrace (2, &addr);
-      btmsg = string_format ("%sBacktrace at 0x%08x (stackframe at 0x%08x):\n", where.c_str(),
-                             addr, size_t (__builtin_frame_address (0)) /*size_t (&addr)*/);
-      for (size_t i = 0; i < syms.size(); i++)
-        btmsg += string_format ("  %s\n", syms[i].c_str());
-    }
   if (f & DO_LOGFILE)
     {
       String out;
@@ -234,11 +221,11 @@ debug_handler (const char dkind, const String &file_line, const String &message,
       while (err < 0 && (errno == EINTR || errno == EAGAIN));
       if (f & DO_BACKTRACE)
         do
-          err = write (conftest_logfd, btmsg.data(), btmsg.size());
+          err = write (conftest_logfd, backtrace_string.data(), backtrace_string.size());
         while (err < 0 && (errno == EINTR || errno == EAGAIN));
     }
   if (f & DO_BACKTRACE)
-    printerr ("%s", btmsg.c_str());
+    printerr ("%s", backtrace_string.c_str());
   if (f & DO_ABORT)
     {
       ::abort();
@@ -267,7 +254,7 @@ cstring_option_sense (const char *option_string, const char *option, char *value
             }
           else if (p[l] == 0 || p[l] == ':' || p[l] == ';')
             {                           // option present
-              strcpy (value, "1");
+              strcpy (value, "true");
             }
           else
             match = false;              // no match
@@ -366,40 +353,67 @@ envkey_debug_message (const char *env_var, const char *key, const char *file, co
 {
   if (!envkey_debug_check (env_var, key, cachep))
     return;
-  String prefix = file ? file : "";
-  if (!prefix.empty() && line >= 0)
-    prefix += ":" + string_from_int (line);
-  debug_handler ('D', prefix, message, key);
+  debug_handler ('D', file, line, message, key);
 }
 
 // == debug_* functions ==
 void
 debug_message (char kind, const char *file, int line, const String &message)
 {
-  String prefix = file ? file : "";
-  if (!prefix.empty() && line >= 0)
-    prefix += ":" + string_from_int (line);
+  String btmsg;
   if (kind == 'F' || kind == 'C' || kind == 'G')
-    debug_handler (kind, prefix, message);
+    {
+      if (kind != 'G' && dbe_backtrace_warnings)
+        {
+          void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
+          btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), file, line, NULL);
+        }
+      debug_handler (kind, file, line, message, NULL, btmsg);
+    }
 }
 
 void
-debug_fmessage (const char *file, int line, const String &message)
+debug_fatal_message (const char *file, int line, const String &message)
 {
-  debug_message ('F', file, line, message);
+  void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
+  const String btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), file, line, NULL);
+  debug_handler ('F', file, line, message, NULL, btmsg);
   ::abort();
 }
 
 void
 debug_assert (const char *file, const int line, const char *message)
 {
-  debug_message ('C', file, line, String ("assertion failed: ") + (message ? message : "?"));
+  String btmsg;
+  if (dbe_backtrace_warnings)           // indicates string_to_bool ("backtrace-warnings") == true
+    {
+      int64 btdepth = string_to_int (debug_config_get ("backtrace-warnings", "true"));
+      if (btdepth < 1)                  // string_to_int can yield 0 if the value is "true" instead of a number
+        btdepth = 7;                    // default to limited assertion backtraces
+      btdepth += 1;                     // add 1 since we're skipping the first frame
+      if (btdepth > RAPICORN_BACKTRACE_MAXDEPTH)
+        btdepth = RAPICORN_BACKTRACE_MAXDEPTH;
+      void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
+      ssize_t nptrs = backtrace_pointers (__p_, btdepth);
+      if (nptrs > 1)
+        {
+          nptrs -= 1;
+          void **ptrs = &__p_[1];       // skip the first frame, i.e. __func__
+          const StringVector symbols = pretty_backtrace_symbols (ptrs, nptrs);
+          btmsg = "  " + string_join ("\n  ", symbols) + "\n";
+        }
+    }
+  debug_handler ('C', file, line, String ("assertion failed: ") + (message ? message : "?"), NULL, btmsg);
 }
 
 void
-debug_fassert (const char *file, const int line, const char *message)
+debug_fatal_assert (const char *file, const int line, const char *message)
 {
-  debug_fmessage (file, line, String ("assertion failed: ") + (message ? message : "?"));
+  const String assert_message = String ("assertion failed: ") + (message ? message : "?");
+  void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
+  const String btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), file, line, NULL);
+  debug_handler ('F', file, line, assert_message, NULL, btmsg);
+  ::abort();
 }
 
 struct DebugMap {
@@ -434,7 +448,7 @@ debug_config_add (const String &option)
   else
     {
       key = option;
-      value = "1";
+      value = "true";
     }
   if (!key.empty())
     dbg->map[key] = value;

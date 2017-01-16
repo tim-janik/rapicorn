@@ -5,10 +5,13 @@
 #include <rcore/strings.hh>
 
 // For convenience, redefine assert() to get backtraces, logging, etc.
-#if !defined (assert) && defined (RAPICORN_CONVENIENCE) // dont redefine an existing custom macro
-#include <assert.h>                                     // import definition of assert() from libc
-#undef  assert
-#define assert  RAPICORN_ASSERT                         ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#if defined (RAPICORN_CONVENIENCE)
+#define ASSERT  RAPICORN_ASSERT                 ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#  if !defined (assert)                         // dont redefine an existing custom macro
+#  include <assert.h>                           // import definition of assert() from libc
+#  undef  assert
+#  define assert  RAPICORN_ASSERT               ///< Shorthand for #RAPICORN_ASSERT if RAPICORN_CONVENIENCE is defined.
+#  endif
 #endif // RAPICORN_CONVENIENCE
 
 namespace Rapicorn {
@@ -46,10 +49,10 @@ bool   debug_devel_check ();
 #define RAPICORN_FLIPPER(key, blurb,...)  Rapicorn::FlipperOption (key, bool (__VA_ARGS__))
 #define RAPICORN_DEBUG_OPTION(key, blurb) Rapicorn::DebugOption (key)
 #define RAPICORN_KEY_DEBUG(key,...)       do { if (RAPICORN_UNLIKELY (Rapicorn::_rapicorn_debug_check_cache)) Rapicorn::rapicorn_debug (key, RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
-#define RAPICORN_FATAL(...)               do { Rapicorn::debug_fmessage (RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
-#define RAPICORN_ASSERT(cond)             do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
+#define RAPICORN_FATAL(...)               do { Rapicorn::debug_fatal_message (RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
+#define RAPICORN_ASSERT(cond)             do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_fatal_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
 #define RAPICORN_ASSERT_RETURN(cond, ...) do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); return __VA_ARGS__; } while (0)
-#define RAPICORN_ASSERT_UNREACHED()       do { Rapicorn::debug_fassert (RAPICORN_PRETTY_FILE, __LINE__, "line must not be reached"); } while (0)
+#define RAPICORN_ASSERT_UNREACHED()       do { Rapicorn::debug_fatal_assert (RAPICORN_PRETTY_FILE, __LINE__, "line must not be reached"); } while (0)
 #define RAPICORN_CRITICAL(...)            do { Rapicorn::debug_message ('C', RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
 #define RAPICORN_CRITICAL_UNLESS(cond)    do { if (RAPICORN_LIKELY (cond)) break; Rapicorn::debug_assert (RAPICORN_PRETTY_FILE, __LINE__, #cond); } while (0)
 #define RAPICORN_DIAG(...)                do { Rapicorn::debug_message ('G', RAPICORN_PRETTY_FILE, __LINE__, Rapicorn::string_format (__VA_ARGS__)); } while (0)
@@ -133,9 +136,9 @@ void printout_string     (const String &string);
 void printerr_string     (const String &string);
 void user_notice_string  (const UserSource &source, const String &string);
 void user_warning_string (const UserSource &source, const String &string);
-void debug_fmessage      (const char *file, int line, const String &message) RAPICORN_NORETURN;
 void debug_message       (char kind, const char *file, int line, const String &message);
-void debug_fassert       (const char*, int, const char*) RAPICORN_NORETURN;
+void debug_fatal_message (const char *file, int line, const String &message) RAPICORN_NORETURN;
+void debug_fatal_assert  (const char*, int, const char*) RAPICORN_NORETURN;
 void debug_assert        (const char*, int, const char*);
 
 /// @endcond
