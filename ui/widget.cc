@@ -65,9 +65,15 @@ WidgetImpl::construct ()
 }
 
 void
-WidgetImpl::fabricated ()
+WidgetImpl::fabricated()
 {
   // must chain and propagate to children
+}
+
+void
+WidgetImpl::fabricated (Internal)
+{
+  fabricated();
 }
 
 void
@@ -351,11 +357,11 @@ WidgetImpl::grab_focus ()
   // unset old focus
   WindowImpl *rwidget = get_window();
   if (rwidget)
-    WindowImpl::WidgetImplFriend::set_focus (*rwidget, NULL);
+    rwidget->set_focus (NULL);
   // set new focus
   rwidget = get_window();
-  if (rwidget && rwidget->get_focus() == NULL)
-    WindowImpl::WidgetImplFriend::set_focus (*rwidget, this);
+  if (rwidget && rwidget->get_focus_widget() == NULL)
+    rwidget->set_focus (this);
   return rwidget && rwidget->get_focus_widget() == this;
 }
 
@@ -553,7 +559,7 @@ WidgetImpl::notify_key_error ()
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         display_window->beep();
     }
@@ -572,7 +578,7 @@ WidgetImpl::request_content (ContentSourceType csource, uint64 nonce, const Stri
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         {
           display_window->request_content (csource, nonce, data_type);
@@ -594,7 +600,7 @@ WidgetImpl::own_content (ContentSourceType content_source, uint64 nonce, const S
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         {
           display_window->set_content_owner (content_source, nonce, data_types);
@@ -613,7 +619,7 @@ WidgetImpl::disown_content (ContentSourceType content_source, uint64 nonce)
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         {
           display_window->set_content_owner (content_source, nonce, StringVector());
@@ -634,7 +640,7 @@ WidgetImpl::provide_content (const String &data_type, const String &data, uint64
   WindowImpl *rwidget = get_window();
   if (rwidget)
     {
-      DisplayWindow *display_window = WindowImpl::WidgetImplFriend::display_window (*rwidget);
+      DisplayWindow *display_window = rwidget->display_window();
       if (display_window)
         {
           display_window->provide_content (data_type, data, request_id);
@@ -745,39 +751,27 @@ WidgetImpl::query_selector_unique (const String &selector)
 uint
 WidgetImpl::exec_slow_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->exec_timer (sl, 250, 50, EventLoop::PRIORITY_NORMAL);
-    }
+  EventLoop *loop = get_loop();
+  if (loop)
+    return loop->exec_timer (sl, 250, 50, EventLoop::PRIORITY_NORMAL);
   return 0;
 }
 
 uint
 WidgetImpl::exec_fast_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->exec_timer (sl, 200, 20, EventLoop::PRIORITY_NORMAL);
-    }
+  EventLoop *loop = get_loop();
+  if (loop)
+    return loop->exec_timer (sl, 200, 20, EventLoop::PRIORITY_NORMAL);
   return 0;
 }
 
 uint
 WidgetImpl::exec_key_repeater (const EventLoop::BoolSlot &sl)
 {
-  WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->exec_timer (sl, 250, 33, EventLoop::PRIORITY_NORMAL);
-    }
+  EventLoop *loop = get_loop();
+  if (loop)
+    return loop->exec_timer (sl, 250, 33, EventLoop::PRIORITY_NORMAL);
   return 0;
 }
 
@@ -787,22 +781,16 @@ WidgetImpl::exec_now (const EventLoop::VoidSlot &sl)
   /* queue arbitrary code for asynchornous execution, i.e. this function pretty much guarantees
    * slot execution if there's *any* main loop running, so fallback to the UIThread main loop if needed.
    */
-  WindowImpl *rwidget = get_window();
-  EventLoop *loop = rwidget ? rwidget->get_loop() : &*uithread_main_loop();
-  return loop ? loop->exec_now (sl) : 0;
+  EventLoop *loop = get_loop();
+  loop = loop ? loop : uithread_main_loop().get();
+  return loop->exec_now (sl);
 }
 
 bool
 WidgetImpl::remove_exec (uint exec_id)
 {
-  WindowImpl *rwidget = get_window();
-  if (rwidget)
-    {
-      EventLoop *loop = rwidget->get_loop();
-      if (loop)
-        return loop->try_remove (exec_id);
-    }
-  return false;
+  EventLoop *loop = get_loop();
+  return loop ? loop->try_remove (exec_id) : false;
 }
 
 bool
@@ -824,15 +812,11 @@ WidgetImpl::queue_visual_update ()
   uint timer_id = get_data (&visual_update_key);
   if (!timer_id)
     {
-      WindowImpl *rwidget = get_window();
-      if (rwidget)
+      EventLoop *loop = get_loop();
+      if (loop)
         {
-          EventLoop *loop = rwidget->get_loop();
-          if (loop)
-            {
-              timer_id = loop->exec_timer (Aida::slot (*this, &WidgetImpl::force_visual_update), 20);
-              set_data (&visual_update_key, timer_id);
-            }
+          timer_id = loop->exec_timer (Aida::slot (*this, &WidgetImpl::force_visual_update), 20);
+          set_data (&visual_update_key, timer_id);
         }
     }
 }
@@ -1276,6 +1260,13 @@ WidgetImpl::root () const
   return root;
 }
 
+EventLoop*
+WidgetImpl::get_loop () const
+{
+  WindowImpl *window = get_window();
+  return window ? window->get_event_loop().get() : NULL;
+}
+
 WindowImpl*
 WidgetImpl::get_window () const
 {
@@ -1296,7 +1287,7 @@ WidgetImpl::get_viewport () const
     return acache->viewport;
   ViewportImpl *viewport = NULL;
   for (WidgetImpl *widget = const_cast<WidgetImpl*> (this); widget && !viewport; widget = widget->parent())
-    viewport = dynamic_cast<ViewportImpl*> (widget);
+    viewport = widget->as_viewport_impl();
   return viewport;
 }
 
@@ -1533,7 +1524,7 @@ WidgetImpl::expose_unclipped (const Region &region)
   viewport_region.translate (delta.x, delta.y);
   // clip region against ancestry
   viewport_region.intersect (Region (vextents));
-  viewport.expose_region (viewport_region);
+  viewport.get_window()->expose_region (viewport_region); // FIXME: use viewport
 }
 
 /** Invalidate drawing contents of a widget
@@ -1552,7 +1543,7 @@ WidgetImpl::expose (const Region &region) // widget relative
 
 /// Signal emitted when a widget ancestry is added to or removed from a Window
 void
-WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+WidgetImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   if (anchored())
     {
@@ -1565,7 +1556,7 @@ WidgetImpl::hierarchy_changed (WidgetImpl *old_toplevel)
     }
   // assign anchored
   const bool was_anchored = anchored();
-  set_flag (ANCHORED, WindowImpl::WidgetImplFriend::widget_is_anchored (*this)); // anchored = true/false
+  set_flag (ANCHORED, WindowImpl::widget_is_anchored (*this)); // anchored = true/false
   const bool hierarchy_anchor_changed = was_anchored != anchored();
   assert_return (hierarchy_anchor_changed == true);
   if (anchored())
@@ -2190,6 +2181,22 @@ WidgetImpl::drawable () const
   if (viewable() && child_allocation_.width > 0 && child_allocation_.height > 0)
     return true;
   return false;
+}
+
+// Return @a widgets without any of @a removes, preserving the original order.
+vector<WidgetImplP>
+WidgetImpl::widget_difference (const vector<WidgetImplP> &widgets, const vector<WidgetImplP> &removes)
+{
+  std::set<WidgetImpl*> mminus;
+  for (auto &delme : removes)
+    mminus.insert (&*delme);
+  vector<WidgetImplP> remainings;
+  if (widgets.size() > removes.size())
+    remainings.reserve (widgets.size() - removes.size());
+  for (auto &candidate : widgets)
+    if (mminus.find (&*candidate) == mminus.end())
+      remainings.push_back (candidate);
+  return remainings;
 }
 
 } // Rapicorn

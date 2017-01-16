@@ -74,7 +74,7 @@ SliderAreaImpl::adjustment_source (AdjustmentSourceType adj_source)
 }
 
 void
-SliderAreaImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+SliderAreaImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   this->TableLayoutImpl::hierarchy_changed (old_toplevel);
   if (anchored() && adjustment_source_ != AdjustmentSourceType::NONE)
@@ -140,7 +140,7 @@ SliderTroughImpl::flipped() const
 }
 
 void
-SliderTroughImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+SliderTroughImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   if (slider_area_ && conid_slider_changed_)
     slider_area_->sig_slider_changed() -= conid_slider_changed_;

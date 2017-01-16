@@ -463,12 +463,29 @@ String cxx_demangle (const char *mangled_identifier);
 } // Rapicorn
 
 namespace RapicornInternal {
+
+template<bool rapicorn_build>
+class InternalUse {
+  static void internal_linkage ();
+public:
+  InternalUse()
+  {
+    static_assert (rapicorn_build, "invalid use of RapicornInternal namespace");
+    internal_linkage();
+  }
+};
+
 #ifdef __RAPICORN_BUILD__
-struct ImplementationHelper;
-#else
-class ImplementationHelper final {};
-#endif
-const char* buildid(); // buildid.cc
+constexpr bool rapicorn_build () { return true; }
+const char*    buildid        (); // buildid.cc
+#else  // !__RAPICORN_BUILD__
+constexpr bool rapicorn_build () { return false; }
+#endif // !__RAPICORN_BUILD__
+
 } // RapicornInternal
+
+namespace Rapicorn {
+typedef const ::RapicornInternal::InternalUse<::RapicornInternal::rapicorn_build()> Internal;
+} // Rapicorn
 
 #endif // __RAPICORN_CXXAUX_HH__

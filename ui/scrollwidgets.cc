@@ -74,7 +74,7 @@ ScrollPortImpl::ScrollPortImpl() :
 {}
 
 void
-ScrollPortImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+ScrollPortImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   if (hadjustment_ && conid_hadjustment_)
     hadjustment_->sig_value_changed() -= conid_hadjustment_;

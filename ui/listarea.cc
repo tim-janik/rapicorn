@@ -128,7 +128,7 @@ WidgetListImpl::~WidgetListImpl()
 }
 
 void
-WidgetListImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+WidgetListImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   MultiContainerImpl::hierarchy_changed (old_toplevel);
   if (anchored())

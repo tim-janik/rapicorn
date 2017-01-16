@@ -89,7 +89,7 @@ TextControllerImpl::construct()
 }
 
 void
-TextControllerImpl::hierarchy_changed (WidgetImpl *old_toplevel)
+TextControllerImpl::hierarchy_changed (WindowImpl *old_toplevel)
 {
   this->SingleContainerImpl::hierarchy_changed (old_toplevel);
   if (anchored() && !internal_tblock_)

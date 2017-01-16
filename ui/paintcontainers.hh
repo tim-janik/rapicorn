@@ -80,7 +80,7 @@ class FocusFrameImpl : public virtual FrameImpl, public virtual FocusFrameIface,
   DrawFrame         focus_frame_;
 protected:
   virtual void set_focus_child            (WidgetImpl *widget) override;
-  virtual void hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void hierarchy_changed          (WindowImpl *old_toplevel) override;
   virtual void focusable_container_change (ContainerImpl &focus_container) override;
 public:
   explicit          FocusFrameImpl    ();
@@ -173,7 +173,7 @@ class FocusPainterImpl : public virtual ElementPainterImpl, public virtual Focus
 protected:
   virtual WidgetState render_state               () const override;
   virtual void        set_focus_child            (WidgetImpl *widget) override;
-  virtual void        hierarchy_changed          (WidgetImpl *old_toplevel) override;
+  virtual void        hierarchy_changed          (WindowImpl *old_toplevel) override;
   virtual void        focusable_container_change (ContainerImpl &focus_container) override;
 public:
   explicit            FocusPainterImpl           ();

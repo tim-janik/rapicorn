@@ -1,16 +1,35 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "viewport.hh"
 #include "factory.hh"
+#include "window.hh"
+#include "rcore/cairoutils.hh"
 
-#define VDEBUG(...)     RAPICORN_KEY_DEBUG ("Viewport", __VA_ARGS__)
+#define EDEBUG(...)           RAPICORN_KEY_DEBUG ("Events", __VA_ARGS__)
+#define DEBUG_RESIZE(...)     RAPICORN_KEY_DEBUG ("Resize", __VA_ARGS__)
+#define DEBUG_RENDER(...)     RAPICORN_KEY_DEBUG ("Render", __VA_ARGS__)
 
 namespace Rapicorn {
 
-ViewportImpl::ViewportImpl ()
-{}
-
-ViewportImpl::~ViewportImpl ()
+// == ViewportImpl ==
+ViewportImpl::ViewportImpl() :
+  display_window_ (NULL), immediate_event_hash_ (0),
+  tunable_requisition_counter_ (0),
+  auto_focus_ (true), entered_ (false), pending_win_size_ (false), pending_expose_ (true),
+  need_resize_ (false)
 {
+  inherited_state_ = 0;
+  dw_config_.title = application_name();
+}
+
+ViewportImpl::~ViewportImpl()
+{
+  assert_return (anchored() == false);
+  if (has_display_window())
+    {
+      clear_immediate_event();
+      display_window_->destroy();
+      display_window_ = NULL;
+    }
   AncestryCache *ancestry_cache = const_cast<AncestryCache*> (ResizeContainerImpl::fetch_ancestry_cache());
   ancestry_cache->viewport = NULL;
 }
@@ -24,17 +43,155 @@ ViewportImpl::fetch_ancestry_cache ()
 }
 
 void
+ViewportImpl::hierarchy_changed (WindowImpl *old_toplevel)
+{
+  if (old_toplevel)
+    {
+      EventLoop *loop = old_toplevel->get_loop();
+      loop->remove (event_dispatcher_id_);
+      event_dispatcher_id_ = 0;
+      loop->remove (drawing_dispatcher_id_);
+      drawing_dispatcher_id_ = 0;
+    }
+  ResizeContainerImpl::hierarchy_changed (old_toplevel);
+  if (anchored())
+    {
+      EventLoop *loop = get_loop();
+      event_dispatcher_id_ = loop->exec_dispatcher (Aida::slot (*this, &WindowImpl::event_dispatcher), EventLoop::PRIORITY_NORMAL);
+      drawing_dispatcher_id_ = loop->exec_dispatcher (Aida::slot (*this, &WindowImpl::drawing_dispatcher), EventLoop::PRIORITY_UPDATE);
+    }
+}
+
+String
+ViewportImpl::title () const
+{
+  return dw_config_.title;
+}
+
+void
+ViewportImpl::title (const String &viewport_title)
+{
+  if (dw_config_.title != viewport_title)
+    {
+      dw_config_.title = viewport_title;
+      if (has_display_window())
+        display_window_->configure (dw_config_, false);
+      changed ("title");
+    }
+}
+
+bool
+ViewportImpl::auto_focus () const
+{
+  return auto_focus_;
+}
+
+void
+ViewportImpl::auto_focus (bool afocus)
+{
+  if (afocus != auto_focus_)
+    {
+      auto_focus_ = afocus;
+      changed ("auto_focus");
+    }
+}
+
+WidgetIfaceP
+ViewportImpl::get_entered ()
+{
+  WidgetImplP widget = last_entered_children_.empty() ? NULL : last_entered_children_.back();
+  if (widget && widget->anchored())
+    return widget;
+  return NULL;
+}
+
+struct CurrentFocus {
+  WidgetImpl *focus_widget;
+  size_t      uncross_id;
+  CurrentFocus (WidgetImpl *f = NULL, size_t i = 0) : focus_widget (f), uncross_id (i) {}
+};
+static DataKey<CurrentFocus> focus_widget_key;
+
+WidgetIfaceP
+ViewportImpl::get_focus ()
+{
+  return shared_ptr_cast<WidgetIface> (get_data (&focus_widget_key).focus_widget);
+}
+
+void
+ViewportImpl::uncross_focus (WidgetImpl &fwidget)
+{
+  CurrentFocus cfocus = get_data (&focus_widget_key);
+  assert_return (&fwidget == cfocus.focus_widget);
+  if (cfocus.uncross_id)
+    {
+      set_data (&focus_widget_key, CurrentFocus (cfocus.focus_widget, 0));      // reset cfocus.uncross_id
+      cross_unlink (fwidget, cfocus.uncross_id);
+      WidgetImpl *widget = &fwidget;
+      while (widget)
+        {
+          widget->set_flag (FOCUS_CHAIN, false);
+          ContainerImpl *fc = widget->parent();
+          if (fc)
+            fc->focus_lost();
+          widget = fc;
+        }
+      cfocus = get_data (&focus_widget_key);
+      assert_return (&fwidget == cfocus.focus_widget && cfocus.uncross_id == 0);
+      delete_data (&focus_widget_key);                                          // reset cfocus.focus_widget
+      fwidget.widget_adjust_state (WidgetState::FOCUSED, false);
+    }
+}
+
+void
+ViewportImpl::set_focus (WidgetImpl *widget, Internal)
+{
+  CurrentFocus cfocus = get_data (&focus_widget_key);
+  if (widget == cfocus.focus_widget)
+    return;
+  if (cfocus.focus_widget)
+    uncross_focus (*cfocus.focus_widget);
+  if (!widget)
+    return;
+  // set new focus
+  assert_return (widget->has_ancestor (*this));
+  cfocus.focus_widget = widget;
+  cfocus.uncross_id = cross_link (*cfocus.focus_widget, Aida::slot (*this, &ViewportImpl::uncross_focus));
+  set_data (&focus_widget_key, cfocus);
+  while (widget)
+    {
+      widget->set_flag (FOCUS_CHAIN, true);
+      ContainerImpl *fc = widget->parent();
+      if (fc)
+        fc->set_focus_child (widget);
+      widget = fc;
+    }
+  cfocus.focus_widget->widget_adjust_state (WidgetState::FOCUSED, true);
+}
+
+cairo_surface_t*
+ViewportImpl::create_snapshot (const IRect &subarea)
+{
+  const IRect rect = subarea.intersection (allocation());
+  cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, subarea.width, subarea.height);
+  CAIRO_CHECK_STATUS (surface);
+  cairo_surface_set_device_offset (surface, -subarea.x, -subarea.y);
+  cairo_t *cr = cairo_create (surface);
+  CAIRO_CHECK_STATUS (cr);
+  vector<IRect> irects;
+  irects.push_back (rect);
+  compose_into (cr, irects);
+  cairo_destroy (cr);
+  return surface;
+}
+
+void
 ViewportImpl::expose_region (const Region &region)
 {
   if (!region.empty())
     {
       expose_region_.add (region);
       collapse_expose_region();
-      if (parent())
-        {
-          // propagate exposes, to make child rendering changes visible at toplevel
-          expose (region);
-        }
     }
 }
 
@@ -56,8 +213,1026 @@ ViewportImpl::collapse_expose_region ()
        * rectangle which is good enough to avoid worst case explosion.
        */
       expose_region_.add (expose_region_.extents());
-      VDEBUG ("collapsing expose rectangles due to overflow: %u -> %u", n_erects, expose_region_.count_rects());
+      DEBUG_RENDER ("collapsing expose rectangles due to overflow: %u -> %u", n_erects, expose_region_.count_rects());
     }
+}
+
+void
+ViewportImpl::draw_child (WidgetImpl &child)
+{
+  // FIXME: this should be optimized to just redraw the child in question
+  ViewportImpl *child_viewport = child.get_viewport();
+  assert_return (child_viewport == this);
+  draw_now();
+}
+
+void
+ViewportImpl::draw_now ()
+{
+  EventLoop *loop = get_loop();
+  if (loop && has_display_window())
+    {
+      const uint64 start = timestamp_realtime();
+      IRect area = allocation();
+      assert_return (area.x == 0 && area.y == 0);
+      // determine invalidated rendering region
+      Region region = area;
+      region.intersect (peek_expose_region());
+      discard_expose_region();
+      // create compose surface extents
+      IRect rrect = region.extents();
+      const int x1 = rrect.x, y1 = rrect.y, x2 = rrect.x + rrect.width, y2 = rrect.y + rrect.height;
+      cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, x2 - x1, y2 - y1);
+      cairo_surface_set_device_offset (surface, -x1, -y1);
+      CAIRO_CHECK_STATUS (surface);
+      cairo_t *cr = cairo_create (surface);
+      CAIRO_CHECK_STATUS (cr);
+      // test code
+      cairo_rectangle (cr, area.x, area.y, area.width, area.height);
+      cairo_set_source_rgb (cr, 0, 0, 1);
+      cairo_paint (cr);
+      // compose into region rectangles
+      vector<IRect> irects;
+      region.list_rects (irects);
+      compose_into (cr, irects);
+      // and blit contents onto the screen
+      display_window_->blit_surface (surface, region);
+      cairo_destroy (cr);
+      cairo_surface_destroy (surface);
+      // notify "displayed" at PRIORITY_UPDATE, so other high priority handlers run first
+      loop->exec_callback ([this] () {
+          if (has_display_window())
+            sig_displayed.emit();
+        }, EventLoop::PRIORITY_UPDATE);
+      const uint64 stop = timestamp_realtime();
+      DEBUG_RENDER ("%+d%+d%+dx%d coverage=%.1f%% elapsed=%.3fms",
+                    x1, y1, x2 - x1, y2 - y1, ((x2 - x1) * (y2 - y1)) * 100.0 / (area.width*area.height),
+                    (stop - start) / 1000.0);
+    }
+  else
+    discard_expose_region(); // nuke stale exposes
+}
+
+void
+ViewportImpl::render (RenderContext &rcontext)
+{
+  // paint background
+  Color col = background();
+  cairo_t *cr = cairo_context (rcontext);
+  cairo_set_source_rgba (cr, col.red1(), col.green1(), col.blue1(), col.alpha1());
+  vector<DRect> drects;
+  rendering_region (rcontext).list_rects (drects);
+  for (size_t i = 0; i < drects.size(); i++)
+    cairo_rectangle (cr, drects[i].x, drects[i].y, drects[i].width, drects[i].height);
+  cairo_clip (cr);
+  cairo_paint (cr);
+}
+
+void
+ViewportImpl::dispose_widget (WidgetImpl &widget)
+{
+  remove_grab_widget (widget);
+  cancel_widget_events (widget);
+  ResizeContainerImpl::dispose_widget (widget);
+}
+
+void
+ViewportImpl::queue_resize_redraw()
+{
+  if (!need_resize_)
+    {
+      need_resize_ = true;
+      EventLoop *loop = get_loop();
+      if (loop)
+        loop->wakeup();
+    }
+}
+
+void
+ViewportImpl::ensure_resized()
+{
+  if (need_resize_)
+    resize_redraw (NULL, true);
+}
+
+WidgetImpl::WidgetFlag
+ViewportImpl::check_widget_requisition (WidgetImpl &widget, bool discard_tuned)
+{
+  if (discard_tuned)
+    widget.invalidate_requisition();    // discard requisitions tuned to previous allocations
+  ContainerImpl *container = widget.as_container_impl();
+  uint64 invalidation_flags = 0;
+  if (RAPICORN_LIKELY (container))
+    for (auto &child : *container)
+      if (RAPICORN_LIKELY (child->visible()))
+        invalidation_flags |= check_widget_requisition (*child, discard_tuned);
+  if (RAPICORN_UNLIKELY (widget.test_any (INVALID_REQUISITION)))
+    widget.requisition();               // does size_request and clears INVALID_REQUISITION
+  invalidation_flags |= widget.widget_flags_ & (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  return WidgetFlag (invalidation_flags);
+}
+
+WidgetImpl::WidgetFlag
+ViewportImpl::check_widget_allocation (WidgetImpl &widget)
+{
+  return_unless (widget.visible(), WidgetFlag (0));
+  if (need_resize_)
+    {
+      /* if *any* descendant needs size_request, we need to stop
+       * allocating (forcing) inadequate sizes and start over.
+       */
+      return INVALID_REQUISITION;
+    }
+  if (widget.test_any (INVALID_ALLOCATION))
+    widget.set_child_allocation (widget.child_allocation()); // clears INVALID_ALLOCATION
+  uint64 invalidation_flags = 0;
+  ContainerImpl *container = widget.as_container_impl();
+  if (container)
+    for (auto &child : *container)
+      invalidation_flags |= check_widget_allocation (*child);
+  invalidation_flags |= widget.widget_flags_ & (INVALID_REQUISITION | INVALID_ALLOCATION | INVALID_CONTENT);
+  return WidgetFlag (invalidation_flags);
+}
+
+WidgetImpl::WidgetFlag
+ViewportImpl::pop_need_resize()
+{
+  if (need_resize_)
+    {
+      need_resize_ = false;
+      return INVALID_REQUISITION;
+    }
+  return WidgetFlag (0);
+}
+
+WidgetImpl::WidgetFlag
+ViewportImpl::negotiate_sizes (const Allocation *new_viewport_area)
+{
+  const uint64 INVALID_SIZE = INVALID_REQUISITION | INVALID_ALLOCATION;
+  uint64 invalidation_flags = pop_need_resize();
+  // ensure all widgets have a valid size requisition
+  while (invalidation_flags & INVALID_REQUISITION)              // widget implementations must avoid an endless requisition loop
+    {
+      invalidation_flags = check_widget_requisition (*this, false);
+      invalidation_flags |= pop_need_resize();
+    }
+  // assign new size allocation if provided
+  tunable_requisition_counter_ = 3;
+  if (new_viewport_area)
+    set_child_allocation (*new_viewport_area);
+  /* negotiate and allocate sizes, initially allow tuning and re-allocations:
+   * - widgets can tune_requisition() during size_allocate() to negotiate width
+   *   for height or vice versa.
+   * - whether the tuned requisition is honored at all, depends on
+   *   tunable_requisition_counter_ which is adjusted after a few iterations
+   *   to enforce a halt of the negotiation process.
+   * - requisitions tuned to the current allocation are re-considered by the
+   *   widget's ancestors, see WidgetImpl::tune_requisition().
+   */
+  for (/**/; tunable_requisition_counter_; tunable_requisition_counter_--)
+    {
+      if (test_any (INVALID_ALLOCATION))
+        {
+          if (new_viewport_area)
+            set_child_allocation (child_allocation());
+          else
+            {
+              const Requisition rsize = requisition();
+              set_child_allocation (Allocation (0, 0, rsize.width, rsize.height));
+            }
+        }
+      do
+        invalidation_flags = check_widget_allocation (*this);   // aborts if need_resize_!=0
+      while (INVALID_ALLOCATION == (invalidation_flags & INVALID_SIZE));
+      invalidation_flags |= pop_need_resize();
+      while (invalidation_flags & INVALID_REQUISITION)
+        invalidation_flags = check_widget_requisition (*this, false);
+      if (0 == (invalidation_flags & INVALID_ALLOCATION))
+        break;                                                  // !INVALID_REQUISITION and !INVALID_ALLOCATION
+    }
+  tunable_requisition_counter_ = 0;
+  // fixate last allocations (if still needed)
+  while (invalidation_flags & INVALID_SIZE)
+    {
+      while (invalidation_flags & INVALID_REQUISITION)
+        invalidation_flags = check_widget_requisition (*this, false);
+      while (invalidation_flags & INVALID_ALLOCATION)
+        invalidation_flags = check_widget_allocation (*this);
+      invalidation_flags |= pop_need_resize();
+    }
+  return WidgetFlag (invalidation_flags);
+}
+
+void
+ViewportImpl::negotiate_initial_size()
+{
+  Allocation area;
+  // first, get a simple, untuned size requisition from all widgets
+  invalidate_size();
+  check_widget_requisition (*this, /* discard_tuned */ true);
+  // second, negotiate ideal size based on requisition
+  negotiate_sizes (NULL);
+}
+
+bool
+ViewportImpl::can_resize_redraw()
+{
+  return !pending_win_size_ && has_display_window() && (need_resize_ || exposes_pending());
+}
+
+void
+ViewportImpl::resize_redraw (const Allocation *new_viewport_area, bool resize_only)
+{
+  const uint64 resize_start = timestamp_realtime();
+  if (new_viewport_area)
+    invalidate_allocation();                            // sets need_resize_
+  return_unless (can_resize_redraw());                  // check need_resize_
+  // if we have a new allocation, previous tunings are useless
+  const bool discard_previous_tunings = new_viewport_area != NULL;
+  if (discard_previous_tunings)
+    check_widget_requisition (*this, true);
+  // negotiate ideal size within allocation
+  const Allocation current_allocation = allocation();
+  const uint64 invalidation_flags = negotiate_sizes (new_viewport_area ? new_viewport_area : &current_allocation);
+  // check if we fit the display window
+  maybe_resize_viewport();
+  // redraw resized contents
+  const uint64 redraw_start = timestamp_realtime();
+  const String fixme_dbg = peek_expose_region().extents().string();
+  if (resize_only)
+    need_resize_ = true;                                // must redraw later
+  else if (!need_resize_ && !pending_win_size_ && (exposes_pending() || invalidation_flags & INVALID_CONTENT))
+    {
+      render_widget();
+      draw_now();
+    }
+  const uint64 stop = timestamp_realtime();
+  DEBUG_RESIZE ("request=%s allocate=%s pws=%d expose=%s resize_elapsed=%.3fms redraw_elapsed=%.3fms nresize=%d",
+                new_viewport_area ? "-" : string_format ("%.0fx%.0f", requisition().width, requisition().height),
+                string_format ("%.0fx%.0f", allocation().width, allocation().height),
+                pending_win_size_, fixme_dbg,
+                (redraw_start - resize_start) / 1000.0,
+                (!resize_only) * (stop - redraw_start) / 1000.0,
+                need_resize_);
+}
+
+void
+ViewportImpl::maybe_resize_viewport()
+{
+  const Requisition rsize = requisition();
+  if (has_display_window())
+    {
+      // grow display window if needed
+      const DisplayWindow::State state = display_window_->get_state();
+      if (state.width <= 0 || state.height <= 0 ||
+          ((rsize.width > state.width || rsize.height > state.height) &&
+           (dw_config_.request_width != rsize.width || dw_config_.request_height != rsize.height)))
+        {
+          const int oldreq_width = dw_config_.request_width, oldreq_height = dw_config_.request_height;
+          dw_config_.request_width = rsize.width;
+          dw_config_.request_height = rsize.height;
+          pending_win_size_ = true;
+          discard_expose_region(); // we request a new WIN_SIZE event in configure
+          display_window_->configure (dw_config_, true);
+          DEBUG_RESIZE ("resize-viewport: %s: old=%dx%d new_config=%dx%d", id(), oldreq_width, oldreq_height, dw_config_.request_width, dw_config_.request_height);
+        }
+    }
+}
+
+bool
+ViewportImpl::drawing_dispatcher (const LoopState &state)
+{
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    {
+      return can_resize_redraw();
+    }
+  else if (state.phase == state.DISPATCH)
+    {
+      const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
+      resize_redraw (NULL);
+      return true;
+    }
+  return false;
+}
+
+bool
+ViewportImpl::screen_viewable ()
+{
+  return visible() && has_display_window() && display_window_->viewable();
+}
+
+static bool startup_viewport = true;
+
+void
+ViewportImpl::show_display_window()
+{
+  if (has_display_window())
+    {
+      // try to ensure initial focus
+      if (auto_focus_ && !get_focus())
+        move_focus (FocusDir::NEXT);
+      // size request & show up
+      display_window_->show();
+      // figure if this is the first window triggered by the user startig an app
+      const bool user_action = startup_viewport;
+      startup_viewport = false;
+      display_window_->present (user_action);
+    }
+}
+
+DisplayWindow*
+ViewportImpl::display_window (Internal) const
+{
+  return display_window_;
+}
+
+void
+ViewportImpl::create_display_window ()
+{
+  EventLoopP loop = anchored() ? get_window()->get_event_loop() : NULL;
+  if (loop)
+    {
+      if (!has_display_window())
+        {
+          negotiate_initial_size(); // find and allocate initial size
+          DisplayDriver *sdriver = DisplayDriver::retrieve_display_driver ("auto");
+          if (sdriver)
+            {
+              DisplayWindow::Setup setup;
+              setup.window_type = WindowType::NORMAL;
+              uint64 flags = DisplayWindow::ACCEPT_FOCUS | DisplayWindow::DELETABLE |
+                             DisplayWindow::DECORATED | DisplayWindow::MINIMIZABLE | DisplayWindow::MAXIMIZABLE;
+              setup.request_flags = DisplayWindow::Flags (flags);
+              setup.session_role = "RAPICORN:" + program_name();
+              if (!id().empty())
+                setup.session_role += ":" + id();
+              setup.bg_average = background();
+              const Allocation asize = allocation();
+              dw_config_.request_width = asize.width;
+              dw_config_.request_height = asize.height;
+              if (dw_config_.alias.empty())
+                dw_config_.alias = program_alias();
+              pending_win_size_ = true;
+              display_window_ = sdriver->create_display_window (setup, dw_config_);
+              display_window_->set_event_wakeup ([loop] () { loop->wakeup(); /* thread safe */ });
+            }
+          else
+            fatal ("failed to find and open any display driver");
+        }
+      RAPICORN_ASSERT (has_display_window() == true);
+      EventLoop::VoidSlot sl = Aida::slot (*this, &ViewportImpl::show_display_window);
+      loop->exec_callback (sl);
+    }
+}
+
+void
+ViewportImpl::destroy_display_window ()
+{
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
+  if (!has_display_window())
+    return; // during destruction, ref_count == 0
+  clear_immediate_event();
+  display_window_->destroy();
+  display_window_ = NULL;
+  // reset widget state where needed
+  cancel_widget_events (NULL);
+}
+
+void
+ViewportImpl::show ()
+{
+  create_display_window();
+}
+
+bool
+ViewportImpl::closed ()
+{
+  return !has_display_window();
+}
+
+void
+ViewportImpl::close ()
+{
+  destroy_display_window();
+}
+
+void
+ViewportImpl::destroy ()
+{
+  const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl*> (this);
+  if (anchored())
+    {
+      destroy_display_window();
+      dispose();
+    }
+}
+
+void
+ViewportImpl::query_idle ()
+{
+  EventLoop *loop = get_loop();
+  if (loop && has_display_window())
+    {
+      const ViewportImplP thisp = shared_ptr_cast<ViewportImpl*> (this);
+      const int PRIORITY_FLOOR = 1; // lowest possible priority, must be truely idle to execute this
+      loop->exec_callback ([thisp] () { thisp->sig_notify_idle.emit(); }, PRIORITY_FLOOR);
+    }
+  else
+    sig_notify_idle.emit();
+}
+
+bool
+ViewportImpl::snapshot (const String &pngname)
+{
+  cairo_surface_t *isurface = this->create_snapshot (allocation());
+  cairo_status_t wstatus = cairo_surface_write_to_png (isurface, pngname.c_str());
+  cairo_surface_destroy (isurface);
+  String err = CAIRO_STATUS_SUCCESS == wstatus ? "ok" : cairo_status_to_string (wstatus);
+  RAPICORN_DIAG ("ViewportImpl:snapshot:%s: failed to create \"%s\": %s", id(), pngname, err);
+  return CAIRO_STATUS_SUCCESS == wstatus;
+}
+
+void
+ViewportImpl::add_grab (WidgetImpl &child, bool constrained)
+{
+  if (!child.has_ancestor (*this))
+    throw Exception ("child is not descendant of container \"", id(), "\": ", child.id());
+  /* for constrained==true grabs, the mouse pointer is always considered to
+   * be contained by the grab-widget, and only by the grab-widget. events are
+   * delivered to the grab-widget and its children.
+   */
+  grab_stack_.push_back (GrabEntry (child, constrained));
+  // grab_stack_changed(); // FIXME: re-enable this, once grab_stack_changed() synthesizes from idler
+}
+
+bool
+ViewportImpl::remove_grab (WidgetImpl *child)
+{
+  assert_return (child != NULL, false);
+  return remove_grab (*child);
+}
+
+bool
+ViewportImpl::remove_grab (WidgetImpl &child)
+{
+  for (int i = grab_stack_.size() - 1; i >= 0; i--)
+    if (grab_stack_[i].widget == &child)
+      {
+        grab_stack_.erase (grab_stack_.begin() + i);
+        grab_stack_changed();
+        return true;
+      }
+  return false;
+}
+
+WidgetImpl*
+ViewportImpl::get_grab (bool *constrained)
+{
+  for (int i = grab_stack_.size() - 1; i >= 0; i--)
+    if (grab_stack_[i].widget->visible())
+      {
+        if (constrained)
+          *constrained = grab_stack_[i].constrained;
+        return grab_stack_[i].widget;
+      }
+  return NULL;
+}
+
+bool
+ViewportImpl::is_grabbing (WidgetImpl &descendant)
+{
+  for (size_t i = 0; i < grab_stack_.size(); i++)
+    if (grab_stack_[i].widget == &descendant)
+      return true;
+  return false;
+}
+
+bool
+ViewportImpl::has_queued_win_size ()
+{
+  return has_display_window() && display_window_->peek_events ([] (Event *e) { return e->type == WIN_SIZE; });
+}
+
+bool
+ViewportImpl::dispatch_mouse_movement (const Event &event)
+{
+  last_event_context_ = event;
+  vector<WidgetImplP> pierced; // list of entered widgets
+  // construct list of widgets eligible to receive events
+  bool constrained = false;
+  WidgetImpl *grab_widget = get_grab (&constrained);
+  if (grab_widget && grab_widget->drawable())
+    {
+      pierced.push_back (shared_ptr_cast<WidgetImpl> (grab_widget));    // grab_widget always receives events
+      if (grab_widget->point (grab_widget->point_from_event (event)))
+        {
+          ContainerImpl *container = grab_widget->as_container_impl();
+          if (container)                                                // deliver events to grab-widget children
+            container->point_descendants (container->point_from_event (event), pierced);
+        }
+    }
+  else if (!grab_widget && drawable() && entered_)
+    {
+      pierced.push_back (shared_ptr_cast<WidgetImpl> (this));           // deliver to entered viewport
+      point_descendants (point_from_event (event), pierced);
+    }
+  // send leave events - not "stolen" by grab_widget, so other widgets are notified about the grab through leave-event
+  vector<WidgetImplP> left_children = widget_difference (last_entered_children_, pierced);
+  EventMouse *leave_event = create_event_mouse (MOUSE_LEAVE, EventContext (event));
+  for (vector<WidgetImplP>::reverse_iterator it = left_children.rbegin(); it != left_children.rend(); it++)
+    (*it)->process_event (*leave_event);
+  delete leave_event;
+  left_children.clear();
+  // send enter events - for grabs, 'pierced' was setup accordingly above
+  vector<WidgetImplP> insensitive_widgets;
+  vector<WidgetImplP> entered_children = widget_difference (pierced, last_entered_children_);
+  EventMouse *enter_event = create_event_mouse (MOUSE_ENTER, EventContext (event));
+  for (vector<WidgetImplP>::reverse_iterator it = entered_children.rbegin(); it != entered_children.rend(); it++)
+    if ((*it)->sensitive())
+      (*it)->process_event (*enter_event);
+    else
+      insensitive_widgets.push_back (*it);
+  delete enter_event;
+  entered_children.clear();
+  // filter insensitive widgets, which we kept from getting enter-event
+  if (insensitive_widgets.size())
+    pierced = widget_difference (pierced, insensitive_widgets);
+  insensitive_widgets.clear();
+  // send actual move event - for grabs, 'pierced' was setup accordingly above
+  bool handled = false;
+  EventMouse *move_event = create_event_mouse (MOUSE_MOVE, EventContext (event));
+  for (vector<WidgetImplP>::reverse_iterator it = pierced.rbegin(); it != pierced.rend(); it++)
+    if (!handled)
+      handled = (*it)->process_event (*move_event);
+  delete move_event;
+  // update entered children
+  last_entered_children_.swap (pierced);
+  if (last_entered_children_.size() != pierced.size() ||
+      (last_entered_children_.size() > 0 && last_entered_children_.back() != pierced.back()))
+    changed ("get_entered");
+  return handled;
+}
+
+/// Dispatch event to previously entered widgets.
+bool
+ViewportImpl::dispatch_event_to_entered (const Event &event)
+{
+  const vector<WidgetImplP> &pierced = last_entered_children_;
+  // send actual event
+  bool handled = false;
+  for (auto it = pierced.rbegin(); it != pierced.rend() && !handled; it++)
+    if ((*it)->sensitive())
+      handled = (*it)->process_event (event);
+  return handled;
+}
+
+bool
+ViewportImpl::dispatch_button_press (const EventButton &bevent)
+{
+  uint press_count = bevent.type - BUTTON_PRESS + 1;
+  assert (press_count >= 1 && press_count <= 3);
+  // figure all entered children
+  const vector<WidgetImplP> pierced = last_entered_children_; // use copy to beware of modifications
+  // event propagation, capture phase - capture_event(press_event) is always paired with capture_event(release_event) or reset/CANCELED
+  bool handled = false;
+  for (vector<WidgetImplP>::const_iterator it = pierced.begin(); !handled && it != pierced.end(); it++)
+    {
+      WidgetImpl &widget = **it;
+      if (widget.anchored() && widget.sensitive())
+        {
+          ButtonState bs (monotonic_counter(), widget, bevent.button, true);
+          if (button_state_map_[bs] == 0)                               // no press delivered for <button> on <widget> yet
+            {
+              button_state_map_[bs] = press_count;                      // record press of bevent.button for pairing
+              handled = widget.process_event (bevent, true);    // may modify last_entered_children_ + this
+            }
+        }
+    }
+  // event propagation, bubble phase - handle_event(press_event) is always paired with handle_event(release_event) or reset/CANCELED
+  for (vector<WidgetImplP>::const_reverse_iterator it = pierced.rbegin(); !handled && it != pierced.rend(); it++)
+    {
+      WidgetImpl &widget = **it;
+      if (widget.anchored() && widget.sensitive())
+        {
+          ButtonState bs (monotonic_counter(), widget, bevent.button);
+          if (button_state_map_[bs] == 0)                               // no press delivered for <button> on <widget> yet
+            {
+              button_state_map_[bs] = press_count;                      // record press of bevent.button for pairing
+              handled = widget.process_event (bevent);  // may modify last_entered_children_ + this
+            }
+        }
+    }
+  return handled;
+}
+
+bool
+ViewportImpl::dispatch_button_release (const EventButton &bevent)
+{
+  bool handled = false;
+  // event propagation, bubble phase - handle_event(release/CANCELED) for previous handle_event(press_event)
+  for (ButtonStateMap::iterator       it = button_state_map_earliest (bevent.button, false); // ordering implied by ButtonState.serializer
+       it != button_state_map_.end(); it = button_state_map_earliest (bevent.button, false))
+    {
+      const ButtonState bs = it->first; // uint press_count = it->second;
+#if 0 // FIXME
+      if (press_count == 3)
+        bevent.type = BUTTON_3RELEASE;
+      else if (press_count == 2)
+        bevent.type = BUTTON_2RELEASE;
+      // bevent.type = BUTTON_RELEASE;
+#endif
+      button_state_map_.erase (it);
+      handled |= bs.widget.process_event (bevent, bs.captured); // modifies button_state_map_ + this
+    }
+  // event propagation, capture phase - capture_event(release/CANCELED) for previous capture_event(press_event)
+  for (ButtonStateMap::iterator       it = button_state_map_earliest (bevent.button, true); // ordering implied by ButtonState.serializer
+       it != button_state_map_.end(); it = button_state_map_earliest (bevent.button, true))
+    {
+      const ButtonState bs = it->first; // uint press_count = it->second;
+#if 0 // FIXME
+      if (press_count == 3)
+        bevent.type = BUTTON_3RELEASE;
+      else if (press_count == 2)
+        bevent.type = BUTTON_2RELEASE;
+      // bevent.type = BUTTON_RELEASE;
+#endif
+      button_state_map_.erase (it);
+      handled |= bs.widget.process_event (bevent, bs.captured); // modifies button_state_map_ + this
+    }
+  return handled;
+}
+
+bool
+ViewportImpl::dispatch_move_event (const EventMouse &mevent)
+{
+  dispatch_mouse_movement (mevent);
+  return false;
+}
+
+bool
+ViewportImpl::move_container_focus (ContainerImpl &container, FocusDir focus_dir)
+{
+  assert_return (container.has_ancestor (*this), false);
+  WidgetImplP keep_focus = NULL, old_focus = shared_ptr_cast<WidgetImpl> (get_focus());
+  switch (focus_dir)
+    {
+    case FocusDir::UP:   case FocusDir::DOWN:
+    case FocusDir::LEFT: case FocusDir::RIGHT:
+      keep_focus = old_focus;
+      break;
+    default: ;
+    }
+  if (focus_dir != FocusDir::NONE && !container.move_focus (focus_dir))
+    {
+      if (keep_focus && keep_focus->get_viewport() != this)
+        keep_focus = NULL;
+      if (keep_focus)
+        keep_focus->grab_focus();        // ensure to keep directional focus widget (usually arrows)
+      else
+        set_focus (NULL);
+      if (old_focus == get_focus())
+        return false;                   // should have moved focus but failed
+    }
+  if (old_focus && !get_focus() && (focus_dir == FocusDir::NEXT || focus_dir == FocusDir::PREV))
+    {
+      // wrap around for ordered focus moves (usually Tab)
+      return container.move_focus (focus_dir);
+    }
+  return true;
+}
+
+bool
+ViewportImpl::dispatch_key_event (const Event &event)
+{
+  ensure_resized(); // ensure coordinates are interpreted with correct allocations
+  dispatch_mouse_movement (event);
+  // find target widget
+  WidgetImpl *target, *grab_widget = get_grab(), *focus_widget = get_focus_widget();
+  if (focus_widget && (!grab_widget || focus_widget->has_ancestor (*grab_widget)))
+    target = focus_widget;
+  else if (grab_widget)
+    target = grab_widget;
+  else
+    target = this;
+  // try delivery
+  if (target->key_sensitive())
+    {
+      if (target->process_event (event) == true)
+        return true;
+      grab_widget = get_grab();
+      focus_widget = get_focus_widget();
+    }
+  // some key presses need further processing
+  const EventKey *kevent = dynamic_cast<const EventKey*> (&event);
+  if (!kevent || kevent->type != KEY_PRESS)
+    return false;
+  // activate focus / default
+  const ActivateKeyType activate = key_value_to_activation (kevent->key);
+  if (activate == ACTIVATE_FOCUS || activate == ACTIVATE_DEFAULT)
+    {
+      if (focus_widget && focus_widget->key_sensitive() && (!grab_widget || focus_widget->has_ancestor (*grab_widget)))
+        {
+          if (!focus_widget->activate())
+            notify_key_error();
+          return true;
+        }
+    }
+  // move focus
+  const FocusDir fdir = key_value_to_focus_dir (kevent->key);
+  if (fdir != FocusDir::NONE)
+    {
+      ContainerImpl *container = grab_widget ? grab_widget->as_container_impl() : this;
+      if (container && container->key_sensitive())
+        {
+          if (!move_container_focus (*container, fdir))
+            notify_key_error();
+          return true;
+        }
+    }
+  return false;
+}
+
+bool
+ViewportImpl::dispatch_win_size_event (const Event &event)
+{
+  bool handled = false;
+  const EventWinSize *wevent = dynamic_cast<const EventWinSize*> (&event);
+  if (wevent)
+    {
+      pending_win_size_ = wevent->intermediate || has_queued_win_size();
+      EDEBUG ("%s: %.0fx%.0f intermediate=%d pending=%d", string_from_event_type (event.type),
+              wevent->width, wevent->height, wevent->intermediate, pending_win_size_);
+      DEBUG_RESIZE ("%s: %.0fx%.0f intermediate=%d pending=%d", string_from_event_type (event.type),
+                    wevent->width, wevent->height, wevent->intermediate, pending_win_size_);
+      const Allocation area = allocation();
+      if (wevent->width != area.width || wevent->height != area.height)
+        {
+          Allocation new_area = Allocation (0, 0, wevent->width, wevent->height);
+          if (!pending_win_size_)
+            {
+#if 0 // excessive resizing costs
+              Allocation zzz = new_area;
+              resize_redraw (&zzz);
+              for (int i = 0; i < 37; i++)
+                {
+                  zzz.width += 1;
+                  resize_redraw (&zzz);
+                  zzz.height += 1;
+                  resize_redraw (&zzz);
+                }
+#endif
+              resize_redraw (&new_area);
+            }
+          else
+            discard_expose_region(); // we'll get more WIN_SIZE events
+        }
+      if (!pending_win_size_ && pending_expose_)
+        {
+          expose();
+          pending_expose_ = false;
+        }
+      handled = true;
+    }
+  return handled;
+}
+
+bool
+ViewportImpl::dispatch_event (const Event &event)
+{
+  if (!has_display_window())
+    return false;       // we can only handle events on a display_window
+  EDEBUG ("%s: w=%p", string_from_event_type (event.type), this);
+  switch (event.type)
+    {
+      bool handled;
+      const EventButton *bevent;
+      WidgetImpl *focus_widget;
+    case EVENT_LAST:
+    case EVENT_NONE:
+      return false;
+    case MOUSE_ENTER:
+      entered_ = true;
+      dispatch_mouse_movement (event);
+      return false;
+    case MOUSE_MOVE:
+      if (display_window_->peek_events ([] (Event *e) { return e->type == MOUSE_MOVE; }))
+        return true; // coalesce multiple motion events
+      else
+        return dispatch_move_event (event);
+    case MOUSE_LEAVE:
+      dispatch_mouse_movement (event);
+      entered_ = false;
+      return false;
+    case BUTTON_PRESS:
+    case BUTTON_2PRESS:
+    case BUTTON_3PRESS:
+    case BUTTON_CANCELED:
+    case BUTTON_RELEASE:
+    case BUTTON_2RELEASE:
+    case BUTTON_3RELEASE:
+      ensure_resized(); // ensure coordinates are interpreted with correct allocations
+      bevent = dynamic_cast<const EventButton*> (&event);
+      dispatch_mouse_movement (*bevent);
+      if (bevent->type >= BUTTON_PRESS && bevent->type <= BUTTON_3PRESS)
+        handled = dispatch_button_press (*bevent);
+      else
+        handled = dispatch_button_release (*bevent);
+      dispatch_mouse_movement (*bevent);
+      return handled;
+    case FOCUS_IN:
+    case FOCUS_OUT:
+      dispatch_mouse_movement (event);  // dispatch_event_to_entered (event);
+      return false;
+    case KEY_PRESS:
+    case KEY_CANCELED:
+    case KEY_RELEASE:
+      return dispatch_key_event (event);
+    case CONTENT_DATA:
+    case CONTENT_CLEAR:
+    case CONTENT_REQUEST:
+      dispatch_mouse_movement (event);
+      focus_widget = get_focus_widget();
+      if (focus_widget && focus_widget->key_sensitive() && focus_widget->process_event (event))
+        return true;
+      else if (event.type == CONTENT_REQUEST)
+        { // CONTENT_REQUEST events must be answered
+          const EventData *devent = dynamic_cast<const EventData*> (&event);
+          provide_content ("", "", devent->request_id); // no-type, i.e. reject request
+          return true;
+        }
+      return false;
+    case SCROLL_UP:          // button4
+    case SCROLL_DOWN:        // button5
+    case SCROLL_LEFT:        // button6
+    case SCROLL_RIGHT:       // button7
+      dispatch_mouse_movement (event);
+      return dispatch_event_to_entered (event);
+    case CANCEL_EVENTS:
+      cancel_widget_events (NULL);
+      return false;
+    case WIN_SIZE:
+      return dispatch_win_size_event (event);
+    case WIN_DELETE:
+      destroy();
+      return true;
+    case WIN_DESTROY:
+      destroy();
+      return true;
+    }
+  return false;
+}
+
+bool
+ViewportImpl::event_dispatcher (const LoopState &state)
+{
+  if (state.phase == state.PREPARE || state.phase == state.CHECK)
+    return has_display_window() && display_window_->has_event();
+  else if (state.phase == state.DISPATCH)
+    {
+      const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
+      Event *event = has_display_window() ? display_window_->pop_event() : NULL;
+      if (event)
+        {
+          if (immediate_event_hash_ == size_t (event))
+            clear_immediate_event();
+          dispatch_event (*event);
+          delete event;
+        }
+      return true;
+    }
+  else if (state.phase == state.DESTROY)
+    destroy_display_window();
+  return false;
+}
+
+bool
+ViewportImpl::immediate_event_dispatcher (const LoopState &state)
+{
+  switch (state.phase)
+    {
+    case LoopState::PREPARE:
+    case LoopState::CHECK:
+      return true;
+    case LoopState::DISPATCH:
+      {
+        const WidgetImplP guard_this = shared_ptr_cast<WidgetImpl> (this);
+        event_dispatcher (state);
+        return immediate_event_hash_ != 0; // destroy if there are no more immediate events
+      }
+    default:
+      return false;
+    }
+}
+
+void
+ViewportImpl::push_immediate_event (Event *event)
+{
+  assert_return (has_display_window() == true);
+  assert_return (event != NULL);
+  display_window_->push_event (event);
+  EventLoop *loop = get_loop();
+  if (immediate_event_hash_ == 0 && loop)
+    {
+      // force immediate (synthesized) event processing before further uithread main loop RPC handling
+      loop->exec_dispatcher (Aida::slot (*this, &ViewportImpl::immediate_event_dispatcher), EventLoop::PRIORITY_NOW);
+      immediate_event_hash_ = size_t (event);
+    }
+}
+
+void
+ViewportImpl::clear_immediate_event ()
+{
+  return_unless (immediate_event_hash_ != 0);
+  immediate_event_hash_ = 0;
+}
+
+void
+ViewportImpl::cancel_widget_events (WidgetImpl *widget)
+{
+  // cancel enter events
+  for (int i = last_entered_children_.size(); i > 0;)
+    {
+      WidgetImplP current = last_entered_children_[--i]; /* walk backwards */
+      if (widget == &*current || !widget)
+        {
+          last_entered_children_.erase (last_entered_children_.begin() + i);
+          EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context_);
+          current->process_event (*mevent);
+          delete mevent;
+        }
+    }
+  // cancel button press events
+  while (button_state_map_.begin() != button_state_map_.end())
+    {
+      ButtonStateMap::iterator it = button_state_map_.begin();
+      const ButtonState bs = it->first;
+      button_state_map_.erase (it);
+      if (&bs.widget == widget || !widget)
+        {
+          EventButton *bevent = create_event_button (BUTTON_CANCELED, last_event_context_, bs.button);
+          bs.widget.process_event (*bevent, bs.captured); // modifies button_state_map_ + this
+          delete bevent;
+        }
+    }
+}
+
+void
+ViewportImpl::remove_grab_widget (WidgetImpl &child)
+{
+  bool stack_changed = false;
+  for (int i = grab_stack_.size() - 1; i >= 0; i--)
+    if (grab_stack_[i].widget == &child)
+      {
+        grab_stack_.erase (grab_stack_.begin() + i);
+        stack_changed = true;
+      }
+  if (stack_changed)
+    grab_stack_changed();
+}
+
+void
+ViewportImpl::grab_stack_changed()
+{
+  // FIXME: use idle handler for event synthesis
+  EventMouse *mevent = create_event_mouse (MOUSE_LEAVE, last_event_context_);
+  dispatch_mouse_movement (*mevent);
+  // synthesize neccessary leaves after grabbing
+  if (!grab_stack_.size() && !entered_)
+    dispatch_event (*mevent);
+  delete mevent;
+}
+
+ViewportImpl::ButtonStateMap::iterator
+ViewportImpl::button_state_map_earliest (const uint button, const bool captured)
+{
+  ButtonStateMap::iterator earliest_it = button_state_map_.end();
+  uint64 earliest_serializer = ~uint64 (0);
+  // find first iterator matching arguments ordered by serializer
+  for (ButtonStateMap::iterator it = button_state_map_.begin(); it != button_state_map_.end(); ++it)
+    {
+      const ButtonState &bs = it->first;
+      if (bs.button == button && bs.captured == captured && bs.serializer < earliest_serializer)
+        {
+          earliest_it = it;
+          earliest_serializer = bs.serializer;
+        }
+    }
+  return earliest_it;
+}
+
+static const WidgetFactory<ViewportImpl> viewport_factory ("Rapicorn::Viewport");
+
+// == ViewportImpl::ButtonState ==
+bool
+ViewportImpl::ButtonState::operator< (const ButtonState &bs2) const
+{
+  // NOTE: only widget+captured+button are used for button_state_map_ deduplication
+  const ButtonState &bs1 = *this;
+  if (&bs1.widget != &bs2.widget)
+    return &bs1.widget < &bs2.widget;
+  if (bs1.captured != bs2.captured)
+    return bs1.captured < bs2.captured;
+  return bs1.button < bs2.button;
 }
 
 } // Rapicorn
