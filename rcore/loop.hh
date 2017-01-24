@@ -85,7 +85,7 @@ public:
   static const int16 PRIORITY_CEILING = 999; ///< Internal upper limit, don't use.
   static const int16 PRIORITY_NOW     = 900; ///< Most important, used for immediate async execution.
   static const int16 PRIORITY_ASCENT  = 800; ///< Threshold for priorization across different loops.
-  static const int16 PRIORITY_HIGH    = 700; ///< Very important, used for e.g. io handlers.
+  static const int16 PRIORITY_HIGH    = 700; ///< Very important, used for timers or IO handlers.
   static const int16 PRIORITY_NEXT    = 600; ///< Important, used for async operations and callbacks.
   static const int16 PRIORITY_NORMAL  = 500; ///< Normal importantance, GUI event processing, RPC.
   static const int16 PRIORITY_UPDATE  = 400; ///< Mildly important, used for GUI updates or user information.
@@ -112,7 +112,7 @@ public:
                         = PRIORITY_NORMAL);     /// Execute a single dispatcher callback for prepare, check, dispatch.
   /// Execute a callback after a specified timeout with adjustable initial timeout, returning true repeats callback.
   template<class BoolVoidFunctor>
-  uint exec_timer      (BoolVoidFunctor &&bvf, uint delay_ms, int64 repeat_ms = -1, int priority = PRIORITY_NORMAL);
+  uint exec_timer      (BoolVoidFunctor &&bvf, uint delay_ms, int64 repeat_ms = -1, int priority = PRIORITY_HIGH);
   /// Execute a callback after polling for mode on fd, returning true repeats callback.
   template<class BoolVoidPollFunctor>
   uint exec_io_handler (BoolVoidPollFunctor &&bvf, int fd, const String &mode, int priority = PRIORITY_NORMAL);
