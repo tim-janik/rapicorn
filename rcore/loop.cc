@@ -126,14 +126,14 @@ EventLoop::EventLoop (MainLoop &main) :
   main_loop_ (&main), dispatch_priority_ (0), primary_ (false)
 {
   poll_sources_.reserve (7);
-  // we cannot *use* main_loop_ yet, because we might be called from within MainLoop::MainLoop(), see SlaveLoop()
+  // we cannot *use* main_loop_ yet, because we might be called from within MainLoop::MainLoop(), see SubLoop()
   assert_return (main_loop_ && main_loop_->main_loop_); // sanity checks
 }
 
 EventLoop::~EventLoop ()
 {
   unpoll_sources_U();
-  // we cannot *use* main_loop_ anymore, because we might be called from within MainLoop::MainLoop(), see ~SlaveLoop()
+  // we cannot *use* main_loop_ anymore, because we might be called from within MainLoop::MainLoop(), see ~SubLoop()
 }
 
 inline EventSourceP&
@@ -273,9 +273,9 @@ EventLoop::kill_sources_Lm()
 
 /** Remove all sources from a loop and prevent any further execution.
  * The destroy_loop() method removes all sources from a loop and in
- * case of a slave EventLoop (see create_slave()) removes it from its
+ * case of a sub EventLoop (see create_sub_loop()) removes it from its
  * associated main loop. Calling destroy_loop() on a main loop also
- * calls destroy_loop() for all its slave loops.
+ * calls destroy_loop() for all its sub loops.
  * Note that MainLoop objects are artificially kept alive until
  * MainLoop::destroy_loop() is called, so calling destroy_loop() is
  * mandatory for MainLoop objects to prevent object leaks.
@@ -718,7 +718,6 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
     loops[i]->collect_sources_Lm (state);
   // prepare
   bool any_dispatchable = false;
-  bool priority_ascension = false;      // flag for priority elevation between loops
   state.phase = state.PREPARE;
   state.current_time_usecs = timestamp_realtime();
   bool dispatchable[nrloops + 1];        // +1 for gcontext_
@@ -726,8 +725,6 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
     {
       dispatchable[i] = loops[i]->prepare_sources_Lm (state, &timeout_usecs, pfda);
       any_dispatchable |= dispatchable[i];
-      if (UNLIKELY (loops[i]->dispatch_priority_ >= PRIORITY_ASCENT) && dispatchable[i])
-        priority_ascension = true;
     }
   // prepare GLib
   const int gfirstfd = pfda.size();
@@ -769,13 +766,18 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
   // check
   state.phase = state.CHECK;
   state.current_time_usecs = timestamp_realtime();
+  int16 max_dispatch_priority = -32768;
   for (size_t i = 0; i < nrloops; i++)
     {
       dispatchable[i] |= loops[i]->check_sources_Lm (state, pfda);
-      any_dispatchable |= dispatchable[i];
-      if (UNLIKELY (loops[i]->dispatch_priority_ >= PRIORITY_ASCENT) && dispatchable[i])
-        priority_ascension = true;
+      if (!dispatchable[i])
+        continue;
+      any_dispatchable = true;
+      max_dispatch_priority = MAX (max_dispatch_priority, loops[i]->dispatch_priority_);
     }
+  bool priority_ascension = false;      // flag for priority elevation between loops
+  if (UNLIKELY (max_dispatch_priority >= PRIORITY_ASCENT) && any_dispatchable)
+    priority_ascension = true;
   // check GLib
   if (RAPICORN_UNLIKELY (gcontext_))
     {
@@ -787,13 +789,18 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
     {
       const size_t gloop = RAPICORN_UNLIKELY (gcontext_) && dispatchable[nrloops] ? 1 : 0;
       const size_t maxloops = nrloops + gloop; // +1 for gcontext_
-      size_t index, i = maxloops;
-      do        // find next dispatchable loop in round-robin fashion
-        index = rr_index_++ % maxloops;
-      while ((!dispatchable[index] ||
-              (priority_ascension && (index >= nrloops || // no priority_ascension support for gcontext_
-                                      loops[index]->dispatch_priority_ < PRIORITY_ASCENT))) &&
-             i--);
+      size_t index;
+      while (true)    // pick loops in round-robin fashion
+        {
+          index = rr_index_++ % maxloops; // round-robin step
+          if (!dispatchable[index])
+            continue; // need to find next dispatchable
+          if (index < nrloops && loops[index]->dispatch_priority_ < max_dispatch_priority)
+            continue; // ignore loops without max-priority source, except for gcontext_ which can still benefit from round-robin
+          if (priority_ascension && index >= nrloops)
+            continue; // but there's no priority_ascension support for gcontext_
+          break;      // DONE: index points to a dispatchable loop which meets priority requirements
+        }
       state.phase = state.DISPATCH;
       if (index >= nrloops)
         g_main_context_dispatch (gcontext_);
@@ -812,25 +819,25 @@ MainLoop::iterate_loops_Lm (LoopState &state, bool may_block, bool may_dispatch)
   return any_dispatchable; // need to dispatch or recheck
 }
 
-class SlaveLoop : public EventLoop {
-  friend class FriendAllocator<SlaveLoop>;
+class SubLoop : public EventLoop {
+  friend class FriendAllocator<SubLoop>;
 public:
-  SlaveLoop (MainLoopP main) :
+  SubLoop (MainLoopP main) :
     EventLoop (*main)
   {}
-  ~SlaveLoop()
+  ~SubLoop()
   {
     assert_return (main_loop_ == NULL);
   }
 };
 
 EventLoopP
-MainLoop::create_slave()
+MainLoop::create_sub_loop()
 {
   ScopedLock<Mutex> locker (mutex());
-  EventLoopP slave_loop = FriendAllocator<SlaveLoop>::make_shared (shared_ptr_cast<MainLoop> (this));
-  this->add_loop_L (*slave_loop);
-  return slave_loop;
+  EventLoopP sub_loop = FriendAllocator<SubLoop>::make_shared (shared_ptr_cast<MainLoop> (this));
+  this->add_loop_L (*sub_loop);
+  return sub_loop;
 }
 
 // === EventLoop::LoopState ===
@@ -1154,7 +1161,7 @@ PollFDSource::~PollFDSource ()
   Rapicorn <a href="http://en.wikipedia.org/wiki/Event_loop">event loops</a>
   are a programming facility to execute callback handlers (dispatch event sources) according to expiring Timers,
   IO events or arbitrary other conditions.
-  A Rapicorn::EventLoop is created with Rapicorn::MainLoop::_new() or Rapicorn::MainLoop::new_slave(). Callbacks or other
+  A Rapicorn::EventLoop is created with Rapicorn::MainLoop::_new() or Rapicorn::MainLoop::create_sub_loop(). Callbacks or other
   event sources are added to it via Rapicorn::EventLoop::add(), Rapicorn::EventLoop::exec_normal() and related functions.
   Once a main loop is created and its callbacks are added, it can be run as: @code
   * while (!loop.finishable())
@@ -1165,11 +1172,11 @@ PollFDSource::~PollFDSource ()
   sources based on newly incoming events on the descriptors.
   If multiple sources need dispatching, they are handled according to their priorities (see Rapicorn::EventLoop::add())
   and at the same priority, sources are dispatched in round-robin fashion.
-  Calling Rapicorn::MainLoop::iterate() also iterates over its slave loops, which allows to handle sources
+  Calling Rapicorn::MainLoop::iterate() also iterates over its sub loops, which allows to handle sources
   on several independently running loops within the same thread, usually used to associate one event loop with one window.
 
   Traits of the Rapicorn::EventLoop class:
-  @li The main loop and its slave loops are handled in round-robin fahsion, priorities below Rapicorn::EventLoop::PRIORITY_ASCENT only apply internally to a loop.
+  @li The main loop and its sub loops are handled in round-robin fahsion, priorities below Rapicorn::EventLoop::PRIORITY_ASCENT only apply internally to a loop.
   @li Loops are thread safe, so any thready may add or remove sources to a loop at any time, regardless of which thread
   is currently running the loop.
   @li Sources added to a loop may be flagged as "primary" (see Rapicorn::EventSource::primary()),

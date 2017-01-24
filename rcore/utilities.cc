@@ -495,7 +495,7 @@ pretty_backtrace_symbols (void **pointers, const int nptrs)
   // fetch process maps to correlate pointers
   MappingVector maps = read_maps();
   // reduce mappings to DSOs
-  char self_exe[1024]; // PATH_MAX
+  char self_exe[1024 + 1] = { 0, }; // PATH_MAX
   ssize_t l = readlink ("/proc/self/exe", self_exe, sizeof (self_exe));
   if (l > 0)
     {

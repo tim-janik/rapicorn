@@ -32,7 +32,7 @@ static void wleave (WindowImpl *wi)
 
 
 WindowImpl::WindowImpl () :
-  loop_ (uithread_main_loop()->create_slave()),
+  loop_ (uithread_main_loop()->create_sub_loop()),
   commands_emission_ (NULL)
 {
   // create event loop (auto-starts)

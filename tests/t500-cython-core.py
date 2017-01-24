@@ -10,7 +10,7 @@ def assert_raises (Exception, pycallable, *args, **kwds):
 
 # test MainLoop and EventLoop object identities
 ml = Rapicorn.MainLoop()
-sl = ml.create_slave()
+sl = ml.create_sub_loop()
 sm = sl.main_loop()
 m3 = Rapicorn.MainLoop()
 assert ml == ml and sl == sl and sm == sm and m3 == m3
