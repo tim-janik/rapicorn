@@ -499,10 +499,12 @@ pretty_backtrace_symbols (void **pointers, const int nptrs)
   ssize_t l = readlink ("/proc/self/exe", self_exe, sizeof (self_exe));
   if (l > 0)
     {
-      // masquerade mappings for the argv[0] executable as addr2line uses absolute addresses for executables
+      // filter out mapping entry for no-PIE binary which addr2line expects absolute addresses for
       for (size_t i = 0; i < maps.size(); i++)
-        if (maps[i].exe == self_exe ||                          // erase /proc/self/exe
-            maps[i].exe.size() < 2 || maps[i].exe[0] != '/')    // erase "[heap]" and other non-dso
+        if (maps[i].exe.size() < 2 || maps[i].exe[0] != '/' ||  // erase "[heap]" and other non-dso
+            (maps[i].exe == self_exe &&                         // find /proc/self/exe
+             (maps[i].addr == 0x08048000 ||                     // statically linked elf_i386 binary
+              maps[i].addr == 0x00400000)))                     // statically linked elf_x86_64 binary
           {
             maps.erase (maps.begin() + i);
             i--;
