@@ -55,7 +55,7 @@ WORKDIR /usr/src/$PROJECT
 RUN : && \
     case $INTENT in \
       *clangbuild*) nice ./autogen.sh --prefix=/usr CC=clang CXX=clang++ ;; \
-      *)            nice ./autogen.sh --prefix=/usr ;; \
+      *gccbuild*)   nice ./autogen.sh --prefix=/usr ;; \
     esac
 RUN nice make -j`nproc`
 RUN nice make check
@@ -75,7 +75,6 @@ RUN ls -l *.tar.xz
 # Figure Debian version, this must have a distribution specific suffix for bintray uploads.
 # Extract distribution from tarball, prepare debian source tarball, add debian/ directory,
 # update Debian's 'changelog', install build tools, build Debian packages in /usr/src/.
-# NOTE: "rm -r $TARDIR/" is a crude workaround for deb#809219 on xenial.
 ENV  DIST		"@DIST@"
 ENV  TRAVIS_JOB_NUMBER	"@TRAVIS_JOB_NUMBER@"
 RUN `intent package` && \
@@ -99,7 +98,7 @@ RUN `intent package` && \
     retry apt-get install -y $(dpkg-checkbuilddeps 2>&1 | sed 's/.*: //') && \
     nice debuild -j`nproc` -rfakeroot -us -uc && \
     cd .. && \
-    rm -r $TARDIR/ && \
+  rm -r $TARDIR/ && \
     ls -al
 
 # Test package installation from /usr/src/ and removal locally
