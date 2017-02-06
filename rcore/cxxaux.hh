@@ -61,6 +61,7 @@
 #define	UNLIKELY		RAPICORN_UNLIKELY       ///< Compiler hint that @a expression is unlikely to be true.
 #define	LIKELY			RAPICORN_LIKELY         ///< Compiler hint that @a expression is likely to be true.
 #define	STRINGIFY               RAPICORN_CPP_STRINGIFY  ///< Produces a const char C string from the macro @a argument.
+#define __HERE__                RAPICORN__HERE__        ///< Shorthand for a string containing __FILE__ ":" __LINE__
 #define __unused                RAPICORN_UNUSED
 #define __used                  RAPICORN_USED
 #endif
@@ -80,6 +81,7 @@
 #define RAPICORN_CPP_PASTE2(a,b)                RAPICORN_CPP_PASTE2_ (a,b)
 #define RAPICORN_CPP_STRINGIFY_(s)              #s      // indirection required to expand macros like __LINE__
 #define RAPICORN_CPP_STRINGIFY(s)               RAPICORN_CPP_STRINGIFY_ (s)
+#define RAPICORN__HERE__                        (__FILE__ ":" RAPICORN_CPP_STRINGIFY (__LINE__))
 #define RAPICORN_STATIC_ASSERT(expr)            static_assert (expr, #expr) ///< Shorthand for static_assert (condition, "condition")
 
 // == GCC Attributes ==
