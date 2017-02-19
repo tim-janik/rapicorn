@@ -80,6 +80,7 @@ int
 arg_parse_collapse (int   *argcp,
                     char **argv)
 {
+  return_unless (argcp != NULL, 0);
   // collapse args
   const uint argc = *argcp;
   uint e = 1;
@@ -162,7 +163,7 @@ parse_settings_and_args (VInitSettings &vsettings, int *argcp, char **argv, cons
     vsettings.test_codes() |= Test::MODE_TESTING | tco;
   // parse command line args
   bool fatal_warnings = strstr (internal_args, ":fatal-warnings:") != NULL;
-  const size_t argc = *argcp;
+  const size_t argc = argcp ? *argcp : 0;
   for (size_t i = 1; i < argc; i++)
     {
       if (arg_parse_option (*argcp, argv, &i, "--fatal-warnings") ||
@@ -209,13 +210,14 @@ parse_init_args (int *argcp, char **argv, const StringVector &args)
 String
 program_argv0 ()
 {
-  // assert program_argv0_init() has been called earlier
-  const char *fallback = "";
+  if (program_argv0_)
+    return program_argv0_;
 #ifdef  _GNU_SOURCE
-  fallback = program_invocation_name;
+  return program_invocation_name;
 #endif
-  assert_return (program_argv0_ != NULL, fallback);
-  return program_argv0_;
+  // assert program_argv0_init() has been called earlier
+  assert_return (program_argv0_ != NULL, "");
+  return "";
 }
 
 // Early initialization of program_argv0() from argv0 as passed into main().
