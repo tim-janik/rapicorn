@@ -749,6 +749,8 @@ public: /// @name API for remote calls.
   virtual ProtoMsg*         call_remote       (ProtoMsg*) = 0; ///< Carry out a remote call syncronously, transfers memory.
   virtual void              add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle) = 0;
   virtual void              pop_handle        (ProtoReader &fr, RemoteHandle &rhandle) = 0;
+  /// Set callback for wakeups when new events may need dispatching
+  virtual void              notify_callback   (const std::function<void (ClientConnection&)> &cb) = 0;
 public: /// @name API for signal event handlers.
   virtual size_t        signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) = 0;
   virtual bool          signal_disconnect (size_t signal_handler_id) = 0;

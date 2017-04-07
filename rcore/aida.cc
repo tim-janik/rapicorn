@@ -1863,6 +1863,7 @@ class ClientConnectionImpl : public ClientConnection {
   Id2OrboMap                    id2orbo_map_;           // map server orbid -> OrbObjectP
   std::vector<SignalHandler*>   signal_handlers_;
   UIntSet                       ehandler_set; // client event handler
+  std::function<void (ClientConnection&)> notify_cb_;
   bool                          blocking_for_sem_;
   bool                          seen_garbage_;
   SignalHandler*                signal_lookup (size_t handler_id);
@@ -1901,6 +1902,7 @@ public:
   virtual void         dispatch          () override;
   virtual void         add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle) override;
   virtual void         pop_handle        (ProtoReader &fr, RemoteHandle &rhandle) override;
+  virtual void         notify_callback   (const std::function<void (ClientConnection&)> &cb);
   virtual void         remote_origin     (ImplicitBaseP rorigin) override  { assert (!"reached"); }
   virtual RemoteHandle remote_origin     () override;
   virtual size_t       signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) override;
@@ -1980,6 +1982,12 @@ ClientConnectionImpl::pop_handle (ProtoReader &fr, RemoteHandle &rhandle)
       id2orbo_map_[orbid] = orbop;
     }
   (rhandle.*pmf_upgrade_from) (orbop);
+}
+
+void
+ClientConnectionImpl::notify_callback (const std::function<void (ClientConnection&)> &cb)
+{
+  notify_cb_ = cb;
 }
 
 void
@@ -2113,6 +2121,8 @@ ClientConnectionImpl::call_remote (ProtoMsg *fb)
         }
     }
   blocking_for_sem_ = false;
+  if (notify_cb_)
+    notify_cb_ (*this);
   return fr;
 }
 
