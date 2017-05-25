@@ -118,6 +118,7 @@ parse_bool_option (const String &s, const char *arg, bool *boolp)
 static const char   *program_argv0_ = NULL;
 static const String *program_name_ = NULL;
 static const String *application_name_ = NULL;
+static String       *program_alias_ = NULL;
 
 struct VInitSettings : InitSettings {
   bool&   autonomous()  { return autonomous_; }
@@ -253,12 +254,33 @@ program_name ()
   return "/proc/self/exe";
 }
 
+/// Adjust program_alias as needed.
+void
+program_alias (String customname)
+{
+  if (customname.empty() && program_alias_)
+    {
+      String *const old = program_alias_;
+      program_alias_ = NULL;
+      delete old;
+    }
+  else if (!customname.empty())
+    {
+      if (program_alias_)
+        *program_alias_ = customname;
+      else
+        program_alias_ = new String (customname);
+    }
+}
+
 /** Provide short name for the current process.
  * The short name is usually the last part of argv[0]. See also GNU Libc program_invocation_short_name.
  */
 String
 program_alias ()
 {
+  if (program_alias_)
+    return *program_alias_;
   if (program_name_)
     {
       const char *slash = strchr (program_name_->c_str(), '/');

@@ -62,6 +62,7 @@ public:
 String       program_argv0      ();
 void         program_argv0_init (const char *argv0);
 String       program_name       ();
+void         program_alias      (String customname);
 String       program_alias      ();
 String       program_cwd        ();
 String       application_name   ();
