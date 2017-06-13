@@ -1,3 +1,53 @@
+Rapicorn 17.0.0~rc1:
+
+* Support clang++-3.6.2.
+* Fixed uild on Arch linux [milkmiruku]
+* Fixed build on Kubuntu 16.04 [stw]
+* Fixed bad_weak_ptr exceptions.
+* Added support g_main_context() integration.
+* Improved the quality of rendering stretched SVG files.
+* Fixed spacing calculcations, text block creation and resizing priorities.
+* Parse .ini files from $XDG_CONFIG_HOME, $XDG_CONFIG_DIRS and /etc/rapicorn/.
+* Support selectable container children.
+* Support Capturing event phase.
+* Automatically allow shrinking for all spreading widgets to preserve others.
+* Fixed focus movemenet to (partially) obscured widgets.
+* Use viewport window relative coordinates for all widgets.
+* Simplified code in several places.
+* Improved rendering speed significantly.
+* Introduced SelectableItem for lists and remove some dated code.
+* Cleaned up the ancestry cache handling and allow Window.destroy().
+* Simplified ThemeInfo and styling.
+* Added support for SVGs in the widget factory.
+* Use 16 bit for widget states and add TOGGLED and STASHED.
+* Fix the SVG ink rectangle where libsvg only exports ints instead of doubles.
+* Add ElementPainter: with 'element' and 'filler' properties to render SVGs.
+* Allow normal buttons to toggle.
+* Added ShapePainter that can render circle, diamond, square and star.
+* Support a Button.label property.
+* Add a RadioButton implementation.
+* Improved filewview UI.
+* SVG theme updates.
+* Use <Element id="some-identifier" declare="new-element"/> in XML UIs.
+* Added Widget properties acceleratable, hover, panel, receives_default.
+* Also add Widget properties selected, insensitive and active.
+* Consistently use int for size calculations everywhere.
+* Optimized resizing and invalidation region calculations.
+* Cleaned up the code and build rules in several places.
+* Support fine grained size negotiations.
+* Support per widget offline surfaces.
+* Better documented ABI versioning affects.
+* Improved documentation.
+* Added test categorization and numbering.
+* Build Rapicorn via non-recursive sub Makefiles.
+* Fixed use-after-free in DisplayWindowX11.
+* Avoid overlinking in rapicorn.pc.
+* Require srcdir=destdir upon distcheck.
+* Added backtrace generator via addr2line.
+* Added support for notifications from Aida remote calls.
+* Added support for event loop source groups.
+* Majorly improved Docker build setup.
+
 Rapicorn 16.0.0:	(2016-04-07)
 
 * Remove internal librsvg copy, require an installed librsvg-2.0.
