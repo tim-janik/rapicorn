@@ -62,4 +62,4 @@ Tim Janik.
 
 # SEE ALSO
 
-**rapidrun**(1), [**Rapicorn Website**](http://rapicorn.org)
+**rapidrun**(1), [**Rapicorn Website**](https://rapicorn.testbit.org)

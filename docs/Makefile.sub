@@ -1,6 +1,6 @@
 # Rapicorn			- non-recursive Makefile
 
-docs_project_link   = http://rapicorn.org
+docs_project_link   = https://rapicorn.testbit.org
 docs_doxy_extra     = docs/examples.dox
 docs_doxy_sources   = $(ui_doc_sources) $(rcore_doc_sources)
 docs_doxy_headers   = $(filter     %.h %.H %.hh, $(docs_doxy_sources))

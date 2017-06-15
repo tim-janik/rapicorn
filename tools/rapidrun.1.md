@@ -73,4 +73,4 @@ Tim Janik.
 
 # SEE ALSO
 
-**rapidres**(1), [**Rapicorn Website**](http://rapicorn.org)
+**rapidres**(1), [**Rapicorn Website**](https://rapicorn.testbit.org)

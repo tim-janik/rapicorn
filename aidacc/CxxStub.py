@@ -1,7 +1,7 @@
 # This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 """AidaCxxStub - Aida C++ Code Generator
 
-More details at http://www.rapicorn.org/
+More details at https://rapicorn.testbit.org/
 """
 import Decls, GenUtils, TmplFiles, re, os, collections
 
