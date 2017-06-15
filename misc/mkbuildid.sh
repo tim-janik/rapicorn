@@ -18,10 +18,12 @@ BUILDID_HH="$2"
 DOTGIT=`git rev-parse --git-dir 2>/dev/null` || true
 
 gen_buildid() {
-  test -e "$DOTGIT" ||				# Tarball: lacks git version info
+  DESC=
+  test -e "$DOTGIT" &&				# Try 'git describe', shallow repos will yield ''
+      DESC=$(git describe --match '[0-9]*.*[0-9]' --abbrev=5 $COMMITID 2>/dev/null)
+  test -e "$DOTGIT" -a -n "$DESC" ||		# Lacking git version info, treat as tarball
       { printf %s "${FALLBACK_VERSION-0.0.0}+tarball" ; return ; }
   COMMITID="${1-HEAD}"
-  DESC=$(git describe --match '[0-9]*.*[0-9]' --abbrev=5 $COMMITID)
   test "$DESC" != "${DESC%%-*}" ||		# HEAD is on release tag
       { echo "$FALLBACK_VERSION" ; return ; }
   # HEAD has commits on top of last release tag, transform 1.2.3-7-gabc into version postfix
