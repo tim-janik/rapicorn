@@ -1,9 +1,9 @@
 The Rapicorn Toolkit
 ====================
 
-[![License MPL2](http://testbit.eu/~timj/pics/license-mpl-2.svg)](https://github.com/tim-janik/rapicorn/blob/master/COPYING.MPL)
+[![License MPL2](https://testbit.eu/~timj/pics/license-mpl-2.svg)](https://github.com/tim-janik/rapicorn/blob/master/COPYING.MPL)
 [![Build Status](https://travis-ci.org/tim-janik/rapicorn.svg)](https://travis-ci.org/tim-janik/rapicorn)
-[![Binary Download](https://api.bintray.com/packages/beast-team/deb/rapicorn/images/download.svg)](https://github.com/tim-janik/rapicorn/#binary-packages)
+[![Tarball Download](https://testbit.eu/~timj/pics/tarball.svg)](https://dist.testbit.org/rapicorn/)
 
 
 ## DESCRIPTION
@@ -14,14 +14,14 @@ in declarative markup language and is connected to the programming logic
 using data bindings and commands.
 
 *   For a full description, visit the project website:
-	http://rapicorn.org
+	https://rapicorn.testbit.org/
 
 *   To submit bug reports and feature requests, visit:
 	https://github.com/tim-janik/rapicorn/issues
 
 *   Rapicorn is currently in the "prototype" phase. Features are still
 	under heavy development. Details are provided in the roadmap:
-	http://rapicorn.org/wiki/Rapicorn_Task_List#Roadmap
+	https://rapicorn.testbit.org/wiki/Rapicorn_Task_List
 
 
 ## REQUIREMENTS
@@ -73,27 +73,9 @@ Documentation is provided online and locally (if installed in /usr):
 *   file:///usr/share/doc/rapicorn/html/index.html
 
 
-## BINARY PACKAGES
+## CONTINUOUS INTEGRATION
 
 New source code pushed to the Rapicorn repository is automatically built
-and tested through a travis-ci script. Successful travis-ci builds also
-create binary Debian packages
-([latest version](https://bintray.com/beast-team/deb/rapicorn/_latestVersion))
-which can be installed after adding an apt data source. Here is an example
-for Ubuntu wily, for other distributions substitute 'wily' with the name
-of one of our [release builds](https://bintray.com/beast-team/deb/):
+and tested through a travis-ci script. Here is the build history overview:
 
-    # Enable HTTPS transports for apt
-    sudo apt-get -y install apt-transport-https ca-certificates
-    # Install the bintray key and add the beast-team packages
-    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
-    echo "deb [trusted=yes] https://dl.bintray.com/beast-team/deb wily main" |
-      sudo tee -a /etc/apt/sources.list.d/beast-team.list
-    # Update package list and install Rapicorn
-    sudo apt-get update && apt-get -y install rapicorn
-
-Please note, that these packages and building from upstream source often
-introduces API or ABI incompatibilities that the shared-object library
-version may not properly reflect. So rebuilding or manual adjustments
-for dependent packages may be needed. The official release tarballs on
-the project website do not have this problem.
+*   https://travis-ci.org/tim-janik/rapicorn/builds

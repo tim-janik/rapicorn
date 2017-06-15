@@ -1,7 +1,7 @@
 # This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 """AidaTypeMap - Binary Type Map generator for Aida
 
-More details at http://www.rapicorn.org/
+More details at https://rapicorn.testbit.org/
 """
 import Decls, struct
 

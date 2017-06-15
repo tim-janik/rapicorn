@@ -85,7 +85,7 @@ parse_args (int    *argc_p,
           printout ("Copyright (C) 2008 Tim Janik.\n");
           printout ("This is free software and comes with ABSOLUTELY NO WARRANTY; see\n");
           printout ("the source for copying conditions. Sources, examples and contact\n");
-          printout ("information are available at http://rapicorn.org/.\n");
+          printout ("information are available at https://rapicorn.testbit.org/.\n");
           exit (0);
         }
     }

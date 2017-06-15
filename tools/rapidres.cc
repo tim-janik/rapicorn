@@ -227,7 +227,7 @@ main (int argc, char *argv[])
           printf ("Copyright (C) 2007 Tim Janik.\n");
           printf ("This is free software and comes with ABSOLUTELY NO WARRANTY; see\n");
           printf ("the source for copying conditions. Sources, examples and contact\n");
-          printf ("information are available at http://rapicorn.org/.\n");
+          printf ("information are available at https://rapicorn.testbit.org/.\n");
           exit (0);
 	}
       else if (strcmp ("-s", argv[i]) == 0 && i + 1 < argc)
