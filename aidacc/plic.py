@@ -6,7 +6,7 @@ pkginstall_configvars = {
   'aidaccpydir'  : '.',
   #@PKGINSTALL_CONFIGVARS_IN24LINES@ # configvars are substituted upon script installation
 }
-sys.path.insert (0, pkginstall_configvars["aidaccpydir"])
+sys.path.insert (0, os.environ.get ('AIDACC_DESTDIR','') + pkginstall_configvars["aidaccpydir"])
 import yapps2runtime as runtime
 import Parser, Decls, GenUtils # pre-import modules for Generator modules
 true, false, length = (True, False, len)
