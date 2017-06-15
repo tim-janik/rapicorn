@@ -15,7 +15,6 @@ env:
     - DIST="ubuntu:wily"     INTENT="gccbuild,package,bintrayup"
     - DIST="ubuntu:xenial"   INTENT="gccbuild,package,bintrayup,distcheck"
     - DIST="debian:jessie"   INTENT="gccbuild,package,bintrayup"
-    - DIST="ubuntu:yakkety"  INTENT="gccbuild,package,bintrayup"
     # test upcoming releases and get new compiler warnings
     - DIST="debian:stretch"  INTENT="gccbuild,package,bintrayup"
     - DIST="ubuntu:zesty"    INTENT="gccbuild"
