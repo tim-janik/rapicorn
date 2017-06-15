@@ -1,6 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "main.hh"
 #include "config/config.h"
+#include "topbuildid.hh"
 #include "inout.hh"
 #include "strings.hh"
 #include "thread.hh"
@@ -14,7 +15,7 @@
 namespace Rapicorn {
 
 String  rapicorn_version ()     { return RAPICORN_VERSION; }
-String  rapicorn_buildid ()     { return RapicornInternal::buildid(); }
+String  rapicorn_buildid ()     { return ::Internal::buildid(); }
 
 // === arg parsers ===
 /**

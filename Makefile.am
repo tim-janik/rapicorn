@@ -122,10 +122,10 @@ EXTRA_DIST += docs/manpage.css
 	$(Q) $(PANDOC) -s -t html -S --toc -H $(topdir)/docs/manpage.css -B manpage_header.html -A manpage_footer.html $< -o $@
 
 # == topbuildid.cc ==
-EXTRA_DIST  += misc/mkbuildid.sh
-topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh -p topbuildid.cc)	# "update rule" for topbuildid.cc
+EXTRA_DIST  += misc/mkbuildid.sh topbuildid.hh
+topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh -p topbuildid.cc topbuildid.hh) # "update rule" for topbuildid.cc
 topbuildid.cc: # avoid explicit deps, 'topbuildid::=' ensures updates
-CLEANFILES += topbuildid.cc	# preserve across 'mostlyclean' if unchanged to avoid expensive rebuilds
+CLEANFILES += topbuildid.cc     # preserve across 'mostlyclean' if unchanged to avoid expensive rebuilds
 buildid:
 	@echo $(topbuildid)
 

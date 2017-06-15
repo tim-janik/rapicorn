@@ -1,6 +1,7 @@
 // This Source Code Form is licensed MPL-2.0: http://mozilla.org/MPL/2.0
 #include "rcore/cxxaux.hh"
 #include "config/config.h"
+#include "topbuildid.hh"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -223,7 +224,7 @@ main (int argc, char *argv[])
 	}
       else if (strcmp ("-v", argv[i]) == 0 || strcmp ("--version", argv[i]) == 0)
 	{
-          printf ("rapidrun (Rapicorn utilities) %s (Build ID: %s)\n", RAPICORN_VERSION, RapicornInternal::buildid());
+          printf ("rapidrun (Rapicorn utilities) %s (Build ID: %s)\n", RAPICORN_VERSION, Internal::buildid());
           printf ("Copyright (C) 2007 Tim Janik.\n");
           printf ("This is free software and comes with ABSOLUTELY NO WARRANTY; see\n");
           printf ("the source for copying conditions. Sources, examples and contact\n");

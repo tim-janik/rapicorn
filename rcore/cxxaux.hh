@@ -479,7 +479,6 @@ public:
 
 #ifdef __RAPICORN_BUILD__
 constexpr bool rapicorn_build () { return true; }
-const char*    buildid        (); // buildid.cc
 #else  // !__RAPICORN_BUILD__
 constexpr bool rapicorn_build () { return false; }
 #endif // !__RAPICORN_BUILD__
