@@ -285,7 +285,7 @@ MAINTAINERCLEANFILES += 	\
 # == ChangeLog ==
 # Since we switched in 2007 from keeping a ChangeLog file to using the git log exclusively, we need to generate it in 2 parts.
 oldchangelog_sedcmd = 's/^[ 	]*(\w\w\w \w\w\w  *[0-9]+ [0-9][0-9]:[0-9][0-9]:[0-9][0-9] 200[0-9] [ a-zA-Z]*) <\w+@[a-z.]+>$$/	\1/'
-ChangeLog: $(GITSTAMPS_FIXME)
+ChangeLog: $(GITSTAMP)
 	$(AM_V_GEN)
 	$(Q) git log --topo-order --full-history --date=short \
 		--abbrev=11 --until=2007-05-17 \
