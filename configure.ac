@@ -18,7 +18,7 @@ AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
 AM_CONFIG_HEADER(config/config.h)
 AC_CANONICAL_TARGET                                     # architecture information
-AM_INIT_AUTOMAKE(1.9 dist-xz tar-pax no-dist-gzip no-define foreign)
+AM_INIT_AUTOMAKE(1.9 no-dist no-define foreign)
 # version handling
 RAPICORN_VERSION="$PACKAGE_VERSION"
 [MAJOR=`echo $PACKAGE_VERSION | sed 's/\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)\(.*\)/\1/'`]
