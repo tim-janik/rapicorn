@@ -210,6 +210,48 @@ README: README.md
 .SECONDARY: README.md		# pacify make(1) when shipping README without README.md
 MAINTAINERCLEANFILES += README
 
+# == ChangeLog ==
+# Since we switched in 2007 from keeping a ChangeLog file to using the git log exclusively, we need to generate it in 2 parts.
+oldchangelog_sedcmd = 's/^[ 	]*(\w\w\w \w\w\w  *[0-9]+ [0-9][0-9]:[0-9][0-9]:[0-9][0-9] 200[0-9] [ a-zA-Z]*) <\w+@[a-z.]+>$$/	\1/'
+ChangeLog: $(GITSTAMP)
+	$(AM_V_GEN)
+	$(Q) git log --topo-order --full-history --date=short \
+		--abbrev=11 --until=2007-05-17 \
+		--pretty='%ad  %an 	# %h%n%n%B%n'	     > $@.tmpo	# Generate *old* ChangeLog with -prefixed records
+	$(Q) sed -r $(oldchangelog_sedcmd)		    -i $@.tmpo	# Tab-indent old ChangeLog author lines
+	$(Q) git log --topo-order --full-history --date=short \
+		--abbrev=11 --since=2007-05-17 \
+		--pretty='%ad  %an 	# %h%n%n%B%n'	     > $@.tmpn	# Generate new git log with -prefixed records
+	$(Q) cat $@.tmpn $@.tmpo > $@.tmp && rm -f $@.tmpn $@.tmpo
+	$(Q) sed -r -e 's/^(	|        )?/	/' \
+		    -e 's/^	// ; s/[[:space:]]+$$// ' -i $@.tmp	# Tab-indent commit bodies, kill trailing whitespaces
+	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'	    -i $@.tmp	# Compress multiple newlines
+	$(Q) mv $@.tmp $@
+noinst_DATA	     += ChangeLog
+EXTRA_DIST	     += ChangeLog
+MAINTAINERCLEANFILES += ChangeLog
+
+# == distgit ==
+distname      = $(PACKAGE)-$(VERSION)
+distnamexz    = $(distname).tar.xz
+distgit: $(extra_distgit)
+	$(Q) test 0 = `git diff HEAD | wc -l` || echo -e "#\n# $@: WARNING: working tree unclean\n#" >&2
+	$(Q) git archive --format=tar --prefix=$(distname)/ HEAD >$(distname).tar
+	$(Q) rm -rf .tmpdist/ && \
+	  mkdir .tmpdist/ && \
+	  tar -C .tmpdist/ -xf $(distname).tar && \
+	  { test -z "$(extra_distgit)" || cp --parents $(extra_distgit) .tmpdist/$(distname)/ ; } && \
+	  cd .tmpdist/$(distname)/ && \
+	  ./autogen.sh --help >/dev/null && \
+	  cd ../ && \
+	  tar -f ../$(distname).tar -hu $(distname)/ && \
+	  cd .. && \
+	  rm -fr .tmpdist/
+	$(Q) rm -f $(distname).tar.xz && xz $(distname).tar && test -e $(distnamexz)
+	$(Q) echo "Archive ready: $(distnamexz)" | sed '1h; 1s/./=/g; 1p; 1x; $$p; $$x'
+.PHONY: distgit
+extra_distgit = ChangeLog README revisions.lst
+
 # == distcheck ==
 # Distcheck aims:
 # - use srcdir==builddir;
@@ -220,17 +262,17 @@ MAINTAINERCLEANFILES += README
 # distcheck_uniqdir - directory for build tests, outside of srcdir, unique per user and checkout
 # distcheck_uniqdir = distcheck-$(shell printf %d-%04x\\n $$UID 0x`X=$$(pwd) && echo -n "$$X" | md5sum | sed 's/^\(....\).*/\1/'`)
 distcheck_uniqdir = distcheck-$(shell python -c "import os, md5; print ('%u-%s' % (os.getuid(), md5.new (os.getcwd()).hexdigest()[:4]))")
-distcheck: dist
+distcheck: distgit
 	$(Q) TMPDIR="$${TMPDIR-$${TEMP-$${TMP-/tmp}}}" \
 	&& DCDIR="$$TMPDIR/$(distcheck_uniqdir)" \
-	&& TARBALL=`readlink -f $(firstword $(DIST_ARCHIVES))` \
-	&& test -n "$$TMPDIR" -a -n "$(distcheck_uniqdir)" -a -n "$$DCDIR" -a -n "$(distdir)" -a -n "$$TARBALL" \
+	&& TARBALL=$$(readlink -f "$(distnamexz)") \
+	&& test -n "$$TMPDIR" -a -n "$(distcheck_uniqdir)" -a -n "$$DCDIR" -a -n "$(distname)" -a -n "$$TARBALL" \
 	&& { test ! -e "$$DCDIR/" || { chmod u+w -R "$$DCDIR/" && rm -r "$$DCDIR/" ; } ; } \
 	&& mkdir -p "$$DCDIR" \
 	&& set -x \
 	&& cd "$$DCDIR" \
 	&& tar xf "$$TARBALL" \
-	&& cd "$(distdir)" \
+	&& cd "$(distname)" \
 	&& ./configure --prefix="$$DCDIR/inst" $(AM_DISTCHECK_CONFIGURE_FLAGS) $(DISTCHECK_CONFIGURE_FLAGS) \
 	&& touch dc-buildtree-cleaned \
 	&& find . -print >dc-buildtree-files \
@@ -281,24 +323,3 @@ MAINTAINERCLEANFILES += 	\
 	config/lt~obsolete\.m4	\
 	config/missing		\
 	config/py-compile
-
-# == ChangeLog ==
-# Since we switched in 2007 from keeping a ChangeLog file to using the git log exclusively, we need to generate it in 2 parts.
-oldchangelog_sedcmd = 's/^[ 	]*(\w\w\w \w\w\w  *[0-9]+ [0-9][0-9]:[0-9][0-9]:[0-9][0-9] 200[0-9] [ a-zA-Z]*) <\w+@[a-z.]+>$$/	\1/'
-ChangeLog: $(GITSTAMPS_FIXME)
-	$(AM_V_GEN)
-	$(Q) git log --topo-order --full-history --date=short \
-		--abbrev=11 --until=2007-05-17 \
-		--pretty='%ad  %an 	# %h%n%n%B%n'	     > $@.tmpo	# Generate *old* ChangeLog with -prefixed records
-	$(Q) sed -r $(oldchangelog_sedcmd)		    -i $@.tmpo	# Tab-indent old ChangeLog author lines
-	$(Q) git log --topo-order --full-history --date=short \
-		--abbrev=11 --since=2007-05-17 \
-		--pretty='%ad  %an 	# %h%n%n%B%n'	     > $@.tmpn	# Generate new git log with -prefixed records
-	$(Q) cat $@.tmpn $@.tmpo > $@.tmp && rm -f $@.tmpn $@.tmpo
-	$(Q) sed -r -e 's/^(	|        )?/	/' \
-		    -e 's/^	// ; s/[[:space:]]+$$// ' -i $@.tmp	# Tab-indent commit bodies, kill trailing whitespaces
-	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'	    -i $@.tmp	# Compress multiple newlines
-	$(Q) mv $@.tmp $@
-noinst_DATA	     += ChangeLog
-EXTRA_DIST	     += ChangeLog
-MAINTAINERCLEANFILES += ChangeLog
