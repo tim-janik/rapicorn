@@ -106,7 +106,6 @@ ui_private_files = $(strip		\
 	ui/regionimpl.h			\
 	ui/widget.dox			\
 )
-EXTRA_DIST += $(ui_private_files)
 ui_doc_sources = $(ui_librapicorn_headers) $(ui_librapicorn_sources) ui/widget.dox ui/interfaces.idl ui/interfaces.dox $(ui_generated_headers)
 
 # == librapicorn-@MAJOR@.so ==
@@ -119,7 +118,6 @@ nodist_ui_librapicorn_@MAJOR@_la_SOURCES	= $(rcore_generated_sources)
 ui_librapicorn_@MAJOR@_la_CXXFLAGS		= $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
 ui_librapicorn_@MAJOR@_la_LIBADD		= $(LIBRAPICORN_LIBS)
 EXTRA_ui_librapicorn_@MAJOR@_la_DEPENDENCIES	= ui/ldscript.map
-EXTRA_DIST				       += ui/ldscript.map
 ui_librapicorn_@MAJOR@_la_LDFLAGS		= $(strip	\
 	$(AM_LDFLAGS) -no-undefined -Wl,--as-needed -Wl,-O1	\
 	-version-info $(LT_VERSION_INFO) 			\
@@ -143,7 +141,6 @@ MOSTLYCLEANFILES += ui/interfaces.dox
 $(ui_librapicorn_sources): ui/interfaces.dox
 
 # == serverapi.hh ==
-EXTRA_DIST += ui/serverinsert.hh
 ui/serverapi.hh: ui/interfaces.idl ui/serverinsert.hh $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
 	$(AM_V_GEN)
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G serverhh \
@@ -162,7 +159,6 @@ MOSTLYCLEANFILES += ui/serverapi.cc
 ui/serverglue.cc: ui/serverapi.cc
 
 # == clientapi.hh ==
-EXTRA_DIST += ui/clientinsert.hh
 ui/clientapi.hh: ui/interfaces.idl ui/clientinsert.hh $(AIDACC_INTERN) $(AIDACC_CXXSTUB_PY)
 	$(AM_V_GEN)
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G macro=RAPICORN_IDL -G clienthh \
@@ -181,7 +177,6 @@ MOSTLYCLEANFILES += ui/clientapi.cc
 ui/clientglue.cc: ui/clientapi.cc
 
 # == sinfex.lgen ==
-EXTRA_DIST += ui/sinfex.l
 ui/sinfex.lgen: ui/sinfex.l
 	$(AM_V_GEN)
 	$(Q) $(FLEX) -CFe -o$@ $<
@@ -189,7 +184,6 @@ MOSTLYCLEANFILES += ui/sinfex.lgen
 ui/sinfex.cc: ui/sinfex.lgen
 
 # == sinfex.ygen ==
-EXTRA_DIST += ui/sinfex.y
 ui/sinfex.ygen: ui/sinfex.y
 	$(AM_V_GEN)
 	$(Q) $(BISON) -o$@ $<
