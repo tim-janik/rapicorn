@@ -216,7 +216,7 @@ stamp-it: Makefile.in.in ../config.status POTFILES.in
 	  && CONFIG_FILES=$(subdir)/Makefile.in CONFIG_HEADERS= CONFIG_LINKS= \
 	       $(SHELL) ./config.status
 
-distfile-list slowcheck perf download download-local: ; @:
+distfile-list slowcheck perf download download-local extra-gitdist: ; @:
 
 # Tell versions [3.59,3.63) of GNU make not to export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
