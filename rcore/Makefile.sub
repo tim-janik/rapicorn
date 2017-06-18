@@ -68,7 +68,6 @@ rcore_generated_sources =		\
 rcore_private_files = $(strip		\
 	rcore/svg.hh			\
 )
-EXTRA_DIST += $(rcore_private_files)
 rcore_doc_sources = $(rcore_librapicorn_headers) $(rcore_librapicorn_sources)
 
 # == librapicorn-@MAJOR@.so ==
@@ -77,7 +76,6 @@ rcore_librapicorn_include_HEADERS	 = $(rcore_librapicorn_headers)
 nodist_rcore_librapicorn_include_HEADERS = $(rcore_generated_headers)
 
 # == aidavariants.hh ==
-EXTRA_DIST += rcore/aidaproto.hh
 rcore/aidavariants.hh: rcore/aidaproto.hh $(XMANIFOLD)
 	$(AM_V_GEN)
 	$(Q) cd . \

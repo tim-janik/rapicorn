@@ -38,18 +38,9 @@ PYTHON_INTERN		= $(WITH_PYTHONPATH_INTERN) $(PYTHON)
 XVFB_PYTHON_INTERN	= $(WITH_PYTHONPATH_INTERN) $(X11_ENV) $(PYTHON)
 XVFB_RAPIDRUN		= $(X11_ENV) $(abs_top_builddir)/tools/rapidrun --fatal-warnings "$$@"
 IMGCHECK		= tools/imgcheck
-EXTRA_DIST	       +=	\
-	misc/xmanifold.py	\
-	misc/taptool.sh
 
 # == yapps ==
 YAPPS			= $(PYTHON) $(topdir)/yapps2_deb/yapps2.py
-EXTRA_DIST	       += 		\
-	yapps2_deb/yapps/__init__.py	\
-	yapps2_deb/yapps/grammar.py	\
-	yapps2_deb/yapps/parsetree.py	\
-	yapps2_deb/yapps/runtime.py	\
-	yapps2_deb/yapps2.py
 
 # == res/ ==
 include res/Makefile.sub
@@ -80,7 +71,6 @@ include examples/Makefile.sub
 
 # == revisions.lst ==
 noinst_DATA += revisions.lst
-EXTRA_DIST  += revisions.lst $(revisioned_files)
 revisions.lst: @INGIT@ $(revisioned_files) Makefile
 	$(AM_V_GEN)
 	$(Q) rm -f $@.tmplst
@@ -116,13 +106,11 @@ manpage_footer.html:
 	$(Q) echo $$'<hr>\n<a href="../index.html">Return to Index</a>\n' > $@
 .INTERMEDIATE: manpage_footer.html
 MOSTLYCLEANFILES += manpage_footer.html
-EXTRA_DIST += docs/manpage.css
 %.1.html: %.1.revd.md manpage_header.html manpage_footer.html docs/manpage.css
 	$(AM_V_GEN)
 	$(Q) $(PANDOC) -s -t html -S --toc -H $(topdir)/docs/manpage.css -B manpage_header.html -A manpage_footer.html $< -o $@
 
 # == topbuildid.cc ==
-EXTRA_DIST  += misc/mkbuildid.sh topbuildid.hh
 topbuildid ::= $(shell $(topdir)/misc/mkbuildid.sh -p topbuildid.cc topbuildid.hh) # "update rule" for topbuildid.cc
 topbuildid.cc: # avoid explicit deps, 'topbuildid::=' ensures updates
 CLEANFILES += topbuildid.cc     # preserve across 'mostlyclean' if unchanged to avoid expensive rebuilds
@@ -134,7 +122,6 @@ buildid:
 check-local: $(make_check_targets)
 
 # == stamp-autocheck-xmllint ==
-EXTRA_DIST	 += $(make_check_xml_files)
 noinst_DATA	 += stamp-autocheck-xmllint
 MOSTLYCLEANFILES += stamp-autocheck-xmllint
 stamp-autocheck-xmllint: $(make_check_xml_files)
@@ -157,7 +144,6 @@ pkg-config-call-info:
 
 # == check-python-tests ==
 check-python-tests:
-EXTRA_DIST += $(make_check_pytests)
 define make_check_pytests_TEMPLATE
 $(1)--test: $(1)
 	$$(Q) $$(XVFB_PYTHON_INTERN) $(1) ; eval "$$$$TSTDIAGNOSE" $(1)
@@ -175,11 +161,9 @@ $(SOURCES): rapicorn.hh
 # == include/ install ==
 rapicorn_includedir      = $(includedir)/rapicorn-@MAJOR@/
 rapicorn_include_HEADERS = rapicorn-core.hh rapicorn-test.hh rapicorn.hh
-EXTRA_DIST		+= $(rapicorn_include_HEADERS)
 
 # == rapicorn.pc ==
 rapicorn_pkgconfig_DATA  = rapicorn-@MAJOR@.pc
-EXTRA_DIST		+= rapicorn.pc.in
 rapicorn-@MAJOR@.pc: rapicorn.pc.in $(top_builddir)/config.status
 	$(AM_V_GEN)
 	$(Q) cd $(top_builddir) && $(SHELL) ./config.status --file=$@:$<
@@ -199,7 +183,6 @@ uninstall-hook: rapicorn-pc-uninstall-hook
 # == doc/ install ==
 projectdocsdir   = $(docdir)/
 projectdocs_DATA = README NEWS COPYING.MPL
-EXTRA_DIST	+= $(projectdocs_DATA)
 
 # == README ==
 README: README.md
@@ -228,7 +211,6 @@ ChangeLog: $(GITSTAMP)
 	$(Q) sed '/^\s*$$/{ N; /^\s*\n\s*$$/D }'	    -i $@.tmp	# Compress multiple newlines
 	$(Q) mv $@.tmp $@
 noinst_DATA	     += ChangeLog
-EXTRA_DIST	     += ChangeLog
 MAINTAINERCLEANFILES += ChangeLog
 
 # == distgit ==

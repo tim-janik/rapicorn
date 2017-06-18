@@ -13,7 +13,6 @@ t101-dynamic-cast-check: $(HEADERS) $(SOURCES)
 make_check_targets	+= t101-dynamic-cast-check
 
 # == t190-installcheck-api-test ==
-EXTRA_DIST		+= tests/t190-api-use.cc
 t190-installcheck-api-use: tests/t190-api-use.cc
 	@echo "  BUILD   " $@
 	$(Q) $(CXX) -Werror $< -c -o $(<:.cc=.o)     `$(TESTS_PKG_CONFIG) --cflags rapicorn-@MAJOR@` \
@@ -28,7 +27,6 @@ installcheck-local: t190-installcheck-api-use
 
 # == t201-rcore-basics ==
 noinst_PROGRAMS			       += tests/t201-rcore-basics
-EXTRA_DIST			       += tests/t201/rcore-basics-xmldata.cc
 tests_t201_rcore_basics_CXXFLAGS	= $(AM_CXXFLAGS) $(LIBRAPICORN_CFLAGS)
 tests_t201_rcore_basics_LDADD		= ui/librapicorn-@MAJOR@.la $(LIBRAPICORN_LIBS)
 tests_t201_rcore_basics_SOURCES		=	\
@@ -42,8 +40,6 @@ tests_t201_rcore_basics_SOURCES		=	\
 tests/t201/rcore-basics-markup.cc: tests/t201/rcore-basics-xmldata.cc
 
 # == t201-rcore-basics-test ==
-EXTRA_DIST				+=      \
-	tests/t201-rcore-basics.outref
 t201-rcore-basics-test: tests/t201-rcore-basics tests/t201-rcore-basics.outref
 	$(Q) cd tests && $(TAPTOOL) --test-name t201-rcore-basics -- ./t201-rcore-basics
 	$(Q) rm -f $(TSTOUT)
@@ -69,13 +65,9 @@ tests_t203_more_basics_SOURCES		 = 	\
 	tests/t203/more-basics-svgtool.cc	\
 	tests/t203/more-basics-threads.cc	\
 	tests/t203/more-basics-xmltest.cc
-EXTRA_DIST				+=      \
-	tests/t203/more-basics-sample.svg
 tests/t203/more-basics-xmltest.cc: tests/t201/rcore-basics-xmldata.cc
 
 # == t203-more-basics-test ==
-EXTRA_DIST				+=      \
-	tests/t203-more-basics.outref
 t203-more-basics-test: tests/t203-more-basics tests/t203-more-basics.outref
 	$(Q) cd tests && $(TAPTOOL) --test-name t203-more-basics -- ./t203-more-basics
 make_check_targets += t203-more-basics-test
@@ -128,20 +120,11 @@ t206-naive-entropy-test: tests/t901-bench-rcore
 make_check_targets += t206-naive-entropy-test
 
 # == t301-testpass-idl-test ==
-EXTRA_DIST				+=      \
-	tests/t301/testpass.idl			\
-	tests/t301/include-p1.idl		\
-	tests/t301/include-p2.idl
 t301-testpass-idl-test: tests/t301/testpass.idl
 	$(Q) $(AIDACC_INTERN) --aida-debug $(topdir)/tests/t301/testpass.idl > /dev/null ; eval "$$TSTDIAGNOSE"
 make_check_targets += t301-testpass-idl-test
 
 # == t302-testfail-idl-test ==
-EXTRA_DIST				+=      \
-	tests/t302/include-f1.idl		\
-	tests/t302/include-f2.idl		\
-	tests/t302/testfail.idl			\
-	tests/t302/testfail.ref
 t302-testfail-idl-test: tests/t302/testfail.idl tests/t302/testfail.ref
 	$(Q) $(AIDACC_INTERN) --aida-fail-file-test $(topdir)/tests/t302/testfail.idl > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) sed 's/\(:[0-9]\+:[0-9]\+: Trying to find one of \).*/\1.../' < $(TSTOUT) > $(TSTOUT).notokens && mv $(TSTOUT).notokens $(TSTOUT)
@@ -154,9 +137,6 @@ tests_t303_mini_server_LDADD		 = ui/librapicorn-@MAJOR@.la
 tests_t303_mini_server_CXXFLAGS		 = $(AM_CXXFLAGS) -Itests/
 tests_t303_mini_server_SOURCES		 =	\
 	tests/t303-mini-server-main.cc
-EXTRA_DIST				+=	\
-	tests/t303-mini-server.idl		\
-	tests/t303-mini-server-impl.cc
 tests_t303_generated			 =	\
 	tests/t303-mini-server-srvt.hh		\
 	tests/t303-mini-server-srvt.cc		\
@@ -179,12 +159,10 @@ make_check_targets += t303-mini-server-test
 
 # == t304-testpass-cxx-test ==
 # test CxxStub Generation for Clinet & Server
-EXTRA_DIST	+= tests/t304/testcxxserver.ref
 tests/t304-testpass-cxx-server: tests/t301/testpass.idl tests/t304/testcxxserver.ref $(AIDACC_INTERN)
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G serverhh -G servercc -G aidaids -G strip-path=$(topdir)/ \
 	  $(topdir)/tests/t301/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE"
 	$(Q) eval "$$TSTDIFF" tests/t304/testcxxserver.ref
-EXTRA_DIST	+= tests/t304/testcxxclient.ref
 tests/t304-testpass-cxx-client: tests/t301/testpass.idl tests/t304/testcxxclient.ref $(AIDACC_INTERN)
 	$(Q) $(AIDACC_INTERN) -x CxxStub -G iface-prefix=I_ -G clienthh -G clientcc -G strip-path=$(topdir)/ \
 	  $(topdir)/tests/t301/testpass.idl -o $(TSTOUT) ; eval "$$TSTDIAGNOSE"
@@ -243,7 +221,6 @@ tests_t401_servertests_SOURCES		=	\
 	tests/t401/testselector.cc		\
 	tests/t401/testwidgets.cc		\
 	tests/t401/widgets.cc
-EXTRA_DIST				+= tests/t401/servertests.hh
 make_check_xml_files			+= tests/t401/factory.xml tests/t401/testwidgets.xml
 tests/t401/labelmarkup.cc: tests/t201/rcore-basics-xmldata.cc
 
@@ -258,9 +235,6 @@ tests_t402_clienttests_LDADD		= ui/librapicorn-@MAJOR@.la $(RAPICORN_GUI_LIBS)
 tests_t402_clienttests_SOURCES		=	\
 	tests/t402/clienttests.cc		\
 	tests/t402/pixmaps.cc
-EXTRA_DIST				+=	\
-	tests/t402/testpixs.c			\
-	tests/t402/testpixs.png
 
 # == t402-clienttests-test ==
 t402-clienttests-test: tests/t402-clienttests
@@ -269,9 +243,6 @@ make_check_targets += t402-clienttests-test
 
 # == t403-sinfex-expression-test ==
 SINFEX_SHELL				 = $(topdir)/tests/t401-servertests --shell
-EXTRA_DIST				+=	\
-	tests/t403/expressions.ref		\
-	tests/t403/expressions.txt
 t403-sinfex-expression-test: tests/t403/expressions.ref tests/t403/expressions.txt tests/t401-servertests
 	$(Q) egrep -v '^[[:space:]]*(#|$$)' < $(srcdir)/tests/t403/expressions.txt > $(TSTTMP)
 	$(Q) $(X11_ENV) COLUMNS=9999 $(SINFEX_SHELL) < $(TSTTMP) > $(TSTOUT) ; eval "$$TSTDIAGNOSE"
@@ -312,7 +283,6 @@ t601-arrow-sizing-test: tests/t601-arrow-sizing.xml
 make_check_targets += t601-arrow-sizing-test
 
 # == t602-factory-dump ==
-EXTRA_DIST		+= tests/t602-factory-dump.ref
 make_check_xml_files	+= tests/t602-factory-dump.xml
 t602-factory-dump-test: tests/t602-factory-dump.ref tests/t602-factory-dump.xml
 	$(Q) $(XVFB_RAPIDRUN) -x --test-dump \
@@ -321,7 +291,6 @@ t602-factory-dump-test: tests/t602-factory-dump.ref tests/t602-factory-dump.xml
 make_check_targets += t602-factory-dump-test
 
 # == t700-png-image ==
-EXTRA_DIST		+= tests/t700-png-image.png
 make_check_xml_files	+= tests/t700-png-image.xml
 t700-png-image-test: tests/t700-png-image.xml tests/t700-png-image.png $(IMGCHECK)
 	$(Q) rm -f tests/t700-png-image-snap.png
@@ -333,7 +302,6 @@ t700-png-image-test: tests/t700-png-image.xml tests/t700-png-image.png $(IMGCHEC
 make_check_targets += t700-png-image-test
 
 # == t701-alignment-layout ==
-EXTRA_DIST		+= tests/t701-alignment-layout.png
 make_check_xml_files	+= tests/t701-alignment-layout.xml
 t701-alignment-layout-test: tests/t701-alignment-layout.xml tests/t701-alignment-layout.png $(IMGCHECK)
 	$(Q) rm -f tests/t701-alignment-layout-snap.png

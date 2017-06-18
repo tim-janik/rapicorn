@@ -25,7 +25,6 @@ aidacc_private_files = $(strip		\
 	aidacc/plic.py 			\
 	aidacc/Parser.g			\
 )
-EXTRA_DIST += $(aidacc_private_files)
 
 # == aidacc imports ==
 aidacc_installdir		= $(libdir)/rapicorn-@MAJOR@/aidacc
@@ -55,7 +54,6 @@ $(AIDACC_INSTALLABLE): aidacc/plic.py $(aidacc_imports) $(aidacc_generated) aida
 MOSTLYCLEANFILES += $(AIDACC_INSTALLABLE)
 
 # == TmplFiles.py ==
-EXTRA_DIST += $(aidacc_templ_files)
 aidacc/TmplFiles.py: $(aidacc_templ_files)
 	$(AM_V_GEN)
 	$(Q) (cd $(srcdir) && echo "# $@: generated from: $(aidacc_templ_files)" \
