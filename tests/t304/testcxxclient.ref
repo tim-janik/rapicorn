@@ -53,10 +53,6 @@
 #ifndef __AIDA_CXXSTUB_CLIENT_CC__
 #define __AIDA_CXXSTUB_CLIENT_CC__
 
-#ifndef AIDA_CHECK
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
-#endif
-
 namespace { // Anon
 using Rapicorn::Aida::uint64;
 
@@ -1950,7 +1946,7 @@ __aida_emit1__UIWidgetAreaHandle__void_signal (const Rapicorn::Aida::ProtoMsg *s
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -1973,7 +1969,7 @@ __aida_emit2__UIWidgetAreaHandle__sample_signal (const Rapicorn::Aida::ProtoMsg 
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   double rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x219d8339499d690eULL, 0x08bca1e9a82f86b0ULL, 2);
   rb <<= emit_result_id;
@@ -2594,7 +2590,7 @@ __aida_emit1__SignalTestInterfaceHandle__void_result (const Rapicorn::Aida::Prot
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2617,7 +2613,7 @@ __aida_emit2__SignalTestInterfaceHandle__bool_result (const Rapicorn::Aida::Prot
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   bool rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x31529d809bd68e6bULL, 0xa11d55517d4325aeULL, 2);
   rb <<= emit_result_id;
@@ -2643,7 +2639,7 @@ __aida_emit2__SignalTestInterfaceHandle__int32_result (const Rapicorn::Aida::Pro
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   int rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0xac712d196d3466f3ULL, 0xeb06bf4f2b2a414cULL, 2);
   rb <<= emit_result_id;
@@ -2669,7 +2665,7 @@ __aida_emit2__SignalTestInterfaceHandle__int64_result (const Rapicorn::Aida::Pro
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   int64_t rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x1439d37d87e2668bULL, 0x57ded621e6b0cde6ULL, 2);
   rb <<= emit_result_id;
@@ -2695,7 +2691,7 @@ __aida_emit2__SignalTestInterfaceHandle__float64_result (const Rapicorn::Aida::P
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   double rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x4c5a782eaa76edb0ULL, 0xb66fbaa524004fd9ULL, 2);
   rb <<= emit_result_id;
@@ -2721,7 +2717,7 @@ __aida_emit2__SignalTestInterfaceHandle__string_result (const Rapicorn::Aida::Pr
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   std::string rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0xbc5c00f41d7c710dULL, 0x368d920fb6c136e6ULL, 2);
   rb <<= emit_result_id;
@@ -2747,7 +2743,7 @@ __aida_emit2__SignalTestInterfaceHandle__enum_result (const Rapicorn::Aida::Prot
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   QuickEnum rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x60702e53aca1b772ULL, 0xeac0d39852c951fbULL, 2);
   rb <<= emit_result_id;
@@ -2773,7 +2769,7 @@ __aida_emit2__SignalTestInterfaceHandle__record_result (const Rapicorn::Aida::Pr
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   ClnT_QuickRecord rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x755d247d6abfde87ULL, 0x093ff68bbb0f5257ULL, 2);
   rb <<= emit_result_id;
@@ -2799,7 +2795,7 @@ __aida_emit2__SignalTestInterfaceHandle__sequence_result (const Rapicorn::Aida::
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   ClnT_QuickSequence rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0xb5c453295aa72207ULL, 0x7c0fa1c12417b139ULL, 2);
   rb <<= emit_result_id;
@@ -2825,7 +2821,7 @@ __aida_emit2__SignalTestInterfaceHandle__interface_result (const Rapicorn::Aida:
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   GrandChildHandle rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0xe8ef1fe5de31f95bULL, 0xc0e4bcc410120585ULL, 2);
   rb <<= emit_result_id;
@@ -2851,7 +2847,7 @@ __aida_emit2__SignalTestInterfaceHandle__any_result (const Rapicorn::Aida::Proto
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::Any rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x296163d4220985ceULL, 0x40daacab4a841093ULL, 2);
   rb <<= emit_result_id;
@@ -2877,7 +2873,7 @@ __aida_emit2__SignalTestInterfaceHandle__self_result (const Rapicorn::Aida::Prot
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   SignalTestInterfaceHandle rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x35828273200534f7ULL, 0x72873f1374d6093bULL, 2);
   rb <<= emit_result_id;
@@ -2903,7 +2899,7 @@ __aida_emit1__SignalTestInterfaceHandle__void_arg (const Rapicorn::Aida::ProtoMs
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2926,7 +2922,7 @@ __aida_emit1__SignalTestInterfaceHandle__bool_arg (const Rapicorn::Aida::ProtoMs
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2949,7 +2945,7 @@ __aida_emit1__SignalTestInterfaceHandle__int32_arg (const Rapicorn::Aida::ProtoM
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2972,7 +2968,7 @@ __aida_emit1__SignalTestInterfaceHandle__int64_arg (const Rapicorn::Aida::ProtoM
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -2995,7 +2991,7 @@ __aida_emit1__SignalTestInterfaceHandle__float64_arg (const Rapicorn::Aida::Prot
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3018,7 +3014,7 @@ __aida_emit1__SignalTestInterfaceHandle__string_arg (const Rapicorn::Aida::Proto
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3041,7 +3037,7 @@ __aida_emit1__SignalTestInterfaceHandle__enum_arg (const Rapicorn::Aida::ProtoMs
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3064,7 +3060,7 @@ __aida_emit1__SignalTestInterfaceHandle__record_arg (const Rapicorn::Aida::Proto
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3087,7 +3083,7 @@ __aida_emit1__SignalTestInterfaceHandle__sequence_arg (const Rapicorn::Aida::Pro
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3110,7 +3106,7 @@ __aida_emit1__SignalTestInterfaceHandle__interface_arg (const Rapicorn::Aida::Pr
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3133,7 +3129,7 @@ __aida_emit1__SignalTestInterfaceHandle__any_arg (const Rapicorn::Aida::ProtoMsg
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3156,7 +3152,7 @@ __aida_emit1__SignalTestInterfaceHandle__self_args (const Rapicorn::Aida::ProtoM
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3201,7 +3197,7 @@ __aida_emit1__ChildInheritingSignalsHandle__child_signal (const Rapicorn::Aida::
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }
@@ -3557,7 +3553,7 @@ __aida_emit2__ButtonAreaHandle__check_activate (const Rapicorn::Aida::ProtoMsg *
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   bool rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, 0x528a0b92de4a958cULL, 0x4d47eecbae62f654ULL, 2);
   rb <<= emit_result_id;
@@ -3583,7 +3579,7 @@ __aida_emit1__ButtonAreaHandle__activate (const Rapicorn::Aida::ProtoMsg *sfb, v
       return NULL;
     }
   Rapicorn::Aida::uint64 emit_result_id;
-  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());
+  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);
   Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);
   return NULL;
 }

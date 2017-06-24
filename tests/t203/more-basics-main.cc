@@ -59,7 +59,8 @@ test_logging (const char *logarg)
     TASSERT (0 == "test-TASSERT");
   if (String ("--test-assertion-hook") == logarg)
     {
-      Test::set_assertion_hook ([] () { printerr ("assertion-hook triggered: magic=0x%x\n", 0xdecaff); });
+      // Aida::assertion_failed_hook ([] () { printerr ("assertion-hook triggered: magic=0x%x\n", 0xdecaff); });
+      // assertion hook is already setup by init_core_test and runs Rapicorn::test_assertion_failed()
       TASSERT (0 == "test-assertion-hook");
     }
   if (String ("--test-TCMP") == logarg)

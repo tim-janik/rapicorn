@@ -55,9 +55,6 @@
 #ifndef __AIDA_CXXSTUB_SERVER_CC__
 #define __AIDA_CXXSTUB_SERVER_CC__
 
-#ifndef AIDA_CHECK
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
-#endif
 #ifndef AIDA_CPP_PASTE
 #define AIDA_CPP_CAT2(a,b)    a ## b
 #define AIDA_CPP_PASTE(a,b)     AIDA_CPP_CAT2 (a, b)
@@ -3669,11 +3666,11 @@ namespace MandatoryNamespace {
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__FirstInterface__void_func (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 0, NULL);
   I_FirstInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   self->void_func ();
   return NULL;
 }
@@ -3693,11 +3690,11 @@ namespace InterfaceTests {
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__UIWidgetArea__dummy (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   bool rval = self->dummy ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xf67db704b9d460d6ULL, 0xd4950feab697e61eULL);
   rb <<= rval;
@@ -3706,11 +3703,11 @@ __aida_get__UIWidgetArea__dummy (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__UIWidgetArea__dummy (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   bool  arg_dummy;
   fbr >>= arg_dummy;
   self->dummy (arg_dummy);
@@ -3719,11 +3716,11 @@ __aida_set__UIWidgetArea__dummy (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__UIWidgetArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string rval = self->on_click ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x58ba68f6b64584c9ULL, 0xa7d2686edb40f27aULL);
   rb <<= rval;
@@ -3732,11 +3729,11 @@ __aida_get__UIWidgetArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__UIWidgetArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string  arg_on_click;
   fbr >>= arg_on_click;
   self->on_click (arg_on_click);
@@ -3745,11 +3742,11 @@ __aida_set__UIWidgetArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__simple_method (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 0, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double rval = self->simple_method ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xd0dd4c08ba5022c0ULL, 0xb1af31ca1ec7037aULL);
   rb <<= rval;
@@ -3758,11 +3755,11 @@ __aida_call__UIWidgetArea__simple_method (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__single_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int  arg_n;
   fbr >>= arg_n;
   double rval = self->single_arg (arg_n);
@@ -3773,11 +3770,11 @@ __aida_call__UIWidgetArea__single_arg (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int  arg_n;
   fbr >>= arg_n;
   double rval = self->single_arg2 (arg_n);
@@ -3788,11 +3785,11 @@ __aida_call__UIWidgetArea__single_arg2 (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__two_args (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int  arg_n;
   fbr >>= arg_n;
   double  arg_r;
@@ -3805,11 +3802,11 @@ __aida_call__UIWidgetArea__two_args (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__two_args2 (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int  arg_n;
   fbr >>= arg_n;
   double  arg_r;
@@ -3822,11 +3819,11 @@ __aida_call__UIWidgetArea__two_args2 (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__multi_args (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 6);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 6, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   bool  arg_b;
   fbr >>= arg_b;
   int64_t  arg_n;
@@ -3847,11 +3844,11 @@ __aida_call__UIWidgetArea__multi_args (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__self_method (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   I_UIWidgetAreaIface *arg_ba1;
   fbr >>= arg_ba1;
   I_UIWidgetAreaIface *arg_ba2;
@@ -3864,22 +3861,22 @@ __aida_call__UIWidgetArea__self_method (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__void_method (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 0, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   self->void_method ();
   return NULL;
 }
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__on_click2out (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 0, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string rval = self->on_click2out ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xb8bc20394724087aULL, 0xbc7b1e7d30aeb178ULL);
   rb <<= rval;
@@ -3888,11 +3885,11 @@ __aida_call__UIWidgetArea__on_click2out (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__UIWidgetArea__on_click2in (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string  arg_command;
   fbr >>= arg_command;
   self->on_click2in (arg_command);
@@ -3925,11 +3922,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__UIWidgetArea__void_signal (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -3986,11 +3983,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__UIWidgetArea__sample_signal (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_UIWidgetAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4013,11 +4010,11 @@ __aida_connect__UIWidgetArea__sample_signal (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__QuickIface__simple_function (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_QuickIfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int  arg_i;
   fbr >>= arg_i;
   self->simple_function (arg_i);
@@ -4027,22 +4024,22 @@ __aida_call__QuickIface__simple_function (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_void (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 0);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 0, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   self->method_with_void ();
   return NULL;
 }
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   bool  arg_input;
   fbr >>= arg_input;
   bool  arg_optval;
@@ -4055,11 +4052,11 @@ __aida_call__MethodTestInterface__method_with_bools (Rapicorn::Aida::ProtoReader
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int  arg_input;
   fbr >>= arg_input;
   int  arg_optval;
@@ -4072,11 +4069,11 @@ __aida_call__MethodTestInterface__method_with_ints32 (Rapicorn::Aida::ProtoReade
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int64_t  arg_input;
   fbr >>= arg_input;
   int64_t  arg_optval;
@@ -4089,11 +4086,11 @@ __aida_call__MethodTestInterface__method_with_ints64 (Rapicorn::Aida::ProtoReade
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double  arg_input;
   fbr >>= arg_input;
   double  arg_optval;
@@ -4106,11 +4103,11 @@ __aida_call__MethodTestInterface__method_with_floats (Rapicorn::Aida::ProtoReade
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_string (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string  arg_input;
   fbr >>= arg_input;
   std::string  arg_optval;
@@ -4123,11 +4120,11 @@ __aida_call__MethodTestInterface__method_with_string (Rapicorn::Aida::ProtoReade
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   QuickEnum  arg_input;
   fbr >>= arg_input;
   QuickEnum  arg_optval;
@@ -4140,11 +4137,11 @@ __aida_call__MethodTestInterface__method_with_enum (Rapicorn::Aida::ProtoReader 
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_record (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   SrvT_QuickRecord  arg_input;
   fbr >>= arg_input;
   SrvT_QuickRecord  arg_optval;
@@ -4157,11 +4154,11 @@ __aida_call__MethodTestInterface__method_with_record (Rapicorn::Aida::ProtoReade
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   SrvT_QuickSequence  arg_input;
   fbr >>= arg_input;
   SrvT_QuickSequence  arg_optval;
@@ -4174,11 +4171,11 @@ __aida_call__MethodTestInterface__method_with_sequence (Rapicorn::Aida::ProtoRea
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   I_GrandChildIface *arg_input;
   fbr >>= arg_input;
   I_GrandChildIface *arg_optval;
@@ -4191,11 +4188,11 @@ __aida_call__MethodTestInterface__method_with_interface (Rapicorn::Aida::ProtoRe
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   Rapicorn::Aida::Any  arg_input;
   fbr >>= arg_input;
   Rapicorn::Aida::Any  arg_optval;
@@ -4208,11 +4205,11 @@ __aida_call__MethodTestInterface__method_with_anys (Rapicorn::Aida::ProtoReader 
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__MethodTestInterface__method_with_quickiface (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_MethodTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   I_QuickIfaceIface *arg_input;
   fbr >>= arg_input;
   I_QuickIfaceIface *arg_iface0;
@@ -4250,11 +4247,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__void_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4307,11 +4304,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__bool_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4364,11 +4361,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__int32_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4421,11 +4418,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__int64_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4478,11 +4475,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__float64_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4535,11 +4532,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__string_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4592,11 +4589,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__enum_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4649,11 +4646,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__record_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4706,11 +4703,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__sequence_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4763,11 +4760,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__interface_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4820,11 +4817,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__any_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4877,11 +4874,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__self_result (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4923,11 +4920,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__void_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -4971,11 +4968,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__bool_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5019,11 +5016,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__int32_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5067,11 +5064,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__int64_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5115,11 +5112,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__float64_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5163,11 +5160,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__string_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5211,11 +5208,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__enum_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5259,11 +5256,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__record_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5307,11 +5304,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__sequence_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5355,11 +5352,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__interface_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5403,11 +5400,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__any_arg (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5451,11 +5448,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__SignalTestInterface__self_args (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_SignalTestInterfaceIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5510,11 +5507,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_ChildInheritingSignalsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -5534,11 +5531,11 @@ __aida_connect__ChildInheritingSignals__child_signal (Rapicorn::Aida::ProtoReade
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__bool_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   bool rval = self->bool_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x14469c03fdfc61e4ULL, 0x3bb8a3b5d9832788ULL);
   rb <<= rval;
@@ -5547,11 +5544,11 @@ __aida_get__PropertyTester__bool_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__bool_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   bool  arg_bool_prop;
   fbr >>= arg_bool_prop;
   self->bool_prop (arg_bool_prop);
@@ -5560,11 +5557,11 @@ __aida_set__PropertyTester__bool_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__int32_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int rval = self->int32_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x8a2f1538f2b852fbULL, 0x7d3e8ea6f069a1c0ULL);
   rb <<= rval;
@@ -5573,11 +5570,11 @@ __aida_get__PropertyTester__int32_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__int32_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int  arg_int32_prop;
   fbr >>= arg_int32_prop;
   self->int32_prop (arg_int32_prop);
@@ -5586,11 +5583,11 @@ __aida_set__PropertyTester__int32_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__int64_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int64_t rval = self->int64_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xc9bb6114fc5c90deULL, 0x400dff0f59e66f63ULL);
   rb <<= rval;
@@ -5599,11 +5596,11 @@ __aida_get__PropertyTester__int64_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__int64_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   int64_t  arg_int64_prop;
   fbr >>= arg_int64_prop;
   self->int64_prop (arg_int64_prop);
@@ -5612,11 +5609,11 @@ __aida_set__PropertyTester__int64_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__float64_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double rval = self->float64_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xb3d53f6a66ba171eULL, 0xc9e2fe1ad9d2d2abULL);
   rb <<= rval;
@@ -5625,11 +5622,11 @@ __aida_get__PropertyTester__float64_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__float64_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double  arg_float64_prop;
   fbr >>= arg_float64_prop;
   self->float64_prop (arg_float64_prop);
@@ -5638,11 +5635,11 @@ __aida_set__PropertyTester__float64_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__string_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string rval = self->string_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xd11acce29fa83acfULL, 0xb251b5fc0f737558ULL);
   rb <<= rval;
@@ -5651,11 +5648,11 @@ __aida_get__PropertyTester__string_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__string_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string  arg_string_prop;
   fbr >>= arg_string_prop;
   self->string_prop (arg_string_prop);
@@ -5664,11 +5661,11 @@ __aida_set__PropertyTester__string_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__enum_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   QuickEnum rval = self->enum_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x42f93106aeb5af11ULL, 0xdc4094dc01da9f81ULL);
   rb <<= rval;
@@ -5677,11 +5674,11 @@ __aida_get__PropertyTester__enum_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__enum_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   QuickEnum  arg_enum_prop;
   fbr >>= arg_enum_prop;
   self->enum_prop (arg_enum_prop);
@@ -5690,11 +5687,11 @@ __aida_set__PropertyTester__enum_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__record_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   SrvT_QuickRecord rval = self->record_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xb6ab96740d7834eeULL, 0xe7873bec722bb0c8ULL);
   rb <<= rval;
@@ -5703,11 +5700,11 @@ __aida_get__PropertyTester__record_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__record_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   SrvT_QuickRecord  arg_record_prop;
   fbr >>= arg_record_prop;
   self->record_prop (arg_record_prop);
@@ -5716,11 +5713,11 @@ __aida_set__PropertyTester__record_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__sequence_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   SrvT_QuickSequence rval = self->sequence_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x7f96e6ff442ecdd5ULL, 0xdb054c03831fd75bULL);
   rb <<= rval;
@@ -5729,11 +5726,11 @@ __aida_get__PropertyTester__sequence_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__sequence_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   SrvT_QuickSequence  arg_sequence_prop;
   fbr >>= arg_sequence_prop;
   self->sequence_prop (arg_sequence_prop);
@@ -5742,11 +5739,11 @@ __aida_set__PropertyTester__sequence_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__interface_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   I_GrandChildIfaceP rval = self->interface_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xf3cef8a00677d931ULL, 0x8733ca529b58ea4aULL);
   rb <<= rval;
@@ -5755,11 +5752,11 @@ __aida_get__PropertyTester__interface_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__interface_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   I_GrandChildIface *arg_interface_prop;
   fbr >>= arg_interface_prop;
   self->interface_prop (&*arg_interface_prop);
@@ -5768,11 +5765,11 @@ __aida_set__PropertyTester__interface_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__self_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   I_PropertyTesterIfaceP rval = self->self_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xdd2a04f6c2fc3005ULL, 0x68868b01ea78948fULL);
   rb <<= rval;
@@ -5781,11 +5778,11 @@ __aida_get__PropertyTester__self_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__self_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   I_PropertyTesterIface *arg_self_prop;
   fbr >>= arg_self_prop;
   self->self_prop (&*arg_self_prop);
@@ -5794,11 +5791,11 @@ __aida_set__PropertyTester__self_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__PropertyTester__any_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   Rapicorn::Aida::Any rval = self->any_prop ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xb54c6ac2d1c8f932ULL, 0x1c8ea2813f2c268eULL);
   rb <<= rval;
@@ -5807,11 +5804,11 @@ __aida_get__PropertyTester__any_prop (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__PropertyTester__any_prop (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PropertyTesterIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   Rapicorn::Aida::Any  arg_any_prop;
   fbr >>= arg_any_prop;
   self->any_prop (arg_any_prop);
@@ -5825,11 +5822,11 @@ namespace RapicornAidaTest {
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__ButtonArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string rval = self->on_click ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x199859aecc756e97ULL, 0xa744332174ed27f4ULL);
   rb <<= rval;
@@ -5838,11 +5835,11 @@ __aida_get__ButtonArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__ButtonArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string  arg_on_click;
   fbr >>= arg_on_click;
   self->on_click (arg_on_click);
@@ -5851,11 +5848,11 @@ __aida_set__ButtonArea__on_click (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__ButtonArea__on_click2 (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string rval = self->on_click2 ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x1b448d91990181daULL, 0x9751c08ae956c729ULL);
   rb <<= rval;
@@ -5864,11 +5861,11 @@ __aida_get__ButtonArea__on_click2 (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__ButtonArea__on_click2 (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string  arg_on_click2;
   fbr >>= arg_on_click2;
   self->on_click2 (arg_on_click2);
@@ -5877,11 +5874,11 @@ __aida_set__ButtonArea__on_click2 (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__ButtonArea__on_click3 (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string rval = self->on_click3 ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0x5176fbf25dcf50f4ULL, 0x4d7ae8b51fb816b5ULL);
   rb <<= rval;
@@ -5890,11 +5887,11 @@ __aida_get__ButtonArea__on_click3 (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__ButtonArea__on_click3 (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   std::string  arg_on_click3;
   fbr >>= arg_on_click3;
   self->on_click3 (arg_on_click3);
@@ -5903,11 +5900,11 @@ __aida_set__ButtonArea__on_click3 (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__ButtonArea__click_type (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   ClickType rval = self->click_type ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xb6ab79b43e1f0df9ULL, 0xaa0f1ec5c39b704aULL);
   rb <<= rval;
@@ -5916,11 +5913,11 @@ __aida_get__ButtonArea__click_type (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__ButtonArea__click_type (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   ClickType  arg_click_type;
   fbr >>= arg_click_type;
   self->click_type (arg_click_type);
@@ -5964,11 +5961,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__ButtonArea__check_activate (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -6010,11 +6007,11 @@ public:
 static Rapicorn::Aida::ProtoMsg*
 __aida_connect__ButtonArea__activate (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);
   I_ButtonAreaIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   size_t handler_id;
   Rapicorn::Aida::uint64 signal_connection, result = 0;
   fbr >>= handler_id;
@@ -6033,11 +6030,11 @@ __aida_connect__ButtonArea__activate (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__PureMethods__pure_method (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_PureMethodsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double  arg_f;
   fbr >>= arg_f;
   int rval = self->pure_method (arg_f);
@@ -6052,11 +6049,11 @@ namespace Other {
 static Rapicorn::Aida::ProtoMsg*
 __aida_call__NameTests__args_from_other_namespace (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 3);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 3, NULL);
   I_NameTestsIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   InterfaceTests::SrvT_QuickRecord  arg_qr;
   fbr >>= arg_qr;
   RapicornAidaTest::ClickType  arg_qe;
@@ -6073,11 +6070,11 @@ namespace BseTest {
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__Compressor__threshold (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double rval = self->threshold ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xdea15f2de1c3d8e3ULL, 0xe3fc9febf31cdc20ULL);
   rb <<= rval;
@@ -6086,11 +6083,11 @@ __aida_get__Compressor__threshold (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__Compressor__threshold (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double  arg_threshold;
   fbr >>= arg_threshold;
   self->threshold (arg_threshold);
@@ -6099,11 +6096,11 @@ __aida_set__Compressor__threshold (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_get__Compressor__ratio (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double rval = self->ratio ();
   Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_call_result (fbr, 0xc61a8d739c7b963bULL, 0xca1ad4eeab1aa56eULL);
   rb <<= rval;
@@ -6112,11 +6109,11 @@ __aida_get__Compressor__ratio (Rapicorn::Aida::ProtoReader &fbr)
 static Rapicorn::Aida::ProtoMsg*
 __aida_set__Compressor__ratio (Rapicorn::Aida::ProtoReader &fbr)
 {
-  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);
+  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);
   I_CompressorIface *self;
   fbr.skip_header();
   fbr >>= self;
-  AIDA_CHECK (self, "invalid 'this' pointer");
+  AIDA_ASSERT_RETURN (self != NULL, NULL);
   double  arg_ratio;
   fbr >>= arg_ratio;
   self->ratio (arg_ratio);
