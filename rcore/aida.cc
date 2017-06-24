@@ -5,6 +5,7 @@
 #include "regex.hh"
 #include "config/config.h"      // HAVE_SYS_EVENTFD_H
 #include "randomhash.hh"        // random_nonce
+#include "main.hh"              // program_alias
 
 #include <string.h>
 #include <stdio.h>
@@ -297,41 +298,32 @@ TypeHash::to_string () const
 static_assert (sizeof (ProtoMsg) <= sizeof (ProtoUnion), "sizeof ProtoMsg");
 
 // === Utilities ===
+static std::function<void()> current_assertion_hook;
+
 void
-fatal_error (const char *file, uint line, const String &msg)
+assertion_failed (const char *file, uint line, const char *expr)
 {
-  String s = msg;
-  if (s.size() < 1)
-    s = "!\"reached\"\n";
-  else if (s[s.size() - 1] != '\n')
-    s += "\n";
-  if (file)
-    fprintf (stderr, "%s:%d: ", file, line);
-  fprintf (stderr, "AIDA-ERROR: %s", s.c_str());
+  String msg= file ? file : program_alias();
+  if (line > 0)
+    msg += String (":") + std::to_string (line);
+  msg += ": assertion failed: ";
+  msg += expr ? expr : "statement must be unreached";
+  if (msg[msg.size() - 1] != '\n')
+    msg += "\n";
+  fflush (stdout);
+  fputs (msg.c_str(), stderr);
   fflush (stderr);
-  abort();
+  // run hook, e.g. to abort test programs
+  if (current_assertion_hook)
+    current_assertion_hook();
 }
 
 void
-fatal_error (const String &msg)
+assertion_failed_hook (const std::function<void()> &hook)
 {
-  fatal_error (NULL, 0, msg);
-}
-
-void
-assertion_error (const char *file, uint line, const char *expr)
-{
-  fatal_error (file, line, std::string ("assertion failed: ") + expr);
-}
-
-void
-print_warning (const String &msg)
-{
-  String s = msg;
-  if (s.empty() || s[s.size() - 1] != '\n')
-    s += "\n";
-  fprintf (stderr, "Aida: warning: %s", s.c_str());
-  fflush (stderr);
+  if (hook)
+    AIDA_ASSERT_RETURN (current_assertion_hook == NULL);
+  current_assertion_hook = hook;
 }
 
 // == ImplicitBase ==
@@ -412,7 +404,7 @@ swap_any_unions (TypeKind kind, U &u, U &v)
     case REMOTE:        std::swap (u.rhandle(), v.rhandle()); break;
     case LOCAL:         std::swap (u.pholder, v.pholder);     break;
     case ANY:           std::swap (u.vany, v.vany);           break;
-    default:            AIDA_ASSERT (!"reached");             break;
+    default:            AIDA_ASSERT_RETURN_UNREACHED();       break;
     }
 }
 
@@ -623,7 +615,8 @@ Any::operator== (const Any &clone) const
       else
         return *u_.pholder == *clone.u_.pholder;
     default:
-      fatal_error (String() + "Aida::Any:operator==: invalid type kind: " + type_kind_name (kind()));
+      AIDA_ASSERT_RETURN_UNREACHED (false);
+      return false;
     }
   return true;
 }
@@ -900,7 +893,7 @@ Any::to_transition (BaseConnection &base_connection)
       break;            // leave plain values alone
     case TRANSITION: ;  // conversion must occour only once
     default:
-      fatal_error (String (__func__) + ": invalid type kind: " + type_kind_name (kind()));
+      AIDA_ASSERT_RETURN_UNREACHED();
     }
 }
 
@@ -956,7 +949,7 @@ Any::from_transition (BaseConnection &base_connection)
       break;                            // leave plain values alone
     case INSTANCE: case REMOTE: ;       // conversion must occour only once
     default:
-      fatal_error (String (__func__) + ": invalid type kind: " + type_kind_name (kind()));
+      AIDA_ASSERT_RETURN_UNREACHED();
     }
 }
 
@@ -1002,7 +995,7 @@ RemoteHandle::RemoteHandle (OrbObjectP orbo) :
 void
 RemoteHandle::__aida_upgrade_from__ (const OrbObjectP &orbop)
 {
-  AIDA_ASSERT (__aida_orbid__() == 0);
+  AIDA_ASSERT_RETURN (__aida_orbid__() == 0);
   orbop_ = orbop ? orbop : __aida_null_orb_object__();
 }
 
@@ -1042,8 +1035,7 @@ ProtoMsg::~ProtoMsg()
 void
 ProtoMsg::check_internal ()
 {
-  if (size() > capacity())
-    fatal_error (string_format ("ProtoMsg(this=%p): capacity=%u size=%u", this, capacity(), size()));
+  AIDA_ASSERT_RETURN (size() <= capacity());
 }
 
 void
@@ -1109,12 +1101,8 @@ ProtoReader::pop_interface ()
 void
 ProtoReader::check_request (int type)
 {
-  if (nth_ >= n_types())
-    fatal_error (string_format ("ProtoReader(this=%p): size=%u requested-index=%u", this, n_types(), nth_));
-  if (get_type() != type)
-    fatal_error (string_format ("ProtoReader(this=%p): size=%u index=%u type=%s requested-type=%s",
-                                this, n_types(), nth_,
-                                ProtoMsg::type_name (get_type()).c_str(), ProtoMsg::type_name (type).c_str()));
+  AIDA_ASSERT_RETURN (nth_ < n_types());
+  AIDA_ASSERT_RETURN (get_type() == type);
 }
 
 uint64
@@ -1605,9 +1593,8 @@ public:
   TransportChannel () :
     last_fb (NULL)
   {
-    const int err = open();
-    if (err != 0)
-      fatal_error (string_format ("failed to create wakeup pipe: %s", strerror (-err)));
+    const int create_wakeup_pipe_error = open();
+    AIDA_ASSERT_RETURN (create_wakeup_pipe_error == 0);
   }
 };
 
@@ -1759,13 +1746,15 @@ public:
   unregister_connection (BaseConnection &connection)
   {
     ScopedLock<Mutex> sl (mutex_);
+    bool connection_found_and_unregistered = false;
     for (size_t i = 0; i < connections_.size(); i++)
       if (connections_[i] == &connection)
         {
           connections_[i] = NULL;
-          return;
+          connection_found_and_unregistered = true;
+          break;
         }
-    print_warning ("unregister_connection(x): x not registered");
+    AIDA_ASSERT_RETURN (connection_found_and_unregistered);
   }
   ServerConnection*
   server_connection_from_protocol (const String &protocol)
@@ -1790,11 +1779,11 @@ static DurableInstance<ConnectionRegistry> connection_registry; // keep Connecti
 BaseConnection::BaseConnection (const std::string &protocol) :
   protocol_ (protocol), peer_ (NULL)
 {
-  AIDA_ASSERT (protocol.size() > 0);
+  AIDA_ASSERT_RETURN (protocol.size() > 0);
   if (protocol_[0] == ':')
-    AIDA_ASSERT (protocol_[protocol_.size()-1] == ':');
+    AIDA_ASSERT_RETURN (protocol_[protocol_.size()-1] == ':');
   else
-    AIDA_ASSERT (string_startswith (protocol, "inproc://"));
+    AIDA_ASSERT_RETURN (string_startswith (protocol, "inproc://"));
 }
 
 BaseConnection::~BaseConnection ()
@@ -1837,13 +1826,13 @@ BaseConnection::has_peer () const
 void
 BaseConnection::remote_origin (ImplicitBaseP)
 {
-  AIDA_ASSERT (!"reached");
+  AIDA_ASSERT_RETURN_UNREACHED();
 }
 
 RemoteHandle
 BaseConnection::remote_origin()
 {
-  AIDA_ASSERT (!"reached");
+  AIDA_ASSERT_RETURN_UNREACHED (RemoteHandle());
 }
 
 // == ClientConnectionImpl ==
@@ -1893,7 +1882,7 @@ public:
     notify_for_result();
   }
   void                 notify_for_result ()             { if (blocking_for_sem_) sem_post (&transport_sem_); }
-  void                 block_for_result  ()             { AIDA_ASSERT (blocking_for_sem_); sem_wait (&transport_sem_); }
+  void                 block_for_result  ()             { AIDA_ASSERT_RETURN (blocking_for_sem_); sem_wait (&transport_sem_); }
   void                 gc_sweep          (const ProtoMsg *fb);
   virtual int          notify_fd         () override    { return transport_channel_.inputfd(); }
   virtual bool         pending           () override    { return !event_queue_.empty() || transport_channel_.has_msg(); }
@@ -1903,7 +1892,7 @@ public:
   virtual void         add_handle        (ProtoMsg &fb, const RemoteHandle &rhandle) override;
   virtual void         pop_handle        (ProtoReader &fr, RemoteHandle &rhandle) override;
   virtual void         notify_callback   (const std::function<void (ClientConnection&)> &cb);
-  virtual void         remote_origin     (ImplicitBaseP rorigin) override  { assert (!"reached"); }
+  virtual void         remote_origin     (ImplicitBaseP rorigin) override  { AIDA_ASSERT_RETURN_UNREACHED(); }
   virtual RemoteHandle remote_origin     () override;
   virtual size_t       signal_connect    (uint64 hhi, uint64 hlo, const RemoteHandle &rhandle, SignalEmitHandler seh, void *data) override;
   virtual bool         signal_disconnect (size_t signal_handler_id) override;
@@ -1957,8 +1946,7 @@ ClientConnectionImpl::remote_origin()
   const MessageId msgid = MessageId (frr.pop_int64());
   frr.skip(); // hashhigh
   frr.skip(); // hashlow
-  if (!msgid_is (msgid, MSGID_META_WELCOME))
-    fatal_error (string_format ("HELLO failed, server refused WELCOME: %016x", msgid));
+  AIDA_ASSERT_RETURN (msgid_is (msgid, MSGID_META_WELCOME), RemoteHandle::__aida_null_handle__());
   pop_handle (frr, rorigin);
   delete fr;
   errno = 0;
@@ -2034,34 +2022,39 @@ ClientConnectionImpl::dispatch ()
         fbr.skip(); // hashlow
         const size_t handler_id = fbr.pop_int64();
         SignalHandler *client_signal_handler = signal_lookup (handler_id);
-        AIDA_ASSERT (client_signal_handler != NULL);
+        AIDA_ASSERT_RETURN (client_signal_handler != NULL);
         ProtoMsg *fr = client_signal_handler->seh (fb, client_signal_handler->data);
         if (fr == fb)
           fb = NULL; // prevent deletion
         if (idmask == MSGID_EMIT_ONEWAY)
-          AIDA_ASSERT (fr == NULL);
+          AIDA_ASSERT_RETURN (fr == NULL);
         else // MSGID_EMIT_TWOWAY
           {
-            AIDA_ASSERT (fr && msgid_is (fr->first_id(), MSGID_EMIT_RESULT));
+            AIDA_ASSERT_RETURN (fr && msgid_is (fr->first_id(), MSGID_EMIT_RESULT));
             post_peer_msg (fr);
           }
       }
       break;
     case MSGID_DISCONNECT:
       {
+#if 0   // TODO: implement MSGID_DISCONNECT
         const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         const size_t handler_id = fbr.pop_int64();
         const bool deleted = true; // FIXME: currently broken
         if (!deleted)
           print_warning (string_format ("%s: invalid handler id (%016x) in message: (%016x, %016x%016x)",
                                         __func__, handler_id, msgid, hashhigh, hashlow));
+#endif
       }
       break;
     case MSGID_META_GARBAGE_SWEEP:
       gc_sweep (fb);
       break;
     default: // result/reply messages are handled in call_remote
-      print_warning (string_format ("%s: invalid message: %016x", __func__, msgid));
+      {
+        const String s = string_format ("msgid should not occur: %016x", msgid);
+        assertion_failed (__FILE__, __LINE__, s.c_str());
+      }
       break;
     }
   if (AIDA_UNLIKELY (fb))
@@ -2071,7 +2064,7 @@ ClientConnectionImpl::dispatch ()
 ProtoMsg*
 ClientConnectionImpl::call_remote (ProtoMsg *fb)
 {
-  AIDA_ASSERT (fb != NULL);
+  AIDA_ASSERT_RETURN (fb != NULL, NULL);
   // enqueue method call message
   const MessageId callid = MessageId (fb->first_id());
   const bool needsresult = msgid_needs_result (callid);
@@ -2116,8 +2109,9 @@ ClientConnectionImpl::call_remote (ProtoMsg *fb)
       else
         {
           ProtoReader frr (*fr);
-          const uint64 retid = frr.pop_int64(), rethh = frr.pop_int64(), rethl = frr.pop_int64();
-          print_warning (string_format ("%s: invalid reply: (%016x, %016x%016x)", __func__, retid, rethh, rethl));
+          const uint64 retid = frr.pop_int64(); // rethh = frr.pop_int64(), rethl = frr.pop_int64();
+          const String s = string_format ("msgid should not occur: %016x", retid);
+          assertion_failed (__FILE__, __LINE__, s.c_str());
         }
     }
   blocking_for_sem_ = false;
@@ -2266,7 +2260,7 @@ ServerConnectionImpl::start_garbage_collection()
 {
   if (sweep_remotes_)
     {
-      print_warning ("ServerConnectionImpl::start_garbage_collection: duplicate garbage collection request unimplemented");
+      assertion_failed (__FILE__, __LINE__, "duplicate garbage collection request should not occur");
       return;
     }
   // GARBAGE_SWEEP
@@ -2298,9 +2292,9 @@ void
 ServerConnectionImpl::remote_origin (ImplicitBaseP rorigin)
 {
   if (rorigin)
-    AIDA_ASSERT (remote_origin_ == NULL);
+    AIDA_ASSERT_RETURN (remote_origin_ == NULL);
   else // rorigin == NULL
-    AIDA_ASSERT (remote_origin_ != NULL);
+    AIDA_ASSERT_RETURN (remote_origin_ != NULL);
   remote_origin_ = rorigin;
 }
 
@@ -2340,8 +2334,8 @@ ServerConnectionImpl::dispatch ()
     case MSGID_META_HELLO:
       {
         const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-        AIDA_ASSERT (hashhigh == 0 && hashlow == 0);
-        AIDA_ASSERT (fbr.remaining() == 0);
+        AIDA_ASSERT_RETURN (hashhigh == 0 && hashlow == 0);
+        AIDA_ASSERT_RETURN (fbr.remaining() == 0);
         fbr.reset (*fb);
         ImplicitBaseP rorigin = remote_origin_;
         ProtoMsg *fr = ProtoMsg::renew_into_result (fbr, MSGID_META_WELCOME, 0, 0, 1);
@@ -2349,7 +2343,7 @@ ServerConnectionImpl::dispatch ()
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         const uint64 resultmask = msgid_as_result (MessageId (idmask));
-        AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
+        AIDA_ASSERT_RETURN (fr && msgid_mask (fr->first_id()) == resultmask);
         post_peer_msg (fr);
       }
       break;
@@ -2359,17 +2353,17 @@ ServerConnectionImpl::dispatch ()
       {
         const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
         const DispatchFunc server_method_implementation = find_method (hashhigh, hashlow);
-        AIDA_ASSERT (server_method_implementation != NULL);
+        AIDA_ASSERT_RETURN (server_method_implementation != NULL);
         fbr.reset (*fb);
         ProtoMsg *fr = server_method_implementation (fbr);
         if (AIDA_LIKELY (fr == fb))
           fb = NULL; // prevent deletion
         if (idmask == MSGID_CALL_ONEWAY)
-          AIDA_ASSERT (fr == NULL);
+          AIDA_ASSERT_RETURN (fr == NULL);
         else // MSGID_CALL_TWOWAY
           {
             const uint64 resultmask = msgid_as_result (MessageId (idmask));
-            AIDA_ASSERT (fr && msgid_mask (fr->first_id()) == resultmask);
+            AIDA_ASSERT_RETURN (fr && msgid_mask (fr->first_id()) == resultmask);
             post_peer_msg (fr);
           }
       }
@@ -2410,14 +2404,15 @@ ServerConnectionImpl::dispatch ()
         fbr.skip(); // hashlow
         const uint64 emit_result_id = fbr.pop_int64();
         EmitResultHandler emit_result_handler = emit_result_handler_pop (emit_result_id);
-        AIDA_ASSERT (emit_result_handler != NULL);
+        AIDA_ASSERT_RETURN (emit_result_handler != NULL);
         emit_result_handler (fbr);
       }
       break;
     default:
       {
-        const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
-        print_warning (string_format ("%s: invalid message: (%016x, %016x%016x)", __func__, msgid, hashhigh, hashlow));
+        // const uint64 hashhigh = fbr.pop_int64(), hashlow = fbr.pop_int64();
+        const String s = string_format ("msgid should not occur: %016x", msgid);
+        assertion_failed (__FILE__, __LINE__, s.c_str());
       }
       break;
     }
@@ -2436,7 +2431,7 @@ ServerConnectionImpl::cast_interface_handle (RemoteHandle &rhandle, ImplicitBase
 void
 ServerConnectionImpl::emit_result_handler_add (size_t id, const EmitResultHandler &handler)
 {
-  AIDA_ASSERT (emit_result_map_.count (id) == 0);        // PARANOID
+  AIDA_ASSERT_RETURN (emit_result_map_.count (id) == 0);        // PARANOID
   emit_result_map_[id] = handler;
 }
 
@@ -2466,7 +2461,7 @@ ServerConnectionP
 ServerConnection::make_server_connection (const String &protocol)
 {
   assert (protocol.empty() == false);
-  AIDA_ASSERT (connection_registry->server_connection_from_protocol (protocol) == NULL);
+  AIDA_ASSERT_RETURN (connection_registry->server_connection_from_protocol (protocol) == NULL, NULL);
   return std::make_shared<ServerConnectionImpl> (protocol);
 }
 

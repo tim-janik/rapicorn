@@ -69,9 +69,9 @@ struct HandlerLink {
   Function     function;
   int          ref_count;
   explicit     HandlerLink (const Function &callback) : next (NULL), prev (NULL), function (callback), ref_count (1) {}
-  /*dtor*/    ~HandlerLink ()           { AIDA_ASSERT (ref_count == 0); }
-  void         incref      ()           { ref_count += 1; AIDA_ASSERT (ref_count > 0); }
-  void         decref      ()           { ref_count -= 1; if (!ref_count) delete this; else AIDA_ASSERT (ref_count > 0); }
+  /*dtor*/    ~HandlerLink ()           { AIDA_ASSERT_RETURN (ref_count == 0); }
+  void         incref      ()           { ref_count += 1; AIDA_ASSERT_RETURN (ref_count > 0); }
+  void         decref      ()           { ref_count -= 1; if (!ref_count) delete this; else AIDA_ASSERT_RETURN (ref_count > 0); }
   void
   unlink ()
   {
@@ -164,7 +164,7 @@ protected:
       {
         while (callback_ring_->next != callback_ring_)
           callback_ring_->next->unlink();
-        AIDA_ASSERT (callback_ring_->ref_count >= 2);
+        AIDA_ASSERT_RETURN (callback_ring_->ref_count >= 2);
         callback_ring_->decref();
         callback_ring_->decref();
       }
@@ -200,7 +200,7 @@ public:
         link->incref();
         links[nlinks++] = link;
       }
-    AIDA_ASSERT (nlinks <= capacity);
+    AIDA_ASSERT_RETURN (nlinks <= capacity, collector.result());
     // walk signal handler list, invoke and decref
     size_t i;
     for (i = 0; i < nlinks; i++)
@@ -282,7 +282,7 @@ protected:
       {
         while (callback_ring_->next != callback_ring_)
           callback_ring_->next->unlink();
-        AIDA_ASSERT (callback_ring_->ref_count >= 2);
+        AIDA_ASSERT_RETURN (callback_ring_->ref_count >= 2);
         callback_ring_->decref();
         callback_ring_->decref();
       }

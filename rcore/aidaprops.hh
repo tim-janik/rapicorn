@@ -307,8 +307,8 @@ PropertyRange<Class,Type>::PropertyRange (void (Class::*csetter) (Type), Type (C
   setter (csetter),
   getter (cgetter)
 {
-  AIDA_ASSERT (minimum_value <= maximum_value);
-  AIDA_ASSERT (minimum_value + stepping <= maximum_value);
+  AIDA_ASSERT_RETURN (minimum_value <= maximum_value);
+  AIDA_ASSERT_RETURN (minimum_value + stepping <= maximum_value);
 }
 
 template<class Class, typename Type> void
@@ -374,8 +374,8 @@ PropertyEnum<Class,Type>::set_value (PropertyHostInterface &obj, const String &s
 {
   String error_string;
   EnumValue ev = enum_.find_value (svalue);
-  if (!ev.ident)
-    print_warning (String (__PRETTY_FUNCTION__) + ": invalid enum value name: " + svalue);
+  const char *const enum_value_name = ev.ident;
+  AIDA_ASSERT_RETURN (enum_value_name != NULL);
   Type v = Type (ev.value);
   Class *instance = dynamic_cast<Class*> (&obj);
   (instance->*setter) (v);
@@ -387,8 +387,8 @@ PropertyEnum<Class,Type>::get_value (PropertyHostInterface &obj)
   Class *instance = dynamic_cast<Class*> (&obj);
   Type v = (instance->*getter) ();
   EnumValue ev = enum_.find_value (v);
-  if (!ev.ident)
-    print_warning (String (__PRETTY_FUNCTION__) + ": unrecognized enum value");
+  const char *const enum_value_name = ev.ident;
+  AIDA_ASSERT_RETURN (enum_value_name != NULL, "");
   return ev.ident ? ev.ident : "";
 }
 
