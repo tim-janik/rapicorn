@@ -853,12 +853,12 @@ class Generator:
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
-    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + %u);\n' % len (mtype.args)
+    s += '  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + %u, NULL);\n' % len (mtype.args)
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
+    s += '  AIDA_ASSERT_RETURN (self != NULL, NULL);\n'
     # fetch args
     for a in mtype.args:
       s += '  ' + self.V ('arg_' + a[0], a[1]) + ';\n'
@@ -942,12 +942,12 @@ class Generator:
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
-    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 1);\n'
+    s += '  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 1, NULL);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
+    s += '  AIDA_ASSERT_RETURN (self != NULL, NULL);\n'
     # fetch property
     s += '  ' + self.V ('arg_' + fident, ftype) + ';\n'
     s += self.generate_proto_pop_args ('fbr', class_info, 'arg_', [(fident, ftype)])
@@ -966,12 +966,12 @@ class Generator:
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
-    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1);\n'
+    s += '  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1, NULL);\n'
     # fetch self
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
+    s += '  AIDA_ASSERT_RETURN (self != NULL, NULL);\n'
     # return var
     s += '  '
     s += self.R (ftype) + ' rval = '
@@ -1028,7 +1028,7 @@ class Generator:
     s += '      return NULL;\n'
     s += '    }\n'
     s += '  Rapicorn::Aida::uint64 emit_result_id;\n'
-    s += '  assert (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection());\n'
+    s += '  AIDA_ASSERT_RETURN (NULL != &Rapicorn::Aida::ProtoScope::current_client_connection(), NULL);\n'
     if async:
       s += '  ' + self.R (stype.rtype) + ' rval = Rapicorn::Aida::proto_msg_emit_signal (*sfb, *fptr, emit_result_id);\n'
       s += '  Rapicorn::Aida::ProtoMsg &rb = *__AIDA_Local__::new_emit_result (sfb, %s, 2);\n' % digest # invalidates fbr
@@ -1115,11 +1115,11 @@ class Generator:
     s += 'static Rapicorn::Aida::ProtoMsg*\n'
     s += dispatcher_name + ' (Rapicorn::Aida::ProtoReader &fbr)\n'
     s += '{\n'
-    s += '  AIDA_ASSERT (fbr.remaining() == 3 + 1 + 2);\n'
+    s += '  AIDA_ASSERT_RETURN (fbr.remaining() == 3 + 1 + 2, NULL);\n'
     s += '  %s *self;\n' % self.C (class_info)
     s += '  fbr.skip_header();\n'
     s += self.generate_proto_pop_args ('fbr', class_info, '', [('self', class_info)])
-    s += '  AIDA_CHECK (self, "invalid \'this\' pointer");\n'
+    s += '  AIDA_ASSERT_RETURN (self != NULL, NULL);\n'
     s += '  size_t handler_id;\n'
     s += '  Rapicorn::Aida::uint64 signal_connection, result = 0;\n'
     s += '  fbr >>= handler_id;\n'
