@@ -83,9 +83,6 @@ bool    normal             ();  ///< Indicates whether normal tests should be ru
 bool    slow               ();  ///< Indicates whether slow tests should be run.
 bool    ui_test            ();  ///< Indicates execution of ui-thread tests.
 
-void    set_assertion_hook (const std::function<void()> &hook);                 ///< Install hook to be called when assertions fail.
-void    assertion_failed   (const char *file, int line, const char *message);   ///< Internal function for failing assertions.
-
 /// @cond
 void                        test_output   (int kind, const String &string);
 template<class... Args> RAPICORN_PRINTF (2, 0)
@@ -180,13 +177,13 @@ tprinterr (const char *format, const Args &...args)
     printerr_string (string_format (format, args...));
 }
 #define TASSERT__AT(LINE,cond)  do { if (RAPICORN_LIKELY (cond)) break; \
-    Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); } while (0)
+    ::Rapicorn::Aida::assertion_failed (RAPICORN_PRETTY_FILE, LINE, #cond); } while (0)
 #define TCMP_op(a,cmp,b,sa,sb,cast)  do { if (a cmp b) break;           \
   Rapicorn::String __tassert_va = Rapicorn::Test::stringify_arg (cast (a), #a); \
   Rapicorn::String __tassert_vb = Rapicorn::Test::stringify_arg (cast (b), #b), \
     __tassert_as = Rapicorn::string_format ("'%s %s %s': %s %s %s", \
                                             sa, #cmp, sb, __tassert_va.c_str(), #cmp, __tassert_vb.c_str()); \
-  Rapicorn::Test::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
+  ::Rapicorn::Aida::assertion_failed (RAPICORN_PRETTY_FILE, __LINE__, __tassert_as.c_str()); \
   } while (0)
 /// @endcond
 

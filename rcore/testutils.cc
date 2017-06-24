@@ -164,43 +164,6 @@ test_output (int kind, const String &msg)
     }
 }
 
-static std::function<void()> assertion_hook;
-
-void
-set_assertion_hook (const std::function<void()> &hook)
-{
-  assertion_hook = hook;
-}
-
-void
-assertion_failed (const char *file, int line, const char *message)
-{
-  String m;
-  if (file)
-    {
-      m += String (file) + ":";
-      if (line >= 0)
-        m += string_format ("%u:", line);
-    }
-  else
-    {
-      const String argv0 = program_argv0();
-      if (!argv0.empty())
-        m += argv0 + ":";
-    }
-  m += " assertion failed: ";
-  m += message;
-  String sout = ensure_newline (m);
-  fflush (stdout);
-  fputs (sout.c_str(), stderr);
-  fflush (stderr);
-
-  if (assertion_hook)
-    assertion_hook();
-
-  return Rapicorn::breakpoint();
-}
-
 struct TestEntry {
   void          (*func) (void*);
   void           *data;
@@ -378,6 +341,20 @@ random_frange (double begin, double end)
 
 namespace Rapicorn {
 
+void    test_assertion_failed();
+
+void
+test_assertion_failed()
+{
+  void *__p_[RAPICORN_BACKTRACE_MAXDEPTH] = { 0, };
+  String btmsg = pretty_backtrace (__p_, backtrace_pointers (__p_, sizeof (__p_) / sizeof (__p_[0])), __FILE__, __LINE__, NULL);
+  if (btmsg.size())
+    printerr ("%s", btmsg.c_str());
+  printerr ("Rapicorn::test_assertion_failed(): aborting...");
+  Rapicorn::breakpoint();
+  abort();
+}
+
 /** Initialize the Rapicorn toolkit core for a test program.
  * Initializes the Rapicorn toolkit core to execute unit tests by calling
  * parse_settings_and_args() with args "autonomous=1" and "testing=1" and
@@ -387,6 +364,7 @@ namespace Rapicorn {
 void
 init_core_test (const String &application, int *argcp, char **argv, const StringVector &args)
 {
+  Aida::assertion_failed_hook (test_assertion_failed);
   RapicornInternal::inject_init_args (":autonomous:testing:fatal-warnings:");
   RapicornInternal::parse_init_args (argcp, argv, args);
   if (!application.empty())
