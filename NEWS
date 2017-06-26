@@ -1,4 +1,4 @@
-Rapicorn 17.0.0~rc1:
+Rapicorn 17.0.0:
 
 * Support clang++-3.6.2.
 * Fixed uild on Arch linux [milkmiruku]
@@ -44,6 +44,7 @@ Rapicorn 17.0.0~rc1:
 * Avoid overlinking in rapicorn.pc.
 * Require srcdir=destdir upon distcheck.
 * Added backtrace generator via addr2line.
+* Fixed macro uses in generated Aida glue code.
 * Added support for notifications from Aida remote calls.
 * Added support for event loop source groups.
 * Majorly improved Docker build setup.
