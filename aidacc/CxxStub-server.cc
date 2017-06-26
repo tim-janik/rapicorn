@@ -1,9 +1,6 @@
 #ifndef __AIDA_CXXSTUB_SERVER_CC__
 #define __AIDA_CXXSTUB_SERVER_CC__
 
-#ifndef AIDA_CHECK
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
-#endif
 #ifndef AIDA_CPP_PASTE
 #define AIDA_CPP_CAT2(a,b)    a ## b
 #define AIDA_CPP_PASTE(a,b)     AIDA_CPP_CAT2 (a, b)

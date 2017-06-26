@@ -18,7 +18,7 @@ namespace Rapicorn { namespace Aida {
 #define AIDA_CPP_STRINGIFYi(s)  #s // indirection required to expand __LINE__ etc
 #define AIDA_CPP_STRINGIFY(s)   AIDA_CPP_STRINGIFYi (s)
 #define AIDA_I64ELEMENTS(size)  (((size) + sizeof (int64) - 1) / sizeof (int64)) ///< Length of int64[] array to hold @a size.
-#if     __GNUC__ >= 4
+#if     __GNUC__ >= 4 || defined __clang__
 #define AIDA_UNUSED             __attribute__ ((__unused__))
 #define AIDA_DEPRECATED         __attribute__ ((__deprecated__))
 #define AIDA_NORETURN           __attribute__ ((__noreturn__))
@@ -26,8 +26,8 @@ namespace Rapicorn { namespace Aida {
 #define AIDA_BOOLi(expr)        __extension__ ({ bool _plic__bool; if (expr) _plic__bool = 1; else _plic__bool = 0; _plic__bool; })
 #define AIDA_ISLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 1)
 #define AIDA_UNLIKELY(expr)     __builtin_expect (AIDA_BOOLi (expr), 0)
-#define AIDA_ASSERT(expr)       do { if (__builtin_expect (!(expr), 0)) ::Rapicorn::Aida::assertion_error (__FILE__, __LINE__, #expr); } while (0)
-#define AIDA_ASSERT_RETURN(expr,...) do { if (__builtin_expect (!!(expr), 1)) break; ::Rapicorn::Aida::assertion_error (__FILE__, __LINE__, #expr); return __VA_ARGS__; } while (0)
+#define AIDA_ASSERT_RETURN(expr,...)      do { if (AIDA_ISLIKELY (expr)) break; ::Rapicorn::Aida::assertion_failed (__FILE__, __LINE__, #expr); return __VA_ARGS__; } while (0)
+#define AIDA_ASSERT_RETURN_UNREACHED(...) do { ::Rapicorn::Aida::assertion_failed (__FILE__, __LINE__, NULL); return __VA_ARGS__; } while (0)
 #else   // !__GNUC__
 #define AIDA_UNUSED
 #define AIDA_DEPRECATED
@@ -35,7 +35,8 @@ namespace Rapicorn { namespace Aida {
 #define AIDA_PRINTF(fix, arx)
 #define AIDA_ISLIKELY(expr)     expr
 #define AIDA_UNLIKELY(expr)     expr
-#define AIDA_ASSERT(expr)       do { } while (0)
+#define AIDA_ASSERT_RETURN(expr,...)      do { } while (0)
+#define AIDA_ASSERT_RETURN_UNREACHED(...) do { return __VA_ARGS__; } while (0)
 #endif
 #define AIDA_LIKELY             AIDA_ISLIKELY
 
@@ -240,10 +241,10 @@ public:
 };
 
 // == Utilities ==
-void assertion_error (const char *file, uint line, const char *expr) AIDA_NORETURN;
-void fatal_error     (const char *file, uint line, const String &msg) AIDA_NORETURN;
-void fatal_error     (const String &msg) AIDA_NORETURN;
-void print_warning   (const String &msg);
+/// Function used internally to print an error message for failing assertions.
+void assertion_failed (const char *file, uint line, const char *expr);
+/// Install hook function to be called after assertion_failed().
+void assertion_failed_hook (const std::function<void()> &hook);
 
 // == Type Utilities ==
 template<class Y> struct ValueType           { typedef Y T; };
@@ -825,7 +826,7 @@ ProtoMsg::reset()
 template<class C> ServerConnectionP
 ServerConnection::bind (const String &protocol, std::shared_ptr<C> object_ptr)
 {
-  AIDA_ASSERT (object_ptr != NULL);
+  AIDA_ASSERT_RETURN (object_ptr != NULL, NULL);
   auto server_connection = make_server_connection (protocol);
   if (server_connection)
     server_connection->remote_origin (object_ptr);

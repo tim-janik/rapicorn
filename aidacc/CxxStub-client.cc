@@ -1,10 +1,6 @@
 #ifndef __AIDA_CXXSTUB_CLIENT_CC__
 #define __AIDA_CXXSTUB_CLIENT_CC__
 
-#ifndef AIDA_CHECK
-#define AIDA_CHECK(cond,errmsg) do { if (cond) break; Rapicorn::Aida::fatal_error (__FILE__, __LINE__, errmsg); } while (0)
-#endif
-
 namespace { // Anon
 using Rapicorn::Aida::uint64;
 

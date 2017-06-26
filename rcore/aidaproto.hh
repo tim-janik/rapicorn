@@ -13,8 +13,7 @@ proto_msg_emit_signal (const Aida::ProtoMsg &fb, const std::function<R (A1, A2)>
   fbr.skip();   // skip handler_id
   if (async)
     emit_result_id = fbr.pop_int64();
-  if (AIDA_UNLIKELY (fbr.remaining() != NARGS))
-    Aida::fatal_error ("invalid number of signal arguments");
+  AIDA_ASSERT_RETURN (fbr.remaining() == NARGS, R());
   typename ValueType<A1>::T a1; typename ValueType<A2>::T a2;
   fbr >>= a1; fbr >>= a2;
   return func (a1, a2);
