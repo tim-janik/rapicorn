@@ -224,7 +224,8 @@ public:
 
 
 // === EventFd ===
-class EventFd            /// Wakeup facility for IPC.
+/// Wakeup facility for IPC.
+class EventFd
 {
   int      fds[2];
   void     operator= (const EventFd&) = delete; // no assignments
