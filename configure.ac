@@ -11,8 +11,8 @@ AC_PREREQ(2.57)
 # * ABI_VERSION:     Record the latest version since ABI compatibility has been kept
 # * ABI changes:     Increment MAJOR or MINOR and reset ABI_VERSION to the current VERSION
 # * ~RC:             Release candidate, may contain [~-]\w+[0-9]+ or nothing
-AC_INIT([rapicorn], [17.0.1])
-:;      ABI_VERSION=[17.0.0]
+AC_INIT([rapicorn], [17.1.0~alpha1])
+:;      ABI_VERSION=[17.1.0]
 AC_CONFIG_SRCDIR([ui/widget.hh])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
