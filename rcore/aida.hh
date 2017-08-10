@@ -202,7 +202,7 @@ typedef std::vector<TypeHash> TypeHashList;
 
 // == ImplicitBase ==
 /// Abstract base interface that all IDL interfaces are implicitely derived from.
-class ImplicitBase : public virtual std::enable_shared_from_this<ImplicitBase> {
+class ImplicitBase : public virtual VirtualEnableSharedFromThis<ImplicitBase> {
 protected:
   virtual                    ~ImplicitBase        () = 0; // abstract class
   virtual const PropertyList& __aida_properties__ () = 0; ///< Retrieve the list of properties for @a this instance.
@@ -216,10 +216,6 @@ public:
   virtual std::vector<String> __aida_dir__        () const = 0;
   virtual Any                 __aida_get__        (const String &name) const = 0;
   virtual bool                __aida_set__        (const String &name, const Any &any) = 0;
-  std::shared_ptr
-  <const ImplicitBase>        shared_from_this    () const { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
-  ImplicitBaseP               shared_from_this    ()       { return std::enable_shared_from_this<ImplicitBase>::shared_from_this(); }
-  ImplicitBaseP               shared_from_this    (std::nullptr_t);
 };
 
 
