@@ -290,6 +290,19 @@ public:
   explicit     operator bool () const                        { return ptr_ != NULL; }
 };
 
+/// Helper class for VirtualEnableSharedFromThis.
+struct VirtualEnableSharedFromThisBase :
+    public virtual std::enable_shared_from_this<VirtualEnableSharedFromThisBase> {
+  virtual ~VirtualEnableSharedFromThisBase() = 0;
+};
+
+/// Virtual base class template that provides std::enable_shared_from_this for multiple inheritance.
+template<class T>
+struct VirtualEnableSharedFromThis : public virtual VirtualEnableSharedFromThisBase {
+  std::shared_ptr<T>       shared_from_this()       { return std::dynamic_pointer_cast<T> (VirtualEnableSharedFromThisBase::shared_from_this()); }
+  std::shared_ptr<const T> shared_from_this() const { return std::dynamic_pointer_cast<T> (VirtualEnableSharedFromThisBase::shared_from_this()); }
+};
+
 /**
  * A std::make_shared<>() wrapper class to access private ctor & dtor.
  * To call std::make_shared<T>() on a class @a T, its constructor and

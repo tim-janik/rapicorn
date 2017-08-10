@@ -27,6 +27,10 @@
 
 namespace Rapicorn {
 
+// == VirtualEnableSharedFromThisBase ==
+VirtualEnableSharedFromThisBase::~VirtualEnableSharedFromThisBase()
+{} // force emission of vtable
+
 /* --- limits.h & float.h checks --- */
 /* assert several assumptions the code makes */
 RAPICORN_STATIC_ASSERT (CHAR_BIT     == +8);
