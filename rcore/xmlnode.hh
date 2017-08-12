@@ -13,7 +13,7 @@ typedef std::weak_ptr  <XmlNode> XmlNodeW;
 /** Simple XML tree representation.
  * @DISCOURAGED: Nonpublic API, data structure used internally.
  */
-class XmlNode : public virtual DataListContainer, public virtual std::enable_shared_from_this<XmlNode> {
+class XmlNode : public virtual DataListContainer, public virtual VirtualEnableSharedFromThis<XmlNode> {
   String                name_; // element name
   XmlNode              *parent_;
   StringVector          attribute_names_;
