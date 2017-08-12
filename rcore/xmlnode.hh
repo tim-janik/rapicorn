@@ -45,7 +45,7 @@ public:
   uint                  parsed_char     () const                { return char_; }
   // Text Nodes
   virtual String        text            () const = 0;
-  bool                  istext          () const                { return name_.size() == 0; }
+  virtual bool          istext          () const = 0;
   // Container Nodes
   virtual ConstNodes&   children        () const = 0;
   ConstChildIter        children_begin  () const { return children().begin(); }
