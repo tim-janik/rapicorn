@@ -21,6 +21,13 @@ XmlNode::~XmlNode ()
   assert (parent_ == NULL);
 }
 
+void
+XmlNode::rename (XmlNodeP self, const String &newname)
+{
+  if (self.get() == this)
+    name_ = newname;
+}
+
 static inline vector<String>::const_iterator
 find_attribute (const vector<String> &attribute_names,
                 const String         &name,

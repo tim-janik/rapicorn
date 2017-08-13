@@ -31,6 +31,7 @@ public:
   XmlNode*              parent          () const                { return parent_; }
   const StringVector&   list_attributes () const                { return attribute_names_; }
   const StringVector&   list_values     () const                { return attribute_values_; }
+  void                  rename          (XmlNodeP self, const String &newname);
   bool                  set_attribute   (const String   &name,
                                          const String   &value,
                                          bool            replace = true);
