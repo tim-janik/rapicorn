@@ -395,7 +395,7 @@ node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t 
         s += " " + node.xml_escape (keys[i]) + "=\"" + escape_xml<ALL-SQ> (values[i]) + "\"";
     }
   XmlNode::ConstNodes &cl = node.children();
-  if (!cl.empty())
+  if (!(cl.empty() || (cl.size() == 1 && cl[0]->istext() && cl[0]->text().empty())))
     {
       if (include_outer)
         s += ">";
