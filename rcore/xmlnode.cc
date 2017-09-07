@@ -21,6 +21,13 @@ XmlNode::~XmlNode ()
   assert (parent_ == NULL);
 }
 
+void
+XmlNode::rename (XmlNodeP self, const String &newname)
+{
+  if (self.get() == this)
+    name_ = newname;
+}
+
 static inline vector<String>::const_iterator
 find_attribute (const vector<String> &attribute_names,
                 const String         &name,
@@ -133,6 +140,7 @@ class XmlNodeText : public virtual XmlNode {
   String                text_;
   // XmlNodeText
   virtual String        text            () const         { return text_; }
+  virtual bool          istext          () const         { return true; }
   // XmlNodeParent
   virtual ConstNodes&   children        () const         { return *(ConstNodes*) NULL; }
   virtual bool          add_child       (XmlNode &child) { return false; }
@@ -157,6 +165,11 @@ class XmlNodeParent : public virtual XmlNode {
     for (auto c : children_)
       result.append (c->text());
     return result;
+  }
+  virtual bool
+  istext () const
+  {
+    return false;
   }
   /* XmlNodeParent */
   virtual ConstNodes&   children        () const        { return children_; }
@@ -389,7 +402,7 @@ node_xml_string (const XmlNode &node, size_t indent, bool include_outer, size_t 
         s += " " + node.xml_escape (keys[i]) + "=\"" + escape_xml<ALL-SQ> (values[i]) + "\"";
     }
   XmlNode::ConstNodes &cl = node.children();
-  if (!cl.empty())
+  if (!(cl.empty() || (cl.size() == 1 && cl[0]->istext() && cl[0]->text().empty())))
     {
       if (include_outer)
         s += ">";

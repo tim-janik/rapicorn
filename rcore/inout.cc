@@ -169,9 +169,9 @@ debug_handler (const char dkind, const char *const file, const int line, const S
           fgc1 = color (FG_YELLOW);
           break;
         }
-      printerr ("%s%s%s%s%s%s%s%s[%u] %s%s%s:%s%s %s%s",
+      printerr ("%s%s%s%s%s: %s%s%s%s%s%s:%s%s %s%s", // keep format compatible with emacs:next-error
+                bo1, fgw, program_alias().c_str(), fgc0, bo0,
                 cy1, where.c_str(), cy0,
-                bo1, fgw, program_alias().c_str(), fgc0, bo0, ThisThread::thread_pid(),
                 fbo1, fgc1, what,
                 fgc0, fbo0,
                 msg.c_str(), emsg.c_str());
