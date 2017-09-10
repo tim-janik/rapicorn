@@ -14,7 +14,6 @@ env:
   matrix:
     - DIST="ubuntu:wily"     INTENT="gccbuild"
     - DIST="ubuntu:xenial"   INTENT="gccbuild,distcheck"
-    - DIST="debian:jessie"   INTENT="gccbuild"
     # test upcoming releases and get new compiler warnings
     - DIST="debian:stretch"  INTENT="gccbuild"
     - DIST="ubuntu:zesty"    INTENT="gccbuild"
