@@ -186,14 +186,9 @@ using   std::vector;
 typedef std::string String;             ///< Convenience alias for std::string.
 typedef vector<String> StringVector;    ///< Convenience alias for a std::vector<std::string>.
 
-#if DOXYGEN
 /// Template to map all type arguments to void, useful for SFINAE.
 /// See also: http://open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3911.pdf
 template<class...> using void_t = void;
-#else // work-around for g++ <= 4.9
-template<class...> struct void_t__voider { using type = void; };
-template<class... T0toN > using void_t = typename void_t__voider<T0toN...>::type;
-#endif
 
 // == File Path Handling ==
 #ifdef  _WIN32 // includes _WIN64
